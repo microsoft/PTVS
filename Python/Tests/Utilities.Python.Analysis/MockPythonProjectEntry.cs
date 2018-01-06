@@ -82,6 +82,11 @@ namespace TestUtilities.Python {
             set;
         }
 
+        public Uri DocumentUri {
+            get;
+            set;
+        }
+
         public string GetLine(int lineNo) {
             throw new NotImplementedException();
         }

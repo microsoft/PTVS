@@ -40,16 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
-        private readonly PythonAnalyzer _projectState;
-        private readonly string _moduleName;
-        private readonly string _filePath;
-        private readonly ModuleInfo _myScope;
-        private IAnalysisCookie _cookie;
-        private PythonAst _tree;
-        private ModuleAnalysis _currentAnalysis;
         private AnalysisUnit _unit;
-        private int _analysisVersion;
-        private Dictionary<object, object> _properties = new Dictionary<object, object>();
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
         private readonly DocumentBuffer _buffer;
@@ -58,18 +49,36 @@ namespace Microsoft.PythonTools.Analysis {
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
         private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
 
-        internal ProjectEntry(PythonAnalyzer state, string moduleName, string filePath, IAnalysisCookie cookie) {
-            _projectState = state;
-            _moduleName = moduleName ?? "";
-            _filePath = filePath;
-            _cookie = cookie;
-            _myScope = new ModuleInfo(_moduleName, this, state.Interpreter.CreateModuleContext());
-            _unit = new AnalysisUnit(_tree, _myScope.Scope);
+        internal ProjectEntry(
+            PythonAnalyzer state,
+            string moduleName,
+            string filePath,
+            Uri documentUri,
+            IAnalysisCookie cookie
+        ) {
+            ProjectState = state;
+            ModuleName = moduleName ?? "";
+            DocumentUri = documentUri ?? MakeDocumentUri(filePath);
+            FilePath = filePath;
+            Cookie = cookie;
+            MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
+            _unit = new AnalysisUnit(Tree, MyScope.Scope);
             _buffer = new DocumentBuffer();
-            if (_cookie is InitialContentCookie c) {
+            if (Cookie is InitialContentCookie c) {
                 _buffer.Reset(c.Version, c.Content);
             }
             AnalysisLog.NewUnit(_unit);
+        }
+
+        internal static Uri MakeDocumentUri(string filePath) {
+            Uri u;
+            if (!Path.IsPathRooted(filePath)) {
+                u = new Uri($"file:///LOCAL-PATH/{filePath.Replace('\\', '/')}");
+            } else {
+                u = new Uri(filePath);
+            }
+
+            return u;
         }
 
         public event EventHandler<EventArgs> OnNewParseTree;
@@ -85,22 +94,19 @@ namespace Microsoft.PythonTools.Analysis {
                     if (_curWaiter != null) {
                         _curWaiter.Set();
                     }
-                    _tree = null;
+                    Tree = null;
                     return;
                 }
 
-                _tree = newAst;
-                _cookie = newCookie;
+                Tree = newAst;
+                Cookie = newCookie;
 
                 if (_curWaiter != null) {
                     _curWaiter.Set();
                 }
             }
 
-            var newParse = OnNewParseTree;
-            if (newParse != null) {
-                newParse(this, EventArgs.Empty);
-            }
+            OnNewParseTree?.Invoke(this, EventArgs.Empty);
         }
 
         internal bool IsVisible(ProjectEntry assigningScope) {
@@ -109,8 +115,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void GetTreeAndCookie(out PythonAst tree, out IAnalysisCookie cookie) {
             lock (this) {
-                tree = _tree;
-                cookie = _cookie;
+                tree = Tree;
+                cookie = Cookie;
             }
         }
 
@@ -148,7 +154,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _curWaiter = null;
             }
 
-            return gotNewTree ? _tree : null;
+            return gotNewTree ? Tree : null;
         }
 
         public void Analyze(CancellationToken cancel) {
@@ -161,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             lock (this) {
-                _analysisVersion++;
+                AnalysisVersion++;
 
                 foreach (var aggregate in _aggregates) {
                     aggregate.BumpVersion();
@@ -176,23 +182,12 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void RaiseOnNewAnalysis() {
-            var evt = OnNewAnalysis;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            OnNewAnalysis?.Invoke(this, EventArgs.Empty);
         }
 
-        public int AnalysisVersion {
-            get {
-                return _analysisVersion;
-            }
-        }
+        public int AnalysisVersion { get; private set; }
 
-        public bool IsAnalyzed {
-            get {
-                return Analysis != null;
-            }
-        }
+        public bool IsAnalyzed => Analysis != null;
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
             PythonAst tree;
@@ -202,33 +197,33 @@ namespace Microsoft.PythonTools.Analysis {
                 return;
             }
 
-            var oldParent = _myScope.ParentPackage;
-            if (_filePath != null) {
-                ProjectState.ModulesByFilename[_filePath] = _myScope;
+            var oldParent = MyScope.ParentPackage;
+            if (FilePath != null) {
+                ProjectState.ModulesByFilename[FilePath] = MyScope;
             }
 
             if (oldParent != null) {
                 // update us in our parent package
-                oldParent.AddChildPackage(_myScope, _unit);
-            } else if (_filePath != null) {
+                oldParent.AddChildPackage(MyScope, _unit);
+            } else if (FilePath != null) {
                 // we need to check and see if our parent is a package for the case where we're adding a new
                 // file but not re-analyzing our parent package.
                 string parentFilename;
-                if (ModulePath.IsInitPyFile(_filePath)) {
+                if (ModulePath.IsInitPyFile(FilePath)) {
                     // subpackage
-                    parentFilename = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(_filePath)), "__init__.py");
+                    parentFilename = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(FilePath)), "__init__.py");
                 } else {
                     // just a module
-                    parentFilename = Path.Combine(Path.GetDirectoryName(_filePath), "__init__.py");
+                    parentFilename = Path.Combine(Path.GetDirectoryName(FilePath), "__init__.py");
                 }
 
                 ModuleInfo parentPackage;
                 if (ProjectState.ModulesByFilename.TryGetValue(parentFilename, out parentPackage)) {
-                    parentPackage.AddChildPackage(_myScope, _unit);
+                    parentPackage.AddChildPackage(MyScope, _unit);
                 }
             }
 
-            _unit = new AnalysisUnit(tree, _myScope.Scope);
+            _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
             foreach (var value in MyScope.Scope.AllVariables) {
@@ -244,15 +239,15 @@ namespace Microsoft.PythonTools.Analysis {
             var walker = new OverviewWalker(this, _unit, tree);
             tree.Walk(walker);
 
-            _myScope.Specialize();
+            MyScope.Specialize();
 
             // It may be that we have analyzed some child packages of this package already, but because it wasn't analyzed,
             // the children were not registered. To handle this possibility, scan analyzed packages for children of this
             // package (checked by module name first, then sanity-checked by path), and register any that match.
-            if (ModulePath.IsInitPyFile(_filePath)) {
-                string pathPrefix = Path.GetDirectoryName(_filePath) + "\\";
+            if (ModulePath.IsInitPyFile(FilePath)) {
+                string pathPrefix = Path.GetDirectoryName(FilePath) + "\\";
                 var children =
-                    from pair in _projectState.ModulesByFilename
+                    from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
                     where fileName.StartsWith(pathPrefix)
@@ -261,21 +256,21 @@ namespace Microsoft.PythonTools.Analysis {
                     let lastDot = moduleName.LastIndexOf('.')
                     where lastDot > 0
                     let parentModuleName = moduleName.Substring(0, lastDot)
-                    where parentModuleName == _myScope.Name
+                    where parentModuleName == MyScope.Name
                     select pair.Value;
                 foreach (var child in children) {
-                    _myScope.AddChildPackage(child, _unit);
+                    MyScope.AddChildPackage(child, _unit);
                 }
             }
 
             _unit.Enqueue();
 
             if (!enqueueOnly) {
-                _projectState.AnalyzeQueuedEntries(cancel);
+                ProjectState.AnalyzeQueuedEntries(cancel);
             }
 
             // publish the analysis now that it's complete/running
-            _currentAnalysis = new ModuleAnalysis(
+            Analysis = new ModuleAnalysis(
                 _unit,
                 ((ModuleScope)_unit.Scope).CloneForPublish()
             );
@@ -288,60 +283,31 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.ClearUnresolvedModules();
         }
 
-        public IGroupableAnalysisProject AnalysisGroup {
-            get {
-                return _projectState;
-            }
-        }
+        public IGroupableAnalysisProject AnalysisGroup => ProjectState;
 
-        public ModuleAnalysis Analysis {
-            get { return _currentAnalysis; }
-        }
+        public ModuleAnalysis Analysis { get; private set; }
 
-        public string FilePath {
-            get { return _filePath; }
-        }
+        public string FilePath { get; }
 
-        public IAnalysisCookie Cookie {
-            get { return _cookie; }
-        }
+        public IAnalysisCookie Cookie { get; private set; }
 
-        internal PythonAnalyzer ProjectState {
-            get { return _projectState; }
-        }
+        internal PythonAnalyzer ProjectState { get; private set; }
 
-        public PythonAst Tree {
-            get { return _tree; }
-        }
+        public PythonAst Tree { get; private set; }
 
-        internal ModuleInfo MyScope {
-            get { return _myScope; }
-        }
+        internal ModuleInfo MyScope { get; private set; }
 
-        public IModuleContext AnalysisContext {
-            get { return _myScope.InterpreterContext; }
-        }
+        public IModuleContext AnalysisContext => MyScope.InterpreterContext;
 
-        public string ModuleName {
-            get {
-                return _moduleName;
-            }
-        }
+        public string ModuleName { get; }
 
-        public Dictionary<object, object> Properties {
-            get {
-                if (_properties == null) {
-                    _properties = new Dictionary<object, object>();
-                }
-                return _properties;
-            }
-        }
+        public Uri DocumentUri { get; }
 
+        public Dictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
-        #region IProjectEntry2 Members
 
         public void RemovedFromProject() {
-            _analysisVersion = -1;
+            AnalysisVersion = -1;
             foreach (var aggregatedInto in _aggregates) {
                 if (aggregatedInto.AnalysisVersion != -1) {
                     ProjectState.ClearAggregate(aggregatedInto);
@@ -349,8 +315,6 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
-
-        #endregion
 
         internal void Enqueue() {
             _unit.Enqueue();
@@ -406,7 +370,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return null;
             }
             try {
-                var sr = Parser.ReadStreamWithEncoding(stream, _projectState.LanguageVersion);
+                var sr = Parser.ReadStreamWithEncoding(stream, ProjectState.LanguageVersion);
                 stream = null;
                 version = 0;
                 return sr;
@@ -472,11 +436,14 @@ namespace Microsoft.PythonTools.Analysis {
         string FilePath { get; }
 
         /// <summary>
+        /// Returns the document unique identifier
+        /// </summary>
+        Uri DocumentUri { get; }
+
+        /// <summary>
         /// Provides storage of arbitrary properties associated with the project entry.
         /// </summary>
-        Dictionary<object, object> Properties {
-            get;
-        }
+        Dictionary<object, object> Properties { get; }
 
         /// <summary>
         /// Called when the project entry is removed from the project.

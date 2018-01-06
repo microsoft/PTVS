@@ -50,6 +50,14 @@ namespace Microsoft.PythonTools.Analysis {
             var lineLoc = SplitLines(Text.ToString()).ToArray();
 
             foreach (var change in changes.Changes) {
+                if (change.WholeBuffer) {
+                    Text.Clear();
+                    if (!string.IsNullOrEmpty(change.InsertedText)) {
+                        Text.Append(change.InsertedText);
+                    }
+                    continue;
+                }
+
                 int start = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.Start, Text.Length);
                 if (start > lastStart) {
                     throw new InvalidOperationException("changes must be in reverse order of start location");

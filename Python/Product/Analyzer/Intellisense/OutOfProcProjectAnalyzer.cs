@@ -64,6 +64,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _server = new LS.Server();
+            _server.OnParseComplete += OnParseComplete;
+            _server.OnPublishDiagnostics += OnPublishDiagnostics;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -1694,7 +1696,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
-            var entry = await AddNewFile(new Uri(request.path), request.addingFromDir);
+            var entry = await AddNewFile(ProjectEntry.MakeDocumentUri(request.path), request.path, request.addingFromDir);
             var documentUri = new Uri(entry.FilePath);
 
             await done(new AP.AddFileResponse { documentUri = documentUri.AbsoluteUri });
@@ -1712,8 +1714,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             for(int i = 0; i < request.path.Length; ++i) {
                 if (!string.IsNullOrEmpty(request.path[i])) {
-                    var documentUri = GetDocumentUri(request.path[i]);
-                    entries[i] = await AddNewFile(documentUri, request.addingFromDir);
+                    var documentUri = ProjectEntry.MakeDocumentUri(request.path[i]);
+                    entries[i] = await AddNewFile(documentUri, request.path[i], request.addingFromDir);
                     response.documentUri[i] = documentUri.AbsoluteUri;
                 }
             }
@@ -1727,17 +1729,20 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async Task<IProjectEntry> AddNewFile(Uri documentUri, string addingFromDir) {
-            var path = documentUri.LocalPath;
-
+        private async Task<IProjectEntry> AddNewFile(Uri documentUri, string path, string addingFromDir) {
             if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 return Project.AddXamlFile(path, null);
             }
 
-            return await _server.LoadFileAsync(
+            var entry = await _server.LoadFileAsync(
                 documentUri,
                 string.IsNullOrEmpty(addingFromDir) ? null : new Uri(addingFromDir)
             ).ConfigureAwait(false);
+
+            if (entry is IPythonProjectEntry pyEntry) {
+                pyEntry.OnNewAnalysis += OnNewAnalysis;
+            }
+            return entry;
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
@@ -1909,12 +1914,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     },
                     contentChanges = changes.ToArray()
                 });
-
             }
+
+#if DEBUG
+            var newCode = (entry as IDocument)?.ReadDocument(out _)?.ReadToEnd();
+#endif
 
             return new AP.FileUpdateResponse {
 #if DEBUG
-                newCode = (entry as IDocument)?.ReadDocument(out _)?.ReadToEnd()
+                newCode = newCode
 #endif
             };
         }
@@ -1944,14 +1952,6 @@ namespace Microsoft.PythonTools.Intellisense {
             await _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams { });
         }
 
-        private static Uri GetDocumentUri(string path) {
-            if (!Path.IsPathRooted(path)) {
-                return new Uri($"file:///LOCAL-PATH/{path.Replace('\\', '/')}");
-            }
-
-            return new Uri(path);
-        }
-
         internal async Task BeginAnalyzingFileAsync(IProjectEntry item, Uri documentUri, bool isTemporaryFile, bool suppressErrorList) {
             if (Project == null) {
                 // We aren't able to analyze code, so don't create an entry.
@@ -1972,14 +1972,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private async void OnNewAnalysis(object sender, EventArgs e) {
             var projEntry = sender as IPythonProjectEntry;
             if (projEntry != null) {
-                var documentUri = GetDocumentUri(projEntry.FilePath);
                 projEntry.GetTreeAndCookie(out _, out var cookieTmp);
-                var cookie = (VersionCookie)cookieTmp;
+                var cookie = cookieTmp as VersionCookie;
 
                 await _connection.SendEventAsync(
                     new AP.FileAnalysisCompleteEvent() {
-                        documentUri = documentUri.AbsoluteUri,
-                        version = cookie.Version
+                        documentUri = projEntry.DocumentUri.AbsoluteUri,
+                        version = cookie?.Version ?? 0
                     }
                 );
             }
@@ -2053,158 +2052,36 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </remarks>
         public PythonAnalyzer Project => _server._analyzer;
 
-        class ParseResult {
-            public readonly PythonAst Ast;
-            public readonly CollectingErrorSink Errors;
-            public readonly List<AP.TaskItem> Tasks;
-            public readonly int Version;
-
-            public ParseResult(PythonAst ast, CollectingErrorSink errors, List<AP.TaskItem> tasks, int version) {
-                Ast = ast;
-                Errors = errors;
-                Tasks = tasks;
-                Version = version;
-            }
-        }
-
-
-        private void ParseFile(IProjectEntry entry, CodeInfo buffer) {
-            IPythonProjectEntry pyEntry;
-            IExternalProjectEntry externalEntry;
-
-            if ((pyEntry = entry as IPythonProjectEntry) != null) {
-                var errorSink = new CollectingErrorSink();
-                var tasks = new List<AP.TaskItem>();
-                ParserOptions options = MakeParserOptions(errorSink, tasks);
-
-                var parser = buffer.CreateParser(Project.LanguageVersion, options);
-                var ast = ParseOneFile(parser);
-                var parseResult = new ParseResult(
-                    ast,
-                    errorSink,
-                    tasks,
-                    buffer.Version
-                );
-
-                // Save the single or combined tree into the project entry
-                UpdateAnalysisTree(pyEntry, parseResult);
-
-                // update squiggles for the buffer. snapshot may be null if we
-                // are analyzing a file that is not open
-                SendParseComplete(pyEntry, parseResult);
-
-                // enqueue analysis of the file
-                if (parseResult.Ast != null) {
-                    _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
-                }
-            } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
-                externalEntry.ParseContent(buffer.GetReader(), null);
-                _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
-            }
-        }
-
-        private static void UpdateAnalysisTree(IPythonProjectEntry entry, ParseResult parseResult) {
-            IAnalysisCookie cookie = new VersionCookie(parseResult.Version);
-
-            var ast = parseResult.Ast;
-            if (ast == null) {
-                // we failed to get any sort of AST out, so we can't analyze...
-                // But we need to balance the UpdateTree call, so just fetch the
-                // last valid ast and cookie.
-                entry.GetTreeAndCookie(out ast, out cookie);
-            }
-
-            entry.UpdateTree(ast, cookie);
-        }
-
-        private async void SendParseComplete(IPythonProjectEntry entry, ParseResult parseResult) {
+        private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
+            var entry = GetPythonEntry(e.uri.AbsoluteUri);
+            var tree = entry.Tree;
             await _connection.SendEventAsync(
-                new AP.FileParsedEvent() {
-                    documentUri = GetDocumentUri(entry.FilePath).AbsoluteUri,
-                    buffer = new AP.BufferParseInfo() {
-                        version = parseResult.Version,
-                        errors = parseResult.Errors.Errors.Select(e => MakeError(e, parseResult.Ast)).ToArray(),
-                        warnings = parseResult.Errors.Warnings.Select(e => MakeError(e, parseResult.Ast)).ToArray(),
-                        hasErrors = parseResult.Errors.Errors.Any(),
-                        tasks = parseResult.Tasks.ToArray()
-                    }
+                new AP.DiagnosticsEvent {
+                    documentUri = e.uri.AbsoluteUri,
+                    version = e._version ?? (entry as IDocument)?.DocumentVersion ?? -1,
+                    diagnostics = e.diagnostics?.ToArray()
                 }
             );
         }
 
-        private static AP.Error MakeError(ErrorResult error, PythonAst ast) {
-            return new AP.Error() {
-                message = error.Message,
-                startLine = error.Span.Start.Line,
-                startColumn = error.Span.Start.Column,
-                endLine = error.Span.End.Line,
-                endColumn = error.Span.End.Column,
-                length = ast.GetSpanLength(error.Span)
-            };
-        }
-
-        private ParserOptions MakeParserOptions(CollectingErrorSink errorSink, List<AP.TaskItem> tasks) {
-            var options = new ParserOptions {
-                ErrorSink = errorSink,
-                IndentationInconsistencySeverity = Options.indentationInconsistencySeverity,
-                BindReferences = true
-            };
-            var commentMap = Options.commentTokens;
-            if (commentMap != null) {
-                options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text, commentMap);
-            }
-            return options;
-        }
-
-        private static PythonAst ParseOneFile(Parser parser) {
-            if (parser != null) {
-                try {
-                    return parser.ParseFile();
-                } catch (BadSourceException) {
-                } catch (Exception e) {
-                    if (e.IsCriticalException()) {
-                        throw;
-                    }
-                    Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
+        private async void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
+            await _connection.SendEventAsync(
+                new AP.FileParsedEvent {
+                    documentUri = e.uri.AbsoluteUri,
+                    version = e.version
                 }
-
-            }
-            return null;
-        }
-
-        // Tokenizer callback. Extracts comment tasks (like "TODO" or "HACK") from comments.
-        private void ProcessComment(List<AP.TaskItem> commentTasks, SourceSpan span, string text, Dictionary<string, AP.TaskPriority> commentMap) {
-            if (string.IsNullOrEmpty(text) || commentMap == null) {
-                return;
-            }
-            foreach (var kv in commentMap) {
-                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                    commentTasks.Add(
-                        new AP.TaskItem() {
-                            message = text.TrimStart('#').Trim(),
-                            startLine = span.Start.Line,
-                            startColumn = span.Start.Column,
-                            endLine = span.End.Line,
-                            endColumn = span.End.Column,
-                            length = text.Length,
-                            priority = kv.Value,
-                            category = AP.TaskCategory.comments,
-                            squiggle = false
-                        }
-                    );
-                }
-            }
+            );
         }
 
         #region Implementation Details
-
 
         internal void Cancel() {
             _analysisQueue.Stop();
         }
 
         internal void UnloadFile(IProjectEntry entry, string documentUri) {
-            if (entry != null) {
+            if (entry is IPythonProjectEntry pyEntry) {
+                pyEntry.OnNewAnalysis -= OnNewAnalysis;
             }
         }
 

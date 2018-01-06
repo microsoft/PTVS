@@ -17,15 +17,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -119,19 +116,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var entry = GetEntry(@params.textDocument.uri);
             if (entry is IDocument doc) {
                 int toVersion = @params.textDocument.version ?? (doc.DocumentVersion + changes.Length);
-                for (int i = changes.Length - 1; i >= 0; --i) {
-                    if (changes[i].range == null) {
-                        doc.ResetDocument(@params.textDocument.version ?? 0, changes[i].text);
-                        changes = changes.Skip(i + 1).ToArray();
-                        break;
-                    }
-                }
 
                 doc.UpdateDocument(new DocumentChangeSet(
                     doc.DocumentVersion,
                     toVersion,
-                    changes.Where(c => c.range.HasValue).Select(c => new DocumentChange {
-                        ReplacedSpan = c.range.Value,
+                    changes.Select(c => new DocumentChange {
+                        ReplacedSpan = c.range.GetValueOrDefault(),
+                        WholeBuffer = !c.range.HasValue,
                         InsertedText = c.text
                     }).OrderByDescending(c => c.ReplacedSpan.Start)
                 ));
@@ -367,6 +358,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return _parseQueue.Count + _queue.Count;
         }
 
+        public event EventHandler<ParseCompleteEventArgs> OnParseComplete;
+        private void ParseComplete(Uri uri, int version) => OnParseComplete?.Invoke(this, new ParseCompleteEventArgs { uri = uri, version = version });
+
+        public event EventHandler<AnalysisCompleteEventArgs> OnAnalysisComplete;
+        private void AnalysisComplete(Uri uri) => OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri });
+
         #endregion
 
         private string GetLocalPath(Uri uri) {
@@ -430,7 +427,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
             var first = aliases.FirstOrDefault();
 
-            var pyItem = _analyzer.AddModule(first, path, cookie);
+            var pyItem = _analyzer.AddModule(first, path, documentUri, cookie);
             item = pyItem;
             foreach (var a in aliases.Skip(1)) {
                 _analyzer.AddModuleAlias(first, a);
@@ -460,12 +457,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private async void EnqueueItem(IProjectEntry entry, AnalysisPriority priority = AnalysisPriority.Normal) {
             try {
                 var pr = await _parseQueue.Enqueue(entry, _analyzer.LanguageVersion).ConfigureAwait(false);
+                ParseComplete(entry.DocumentUri, pr.DocumentVersion);
+
                 _queue.Enqueue(entry, priority);
 
                 // Allow the caller to complete before publishing diagnostics
                 await Task.Yield();
                 if (pr.Diagnostics != null) {
                     PublishDiagnostics(pr.Diagnostics);
+                } else {
+                    PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                        uri = entry.DocumentUri
+                    });
                 }
             } catch (BadSourceException) {
             } catch (Exception ex) {

@@ -21,6 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -121,6 +123,33 @@ namespace AnalysisTests {
 
             Assert.IsTrue(await s.UnloadFileAsync(u));
             AssertUtil.DoesntContain(s._projectFiles.Keys, u.AbsoluteUri);
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ApplyChanges() {
+            var s = await CreateServer(null);
+
+            var m = await AddModule(s, "", "mod");
+            Assert.AreEqual("x", await ApplyChange(s, m, DocumentChange.Insert("x", new SourceLocation(1, 1))));
+            Assert.AreEqual("", await ApplyChange(s, m, DocumentChange.Delete(new SourceLocation(1, 1), new SourceLocation(1, 2))));
+            Assert.AreEqual("y", await ApplyChange(s, m, DocumentChange.Insert("y", new SourceLocation(1, 1))));
+        }
+
+        private static async Task<string> ApplyChange(
+            Server s,
+            Uri document,
+            params DocumentChange[] e
+        ) {
+            await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+                textDocument = new VersionedTextDocumentIdentifier {
+                    uri = document
+                },
+                contentChanges = e.Select(c => new TextDocumentContentChangedEvent {
+                    range = c.ReplacedSpan,
+                    text = c.InsertedText
+                }).ToArray()
+            });
+            return (s._projectFiles[document.AbsoluteUri] as IDocument)?.ReadDocument(out _).ReadToEnd();
         }
 
         [TestMethod, Priority(0)]

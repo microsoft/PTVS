@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
 using Newtonsoft.Json;
+using LS = Microsoft.PythonTools.Analysis.LanguageServer;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal static class AnalysisProtocol {
@@ -254,22 +255,21 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Name = "fileParsed";
 
             public string documentUri;
-            public BufferParseInfo buffer;
+            public int version;
 
             public override string name => Name;
         }
 
-        public class BufferParseInfo {
-            public int version;
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            public bool hasErrors;
-            public Error[] errors;
-            public Error[] warnings;
-            public TaskItem[] tasks;
+        public class DiagnosticsEvent : Event {
+            public const string Name = "diagnostics";
 
-            public bool ShouldSerializeerrors() => (errors?.Length ?? 0) > 0;
-            public bool ShouldSerializewarnings() => (warnings?.Length ?? 0) > 0;
-            public bool ShouldSerializetasks() => (tasks?.Length ?? 0) > 0;
+            public string documentUri;
+            public int version;
+            public LS.Diagnostic[] diagnostics;
+
+            public bool ShouldSerializediagnostics() => (diagnostics?.Length ?? 0) > 0;
+
+            public override string name => Name;
         }
 
         public sealed class FormatCodeRequest : Request<FormatCodeResponse> {
@@ -293,12 +293,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public struct CodeSpan {
             public int start, length;
-        }
-
-        public class Error {
-            public string message;
-            public int startLine, startColumn;
-            public int endLine, endColumn, length;
         }
 
         public class AddFileRequest : Request<AddFileResponse> {
@@ -481,6 +475,12 @@ namespace Microsoft.PythonTools.Intellisense {
             public string newText;
             public int startLine, startColumn;
             public int endLine, endColumn;
+
+            /// <summary>
+            /// The version number this change applies to. This
+            /// allows a sequence of changes to be grouped and batched
+            /// </summary>
+            public int version;
 
             public static ChangeInfo FromDocumentChange(DocumentChange c) {
                 return new ChangeInfo {
@@ -810,25 +810,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class AnalysisOptions {
             public Severity indentationInconsistencySeverity;
-            public Dictionary<string, TaskPriority> commentTokens;
+            public Dictionary<string, LS.DiagnosticSeverity> commentTokens;
             public Dictionary<string, int> analysisLimits;
-        }
-
-        public sealed class TaskItem : Error {
-            public TaskPriority priority;
-            public TaskCategory category;
-            public bool squiggle;
-        }
-
-        public enum TaskPriority {
-            high,
-            normal,
-            low
-        }
-
-        public enum TaskCategory {
-            buildCompile,
-            comments
         }
 
 

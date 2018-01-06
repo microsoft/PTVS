@@ -182,9 +182,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static AP.FileUpdate GetUpdateForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
+        private static IEnumerable<AP.FileUpdate> GetUpdatesForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
             if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand()) {
-                return null;
+                yield break;
             }
 
             var lastSent = buffer.AddSentSnapshot(snapshot);
@@ -201,20 +201,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 // file and set our initial snapshot.  We'll roll forward
                 // to new snapshots when we receive the errors event.  This
                 // just makes sure that the content is in sync.
-                return new AP.FileUpdate {
+                yield return new AP.FileUpdate {
                     content = snapshot.GetText(),
                     version = snapshot.Version.VersionNumber,
                     kind = AP.FileUpdateKind.reset
                 };
+                yield break;
             }
 
-            var versions = GetVersions(lastSent.Version, snapshot.Version).SelectMany(v => GetChanges(buffer, v));
-
-            return new AP.FileUpdate {
-                changes = versions.ToArray(),
-                version = snapshot.Version.VersionNumber,
-                kind = AP.FileUpdateKind.changes
-            };
+            foreach (var v in GetVersions(lastSent.Version, snapshot.Version)) {
+                yield return new AP.FileUpdate {
+                    version = v.VersionNumber,
+                    changes = GetChanges(buffer, v).ToArray(),
+                    kind = AP.FileUpdateKind.changes
+                };
+            }
         }
 
         [Conditional("DEBUG")]
@@ -248,7 +249,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                var updates = snapshotGroup.Select(s => GetUpdateForSnapshot(snapshotGroup.Key, s)).Where(u => u != null).ToArray();
+                var updates = snapshotGroup.SelectMany(s => GetUpdatesForSnapshot(snapshotGroup.Key, s)).Where(u => u != null).ToArray();
                 if (!updates.Any()) {
                     continue;
                 }
@@ -326,7 +327,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         startColumn = oldPos.Column,
                         endLine = oldEnd.Line,
                         endColumn = oldEnd.Column,
-                        newText = change.NewText
+                        newText = change.NewText,
+                        version = curVersion.VersionNumber
                     };
                     changes.Add(prev);
                 }

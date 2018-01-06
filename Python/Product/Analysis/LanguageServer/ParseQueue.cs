@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +29,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class ParseQueue {
+        public const string PythonParserSource = "Python";
+        private const string TaskCommentSource = "Task comment";
+
         private readonly VolatileCounter _parsingInProgress;
 
         public ParseQueue() {
@@ -25,6 +44,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public sealed class ParseResult {
             public PythonAst Tree;
+            public int DocumentVersion;
             public PublishDiagnosticsEventArgs Diagnostics;
         }
 
@@ -34,13 +54,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public TaskCompletionSource<ParseResult> Task;
         }
 
+        private static void AbortParsingTree(IPythonProjectEntry entry) {
+            if (entry == null) {
+                return;
+            }
+
+            entry.GetTreeAndCookie(out var tree, out var cookie);
+            entry.UpdateTree(tree, cookie);
+        }
+
         public Task<ParseResult> Enqueue(IProjectEntry entry, PythonLanguageVersion languageVersion) {
             var tcs = new TaskCompletionSource<ParseResult>();
             (entry as IPythonProjectEntry)?.BeginParsingTree();
             _parsingInProgress.Increment();
             bool enqueued = false;
             try {
-                enqueued = ThreadPool.QueueUserWorkItem(ParseFromDiskWorker, new ParseState {
+                enqueued = ThreadPool.QueueUserWorkItem(ParseWorker, new ParseState {
                     Entry = entry,
                     LanguageVersion = languageVersion,
                     Task = tcs
@@ -49,13 +78,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 tcs.SetException(ex);
             } finally {
                 if (!enqueued) {
+                    AbortParsingTree(entry as IPythonProjectEntry);
                     _parsingInProgress.Decrement();
                 }
             }
             return tcs.Task;
         }
 
-        private void ParseFromDiskWorker(object state) {
+        private void ParseWorker(object state) {
             var ps = state as ParseState;
             var entry = ps?.Entry;
             var task = ps?.Task;
@@ -71,15 +101,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         if (r == null) {
                             throw new FileNotFoundException("failed to parse file", entry.FilePath);
                         }
+                        result = new ParseResult { DocumentVersion = version };
                         externalEntry.ParseContent(r, new VersionCookie(version));
                     }
                     result = new ParseResult();
                 } else if (entry is IPythonProjectEntry pyEntry) {
-                    using (var r = OpenStream(entry, out var versions)) {
-                        if (r == null) {
-                            throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                    using (var r = OpenStream(entry, out var version)) {
+                        try {
+                            if (r == null) {
+                                throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                            }
+                            result = ParsePython(r, pyEntry, ps.LanguageVersion);
+                            result.DocumentVersion = version;
+                            pyEntry.UpdateTree(result.Tree, new VersionCookie(version));
+                        } finally {
+                            if (result == null) {
+                                AbortParsingTree(pyEntry);
+                            }
                         }
-                        result = ParsePython(r, pyEntry, ps.LanguageVersion);
                     }
                 } else {
                 }
@@ -120,25 +159,45 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return PathUtils.OpenWithRetry(entry.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
+        private static Uri GetOrCreateUri(IProjectEntry entry) {
+            if (entry.Properties != null && entry.Properties.TryGetValue(typeof(Uri), out object o) && o is Uri uri) {
+                return uri;
+            }
+            try {
+                return new Uri(entry.FilePath);
+            } catch (UriFormatException) {
+                return null;
+            }
+        }
+
+        public Dictionary<string, Severity> TaskCommentMap { get; set; }
+
         private ParseResult ParsePython(Stream stream, IPythonProjectEntry entry, PythonLanguageVersion version) {
-            var diags = new List<Diagnostic>();
             var opts = new ParserOptions {
-                BindReferences = true,
-                ErrorSink = new DiagnosticsErrorSink("Python parser", diags)
+                BindReferences = true
             };
-            opts.ProcessComment += new DiagnosticsErrorSink("Task comment", diags).ProcessTaskComment;
+
+            List<Diagnostic> diags = null;
+            var u = GetOrCreateUri(entry);
+            if (u != null) {
+                diags = new List<Diagnostic>();
+                opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, diags);
+                var tcm = TaskCommentMap;
+                if (tcm != null && tcm.Any()) {
+                    opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, diags, tcm).ProcessTaskComment;
+                }
+            }
 
             var parser = Parser.CreateParser(stream, version, opts);
             var diagnostics = diags;
 
             var result = new ParseResult();
             var tree = parser.ParseFile();
-            entry.UpdateTree(tree, null);
             result.Tree = tree;
             if (diagnostics?.Any() ?? false) {
                 result.Diagnostics = new PublishDiagnosticsEventArgs {
                     diagnostics = diagnostics,
-                    uri = new Uri(entry.FilePath)
+                    uri = u
                 };
             }
             return result;

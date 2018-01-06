@@ -47,6 +47,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
+using LS = Microsoft.PythonTools.Analysis.LanguageServer;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -161,9 +162,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _analysisOptions = new AP.AnalysisOptions {
                 indentationInconsistencySeverity = Severity.Ignore,
-                commentTokens = new Dictionary<string, AP.TaskPriority>() {
-                    { "TODO", AP.TaskPriority.normal },
-                    { "HACK", AP.TaskPriority.high },
+                commentTokens = new Dictionary<string, LS.DiagnosticSeverity>() {
+                    { "TODO", LS.DiagnosticSeverity.Warning },
+                    { "HACK", LS.DiagnosticSeverity.Warning },
                 }
             };
 
@@ -213,7 +214,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (_services.CommentTaskProvider != null) {
                 foreach (var keyValue in (_services.CommentTaskProvider.Tokens).MaybeEnumerate()) {
-                    _analysisOptions.commentTokens[keyValue.Key] = GetPriority(keyValue.Value);
+                    var sev = LS.DiagnosticSeverity.Unspecified;
+                    switch (keyValue.Value) {
+                        case VSTASKPRIORITY.TP_HIGH:
+                            sev = LS.DiagnosticSeverity.Error;
+                            break;
+                        case VSTASKPRIORITY.TP_NORMAL:
+                            sev = LS.DiagnosticSeverity.Warning;
+                            break;
+                        case VSTASKPRIORITY.TP_LOW:
+                            sev = LS.DiagnosticSeverity.Information;
+                            break;
+                    }
+                    _analysisOptions.commentTokens[keyValue.Key] = sev;
                 }
             }
 
@@ -1394,80 +1407,60 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void OnParseComplete(AnalysisEntry entry, AP.FileParsedEvent parsedEvent) {
+        private void OnDiagnostics(AnalysisEntry entry, AP.DiagnosticsEvent diagnostics) {
             var bufferParser = entry.TryGetBufferParser();
+            var bi = bufferParser.DefaultBufferInfo;
+            if (bi == null) {
+                return;
+            }
 
             // Update the warn-on-launch state for this entry
-            var buffer = parsedEvent.buffer;
-                var hasErrors = buffer.errors?.Any() ?? false;
+            var hasErrors = diagnostics.diagnostics.MaybeEnumerate()
+                .Any(d => d.source == "Python" && d.severity == Analysis.LanguageServer.DiagnosticSeverity.Error);
 
-                Debug.WriteLine("Received updated parse {0} {1}", new Uri(parsedEvent.documentUri), buffer.version);
+            // Update the parser warnings/errors.
+            var errorTask = entry.SuppressErrorList ? null : _services.ErrorTaskProvider;
 
-                LocationTracker translator = null;
-                if (bufferParser != null) {
-                    var textBuffer = bufferParser.DefaultBufferInfo;
-                    if (textBuffer == null) {
-                        // ignore unexpected buffer ID
-                        return;
-                    }
+            if (errorTask != null) {
+                var pyErrors = diagnostics.diagnostics.MaybeEnumerate()
+                    .Where(d => d.source == "Python")
+                    .GroupBy(d => d.severity);
 
-                    if (!textBuffer.UpdateLastReceivedParse(buffer.version)) {
-                        // ignore receiving responses out of order...
-                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
-                        return;
-                    }
-
-                    translator = textBuffer.LocationTracker;
-                }
-
-                // Update the parser warnings/errors.
-                if (!entry.SuppressErrorList && _services.ErrorTaskProvider != null) {
-                    if ((buffer.errors?.Any() ?? false) || (buffer.warnings?.Any() ?? false)) {
-                        var factory = new TaskProviderItemFactory(translator, buffer.version);
-                        var warningItems = buffer.warnings?.Select(er => factory.FromErrorResult(
-                            _services.Site,
-                            er,
-                            VSTASKPRIORITY.TP_NORMAL,
-                            VSTASKCATEGORY.CAT_BUILDCOMPILE
-                        ));
-                        var errorItems = buffer.errors?.Select(er => factory.FromErrorResult(
-                            _services.Site,
-                            er,
-                            VSTASKPRIORITY.TP_HIGH,
-                            VSTASKCATEGORY.CAT_BUILDCOMPILE
-                        ));
-
-
-                        _services.ErrorTaskProvider.ReplaceItems(
-                            entry.Path,
-                            ParserTaskMoniker,
-                            errorItems.MaybeEnumerate().Concat(warningItems.MaybeEnumerate()).ToList()
-                        );
-                    } else {
-                        _services.ErrorTaskProvider.Clear(entry.Path, ParserTaskMoniker);
-                    }
-                }
-
-            if (!entry.SuppressErrorList && _services.CommentTaskProvider != null) {
-                if (buffer.tasks?.Any() ?? false) {
-                    var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
-                        _services.Site,
-                        x.message,
-                        TaskProviderItemFactory.GetSpan(x),
-                        GetPriority(x.priority),
-                        GetCategory(x.category),
-                        x.squiggle,
-                        translator,
-                        buffer.version
-                    ));
-
-                    _services.CommentTaskProvider.ReplaceItems(
-                        entry.Path,
-                        ParserTaskMoniker,
-                        taskItems.ToList()
-                    );
+                if (!pyErrors.Any()) {
+                    errorTask.Clear(entry.Path, ParserTaskMoniker);
                 } else {
-                    _services.CommentTaskProvider.Clear(entry.Path, ParserTaskMoniker);
+                    var factory = new TaskProviderItemFactory(bi.LocationTracker, diagnostics.version);
+                    var items = pyErrors.SelectMany(ge => ge.Select(e => factory.FromDiagnostic(
+                        _services.Site,
+                        e,
+                        ge.Key,
+                        VSTASKCATEGORY.CAT_BUILDCOMPILE,
+                        true
+                    ))).ToList();
+
+                    errorTask.ReplaceItems(entry.Path, ParserTaskMoniker, items);
+                }
+            }
+
+            var commentTask = entry.SuppressErrorList ? null : _services.CommentTaskProvider;
+            if (commentTask != null) {
+                var comments = diagnostics.diagnostics.MaybeEnumerate()
+                    .Where(d => d.source == "Task comment")
+                    .GroupBy(d => d.severity);
+
+                if (!comments.Any()) {
+                    commentTask.Clear(entry.Path, ParserTaskMoniker);
+                } else {
+                    var factory = new TaskProviderItemFactory(bi.LocationTracker, diagnostics.version);
+                    var items = comments.SelectMany(ge => ge.Select(e => factory.FromDiagnostic(
+                        _services.Site,
+                        e,
+                        ge.Key,
+                        VSTASKCATEGORY.CAT_COMMENTS,
+                        false
+                    ))).ToList();
+
+                    commentTask.ReplaceItems(entry.Path, ParserTaskMoniker, items);
                 }
             }
 
@@ -1480,32 +1473,28 @@ namespace Microsoft.PythonTools.Intellisense {
                     OnShouldWarnOnLaunchChanged(entry);
                 }
             }
+        }
+
+        private void OnParseComplete(AnalysisEntry entry, AP.FileParsedEvent parsedEvent) {
+            var bufferParser = entry.TryGetBufferParser();
+
+            Debug.WriteLine("Received updated parse {0} {1}", new Uri(parsedEvent.documentUri), parsedEvent.version);
+
+            if (bufferParser != null) {
+                var textBuffer = bufferParser.DefaultBufferInfo;
+                if (textBuffer == null) {
+                    // ignore unexpected buffer ID
+                    return;
+                }
+
+                if (!textBuffer.UpdateLastReceivedParse(parsedEvent.version)) {
+                    // ignore receiving responses out of order...
+                    Debug.WriteLine("Ignoring out of order parse {0}", parsedEvent.version);
+                    return;
+                }
+            }
 
             entry.OnParseComplete();
-        }
-
-        private static VSTASKCATEGORY GetCategory(AP.TaskCategory category) {
-            switch (category) {
-                case AP.TaskCategory.buildCompile: return VSTASKCATEGORY.CAT_BUILDCOMPILE;
-                case AP.TaskCategory.comments: return VSTASKCATEGORY.CAT_COMMENTS;
-                default: return VSTASKCATEGORY.CAT_MISC;
-            }
-        }
-
-        private static VSTASKPRIORITY GetPriority(AP.TaskPriority priority) {
-            switch (priority) {
-                case AP.TaskPriority.high: return VSTASKPRIORITY.TP_HIGH;
-                case AP.TaskPriority.low: return VSTASKPRIORITY.TP_LOW;
-                default: return VSTASKPRIORITY.TP_NORMAL;
-            }
-        }
-
-        private AP.TaskPriority GetPriority(VSTASKPRIORITY value) {
-            switch (value) {
-                case VSTASKPRIORITY.TP_HIGH: return AP.TaskPriority.high;
-                case VSTASKPRIORITY.TP_LOW: return AP.TaskPriority.low;
-                default: return AP.TaskPriority.normal;
-            }
         }
 
         #region Implementation Details
@@ -2155,7 +2144,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
             lock (_analysisOptions) {
                 foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
-                    _analysisOptions.commentTokens[keyValue.Key] = GetPriority(keyValue.Value);
+                    var sev = LS.DiagnosticSeverity.Unspecified;
+                    switch (keyValue.Value) {
+                        case VSTASKPRIORITY.TP_HIGH:
+                            sev = LS.DiagnosticSeverity.Error;
+                            break;
+                        case VSTASKPRIORITY.TP_NORMAL:
+                            sev = LS.DiagnosticSeverity.Warning;
+                            break;
+                        case VSTASKPRIORITY.TP_LOW:
+                            sev = LS.DiagnosticSeverity.Information;
+                            break;
+                    }
+                    _analysisOptions.commentTokens[keyValue.Key] = sev;
                 }
             }
             SendRequestAsync(new AP.SetAnalysisOptionsRequest { options = _analysisOptions })

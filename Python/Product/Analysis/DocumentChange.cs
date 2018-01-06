@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools {
     public sealed class DocumentChange {
         public string InsertedText { get; set; }
         public SourceSpan ReplacedSpan { get; set; }
+        public bool WholeBuffer { get; set; }
 
         public static DocumentChange Insert(string text, SourceLocation start) {
             return new DocumentChange { InsertedText = text, ReplacedSpan = new SourceSpan(start, start) };

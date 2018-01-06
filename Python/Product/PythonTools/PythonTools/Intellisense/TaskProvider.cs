@@ -24,10 +24,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -137,27 +136,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Factory Functions
 
-        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, AP.Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
-            return new TaskProviderItem(
-                serviceProvider,
-                result.message,
-                GetSpan
-                (result),
-                priority,
-                category,
-                true,
-                _spanTranslator,
-                _fromVersion
-            );
-        }
-
-        internal static SourceSpan GetSpan(AP.Error result) {
-            return new SourceSpan(
-                new SourceLocation(result.startLine, result.startColumn),
-                new SourceLocation(result.endLine, result.endColumn)
-            );
-        }
-
         internal TaskProviderItem FromUnresolvedImport(
             IServiceProvider serviceProvider, 
             IPythonInterpreterFactory factory,
@@ -178,6 +156,29 @@ namespace Microsoft.PythonTools.Intellisense {
                 VSTASKPRIORITY.TP_NORMAL,
                 VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
+                _spanTranslator,
+                _fromVersion
+            );
+        }
+
+        internal TaskProviderItem FromDiagnostic(IServiceProvider site, Diagnostic diagnostic, DiagnosticSeverity severity, VSTASKCATEGORY category, bool squiggle) {
+            var priority = VSTASKPRIORITY.TP_LOW;
+            switch (severity) {
+                case DiagnosticSeverity.Error:
+                    priority = VSTASKPRIORITY.TP_HIGH;
+                    break;
+                case DiagnosticSeverity.Warning:
+                    priority = VSTASKPRIORITY.TP_NORMAL;
+                    break;
+            }
+
+            return new TaskProviderItem(
+                site,
+                diagnostic.message,
+                diagnostic.range,
+                priority,
+                category,
+                squiggle,
                 _spanTranslator,
                 _fromVersion
             );

@@ -287,4 +287,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public int? _version;
     }
+
+    public sealed class ParseCompleteEventArgs : EventArgs {
+        public Uri uri { get; set; }
+        public int version { get; set; }
+    }
+
+    public sealed class AnalysisCompleteEventArgs : EventArgs {
+        public Uri uri { get; set; }
+        public int version { get; set; }
+    }
+
 }

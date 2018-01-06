@@ -351,13 +351,14 @@ namespace Microsoft.PythonTools.Editor {
 
         public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
             lock (_lock) {
-                if (_lastSentSnapshot != null && _lastSentSnapshot.Version.VersionNumber < sent.Version.VersionNumber) {
-                    return _lastSentSnapshot;
+                var prevSent = _lastSentSnapshot;
+                if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
+                    return prevSent;
                 }
                 _lastSentSnapshot = sent;
                 _expectAnalysis[sent.Version.VersionNumber] = sent;
                 _expectParse[sent.Version.VersionNumber] = sent;
-                return sent;
+                return prevSent;
             }
         }
 

@@ -14,17 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class DiagnosticsErrorSink : ErrorSink {
         private readonly string _source;
         private readonly List<Diagnostic> _diagnostics;
+        private readonly IReadOnlyList<KeyValuePair<string, Severity>> _taskCommentMap;
 
-        public DiagnosticsErrorSink(string source, List<Diagnostic> diagnostics) {
+        public DiagnosticsErrorSink(string source, List<Diagnostic> diagnostics, IReadOnlyDictionary<string, Severity> taskCommentMap = null) {
             _source = source;
             _diagnostics = diagnostics;
+            _taskCommentMap = taskCommentMap?.ToArray();
         }
 
         public IReadOnlyList<Diagnostic> Diagnostics => _diagnostics;
@@ -48,14 +53,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void ProcessTaskComment(object sender, CommentEventArgs e) {
             // TODO: Handle full map of settings
-            if (!(e.Text?.StartsWith("TODO:") ?? false)) {
-                return;
-            }
+            var text = e.Text.TrimStart('#').Trim();
 
             var d = new Diagnostic {
-                message = e.Text,
+                message = text,
                 range = e.Span
             };
+
+            foreach (var kv in _taskCommentMap.MaybeEnumerate()) {
+                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                    d.severity = GetSeverity(kv.Value);
+                    break;
+                }
+            }
 
             lock (_diagnostics) {
                 _diagnostics.Add(d);
