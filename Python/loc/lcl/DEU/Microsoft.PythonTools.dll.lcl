@@ -4643,7 +4643,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A sample polls application using the Flask web framework with the Jade template engine. It can be configured to use Azure Table Storage or MongoDB for storage.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Eine beispielhafte Umfrageanwendung unter Verwendung des Flask-Webframeworks mit dem Jade-Vorlagenmodul. Sie kann zur Verwendung von Azure Table Storage oder MongoDB als Speicher konfiguriert werden.]]></Val>
+            <Val><![CDATA[Eine beispielhafte Umfrageanwendung unter Verwendung des Flask-Webframeworks mit der Jade-Vorlagen-Engine. Sie kann zur Verwendung von Azure Table Storage oder MongoDB als Speicher konfiguriert werden.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4679,7 +4679,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating an application using the Flask web framework with the Jade template engine. It features sample pages that use the Twitter Bootstrap framework for responsive web design.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ein Projekt zum Erstellen einer Anwendung unter Verwendung des Flask-Webframeworks mit dem Jade-Vorlagenmodul. Das Projekt umfasst Beispielseiten, die das Twitter Bootstrap-Framework für ein dynamisches Webdesign nutzen.]]></Val>
+            <Val><![CDATA[Ein Projekt zum Erstellen einer Anwendung unter Verwendung des Flask-Webframeworks mit der Jade-Vorlagen-Engine. Das Projekt umfasst Beispielseiten, die das Twitter Bootstrap-Framework für ein dynamisches Webdesign nutzen.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4697,7 +4697,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating an application using the Flask web framework with the Jinja template engine. It features sample pages that use the Twitter Bootstrap framework for responsive web design.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ein Projekt zum Erstellen einer Anwendung unter Verwendung des Flask-Webframeworks mit dem Jinja-Vorlagenmodul. Das Projekt umfasst Beispielseiten, die das Twitter Bootstrap-Framework für ein dynamisches Webdesign nutzen.]]></Val>
+            <Val><![CDATA[Ein Projekt zum Erstellen einer Anwendung unter Verwendung des Flask-Webframeworks mit der Jinja-Vorlagen-Engine. Das Projekt umfasst Beispielseiten, die das Twitter Bootstrap-Framework für ein dynamisches Webdesign nutzen.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6643,7 +6643,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17347.2]]></Val>
+        <Val><![CDATA[3.0.17355.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6679,7 +6679,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17347.2]]></Val>
+        <Val><![CDATA[3.0.17355.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
