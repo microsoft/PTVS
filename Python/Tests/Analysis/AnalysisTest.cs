@@ -5635,6 +5635,7 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
+                new VariableLocation(5, 9, VariableType.Value),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );

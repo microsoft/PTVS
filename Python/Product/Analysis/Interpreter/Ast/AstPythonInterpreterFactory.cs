@@ -183,97 +183,38 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            FileStream file = null;
             var path = GetCacheFilePath(filePath);
             if (string.IsNullOrEmpty(path)) {
                 return null;
             }
 
-            for (int retries = 5; retries > 0; --retries) {
-                try {
-                    file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                } catch (DirectoryNotFoundException) {
-                    return null;
-                } catch (FileNotFoundException) {
-                    return null;
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Thread.Sleep(10);
-                }
+            var file = PathUtils.OpenWithRetry(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            if (file == null || _skipWriteToCache) {
+                return file;
             }
 
-            if (file != null && !_skipWriteToCache) {
-                bool fileIsOkay = false;
-                try {
-                    var cacheTime = File.GetLastWriteTimeUtc(path);
-                    var sourceTime = File.GetLastWriteTimeUtc(filePath);
-                    if (sourceTime <= cacheTime) {
-                        fileIsOkay = true;
-                    }
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+            bool fileIsOkay = false;
+            try {
+                var cacheTime = File.GetLastWriteTimeUtc(path);
+                var sourceTime = File.GetLastWriteTimeUtc(filePath);
+                if (sourceTime <= cacheTime) {
+                    fileIsOkay = true;
                 }
-
-                if (!fileIsOkay) {
-                    file.Dispose();
-                    file = null;
-
-                    Log(TraceLevel.Info, "InvalidateCachedModule", path);
-
-                    try {
-                        File.Delete(path);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    }
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
 
-            return file;
-        }
-
-        private static FileStream OpenAndOverwrite(string path) {
-            for (int retries = 5; retries > 0; --retries) {
-                try {
-                    return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
-                } catch (DirectoryNotFoundException) {
-                    var dir = Path.GetDirectoryName(path);
-                    if (Directory.Exists(dir)) {
-                        break;
-                    }
-
-                    // Directory does not exist, so try to create it.
-                    try {
-                        Directory.CreateDirectory(dir);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        Debug.Fail(ex.ToString());
-                        break;
-                    }
-                } catch (UnauthorizedAccessException) {
-                    if (!File.Exists(path)) {
-                        break;
-                    }
-
-                    // File exists, so may be marked readonly. Try and delete it
-                    File_ReallyDelete(path);
-                } catch (IOException) {
-                    break;
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToString());
-                    break;
-                }
-
-                Thread.Sleep(10);
+            if (fileIsOkay) {
+                return file;
             }
+
+            file.Dispose();
+            file = null;
+
+            Log(TraceLevel.Info, "InvalidateCachedModule", path);
+
+            PathUtils.DeleteFile(path);
             return null;
-        }
-
-        private static void File_ReallyDelete(string path) {
-            for (int retries = 5; retries > 0 && File.Exists(path); --retries) {
-                try {
-                    File.SetAttributes(path, FileAttributes.Normal);
-                    File.Delete(path);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToString());
-                    break;
-                }
-            }
         }
 
         internal void WriteCachedModule(string filePath, Stream code) {
@@ -289,7 +230,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Log(TraceLevel.Info, "WriteCachedModule", cache);
 
             try {
-                using (var stream = OpenAndOverwrite(cache)) {
+                using (var stream = PathUtils.OpenWithRetry(cache, FileMode.Create, FileAccess.Write, FileShare.Read)) {
                     if (stream == null) {
                         return;
                     }

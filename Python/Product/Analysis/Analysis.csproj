@@ -473,7 +473,7 @@
       <FileWrites Include="@(Python2DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v3\python.pyi')" BeforeTargets="_IncludePython2DB">
+  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v2\python.pyi')" BeforeTargets="_IncludePython2DB">
     <PropertyGroup>
       <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>

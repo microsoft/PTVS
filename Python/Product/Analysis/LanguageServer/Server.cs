@@ -413,26 +413,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(item);
             }
 
-            List<string> aliases = null;
+            IEnumerable<string> aliases = null;
             var path = GetLocalPath(documentUri);
             if (fromSearchPath != null) {
                 if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
-                    aliases = new List<string> { mp.ModuleName };
+                    aliases = new[] { mp.ModuleName };
                 }
             } else {
-                aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToList();
+                aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToArray();
             }
 
             if (!(aliases?.Any() ?? false)) {
-                return Task.FromResult(item);
+                aliases = new[] { Path.GetFileNameWithoutExtension(path) };
             }
 
             var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
+            var first = aliases.FirstOrDefault();
 
-            var pyItem = _analyzer.AddModule(aliases[0], path, cookie);
+            var pyItem = _analyzer.AddModule(first, path, cookie);
             item = pyItem;
             foreach (var a in aliases.Skip(1)) {
-                _analyzer.AddModuleAlias(aliases[0], a);
+                _analyzer.AddModuleAlias(first, a);
             }
 
             if (!_projectFiles.TryAdd(documentUri.AbsoluteUri, item)) {

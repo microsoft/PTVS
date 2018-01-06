@@ -211,12 +211,14 @@ namespace Microsoft.PythonTools.Debugger {
                 return functionName;
             }
 
-            string qualName = walker.Name.Aggregate((a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(a, n));
-            if (string.IsNullOrEmpty(qualName)) {
-                return functionName;
+            if (walker.Name.Any()) {
+                string qualName = walker.Name.Aggregate((a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(a, n));
+                if (!string.IsNullOrEmpty(qualName)) {
+                    return qualName;
+                }
             }
 
-            return qualName;
+            return functionName;
         }
     }
 
