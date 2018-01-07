@@ -455,6 +455,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             string line;
             while ((line = await reader.ReadHeaderLineAsync().ConfigureAwait(false)) != null) {
                 if (String.IsNullOrEmpty(line)) {
+                    if (headers.Count == 0) {
+                        continue;
+                    }
                     // end of headers for this request...
                     break;
                 }
