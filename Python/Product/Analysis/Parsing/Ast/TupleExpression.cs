@@ -80,18 +80,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     format.SpaceWithinEmptyTupleExpression != null) {
                     format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
                     res.Append('(');
-                    if (String.IsNullOrWhiteSpace(this.GetSecondWhiteSpace(ast))) {
-                        res.Append(format.SpaceWithinEmptyTupleExpression.Value ? " " : "");
-                    } else {
-                        format.ReflowComment(res, this.GetSecondWhiteSpace(ast));
-                    }
+                    format.Append(res, format.SpaceWithinEmptyTupleExpression, " ", "", this.GetSecondWhiteSpaceDefaultNull(ast));
                     res.Append(')');
                 } else {
-                    string delimWs =
-                     format.SpacesWithinParenthesisedTupleExpression != null ?
-                     format.SpacesWithinParenthesisedTupleExpression.Value ? " " : "" : null;
-
-                    ListExpression.AppendItems(res, ast, format, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", this, Items, delimWs);
+                    ListExpression.AppendItems(res, ast, format, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", this, Items, format.SpacesWithinParenthesisedTupleExpression);
                 } 
             }
         }

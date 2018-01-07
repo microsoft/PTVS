@@ -59,19 +59,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // The information about the exluded node is used by PostWalk(CallExpression).
         private readonly Dictionary<Expression, Expression> _expressions = new Dictionary<Expression, Expression>();
 
-        private static readonly CodeFormattingOptions _formattingOptions = new CodeFormattingOptions {
-            WrappingWidth = 0,
-            SpacesAroundBinaryOperators = true,
-            SpaceBeforeIndexBracket = false,
-            SpaceWithinIndexBrackets = false,
-            SpaceBeforeCallParen = false,
-            SpaceWithinCallParens = false,
-            SpaceWithinFunctionDeclarationParens = false,
-            SpacesWithinParenthesisExpression = false,
-            SpacesWithinParenthesisedTupleExpression = false,
-            SpacesWithinEmptyListExpression = false,
-        };
-
         public ProximityExpressionWalker(PythonAst ast, int startLine, int endLine) {
             _ast = ast;
             _startLine = startLine;
@@ -151,7 +138,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public IEnumerable<string> GetExpressions() {
-            return _expressions.Keys.Select(expr => expr.ToCodeString(_ast, _formattingOptions)).OrderBy(s => s).Distinct();
+            return _expressions.Keys.Select(expr => expr.ToCodeString(_ast, CodeFormattingOptions.Traditional).Trim()).OrderBy(s => s).Distinct();
         }
     }
 }
