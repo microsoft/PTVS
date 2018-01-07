@@ -55,17 +55,17 @@ d.e[0].f
 abs(f.g).e
 h(i.j).k
 ";
-            ProximityTest(code, "a.b.c", "d", "d.e[0].f", "g", " (g + 1).e", "abs(f.g).e", "f.g", "i.j");
+            ProximityTest(code, "a.b.c", "d", "d.e[0].f", "g", "(g + 1).e", "abs(f.g).e", "f.g", "i.j");
         }
 
         [TestMethod, Priority(0)]
         public void AutosIndexing() {
             string code = @"
-a[b.c[d.e], f:g].h[abs(i[j])].k[l(m[n])].o[p]
+a[b.c[d.e],f:g].h[abs(i[j])].k[l(m[n])].o[p]
 abs(q[r])[s]
 ";
             ProximityTest(code,
-                "a[(b.c[d.e],f :g)].h[abs(i[j])].k",
+                "a[b.c[d.e], f:g].h[abs(i[j])].k",
                 "b.c[d.e]", "d.e", "f", "g", "abs(i[j])", "i[j]", "j",
                 "m[n]", "n", "p", "abs(q[r])[s]", "q[r]", "r", "s");
         }
@@ -77,7 +77,7 @@ abs(a, len(b))
 c(d)
 e.f.g(h)
 ";
-            ProximityTest(code, "abs(a,len(b))", "a", "len(b)", "b", "d", "e.f", "h");
+            ProximityTest(code, "abs(a, len(b))", "a", "len(b)", "b", "d", "e.f", "h");
         }
 
         [TestMethod, Priority(0)]

@@ -451,9 +451,11 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// header specifying the length of the body.
         /// </summary>
         private static async Task<string> ReadPacket(ProtocolReader reader) {
-            Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var lines = new List<string>();
             string line;
             while ((line = await reader.ReadHeaderLineAsync().ConfigureAwait(false)) != null) {
+                lines.Add(line ?? "(null)");
                 if (String.IsNullOrEmpty(line)) {
                     if (headers.Count == 0) {
                         continue;
@@ -483,6 +485,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
             int contentLength;
 
             if (!headers.TryGetValue(Headers.ContentLength, out contentLengthStr)) {
+                // HACK: Attempting to find problem with message content
+                Console.Error.WriteLine("Content-Length not specified on request. Lines follow:");
+                foreach (var l in lines) {
+                    Console.Error.WriteLine($"> {l}");
+                }
+                Console.Error.Flush();
                 throw new InvalidDataException("Content-Length not specified on request");
             }
 
