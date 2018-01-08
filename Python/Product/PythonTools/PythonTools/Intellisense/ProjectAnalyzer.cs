@@ -743,7 +743,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     break;
                 case AP.AnalyzerWarningEvent.Name:
                     var warning = (AP.AnalyzerWarningEvent)e.Event;
-                    _logger?.LogEvent(Logging.PythonLogEvent.AnalysisWarning, warning.message);
+                    _logger?.LogEvent(PythonLogEvent.AnalysisWarning, warning.message);
                     break;
                 case AP.UnhandledExceptionEvent.Name:
                     Debug.Fail("Unhandled exception from analyzer");

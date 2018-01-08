@@ -1963,7 +1963,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = documentUri.LocalPath,
+                documentUri = documentUri.AbsoluteUri,
                 filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
