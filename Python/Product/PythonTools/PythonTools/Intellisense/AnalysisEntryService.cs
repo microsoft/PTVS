@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                entry = evaluator.Analyzer?.GetAnalysisEntryFromPath(evaluator.AnalysisFilename);
+                entry = evaluator.Analyzer?.GetAnalysisEntryFromUri(evaluator.DocumentUri);
                 if (entry != null) {
                     return true;
                 }
@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
                 analyzer = evaluator.Analyzer;
-                filename = evaluator.AnalysisFilename;
+                filename = evaluator.DocumentUri.IsFile ? evaluator.DocumentUri.LocalPath : null;
                 return analyzer != null;
             }
 

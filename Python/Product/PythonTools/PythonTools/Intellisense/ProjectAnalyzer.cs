@@ -734,7 +734,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         entry = new AnalysisEntry(
                             this,
                             childFile.filename,
-                            childFile.documentUri,
+                            new Uri(childFile.documentUri),
                             childFile.isTemporaryFile,
                             childFile.suppressErrorList
                         );
@@ -798,7 +798,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 async () => {
                     return await SendRequestAsync(
                         new AP.UnresolvedImportsRequest() {
-                            documentUri = buffer.AnalysisEntry.DocumentUri
+                            documentUri = buffer.AnalysisEntry.DocumentUri.AbsoluteUri
                         },
                         null
                     ).ConfigureAwait(false);
@@ -1000,6 +1000,52 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).ConfigureAwait(false);
 
+            return FinishAnalyze(
+                response,
+                u => new AnalysisEntry(this, path, u, isTemporaryFile, suppressErrorList)
+            );
+        }
+
+        internal async Task<AnalysisEntry> AnalyzeFileAsync(
+            Uri uri,
+            bool isTemporaryFile = false,
+            bool suppressErrorList = false
+        ) {
+            if (_conn == null) {
+                // We aren't able to analyze code, so don't create an entry.
+                return null;
+            }
+
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            AnalysisEntry entry;
+            if (_projectFilesByUri.TryGetValue(uri, out entry)) {
+                return entry;
+            }
+
+            string path = null;
+            if (uri.IsFile) {
+                path = uri.LocalPath;
+            }
+
+            Interlocked.Increment(ref _parsePending);
+            var response = await SendRequestAsync(
+                new AP.AddFileRequest {
+                    uri = uri.AbsoluteUri,
+                    isTemporaryFile = isTemporaryFile,
+                    suppressErrorLists = suppressErrorList
+                }
+            ).ConfigureAwait(false);
+
+            return FinishAnalyze(
+                response,
+                u => new AnalysisEntry(this, path, u, isTemporaryFile, suppressErrorList)
+            );
+        }
+
+        private AnalysisEntry FinishAnalyze(AP.AddFileResponse response, Func<Uri, AnalysisEntry> entryCreator) {
             if (response == null || string.IsNullOrEmpty(response.documentUri)) {
                 Interlocked.Decrement(ref _parsePending);
                 if (_conn == null || response == null) {
@@ -1013,19 +1059,26 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
+            var uri = new Uri(response.documentUri);
+            var entry = entryCreator(uri);
+
             // we awaited between the check and the AddFileRequest, another add could
             // have snuck in.  So we check again here, and we'll leave the other cookie in 
             // as it's likely a SnapshotCookie which we prefer over a FileCookie.
-            if (_projectFilesByUri.TryGetValue(new Uri(response.documentUri), out entry)) {
-                Debug.Assert(entry.Path == path, $"raced on AnalyzeFile and path '{path}' != '{entry.Path}'");
+            if (_projectFilesByUri.TryGetValue(new Uri(response.documentUri), out var entry2)) {
+                if (entry.Path != null) {
+                    Debug.Assert(entry.Path == entry2.Path, $"raced on AnalyzeFile and path '{entry.Path}' != '{entry2.Path}'");
+                }
+                Debug.Assert(entry.DocumentUri == entry2.DocumentUri, $"raced on AnalyzeFile and path '{entry.DocumentUri}' != '{entry2.DocumentUri}'");
                 return entry;
             }
 
             OnAnalysisStarted();
-            entry = _projectFilesByUri[new Uri(response.documentUri)] = _projectFiles[path]
-                = new AnalysisEntry(this, path, response.documentUri, isTemporaryFile, suppressErrorList);
-
-            entry.AnalysisCookie = new FileCookie(path);
+            _projectFilesByUri[uri] = entry;
+            if (!string.IsNullOrEmpty(entry.Path)) {
+                _projectFiles[entry.Path] = entry;
+                entry.AnalysisCookie = new FileCookie(entry.Path);
+            }
 
             return entry;
         }
@@ -1060,7 +1113,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         var path = paths[i];
                         var id = response.documentUri[i];
                         if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(id) && !_projectFilesByUri.TryGetValue(new Uri(id), out entry)) {
-                            entry = _projectFilesByUri[new Uri(id)] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                            var uri = new Uri(id);
+                            entry = _projectFilesByUri[uri] = _projectFiles[path] = new AnalysisEntry(this, path, uri);
                             entry.AnalysisCookie = new FileCookie(path);
                         }
                         res[i] = entry;
@@ -1075,6 +1129,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal AnalysisEntry GetAnalysisEntryFromPath(string path) {
             AnalysisEntry res;
             if (!string.IsNullOrEmpty(path) && _projectFiles.TryGetValue(path, out res)) {
+                return res;
+            }
+            return null;
+        }
+
+        internal AnalysisEntry GetAnalysisEntryFromUri(Uri uri) {
+            AnalysisEntry res;
+            if (uri != null && _projectFilesByUri.TryGetValue(uri, out res)) {
                 return res;
             }
             return null;
@@ -1101,7 +1163,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 expr = expr,
                 column = location.Column,
                 line = location.Line,
-                documentUri = file.DocumentUri
+                documentUri = file.DocumentUri.AbsoluteUri
             };
 
             var res = await SendRequestAsync(req).ConfigureAwait(false);
@@ -1127,7 +1189,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 expr = expr,
                 column = location.Column,
                 line = location.Line,
-                documentUri = entry.DocumentUri
+                documentUri = entry.DocumentUri.AbsoluteUri
             };
 
             var definitions = await SendRequestAsync(req).ConfigureAwait(false);
@@ -1157,7 +1219,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     expr = analysis.Text,
                     column = location.Column,
                     line = location.Line,
-                    documentUri = entry.DocumentUri
+                    documentUri = entry.DocumentUri.AbsoluteUri
                 };
 
                 var definitions = await SendRequestAsync(req).ConfigureAwait(false);
@@ -1228,7 +1290,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         text = text,
                         line = location.Line,
                         column = location.Column,
-                        documentUri = entry.DocumentUri
+                        documentUri = entry.DocumentUri.AbsoluteUri
                     }
                 ).ConfigureAwait(false);
             }
@@ -1348,7 +1410,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<bool> IsMissingImportAsync(AnalysisEntry entry, string text, SourceLocation location) {
             var res = await SendRequestAsync(
                 new AP.IsMissingImportRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     text = text,
                     line = location.Line,
                     column = location.Column
@@ -1439,7 +1501,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void OnDiagnostics(AnalysisEntry entry, AP.DiagnosticsEvent diagnostics) {
             var bufferParser = entry.TryGetBufferParser();
             var bi = bufferParser?.DefaultBufferInfo;
-            if (bi == null) {
+            if (bi == null || entry.Path == null) {
                 return;
             }
 
@@ -1711,10 +1773,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisComplete = false;
 
             _projectFiles.TryRemove(entry.Path, out _);
-            _projectFilesByUri.TryRemove(new Uri(entry.DocumentUri), out _);
+            _projectFilesByUri.TryRemove(new Uri(entry.DocumentUri.AbsoluteUri), out _);
             entry.TryGetBufferParser()?.ClearBuffers();
 
-            await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri.AbsoluteUri }).ConfigureAwait(false);
         }
 
         internal void ClearAllTasks() {
@@ -1821,7 +1883,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
             var members = await SendRequestAsync(new AP.CompletionsRequest {
-                documentUri = entry.DocumentUri,
+                documentUri = entry.DocumentUri.AbsoluteUri,
                 options = options,
                 line = location.Line,
                 column = location.Column
@@ -1848,7 +1910,7 @@ namespace Microsoft.PythonTools.Intellisense {
             AP.CompletionsResponse members;
             using (new DebugTimer("GetMembersAsync")) {
                 members = await SendRequestAsync(new AP.CompletionsRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     text = text,
                     options = options,
                     line = location.Line,
@@ -1876,7 +1938,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 package = package
             };
             if (entry != null) {
-                req.documentUri = entry.DocumentUri;
+                req.documentUri = entry.DocumentUri.AbsoluteUri;
             }
 
             var members = await SendRequestAsync(req).ConfigureAwait(false);
@@ -1891,7 +1953,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<string[]> FindMethodsAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className, int? paramCount) {
             var res = await SendRequestAsync(
                 new AP.FindMethodsRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     className = className,
                     paramCount = paramCount
                 }
@@ -1909,7 +1971,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var res = await SendRequestAsync(
                 new AP.MethodInsertionLocationRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     className = className
                 }
             ).ConfigureAwait(false);
@@ -1926,7 +1988,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<AP.MethodInfoResponse> GetMethodInfoAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className, string methodName) {
             return await SendRequestAsync(
                 new AP.MethodInfoRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     className = className,
                     methodName = methodName
                 }
@@ -2008,7 +2070,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 n => n == lastVersion,
                 async () => await SendRequestAsync(
                     new AP.AnalysisClassificationsRequest() {
-                        documentUri = buffer.AnalysisEntry.DocumentUri,
+                        documentUri = buffer.AnalysisEntry.DocumentUri.AbsoluteUri,
                         colorNames = colorNames
                     }
                 ).ConfigureAwait(false)
@@ -2018,7 +2080,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<AP.LocationNameResponse> GetNameOfLocationAsync(AnalysisEntry entry, ITextBuffer textBuffer, int line, int column) {
             return await SendRequestAsync(
                 new AP.LocationNameRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     line = line,
                     column = column
                 }
@@ -2028,7 +2090,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<string[]> GetProximityExpressionsAsync(AnalysisEntry entry, ITextBuffer textBuffer, int line, int column, int lineCount) {
             return (await SendRequestAsync(
                 new AP.ProximityExpressionsRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     line = line,
                     column = column,
                     lineCount = lineCount
@@ -2047,7 +2109,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var res = await SendRequestAsync(
                 new AP.FormatCodeRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     startIndex = span.Start,
                     endIndex = span.End,
                     options = options,
@@ -2088,7 +2150,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var res = await SendRequestAsync(
                 new AP.RemoveImportsRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     version = loc.Snapshot.Version.VersionNumber,
                     allScopes = allScopes,
                     line = sloc.Line,
@@ -2144,7 +2206,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var selection = view.GetPythonSelection().First();
 
             return await SendRequestAsync(new AP.ExtractMethodRequest {
-                documentUri = buffer.AnalysisEntry.DocumentUri,
+                documentUri = buffer.AnalysisEntry.DocumentUri.AbsoluteUri,
                 indentSize = view.Options.GetIndentSize(),
                 convertTabsToSpaces = view.Options.IsConvertTabsToSpacesEnabled(),
                 newLine = view.Options.GetNewLineCharacter(),
@@ -2162,7 +2224,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 new AP.AddImportRequest() {
                     fromModule = fromModule,
                     name = name,
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     newLine = newLine
                 }
             ).ConfigureAwait(false);
@@ -2202,7 +2264,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var navigations = await SendRequestAsync(
                 new AP.NavigationRequest() {
-                    documentUri = entry.DocumentUri
+                    documentUri = entry.DocumentUri.AbsoluteUri
                 }
             );
 
@@ -2294,7 +2356,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var outliningTags = await SendRequestAsync(
                 new AP.OutliningRegionsRequest() {
-                    documentUri = entry.DocumentUri
+                    documentUri = entry.DocumentUri.AbsoluteUri
                 }
             );
 
@@ -2330,7 +2392,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletionsAsync(AnalysisEntry entry, ITextBuffer textBuffer, SourceLocation location, string indentation) {
             var res = await SendRequestAsync(
                 new AP.OverridesCompletionRequest() {
-                    documentUri = entry.DocumentUri,
+                    documentUri = entry.DocumentUri.AbsoluteUri,
                     column = location.Column,
                     line = location.Line,
                     indentation = indentation
@@ -2373,7 +2435,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     expr = analysis.Text,
                     column = location.Column,
                     line = location.Line,
-                    documentUri = analysis.Entry.DocumentUri
+                    documentUri = analysis.Entry.DocumentUri.AbsoluteUri
                 };
 
                 var quickInfo = await SendRequestAsync(req).ConfigureAwait(false);
@@ -2468,7 +2530,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var r = await buffer.AnalysisEntry.Analyzer.SendRequestAsync(new AP.ExpressionAtPointRequest {
                 purpose = purpose,
-                documentUri = buffer.AnalysisEntry.DocumentUri,
+                documentUri = buffer.AnalysisEntry.DocumentUri.AbsoluteUri,
                 line = point.Line,
                 column = point.Column
             }, timeout: timeout).ConfigureAwait(false);

@@ -111,7 +111,7 @@ namespace AnalysisTests {
             var s = await CreateServer(TestData.GetPath(@"TestData\HelloWorld"));
 
             var u = GetDocument(@"TestData\HelloWorld\Program.py").uri.AbsoluteUri;
-            AssertUtil.ContainsExactly(s._projectFiles.Keys, u);
+            AssertUtil.ContainsExactly(s.GetLoadedFiles(), u);
         }
 
         [TestMethod, Priority(0)]
@@ -119,10 +119,10 @@ namespace AnalysisTests {
             var s = await CreateServer(TestData.GetPath(@"TestData\HelloWorld"));
 
             var u = await AddModule(s, "a = 1", "mod");
-            AssertUtil.ContainsAtLeast(s._projectFiles.Keys, u.AbsoluteUri);
+            AssertUtil.ContainsAtLeast(s.GetLoadedFiles(), u.AbsoluteUri);
 
             Assert.IsTrue(await s.UnloadFileAsync(u));
-            AssertUtil.DoesntContain(s._projectFiles.Keys, u.AbsoluteUri);
+            AssertUtil.DoesntContain(s.GetLoadedFiles(), u.AbsoluteUri);
         }
 
         [TestMethod, Priority(0)]
@@ -149,7 +149,7 @@ namespace AnalysisTests {
                     text = c.InsertedText
                 }).ToArray()
             });
-            return (s._projectFiles[document.AbsoluteUri] as IDocument)?.ReadDocument(out _).ReadToEnd();
+            return (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out _).ReadToEnd();
         }
 
         [TestMethod, Priority(0)]
@@ -267,6 +267,33 @@ mc";
                 contains: new string[0],
                 excludes: new[] { "value" }
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task MultiPartDocument() {
+            var s = await CreateServer(null);
+
+            var mod = await AddModule(s, "x = 1", "mod");
+            var modP2 = new Uri(mod, "#2");
+            var modP3 = new Uri(mod, "#3");
+
+            await AssertCompletion(s, mod, new[] { "x" }, Enumerable.Empty<string>());
+
+            Assert.AreEqual("y = 2", await ApplyChange(s, modP2, DocumentChange.Insert("y = 2", SourceLocation.MinValue)));
+            await s.WaitForCompleteAnalysisAsync();
+
+            await AssertCompletion(s, modP2, new[] { "x", "y" }, Enumerable.Empty<string>());
+
+            Assert.AreEqual("z = 3", await ApplyChange(s, modP3, DocumentChange.Insert("z = 3", SourceLocation.MinValue)));
+            await s.WaitForCompleteAnalysisAsync();
+
+            await AssertCompletion(s, modP3, new[] { "x", "y", "z" }, Enumerable.Empty<string>());
+            await AssertCompletion(s, mod, new[] { "x", "y", "z" }, Enumerable.Empty<string>());
+
+            await ApplyChange(s, mod, DocumentChange.Delete(SourceLocation.MinValue, SourceLocation.MinValue.AddColumns(5)));
+            await s.WaitForCompleteAnalysisAsync();
+            await AssertCompletion(s, modP2, new[] { "y", "z" }, new[] { "x" });
+            await AssertCompletion(s, modP3, new[] { "y", "z" }, new[] { "x" });
         }
 
         public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {

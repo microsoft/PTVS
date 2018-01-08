@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static PythonAst GetVerbatimAst(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, out int version) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var code = ((ProjectEntry)projectFile).ReadDocumentBytes(out version);
+            var code = ((ProjectEntry)projectFile).ReadDocumentBytes(0, out version);
             if (code != null) {
                 var parser = Parser.CreateParser(code, langVersion, options);
                 return parser.ParseFile();
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static PythonAst GetVerbatimAstAndCode(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, out int version, out string code) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var codeReader = ((ProjectEntry)projectFile).ReadDocumentBytes(out version);
+            var codeReader = ((ProjectEntry)projectFile).ReadDocumentBytes(0, out version);
             if (codeReader != null) {
                 var reader = Parser.ReadStreamWithEncoding(codeReader, projectFile.Analysis?.ProjectState.LanguageVersion ?? PythonLanguageVersion.None);
                 code = reader.ReadToEnd();

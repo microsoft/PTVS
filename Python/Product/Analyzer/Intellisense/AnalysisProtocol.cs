@@ -306,6 +306,8 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool suppressErrorLists;
 
+            public string uri;
+
             public override string command => Command;
         }
 

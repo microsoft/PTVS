@@ -89,7 +89,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // TODO: These are to progressively move functionality to the language server
         // These will eventually be removed
         private AnalysisQueue _analysisQueue => _server._queue;
-        private IDictionary<string, IProjectEntry> _projectFiles => _server._projectFiles;
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
@@ -114,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // These commands return a response, which we then send.
             switch (command) {
-                case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
+                case AP.UnloadFileRequest.Command: response = await UnloadFile((AP.UnloadFileRequest)request); break;
                 case AP.CompletionsRequest.Command: response = await GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = await GetModules(request); break;
@@ -901,10 +900,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (string.IsNullOrEmpty(documentUri)) {
                 return null;
             }
-            if (_projectFiles.TryGetValue(documentUri, out var entry)) {
-                return entry as IPythonProjectEntry;
-            }
-            return null;
+            return _server.GetEntry(new Uri(documentUri)) as IPythonProjectEntry;
         }
 
         private VersionedAst GetPythonBuffer(string documentUri) {
@@ -917,8 +913,13 @@ namespace Microsoft.PythonTools.Intellisense {
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out ast, out cookie);
 
-            var v = cookie as VersionCookie;
-            return new VersionedAst { Ast = ast, Version = v?.Version ?? 0 };
+            if (cookie is VersionCookie vc) {
+                int i = _server.GetPart(new Uri(documentUri));
+                if (vc.Versions.TryGetValue(i, out var bv)) {
+                    return new VersionedAst { Ast = bv.Ast, Version = bv.Version };
+                }
+            }
+            return new VersionedAst { Ast = ast, Version = 0 };
         }
 
         private struct VersionedAst {
@@ -1702,13 +1703,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
-            var entry = await AddNewFile(ProjectEntry.MakeDocumentUri(request.path), request.path, request.addingFromDir);
-            var documentUri = new Uri(entry.FilePath);
-
-            await done(new AP.AddFileResponse { documentUri = documentUri.AbsoluteUri });
+            var uri = string.IsNullOrEmpty(request.uri) ? ProjectEntry.MakeDocumentUri(request.path) : new Uri(request.uri);
+            var entry = await AddNewFile(uri, request.path, request.addingFromDir);
+            
+            await done(new AP.AddFileResponse { documentUri = uri.AbsoluteUri });
 
             if (entry != null) {
-                await BeginAnalyzingFileAsync(entry, documentUri, request.isTemporaryFile, request.suppressErrorLists);
+                await BeginAnalyzingFileAsync(entry, uri, request.isTemporaryFile, request.suppressErrorLists);
             }
         }
 
@@ -1746,10 +1747,8 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
         }
 
-        private Response UnloadFile(AP.UnloadFileRequest command) {
-            if (_projectFiles.TryGetValue(command.documentUri, out var entry)) {
-                UnloadFile(entry, command.documentUri);
-            }
+        private async Task<Response> UnloadFile(AP.UnloadFileRequest command) {
+            await _server.UnloadFileAsync(new Uri(command.documentUri));
             return new Response();
         }
 
@@ -1889,8 +1888,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<Response> UpdateContent(AP.FileUpdateRequest request) {
-            _projectFiles.TryGetValue(request.documentUri, out var entry);
-
             foreach (var fileChange in request.updates) {
                 var changes = new List<LS.TextDocumentContentChangedEvent>();
                 if (fileChange.kind == AP.FileUpdateKind.none) {
@@ -1918,14 +1915,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 #if DEBUG
-            var newCode = (entry as IDocument)?.ReadDocument(out _)?.ReadToEnd();
-#endif
-
+            var uri = new Uri(request.documentUri);
+            var entry = _server.GetEntry(uri);
+            int part = _server.GetPart(uri);
             return new AP.FileUpdateResponse {
-#if DEBUG
-                newCode = newCode
-#endif
+                newCode = (entry as IDocument)?.ReadDocument(part, out _)?.ReadToEnd()
             };
+#else
+            return new AP.FileUpdateResponse();
+#endif
         }
 
         internal Task ProcessMessages() {
@@ -2053,7 +2051,7 @@ namespace Microsoft.PythonTools.Intellisense {
             await _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {
                     documentUri = e.uri.AbsoluteUri,
-                    version = e._version ?? (entry as IDocument)?.DocumentVersion ?? -1,
+                    version = e._version ?? -1,
                     diagnostics = e.diagnostics?.ToArray()
                 }
             );
@@ -2072,9 +2070,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void Cancel() {
             _analysisQueue.Stop();
-        }
-
-        internal void UnloadFile(IProjectEntry entry, string documentUri) {
         }
 
         #endregion

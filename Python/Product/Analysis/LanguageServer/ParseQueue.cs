@@ -42,16 +42,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
-        public sealed class ParseResult {
-            public PythonAst Tree;
-            public int DocumentVersion;
-            public PublishDiagnosticsEventArgs Diagnostics;
-        }
-
         private sealed class ParseState {
             public IProjectEntry Entry;
             public PythonLanguageVersion LanguageVersion;
-            public TaskCompletionSource<ParseResult> Task;
+            public TaskCompletionSource<IAnalysisCookie> Task;
         }
 
         private static void AbortParsingTree(IPythonProjectEntry entry) {
@@ -63,8 +57,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             entry.UpdateTree(tree, cookie);
         }
 
-        public Task<ParseResult> Enqueue(IProjectEntry entry, PythonLanguageVersion languageVersion) {
-            var tcs = new TaskCompletionSource<ParseResult>();
+        public Task<IAnalysisCookie> Enqueue(IProjectEntry entry, PythonLanguageVersion languageVersion) {
+            var tcs = new TaskCompletionSource<IAnalysisCookie>();
             (entry as IPythonProjectEntry)?.BeginParsingTree();
             _parsingInProgress.Increment();
             bool enqueued = false;
@@ -94,30 +88,44 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
+            IAnalysisCookie result = null;
+
             try {
-                ParseResult result = null;
+                var doc = entry as IDocument;
+                if (doc == null) {
+                    throw new NotSupportedException($"cannot parse {entry.GetType().FullName}");
+                }
+
                 if (entry is IExternalProjectEntry externalEntry) {
-                    using (var r = OpenTextReader(entry, out var version)) {
+                    using (var r = doc.ReadDocument(0, out var version)) {
                         if (r == null) {
                             throw new FileNotFoundException("failed to parse file", entry.FilePath);
                         }
-                        result = new ParseResult { DocumentVersion = version };
-                        externalEntry.ParseContent(r, new VersionCookie(version));
+                        result = new VersionCookie(version);
+                        externalEntry.ParseContent(r, result);
                     }
-                    result = new ParseResult();
                 } else if (entry is IPythonProjectEntry pyEntry) {
-                    using (var r = OpenStream(entry, out var version)) {
-                        try {
-                            if (r == null) {
-                                throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                    bool complete = false;
+                    try {
+                        var buffers = new SortedDictionary<int, BufferVersion>();
+                        foreach (var part in doc.DocumentParts) {
+                            using (var r = doc.ReadDocumentBytes(part, out var version)) {
+                                if (r == null) {
+                                    throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                                }
+                                ParsePython(r, pyEntry, ps.LanguageVersion, out var tree, out List<Diagnostic> diags);
+                                buffers[part] = new BufferVersion(
+                                    version,
+                                    tree,
+                                    diags.MaybeEnumerate()
+                                );
                             }
-                            result = ParsePython(r, pyEntry, ps.LanguageVersion);
-                            result.DocumentVersion = version;
-                            pyEntry.UpdateTree(result.Tree, new VersionCookie(version));
-                        } finally {
-                            if (result == null) {
-                                AbortParsingTree(pyEntry);
-                            }
+                        }
+                        complete = true;
+                        result = UpdateTree(pyEntry, buffers);
+                    } finally {
+                        if (!complete) {
+                            AbortParsingTree(pyEntry);
                         }
                     }
                 } else {
@@ -130,77 +138,47 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private TextReader OpenTextReader(IProjectEntry entry, out int version) {
-            if (entry is IDocument doc) {
-                var r = doc.ReadDocument(out version);
+        private IAnalysisCookie UpdateTree(IPythonProjectEntry entry, SortedDictionary<int, BufferVersion> buffers) {
+            var cookie = new VersionCookie(buffers);
+
+            if (buffers.Count == 1) {
+                entry.UpdateTree(buffers.First().Value.Ast, cookie);
+                return cookie;
             }
 
-            if (!File.Exists(entry.FilePath)) {
-                version = -1;
-                return null;
-            }
-
-            var stream = PathUtils.OpenWithRetry(entry.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            version = 0;
-            return new StreamReader(stream);
-        }
-
-        private Stream OpenStream(IProjectEntry entry, out int version) {
-            if (entry is IDocument doc) {
-                return doc.ReadDocumentBytes(out version);
-            }
-
-            if (!File.Exists(entry.FilePath)) {
-                version = -1;
-                return null;
-            }
-
-            version = 0;
-            return PathUtils.OpenWithRetry(entry.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        }
-
-        private static Uri GetOrCreateUri(IProjectEntry entry) {
-            if (entry.Properties != null && entry.Properties.TryGetValue(typeof(Uri), out object o) && o is Uri uri) {
-                return uri;
-            }
-            try {
-                return new Uri(entry.FilePath);
-            } catch (UriFormatException) {
-                return null;
-            }
+            var tree = new PythonAst(buffers.Values.Select(v => v.Ast));
+            entry.UpdateTree(tree, cookie);
+            return cookie;
         }
 
         public Dictionary<string, Severity> TaskCommentMap { get; set; }
 
-        private ParseResult ParsePython(Stream stream, IPythonProjectEntry entry, PythonLanguageVersion version) {
+        private void ParsePython(
+            Stream stream,
+            IPythonProjectEntry entry,
+            PythonLanguageVersion version,
+            out PythonAst tree,
+            out List<Diagnostic> diagnostics
+        ) {
             var opts = new ParserOptions {
                 BindReferences = true
             };
 
-            List<Diagnostic> diags = null;
-            var u = GetOrCreateUri(entry);
+            var u = entry.DocumentUri;
             if (u != null) {
-                diags = new List<Diagnostic>();
-                opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, diags);
+                diagnostics = new List<Diagnostic>();
+                opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, diagnostics);
                 var tcm = TaskCommentMap;
                 if (tcm != null && tcm.Any()) {
-                    opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, diags, tcm).ProcessTaskComment;
+                    opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, diagnostics, tcm).ProcessTaskComment;
                 }
+            } else {
+                diagnostics = null;
             }
 
             var parser = Parser.CreateParser(stream, version, opts);
-            var diagnostics = diags;
 
-            var result = new ParseResult();
-            var tree = parser.ParseFile();
-            result.Tree = tree;
-            if (diagnostics?.Any() ?? false) {
-                result.Diagnostics = new PublishDiagnosticsEventArgs {
-                    diagnostics = diagnostics,
-                    uri = u
-                };
-            }
-            return result;
+            tree = parser.ParseFile();
         }
     }
 }

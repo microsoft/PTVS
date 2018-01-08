@@ -47,16 +47,12 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IServiceProvider _serviceProvider;
         private IInteractiveWindowCommands _commands;
 
-        // This filename is used for when we do not have a process
-        private readonly string _analyzerFilename;
-
         private static readonly string currentPrefix = Strings.DebugReplCurrentIndicator;
         private static readonly string notCurrentPrefix = Strings.DebugReplNotCurrentIndicator;
 
         public PythonDebugReplEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
-            _analyzerFilename = "{0}.py".FormatInvariant(Guid.NewGuid());
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
 
@@ -204,7 +200,8 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
-        public string AnalysisFilename => _activeEvaluator?.AnalysisFilename ?? _analyzerFilename;
+        public Uri DocumentUri => _activeEvaluator?.DocumentUri;
+        public Uri NextDocumentUri() => _activeEvaluator?.NextDocumentUri();
 
         public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
 

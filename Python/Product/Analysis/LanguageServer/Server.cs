@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
-        internal readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
+        private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
 
         internal Task _loadingFromDirectory;
 
@@ -89,7 +89,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
-            if (_projectFiles.TryGetValue(@params.textDocument.uri.AbsoluteUri, out IProjectEntry entry)) {
+            var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
+            if (entry != null) {
                 if (entry is IDocument doc && @params.textDocument.text != null) {
                     doc.ResetDocument(@params.textDocument.version, @params.textDocument.text);
                 }
@@ -115,10 +116,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var entry = GetEntry(@params.textDocument.uri);
             if (entry is IDocument doc) {
-                int toVersion = @params.textDocument.version ?? (doc.DocumentVersion + changes.Length);
+                int fromVersion = doc.GetDocumentVersion(GetPart(@params.textDocument.uri));
+                if (fromVersion < 0) {
+                    fromVersion = 0;
+                }
 
-                doc.UpdateDocument(new DocumentChangeSet(
-                    doc.DocumentVersion,
+                int toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
+
+                doc.UpdateDocument(GetPart(@params.textDocument.uri), new DocumentChangeSet(
+                    fromVersion,
                     toVersion,
                     changes.Select(c => new DocumentChange {
                         ReplacedSpan = c.range.GetValueOrDefault(),
@@ -239,14 +245,41 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Private Helpers
 
-        private IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
+        internal IProjectEntry GetOrAddEntry(Uri documentUri, IProjectEntry entry) {
+            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
 
-        private IProjectEntry GetEntry(Uri documentUri) {
-            if (!_projectFiles.TryGetValue(documentUri.AbsoluteUri, out IProjectEntry entry)) {
+            return _projectFiles.GetOrAdd(key, entry);
+        }
+
+        internal IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
+
+        internal IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
+            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
+
+            if (!_projectFiles.TryGetValue(key, out IProjectEntry entry) && throwIfMissing) {
                 throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
             }
             return entry;
         }
+
+        internal int GetPart(Uri documentUri) {
+            var f = documentUri.Fragment;
+            int i;
+            if (string.IsNullOrEmpty(f) || !f.StartsWith("#") || !int.TryParse(f.Substring(1), out i)) {
+                i = 0;
+            }
+            return i;
+        }
+
+        private IProjectEntry RemoveEntry(Uri documentUri) {
+            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
+
+            _projectFiles.TryRemove(key, out var entry);
+            return entry;
+        }
+
+        internal IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys;
+
 
         private void GetAnalysis(TextDocumentIdentifier document, Position position, int? expectedVersion, out IPythonProjectEntry entry, out PythonAst tree) {
             entry = GetEntry(document) as IPythonProjectEntry;
@@ -255,8 +288,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             entry.GetTreeAndCookie(out tree, out var cookie);
             if (expectedVersion.HasValue && cookie is VersionCookie vc) {
-                if (vc.Version != expectedVersion.Value) {
-                    throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {vc.Version}; expected {expectedVersion.Value}");
+                if (vc.Versions.TryGetValue(GetPart(document.uri), out var bv)) {
+                    if (bv.Version != expectedVersion.Value) {
+                        throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
+                    }
+                    tree = bv.Ast;
                 }
             }
         }
@@ -332,7 +368,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public Task<bool> UnloadFileAsync(Uri documentUri) {
-            if (_projectFiles.TryRemove(documentUri.AbsoluteUri, out var entry)) {
+            var entry = RemoveEntry(documentUri);
+            if (entry != null) {
                 _analyzer.RemoveModule(entry);
                 return Task.FromResult(true);
             }
@@ -404,9 +441,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
-            IProjectEntry item = null;
+            var item = GetEntry(documentUri, throwIfMissing: false);
 
-            if (_projectFiles.TryGetValue(documentUri.AbsoluteUri, out item)) {
+            if (item != null) {
                 return Task.FromResult(item);
             }
 
@@ -433,12 +470,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _analyzer.AddModuleAlias(first, a);
             }
 
-            if (!_projectFiles.TryAdd(documentUri.AbsoluteUri, item)) {
-                if (_projectFiles.TryGetValue(documentUri.AbsoluteUri, out var actualItem)) {
-                    return Task.FromResult(actualItem);
-                }
-                // Fallback if we race with removal - overwrite and continue
-                _projectFiles[documentUri.AbsoluteUri] = item;
+            var actualItem = GetOrAddEntry(documentUri, item);
+            if (actualItem != item) {
+                return Task.FromResult(actualItem);
             }
 
             if (_clientCaps?.python?.analysisUpdates ?? false) {
@@ -458,20 +492,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async void EnqueueItem(IProjectEntry entry, AnalysisPriority priority = AnalysisPriority.Normal) {
             try {
-                var pr = await _parseQueue.Enqueue(entry, _analyzer.LanguageVersion).ConfigureAwait(false);
-                ParseComplete(entry.DocumentUri, pr.DocumentVersion);
+                var cookie = await _parseQueue.Enqueue(entry, _analyzer.LanguageVersion).ConfigureAwait(false);
+                IReadOnlyList<Diagnostic> diagnostics = null;
+                if (cookie is VersionCookie vc) {
+                    foreach (var kv in vc.GetUriVersionPairs(entry.DocumentUri)) {
+                        ParseComplete(kv.Key, kv.Value);
+                    }
+                    diagnostics = vc.Versions.Values.SelectMany(v => v.Diagnostics).ToArray();
+                } else {
+                    ParseComplete(entry.DocumentUri, 0);
+                }
 
                 _queue.Enqueue(entry, priority);
 
                 // Allow the caller to complete before publishing diagnostics
                 await Task.Yield();
-                if (pr.Diagnostics != null) {
-                    PublishDiagnostics(pr.Diagnostics);
-                } else {
-                    PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                        uri = entry.DocumentUri
-                    });
-                }
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                    uri = entry.DocumentUri,
+                    diagnostics = diagnostics
+                });
             } catch (BadSourceException) {
             } catch (Exception ex) {
                 LogMessage(new LogMessageEventArgs {
@@ -484,8 +523,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
                 entry.GetTreeAndCookie(out _, out var cookie);
-                int version = (cookie as VersionCookie)?.Version ?? 0;
-                AnalysisComplete(entry.DocumentUri, version);
+                if (cookie is VersionCookie vc) {
+                    foreach (var kv in vc.GetUriVersionPairs(entry.DocumentUri)) {
+                        AnalysisComplete(kv.Key, kv.Value);
+                    }
+                } else {
+                    AnalysisComplete(entry.DocumentUri, 0);
+                }
             }
         }
 

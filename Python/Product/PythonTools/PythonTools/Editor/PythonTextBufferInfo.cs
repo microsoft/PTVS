@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools.Editor {
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
         private readonly Lazy<string> _filename;
+        private readonly Lazy<Uri> _documentUri;
         private readonly TokenCache _tokenCache;
         private readonly LocationTracker _locationTracker;
 
@@ -98,6 +99,7 @@ namespace Microsoft.PythonTools.Editor {
             Buffer = buffer;
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
+            _documentUri = new Lazy<Uri>(GetOrCreateDocumentUri);
             _tokenCache = new TokenCache();
             _defaultLanguageVersion = PythonLanguageVersion.None;
 
@@ -156,11 +158,14 @@ namespace Microsoft.PythonTools.Editor {
 
         private string GetOrCreateFilename() {
             string path;
-            var replEval = Buffer.GetInteractiveWindow()?.Evaluator;
-            if (!string.IsNullOrEmpty(path = (replEval as PythonCommonInteractiveEvaluator)?.AnalysisFilename)) {
-                return path;
-            } else if (!string.IsNullOrEmpty(path = (replEval as SelectableReplEvaluator)?.AnalysisFilename)) {
-                return path;
+            var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            var docUri = replEval?.DocumentUri;
+            if (docUri != null && docUri.IsFile) {
+                return docUri.LocalPath;
+            }
+
+            if (Buffer.GetInteractiveWindow() != null) {
+                return null;
             }
 
             if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc) &&
@@ -168,9 +173,18 @@ namespace Microsoft.PythonTools.Editor {
                 return path;
             }
 
-            return "{0}.py".FormatInvariant(Guid.NewGuid());
+            return null;
         }
 
+        private Uri GetOrCreateDocumentUri() {
+            var path = Filename;
+            if (!string.IsNullOrEmpty(path)) {
+                return new Uri(path);
+            }
+
+            var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            return replEval?.NextDocumentUri();
+        }
 
 
         public ITextBuffer Buffer { get; }
@@ -178,6 +192,7 @@ namespace Microsoft.PythonTools.Editor {
         public ITextSnapshot CurrentSnapshot => Buffer.CurrentSnapshot;
         public IContentType ContentType => Buffer.ContentType;
         public string Filename => _filename.Value;
+        public Uri DocumentUri => _documentUri.Value;
 
         public PythonEditorServices Services { get; }
 

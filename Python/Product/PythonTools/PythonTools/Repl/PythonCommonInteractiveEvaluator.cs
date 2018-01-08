@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Repl {
         private PythonInteractiveOptions _options;
 
         protected VsProjectAnalyzer _analyzer;
-        private readonly string _analysisFilename;
+        private int _nextDocumentIndex;
 
         private bool _enableMultipleScopes;
         private IReadOnlyList<string> _availableScopes;
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Repl {
         public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _deferredOutput = new StringBuilder();
-            _analysisFilename = Guid.NewGuid().ToString() + ".py";
+            DocumentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
@@ -169,7 +169,8 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public virtual string AnalysisFilename => _analysisFilename;
+        public virtual Uri DocumentUri { get; protected set; }
+        public virtual Uri NextDocumentUri() => new Uri(DocumentUri, $"#{++_nextDocumentIndex}");
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;

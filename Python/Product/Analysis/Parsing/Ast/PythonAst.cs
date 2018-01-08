@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 
@@ -39,7 +40,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _body = body;
             _lineLocations = lineLocations;
         }
-        
+
+        internal PythonAst(IEnumerable<PythonAst> existingAst) {
+            var asts = existingAst.ToArray();
+            _body = new SuiteStatement(asts.Select(a => a.Body).ToArray());
+            _langVersion = asts.Select(a => a._langVersion).Distinct().Single();
+            var locs = new List<NewLineLocation>();
+            int offset = 0;
+            foreach (var a in asts) {
+                locs.AddRange(a._lineLocations.Select(ll => new NewLineLocation(ll.EndIndex + offset, ll.Kind)));
+                offset = locs.LastOrDefault().EndIndex;
+            }
+            _lineLocations = locs.ToArray();
+        }
+
         public override string Name {
             get {
                 return "<module>";

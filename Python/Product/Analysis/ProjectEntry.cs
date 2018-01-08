@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis {
         private AnalysisUnit _unit;
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
-        private readonly DocumentBuffer _buffer;
+        private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
@@ -63,9 +63,9 @@ namespace Microsoft.PythonTools.Analysis {
             Cookie = cookie;
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(Tree, MyScope.Scope);
-            _buffer = new DocumentBuffer();
+            _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
-                _buffer.Reset(c.Version, c.Content);
+                _buffers[0].Reset(c.Version, c.Content);
             }
             AnalysisLog.NewUnit(_unit);
         }
@@ -324,17 +324,20 @@ namespace Microsoft.PythonTools.Analysis {
             _aggregates.Add(into);
         }
 
-        public Stream ReadDocumentBytes(out int version) {
-            lock (_buffer) {
-                if (_buffer.Version >= 0) {
-                    version = _buffer.Version;
-                    // TODO: Remove chunkSize argument
-                    return EncodeToStream(_buffer.Text, Encoding.UTF8, 16);
-                } else {
+        public IEnumerable<int> DocumentParts => _buffers.Keys.AsLockedEnumerable(_buffers);
+
+        public Stream ReadDocumentBytes(int part, out int version) {
+            lock (_buffers) {
+                if (_buffers[part].Version >= 0) {
+                    version = _buffers[part].Version;
+                    return EncodeToStream(_buffers[part].Text, Encoding.UTF8);
+                } else if (part == 0) {
                     var s = PathUtils.OpenWithRetry(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     version = s == null ? -1 : 0;
                     return s;
                 }
+                version = -1;
+                return null;
             }
         }
 
@@ -363,8 +366,8 @@ namespace Microsoft.PythonTools.Analysis {
             return ms;
         }
 
-        public TextReader ReadDocument(out int version) {
-            var stream = ReadDocumentBytes(out version);
+        public TextReader ReadDocument(int part, out int version) {
+            var stream = ReadDocumentBytes(part, out version);
             if (stream == null) {
                 version = -1;
                 return null;
@@ -379,23 +382,29 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public int DocumentVersion {
-            get {
-                lock (_buffer) {
-                    return _buffer.Version;
+        public int GetDocumentVersion(int part) {
+            lock (_buffers) {
+                if (_buffers.TryGetValue(part, out var buffer)) {
+                    return buffer.Version;
                 }
+                return -1;
             }
         }
 
-        public void UpdateDocument(DocumentChangeSet changes) {
-            lock (_buffer) {
-                _buffer.Update(changes);
+        public void UpdateDocument(int part, DocumentChangeSet changes) {
+            lock (_buffers) {
+                if (!_buffers.TryGetValue(part, out var buffer)) {
+                    _buffers[part] = buffer = new DocumentBuffer();
+                }
+                buffer.Update(changes);
             }
         }
 
         public void ResetDocument(int version, string content) {
-            lock (_buffer) {
-                _buffer.Reset(version, content);
+            lock (_buffers) {
+                _buffers.Clear();
+                _buffers[0] = new DocumentBuffer();
+                _buffers[0].Reset(version, content);
             }
         }
     }
@@ -490,12 +499,13 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     public interface IDocument {
-        TextReader ReadDocument(out int version);
-        Stream ReadDocumentBytes(out int version);
+        TextReader ReadDocument(int part, out int version);
+        Stream ReadDocumentBytes(int part, out int version);
 
-        int DocumentVersion { get; }
+        int GetDocumentVersion(int part);
+        IEnumerable<int> DocumentParts { get; }
 
-        void UpdateDocument(DocumentChangeSet changes);
+        void UpdateDocument(int part, DocumentChangeSet changes);
         void ResetDocument(int version, string content);
     }
 

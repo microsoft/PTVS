@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public AnalysisEntry(
             VsProjectAnalyzer analyzer,
             string path,
-            string documentUri,
+            Uri documentUri,
             bool isTemporaryFile = false,
             bool suppressErrorList = false
         ) {
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public IIntellisenseCookie AnalysisCookie { get; set; }
 
         public string Path { get; }
-        public string DocumentUri { get; }
+        public Uri DocumentUri { get; }
         public bool IsAnalyzed { get; internal set; }
 
         public Dictionary<object, object> Properties { get; }
