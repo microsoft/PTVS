@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -71,17 +72,35 @@ namespace Microsoft.PythonTools.Intellisense {
                 case TokenCategory.Delimiter:
                 case TokenCategory.Grouping:
                 case TokenCategory.Operator:
-                case TokenCategory.WhiteSpace:
                     // Expect top-level completions after these
                     expressionExtent = span;
                     return true;
+                case TokenCategory.WhiteSpace:
+                    // Top-level completions are not triggered on space
+                    if (Session.GetTriggerCharacter() != ' ') {
+                        expressionExtent = span;
+                        return true;
+                    }
+                    break;
                 //case TokenCategory.BuiltinIdentifier:
-                //case TokenCategory.Identifier:
                 case TokenCategory.Keyword:
                     // Expect filtered top-level completions here
                     // (but the return value is no different)
                     expressionExtent = span;
                     return true;
+                case TokenCategory.Identifier:
+                    // When preceded by a delimiter, grouping, or operator
+                    var tok2 = bi.GetTokensInReverseFromPoint(span.End).Where(t => t.Category != TokenCategory.WhiteSpace && t.Category != TokenCategory.Comment).Take(2).ToArray();
+                    if (tok2.Length == 2 && tok2[0].Category == tok.Value.Category) {
+                        switch (tok2[1].Category) {
+                            case TokenCategory.Delimiter:
+                            case TokenCategory.Grouping:
+                            case TokenCategory.Operator:
+                                expressionExtent = span;
+                                return true;
+                        }
+                    }
+                    break;
             }
 
             return false;

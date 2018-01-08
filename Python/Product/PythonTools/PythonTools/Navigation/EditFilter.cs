@@ -713,6 +713,7 @@ namespace Microsoft.PythonTools.Language {
                         if (controller != null) {
                             controller.TriggerCompletionSession(
                                 (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                '\0',
                                 true
                             );
                             return VSConstants.S_OK;

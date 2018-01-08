@@ -588,10 +588,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 // BOM gets written to stdin immediately, which our analyzer does
                 // not understand.
                 // Force the encoding to ASCII temporarily to avoid this.
-                Console.InputEncoding = Encoding.ASCII;
+                try {
+                    Console.InputEncoding = Encoding.ASCII;
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    // Failed to set it - oh well, let's hope
+                }
                 process = Process.Start(psi);
             } finally {
-                Console.InputEncoding = oldEncoding;
+                try {
+                    Console.InputEncoding = oldEncoding;
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
             }
 
             var conn = new Connection(
@@ -1671,6 +1678,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private static readonly HashSet<string> NoCompletionsAfterKeyword = new HashSet<string> {
+            "class", "for", "as"
+        };
+
         private static CompletionAnalysis TrySpecialCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
@@ -1704,29 +1715,33 @@ namespace Microsoft.PythonTools.Intellisense {
             if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
                 var lastClass = tokens[tokens.Count - 1];
+                var lastText = new Lazy<string>(() => lastClass.Span.GetText());
 
                 if (lastClass.ClassificationType == classifier.Provider.Comment) {
                     // No completions in comments
                     return CompletionAnalysis.EmptyCompletionContext;
                 } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
-                    lastClass.Span.GetText() == "@") {
+                    lastText.Value == "@") {
 
                     if (tokens.Count == 1) {
                         return new DecoratorCompletionAnalysis(services, session, view, span, buffer, options);
                     }
                     // TODO: Handle completions automatically popping up
                     // after '@' when it is used as a binary operator.
-                } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
+                } else if (CompletionAnalysis.IsKeyword(lastClass, "def", lastText)) {
                     return new OverrideCompletionAnalysis(services, session, view, span, buffer, options);
+                } else if (lastClass.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) && NoCompletionsAfterKeyword.Contains(lastText.Value)) {
+                    return CompletionAnalysis.EmptyCompletionContext;
                 }
 
                 // Import completions
                 var first = tokens[0];
-                if (CompletionAnalysis.IsKeyword(first, "import")) {
+                var firstText = new Lazy<string>(() => first.Span.GetText());
+                if (CompletionAnalysis.IsKeyword(first, "import", firstText)) {
                     return ImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "from")) {
+                } else if (CompletionAnalysis.IsKeyword(first, "from", firstText)) {
                     return FromImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
+                } else if (CompletionAnalysis.IsKeyword(first, "raise", firstText) || CompletionAnalysis.IsKeyword(first, "except", firstText)) {
                     if (tokens.Count == 1 ||
                         lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
                         (lastClass.IsOpenGrouping() && tokens.Count < 3)) {

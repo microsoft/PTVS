@@ -300,9 +300,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         goto case '.';
                     case '.':
-                    //case ' ':
+                    case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
-                            TriggerCompletionSession(false);
+                            TriggerCompletionSession(false, ch);
                         }
                         break;
                     case '(':
@@ -335,7 +335,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ((session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
-                                TriggerCompletionSession(false, commitByDefault);
+                                TriggerCompletionSession(false, ch, commitByDefault);
                             }
                         }
                         break;
@@ -858,11 +858,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
+        internal void TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             DismissCompletionSession();
 
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
             }
