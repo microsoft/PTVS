@@ -39,14 +39,14 @@ def g(y):
             doc.Update(new DocumentChangeSet(0, 1, new[] {
                 // We *should* batch adjacent insertions, but we should also
                 // work fine even if we don't. Note that the insertion point
-                // tracks forward with previous insertions in the same version.
+                // tracks backwards with previous insertions in the same version.
                 // If each of these were in its own array, the location would
                 // have to change for each.
-                DocumentChange.Insert(" ", new SourceLocation(2, 11)),
-                DocumentChange.Insert("g", new SourceLocation(2, 11)),
-                DocumentChange.Insert("(", new SourceLocation(2, 11)),
+                DocumentChange.Insert(")", new SourceLocation(2, 11)),
                 DocumentChange.Insert("x", new SourceLocation(2, 11)),
-                DocumentChange.Insert(")", new SourceLocation(2, 11))
+                DocumentChange.Insert("(", new SourceLocation(2, 11)),
+                DocumentChange.Insert("g", new SourceLocation(2, 11)),
+                DocumentChange.Insert(" ", new SourceLocation(2, 11))
             }));
 
             AssertUtil.Contains(doc.Text.ToString(), "return g(x)");

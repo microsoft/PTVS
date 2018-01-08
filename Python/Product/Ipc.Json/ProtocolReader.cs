@@ -53,8 +53,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             var line = _buffer.Take(newLineIndex).ToArray();
             _buffer.RemoveRange(0, newLineIndex + 2);
-            var text = Encoding.ASCII.GetString(line);
-            return text;
+            if (line.Length > 3 && Encoding.UTF8.GetPreamble().SequenceEqual(line.Take(3))) {
+                // Should not have UTF-8 headers, but .NET's Process class
+                // doesn't give us that much control over stdin encoding,
+                // often writing the BOM before we can bypass it.
+                return Encoding.UTF8.GetString(line);
+            }
+            return Encoding.ASCII.GetString(line);
         }
 
         /// <summary>

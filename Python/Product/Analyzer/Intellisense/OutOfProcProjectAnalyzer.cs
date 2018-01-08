@@ -850,7 +850,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            var newImport = new FromImportStatement((ModuleName)fromImport.Root, names, asNames, fromImport.IsFromFuture, fromImport.ForceAbsolute);
+            var newImport = new FromImportStatement((ModuleName)fromImport.Root, names, asNames, fromImport.IsFromFuture, fromImport.ForceAbsolute, -1);
             curAst.CopyAttributes(fromImport, newImport);
 
             var newCode = newImport.ToCodeString(curAst);

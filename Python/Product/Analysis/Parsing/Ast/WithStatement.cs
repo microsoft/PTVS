@@ -67,6 +67,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        public int GetIndexOfWith(PythonAst ast) {
+            if (!IsAsync) {
+                return StartIndex;
+            }
+            return StartIndex + this.GetSecondWhiteSpace(ast).Length + 5;
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             if (IsAsync) {
@@ -102,33 +109,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     }
 
     public sealed class WithItem : Node {
-        private readonly Expression _contextManager;
-        private readonly Expression _variable;
-
-        public WithItem(Expression contextManager, Expression variable) {
-            _contextManager = contextManager;
-            _variable = variable;
+        public WithItem(Expression contextManager, Expression variable, int asIndex) {
+            ContextManager = contextManager;
+            Variable = variable;
+            AsIndex = asIndex;
         }
 
-        public Expression ContextManager {
-            get {
-                return _contextManager;
-            }
-        }
-
-        public Expression Variable {
-            get {
-                return _variable;
-            }
-        }
+        public Expression ContextManager { get; }
+        public Expression Variable { get; }
+        public int AsIndex { get; }
 
         public override void Walk(PythonWalker walker) {
-            if (ContextManager != null) {
-                ContextManager.Walk(walker);
-            }
-            if (Variable != null) {
-                Variable.Walk(walker);
-            }
+            ContextManager?.Walk(walker);
+            Variable?.Walk(walker);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {

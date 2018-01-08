@@ -70,7 +70,7 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(0)]
         public void SigHelpInClass() {
             using (var view = new PythonEditor()) {
-                view.TypeAndWaitForAnalysis("class C(): pass");
+                view.TypeAndWaitForAnalysis("class C(): pass\n");
                 view.MoveCaret(1, 9);
 
                 view.ParamInfo();

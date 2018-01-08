@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return true;
             }
 
-            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Rename);
+            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Complete);
             if (expr != null) {
                 expressionExtent = expr.Value;
                 return true;
@@ -75,8 +75,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Expect top-level completions after these
                     expressionExtent = span;
                     return true;
-                case TokenCategory.BuiltinIdentifier:
-                case TokenCategory.Identifier:
+                //case TokenCategory.BuiltinIdentifier:
+                //case TokenCategory.Identifier:
                 case TokenCategory.Keyword:
                     // Expect filtered top-level completions here
                     // (but the return value is no different)

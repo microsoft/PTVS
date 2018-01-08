@@ -16,41 +16,31 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-
     public partial class BinaryExpression : Expression {
-        private readonly Expression _left, _right;
-        private readonly PythonOperator _op;
-
-        public BinaryExpression(PythonOperator op, Expression left, Expression right) {
-            Contract.Assert(left != null);
-            Contract.Assert(right != null);
+        public BinaryExpression(PythonOperator op, Expression left, Expression right, int operatorIndex) {
             if (op == PythonOperator.None) throw new ArgumentException("bad operator");
 
-            _op = op;
-            _left = left;
-            _right = right;
+            Operator = op;
+            Left = left ?? throw new ArgumentNullException(nameof(left));
+            Right = right ?? throw new ArgumentNullException(nameof(right));
             StartIndex = left.StartIndex;
             EndIndex = right.EndIndex;
+            OperatorIndex = operatorIndex;
         }
 
-        public Expression Left {
-            get { return _left; }
-        }
+        public Expression Left { get; }
 
-        public Expression Right {
-            get { return _right; }
-        }
+        public Expression Right { get; }
 
-        public PythonOperator Operator {
-            get { return _op; }
-        }
+        public PythonOperator Operator { get; }
+
+        public int OperatorIndex { get; }
 
         private bool IsComparison() {
-            switch (_op) {
+            switch (Operator) {
                 case PythonOperator.LessThan:
                 case PythonOperator.LessThanOrEqual:
                 case PythonOperator.GreaterThan:
@@ -74,15 +64,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                _left.Walk(walker);
-                _right.Walk(walker);
+                Left.Walk(walker);
+                Right.Walk(walker);
             }
             walker.PostWalk(this);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            Expression left = _left;
-            Expression right = _right;
+            Expression left = Left;
+            Expression right = Right;
             string op1, op2;
 
             if (Operator == PythonOperator.NotIn) {
@@ -103,7 +93,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 op1 = Operator.ToCodeString();
                 op2 = null;
             }
-            BinaryToCodeString(res, ast, format, this, _left, _right, op1, op2);
+            BinaryToCodeString(res, ast, format, this, Left, Right, op1, op2);
         }
 
         internal static void BinaryToCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, Expression node, Expression left, Expression right, string op1, string op2 = null) {
@@ -139,12 +129,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        public int GetIndexOfSecondOp(PythonAst ast) {
+            if (Operator == PythonOperator.NotIn) {
+                return OperatorIndex + 3 + this.GetSecondWhiteSpace(ast).Length;
+            } else if (Operator == PythonOperator.IsNot) {
+                return OperatorIndex + 2 + this.GetSecondWhiteSpace(ast).Length;
+            } else {
+                return -1;
+            }
+        }
+
         public override string GetLeadingWhiteSpace(PythonAst ast) {
-            return _left.GetLeadingWhiteSpace(ast);
+            return Left.GetLeadingWhiteSpace(ast);
         }
 
         public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
-            _left.SetLeadingWhiteSpace(ast, whiteSpace);
+            Left.SetLeadingWhiteSpace(ast, whiteSpace);
         }
     }
 }

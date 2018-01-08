@@ -90,6 +90,8 @@ namespace PythonToolsMockTests {
                     do {
                         filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), Path.GetRandomFileName()) + ".py";
                     } while (File.Exists(filename));
+                } else if (!Path.IsPathRooted(filename)) {
+                    filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), filename);
                 }
 
                 var cancel = CancellationTokens.After60s;

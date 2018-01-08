@@ -1222,6 +1222,7 @@ namespace Microsoft.PythonTools.Parsing {
             ModuleName dname = ParseRelativeModuleName();
 
             bool ateImport = Eat(TokenKind.KeywordImport);
+            int importIndex = GetStart();
             string importWhiteSpace = _tokenWhiteSpace;
 
             bool ateParen = ateImport && MaybeEat(TokenKind.LeftParenthesis);
@@ -1266,7 +1267,7 @@ namespace Microsoft.PythonTools.Parsing {
                 ateRightParen = Eat(TokenKind.RightParenthesis);
             }
 
-            FromImportStatement ret = new FromImportStatement(dname, names, asNames, fromFuture, AbsoluteImports);
+            FromImportStatement ret = new FromImportStatement(dname, names, asNames, fromFuture, AbsoluteImports, importIndex);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, fromWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, importWhiteSpace);
@@ -2344,14 +2345,16 @@ namespace Microsoft.PythonTools.Parsing {
             var start = GetStart();
             Expression contextManager = ParseExpression();
             Expression var = null;
+            int asIndex = -1;
             if (MaybeEat(TokenKind.KeywordAs)) {
+                asIndex = GetStart();
                 if (itemWhiteSpace != null) {
                     itemWhiteSpace.Add(_tokenWhiteSpace);
                 }
                 var = ParseExpression();
             }
 
-            var res = new WithItem(contextManager, var);
+            var res = new WithItem(contextManager, var, asIndex);
             res.SetLoc(start, GetEnd());
             return res;
         }
@@ -2791,7 +2794,8 @@ namespace Microsoft.PythonTools.Parsing {
             while (MaybeEat(TokenKind.KeywordOr)) {
                 string proceeding = _tokenWhiteSpace;
                 var start = ret.StartIndex;
-                ret = new OrExpression(ret, ParseAndTest());
+                var orIndex = GetStart();
+                ret = new OrExpression(ret, ParseAndTest(), orIndex);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(ret, proceeding);
                 }
@@ -2801,9 +2805,11 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Expression ParseConditionalTest(Expression trueExpr) {
+            int ifIndex = GetStart();
             string ifWhiteSpace = _tokenWhiteSpace;
             Expression expr = ParseOrTest();
             bool ateElse = Eat(TokenKind.KeywordElse);
+            int elseIndex = GetStart();
             string elseWhiteSpace;
             Expression falseExpr;
             if (ateElse) {
@@ -2813,7 +2819,7 @@ namespace Microsoft.PythonTools.Parsing {
                 elseWhiteSpace = null;
                 falseExpr = Error("");
             }
-            var res = new ConditionalExpression(expr, trueExpr, falseExpr);
+            var res = new ConditionalExpression(expr, trueExpr, falseExpr, ifIndex, elseIndex);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(res, ifWhiteSpace);
                 AddSecondPreceedingWhiteSpace(res, elseWhiteSpace);
@@ -2831,7 +2837,8 @@ namespace Microsoft.PythonTools.Parsing {
                 string proceeding = _tokenWhiteSpace;
 
                 var start = ret.StartIndex;
-                ret = new AndExpression(ret, ParseAndTest());
+                var andIndex = GetStart();
+                ret = new AndExpression(ret, ParseAndTest(), andIndex);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(ret, proceeding);
                 }
@@ -2864,6 +2871,7 @@ namespace Microsoft.PythonTools.Parsing {
                 string whitespaceBeforeOperator = _lookaheadWhiteSpace;
                 string secondWhiteSpace = null;
                 bool isLessThanGreaterThan = false, isIncomplete = false;
+                int opIndex = -1;
                 switch (PeekToken().Kind) {
                     case TokenKind.LessThan: NextToken(); op = PythonOperator.LessThan; break;
                     case TokenKind.LessThanOrEqual: NextToken(); op = PythonOperator.LessThanOrEqual; break;
@@ -2874,10 +2882,17 @@ namespace Microsoft.PythonTools.Parsing {
                     case TokenKind.LessThanGreaterThan: NextToken(); op = PythonOperator.NotEqual; isLessThanGreaterThan = true; break;
                     case TokenKind.KeywordIn: NextToken(); op = PythonOperator.In; break;
 
-                    case TokenKind.KeywordNot: NextToken(); isIncomplete = !Eat(TokenKind.KeywordIn); secondWhiteSpace = _tokenWhiteSpace; op = PythonOperator.NotIn; break;
+                    case TokenKind.KeywordNot:
+                        NextToken();
+                        opIndex = GetStart();
+                        isIncomplete = !Eat(TokenKind.KeywordIn);
+                        secondWhiteSpace = _tokenWhiteSpace;
+                        op = PythonOperator.NotIn;
+                        break;
 
                     case TokenKind.KeywordIs:
                         NextToken();
+                        opIndex = GetStart();
                         if (MaybeEat(TokenKind.KeywordNot)) {
                             op = PythonOperator.IsNot;
                             secondWhiteSpace = _tokenWhiteSpace;
@@ -2888,8 +2903,12 @@ namespace Microsoft.PythonTools.Parsing {
                     default:
                         return ret;
                 }
+                if (opIndex < 0) {
+                    opIndex = GetStart();
+                }
+
                 Expression rhs = ParseComparison();
-                BinaryExpression be = new BinaryExpression(op, ret, rhs);
+                BinaryExpression be = new BinaryExpression(op, ret, rhs, opIndex);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(be, whitespaceBeforeOperator);
                     GetNodeAttributes(be)[NodeAttributes.SecondPreceedingWhiteSpace] = secondWhiteSpace;
@@ -2930,10 +2949,11 @@ namespace Microsoft.PythonTools.Parsing {
                 int prec = ot.Precedence;
                 if (prec >= precedence) {
                     NextToken();
+                    int opIndex = GetStart();
                     string whiteSpace = _tokenWhiteSpace;
                     Expression right = ParseExpr(prec + 1);
                     var start = ret.StartIndex;
-                    ret = new BinaryExpression(GetBinaryOperator(ot), ret, right);
+                    ret = new BinaryExpression(GetBinaryOperator(ot), ret, right, opIndex);
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ret, whiteSpace);
                     }
@@ -3034,8 +3054,9 @@ namespace Microsoft.PythonTools.Parsing {
             ret = AddTrailers(ret);
             if (MaybeEat(TokenKind.Power)) {
                 var start = ret.StartIndex;
+                int opIndex = GetStart();
                 string whitespace = _tokenWhiteSpace;
-                ret = new BinaryExpression(PythonOperator.Power, ret, ParseFactor());
+                ret = new BinaryExpression(PythonOperator.Power, ret, ParseFactor(), opIndex);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(ret, whitespace);
                 }

@@ -301,7 +301,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         goto case '.';
                     case '.':
-                    case ' ':
+                    //case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
                             TriggerCompletionSession(false);
                         }
