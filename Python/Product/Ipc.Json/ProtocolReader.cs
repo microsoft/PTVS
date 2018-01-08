@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 // Should not have UTF-8 headers, but .NET's Process class
                 // doesn't give us that much control over stdin encoding,
                 // often writing the BOM before we can bypass it.
-                return Encoding.UTF8.GetString(line);
+                line = line.Skip(3).ToArray();
             }
             return Encoding.ASCII.GetString(line);
         }
