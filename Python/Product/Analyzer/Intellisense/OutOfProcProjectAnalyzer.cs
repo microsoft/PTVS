@@ -1737,7 +1737,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<IProjectEntry> AddNewFile(Uri documentUri, string path, string addingFromDir) {
-            if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
+            if (documentUri.IsFile && Path.GetExtension(documentUri.LocalPath).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 return Project.AddXamlFile(path, null);
             }
 

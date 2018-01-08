@@ -578,8 +578,21 @@ namespace Microsoft.PythonTools.Intellisense {
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
 
-            Trace.TraceInformation("Starting analyzer process: {0} {1}", psi.FileName, psi.Arguments);
-            var process = Process.Start(psi);
+            Process process;
+            var oldEncoding = Console.InputEncoding;
+            try {
+                Trace.TraceInformation("Starting analyzer process: {0} {1}", psi.FileName, psi.Arguments);
+
+                // .NET's Process class takes the current stdin encoding and has
+                // no way to override it. When this encoding is set to UTF-8, the
+                // BOM gets written to stdin immediately, which our analyzer does
+                // not understand.
+                // Force the encoding to ASCII temporarily to avoid this.
+                Console.InputEncoding = Encoding.ASCII;
+                process = Process.Start(psi);
+            } finally {
+                Console.InputEncoding = oldEncoding;
+            }
 
             var conn = new Connection(
                 process.StandardInput.BaseStream,
