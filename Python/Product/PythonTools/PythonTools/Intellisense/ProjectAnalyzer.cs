@@ -716,7 +716,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (_projectFilesByUri.TryGetValue(new Uri(parsed.documentUri), out entry)) {
                         OnParseComplete(entry, parsed);
                     } else {
-                        Debug.WriteLine("Unknown file id for fileParsed event: {0}", new Uri(parsed.documentUri));
+                        Debug.WriteLine("Unknown file id for fileParsed event: {0}", parsed.documentUri);
+                    }
+                    break;
+                case AP.DiagnosticsEvent.Name:
+                    var diagnostics = (AP.DiagnosticsEvent)e.Event;
+                    if (_projectFilesByUri.TryGetValue(new Uri(diagnostics.documentUri), out entry)) {
+                        OnDiagnostics(entry, diagnostics);
+                    } else {
+                        Debug.WriteLine("Unknown file id for diagnostics event: {0}", diagnostics.documentUri);
                     }
                     break;
                 case AP.ChildFileAnalyzed.Name:
@@ -1430,14 +1438,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void OnDiagnostics(AnalysisEntry entry, AP.DiagnosticsEvent diagnostics) {
             var bufferParser = entry.TryGetBufferParser();
-            var bi = bufferParser.DefaultBufferInfo;
+            var bi = bufferParser?.DefaultBufferInfo;
             if (bi == null) {
                 return;
             }
 
             // Update the warn-on-launch state for this entry
             var hasErrors = diagnostics.diagnostics.MaybeEnumerate()
-                .Any(d => d.source == "Python" && d.severity == Analysis.LanguageServer.DiagnosticSeverity.Error);
+                .Any(d => d.source == "Python" && d.severity == LS.DiagnosticSeverity.Error);
 
             // Update the parser warnings/errors.
             var errorTask = entry.SuppressErrorList ? null : _services.ErrorTaskProvider;

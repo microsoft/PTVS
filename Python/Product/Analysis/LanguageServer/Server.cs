@@ -362,7 +362,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void ParseComplete(Uri uri, int version) => OnParseComplete?.Invoke(this, new ParseCompleteEventArgs { uri = uri, version = version });
 
         public event EventHandler<AnalysisCompleteEventArgs> OnAnalysisComplete;
-        private void AnalysisComplete(Uri uri) => OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri });
+        private void AnalysisComplete(Uri uri, int version) => OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
 
         #endregion
 
@@ -441,7 +441,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _projectFiles[documentUri.AbsoluteUri] = item;
             }
 
-            pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
+            if (_clientCaps?.python?.analysisUpdates ?? false) {
+                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
+            }
 
             EnqueueItem(pyItem);
 
@@ -480,7 +482,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
-            // TODO: Something useful
+            if (sender is IPythonProjectEntry entry) {
+                entry.GetTreeAndCookie(out _, out var cookie);
+                int version = (cookie as VersionCookie)?.Version ?? 0;
+                AnalysisComplete(entry.DocumentUri, version);
+            }
         }
 
         private async Task LoadFromDirectoryAsync(Uri rootDir) {

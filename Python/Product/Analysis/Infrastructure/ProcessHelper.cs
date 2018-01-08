@@ -65,23 +65,32 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             _seenNullOutput.Wait(0);
             _seenNullError.Wait(0);
 
-            var p = Process.Start(_psi);
-
-            // Close stdin so that if the process tries to read it will exit
-            p.StandardInput.Close();
+            var p = new Process {
+                StartInfo = _psi
+            };
 
             p.OutputDataReceived += Process_OutputDataReceived;
             p.ErrorDataReceived += Process_ErrorDataReceived;
 
+            p.Start();
+
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
+
+            p.EnableRaisingEvents = true;
+
+            // Close stdin so that if the process tries to read it will exit
+            p.StandardInput.Close();
 
             _process = p;
         }
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
             if (e.Data == null) {
-                _seenNullError.Release();
+                try {
+                    _seenNullError.Release();
+                } catch (ObjectDisposedException) {
+                }
                 ((Process)sender).ErrorDataReceived -= Process_ErrorDataReceived;
                 return;
             }
@@ -91,7 +100,10 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
             if (e.Data == null) {
-                _seenNullOutput.Release();
+                try {
+                    _seenNullOutput.Release();
+                } catch (ObjectDisposedException) {
+                }
                 ((Process)sender).OutputDataReceived -= Process_OutputDataReceived;
                 return;
             }
@@ -126,11 +138,12 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 throw new InvalidOperationException("Process was not started");
             }
 
-            await Task.WhenAll(
-                _seenNullOutput.WaitAsync(cancellationToken),
-                _seenNullError.WaitAsync(cancellationToken)
-            );
-            cancellationToken.ThrowIfCancellationRequested();
+            if (!_process.HasExited) {
+                await _seenNullOutput.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await _seenNullError.WaitAsync(cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             return _process.ExitCode;
         }
     }

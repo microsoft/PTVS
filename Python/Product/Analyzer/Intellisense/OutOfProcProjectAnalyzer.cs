@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _server = new LS.Server();
             _server.OnParseComplete += OnParseComplete;
+            _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
@@ -227,6 +228,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             assembly = request.interpreter?.assembly,
                             typeName = request.interpreter?.typeName,
                             properties = request.interpreter?.properties
+                        }
+                    },
+                    capabilities = new LS.ClientCapabilities {
+                        python = new LS.PythonClientCapabilities {
+                            analysisUpdates = true
                         }
                     }
                 });
@@ -1734,15 +1740,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return Project.AddXamlFile(path, null);
             }
 
-            var entry = await _server.LoadFileAsync(
+            return await _server.LoadFileAsync(
                 documentUri,
                 string.IsNullOrEmpty(addingFromDir) ? null : new Uri(addingFromDir)
             ).ConfigureAwait(false);
-
-            if (entry is IPythonProjectEntry pyEntry) {
-                pyEntry.OnNewAnalysis += OnNewAnalysis;
-            }
-            return entry;
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
@@ -1910,7 +1911,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = new Uri(request.documentUri),
-                        version = fileChange.version
+                        version = fileChange.version + 1
                     },
                     contentChanges = changes.ToArray()
                 });
@@ -1969,19 +1970,13 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
-        private async void OnNewAnalysis(object sender, EventArgs e) {
-            var projEntry = sender as IPythonProjectEntry;
-            if (projEntry != null) {
-                projEntry.GetTreeAndCookie(out _, out var cookieTmp);
-                var cookie = cookieTmp as VersionCookie;
-
-                await _connection.SendEventAsync(
-                    new AP.FileAnalysisCompleteEvent() {
-                        documentUri = projEntry.DocumentUri.AbsoluteUri,
-                        version = cookie?.Version ?? 0
-                    }
-                );
-            }
+        private void OnAnalysisComplete(object sender, LS.AnalysisCompleteEventArgs e) {
+            _connection.SendEventAsync(
+                new AP.FileAnalysisCompleteEvent() {
+                    documentUri = e.uri.AbsoluteUri,
+                    version = e.version
+                }
+            ).DoNotWait();
         }
 
         private static NameExpression GetFirstNameExpression(Statement stmt) {
@@ -2080,9 +2075,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void UnloadFile(IProjectEntry entry, string documentUri) {
-            if (entry is IPythonProjectEntry pyEntry) {
-                pyEntry.OnNewAnalysis -= OnNewAnalysis;
-            }
         }
 
         #endregion
