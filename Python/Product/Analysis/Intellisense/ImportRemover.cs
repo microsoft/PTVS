@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 targetStmt = enclosingNodeWalker.Target.Parents[enclosingNodeWalker.Target.Parents.Count - 1];
             }
 
-            var walker = new ImportWalker(targetStmt);
+            var walker = new ImportWalker(_ast, targetStmt);
             _ast.Walk(walker);
 
             var changes = new List<DocumentChange>();
@@ -65,17 +65,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 var span = removed.Node.GetSpan(_ast);
                 if (removeCount == removed.NameCount) {
                     removeInfo.SiblingCount.Value--;
-                        
+
                     DeleteStatement(changes, span, removeInfo.SiblingCount.Value == 0);
                 } else {
                     var newCode = updatedStatement.ToCodeString(_ast);
 
-                    int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
-                    int start = _ast.LocationToIndex(span.Start) - proceedingLength;
-                    int length = _ast.GetSpanLength(span) + proceedingLength;
+                    int proceedingLength = (removed.LeadingWhitespace ?? "").Length;
 
-                    changes.Add(DocumentChange.Delete(new SourceSpan(span.Start.AddColumns(-proceedingLength), span.End)));
-                    changes.Add(DocumentChange.Insert(newCode, span.Start));
+                    changes.Add(DocumentChange.Replace(new SourceSpan(
+                        _ast.IndexToLocation(removed.Node.StartIndex - proceedingLength),
+                        span.End
+                    ), newCode));
                 }
             }
             return changes.ToArray();
@@ -171,6 +171,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public abstract Statement Node {
                 get;
             }
+
+            public string LeadingWhitespace { get; protected set; }
         }
 
         /// <summary>
@@ -180,7 +182,7 @@ namespace Microsoft.PythonTools.Intellisense {
             /// <summary>
             /// Turns the statement back into code.
             /// </summary>
-            /// <param name="ast"></param>            
+            /// <param name="ast"></param>
             public abstract string ToCodeString(PythonAst ast);
 
             /// <summary>
@@ -195,8 +197,9 @@ namespace Microsoft.PythonTools.Intellisense {
         class RemovedImportStatement : RemovedStatement {
             private readonly ImportStatement _import;
 
-            public RemovedImportStatement(ImportStatement removed) {
+            public RemovedImportStatement(ImportStatement removed, PythonAst ast) {
                 _import = removed;
+                LeadingWhitespace = removed.GetPreceedingWhiteSpaceDefaultNull(ast);
             }
 
             public override bool IsRemoved(int index, HashSet<string> removedNames) {
@@ -246,8 +249,9 @@ namespace Microsoft.PythonTools.Intellisense {
         class RemovedFromImportStatement : RemovedStatement {
             private readonly FromImportStatement _fromImport;
 
-            public RemovedFromImportStatement(FromImportStatement fromImport) {
+            public RemovedFromImportStatement(FromImportStatement fromImport, PythonAst ast) {
                 _fromImport = fromImport;
+                LeadingWhitespace = fromImport.GetPreceedingWhiteSpaceDefaultNull(ast);
             }
 
             public override int NameCount {
@@ -296,14 +300,14 @@ namespace Microsoft.PythonTools.Intellisense {
             public readonly RemovedStatement Statement;
             public readonly StrongBox<int> SiblingCount;
 
-            public ImportRemovalInfo(ImportStatementInfo statementInfo) {
+            public ImportRemovalInfo(ImportStatementInfo statementInfo, PythonAst ast) {
                 var node = statementInfo.Statement;
                 SiblingCount = statementInfo.Siblings;
 
                 if (node is FromImportStatement) {
-                    Statement = new RemovedFromImportStatement((FromImportStatement)node);
+                    Statement = new RemovedFromImportStatement((FromImportStatement)node, ast);
                 } else {
-                    Statement = new RemovedImportStatement((ImportStatement)node);
+                    Statement = new RemovedImportStatement((ImportStatement)node, ast);
                 }
             }
         }
@@ -325,13 +329,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         class ImportWalker : PythonWalker {
+            private readonly PythonAst _ast;
             private readonly List<ScopeStatement> _scopes = new List<ScopeStatement>();
             private readonly Dictionary<string, List<ImportStatementInfo>> _importedNames = new Dictionary<string, List<ImportStatementInfo>>();
             private readonly HashSet<string> _readNames = new HashSet<string>();
             private readonly ScopeStatement _targetStmt;
             private readonly Dictionary<ScopeStatement, StrongBox<int>> _statementCount = new Dictionary<ScopeStatement, StrongBox<int>>();
 
-            public ImportWalker(ScopeStatement targetStmt) {
+            public ImportWalker(PythonAst ast, ScopeStatement targetStmt) {
+                _ast = ast;
                 _targetStmt = targetStmt;
             }
 
@@ -349,7 +355,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         foreach (var node in nameAndList.Value) {
                             ImportRemovalInfo curInfo;
                             if (!removeInfo.TryGetValue(node.Statement, out curInfo)) {
-                                removeInfo[node.Statement] = curInfo = new ImportRemovalInfo(node);
+                                removeInfo[node.Statement] = curInfo = new ImportRemovalInfo(node, _ast);
                             }
 
                             curInfo.ToRemove.Add(nameAndList.Key);

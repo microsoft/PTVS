@@ -443,6 +443,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class FileUpdateResponse : Response {
+            public int version;
 #if DEBUG
             public string newCode;
 #endif

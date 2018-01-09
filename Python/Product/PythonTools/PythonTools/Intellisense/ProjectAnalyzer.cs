@@ -2129,7 +2129,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             var bi = _services.GetBufferInfo(span.Snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
+            if (bi == null) {
+                return;
+            }
+
+            var entry = await bi.GetAnalysisEntryAsync(CancellationToken.None);
             if (entry == null) {
                 return;
             }
@@ -2169,8 +2173,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task RemoveImportsAsync(SnapshotPoint loc, bool allScopes) {
             var bi = _services.GetBufferInfo(loc.Snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
+            if (bi == null) {
+                return;
+            }
+            var entry = await bi.GetAnalysisEntryAsync(CancellationToken.None);
             if (entry == null) {
+                Debug.Fail("Failed to get analysis entry");
                 return;
             }
 

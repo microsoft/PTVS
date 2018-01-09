@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -81,6 +82,7 @@ namespace Microsoft.PythonTools.Editor {
         private readonly object _lock = new object();
 
         private AnalysisEntry _analysisEntry;
+        private TaskCompletionSource<AnalysisEntry> _waitingForEntry;
 
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
@@ -150,6 +152,8 @@ namespace Microsoft.PythonTools.Editor {
             if (Buffer is ITextBuffer2 buffer2) {
                 buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
             }
+
+            Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(null);
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
@@ -305,6 +309,31 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         /// <summary>
+        /// Returns the current analysis entry if it is not null. Otherwise
+        /// waits for a non-null entry to be set and returns it. If cancelled,
+        /// return null.
+        /// </summary>
+        public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
+            var entry = AnalysisEntry;
+            if (entry != null) {
+                return Task.FromResult(entry);
+            }
+            var tcs = Volatile.Read(ref _waitingForEntry);
+            if (tcs != null) {
+                return tcs.Task;
+            }
+            tcs = new TaskCompletionSource<AnalysisEntry>();
+            tcs = Interlocked.CompareExchange(ref _waitingForEntry, tcs, null) ?? tcs;
+            entry = AnalysisEntry;
+            if (entry != null) {
+                tcs.TrySetResult(entry);
+            } else if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetResult(null));
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// Changes the analysis entry to <paramref name="entry"/> if the current
         /// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
         /// entry, regardless of whether it changed or not.
@@ -324,6 +353,8 @@ namespace Microsoft.PythonTools.Editor {
             if (entry != null) {
                 entry.AnalysisComplete += AnalysisEntry_AnalysisComplete;
                 entry.ParseComplete += AnalysisEntry_ParseComplete;
+
+                Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(entry);
             }
 
             OnNewAnalysisEntry(entry);

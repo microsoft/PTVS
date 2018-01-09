@@ -1888,6 +1888,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<Response> UpdateContent(AP.FileUpdateRequest request) {
+            int version = -1;
             foreach (var fileChange in request.updates) {
                 var changes = new List<LS.TextDocumentContentChangedEvent>();
                 if (fileChange.kind == AP.FileUpdateKind.none) {
@@ -1896,6 +1897,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     changes.Add(new LS.TextDocumentContentChangedEvent {
                         text = fileChange.content
                     });
+                    version = fileChange.version;
                 } else {
                     changes.AddRange(fileChange.changes.Select(c => new LS.TextDocumentContentChangedEvent {
                         range = new SourceSpan(
@@ -1904,11 +1906,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         ),
                         text = c.newText
                     }));
+                    version = fileChange.version + 1;
                 }
                 await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
-                        version = fileChange.version + 1
+                        version = version
                     },
                     contentChanges = changes.ToArray()
                 });
@@ -1918,10 +1921,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var entry = _server.GetEntry(request.documentUri);
             int part = _server.GetPart(request.documentUri);
             return new AP.FileUpdateResponse {
+                version = version,
                 newCode = (entry as IDocument)?.ReadDocument(part, out _)?.ReadToEnd()
             };
 #else
-            return new AP.FileUpdateResponse();
+            return new AP.FileUpdateResponse {
+                version = version
+            };
 #endif
         }
 
