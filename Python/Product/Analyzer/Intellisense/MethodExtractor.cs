@@ -30,8 +30,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _code;
 
         public MethodExtractor(PythonAst ast, string code) {
-            _code = code;
-            _ast = ast;
+            _code = code ?? throw new ArgumentNullException(nameof(code));
+            _ast = ast ?? throw new ArgumentNullException(nameof(ast));
         }
 
         public AP.ExtractMethodResponse ExtractMethod(AP.ExtractMethodRequest input, int version) {
@@ -184,8 +184,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var changes = new List<DocumentChange>();
 
-            changes.Add(DocumentChange.Replace(walker.Target.StartIncludingIndentation, walker.Target.End, newMethod.Call));
-            changes.Add(DocumentChange.Insert(newMethod.Method, walker.Target.InsertLocations[targetScope]));
+            var callChange = DocumentChange.Replace(walker.Target.StartIncludingIndentation, walker.Target.End, newMethod.Call);
+            var methodChange = DocumentChange.Insert(newMethod.Method, walker.Target.InsertLocations[targetScope]);
+            if (callChange.ReplacedSpan.Start < methodChange.ReplacedSpan.Start) {
+                changes.Add(callChange);
+                changes.Add(methodChange);
+            } else {
+                changes.Add(methodChange);
+                changes.Add(callChange);
+            }
 
             List<AP.ScopeInfo> scopes = new List<AP.ScopeInfo>();
             for(int i = 0; i<walker.Target.Parents.Count; i++) {

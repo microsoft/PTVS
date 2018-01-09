@@ -32,11 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public AP.ExtractMethodResponse ExtractMethod(AP.ExtractMethodRequest input, int version) {
-            var resp = _extractor.ExtractMethod(input, version);
-            if (!string.IsNullOrEmpty(resp.cannotExtractMsg)) {
-                resp.cannotExtractMsg = string.Format(CultureInfo.CurrentUICulture, Strings.ExtractMethodCannotExtract, resp.cannotExtractMsg);
-            }
-            return resp;
+            return _extractor.ExtractMethod(input, version);
         }
     }
 }

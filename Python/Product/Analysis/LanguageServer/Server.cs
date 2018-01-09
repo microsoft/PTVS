@@ -122,11 +122,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var entry = GetEntry(uri);
             int part = GetPart(uri);
             if (entry is IDocument doc) {
-                int docVersion = doc.GetDocumentVersion(part);
-                int fromVersion = @params.textDocument.version - 1 ?? docVersion;
-                if (fromVersion < 0) {
-                    fromVersion = 0;
-                }
+                int docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
+                int fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
 
                 List<DidChangeTextDocumentParams> pending;
                 if (fromVersion > docVersion) {
@@ -147,7 +144,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         ReplacedSpan = c.range.GetValueOrDefault(),
                         WholeBuffer = !c.range.HasValue,
                         InsertedText = c.text
-                    }).OrderByDescending(c => c.ReplacedSpan.Start)
+                    })
                 ));
 
                 if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {

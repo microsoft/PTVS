@@ -78,12 +78,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override Statement GetBody() {
             if (_node is Statement body) {
-                var retStmt = new ReturnStatement((Expression)_node);
+                return body;
+            }
+            if (_node is Expression expr) {
+                var retStmt = new ReturnStatement(expr);
                 retStmt.RoundTripRemoveValueWhiteSpace(Ast);
                 return retStmt;
             }
-
-            return null;
+            throw new InvalidOperationException(InvalidExtractionMessage);
         }
 
         public override string InvalidExtractionMessage {

@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var v in GetVersions(lastSent.Version, snapshot.Version)) {
                 yield return new AP.FileUpdate {
                     version = v.VersionNumber,
-                    changes = GetChanges(buffer, v).ToArray(),
+                    changes = GetChanges(buffer, v).Reverse().ToArray(),
                     kind = AP.FileUpdateKind.changes
                 };
             }

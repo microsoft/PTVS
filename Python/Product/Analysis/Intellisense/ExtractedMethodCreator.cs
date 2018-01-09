@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // reset leading indentation to single newline + indentation, this
             // strips out any proceeding comments which we don't extract
-            var leading = _newline + body.GetIndentationLevel(_ast);
+            var leading = _newline + _target.IndentationLevel;
             body.SetLeadingWhiteSpace(_ast, leading);
 
             if (_outputVars.Count > 0) {
