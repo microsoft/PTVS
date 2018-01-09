@@ -357,7 +357,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FileUpdateRequest : Request<FileUpdateResponse> {
             public const string Command = "fileUpdate";
 
-            public string documentUri;
+            public Uri documentUri;
             public FileUpdate[] updates;
 
             public override string command => Command;

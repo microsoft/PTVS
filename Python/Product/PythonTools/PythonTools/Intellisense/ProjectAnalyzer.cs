@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -190,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
-            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>();
+            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(UriEqualityComparer.IncludeFragment);
 
             _logger = _services.Python?.Logger;
 

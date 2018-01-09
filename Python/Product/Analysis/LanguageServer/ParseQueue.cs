@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         foreach (var part in doc.DocumentParts) {
                             using (var r = doc.ReadDocumentBytes(part, out var version)) {
                                 if (r == null) {
-                                    throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                                    continue;
                                 }
                                 ParsePython(r, pyEntry, ps.LanguageVersion, out var tree, out List<Diagnostic> diags);
                                 buffers[part] = new BufferVersion(
@@ -120,6 +120,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                     diags.MaybeEnumerate()
                                 );
                             }
+                        }
+                        if (!buffers.Any()) {
+                            throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
                         }
                         complete = true;
                         result = UpdateTree(pyEntry, buffers);

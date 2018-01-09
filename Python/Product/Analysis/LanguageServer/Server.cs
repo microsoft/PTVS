@@ -33,7 +33,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
-        private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
+        // Uri does not consider #fragment for equality
+        private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
 
         internal Task _loadingFromDirectory;
 
@@ -46,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Server() {
             _queue = new AnalysisQueue();
             _parseQueue = new ParseQueue();
-            _projectFiles = new ConcurrentDictionary<string, IProjectEntry>();
+            _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
         }
 
         public void Dispose() {
@@ -246,17 +247,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Private Helpers
 
         internal IProjectEntry GetOrAddEntry(Uri documentUri, IProjectEntry entry) {
-            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
-
-            return _projectFiles.GetOrAdd(key, entry);
+            return _projectFiles.GetOrAdd(documentUri, entry);
         }
 
         internal IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
 
         internal IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
-            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
-
-            if (!_projectFiles.TryGetValue(key, out IProjectEntry entry) && throwIfMissing) {
+            if (!_projectFiles.TryGetValue(documentUri, out IProjectEntry entry) && throwIfMissing) {
                 throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
             }
             return entry;
@@ -272,13 +269,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IProjectEntry RemoveEntry(Uri documentUri) {
-            var key = documentUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.PathAndQuery, UriFormat.Unescaped);
-
-            _projectFiles.TryRemove(key, out var entry);
+            _projectFiles.TryRemove(documentUri, out var entry);
             return entry;
         }
 
-        internal IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys;
+        internal IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys.Select(k => k.AbsoluteUri);
 
 
         private void GetAnalysis(TextDocumentIdentifier document, Position position, int? expectedVersion, out IPythonProjectEntry entry, out PythonAst tree) {

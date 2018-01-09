@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 tasks.Add(Tuple.Create(snapshotGroup.ToArray(), analyzer.SendRequestAsync(
                     new AP.FileUpdateRequest {
-                        documentUri = entry.DocumentUri.AbsolutePath,
+                        documentUri = entry.DocumentUri,
                         updates = updates
                     }
                 )));

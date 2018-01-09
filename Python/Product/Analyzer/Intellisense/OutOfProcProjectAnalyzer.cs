@@ -1907,7 +1907,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
-                        uri = new Uri(request.documentUri),
+                        uri = request.documentUri,
                         version = fileChange.version + 1
                     },
                     contentChanges = changes.ToArray()
@@ -1915,9 +1915,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 #if DEBUG
-            var uri = new Uri(request.documentUri);
-            var entry = _server.GetEntry(uri);
-            int part = _server.GetPart(uri);
+            var entry = _server.GetEntry(request.documentUri);
+            int part = _server.GetPart(request.documentUri);
             return new AP.FileUpdateResponse {
                 newCode = (entry as IDocument)?.ReadDocument(part, out _)?.ReadToEnd()
             };
