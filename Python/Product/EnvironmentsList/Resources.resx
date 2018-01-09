@@ -142,7 +142,7 @@
     <value>The name of the new environment.</value>
   </data>
   <data name="CondaExtensionEnvironmentNameWatermark" xml:space="preserve">
-    <value>e.g. My New Environment</value>
+    <value>env</value>
   </data>
   <data name="CondaExtensionLanguageVersionLabel" xml:space="preserve">
     <value>Python</value>

@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to e.g. My New Environment.
+        ///   Looks up a localized string similar to env.
         /// </summary>
         public static string CondaExtensionEnvironmentNameWatermark {
             get {

@@ -327,7 +327,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return unique;
         }
 
-#region IPythonInterpreterProvider Members
+        #region IPythonInterpreterProvider Members
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
             if (!ExperimentalOptions.AutoDetectCondaEnvironments) {

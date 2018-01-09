@@ -1653,8 +1653,7 @@ namespace Microsoft.PythonTools.Project {
                         ShowAddInterpreter();
                         return VSConstants.S_OK;
                     case PythonConstants.CreateCondaEnv:
-                        ExecCreateCondaEnv();
-                        return VSConstants.S_OK;
+                        return ExecCreateCondaEnv();
                     case PythonConstants.AddExistingVirtualEnv:
                     case PythonConstants.AddVirtualEnv:
                         ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv, Path.Combine(ProjectHome, "requirements.txt"));

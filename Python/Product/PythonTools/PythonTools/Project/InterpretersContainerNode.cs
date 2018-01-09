@@ -16,15 +16,15 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
