@@ -161,7 +161,10 @@ namespace Microsoft.PythonTools.Interpreter {
             List<PythonInterpreterInformation> found = null;
 
             try {
-                string mainCondaExePath = GetMainCondaExecutablePath();
+                // Try to find an existing root conda installation
+                // If the future we may decide to install a private installation of conda/miniconda
+                var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
+                var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
                 if (mainCondaExePath != null) {
                     found = FindCondaEnvironments(mainCondaExePath).ToList();
                 }
@@ -195,26 +198,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private string GetMainCondaExecutablePath() {
-            // Try to find an existing root conda installation
-            // If the future we may decide to install a private installation of conda/miniconda
-            string mainCondaExePath = null;
-            var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
-            foreach (var factory in globalFactories) {
-                var condaPath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false);
-                if (!string.IsNullOrEmpty(condaPath)) {
-                    // TODO: need to pick the newest conda.exe on the machine,
-                    // not just the first one found.
-                    // Unfortunately, conda.exe doesn't have a version resource,
-                    // we'll need to figure some other way to determine conda version.
-                    mainCondaExePath = condaPath;
-                    break;
-                }
-            }
-
-            return mainCondaExePath;
-        }
-
         private static CondaInfoResult ExecuteCondaInfo(string condaPath) {
             using (var output = ProcessOutput.RunHiddenAndCapture(condaPath, "info", "--json")) {
                 output.Wait();
@@ -240,37 +223,19 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
+        private static readonly bool FindUsingCondaInfo = true;
+        private static readonly bool FindUsingEnvironmentsTxt = false; // Not necessary for conda 4.4+
+
         private List<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var found = new List<PythonInterpreterInformation>();
             var watchFolders = new HashSet<string>();
 
-            // Find environments that were created with "conda create -n <name>"
-            var condaInfoResult = ExecuteCondaInfo(condaPath);
-            if (condaInfoResult != null) {
-                foreach (var folder in condaInfoResult.EnvironmentFolders) {
-                    if (!Directory.Exists(folder)) {
-                        continue;
-                    }
-
-                    PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                    if (env != null) {
-                        found.Add(env);
-                    }
-                }
-            }
-
-            // Find environments that were created with "conda create -p <folder>"
-            // Note that this may have a bunch of entries that no longer exist
-            // as well as duplicates that were returned by conda info.
-            if (File.Exists(_environmentsTxtPath)) {
-                try {
-                    var folders = File.ReadAllLines(_environmentsTxtPath);
-                    foreach (var folder in folders) {
+            if (FindUsingCondaInfo) {
+                // Find environments that were created with "conda create -n <name>"
+                var condaInfoResult = ExecuteCondaInfo(condaPath);
+                if (condaInfoResult != null) {
+                    foreach (var folder in condaInfoResult.EnvironmentFolders) {
                         if (!Directory.Exists(folder)) {
-                            continue;
-                        }
-
-                        if (found.FirstOrDefault(pii => PathUtils.IsSameDirectory(pii.Configuration.PrefixPath, folder)) != null) {
                             continue;
                         }
 
@@ -279,8 +244,33 @@ namespace Microsoft.PythonTools.Interpreter {
                             found.Add(env);
                         }
                     }
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
+                }
+            }
+
+            if (FindUsingEnvironmentsTxt) {
+                // Find environments that were created with "conda create -p <folder>"
+                // Note that this may have a bunch of entries that no longer exist
+                // as well as duplicates that were returned by conda info.
+                if (File.Exists(_environmentsTxtPath)) {
+                    try {
+                        var folders = File.ReadAllLines(_environmentsTxtPath);
+                        foreach (var folder in folders) {
+                            if (!Directory.Exists(folder)) {
+                                continue;
+                            }
+
+                            if (found.FirstOrDefault(pii => PathUtils.IsSameDirectory(pii.Configuration.PrefixPath, folder)) != null) {
+                                continue;
+                            }
+
+                            PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
+                            if (env != null) {
+                                found.Add(env);
+                            }
+                        }
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
                 }
             }
 
@@ -290,7 +280,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private static PythonInterpreterInformation CreateEnvironmentInfo(string prefixPath) {
             var name = Path.GetFileName(prefixPath);
             var description = name;
-            var vendor = string.Empty;
+            var vendor = Strings.CondaEnvironmentDescription;
             var vendorUrl = string.Empty;
             var supportUrl = string.Empty;
             var interpreterPath = Path.Combine(prefixPath, CondaEnvironmentFactoryConstants.ConsoleExecutable);
@@ -432,6 +422,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        #endregion
+#endregion
     }
 }

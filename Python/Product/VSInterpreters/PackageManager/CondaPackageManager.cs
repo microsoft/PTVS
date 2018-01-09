@@ -58,6 +58,9 @@ namespace Microsoft.PythonTools.Interpreter {
             _installedPackages = new List<PackageSpec>();
             _availablePackages = new List<PackageSpec>();
             _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath);
+            if (!File.Exists(_condaPath)) {
+                throw new NotSupportedException();
+            }
             _historyPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta", "history");
         }
 

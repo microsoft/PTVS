@@ -203,4 +203,15 @@
         </Setter>
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+
+    <Style x:Key="DeleteFolderImage" TargetType="Control">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.DeleteFolder}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
 </ResourceDictionary>

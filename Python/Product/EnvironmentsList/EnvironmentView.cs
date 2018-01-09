@@ -31,14 +31,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand OpenInPowerShell = new RoutedCommand();
         public static readonly RoutedCommand OpenInCommandPrompt = new RoutedCommand();
         public static readonly RoutedCommand MakeGlobalDefault = new RoutedCommand();
+        public static readonly RoutedCommand Delete = new RoutedCommand();
         public static readonly RoutedCommand MakeActiveInCurrentProject = new RoutedCommand();
 
         private const string AddNewEnvironmentViewId = "__AddNewEnvironmentView";
         private const string OnlineHelpViewId = "__OnlineHelpView";
+        public const string CondaEnvironmentViewId = "__CondaEnvironmentView";
 
         public static readonly IEnumerable<InterpreterConfiguration> ExtraItems = new[] {
             new InterpreterConfiguration(OnlineHelpViewId, OnlineHelpViewId),
-            new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
+            new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId),
+            new InterpreterConfiguration(CondaEnvironmentViewId, CondaEnvironmentViewId),
         };
 
         // Names of properties that will be requested from interpreter configurations
@@ -120,6 +123,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             CanBeDefault = Factory.CanBeDefault();
+            CanBeDeleted = Factory.CanBeDeleted();
 
             Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
             SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
@@ -138,14 +142,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return new EnvironmentView(OnlineHelpViewId, Resources.EnvironmentViewOnlineHelpLabel, null);
         }
 
+        public static EnvironmentView CreateCondaEnvironmentView(IInterpreterOptionsService service, IInterpreterRegistryService interpreters) {
+            var ev = new EnvironmentView(CondaEnvironmentViewId, Resources.EnvironmentViewCreateNewCondaEnvironmentAutomationName, null);
+            ev.Extensions = new ObservableCollection<object>();
+            ev.Extensions.Add(new CondaExtensionProvider(service, interpreters));
+            return ev;
+        }
+
         public static EnvironmentView CreateMissingEnvironmentView(string id, string description) {
             return new EnvironmentView(id, description + Strings.MissingSuffix, null);
         }
 
         public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
+        public static bool IsCondaEnvironmentView(string id) => CondaEnvironmentViewId.Equals(id);
         public static bool IsOnlineHelpView(string id) => OnlineHelpViewId.Equals(id);
 
         public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration.Id);
+        public static bool IsCondaEnvironmentView(EnvironmentView view) => CondaEnvironmentViewId.Equals(view?.Configuration.Id);
         public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration.Id);
 
         public ObservableCollection<object> Extensions { get; private set; }
@@ -172,6 +185,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         #region Read-only State Dependency Properties
 
         private static readonly DependencyPropertyKey IsConfigurablePropertyKey = DependencyProperty.RegisterReadOnly("IsConfigurable", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
+        private static readonly DependencyPropertyKey CanBeDeletedPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDeleted", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey CanBeDefaultPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDefault", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsDefault", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(true));
@@ -185,6 +199,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly DependencyPropertyKey RefreshProgressVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("RefreshProgressVisibility", typeof(Visibility), typeof(EnvironmentView), new PropertyMetadata(Visibility.Hidden));
 
         public static readonly DependencyProperty IsConfigurableProperty = IsConfigurablePropertyKey.DependencyProperty;
+        public static readonly DependencyProperty CanBeDeletedProperty = CanBeDeletedPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanBeDefaultProperty = CanBeDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
@@ -200,6 +215,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public bool IsConfigurable {
             get { return Factory == null ? false : (bool)GetValue(IsConfigurableProperty); }
             set { if (Factory != null) { SetValue(IsConfigurablePropertyKey, value); } }
+        }
+
+        public bool CanBeDeleted {
+            get { return Factory == null ? false : (bool)GetValue(CanBeDeletedProperty); }
+            set { if (Factory != null) { SetValue(CanBeDeletedPropertyKey, value); } }
         }
 
         public bool CanBeDefault {
@@ -329,6 +349,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     public sealed class EnvironmentViewTemplateSelector : DataTemplateSelector {
         public DataTemplate Environment { get; set; }
 
+        public DataTemplate CondaEnvironment { get; set; }
+
         public DataTemplate AddNewEnvironment { get; set; }
 
         public DataTemplate OnlineHelp { get; set; }
@@ -341,6 +363,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             if (EnvironmentView.IsAddNewEnvironmentView(ev) && AddNewEnvironment != null) {
                 return AddNewEnvironment;
+            }
+
+            if (EnvironmentView.IsCondaEnvironmentView(ev) && CondaEnvironment != null) {
+                return CondaEnvironment;
             }
 
             if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {

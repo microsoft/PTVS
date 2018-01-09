@@ -149,6 +149,31 @@
                 </Grid>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="CondaEnvironmentListItem">
+                <Grid Background="Transparent" Margin="6">
+                    <Grid.Resources>
+                        <Geometry x:Key="AddGeometry">
+                            F1M9.765625,18.1081237792969L11.078125,18.1081237792969 11.078125,24.5456237792969 17.5,24.5456237792969 17.5,25.8581237792969 11.078125,25.8581237792969 11.078125,32.2956237792969 9.765625,32.2956237792969 9.765625,25.8581237792969 3.328125,25.8581237792969 3.328125,24.5456237792969 9.765625,24.5456237792969 9.765625,18.1081237792969z
+                        </Geometry>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Path Width="12" Height="12"
+                          Margin="4"
+                          Stretch="Uniform"
+                          RenderOptions.EdgeMode="Aliased"
+                          Data="{StaticResource AddGeometry}"
+                          Fill="{Binding Foreground,ElementName=CustomLabel}">
+                    </Path>
+                    <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
+                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                           Content="{x:Static l:Resources.EnvironmentViewCondaLabel}"
+                           AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewCreateNewCondaEnvironmentAutomationName}"/>
+                </Grid>
+            </DataTemplate>
+
             <!-- ***********************************************************
                  EnvironmentHeader is used for the top of the detailed
                  display.

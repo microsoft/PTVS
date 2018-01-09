@@ -21,16 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -63,13 +66,14 @@ namespace Microsoft.PythonTools.InterpreterList {
             _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
             
             var list = new ToolWindow();
+            list.ViewCreated += List_ViewCreated;
+            list.CondaProviderCreated += List_CondaCreateProviderCreated;
             list.Site = _site;
             try {
                 list.TelemetryLogger = _pyService.Logger;
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
-            list.ViewCreated += List_ViewCreated;
 
             list.CommandBindings.Add(new CommandBinding(
                 EnvironmentView.OpenInteractiveWindow,
@@ -115,6 +119,11 @@ namespace Microsoft.PythonTools.InterpreterList {
                 EnvironmentPathsExtension.OpenInBrowser,
                 OpenInBrowser_Executed,
                 OpenInBrowser_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.Delete,
+                DeleteEnvironment_Executed,
+                DeleteEnvironment_CanExecute
             ));
 
             Content = list;
@@ -194,6 +203,13 @@ namespace Microsoft.PythonTools.InterpreterList {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
             }
+        }
+
+        private void List_CondaCreateProviderCreated(object sender, CondaProviderEventArgs e) {
+            e.Provider.OperationStarted += PipExtensionProvider_OperationStarted;
+            e.Provider.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+            e.Provider.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+            e.Provider.OperationFinished += PipExtensionProvider_OperationFinished;
         }
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
@@ -394,6 +410,60 @@ namespace Microsoft.PythonTools.InterpreterList {
                 .Where(Directory.Exists));
         }
 
+        private void DeleteEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = view?.CanBeDeleted == true;
+            e.Handled = true;
+        }
+
+        private void DeleteEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
+            // TODO: this is assuming that all environments that CanBeDeleted are conda environments, which may not be true in the future
+            var view = e.Parameter as EnvironmentView;
+            var result = MessageBox.Show(
+                Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.PrefixPath),
+                Resources.ProductTitle,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            );
+            if (result != MessageBoxResult.Yes) {
+                return;
+            }
+
+            var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
+            var registry = compModel.GetService<IInterpreterRegistryService>();
+            // TODO: reuse a single conda environment manager between this and
+            // the one in CondaExtension, since it can be slow to create
+            var mgr = CondaEnvironmentManager.Create(registry);
+            mgr.DeleteAsync(
+                view.Configuration.PrefixPath,
+                new CondaEnvironmentManagerUI(_outputWindow),
+                CancellationToken.None
+            ).HandleAllExceptions(_site, GetType()).DoNotWait();
+        }
+
+        class CondaEnvironmentManagerUI : ICondaEnvironmentManagerUI {
+            private readonly Redirector _window;
+
+            public CondaEnvironmentManagerUI(Redirector window) {
+                _window = window;
+            }
+
+            public void OnErrorTextReceived(ICondaEnvironmentManager sender, string text) {
+                _window.WriteErrorLine(text);
+            }
+
+            public void OnOperationFinished(ICondaEnvironmentManager sender, string operation, bool success) {
+            }
+
+            public void OnOperationStarted(ICondaEnvironmentManager sender, string operation) {
+                _window.ShowAndActivate();
+            }
+
+            public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text) {
+                _window.WriteLine(text);
+            }
+        }
+
         private void OpenInCommandPrompt_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
             e.CanExecute = Directory.Exists(view?.PrefixPath);
@@ -448,6 +518,20 @@ namespace Microsoft.PythonTools.InterpreterList {
             PythonToolsPackage.OpenWebBrowser(_site, (string)e.Parameter);
         }
 
+        internal static void OpenAt(IServiceProvider site, string viewId, Type extension) {
+            var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
+                ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
+            var envs = wnd?.Content as ToolWindow;
+            if (envs == null) {
+                Debug.Fail("Failed to get environment list window");
+                return;
+            }
+
+            ErrorHandler.ThrowOnFailure((wnd.Frame as IVsWindowFrame)?.Show() ?? 0);
+
+            SelectEnvAndExt(envs, viewId, extension, 3);
+        }
+
         internal static void OpenAt(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
             var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
                 ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
@@ -488,6 +572,29 @@ namespace Microsoft.PythonTools.InterpreterList {
             var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter) : null;
             if (select == null) {
                 envs.Dispatcher.InvokeAsync(() => SelectEnvAndExt(envs, interpreter, extension, retries - 1), DispatcherPriority.Background);
+                return;
+            }
+
+            var ext = select?.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
+
+            envs.Environments.MoveCurrentTo(select);
+            if (ext != null) {
+                var exts = envs.Extensions;
+                if (exts != null && exts.Contains(ext)) {
+                    exts.MoveCurrentTo(ext);
+                    ((ext as IEnvironmentViewExtension)?.WpfObject as ICanFocus)?.Focus();
+                }
+            }
+        }
+
+        private static void SelectEnvAndExt(ToolWindow envs, string viewId, Type extension, int retries) {
+            if (retries <= 0) {
+                Debug.Fail("Failed to select environment/extension after multiple retries");
+                return;
+            }
+            var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Configuration.Id == viewId) : null;
+            if (select == null) {
+                envs.Dispatcher.InvokeAsync(() => SelectEnvAndExt(envs, viewId, extension, retries - 1), DispatcherPriority.Background);
                 return;
             }
 

@@ -692,6 +692,8 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 await CacheInstalledPackagesAsync(false, false, cancellationToken);
             } catch (OperationCanceledException) {
+            } catch (FileNotFoundException) {
+                // Happens if we attempt to refresh an environment that was just deleted
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }

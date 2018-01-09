@@ -168,6 +168,7 @@
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
                 <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </l:DataListBox.ItemTemplateSelector>
@@ -246,6 +247,7 @@
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
                 <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </l:DataListBox.ItemTemplateSelector>

@@ -693,11 +693,126 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to create &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaCreateFailed {
+            get {
+                return ResourceManager.GetString("CondaCreateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid name or path &apos;{0}&apos;
+        ///.
+        /// </summary>
+        public static string CondaCreateInvalidNameOrPath {
+            get {
+                return ResourceManager.GetString("CondaCreateInvalidNameOrPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Creating &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string CondaCreateStarted {
+            get {
+                return ResourceManager.GetString("CondaCreateStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully created &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaCreateSuccess {
+            get {
+                return ResourceManager.GetString("CondaCreateSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Conda.
         /// </summary>
         public static string CondaDefaultIndexName {
             get {
                 return ResourceManager.GetString("CondaDefaultIndexName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to delete &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaDeleteFailed {
+            get {
+                return ResourceManager.GetString("CondaDeleteFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Deleting &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string CondaDeleteStarted {
+            get {
+                return ResourceManager.GetString("CondaDeleteStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully deleted &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaDeleteSuccess {
+            get {
+                return ResourceManager.GetString("CondaDeleteSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Conda Environment.
+        /// </summary>
+        public static string CondaEnvironmentDescription {
+            get {
+                return ResourceManager.GetString("CondaEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to export &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaExportFailed {
+            get {
+                return ResourceManager.GetString("CondaExportFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Exporting &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string CondaExportStarted {
+            get {
+                return ResourceManager.GetString("CondaExportStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully exported &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string CondaExportSuccess {
+            get {
+                return ResourceManager.GetString("CondaExportSuccess", resourceCulture);
             }
         }
         
@@ -725,6 +840,26 @@ namespace Microsoft.PythonTools {
         public static string CondaExtensionSearchCondaLabel {
             get {
                 return ResourceManager.GetString("CondaExtensionSearchCondaLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File not found &apos;{0}&apos;
+        ///.
+        /// </summary>
+        public static string CondaFileNotFoundError {
+            get {
+                return ResourceManager.GetString("CondaFileNotFoundError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder not found &apos;{0}&apos;
+        ///.
+        /// </summary>
+        public static string CondaFolderNotFoundError {
+            get {
+                return ResourceManager.GetString("CondaFolderNotFoundError", resourceCulture);
             }
         }
         
