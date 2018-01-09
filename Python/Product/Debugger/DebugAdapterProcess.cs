@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger {
                 FileName = exe,
                 Arguments = arguments,
                 WorkingDirectory = cwd,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 RedirectStandardInput = false,
                 RedirectStandardOutput = false,
                 UseShellExecute = false,
@@ -113,9 +113,7 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
             _process.Exited += OnExited;
-            _process.ErrorDataReceived += OnErrorDataReceived;
             _process.Start();
-            _process.BeginErrorReadLine();
 
             try {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
@@ -133,10 +131,6 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream == null) {
                 _process.Kill();
             }
-        }
-
-        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            Debug.WriteLine($"Debug adapter stderr: {e.Data}", nameof(DebugAdapterProcess));
         }
 
         private void OnExited(object sender, EventArgs e) {
