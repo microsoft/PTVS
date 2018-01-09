@@ -69,6 +69,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             switch (tok.Value.Category) {
+                case TokenCategory.Comment:
+                    return false;
                 case TokenCategory.Delimiter:
                 case TokenCategory.Grouping:
                 case TokenCategory.Operator:

@@ -36,6 +36,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
 
+        private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
+
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
@@ -48,6 +50,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _queue = new AnalysisQueue();
             _parseQueue = new ParseQueue();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
+            _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
         }
 
         public void Dispose() {
@@ -115,11 +118,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            var entry = GetEntry(@params.textDocument.uri);
+            var uri = @params.textDocument.uri;
+            var entry = GetEntry(uri);
+            int part = GetPart(uri);
             if (entry is IDocument doc) {
-                int fromVersion = doc.GetDocumentVersion(GetPart(@params.textDocument.uri));
+                int docVersion = doc.GetDocumentVersion(part);
+                int fromVersion = @params.textDocument.version - 1 ?? docVersion;
                 if (fromVersion < 0) {
                     fromVersion = 0;
+                }
+
+                List<DidChangeTextDocumentParams> pending;
+                if (fromVersion > docVersion) {
+                    // Expected from version hasn't been seen yet, so enqueue it
+                    pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
+                    lock (pending) {
+                        pending.Add(@params);
+                    }
+                    return;
                 }
 
                 int toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
@@ -133,6 +149,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         InsertedText = c.text
                     }).OrderByDescending(c => c.ReplacedSpan.Start)
                 ));
+
+                if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {
+                    DidChangeTextDocumentParams? next = null;
+                    lock (pending) {
+                        var notExpired = pending.Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion).OrderBy(p => p.textDocument.version.GetValueOrDefault()).ToArray();
+                        if (notExpired.Any()) {
+                            pending.Clear();
+                            next = notExpired.First();
+                            pending.AddRange(notExpired.Skip(1));
+                        } else {
+                            _pendingChanges.TryRemove(uri, out _);
+                        }
+                    }
+                    if (next.HasValue) {
+                        await DidChangeTextDocument(next.Value);
+                        return;
+                    }
+                }
             }
 
             EnqueueItem(entry);
