@@ -1891,14 +1891,12 @@ namespace Microsoft.PythonTools.Intellisense {
             int version = -1;
             foreach (var fileChange in request.updates) {
                 var changes = new List<LS.TextDocumentContentChangedEvent>();
-                if (fileChange.kind == AP.FileUpdateKind.none) {
-                    continue;
-                } else if (fileChange.kind == AP.FileUpdateKind.reset) {
+                if (fileChange.kind == AP.FileUpdateKind.reset) {
                     changes.Add(new LS.TextDocumentContentChangedEvent {
                         text = fileChange.content
                     });
                     version = fileChange.version;
-                } else {
+                } else if (fileChange.kind == AP.FileUpdateKind.changes) {
                     changes.AddRange(fileChange.changes.Select(c => new LS.TextDocumentContentChangedEvent {
                         range = new SourceSpan(
                             new SourceLocation(c.startLine, c.startColumn),
@@ -1907,6 +1905,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         text = c.newText
                     }));
                     version = fileChange.version + 1;
+                    if (fileChange.changes.Any()) {
+                        version = fileChange.changes.Last().version + 1;
+                    }
+                } else {
+                    continue;
                 }
                 await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
