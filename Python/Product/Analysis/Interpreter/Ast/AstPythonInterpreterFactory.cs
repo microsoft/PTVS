@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
-        private bool _disposed;
+        private bool _disposed, _loggedBadDbPath;
         private readonly bool _skipCache, _skipWriteToCache;
 
         private AnalysisLogWriter _log;
@@ -156,13 +156,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         internal string GetCacheFilePath(string filePath) {
             var dbPath = _databasePath;
             if (!PathEqualityComparer.IsValidPath(dbPath)) {
+                if (!_loggedBadDbPath) {
+                    _loggedBadDbPath = true;
+                    _log?.Log(TraceLevel.Warning, "InvalidDatabasePath", dbPath);
+                }
                 return null;
             }
 
             var name = PathUtils.GetFileName(filePath);
-            var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
-            if (File.Exists(candidate)) {
-                return candidate;
+            if (!PathEqualityComparer.IsValidPath(name)) {
+                _log?.Log(TraceLevel.Warning, "InvalidCacheName", name);
+                return null;
+            }
+            try {
+                var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
+                if (File.Exists(candidate)) {
+                    return candidate;
+                }
+            } catch (ArgumentException) {
+                return null;
             }
 
             var hash = SHA256.Create();
