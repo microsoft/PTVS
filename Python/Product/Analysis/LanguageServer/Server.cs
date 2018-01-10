@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (@params.rootUri != null) {
                 _rootDir = @params.rootUri;
             } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                _rootDir = new Uri(@params.rootPath);
+                _rootDir = new Uri(PathUtils.NormalizePath(@params.rootPath));
             }
 
             if (_rootDir != null) {
@@ -445,27 +445,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return string.Join(Path.DirectorySeparatorChar.ToString(), bits);
         }
 
-        private Uri GetUriFromLocalPath(string localPath) {
-            var bits = localPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (!bits.Any()) {
-                return null;
-            }
-
-            if (bits.Length >= 3 && bits[0] == "_:") {
-                return new UriBuilder(bits[1].ToLowerInvariant(), bits[2]) {
-                    Path = string.Join("/", bits.Skip(3))
-                }.Uri;
-            }
-
-            if (!Path.IsPathRooted(localPath)) {
-                return new UriBuilder(Uri.UriSchemeFile, ".") {
-                    Path = string.Join("/", bits)
-                }.Uri;
-            }
-
-            return new Uri(localPath);
-        }
-
         private Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
             var item = GetEntry(documentUri, throwIfMissing: false);
 
@@ -568,7 +547,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     continue;
                 }
 
-                await LoadFileAsync(new Uri(file));
+                await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
             }
             foreach (var dir in PathUtils.EnumerateDirectories(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
                 if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
@@ -627,7 +606,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var loc = m.Locations.FirstOrDefault();
             if (loc != null) {
                 res.location = new Location {
-                    uri = new Uri(loc.FilePath, UriKind.RelativeOrAbsolute),
+                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
                     range = new SourceSpan(
                         new SourceLocation(loc.StartLine, loc.StartColumn),
                         new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)

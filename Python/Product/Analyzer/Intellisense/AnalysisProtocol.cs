@@ -134,7 +134,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ValueDescriptionRequest : Request<ValueDescriptionResponse> {
             public const string Command = "valueDescriptions";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string expr;
             public int line, column;
 
@@ -168,7 +169,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class AnalysisClassificationsRequest : Request<AnalysisClassificationsResponse> {
             public const string Command = "analysisClassify";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public bool colorNames;
 
             public override string command => Command;
@@ -180,7 +182,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class MethodInsertionLocationRequest : Request<MethodInsertionLocationResponse> {
             public const string Command = "methodInsertion";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string className;
 
             public override string command => Command;
@@ -194,7 +197,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class MethodInfoRequest : Request<MethodInfoResponse> {
             public const string Command = "methodInfo";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string className;
             public string methodName;
 
@@ -210,7 +214,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FindMethodsRequest : Request<FindMethodsResponse> {
             public const string Command = "findMethods";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string className;
 
             /// <summary>
@@ -240,7 +245,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public class QuickInfoRequest : Request<QuickInfoResponse> {
             public const string Command = "quickInfo";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string expr;
             public int line, column;
 
@@ -254,7 +260,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public class FileParsedEvent : Event {
             public const string Name = "fileParsed";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int version;
 
             public override string name => Name;
@@ -263,7 +270,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public class DiagnosticsEvent : Event {
             public const string Name = "diagnostics";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int version;
             public LS.Diagnostic[] diagnostics;
 
@@ -275,7 +283,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FormatCodeRequest : Request<FormatCodeResponse> {
             public const string Command = "formatCode";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int startIndex, endIndex;
             public string newLine;
             public CodeFormattingOptions options;
@@ -298,6 +307,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public class AddFileRequest : Request<AddFileResponse> {
             public const string Command = "addFile";
 
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string path;
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public string addingFromDir;
@@ -306,26 +316,31 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool suppressErrorLists;
 
-            public string uri;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri uri;
 
             public override string command => Command;
         }
 
         public class AddFileResponse : Response {
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
         }
 
         public class AddBulkFileRequest : Request<AddBulkFileResponse> {
             public const string Command = "addBulkFile";
 
             public string[] path;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string addingFromDir;
 
             public override string command => Command;
         }
 
         public class AddBulkFileResponse : Response {
-            public string[] documentUri;
+            [JsonProperty(ItemConverterType = typeof(UriJsonConverter))]
+            public Uri[] documentUri;
         }
 
         public sealed class SetSearchPathRequest : Request<Response> {
@@ -338,7 +353,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class UnloadFileRequest : Request<Response> {
             public const string Command = "unloadFile";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public override string command => Command;
 
             public override string ToString() => "{0}:{1}".FormatUI(command, documentUri);
@@ -349,7 +365,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Name = "directoryFileAdded";
 
             public string filename;
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             public override string name => Name;
         }
@@ -357,6 +374,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FileUpdateRequest : Request<FileUpdateResponse> {
             public const string Command = "fileUpdate";
 
+            [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
             public FileUpdate[] updates;
 
@@ -381,7 +399,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "addImport";
 
             public string fromModule, name, newLine;
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             public override string command => Command;
         }
@@ -395,7 +414,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "isMissingImport";
 
             public string text;
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int line, column;
 
             public override string command => Command;
@@ -455,7 +475,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override string command => Command;
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
         }
 
         public sealed class UnresolvedImportsResponse : Response {
@@ -506,7 +527,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class LocationNameRequest : Request<LocationNameResponse> {
             public const string Command = "locationName";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int line, column;
 
             public override string command => Command;
@@ -521,7 +543,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ProximityExpressionsRequest : Request<ProximityExpressionsResponse> {
             public const string Command = "proximityExpressions";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int line, column, lineCount;
 
             public override string command => Command;
@@ -534,7 +557,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class OverridesCompletionRequest : Request<OverridesCompletionResponse> {
             public const string Command = "overrides";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int line, column;
             public string indentation;
 
@@ -552,7 +576,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
             public const string Command = "removeImports";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int version;
             public int line, column;
             public bool allScopes;
@@ -568,7 +593,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ExtractMethodRequest : Request<ExtractMethodResponse> {
             public const string Command = "extractMethod";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int startIndex, endIndex;
             public int indentSize;
             public string name;
@@ -617,12 +643,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class ModuleInfo {
             public string moduleName;
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string filename;
         }
 
         public class EnqueueFileResponse : Response {
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
         }
 
         public sealed class ChildFileAnalyzed : Event {
@@ -633,7 +661,8 @@ namespace Microsoft.PythonTools.Intellisense {
             /// </summary>
             public string filename;
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool isTemporaryFile, suppressErrorList;
@@ -645,7 +674,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "getModules";
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string[] package;
 
             public override string command => Command;
@@ -665,7 +695,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public class CompletionsRequest : Request<CompletionsResponse> {
             public const string Command = "completions";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string text;
             public int line, column;
             public GetMemberOptions options;
@@ -681,7 +712,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public string text;
             public int line, column;
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
         }
 
         public sealed class ModulesChangedEvent : Event {
@@ -708,11 +740,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public class FileAnalysisCompleteEvent : Event {
             public const string Name = "fileAnalysisComplete";
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             public int version;
 
             public override string name => Name;
+            public override string ToString() => "{0}:{1} ({2})".FormatUI(name, documentUri, version);
         }
 
         public sealed class LoadExtensionRequest : Request<LoadExtensionResponse> {
@@ -832,11 +866,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class AnalyzeExpressionRequest : Request<AnalyzeExpressionResponse> {
             public const string Command = "findDefs";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public string expr;
             public int line, column;
-            [Obsolete("only use line and column")]
-            public int index;
 
             public override string command => Command;
         }
@@ -855,7 +888,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class OutliningRegionsRequest : Request<OutliningRegionsResponse> {
             public const string Command = "outliningRegions";
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             public override string command => Command;
         }
@@ -872,7 +906,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class NavigationRequest : Request<NavigationResponse> {
             public const string Command = "navigation";
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
 
             public override string command => Command;
         }
@@ -926,7 +961,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {
             public const string Command = "exprAtPoint";
 
-            public string documentUri;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
             public int line, column;
             public ExpressionAtPointPurpose purpose;
 

@@ -95,34 +95,33 @@ namespace PythonToolsMockTests {
                 }
 
                 var cancel = CancellationTokens.After60s;
-                using (var mre = new ManualResetEventSlim()) {
-                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
-                        v => {
-                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
-                            v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
-                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
-                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
-                        },
-                        filename);
+                view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
+                    v => {
+                        v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                        v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                    },
+                    filename);
 
-                    var entry = analyzer.GetAnalysisEntryFromPath(filename);
-                    while (entry == null && !cancel.IsCancellationRequested) {
-                        Thread.Sleep(50);
-                        entry = analyzer.GetAnalysisEntryFromPath(filename);
-                    }
+                var services = vs.ComponentModel.GetService<PythonEditorServices>();
+                var bi = services.GetBufferInfo(view.TextView.TextBuffer);
+                var entry = bi.GetAnalysisEntryAsync(cancel).WaitAndUnwrapExceptions();
+                Assert.IsNotNull(entry, "failed to get analysis entry");
 
-                    if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                    using (var mre = new ManualResetEventSlim()) {
                         EventHandler evt = (s, e) => mre.SetIfNotDisposed();
 
                         try {
                             entry.AnalysisComplete += evt;
+                            entry.TryGetBufferParser()?.EnsureCodeSyncedAsync(bi.Buffer, true).WaitAndUnwrapExceptions();
+                            bool hasStarted = false;
                             while (!mre.Wait(50, cancel) && !vs.HasPendingException && !entry.IsAnalyzed) {
-                                if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
-                                    var bp = entry.TryGetBufferParser();
-                                    Assert.IsNotNull(bp, "No buffer parser was ever created");
-                                    var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
-                                    Assert.IsNotNull(bi, "No BufferInfo was ever created");
-                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer, force: true).WaitAndUnwrapExceptions();
+                                if (!hasStarted) {
+                                    hasStarted = analyzer.IsAnalyzing;
+                                } else if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
+                                    Assert.Fail("analyzer is not analyzing");
                                 }
                             }
                         } catch (OperationCanceledException) {
@@ -130,12 +129,12 @@ namespace PythonToolsMockTests {
                             entry.AnalysisComplete -= evt;
                         }
                     }
-                    if (cancel.IsCancellationRequested) {
-                        Assert.Fail("Timed out waiting for code analysis");
-                    }
-
-                    vs.ThrowPendingException();
                 }
+                if (cancel.IsCancellationRequested) {
+                    Assert.Fail("Timed out waiting for code analysis");
+                }
+
+                vs.ThrowPendingException();
 
                 View = view;
                 view = null;

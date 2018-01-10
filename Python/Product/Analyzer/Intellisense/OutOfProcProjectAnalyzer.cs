@@ -180,8 +180,8 @@ namespace Microsoft.PythonTools.Intellisense {
             throw new InvalidOperationException("File was not correct type");
         }
 
-        private Response IncorrectBufferId(string documentUri) {
-            throw new InvalidOperationException("Buffer was not valid in file " + documentUri ?? "(null)");
+        private Response IncorrectBufferId(Uri documentUri) {
+            throw new InvalidOperationException($"Buffer was not valid in file {documentUri?.AbsoluteUri ?? "(null)"}");
         }
 
         private IPythonInterpreterFactory LoadInterpreterFactory(AP.InterpreterInfo info) {
@@ -329,7 +329,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 modules = res.Select(entry => new AP.ModuleInfo() {
                     filename = entry.FilePath,
                     moduleName = entry.ModuleName,
-                    documentUri = new Uri(entry.FilePath).AbsoluteUri
+                    documentUri = entry.DocumentUri
                 }).ToArray()
             };
         }
@@ -896,14 +896,14 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private IPythonProjectEntry GetPythonEntry(string documentUri) {
-            if (string.IsNullOrEmpty(documentUri)) {
+        private IPythonProjectEntry GetPythonEntry(Uri documentUri) {
+            if (documentUri == null) {
                 return null;
             }
-            return _server.GetEntry(new Uri(documentUri)) as IPythonProjectEntry;
+            return _server.GetEntry(documentUri) as IPythonProjectEntry;
         }
 
-        private VersionedAst GetPythonBuffer(string documentUri) {
+        private VersionedAst GetPythonBuffer(Uri documentUri) {
             var entry = GetPythonEntry(documentUri);
             if (entry == null) {
                 return default(VersionedAst);
@@ -914,7 +914,7 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.GetTreeAndCookie(out ast, out cookie);
 
             if (cookie is VersionCookie vc) {
-                int i = _server.GetPart(new Uri(documentUri));
+                int i = _server.GetPart(documentUri);
                 if (vc.Versions.TryGetValue(i, out var bv)) {
                     return new VersionedAst { Ast = bv.Ast, Version = bv.Version };
                 }
@@ -1448,7 +1448,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var prefix = getModules.package == null ? null : (string.Join(".", getModules.package) + ".");
 
             var modules = await _server.Completion(new LS.CompletionParams {
-                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(getModules.documentUri) },
+                textDocument = getModules.documentUri,
                 _expr = prefix,
                 context = new LS.CompletionContext {
                     triggerKind = LS.CompletionTriggerKind.Invoked,
@@ -1467,7 +1467,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var members = await _server.Completion(new LS.CompletionParams {
                 position = new LS.Position { line = req.line - 1, character = req.column - 1 },
-                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(req.documentUri) },
+                textDocument = req.documentUri,
                 context = new LS.CompletionContext {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
                     _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
@@ -1703,10 +1703,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
-            var uri = string.IsNullOrEmpty(request.uri) ? ProjectEntry.MakeDocumentUri(request.path) : new Uri(request.uri);
+            var uri = request.uri ?? ProjectEntry.MakeDocumentUri(request.path);
             var entry = await AddNewFile(uri, request.path, request.addingFromDir);
             
-            await done(new AP.AddFileResponse { documentUri = uri.AbsoluteUri });
+            await done(new AP.AddFileResponse { documentUri = uri });
 
             if (entry != null) {
                 await BeginAnalyzingFileAsync(entry, uri, request.isTemporaryFile, request.suppressErrorLists);
@@ -1716,14 +1716,14 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task AnalyzeFileAsync(AP.AddBulkFileRequest request, Func<Response, Task> done) {
             var entries = new IProjectEntry[request.path.Length];
             var response = new AP.AddBulkFileResponse {
-                documentUri = Enumerable.Repeat("", request.path.Length).ToArray()
+                documentUri = new Uri[request.path.Length]
             };
 
             for(int i = 0; i < request.path.Length; ++i) {
                 if (!string.IsNullOrEmpty(request.path[i])) {
                     var documentUri = ProjectEntry.MakeDocumentUri(request.path[i]);
                     entries[i] = await AddNewFile(documentUri, request.path[i], request.addingFromDir);
-                    response.documentUri[i] = documentUri.AbsoluteUri;
+                    response.documentUri[i] = documentUri;
                 }
             }
 
@@ -1731,7 +1731,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             for (int i = 0; i < entries.Length; ++i) {
                 if (entries[i] != null) {
-                    await BeginAnalyzingFileAsync(entries[i], new Uri(response.documentUri[i]), false, false);
+                    await BeginAnalyzingFileAsync(entries[i], response.documentUri[i], false, false);
                 }
             }
         }
@@ -1743,12 +1743,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return await _server.LoadFileAsync(
                 documentUri,
-                string.IsNullOrEmpty(addingFromDir) ? null : new Uri(addingFromDir)
+                string.IsNullOrEmpty(addingFromDir) ? null : new Uri(PathUtils.NormalizePath(addingFromDir))
             ).ConfigureAwait(false);
         }
 
         private async Task<Response> UnloadFile(AP.UnloadFileRequest command) {
-            await _server.UnloadFileAsync(new Uri(command.documentUri));
+            await _server.UnloadFileAsync(command.documentUri);
             return new Response();
         }
 
@@ -1966,7 +1966,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = documentUri.AbsoluteUri,
+                documentUri = documentUri,
                 filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
@@ -1976,7 +1976,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void OnAnalysisComplete(object sender, LS.AnalysisCompleteEventArgs e) {
             _connection.SendEventAsync(
                 new AP.FileAnalysisCompleteEvent() {
-                    documentUri = e.uri.AbsoluteUri,
+                    documentUri = e.uri,
                     version = e.version
                 }
             ).DoNotWait();
@@ -2051,11 +2051,11 @@ namespace Microsoft.PythonTools.Intellisense {
         public PythonAnalyzer Project => _server._analyzer;
 
         private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
-            var entry = GetPythonEntry(e.uri.AbsoluteUri);
+            var entry = GetPythonEntry(e.uri);
             var tree = entry.Tree;
             await _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {
-                    documentUri = e.uri.AbsoluteUri,
+                    documentUri = e.uri,
                     version = e._version ?? -1,
                     diagnostics = e.diagnostics?.ToArray()
                 }
@@ -2065,7 +2065,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
             await _connection.SendEventAsync(
                 new AP.FileParsedEvent {
-                    documentUri = e.uri.AbsoluteUri,
+                    documentUri = e.uri,
                     version = e.version
                 }
             );

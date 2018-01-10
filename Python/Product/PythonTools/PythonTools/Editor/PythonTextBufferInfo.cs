@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Editor {
 
             if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc) &&
                 !string.IsNullOrEmpty(path = doc.FilePath)) {
-                return path;
+                return PathUtils.NormalizePath(path);
             }
 
             return null;

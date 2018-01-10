@@ -346,5 +346,59 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             }
             return null;
         }
+
+        /// <summary>
+        /// Normalizes and returns the provided path.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// If the provided path contains invalid characters.
+        /// </exception>
+        public static string NormalizePath(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return string.Empty;
+            }
+
+            var root = EnsureEndSeparator(Path.GetPathRoot(path));
+            var parts = path.Substring(root.Length).Split(DirectorySeparators);
+            bool isDir = string.IsNullOrWhiteSpace(parts[parts.Length - 1]);
+
+            for (int i = 0; i < parts.Length; ++i) {
+                if (string.IsNullOrEmpty(parts[i])) {
+                    if (i > 0) {
+                        parts[i] = null;
+                    }
+                    continue;
+                }
+
+                if (parts[i] == ".") {
+                    parts[i] = null;
+                    continue;
+                }
+
+                if (parts[i] == "..") {
+                    bool found = false;
+                    for (int j = i - 1; j >= 0; --j) {
+                        if (!string.IsNullOrEmpty(parts[j])) {
+                            parts[i] = null;
+                            parts[j] = null;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found && !string.IsNullOrEmpty(root)) {
+                        parts[i] = null;
+                    }
+                    continue;
+                }
+
+                parts[i] = parts[i].TrimEnd(' ', '.');
+            }
+
+            var newPath = root + string.Join(
+                Path.DirectorySeparatorChar.ToString(),
+                parts.Where(s => s != null)
+            );
+            return isDir ? EnsureEndSeparator(newPath) : newPath;
+        }
     }
 }
