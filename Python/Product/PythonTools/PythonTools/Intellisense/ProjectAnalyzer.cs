@@ -1928,7 +1928,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static CompletionResult ToMemberResult(AP.Completion member) {
             return new CompletionResult(
                 member.name,
-                member.completion,
+                member.completion ?? member.name,
                 member.doc,
                 member.memberType,
                 member.detailedValues

@@ -457,6 +457,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class FileUpdate {
             public FileUpdateKind kind;
+
+            // Unlike most version numbers, this is what the version will be
+            // _after_ applying the update, not before. The target file is
+            // assumed to be at version-1 when applying this change.
             public int version;
             public ChangeInfo[] changes;
             public string content;
@@ -499,12 +503,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public string newText;
             public int startLine, startColumn;
             public int endLine, endColumn;
-
-            /// <summary>
-            /// The version number this change applies to. This
-            /// allows a sequence of changes to be grouped and batched
-            /// </summary>
-            public int version;
 
             public static ChangeInfo FromDocumentChange(DocumentChange c) {
                 return new ChangeInfo {
@@ -805,7 +803,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public class Completion {
             public string name;
-            public string completion;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public string completion;   // when null, use "name"
             public string doc;
             public PythonMemberType memberType;
 

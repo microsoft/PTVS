@@ -1554,7 +1554,7 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var c in completions) {
                 var m = new AP.Completion {
                     name = c.label,
-                    completion = c.insertText,
+                    completion = (c.label == c.insertText) ? null : c.insertText,
                     doc = c.documentation,
                     memberType = ToMemberType(c._kind, c.kind)
                 };
@@ -1904,10 +1904,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         ),
                         text = c.newText
                     }));
-                    version = fileChange.version + 1;
-                    if (fileChange.changes.Any()) {
-                        version = fileChange.changes.Last().version + 1;
-                    }
+                    version = fileChange.version;
                 } else {
                     continue;
                 }

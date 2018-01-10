@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             foreach (var v in GetVersions(lastSent.Version, snapshot.Version)) {
                 yield return new AP.FileUpdate {
-                    version = v.VersionNumber,
+                    version = v.VersionNumber + 1,
                     changes = GetChanges(buffer, v).Reverse().ToArray(),
                     kind = AP.FileUpdateKind.changes
                 };
@@ -327,8 +327,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         startColumn = oldPos.Column,
                         endLine = oldEnd.Line,
                         endColumn = oldEnd.Column,
-                        newText = change.NewText,
-                        version = curVersion.VersionNumber
+                        newText = change.NewText
                     };
                     changes.Add(prev);
                 }
