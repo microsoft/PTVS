@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 int toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
 
-                doc.UpdateDocument(GetPart(@params.textDocument.uri), new DocumentChangeSet(
+                doc.UpdateDocument(part, new DocumentChangeSet(
                     fromVersion,
                     toVersion,
                     changes.Select(c => new DocumentChange {

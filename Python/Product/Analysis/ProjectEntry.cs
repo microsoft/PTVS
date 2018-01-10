@@ -375,7 +375,6 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var sr = Parser.ReadStreamWithEncoding(stream, ProjectState.LanguageVersion);
                 stream = null;
-                version = 0;
                 return sr;
             } finally {
                 stream?.Dispose();

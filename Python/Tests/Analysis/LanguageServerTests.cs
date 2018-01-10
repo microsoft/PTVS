@@ -130,26 +130,31 @@ namespace AnalysisTests {
             var s = await CreateServer(null);
 
             var m = await AddModule(s, "", "mod");
-            Assert.AreEqual("x", await ApplyChange(s, m, DocumentChange.Insert("x", new SourceLocation(1, 1))));
-            Assert.AreEqual("", await ApplyChange(s, m, DocumentChange.Delete(new SourceLocation(1, 1), new SourceLocation(1, 2))));
-            Assert.AreEqual("y", await ApplyChange(s, m, DocumentChange.Insert("y", new SourceLocation(1, 1))));
+            Assert.AreEqual(Tuple.Create("x", 1), await ApplyChange(s, m, DocumentChange.Insert("x", new SourceLocation(1, 1))));
+            Assert.AreEqual(Tuple.Create("", 2), await ApplyChange(s, m, DocumentChange.Delete(new SourceLocation(1, 1), new SourceLocation(1, 2))));
+            Assert.AreEqual(Tuple.Create("y", 3), await ApplyChange(s, m, DocumentChange.Insert("y", new SourceLocation(1, 1))));
         }
 
-        private static async Task<string> ApplyChange(
+        private static async Task<Tuple<string, int>> ApplyChange(
             Server s,
             Uri document,
             params DocumentChange[] e
         ) {
+            var initialVersion = Math.Max((s.GetEntry(document) as IDocument)?.GetDocumentVersion(s.GetPart(document)) ?? 0, 0);
+
             await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
-                    uri = document
+                    uri = document,
+                    version = initialVersion + 1
                 },
                 contentChanges = e.Select(c => new TextDocumentContentChangedEvent {
                     range = c.ReplacedSpan,
                     text = c.InsertedText
                 }).ToArray()
             });
-            return (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out _).ReadToEnd();
+            int newVersion = -1;
+            var code = (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out newVersion).ReadToEnd();
+            return Tuple.Create(code, newVersion);
         }
 
         [TestMethod, Priority(0)]
@@ -279,12 +284,12 @@ mc";
 
             await AssertCompletion(s, mod, new[] { "x" }, Enumerable.Empty<string>());
 
-            Assert.AreEqual("y = 2", await ApplyChange(s, modP2, DocumentChange.Insert("y = 2", SourceLocation.MinValue)));
+            Assert.AreEqual(Tuple.Create("y = 2", 1), await ApplyChange(s, modP2, DocumentChange.Insert("y = 2", SourceLocation.MinValue)));
             await s.WaitForCompleteAnalysisAsync();
 
             await AssertCompletion(s, modP2, new[] { "x", "y" }, Enumerable.Empty<string>());
 
-            Assert.AreEqual("z = 3", await ApplyChange(s, modP3, DocumentChange.Insert("z = 3", SourceLocation.MinValue)));
+            Assert.AreEqual(Tuple.Create("z = 3", 1), await ApplyChange(s, modP3, DocumentChange.Insert("z = 3", SourceLocation.MinValue)));
             await s.WaitForCompleteAnalysisAsync();
 
             await AssertCompletion(s, modP3, new[] { "x", "y", "z" }, Enumerable.Empty<string>());
