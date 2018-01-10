@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -32,10 +33,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const string PythonParserSource = "Python";
         private const string TaskCommentSource = "Task comment";
 
+        private readonly ConcurrentDictionary<IDocument, TaskCompletionSource<IAnalysisCookie>> _parsing;
+
         private readonly VolatileCounter _parsingInProgress;
 
         public ParseQueue() {
             _parsingInProgress = new VolatileCounter();
+            _parsing = new ConcurrentDictionary<IDocument, TaskCompletionSource<IAnalysisCookie>>();
         }
 
         public int Count => _parsingInProgress.Count;
@@ -43,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
         private sealed class ParseState {
-            public IProjectEntry Entry;
+            public IDocument Document;
             public PythonLanguageVersion LanguageVersion;
             public TaskCompletionSource<IAnalysisCookie> Task;
         }
@@ -57,33 +61,51 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             entry.UpdateTree(tree, cookie);
         }
 
-        public Task<IAnalysisCookie> Enqueue(IProjectEntry entry, PythonLanguageVersion languageVersion) {
-            var tcs = new TaskCompletionSource<IAnalysisCookie>();
-            (entry as IPythonProjectEntry)?.BeginParsingTree();
-            _parsingInProgress.Increment();
-            bool enqueued = false;
-            try {
-                enqueued = ThreadPool.QueueUserWorkItem(ParseWorker, new ParseState {
-                    Entry = entry,
-                    LanguageVersion = languageVersion,
-                    Task = tcs
-                });
-            } catch (Exception ex) {
-                tcs.SetException(ex);
-            } finally {
-                if (!enqueued) {
-                    AbortParsingTree(entry as IPythonProjectEntry);
-                    _parsingInProgress.Decrement();
-                }
+        internal bool TryGetExistingParseAsync(IDocument doc, out Task<IAnalysisCookie> task) {
+            if (_parsing.TryGetValue(doc, out var tcs)) {
+                task = tcs.Task;
+                return true;
             }
-            return tcs.Task;
+            task = null;
+            return false;
+        }
+
+        public async Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
+            TaskCompletionSource<IAnalysisCookie> created = null;
+            var tcs = _parsing.GetOrAdd(doc, e => { return created = new TaskCompletionSource<IAnalysisCookie>(); });
+            if (created == null) {
+                // Do not start parsing until the previous one has completed
+                await tcs.Task;
+                tcs = new TaskCompletionSource<IAnalysisCookie>();
+            }
+
+            try {
+                (doc as IPythonProjectEntry)?.BeginParsingTree();
+                _parsingInProgress.Increment();
+                bool enqueued = false;
+                try {
+                    enqueued = ThreadPool.QueueUserWorkItem(ParseWorker, new ParseState {
+                        Document = doc,
+                        LanguageVersion = languageVersion,
+                        Task = tcs
+                    });
+                } finally {
+                    if (!enqueued) {
+                        AbortParsingTree(doc as IPythonProjectEntry);
+                    }
+                }
+                return await tcs.Task;
+            } finally {
+                _parsing.TryRemove(doc, out _);
+                _parsingInProgress.Decrement();
+            }
         }
 
         private void ParseWorker(object state) {
             var ps = state as ParseState;
-            var entry = ps?.Entry;
+            var doc = ps?.Document;
             var task = ps?.Task;
-            if (entry == null) {
+            if (doc == null || task == null) {
                 Debug.Fail("invalid type passed to ParseItemWorker");
                 return;
             }
@@ -91,20 +113,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             IAnalysisCookie result = null;
 
             try {
-                var doc = entry as IDocument;
                 if (doc == null) {
-                    throw new NotSupportedException($"cannot parse {entry.GetType().FullName}");
+                    throw new NotSupportedException($"cannot parse {doc.GetType().FullName}");
                 }
 
-                if (entry is IExternalProjectEntry externalEntry) {
+                if (doc is IExternalProjectEntry externalEntry) {
                     using (var r = doc.ReadDocument(0, out var version)) {
                         if (r == null) {
-                            throw new FileNotFoundException("failed to parse file", entry.FilePath);
+                            throw new FileNotFoundException("failed to parse file", externalEntry.FilePath);
                         }
                         result = new VersionCookie(version);
                         externalEntry.ParseContent(r, result);
                     }
-                } else if (entry is IPythonProjectEntry pyEntry) {
+                } else if (doc is IPythonProjectEntry pyEntry) {
                     bool complete = false;
                     try {
                         var buffers = new SortedDictionary<int, BufferVersion>();
@@ -122,7 +143,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             }
                         }
                         if (!buffers.Any()) {
-                            throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
+                            throw new FileNotFoundException($"failed to parse file {pyEntry.DocumentUri.AbsoluteUri}", pyEntry.FilePath);
                         }
                         complete = true;
                         result = UpdateTree(pyEntry, buffers);
@@ -136,8 +157,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ps.Task.TrySetResult(result);
             } catch (Exception ex) {
                 task.TrySetException(ex);
-            } finally {
-                _parsingInProgress.Decrement();
             }
         }
 

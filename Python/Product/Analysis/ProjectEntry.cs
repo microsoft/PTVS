@@ -503,6 +503,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         int GetDocumentVersion(int part);
         IEnumerable<int> DocumentParts { get; }
+        Uri DocumentUri { get; }
 
         void UpdateDocument(int part, DocumentChangeSet changes);
         void ResetDocument(int version, string content);

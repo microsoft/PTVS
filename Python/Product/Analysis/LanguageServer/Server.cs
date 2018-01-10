@@ -36,6 +36,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
 
+        private readonly ConcurrentDictionary<Uri, Dictionary<int, int>> _lastReportedDiagnostics;
+
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
 
         internal Task _loadingFromDirectory;
@@ -51,6 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
+            _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, int>>();
         }
 
         public void Dispose() {
@@ -94,11 +97,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
-            if (entry != null) {
-                if (entry is IDocument doc && @params.textDocument.text != null) {
+            var doc = entry as IDocument;
+            if (doc != null) {
+                if (@params.textDocument.text != null) {
                     doc.ResetDocument(@params.textDocument.version, @params.textDocument.text);
                 }
-            } else {
+            } else if (entry == null) {
                 IAnalysisCookie cookie = null;
                 if (@params.textDocument.text != null) {
                     cookie = new InitialContentCookie {
@@ -109,7 +113,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 entry = await AddFileAsync(@params.textDocument.uri, null, cookie);
             }
 
-            EnqueueItem(entry);
+            if ((doc = entry as IDocument) != null) {
+                EnqueueItem(doc);
+            }
         }
 
         public override async Task DidChangeTextDocument(DidChangeTextDocumentParams @params) {
@@ -126,8 +132,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 int fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
 
                 List<DidChangeTextDocumentParams> pending;
-                if (fromVersion > docVersion) {
-                    // Expected from version hasn't been seen yet, so enqueue it
+                if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
+                    // Expected from version hasn't been seen yet, and there are no resets in this
+                    // change, so enqueue it for later.
                     pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
                     lock (pending) {
                         pending.Add(@params);
@@ -164,18 +171,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return;
                     }
                 }
+
+                EnqueueItem(doc);
             }
 
-            EnqueueItem(entry);
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
-            var entry = GetEntry(@params.textDocument.uri);
-            // No need to keep in-memory buffers now
-            (entry as IDocument)?.ResetDocument(-1, null);
+            var doc = GetEntry(@params.textDocument.uri) as IDocument;
 
-            // Pick up any changes on disk that we didn't know about
-            EnqueueItem(entry, AnalysisPriority.Low);
+            if (doc != null) {
+                // No need to keep in-memory buffers now
+                doc.ResetDocument(-1, null);
+
+                // Pick up any changes on disk that we didn't know about
+                EnqueueItem(doc, AnalysisPriority.Low);
+            }
         }
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
@@ -301,6 +312,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private IProjectEntry RemoveEntry(Uri documentUri) {
             _projectFiles.TryRemove(documentUri, out var entry);
+            _lastReportedDiagnostics.TryRemove(documentUri, out _);
             return entry;
         }
 
@@ -484,7 +496,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
             }
 
-            EnqueueItem(pyItem);
+            if (item is IDocument doc) {
+                EnqueueItem(doc);
+            }
 
             if (reanalyzeEntries != null) {
                 foreach (var entryRef in reanalyzeEntries) {
@@ -495,28 +509,69 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(item);
         }
 
-        private async void EnqueueItem(IProjectEntry entry, AnalysisPriority priority = AnalysisPriority.Normal) {
+        private static bool IsDocumentChanged(IDocument doc, VersionCookie previousResult) {
+            if (previousResult == null) {
+                return true;
+            }
+
+            int seen = 0;
+            foreach (var part in doc.DocumentParts) {
+                if (!previousResult.Versions.TryGetValue(part, out var bv)) {
+                    return true;
+                }
+                if (doc.GetDocumentVersion(part) > bv.Version) {
+                    return true;
+                }
+                seen += 1;
+            }
+            if (seen != doc.DocumentParts.Count()) {
+                return true;
+            }
+            return false;
+        }
+
+        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal) {
             try {
-                var cookie = await _parseQueue.Enqueue(entry, _analyzer.LanguageVersion).ConfigureAwait(false);
-                IReadOnlyList<Diagnostic> diagnostics = null;
-                if (cookie is VersionCookie vc) {
-                    foreach (var kv in vc.GetUriVersionPairs(entry.DocumentUri)) {
-                        ParseComplete(kv.Key, kv.Value);
-                    }
-                    diagnostics = vc.Versions.Values.SelectMany(v => v.Diagnostics).ToArray();
-                } else {
-                    ParseComplete(entry.DocumentUri, 0);
+                // Avoid re-parsing the same version
+                while (_parseQueue.TryGetExistingParseAsync(doc, out var task)) {
+                    await task;
                 }
 
-                _queue.Enqueue(entry, priority);
+                var cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
+                var vc = cookie as VersionCookie;
+                if (vc != null) {
+                    foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                        ParseComplete(kv.Key, kv.Value.Version);
+                    }
+                } else {
+                    ParseComplete(doc.DocumentUri, 0);
+                }
+
+                if (doc is IAnalyzable analyzable) {
+                    _queue.Enqueue(analyzable, priority);
+                }
 
                 // Allow the caller to complete before publishing diagnostics
                 await Task.Yield();
-                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    uri = entry.DocumentUri,
-                    diagnostics = diagnostics
-                });
+
+                if (vc != null) {
+                    var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, int>());
+                    lock (reported) {
+                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                            int part = GetPart(kv.Key), lastVersion;
+                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion < kv.Value.Version) {
+                                reported[part] = kv.Value.Version;
+                                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                                    uri = kv.Key,
+                                    diagnostics = kv.Value.Diagnostics,
+                                    _version = kv.Value.Version
+                                });
+                            }
+                        }
+                    }
+                }
             } catch (BadSourceException) {
+            } catch (OperationCanceledException) {
             } catch (Exception ex) {
                 LogMessage(new LogMessageEventArgs {
                     type = MessageType.Error,
@@ -529,8 +584,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (sender is IPythonProjectEntry entry) {
                 entry.GetTreeAndCookie(out _, out var cookie);
                 if (cookie is VersionCookie vc) {
-                    foreach (var kv in vc.GetUriVersionPairs(entry.DocumentUri)) {
-                        AnalysisComplete(kv.Key, kv.Value);
+                    foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
+                        AnalysisComplete(kv.Key, kv.Value.Version);
                     }
                 } else {
                     AnalysisComplete(entry.DocumentUri, 0);

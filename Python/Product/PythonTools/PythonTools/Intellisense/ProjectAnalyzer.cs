@@ -1576,14 +1576,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (!entry.SuppressErrorList) {
-                bool changed = false;
-                lock (_hasParseErrorsLock) {
-                    changed = hasErrors ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
-                }
-                if (changed) {
-                    OnShouldWarnOnLaunchChanged(entry);
-                }
+            bool changed = false;
+            lock (_hasParseErrorsLock) {
+                changed = hasErrors ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
+            }
+            if (changed) {
+                ShouldWarnOnLaunchChanged?.Invoke(this, new EntryEventArgs(entry));
             }
         }
 
@@ -1820,13 +1818,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal bool ShouldWarnOnLaunch(AnalysisEntry entry) {
             lock (_hasParseErrorsLock) {
                 return _hasParseErrors.Contains(entry);
-            }
-        }
-
-        private void OnShouldWarnOnLaunchChanged(AnalysisEntry entry) {
-            var evt = ShouldWarnOnLaunchChanged;
-            if (evt != null) {
-                evt(this, new EntryEventArgs(entry));
             }
         }
 

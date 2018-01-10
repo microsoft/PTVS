@@ -43,13 +43,13 @@ namespace Microsoft.PythonTools.Intellisense {
             Versions = new SortedDictionary<int, BufferVersion>(versions);
         }
 
-        public IEnumerable<KeyValuePair<Uri, int>> GetUriVersionPairs(Uri documentUri) {
+        public IEnumerable<KeyValuePair<Uri, BufferVersion>> GetAllParts(Uri documentUri) {
             foreach (var kv in Versions) {
                 var u = documentUri;
                 if (kv.Key > 0) {
                     u = new Uri(u, $"#{kv.Key}");
                 }
-                yield return new KeyValuePair<Uri, int>(u, kv.Value.Version);
+                yield return new KeyValuePair<Uri, BufferVersion>(u, kv.Value);
             }
         }
     }
