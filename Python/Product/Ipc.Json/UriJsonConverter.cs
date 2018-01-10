@@ -24,11 +24,16 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            return new Uri(serializer.Deserialize<string>(reader));
+            var uri = serializer.Deserialize<string>(reader);
+            return string.IsNullOrEmpty(uri) ? null : new Uri(uri);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            serializer.Serialize(writer, ((Uri)value).AbsoluteUri);
+            if (value is Uri u) {
+                serializer.Serialize(writer, u.AbsoluteUri);
+            } else {
+                serializer.Serialize(writer, null);
+            }
         }
     }
 }
