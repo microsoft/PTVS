@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools {
             }
 
 
-            var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(sender, _provider._colorNamesWithAnalysis);
+            var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(sender, _provider._colorNamesWithAnalysis, entry);
 
             if (classifications != null) {
                 Debug.WriteLine("Received {0} classifications", classifications.classifications?.Length ?? 0);

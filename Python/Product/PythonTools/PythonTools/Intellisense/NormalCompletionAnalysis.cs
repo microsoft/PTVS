@@ -44,6 +44,11 @@ namespace Microsoft.PythonTools.Intellisense {
             parentExpression = string.Empty;
             expressionExtent = default(SnapshotSpan);
 
+            // We never want normal completions on space
+            if (Session.GetTriggerCharacter() == ' ' && !Session.IsCompleteWordMode()) {
+                return false;
+            }
+
             var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
             if (bi == null) {
                 return false;
@@ -74,16 +79,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 case TokenCategory.Delimiter:
                 case TokenCategory.Grouping:
                 case TokenCategory.Operator:
+                case TokenCategory.WhiteSpace:
                     // Expect top-level completions after these
                     expressionExtent = span;
                     return true;
-                case TokenCategory.WhiteSpace:
-                    // Top-level completions are not triggered on space
-                    if (Session.GetTriggerCharacter() != ' ') {
-                        expressionExtent = span;
-                        return true;
-                    }
-                    break;
                 //case TokenCategory.BuiltinIdentifier:
                 case TokenCategory.Keyword:
                     // Expect filtered top-level completions here
@@ -241,18 +240,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     point.Snapshot,
                     analysis
                 );
-                var parameters = Enumerable.Empty<CompletionResult>();
-                var sigs = analyzer.WaitForRequest(analyzer.GetSignaturesAsync(analysis, View, _snapshot, Span), "GetCompletions.GetSignatures");
-                if (sigs != null && sigs.Signatures.Any()) {
-                    parameters = sigs.Signatures
-                        .SelectMany(s => s.Parameters)
-                        .Select(p => p.Name)
-                        .Distinct()
-                        .Select(n => new CompletionResult(n + "=", PythonMemberType.NamedArgument));
-                }
                 return analyzer.WaitForRequest(analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
-                    .MaybeEnumerate()
-                    .Union(parameters, CompletionComparer.MemberEquality);
+                    .MaybeEnumerate();
             }
         }
     }

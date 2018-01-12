@@ -249,6 +249,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 members = members?.Concat(mods) ?? mods;
             }
 
+            if (@params.context?._includeArgumentNames ?? false) {
+                var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
+                int index = tree.LocationToIndex(@params.position);
+                if (finder.GetExpression(@params.position) is CallExpression callExpr &&
+                    callExpr.Args.Any() &&
+                    index >= callExpr.Args.First().StartIndex && index <= callExpr.Args.Last().EndIndex) {
+                    var argNames = analysis.GetSignatures(callExpr.Target, @params.position)
+                        .SelectMany(o => o.Parameters).Select(p => p?.Name)
+                        .Where(n => !string.IsNullOrEmpty(n))
+                        .Distinct()
+                        .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
+                        .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
+
+                    members = members?.Concat(argNames) ?? argNames;
+                }
+            }
+
             if (members == null) {
                 return new CompletionList { };
             }

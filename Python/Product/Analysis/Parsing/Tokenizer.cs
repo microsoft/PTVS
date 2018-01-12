@@ -2665,8 +2665,8 @@ namespace Microsoft.PythonTools.Parsing {
 
     [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
     public struct NewLineLocation : IComparable<NewLineLocation> {
-        private int _endIndex;
-        private NewLineKind _kind;
+        private readonly int _endIndex;
+        private readonly NewLineKind _kind;
 
         public NewLineLocation(int lineEnd, NewLineKind kind) {
             _endIndex = lineEnd;

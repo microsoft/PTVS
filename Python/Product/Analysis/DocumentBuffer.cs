@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             int lastStart = int.MaxValue;
-            var lineLoc = SplitLines(Text.ToString()).ToArray();
+            var lineLoc = SplitLines(Text).ToArray();
 
             foreach (var change in changes.Changes) {
                 if (change.WholeBuffer) {
@@ -76,16 +76,19 @@ namespace Microsoft.PythonTools.Analysis {
             Version = changes.ToVersion;
         }
 
-        private static IEnumerable<NewLineLocation> SplitLines(string text) {
+        private static IEnumerable<NewLineLocation> SplitLines(StringBuilder text) {
             NewLineLocation nextLine;
 
+            // TODO: Avoid string allocation by operating directly on StringBuilder
+            var str = text.ToString();
+
             int lastLineEnd = 0;
-            while ((nextLine = NewLineLocation.FindNewLine(text, lastLineEnd)).EndIndex != lastLineEnd) {
+            while ((nextLine = NewLineLocation.FindNewLine(str, lastLineEnd)).EndIndex != lastLineEnd) {
                 yield return nextLine;
                 lastLineEnd = nextLine.EndIndex;
             }
 
-            if (lastLineEnd != text.Length) {
+            if (lastLineEnd != str.Length) {
                 yield return nextLine;
             }
         }

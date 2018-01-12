@@ -471,6 +471,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #if DEBUG
             public string newCode;
 #endif
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public bool? failed;
         }
 

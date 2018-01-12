@@ -539,9 +539,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<IOverloadResult> GetSignatures(string exprText, SourceLocation location) {
             try {
-                var scope = FindScope(location);
-                var unit = GetNearestEnclosingAnalysisUnit(scope);
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion);
                 var expr = GetExpression(parser.ParseTopExpression().Body);
                 if (expr is ListExpression ||
@@ -549,34 +546,43 @@ namespace Microsoft.PythonTools.Analysis {
                     expr is DictionaryExpression) {
                     return Enumerable.Empty<IOverloadResult>();
                 }
-                var lookup = eval.Evaluate(expr);
 
-                lookup = AnalysisSet.Create(lookup.Where(av => !(av is MultipleMemberInfo)).Concat(
-                    lookup.OfType<MultipleMemberInfo>().SelectMany(mmi => mmi.Members)
-                ));
-
-                var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
-
-                // TODO: Include relevant type info on the parameter...
-                result.UnionWith(lookup
-                    // Exclude constant values first time through
-                    .Where(av => av.MemberType != PythonMemberType.Constant)
-                    .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>())
-                );
-
-                if (!result.Any()) {
-                    result.UnionWith(lookup
-                        .Where(av => av.MemberType == PythonMemberType.Constant)
-                        .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
-                }
-
-                // Take nearly-equivalent overloads and merge them, retaining the maximum
-                // possible information.
-                return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
+                return GetSignatures(expr, location);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToString());
                 return GetSignaturesError;
             }
+        }
+
+        internal IEnumerable<IOverloadResult> GetSignatures(Expression expr, SourceLocation location) {
+            var scope = FindScope(location);
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+
+            var lookup = eval.Evaluate(expr);
+
+            lookup = AnalysisSet.Create(lookup.Where(av => !(av is MultipleMemberInfo)).Concat(
+                lookup.OfType<MultipleMemberInfo>().SelectMany(mmi => mmi.Members)
+            ));
+
+            var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
+
+            // TODO: Include relevant type info on the parameter...
+            result.UnionWith(lookup
+                // Exclude constant values first time through
+                .Where(av => av.MemberType != PythonMemberType.Constant)
+                .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>())
+            );
+
+            if (!result.Any()) {
+                result.UnionWith(lookup
+                    .Where(av => av.MemberType == PythonMemberType.Constant)
+                    .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
+            }
+
+            // Take nearly-equivalent overloads and merge them, retaining the maximum
+            // possible information.
+            return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
         }
 
         /// <summary>

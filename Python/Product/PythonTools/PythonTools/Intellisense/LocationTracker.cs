@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var fromLines = GetLineLocations(fromVer.VersionNumber);
-            var index = NewLineLocation.LocationToIndex(fromLines, loc, -1);
+            var index = NewLineLocation.LocationToIndex(fromLines, loc, fromVer.Length);
 
             if (fromVer.VersionNumber < toVer.VersionNumber) {
                 index = Tracking.TrackPositionForwardInTime(PointTrackingMode.Negative, index, fromVer, toVer);

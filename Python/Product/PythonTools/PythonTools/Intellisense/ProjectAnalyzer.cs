@@ -2081,8 +2081,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return _activeRequests.TryRemove(key, out o);
         }
 
-        internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames) {
+        internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames, AnalysisEntry entry) {
             var lastVersion = buffer.LastAnalysisSnapshot?.Version;
+
+            if (entry == null) {
+                return Task.FromResult<AP.AnalysisClassificationsResponse>(null);
+            }
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
@@ -2090,7 +2094,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 n => n == lastVersion,
                 async () => await SendRequestAsync(
                     new AP.AnalysisClassificationsRequest() {
-                        documentUri = buffer.AnalysisEntry.DocumentUri,
+                        documentUri = entry.DocumentUri,
                         colorNames = colorNames
                     }
                 ).ConfigureAwait(false)

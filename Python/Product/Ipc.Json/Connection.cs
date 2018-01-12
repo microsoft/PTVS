@@ -441,6 +441,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             if (packet == null) {
+                Debug.WriteLine("Failed to parse {0}{1}", line, message);
                 throw new InvalidDataException("Failed to parse packet" + message);
             }
 

@@ -1471,7 +1471,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 context = new LS.CompletionContext {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
                     _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
+                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
+                    _includeArgumentNames = true
                 },
                 _expr = req.text
             });
