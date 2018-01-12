@@ -423,7 +423,7 @@ namespace Microsoft.PythonTools.Editor {
             lock (_lock) {
                 var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
                 foreach (var i in toRemove) {
-                    Debug.WriteLine($"Skipped parse for version {i}");
+                    Debug.WriteLine($"Skipped analysis for version {i}");
                     _expectAnalysis.Remove(i);
                 }
                 if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
