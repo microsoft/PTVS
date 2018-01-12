@@ -253,8 +253,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
                 int index = tree.LocationToIndex(@params.position);
                 if (finder.GetExpression(@params.position) is CallExpression callExpr &&
-                    callExpr.Args.Any() &&
-                    index >= callExpr.Args.First().StartIndex && index <= callExpr.Args.Last().EndIndex) {
+                    callExpr.GetArgumentAtIndex(tree, index, out _)) {
                     var argNames = analysis.GetSignatures(callExpr.Target, @params.position)
                         .SelectMany(o => o.Parameters).Select(p => p?.Name)
                         .Where(n => !string.IsNullOrEmpty(n))

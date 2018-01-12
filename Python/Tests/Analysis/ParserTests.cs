@@ -2952,6 +2952,43 @@ namespace AnalysisTests {
             Assert.AreEqual(91, y.Index);
         }
 
+        [TestMethod, Priority(0)]
+        public void FindArgument() {
+            var AssertArg = ParseCall("f( a ,   b, c,d,*  x   , )");
+            AssertArg(0, null);
+            AssertArg(2, 0);
+            AssertArg(5, 0);
+            AssertArg(6, 1);
+            AssertArg(10, 1);
+            AssertArg(11, 2);
+            AssertArg(13, 2);
+            AssertArg(14, 3);
+            AssertArg(15, 3);
+            AssertArg(16, 4);
+            AssertArg(23, 4);
+            AssertArg(24, -1);
+            AssertArg(25, -1);
+            AssertArg(26, null);
+
+            AssertArg = ParseCall("f(");
+            AssertArg(0, null);
+            AssertArg(1, null);
+            AssertArg(2, 0);
+        }
+
+        private static Action<int, int?> ParseCall(string code) {
+            var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V36);
+            var tree = parser.ParseTopExpression();
+            if (Statement.GetExpression(tree.Body) is CallExpression ce) {
+                return (index, expected) => {
+                    int? actual = ce.GetArgumentAtIndex(tree, index, out int i) ? i : (int?)null;
+                    Assert.AreEqual(expected, actual);
+                };
+            }
+            Assert.Fail($"Unexpected expression {tree}");
+            return null;
+        }
+
         #endregion
 
         #region Checker Factories / Helpers

@@ -3535,7 +3535,9 @@ namespace Microsoft.PythonTools.Parsing {
                 Expression e = ParseExpression();
                 if (e is ErrorExpression) {
                     ateTerminator = false;
-                    return new[] { new Arg(e) };
+                    a = new Arg(e);
+                    a.SetLoc(e.StartIndex, e.EndIndex);
+                    return new[] { a };
                 }
 
                 if (MaybeEat(TokenKind.Assign)) {               //  Keyword argument

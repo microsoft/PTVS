@@ -373,8 +373,8 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        private readonly Dictionary<int, ITextSnapshot> _expectParse = new Dictionary<int, ITextSnapshot>();
-        private readonly Dictionary<int, ITextSnapshot> _expectAnalysis = new Dictionary<int, ITextSnapshot>();
+        private readonly SortedDictionary<int, ITextSnapshot> _expectParse = new SortedDictionary<int, ITextSnapshot>();
+        private readonly SortedDictionary<int, ITextSnapshot> _expectAnalysis = new SortedDictionary<int, ITextSnapshot>();
         private ITextSnapshot _lastSentSnapshot;
 
         public ITextSnapshot LastAnalysisSnapshot { get; private set; }
@@ -410,12 +410,22 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedParse(int version) {
             lock (_lock) {
+                var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
+                foreach (var i in toRemove) {
+                    Debug.WriteLine($"Skipped parse for version {i}");
+                    _expectParse.Remove(i);
+                }
                 return _expectParse.Remove(version);
             }
         }
 
         public bool UpdateLastReceivedAnalysis(int version) {
             lock (_lock) {
+                var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
+                foreach (var i in toRemove) {
+                    Debug.WriteLine($"Skipped parse for version {i}");
+                    _expectAnalysis.Remove(i);
+                }
                 if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
                     _expectAnalysis.Remove(version);
                     if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {

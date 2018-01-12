@@ -1599,7 +1599,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (!textBuffer.UpdateLastReceivedParse(parsedEvent.version)) {
                     // ignore receiving responses out of order...
-                    Debug.WriteLine("Ignoring out of order parse {0}", parsedEvent.version);
+                    Debug.WriteLine("Ignoring unexpected parse {0}", parsedEvent.version);
                     return;
                 }
             }
