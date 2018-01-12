@@ -247,7 +247,7 @@ namespace DebuggerUITestsRunner {
     }
 
     [TestClass]
-    public class DebugProjectUITestsDefault : DebugProjectUITests {
+    public class DebugProjectUITestsVS : DebugProjectUITests {
         protected override bool UseVsCodeDebugger => false;
     }
 
