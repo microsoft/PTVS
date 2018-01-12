@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -2041,7 +2042,7 @@ namespace Microsoft.PythonTools.Parsing {
                             // the same way (i.e. has the same mix of spaces and
                             // tabs etc.).
                             if (IndentationInconsistencySeverity != Severity.Ignore) {
-                                CheckIndent(sb, noAllocWhiteSpace);
+                                CheckIndent(sb, noAllocWhiteSpace, _tokenStartIndex + startingKind.GetSize());
                             }
                         }
 
@@ -2076,7 +2077,7 @@ namespace Microsoft.PythonTools.Parsing {
             return ((StringBuilder)previousIndent).Length;
         }
 
-        private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace) {
+        private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace, int indentStart) {
             if (_state.Indent[_state.IndentLevel] > 0) {
                 var previousIndent = _state.IndentFormat[_state.IndentLevel];
                 int checkLength;
@@ -2093,12 +2094,10 @@ namespace Microsoft.PythonTools.Parsing {
                         neq = sb[i] != previousIndent[i];
                     }
                     if (neq) {
-                        SourceLocation eoln_token_end = BufferTokenEnd;
-
                         // We've hit a difference in the way we're indenting, report it.
                         _errors.Add("inconsistent whitespace",
-                            this._newLineLocations.ToArray(),
-                            _tokenStartIndex + 1,
+                            _newLineLocations.ToArray(),
+                            indentStart,
                             _tokenEndIndex,
                             ErrorCodes.TabError, _indentationInconsistencySeverity
                         );

@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (Version >= 0) {
                 if (changes.FromVersion < Version) {
                     return;
-                } else if (changes.FromVersion > Version) {
+                } else if (changes.FromVersion > Version && !changes.Changes.Any(c => c.WholeBuffer)) {
                     throw new InvalidOperationException("missing prior versions");
                 }
             }

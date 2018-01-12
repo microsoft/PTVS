@@ -173,7 +173,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return cookie;
         }
 
-        public Dictionary<string, Severity> TaskCommentMap { get; set; }
+        public Dictionary<string, DiagnosticSeverity> TaskCommentMap { get; set; }
+
+        public DiagnosticSeverity InconsistentIndentation { get; set; }
 
         private void ParsePython(
             Stream stream,
@@ -183,7 +185,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             out List<Diagnostic> diagnostics
         ) {
             var opts = new ParserOptions {
-                BindReferences = true
+                BindReferences = true,
+                IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation)
             };
 
             var u = entry.DocumentUri;

@@ -1940,6 +1940,8 @@ namespace Microsoft.PythonTools.Intellisense {
             Options = request.options ?? new AP.AnalysisOptions();
 
             Project.Limits = new AnalysisLimits(Options.analysisLimits);
+            _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
+            _server._parseQueue.TaskCommentMap = Options.commentTokens;
 
             return new Response();
         }

@@ -24,9 +24,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class DiagnosticsErrorSink : ErrorSink {
         private readonly string _source;
         private readonly List<Diagnostic> _diagnostics;
-        private readonly IReadOnlyList<KeyValuePair<string, Severity>> _taskCommentMap;
+        private readonly IReadOnlyList<KeyValuePair<string, DiagnosticSeverity>> _taskCommentMap;
 
-        public DiagnosticsErrorSink(string source, List<Diagnostic> diagnostics, IReadOnlyDictionary<string, Severity> taskCommentMap = null) {
+        public DiagnosticsErrorSink(string source, List<Diagnostic> diagnostics, IReadOnlyDictionary<string, DiagnosticSeverity> taskCommentMap = null) {
             _source = source;
             _diagnostics = diagnostics;
             _taskCommentMap = taskCommentMap?.ToArray();
@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void ProcessTaskComment(object sender, CommentEventArgs e) {
-            // TODO: Handle full map of settings
             var text = e.Text.TrimStart('#').Trim();
 
             var d = new Diagnostic {
@@ -62,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var kv in _taskCommentMap.MaybeEnumerate()) {
                 if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                    d.severity = GetSeverity(kv.Value);
+                    d.severity = kv.Value;
                     break;
                 }
             }
@@ -72,13 +71,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private static DiagnosticSeverity GetSeverity(Severity severity) {
+        internal static DiagnosticSeverity GetSeverity(Severity severity) {
             switch (severity) {
                 case Severity.Ignore: return DiagnosticSeverity.Unspecified;
+                case Severity.Information: return DiagnosticSeverity.Information;
                 case Severity.Warning: return DiagnosticSeverity.Warning;
                 case Severity.Error: return DiagnosticSeverity.Error;
                 case Severity.FatalError: return DiagnosticSeverity.Error;
                 default: return DiagnosticSeverity.Unspecified;
+            }
+        }
+
+        internal static Severity GetSeverity(DiagnosticSeverity severity) {
+            switch (severity) {
+                case DiagnosticSeverity.Unspecified: return Severity.Ignore;
+                case DiagnosticSeverity.Information: return Severity.Information;
+                case DiagnosticSeverity.Warning: return Severity.Warning;
+                case DiagnosticSeverity.Error: return Severity.Error;
+                default: return Severity.Ignore;
             }
         }
     }

@@ -1522,7 +1522,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void OnDiagnostics(AnalysisEntry entry, AP.DiagnosticsEvent diagnostics) {
             var bufferParser = entry.TryGetBufferParser();
             var bi = bufferParser?.DefaultBufferInfo;
-            if (bi == null || entry.Path == null) {
+            if (entry.Path == null) {
                 return;
             }
 
@@ -1541,7 +1541,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (!pyErrors.Any()) {
                     errorTask.Clear(entry.Path, ParserTaskMoniker);
                 } else {
-                    var factory = new TaskProviderItemFactory(bi.LocationTracker, diagnostics.version);
+                    var factory = new TaskProviderItemFactory(bi?.LocationTracker, diagnostics.version);
                     var items = pyErrors.SelectMany(ge => ge.Select(e => factory.FromDiagnostic(
                         _services.Site,
                         e,
@@ -1563,7 +1563,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (!comments.Any()) {
                     commentTask.Clear(entry.Path, ParserTaskMoniker);
                 } else {
-                    var factory = new TaskProviderItemFactory(bi.LocationTracker, diagnostics.version);
+                    var factory = new TaskProviderItemFactory(bi?.LocationTracker, diagnostics.version);
                     var items = comments.SelectMany(ge => ge.Select(e => factory.FromDiagnostic(
                         _services.Site,
                         e,

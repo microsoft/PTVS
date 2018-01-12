@@ -20,10 +20,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -66,6 +68,11 @@ namespace AnalysisTests {
                         assembly = typeof(AstPythonInterpreterFactory).Assembly.Location,
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = version.Configuration.ToDictionary()
+                    }
+                },
+                capabilities = new ClientCapabilities {
+                    python = new PythonClientCapabilities {
+                        analysisUpdates = true
                     }
                 }
             });
@@ -299,6 +306,93 @@ mc";
             await s.WaitForCompleteAnalysisAsync();
             await AssertCompletion(s, modP2, new[] { "y", "z" }, new[] { "x" });
             await AssertCompletion(s, modP3, new[] { "y", "z" }, new[] { "x" });
+        }
+
+        private static async Task<PublishDiagnosticsEventArgs> WaitForDiagnostics(Server s, int minimumVersion, Func<Task> action, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<PublishDiagnosticsEventArgs>();
+
+            if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetCanceled());
+            }
+
+            EventHandler<PublishDiagnosticsEventArgs> handler = null;
+            handler = (sender, pdea) => {
+                if (pdea._version >= minimumVersion) {
+                    tcs.TrySetResult(pdea);
+                    s.OnPublishDiagnostics -= handler;
+                }
+            };
+            s.OnPublishDiagnostics += handler;
+
+            await action().ConfigureAwait(false);
+            return await tcs.Task.ConfigureAwait(false);
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ParseErrorDiagnostics() {
+            var s = await CreateServer(null);
+
+            var e = await WaitForDiagnostics(
+                s,
+                0,
+                () => AddModule(s, "def f(/)\n    error text here\n"),
+                CancellationTokens.After5s
+            );
+
+            AssertUtil.ContainsExactly(
+                e.diagnostics.Select(d => $"{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}"),
+                "unexpected token '/';Python;0;6;7",
+                "invalid parameter;Python;0;6;7",
+                "unexpected token '<newline>';Python;0;8;4",
+                "unexpected indent;Python;1;4;9",
+                "unexpected token 'text';Python;1;10;14",
+                "unexpected token '<dedent>';Python;1;19;0"
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ParseIndentationDiagnostics() {
+            var s = await CreateServer(null);
+
+            var evts = new List<PublishDiagnosticsEventArgs>();
+            s.OnPublishDiagnostics += (sender, pdea) => evts.Add(pdea);
+
+            foreach (var tc in new[] {
+                DiagnosticSeverity.Error,
+                DiagnosticSeverity.Warning,
+                DiagnosticSeverity.Information,
+                DiagnosticSeverity.Unspecified
+            }) {
+                // For now, these options have to be configured directly
+                s._parseQueue.InconsistentIndentation = tc;
+
+                Trace.TraceInformation("Testing {0}", tc);
+
+                var mod = await AddModule(s, "");
+                var e = await WaitForDiagnostics(
+                    s,
+                    2,
+                    async () => await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+                        contentChanges = new[] {
+                            new TextDocumentContentChangedEvent {
+                                text = "def f():\r\n        pass\r\n\tpass"
+                            }
+                        },
+                        textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 2 }
+                    }),
+                    CancellationTokens.After5s
+                );
+
+                Assert.AreEqual(mod, e.uri);
+                var messages = e.diagnostics.Select(d => $"{d.severity};{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}").ToArray();
+                if (tc == DiagnosticSeverity.Unspecified) {
+                    AssertUtil.ContainsExactly(messages);
+                } else {
+                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;1;13;1");
+                }
+
+                await s.UnloadFileAsync(mod);
+            }
         }
 
         public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {
