@@ -25,6 +25,9 @@
       <Item ItemId=";CondaExtensionCreateTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create the environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[환경을 만듭니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -40,6 +43,9 @@
       <Item ItemId=";CondaExtensionEnvironmentNameHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The name of the new environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[새 환경의 이름입니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -55,6 +61,9 @@
       <Item ItemId=";CondaExtensionEnvironmentNameWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[env]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[env]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -70,6 +79,9 @@
       <Item ItemId=";CondaExtensionLanguageVersionHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The version of Python to install into the new environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[새 환경에 설치할 Python의 버전입니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -94,6 +106,9 @@
       <Item ItemId=";CondaExtensionNotAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[This functionality requires Anaconda. You can install it using the Visual Studio installer.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[이 기능을 사용하려면 Anaconda가 필요합니다. Anaconda는 Visual Studio 설치 관리자를 사용하여 설치할 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -532,12 +547,18 @@
       <Item ItemId=";EnvironmentPathsExtensionDeleteConfirmation" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Are you sure you want to delete '{0}'?]D;]A;]D;]A;The folder will be deleted from disk. This operation cannot be undone.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}'을(를) 삭제하시겠습니까?]D;]A;]D;]A;폴더가 디스크에서 삭제됩니다. 이 작업은 취소할 수 없습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";EnvironmentPathsExtensionDeleteEnvironment" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Delete this environment from disk]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[디스크에서 이 환경 삭제]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -670,12 +691,18 @@
       <Item ItemId=";EnvironmentViewCondaLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create conda environment...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Conda 환경 만들기...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";EnvironmentViewCreateNewCondaEnvironmentAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create new conda environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[새 Conda 환경 만들기]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1117,7 +1144,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18010.1]]></Val>
+        <Val><![CDATA[3.0.18012.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1153,7 +1180,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18010.1]]></Val>
+        <Val><![CDATA[3.0.18012.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
