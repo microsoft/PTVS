@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Options {
             NoDatabaseFactory = EO.GetNoDatabaseFactory();
             AutoDetectCondaEnvironments = EO.GetAutoDetectCondaEnvironments();
             UseCondaPackageManager = EO.GetUseCondaPackageManager();
-            UseVsCodeDebugger = EO.UseVsCodeDebugger;
+            UseVsCodeDebugger = EO.GetUseVsCodeDebugger();
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
