@@ -33,24 +33,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const string PythonParserSource = "Python";
         private const string TaskCommentSource = "Task comment";
 
-        private readonly ConcurrentDictionary<IDocument, TaskCompletionSource<IAnalysisCookie>> _parsing;
+        private readonly ConcurrentDictionary<IDocument, Task<IAnalysisCookie>> _parsing;
 
         private readonly VolatileCounter _parsingInProgress;
 
         public ParseQueue() {
             _parsingInProgress = new VolatileCounter();
-            _parsing = new ConcurrentDictionary<IDocument, TaskCompletionSource<IAnalysisCookie>>();
+            _parsing = new ConcurrentDictionary<IDocument, Task<IAnalysisCookie>>();
         }
 
         public int Count => _parsingInProgress.Count;
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
-
-        private sealed class ParseState {
-            public IDocument Document;
-            public PythonLanguageVersion LanguageVersion;
-            public TaskCompletionSource<IAnalysisCookie> Task;
-        }
 
         private static void AbortParsingTree(IPythonProjectEntry entry) {
             if (entry == null) {
@@ -61,62 +55,53 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             entry.UpdateTree(tree, cookie);
         }
 
-        internal bool TryGetExistingParseAsync(IDocument doc, out Task<IAnalysisCookie> task) {
-            if (_parsing.TryGetValue(doc, out var tcs)) {
-                task = tcs.Task;
-                return true;
-            }
-            task = null;
-            return false;
-        }
-
-        public async Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
-            TaskCompletionSource<IAnalysisCookie> created = null;
-            var tcs = _parsing.GetOrAdd(doc, e => { return created = new TaskCompletionSource<IAnalysisCookie>(); });
-            if (created == null) {
-                // Do not start parsing until the previous one has completed
-                await tcs.Task;
-                tcs = new TaskCompletionSource<IAnalysisCookie>();
+        public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
+            if (doc == null) {
+                throw new ArgumentNullException(nameof(doc));
             }
 
+            (doc as IPythonProjectEntry)?.BeginParsingTree();
+            _parsingInProgress.Increment();
+
+            Task<IAnalysisCookie> result = null;
             try {
-                (doc as IPythonProjectEntry)?.BeginParsingTree();
-                _parsingInProgress.Increment();
-                bool enqueued = false;
-                try {
-                    enqueued = ThreadPool.QueueUserWorkItem(ParseWorker, new ParseState {
-                        Document = doc,
-                        LanguageVersion = languageVersion,
-                        Task = tcs
-                    });
-                } finally {
-                    if (!enqueued) {
-                        AbortParsingTree(doc as IPythonProjectEntry);
-                    }
-                }
-                return await tcs.Task;
+                result = _parsing.AddOrUpdate(doc,
+                    _ => Parse(doc, languageVersion, null),
+                    (_, prev) => Parse(doc, languageVersion, prev)
+                );
+                return result;
             } finally {
-                _parsing.TryRemove(doc, out _);
-                _parsingInProgress.Decrement();
+                if (result == null) {
+                    AbortParsingTree(doc as IPythonProjectEntry);
+                    _parsingInProgress.Decrement();
+                }
             }
         }
 
-        private void ParseWorker(object state) {
-            var ps = state as ParseState;
-            var doc = ps?.Document;
-            var task = ps?.Task;
-            if (doc == null || task == null) {
-                Debug.Fail("invalid type passed to ParseItemWorker");
-                return;
+        private Task<IAnalysisCookie> Parse(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
+            if (previousTask != null && previousTask.Status == TaskStatus.Running) {
+                var callingThread = Thread.CurrentThread;
+                var res = previousTask.ContinueWith(t => {
+                    // We need to cancel immediately if we're running on the same thread
+                    // This can happen if the task completes before we call ContinueWith,
+                    // though the RunContinuationsAsynchronously should protect against this too
+                    if (Thread.CurrentThread == callingThread) {
+                        throw new OperationCanceledException();
+                    }
+                    return ParseWorker(doc, languageVersion);
+                });
+                if (!res.IsCanceled) {
+                    return res;
+                }
             }
 
+            return Task.Factory.StartNew(() => ParseWorker(doc, languageVersion), TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        private IAnalysisCookie ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
             IAnalysisCookie result = null;
 
             try {
-                if (doc == null) {
-                    throw new NotSupportedException($"cannot parse {doc.GetType().FullName}");
-                }
-
                 if (doc is IExternalProjectEntry externalEntry) {
                     using (var r = doc.ReadDocument(0, out var version)) {
                         if (r == null) {
@@ -134,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                 if (r == null) {
                                     continue;
                                 }
-                                ParsePython(r, pyEntry, ps.LanguageVersion, out var tree, out List<Diagnostic> diags);
+                                ParsePython(r, pyEntry, languageVersion, out var tree, out List<Diagnostic> diags);
                                 buffers[part] = new BufferVersion(
                                     version,
                                     tree,
@@ -154,10 +139,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                 }
-                ps.Task.TrySetResult(result);
-            } catch (Exception ex) {
-                task.TrySetException(ex);
+            } finally {
+                _parsingInProgress.Decrement();
             }
+            return result;
         }
 
         private IAnalysisCookie UpdateTree(IPythonProjectEntry entry, SortedDictionary<int, BufferVersion> buffers) {

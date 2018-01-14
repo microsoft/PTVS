@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
             FilePath = filePath;
             Cookie = cookie;
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
-            _unit = new AnalysisUnit(Tree, MyScope.Scope);
+            _unit = new AnalysisUnit(null, MyScope.Scope);
             _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
                 _buffers[0].Reset(c.Version, c.Content);
@@ -276,13 +276,6 @@ namespace Microsoft.PythonTools.Analysis {
             );
         }
 
-        private void ClearScope() {
-            MyScope.Scope.Children.Clear();
-            MyScope.Scope.ClearNodeScopes();
-            MyScope.Scope.ClearNodeValues();
-            MyScope.ClearUnresolvedModules();
-        }
-
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;
 
         public ModuleAnalysis Analysis { get; private set; }
@@ -307,7 +300,9 @@ namespace Microsoft.PythonTools.Analysis {
 
 
         public void RemovedFromProject() {
-            AnalysisVersion = -1;
+            lock (this) {
+                AnalysisVersion = -1;
+            }
             foreach (var aggregatedInto in _aggregates) {
                 if (aggregatedInto.AnalysisVersion != -1) {
                     ProjectState.ClearAggregate(aggregatedInto);
@@ -346,7 +341,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return new MemoryStream(encoding.GetBytes(text.ToString()));
             }
 
-            var ms = new MemoryStream(encoding == Encoding.Unicode ? text.Length * 2 : text.Length);
+            var ms = new MemoryStream(Encoding.Unicode.Equals(encoding) ? text.Length * 2 : text.Length);
             var enc = encoding.GetEncoder();
             var chars = new char[chunkSize];
             var bytes = new byte[encoding.GetMaxByteCount(chunkSize)];

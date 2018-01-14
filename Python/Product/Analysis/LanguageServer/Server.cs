@@ -33,6 +33,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
+        private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
+
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
 
@@ -51,6 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Server() {
             _queue = new AnalysisQueue();
             _parseQueue = new ParseQueue();
+            _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
             _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, int>>();
@@ -546,14 +549,43 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return false;
         }
 
+        private IDisposable GetDocumentParseCounter(IDocument doc, out int count) {
+            VolatileCounter counter;
+            lock (_pendingParse) {
+                if (!_pendingParse.TryGetValue(doc, out counter)) {
+                    _pendingParse[doc] = counter = new VolatileCounter();
+                    // Automatically remove counter from the dictionary when it
+                    // reaches zero.
+                    counter.WaitForZeroAsync().ContinueWith(t => {
+                        if (t.IsCompleted) {
+                            lock (_pendingParse) {
+                                if (counter.IsZero && _pendingParse.TryGetValue(doc, out var existing) && existing == counter) {
+                                    _pendingParse.Remove(doc);
+                                }
+                            }
+                        }
+                    });
+                }
+                var res = counter.Incremented();
+                count = counter.Count;
+                return res;
+            }
+        }
+
         private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal) {
             try {
-                // Avoid re-parsing the same version
-                while (_parseQueue.TryGetExistingParseAsync(doc, out var task)) {
-                    await task;
+                IAnalysisCookie cookie;
+                using (GetDocumentParseCounter(doc, out int count)) {
+                    if (count > 3) {
+                        // Rough check to prevent unbounded queueing. If we have
+                        // multiple parses in queue, we will get the latest doc
+                        // version in one of the ones to come.
+                        return;
+                    }
+
+                    cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
                 }
 
-                var cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
                 var vc = cookie as VersionCookie;
                 if (vc != null) {
                     foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {

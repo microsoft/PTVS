@@ -141,7 +141,6 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             if (!_process.HasExited) {
                 await _seenNullOutput.WaitAsync(cancellationToken).ConfigureAwait(false);
                 await _seenNullError.WaitAsync(cancellationToken).ConfigureAwait(false);
-                cancellationToken.ThrowIfCancellationRequested();
             }
 
             return _process.ExitCode;

@@ -388,7 +388,7 @@ mc";
                 if (tc == DiagnosticSeverity.Unspecified) {
                     AssertUtil.ContainsExactly(messages);
                 } else {
-                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;1;13;1");
+                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;2;0;1");
                 }
 
                 await s.UnloadFileAsync(mod);

@@ -675,7 +675,7 @@ namespace Microsoft.PythonTools.Analysis {
             string sourceFile,
             out ModulePath modulePath
         ) {
-            return FromBasePathAndFile_NoThrow(basePath, sourceFile, null, null, out modulePath, out _, out _);
+            return FromBasePathAndFile_NoThrow(basePath, sourceFile, null, out modulePath, out _, out _);
         }
 
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
@@ -780,7 +780,6 @@ namespace Microsoft.PythonTools.Analysis {
             string basePath,
             string sourceFile,
             Func<string, bool> isPackage,
-            Func<string, string, string> getModule,
             out ModulePath modulePath,
             out bool isInvalid,
             out bool isMissing
@@ -795,18 +794,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (isPackage == null) {
                 isPackage = f => !string.IsNullOrEmpty(GetPackageInitPy(f));
-            }
-            if (getModule == null) {
-                getModule = (dir, mod) => {
-                    var pack = GetPackageInitPy(Path.Combine(dir, mod));
-                    if (File.Exists(pack)) {
-                        return pack;
-                    }
-                    var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
-                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonStubRegex, p, mod)) ??
-                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
-                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonFileRegex, p, mod));
-                };
             }
 
             var nameMatch = PythonFileRegex.Match(PathUtils.GetFileName(sourceFile));
