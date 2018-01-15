@@ -108,5 +108,9 @@ namespace TestUtilities.Python {
         public void Analyze(CancellationToken cancel) {
             throw new NotImplementedException();
         }
+
+        public PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie) {
+            throw new NotImplementedException();
+        }
     }
 }

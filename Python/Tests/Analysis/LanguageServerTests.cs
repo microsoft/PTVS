@@ -61,18 +61,25 @@ namespace AnalysisTests {
             version.AssertInstalled();
             var s = new Server();
             s.OnLogMessage += Server_OnLogMessage;
+            var properties = new InterpreterFactoryCreationOptions {
+                TraceLevel = System.Diagnostics.TraceLevel.Verbose,
+                DatabasePath = TestData.GetTempPath($"AstAnalysisCache{version.Version}")
+            }.ToDictionary();
+            version.Configuration.WriteToDictionary(properties);
+
             await s.Initialize(new InitializeParams {
                 rootUri = rootUri,
                 initializationOptions = new PythonInitializationOptions {
                     interpreter = new PythonInitializationOptions.Interpreter {
                         assembly = typeof(AstPythonInterpreterFactory).Assembly.Location,
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
-                        properties = version.Configuration.ToDictionary()
+                        properties = properties
                     }
                 },
                 capabilities = new ClientCapabilities {
                     python = new PythonClientCapabilities {
-                        analysisUpdates = true
+                        analysisUpdates = true,
+                        traceLogging = true
                     }
                 }
             });
@@ -89,7 +96,7 @@ namespace AnalysisTests {
                 case MessageType.Error: Trace.TraceError(e.message); break;
                 case MessageType.Warning: Trace.TraceWarning(e.message); break;
                 case MessageType.Info: Trace.TraceInformation(e.message); break;
-                case MessageType.Log: Trace.WriteLine(e.message); break;
+                case MessageType.Log: Trace.TraceInformation("LOG: " + e.message); break;
             }
         }
 
@@ -149,6 +156,16 @@ namespace AnalysisTests {
         ) {
             var initialVersion = Math.Max((s.GetEntry(document) as IDocument)?.GetDocumentVersion(s.GetPart(document)) ?? 0, 0);
 
+            var parseStart = new TaskCompletionSource<object>();
+            EventHandler<ParseCompleteEventArgs> handler = null;
+            handler = (sender, ev) => {
+                if (ev.uri == document) {
+                    parseStart.TrySetResult(null);
+                    ((Server)sender).OnParseComplete -= handler;
+                }
+            };
+            s.OnParseComplete += handler;
+
             await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
                     uri = document,
@@ -159,6 +176,8 @@ namespace AnalysisTests {
                     text = c.InsertedText
                 }).ToArray()
             });
+            await parseStart.Task;
+
             int newVersion = -1;
             var code = (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out newVersion).ReadToEnd();
             return Tuple.Create(code, newVersion);
@@ -235,7 +254,7 @@ mc";
 
             // Send the document update.
             await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
-                textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 0 },
+                textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 1 },
                 contentChanges = new[] { new TextDocumentContentChangedEvent {
                     text = ".",
                     range = new Range {

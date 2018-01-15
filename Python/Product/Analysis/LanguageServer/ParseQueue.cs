@@ -17,10 +17,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -112,11 +110,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else if (doc is IPythonProjectEntry pyEntry) {
                     bool complete = false;
+                    pyEntry.GetTreeAndCookie(out _, out var lastCookie);
+                    var lastVc = lastCookie as VersionCookie;
                     try {
                         var buffers = new SortedDictionary<int, BufferVersion>();
-                        foreach (var part in doc.DocumentParts) {
+                        foreach (var part in doc.DocumentParts.Reverse()) {
                             using (var r = doc.ReadDocumentBytes(part, out var version)) {
                                 if (r == null) {
+                                    continue;
+                                }
+                                if (lastVc != null && lastVc.Versions.TryGetValue(part, out var lastParse) && lastParse.Version >= version) {
+                                    buffers[part] = lastParse;
                                     continue;
                                 }
                                 ParsePython(r, pyEntry, languageVersion, out var tree, out List<Diagnostic> diags);

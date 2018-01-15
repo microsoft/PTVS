@@ -180,7 +180,6 @@ namespace TestUtilities
                 string.Join("\n", value),
                 string.Join("\n", items)
             );
-            Console.WriteLine(message);
 
             Assert.AreEqual(value.Length, items.Length, message);
             for (int i = 0; i < value.Length; i++) {

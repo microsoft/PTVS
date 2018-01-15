@@ -177,11 +177,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public event EventHandler<ShowMessageEventArgs> OnShowMessage;
 
-        protected void ShowMessage(ShowMessageEventArgs e) => OnShowMessage?.Invoke(this, e);
+        protected void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
 
         public event EventHandler<LogMessageEventArgs> OnLogMessage;
 
-        protected void LogMessage(LogMessageEventArgs e) => OnLogMessage?.Invoke(this, e);
+        protected void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
 
         public event EventHandler<TelemetryEventArgs> OnTelemetry;
 

@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
+using System.Text;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -75,6 +77,54 @@ def g(y):
                 DocumentChange.Insert("#", new SourceLocation(2, 7))
             }));
             AssertUtil.Contains(doc.Text.ToString(), "re#turn g");
+        }
+
+        [TestMethod, Priority(0)]
+        public void EncodeToStream() {
+            var sb = new StringBuilder();
+            var bytes = new byte[256];
+            int read;
+            sb.Append('\ufeff', 12);
+
+            for (int chunkSize = 1; chunkSize < 14; ++chunkSize) {
+                Console.WriteLine($"Chunk size: {chunkSize}");
+                read = ProjectEntry.EncodeToStream(sb, Encoding.UTF8, chunkSize).Read(bytes, 0, bytes.Length);
+                Assert.AreEqual(39, read);
+                for (int i = 0; i < read; i += 3) {
+                    Console.WriteLine($"At {i}: {bytes[i]}, {bytes[i + 1]}, {bytes[i + 2]}");
+                    AssertUtil.AreEqual(bytes.Skip(i).Take(3).ToArray(), (byte)239, (byte)187, (byte)191);
+                }
+            }
+
+            for (int chunkSize = 1; chunkSize < 14; ++chunkSize) {
+                Console.WriteLine($"Chunk size: {chunkSize}");
+                read = ProjectEntry.EncodeToStream(sb, new UTF8Encoding(false), chunkSize).Read(bytes, 0, bytes.Length);
+                Assert.AreEqual(36, read);
+                for (int i = 0; i < read; i += 3) {
+                    Console.WriteLine($"At {i}: {bytes[i]}, {bytes[i + 1]}, {bytes[i + 2]}");
+                    AssertUtil.AreEqual(bytes.Skip(i).Take(3).ToArray(), (byte)239, (byte)187, (byte)191);
+                }
+            }
+
+            for (int chunkSize = 1; chunkSize < 14; ++chunkSize) {
+                Console.WriteLine($"Chunk size: {chunkSize}");
+                read = ProjectEntry.EncodeToStream(sb, Encoding.Unicode, chunkSize).Read(bytes, 0, bytes.Length);
+                Assert.AreEqual(26, read);
+                for (int i = 0; i < read; i += 2) {
+                    Console.WriteLine($"At {i}: {bytes[i]}, {bytes[i + 1]}");
+                    AssertUtil.AreEqual(bytes.Skip(i).Take(2).ToArray(), (byte)0xFF, (byte)0xFE);
+                }
+            }
+
+            for (int chunkSize = 1; chunkSize < 14; ++chunkSize) {
+                Console.WriteLine($"Chunk size: {chunkSize}");
+                read = ProjectEntry.EncodeToStream(sb, new UnicodeEncoding(false, false), chunkSize).Read(bytes, 0, bytes.Length);
+                Assert.AreEqual(24, read);
+                for (int i = 0; i < read; i += 2) {
+                    Console.WriteLine($"At {i}: {bytes[i]}, {bytes[i + 1]}");
+                    AssertUtil.AreEqual(bytes.Skip(i).Take(2).ToArray(), (byte)0xFF, (byte)0xFE);
+                }
+            }
         }
     }
 }

@@ -47,6 +47,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
         public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
+
+        public override string ToString() => ((SourceLocation)this).ToString();
     }
 
     public struct Range {
@@ -54,6 +56,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public static implicit operator SourceSpan(Range r) => new SourceSpan(r.start, r.end);
         public static implicit operator Range(SourceSpan span) => new Range { start = span.Start, end = span.End };
+
+        public override string ToString() => ((SourceSpan)this).ToString();
     }
 
     public struct Location {
@@ -392,6 +396,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// for completions.
         /// </summary>
         public int? completionsTimeout;
+
+        /// <summary>
+        /// Enables an even higher level of logging via the logMessage event.
+        /// This will likely have a performance impact.
+        /// </summary>
+        public bool? traceLogging;
     }
 
     public struct ClientCapabilities {

@@ -126,9 +126,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public PythonAst WaitForCurrentTree(int timeout = -1) {
+        public PythonAst WaitForCurrentTree(int timeout = -1) => WaitForCurrentTree(timeout, out _);
+
+        public PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie) {
             lock (this) {
                 if (_updatesPending == 0) {
+                    cookie = Cookie;
                     return Tree;
                 }
 
@@ -152,9 +155,15 @@ namespace Microsoft.PythonTools.Analysis {
                     _curWaiter.Dispose();
                 }
                 _curWaiter = null;
+
+                if (gotNewTree) {
+                    cookie = Cookie;
+                    return Tree;
+                }
             }
 
-            return gotNewTree ? Tree : null;
+            cookie = null;
+            return null;
         }
 
         public void Analyze(CancellationToken cancel) {
@@ -337,14 +346,31 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal static Stream EncodeToStream(StringBuilder text, Encoding encoding, int chunkSize = 4096) {
+            byte[] bytes, preamble;
+            MemoryStream ms;
+
             if (text.Length < chunkSize) {
-                return new MemoryStream(encoding.GetBytes(text.ToString()));
+                preamble = encoding.GetPreamble() ?? Array.Empty<byte>();
+                bytes = encoding.GetBytes(text.ToString());
+                if (preamble.Any()) {
+                    ms = new MemoryStream(preamble.Length + bytes.Length);
+                    ms.Write(preamble, 0, preamble.Length);
+                    ms.Write(bytes, 0, bytes.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    return ms;
+                }
+                return new MemoryStream(bytes);
             }
 
-            var ms = new MemoryStream(Encoding.Unicode.Equals(encoding) ? text.Length * 2 : text.Length);
+            // Estimate 1 byte per character (or 2 bytes for UTF-16) for initial allocation
+            ms = new MemoryStream(Encoding.Unicode.Equals(encoding) ? text.Length * 2 : text.Length);
             var enc = encoding.GetEncoder();
             var chars = new char[chunkSize];
-            var bytes = new byte[encoding.GetMaxByteCount(chunkSize)];
+
+            preamble = encoding.GetPreamble() ?? Array.Empty<byte>();
+            ms.Write(preamble, 0, preamble.Length);
+
+            bytes = new byte[encoding.GetMaxByteCount(chunkSize)];
             for (int i = 0; i < text.Length;) {
                 bool flush = true;
                 int len = text.Length - i;
@@ -540,5 +566,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// current parse to finish and returns the up-to-date tree.
         /// </summary>
         PythonAst WaitForCurrentTree(int timeout = -1);
+
+        PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie);
     }
 }

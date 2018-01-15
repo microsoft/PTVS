@@ -34,24 +34,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
         private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
+        private readonly VolatileCounter _pendingAnalysisEnqueue;
 
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
-
         private readonly ConcurrentDictionary<Uri, Dictionary<int, int>> _lastReportedDiagnostics;
 
+        // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
 
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities? _clientCaps;
+        private bool _traceLogging;
 
         // If null, all files must be added manually
         private Uri _rootDir;
 
         public Server() {
             _queue = new AnalysisQueue();
+            _pendingAnalysisEnqueue = new VolatileCounter();
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
@@ -68,11 +71,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public async override Task<InitializeResult> Initialize(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
 
+            if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
+                LogMessage(MessageType.Log, "Initializing for unknown interpreter");
+            } else {
+                LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
+            }
+
             _clientCaps = @params.capabilities;
             var searchPaths = @params.initializationOptions.searchPaths;
             if (searchPaths != null) {
                 _analyzer.SetSearchPaths(searchPaths);
             }
+
+            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
 
             if (@params.rootUri != null) {
                 _rootDir = @params.rootUri;
@@ -81,6 +92,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (_rootDir != null) {
+                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
                 _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
 
@@ -99,6 +111,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Opening document {@params.textDocument.uri}");
+            }
+
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
             if (doc != null) {
@@ -130,6 +146,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var uri = @params.textDocument.uri;
             var entry = GetEntry(uri);
             int part = GetPart(uri);
+
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Received changes for {uri} (part {part})");
+            }
+
             if (entry is IDocument doc) {
                 int docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
                 int fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
@@ -138,6 +159,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
                     // Expected from version hasn't been seen yet, and there are no resets in this
                     // change, so enqueue it for later.
+                    LogMessage(MessageType.Log, $"Deferring changes for {uri} until version {fromVersion} is seen");
                     pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
                     lock (pending) {
                         pending.Add(@params);
@@ -175,6 +197,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Applied changes to {uri}");
+                }
                 EnqueueItem(doc);
             }
 
@@ -194,7 +219,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
             if (_analyzer == null) {
-                LogMessage(new LogMessageEventArgs { type = MessageType.Error, message = "change configuration notification sent to uninitialized server" });
+                LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
             }
 
@@ -207,9 +232,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
+            var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Completions in {uri} at {@params.position}");
+            }
+
             var analysis = entry?.Analysis;
             if (analysis == null) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"No analysis found for {uri}");
+                }
                 return new CompletionList { };
             }
 
@@ -229,7 +263,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
 
-            var latestTree = entry.WaitForCurrentTree(_clientCaps?.python?.completionsTimeout ?? -1);
+            var latestTree = entry.WaitForCurrentTree(_clientCaps?.python?.completionsTimeout ?? -1, out var cookie);
+            if (_traceLogging && latestTree != null) {
+                if (cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                    LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
+                } else {
+                    LogMessage(MessageType.Log, $"Got AST for {uri}");
+                }
+            }
             tree = latestTree ?? tree;
 
             IEnumerable<MemberResult> members = null;
@@ -269,6 +310,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (members == null) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"No members found in document {uri}");
+                }
                 return new CompletionList { };
             }
 
@@ -278,9 +322,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
-            return new CompletionList {
-                items = filtered.ToArray()
-            };
+            var res = new CompletionList { items = filtered.ToArray() };
+            LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
+            return res;
         }
 
         public override async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
@@ -369,7 +413,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         CultureInfo.CurrentCulture
                     );
                 } catch (Exception ex) {
-                    LogMessage(new LogMessageEventArgs { type = MessageType.Warning, message = ex.ToString() });
+                    LogMessage(MessageType.Warning, ex.ToString());
                 }
             }
 
@@ -385,6 +429,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (interp == null) {
                 throw new InvalidOperationException("Failed to create interpreter");
             }
+
+            LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
             return await PythonAnalyzer.CreateAsync(factory, interp);
         }
@@ -444,8 +490,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public async Task WaitForCompleteAnalysisAsync() {
             // Wait for all current parsing to complete
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, "Waiting for parsing to complete");
+            }
             await _parseQueue.WaitForAllAsync();
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, "Parsing complete. Waiting for analysis entries to enqueue");
+            }
+            await _pendingAnalysisEnqueue.WaitForZeroAsync();
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, "Enqueue complete. Waiting for analysis to complete");
+            }
             await _queue.WaitForCompleteAsync();
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, "Analysis complete.");
+            }
         }
 
         public int EstimateRemainingWork() {
@@ -453,10 +512,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<ParseCompleteEventArgs> OnParseComplete;
-        private void ParseComplete(Uri uri, int version) => OnParseComplete?.Invoke(this, new ParseCompleteEventArgs { uri = uri, version = version });
+        private void ParseComplete(Uri uri, int version) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Parse complete for {uri} at version {version}");
+            }
+            OnParseComplete?.Invoke(this, new ParseCompleteEventArgs { uri = uri, version = version });
+        }
 
         public event EventHandler<AnalysisCompleteEventArgs> OnAnalysisComplete;
-        private void AnalysisComplete(Uri uri, int version) => OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
+        private void AnalysisComplete(Uri uri, int version) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Analysis complete for {uri} at version {version}");
+            }
+            OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
+        }
 
         #endregion
 
@@ -574,29 +643,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal) {
             try {
-                IAnalysisCookie cookie;
-                using (GetDocumentParseCounter(doc, out int count)) {
-                    if (count > 3) {
-                        // Rough check to prevent unbounded queueing. If we have
-                        // multiple parses in queue, we will get the latest doc
-                        // version in one of the ones to come.
-                        return;
+                VersionCookie vc;
+                using (_pendingAnalysisEnqueue.Incremented()) {
+                    IAnalysisCookie cookie;
+                    using (GetDocumentParseCounter(doc, out int count)) {
+                        if (count > 3) {
+                            // Rough check to prevent unbounded queueing. If we have
+                            // multiple parses in queue, we will get the latest doc
+                            // version in one of the ones to come.
+                            return;
+                        }
+
+                        if (_traceLogging) {
+                            LogMessage(MessageType.Log, $"Parsing document {doc.DocumentUri}");
+                        }
+                        cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
                     }
 
-                    cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
-                }
-
-                var vc = cookie as VersionCookie;
-                if (vc != null) {
-                    foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                        ParseComplete(kv.Key, kv.Value.Version);
+                    vc = cookie as VersionCookie;
+                    if (vc != null) {
+                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                            ParseComplete(kv.Key, kv.Value.Version);
+                        }
+                    } else {
+                        ParseComplete(doc.DocumentUri, 0);
                     }
-                } else {
-                    ParseComplete(doc.DocumentUri, 0);
-                }
 
-                if (doc is IAnalyzable analyzable) {
-                    _queue.Enqueue(analyzable, priority);
+                    if (doc is IAnalyzable analyzable) {
+                        _queue.Enqueue(analyzable, priority);
+                    }
                 }
 
                 // Allow the caller to complete before publishing diagnostics
@@ -621,10 +696,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } catch (BadSourceException) {
             } catch (OperationCanceledException) {
             } catch (Exception ex) {
-                LogMessage(new LogMessageEventArgs {
-                    type = MessageType.Error,
-                    message = ex.ToString()
-                });
+                LogMessage(MessageType.Error, ex.ToString());
             }
         }
 
