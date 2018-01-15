@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual async Task DidChangeConfiguration(DidChangeConfigurationParams @params) { }
 
-        public virtual async Task DidChangeWatchedFilesParams(DidChangeWatchedFilesParams @params) { }
+        public virtual async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) { }
 
         public virtual async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
             return null;

@@ -53,7 +53,10 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
 
             public InterpreterInfo interpreter;
-            public string rootUri;
+
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri rootUri;
+            public bool analyzeAllFiles;
         }
 
         public sealed class InterpreterInfo {
@@ -717,6 +720,20 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class ModulesChangedEvent : Event {
             public const string Name = "modulesChanged";
+
+            public override string name => Name;
+        }
+
+        public struct FileEvent {
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
+            public LS.FileChangeType kind;
+        }
+
+        public sealed class FileChangedEvent : Event {
+            public const string Name = "fileChanged";
+
+            public FileEvent[] changes;
 
             public override string name => Name;
         }

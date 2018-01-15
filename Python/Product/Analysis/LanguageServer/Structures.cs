@@ -402,6 +402,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// This will likely have a performance impact.
         /// </summary>
         public bool? traceLogging;
+
+        /// <summary>
+        /// Disables automatic analysis of all files under the root URI.
+        /// </summary>
+        public bool? manualFileLoad;
     }
 
     public struct ClientCapabilities {

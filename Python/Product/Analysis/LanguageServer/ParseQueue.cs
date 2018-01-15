@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                 if (r == null) {
                                     continue;
                                 }
-                                if (lastVc != null && lastVc.Versions.TryGetValue(part, out var lastParse) && lastParse.Version >= version) {
+                                if (version >= 0 && lastVc != null && lastVc.Versions.TryGetValue(part, out var lastParse) && lastParse.Version >= version) {
                                     buffers[part] = lastParse;
                                     continue;
                                 }

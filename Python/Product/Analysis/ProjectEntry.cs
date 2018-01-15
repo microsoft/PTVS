@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return EncodeToStream(_buffers[part].Text, Encoding.UTF8);
                 } else if (part == 0) {
                     var s = PathUtils.OpenWithRetry(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    version = s == null ? -1 : 0;
+                    version = -1;
                     return s;
                 }
                 version = -1;

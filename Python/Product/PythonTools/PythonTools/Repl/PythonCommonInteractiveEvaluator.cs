@@ -158,13 +158,26 @@ namespace Microsoft.PythonTools.Repl {
                 if (factory == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
-                    var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractiveAsync(
-                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
-                        factory,
-                        DisplayName.IfNullOrEmpty("Unnamed"),
-                        projectFile
-                    ), CancellationToken.None);
+                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
+                        var pyProject = GetAssociatedPythonProject(config.Interpreter);
+
+                        var a = await VsProjectAnalyzer.CreateForInteractiveAsync(
+                            _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
+                            factory,
+                            DisplayName.IfNullOrEmpty("Unnamed")
+                        );
+
+                        IEnumerable<string> sp;
+                        if (pyProject != null) {
+                            sp = pyProject.GetSearchPaths();
+                        } else {
+                            var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                            sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
+                        }
+                        await a.SetSearchPathsAsync(sp.MaybeEnumerate());
+
+                        return a;
+                    }, CancellationToken.None);
                 }
                 return _analyzer;
             }

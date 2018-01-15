@@ -97,6 +97,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
             switch (e.Event.name) {
                 case AP.ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
+                case AP.FileChangedEvent.Name: OnFileChanged((AP.FileChangedEvent)e.Event); break;
             }
         }
 
@@ -221,7 +222,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task<Response> Initialize(AP.InitializeRequest request) {
             try {
                 await _server.Initialize(new LS.InitializeParams {
-                    rootUri = string.IsNullOrEmpty(request.rootUri) ? null : new Uri(request.rootUri),
+                    rootUri = request.rootUri,
                     initializationOptions = new LS.PythonInitializationOptions {
                         interpreter = new LS.PythonInitializationOptions.Interpreter {
                             assembly = request.interpreter?.assembly,
@@ -231,7 +232,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     },
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
-                            analysisUpdates = true
+                            analysisUpdates = true,
+                            manualFileLoad = !request.analyzeAllFiles
                         }
                     }
                 });
@@ -1959,6 +1961,12 @@ namespace Microsoft.PythonTools.Intellisense {
             await _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams { });
         }
 
+        private async void OnFileChanged(AP.FileChangedEvent e) {
+            await _server.DidChangeWatchedFiles(new LS.DidChangeWatchedFilesParams {
+                changes = e.changes.MaybeEnumerate().Select(c => new LS.FileEvent { uri = c.documentUri, type = c.kind }).ToArray()
+            });
+        }
+
         internal async Task BeginAnalyzingFileAsync(IProjectEntry item, Uri documentUri, bool isTemporaryFile, bool suppressErrorList) {
             if (Project == null) {
                 // We aren't able to analyze code, so don't create an entry.
@@ -2054,7 +2062,18 @@ namespace Microsoft.PythonTools.Intellisense {
         public PythonAnalyzer Project => _server._analyzer;
 
         private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
-            var entry = GetPythonEntry(e.uri);
+            IPythonProjectEntry entry;
+            try {
+                entry = GetPythonEntry(e.uri);
+            } catch (LS.LanguageServerException) {
+                // Likely racing with the addition of the file, so delay a bit in case it appears
+                await Task.Delay(500);
+                try {
+                    entry = GetPythonEntry(e.uri);
+                } catch (LS.LanguageServerException) {
+                    return;
+                }
+            }
             var tree = entry.Tree;
             await _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {

@@ -804,7 +804,7 @@ namespace Microsoft.PythonTools.Analysis {
             var bits = new List<string> { nameMatch.Groups["name"].Value };
 
             var path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(sourceFile));
-            while (PathEqualityComparer.Instance.StartsWith(basePath, path, allowFullMatch: false)) {
+            while (PathEqualityComparer.Instance.StartsWith(path, basePath, allowFullMatch: false)) {
                 if (!isPackage(path)) {
                     isMissing = true;
                     return false;

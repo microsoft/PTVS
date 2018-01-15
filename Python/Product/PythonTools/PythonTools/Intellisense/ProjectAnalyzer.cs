@@ -120,14 +120,15 @@ namespace Microsoft.PythonTools.Intellisense {
             });
 
             var analyzer = new VsProjectAnalyzer(services, factory);
-            await analyzer.InitializeAsync(!inProcess, null, null);
+            await analyzer.InitializeAsync(!inProcess, null, null, false);
             return analyzer;
         }
 
         internal static async Task<VsProjectAnalyzer> CreateForProjectAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
-            MSBuild.Project project,
+            string projectPath,
+            string projectHome,
             bool inProcess = false
         ) {
             services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
@@ -138,7 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
             });
 
             var analyzer = new VsProjectAnalyzer(services, factory);
-            await analyzer.InitializeAsync(!inProcess, project.FullPath, project);
+            await analyzer.InitializeAsync(!inProcess, projectPath, projectHome, false);
             return analyzer;
         }
 
@@ -146,7 +147,6 @@ namespace Microsoft.PythonTools.Intellisense {
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
             string displayName,
-            MSBuild.Project project = null,
             bool inProcess = false
         ) {
             services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Intellisense {
             });
 
             var analyzer = new VsProjectAnalyzer(services, factory);
-            await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", project);
+            await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", null, false);
             return analyzer;
         }
 
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
             bool inProcess = true
         ) {
             var analyzer = new VsProjectAnalyzer(services, factory);
-            await analyzer.InitializeAsync(!inProcess, "PTVS_TEST", null);
+            await analyzer.InitializeAsync(!inProcess, "PTVS_TEST", null, false);
             return analyzer;
         }
 
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private string DefaultComment => "Global Analysis";
 
-        private async Task InitializeAsync(bool outOfProc, string comment, MSBuild.Project projectFile) {
+        private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
             if (outOfProc) {
                 _conn = StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
             } else {
@@ -215,7 +215,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var interp = new AP.InterpreterInfo();
             _services.InterpreterRegistryService.GetSerializationInfo(_interpreterFactory, out interp.assembly, out interp.typeName, out interp.properties);
-            var initialize = new AP.InitializeRequest { interpreter = interp };
+            var initialize = new AP.InitializeRequest {
+                interpreter = interp,
+                rootUri = string.IsNullOrEmpty(rootDir) ? null : new Uri(rootDir),
+                analyzeAllFiles = analyzeAllFiles
+            };
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
@@ -235,6 +239,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisOptions.indentationInconsistencySeverity = _services.Python?.GeneralOptions.IndentationInconsistencySeverity ?? Severity.Ignore;
 
             if (_services.CommentTaskProvider != null) {
+                _analysisOptions.commentTokens.Clear();
                 foreach (var keyValue in (_services.CommentTaskProvider.Tokens).MaybeEnumerate()) {
                     var sev = LS.DiagnosticSeverity.Unspecified;
                     switch (keyValue.Value) {
@@ -485,6 +490,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public async Task SetSearchPathsAsync(IEnumerable<string> absolutePaths) {
             await SendRequestAsync(new AP.SetSearchPathRequest { dir = absolutePaths.ToArray() }).ConfigureAwait(false);
+            await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
+        }
+
+        public async Task NotifyFileChangesAsync(IEnumerable<Uri> newFiles, IEnumerable<Uri> deletedFiles, IEnumerable<Uri> changedFiles) {
+            await SendEventAsync(new AP.FileChangedEvent {
+                changes = newFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Created, documentUri = f })
+                .Concat(deletedFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Deleted, documentUri = f }))
+                .Concat(changedFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Changed, documentUri = f }))
+                .ToArray()
+            });
         }
 
         #endregion

@@ -78,12 +78,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             _clientCaps = @params.capabilities;
-            var searchPaths = @params.initializationOptions.searchPaths;
-            if (searchPaths != null) {
-                _analyzer.SetSearchPaths(searchPaths);
-            }
-
-            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
 
             if (@params.rootUri != null) {
                 _rootDir = @params.rootUri;
@@ -91,7 +85,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _rootDir = new Uri(PathUtils.NormalizePath(@params.rootPath));
             }
 
-            if (_rootDir != null) {
+            SetSearchPaths(@params.initializationOptions.searchPaths);
+
+            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
+
+            if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
                 _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
@@ -203,6 +201,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 EnqueueItem(doc);
             }
 
+        }
+
+        public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
+            IProjectEntry entry;
+            foreach (var c in @params.changes.MaybeEnumerate()) {
+                switch (c.type) {
+                    case FileChangeType.Created:
+                        entry = await LoadFileAsync(c.uri);
+                        if (entry != null) {
+                            if (_traceLogging) {
+                                LogMessage(MessageType.Log, $"Saw {c.uri} created and loaded new entry");
+                            }
+                        } else {
+                            LogMessage(MessageType.Warning, $"Failed to load {c.uri}");
+                        }
+                        break;
+                    case FileChangeType.Deleted:
+                        await UnloadFileAsync(c.uri);
+                        break;
+                    case FileChangeType.Changed:
+                        if ((entry = GetEntry(c.uri, false)) is IDocument doc) {
+                            // If document version is >=0, it is loaded in memory.
+                            if (doc.GetDocumentVersion(0) < 0) {
+                                EnqueueItem(doc, AnalysisPriority.Low);
+                            }
+                        }
+                        break;
+                }
+            }
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
@@ -440,8 +467,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var filePath = GetLocalPath(document);
             ModulePath mp;
 
-            if (!string.IsNullOrEmpty(localRoot) && !string.IsNullOrEmpty(filePath)) {
-                if (ModulePath.FromBasePathAndFile_NoThrow(localRoot, filePath, out mp)) {
+            if (!string.IsNullOrEmpty(filePath)) {
+                if (!string.IsNullOrEmpty(localRoot) && ModulePath.FromBasePathAndFile_NoThrow(localRoot, filePath, out mp)) {
                     yield return mp;
                 }
 
@@ -525,6 +552,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 LogMessage(MessageType.Log, $"Analysis complete for {uri} at version {version}");
             }
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
+        }
+
+        public async void SetSearchPaths(IEnumerable<string> searchPaths) {
+            _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         }
 
         #endregion

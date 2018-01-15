@@ -28,7 +28,9 @@ namespace Microsoft.PythonTools.Analysis {
         public void Reset(int version, string content) {
             Version = version;
             Text.Clear();
-            Text.Append(content);
+            if (!string.IsNullOrEmpty(content)) {
+                Text.Append(content);
+            }
         }
 
         public void Update(IEnumerable<DocumentChangeSet> changes) {
