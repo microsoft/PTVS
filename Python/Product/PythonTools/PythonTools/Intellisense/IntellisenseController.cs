@@ -893,7 +893,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void TriggerSignatureHelp() {
             Volatile.Read(ref _sigHelpSession)?.Dismiss();
 
-            var sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            ISignatureHelpSession sigHelpSession = null;
+            try {
+                sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            } catch (ObjectDisposedException) {
+            }
 
             if (sigHelpSession != null) {
                 sigHelpSession.Dismissed += OnSignatureSessionDismissed;

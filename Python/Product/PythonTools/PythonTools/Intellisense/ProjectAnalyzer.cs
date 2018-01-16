@@ -581,7 +581,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Connection StartSubprocessConnection(string comment, out AnalysisProcessInfo proc) {
-            var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
+            var libAnalyzer = typeof(AP.AddFileRequest).Assembly.Location;
 #if DEBUG
             var testOption = Debug.Listeners["Microsoft.PythonTools.AssertListener"] != null ? "/unittest " : "";
 #else

@@ -465,7 +465,9 @@ namespace Microsoft.PythonTools.Intellisense {
             // _after_ applying the update, not before. The target file is
             // assumed to be at version-1 when applying this change.
             public int version;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public ChangeInfo[] changes;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string content;
         }
 
@@ -497,16 +499,13 @@ namespace Microsoft.PythonTools.Intellisense {
             public int startLine, endLine, startColumn, endColumn;
         }
 
-        public sealed class FileChangedResponse : Response {
-#if DEBUG
-            public string newCode;
-#endif
-        }
-
         public sealed class ChangeInfo {
             public string newText;
             public int startLine, startColumn;
             public int endLine, endColumn;
+#if DEBUG
+            public int _startIndex, _endIndex;
+#endif
 
             public static ChangeInfo FromDocumentChange(DocumentChange c) {
                 return new ChangeInfo {

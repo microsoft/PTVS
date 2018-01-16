@@ -1122,12 +1122,19 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                return Site.GetUIThread().InvokeTaskSync(async() => {
-                    if (_analyzer == null) {
-                        _analyzer = await CreateAnalyzerAsync();
+                // So many deadlocks, but can't force all callers to become async, so do the best we can
+                for (int retries = 3; retries > 0; --retries) {
+                    var cts = new CancellationTokenSource(10000);
+                    try {
+                        return Site.GetUIThread().InvokeTaskSync(async () => {
+                            if (_analyzer == null) {
+                                _analyzer = await CreateAnalyzerAsync();
+                            }
+                            return _analyzer;
+                        }, cts.Token);
+                    } catch (OperationCanceledException) {
                     }
-                    return _analyzer;
-                }, CancellationToken.None);
+                }
             }
             return _analyzer;
         }

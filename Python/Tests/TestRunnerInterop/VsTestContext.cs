@@ -172,8 +172,10 @@ namespace TestRunnerInterop {
             queue.Enqueue(path);
 
             foreach(var d in FileUtils.EnumerateDirectories(path)) {
-                queue.Enqueue(d);
-                result[d] = DateTime.MinValue;
+                if (Path.GetFileName(d) != ".vs") {
+                    queue.Enqueue(d);
+                    result[d] = DateTime.MinValue;
+                }
             }
             while (queue.Count > 0) {
                 var dir = queue.Dequeue();

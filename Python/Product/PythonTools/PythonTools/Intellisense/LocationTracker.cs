@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static IEnumerable<NewLineLocation> LinesToLineEnds(IEnumerable<ITextSnapshotLine> lines) {
-            return lines.Select(l => {
+            foreach (var l in lines) {
                 var nlk = NewLineKind.None;
                 if (l.LineBreakLength == 2) {
                     nlk = NewLineKind.CarriageReturnLineFeed;
@@ -102,8 +102,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         nlk = NewLineKind.CarriageReturn;
                     }
                 }
-                return new NewLineLocation(l.EndIncludingLineBreak.Position, nlk);
-            });
+                yield return new NewLineLocation(l.EndIncludingLineBreak.Position, nlk);
+            }
         }
 
         private static IEnumerable<NewLineLocation> LineEndsToLineLengths(IEnumerable<NewLineLocation> lineEnds) {
@@ -183,6 +183,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     foreach (var c in ver.Changes) {
                         var oldLoc = NewLineLocation.IndexToLocation(initial, c.OldPosition);
                         int lineNo = oldLoc.Line - 1;
+                        while (asLengths.Count <= lineNo) {
+                            asLengths.Add(new NewLineLocation(0, NewLineKind.None));
+                        }
                         var line = asLengths[lineNo];
                         
                         if (c.OldLength > 0) {
@@ -208,6 +211,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (!string.IsNullOrEmpty(c.NewText)) {
                             NewLineLocation addedLine = new NewLineLocation(0, NewLineKind.None);
                             int lastLineEnd = 0, cutAtCol = oldLoc.Column - 1;
+                            if (cutAtCol > line.EndIndex - line.Kind.GetSize() && lineNo + 1 < asLengths.Count) {
+                                cutAtCol = 0;
+                                lineNo += 1;
+                                line = asLengths[lineNo];
+                            }
                             while ((addedLine = NewLineLocation.FindNewLine(c.NewText, lastLineEnd)).Kind != NewLineKind.None) {
                                 if (cutAtCol > 0) {
                                     asLengths[lineNo] = new NewLineLocation(line.EndIndex - cutAtCol, line.Kind);

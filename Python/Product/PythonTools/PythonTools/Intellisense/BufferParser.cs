@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static IEnumerable<AP.FileUpdate> GetUpdatesForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
+        internal static IEnumerable<AP.FileUpdate> GetUpdatesForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
             if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand()) {
                 yield break;
             }
@@ -309,7 +309,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return true;
         }
 
-        private static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
+        internal static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
                 AP.ChangeInfo prev = null;
@@ -327,7 +327,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         startColumn = oldPos.Column,
                         endLine = oldEnd.Line,
                         endColumn = oldEnd.Column,
-                        newText = change.NewText
+                        newText = change.NewText,
+#if DEBUG
+                        _startIndex = change.OldPosition,
+                        _endIndex = change.OldEnd
+#endif
                     };
                     changes.Add(prev);
                 }

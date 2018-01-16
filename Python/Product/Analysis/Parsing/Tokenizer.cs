@@ -2704,16 +2704,6 @@ namespace Microsoft.PythonTools.Parsing {
 
             int line = match + 2;
             int col = index - lineLocations[match].EndIndex + 1;
-            if (col == 1 && lineLocations[match].Kind == NewLineKind.None) {
-                if (match >= 0) {
-                    line = match + 1;
-                    col = index - (match > 1 ? lineLocations[match - 1].EndIndex : 0) + 1;
-                } else {
-                    line = 1;
-                    col = 1;
-                    index = 0;
-                }
-            }
             return new SourceLocation(index, line, col);
         }
 
