@@ -16,9 +16,11 @@
 
 namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterPythonInterpreter {
+        public string PrefixPath { get; }
         public string InterpreterExecutablePath { get; }
 
-        public CookiecutterPythonInterpreter(string interpreterExecutablePath) {
+        public CookiecutterPythonInterpreter(string prefixPath, string interpreterExecutablePath) {
+            PrefixPath = prefixPath;
             InterpreterExecutablePath = interpreterExecutablePath;
         }
     }
