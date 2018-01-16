@@ -80,6 +80,38 @@ def g(y):
         }
 
         [TestMethod, Priority(0)]
+        public void ResetDocumentBuffer() {
+            var doc = new DocumentBuffer();
+
+            doc.Reset(0, "");
+
+            Assert.AreEqual("", doc.Text.ToString());
+
+            doc.Update(new[] { new DocumentChangeSet(0, 1, new[] {
+                DocumentChange.Insert("text", SourceLocation.MinValue)
+            }) });
+
+            Assert.AreEqual("text", doc.Text.ToString());
+
+            try {
+                doc.Update(new[] { new DocumentChangeSet(1, 0, new[] {
+                DocumentChange.Delete(SourceLocation.MinValue, SourceLocation.MinValue.AddColumns(4))
+            }) });
+                Assert.Fail("expected InvalidOperationException");
+            } catch (InvalidOperationException) {
+            }
+            Assert.AreEqual("text", doc.Text.ToString());
+            Assert.AreEqual(1, doc.Version);
+
+            doc.Update(new[] { new DocumentChangeSet(1, 0, new[] {
+                new DocumentChange { WholeBuffer = true }
+            }) });
+
+            Assert.AreEqual("", doc.Text.ToString());
+            Assert.AreEqual(0, doc.Version);
+        }
+
+        [TestMethod, Priority(0)]
         public void EncodeToStream() {
             var sb = new StringBuilder();
             var bytes = new byte[256];

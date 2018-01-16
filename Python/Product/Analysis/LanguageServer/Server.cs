@@ -385,7 +385,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
 
         internal IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
-            if (!_projectFiles.TryGetValue(documentUri, out IProjectEntry entry) && throwIfMissing) {
+            IProjectEntry entry = null;
+            if ((documentUri == null || !_projectFiles.TryGetValue(documentUri, out entry)) && throwIfMissing) {
                 throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
             }
             return entry;

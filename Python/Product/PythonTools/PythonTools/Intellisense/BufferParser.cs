@@ -228,8 +228,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var total = snapshots.Aggregate(string.Empty, (t, s) => t + s.GetText());
 
             if (response.newCode.TrimEnd() != total.TrimEnd()) {
-                Console.Error.WriteLine($"New Code: [{response.newCode}]");
-                Console.Error.WriteLine($"Snapshot: [{total}]");
+                Console.Error.WriteLine($"New Code: {response.version} [{response.newCode}]");
+                Console.Error.WriteLine($"Snapshot: {string.Join(", ", snapshots.Select(s => s.Version.VersionNumber))} [{total}]");
                 Debug.Fail("Buffer content mismatch");
             }
 #endif

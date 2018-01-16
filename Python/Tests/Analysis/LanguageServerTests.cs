@@ -149,13 +149,22 @@ namespace AnalysisTests {
             Assert.AreEqual(Tuple.Create("y", 3), await ApplyChange(s, m, DocumentChange.Insert("y", new SourceLocation(1, 1))));
         }
 
-        private static async Task<Tuple<string, int>> ApplyChange(
+        private static Task<Tuple<string, int>> ApplyChange(
             Server s,
             Uri document,
             params DocumentChange[] e
         ) {
             var initialVersion = Math.Max((s.GetEntry(document) as IDocument)?.GetDocumentVersion(s.GetPart(document)) ?? 0, 0);
+            return ApplyChange(s, document, initialVersion, initialVersion + 1, e);
+        }
 
+        private static async Task<Tuple<string, int>> ApplyChange(
+            Server s,
+            Uri document,
+            int initialVersion,
+            int finalVersion,
+            params DocumentChange[] e
+        ) {
             var parseStart = new TaskCompletionSource<object>();
             EventHandler<ParseCompleteEventArgs> handler = null;
             handler = (sender, ev) => {
@@ -169,10 +178,10 @@ namespace AnalysisTests {
             await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
                     uri = document,
-                    version = initialVersion + 1
+                    version = finalVersion
                 },
                 contentChanges = e.Select(c => new TextDocumentContentChangedEvent {
-                    range = c.ReplacedSpan,
+                    range = c.WholeBuffer ? null : (Range?)c.ReplacedSpan,
                     text = c.InsertedText
                 }).ToArray()
             });
@@ -325,6 +334,17 @@ mc";
             await s.WaitForCompleteAnalysisAsync();
             await AssertCompletion(s, modP2, new[] { "y", "z" }, new[] { "x" });
             await AssertCompletion(s, modP3, new[] { "y", "z" }, new[] { "x" });
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task UpdateDocumentBuffer() {
+            var s = await CreateServer(null);
+
+            var mod = await AddModule(s, "");
+
+            Assert.AreEqual(Tuple.Create("test", 1), await ApplyChange(s, mod, DocumentChange.Insert("test", SourceLocation.MinValue)));
+            Assert.AreEqual(Tuple.Create("", 0), await ApplyChange(s, mod, 1, 0, new DocumentChange { WholeBuffer = true }));
+            Assert.AreEqual(Tuple.Create("test", 1), await ApplyChange(s, mod, DocumentChange.Insert("test", SourceLocation.MinValue)));
         }
 
         private static async Task<PublishDiagnosticsEventArgs> WaitForDiagnostics(Server s, int minimumVersion, Func<Task> action, CancellationToken cancellationToken) {

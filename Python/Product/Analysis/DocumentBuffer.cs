@@ -40,11 +40,16 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Update(DocumentChangeSet changes) {
-            if (Version >= 0) {
-                if (changes.FromVersion < Version) {
-                    return;
-                } else if (changes.FromVersion > Version && !changes.Changes.Any(c => c.WholeBuffer)) {
-                    throw new InvalidOperationException("missing prior versions");
+            if (!changes.Changes.Any(c => c.WholeBuffer)) {
+                if (Version >= 0) {
+                    if (changes.FromVersion < Version) {
+                        return;
+                    } else if (changes.FromVersion > Version) {
+                        throw new InvalidOperationException("missing prior versions");
+                    }
+                }
+                if (changes.FromVersion >= changes.ToVersion) {
+                    throw new InvalidOperationException("cannot reduce version without resetting buffer");
                 }
             }
 
