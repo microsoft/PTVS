@@ -202,21 +202,12 @@ namespace Microsoft.PythonTools.Debugger {
                 return functionName;
             }
 
-            var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
-            try {
-                ast.Walk(walker);
-            } catch (InvalidDataException) {
-                // Walker ran into a mismatch between expected function name and AST, so we cannot
-                // rely on AST to construct an accurate qualified name. Just return what we have.
-                return functionName;
-            }
-
-            string qualName = walker.Name.Aggregate((a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(a, n));
-            if (string.IsNullOrEmpty(qualName)) {
-                return functionName;
-            }
-
-            return qualName;
+            return QualifiedFunctionNameWalker.GetDisplayName(
+                lineNo,
+                functionName,
+                ast,
+                (a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(n, a)
+            );
         }
     }
 

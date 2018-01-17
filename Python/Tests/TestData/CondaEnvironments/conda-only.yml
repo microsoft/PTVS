@@ -1,0 +1,3 @@
+name: conda-only
+dependencies:
+  - cookies==2.2.1

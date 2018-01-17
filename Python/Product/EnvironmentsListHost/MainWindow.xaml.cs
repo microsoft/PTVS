@@ -40,12 +40,14 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
                 new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly)
             ));
 
-            EnvironmentsToolWindow.Interpreters = _container.GetExport<IInterpreterRegistryService>().Value;
-            EnvironmentsToolWindow.Service = _container.GetExport<IInterpreterOptionsService>().Value;
+            EnvironmentsToolWindow.InitializeEnvironments(
+                _container.GetExport<IInterpreterRegistryService>().Value,
+                _container.GetExport<IInterpreterOptionsService>().Value
+            );
         }
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {
-            var pm = EnvironmentsToolWindow.Service.GetPackageManagers(e.View.Factory).FirstOrDefault();
+            var pm = EnvironmentsToolWindow.OptionsService.GetPackageManagers(e.View.Factory).FirstOrDefault();
             if (pm != null) {
                 e.View.Extensions.Add(new PipExtensionProvider(e.View.Factory, pm));
             }

@@ -68,6 +68,20 @@ namespace Microsoft.PythonTools.Logging {
         public string Name { get; set; }
     }
 
+    internal sealed class AnalysisInitialize : PythonToolsLoggerData {
+        [PiiProperty]
+        public string InterpreterId { get; set; }
+        public string Architecture { get; set; }
+        public string Version { get; set; }
+        public string Reason { get; set; }
+    }
+
+    internal static class AnalysisInitializeReasons {
+        public const string Project = "Project";
+        public const string Interactive = "Interactive";
+        public const string Default = "Default";
+    }
+
     internal sealed class AnalysisInfo : PythonToolsLoggerData {
         [PiiProperty]
         public string InterpreterId { get; set; }

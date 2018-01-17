@@ -335,6 +335,19 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidCreateCondaEnv" priority="0x0130" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Create &amp;Conda Environment...</ButtonText>
+          <ToolTipText>Creates a new conda environment.</ToolTipText>
+          <CanonicalName>Create Conda Environment</CanonicalName>
+          <LocCanonicalName>Create Conda Environment</LocCanonicalName>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidViewAllEnvironments" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsViewCommandsGroup" />
         <!-- No PYEnvironment image yet -->
@@ -1153,6 +1166,7 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
       <IDSymbol name="cmdidInstallProjectRequirements" value="0x4036" />
+      <IDSymbol name="cmdidCreateCondaEnv" value="0x4037" />
 
       <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
       <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>

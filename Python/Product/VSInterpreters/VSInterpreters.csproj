@@ -83,6 +83,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interpreter\NoInterpretersFactory.cs" />
+    <Compile Include="Interpreter\ICondaEnvironmentManagerUI.cs" />
+    <Compile Include="Interpreter\ICondaEnvironmentManager.cs" />
+    <Compile Include="Interpreter\CondaEnvironmentManager.cs" />
     <Compile Include="PackageManager\CPythonCondaPackageManagerProvider.cs" />
     <Compile Include="PackageManager\IPackageManager.cs" />
     <Compile Include="PackageManager\IPackageManagerProvider.cs" />

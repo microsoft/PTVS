@@ -61,6 +61,105 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Create.
+        /// </summary>
+        public static string CondaExtensionCreateLabel {
+            get {
+                return ResourceManager.GetString("CondaExtensionCreateLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create the environment..
+        /// </summary>
+        public static string CondaExtensionCreateTooltip {
+            get {
+                return ResourceManager.GetString("CondaExtensionCreateTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create.
+        /// </summary>
+        public static string CondaExtensionDisplayName {
+            get {
+                return ResourceManager.GetString("CondaExtensionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the new environment..
+        /// </summary>
+        public static string CondaExtensionEnvironmentNameHelp {
+            get {
+                return ResourceManager.GetString("CondaExtensionEnvironmentNameHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string CondaExtensionEnvironmentNameLabel {
+            get {
+                return ResourceManager.GetString("CondaExtensionEnvironmentNameLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to env.
+        /// </summary>
+        public static string CondaExtensionEnvironmentNameWatermark {
+            get {
+                return ResourceManager.GetString("CondaExtensionEnvironmentNameWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These environment settings may be configured. The tooltips on each field include more information and examples..
+        /// </summary>
+        public static string CondaExtensionHelpContent {
+            get {
+                return ResourceManager.GetString("CondaExtensionHelpContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of Python to install into the new environment..
+        /// </summary>
+        public static string CondaExtensionLanguageVersionHelp {
+            get {
+                return ResourceManager.GetString("CondaExtensionLanguageVersionHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python.
+        /// </summary>
+        public static string CondaExtensionLanguageVersionLabel {
+            get {
+                return ResourceManager.GetString("CondaExtensionLanguageVersionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python.
+        /// </summary>
+        public static string CondaExtensionLanguageVersionWatermark {
+            get {
+                return ResourceManager.GetString("CondaExtensionLanguageVersionWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This functionality requires Anaconda. You can install it using the Visual Studio installer..
+        /// </summary>
+        public static string CondaExtensionNotAvailable {
+            get {
+                return ResourceManager.GetString("CondaExtensionNotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Apply.
         /// </summary>
         public static string ConfigurationExtensionApplyLabel {
@@ -484,6 +583,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete &apos;{0}&apos;?
+        ///
+        ///The folder will be deleted from disk. This operation cannot be undone..
+        /// </summary>
+        public static string EnvironmentPathsExtensionDeleteConfirmation {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionDeleteConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete this environment from disk.
+        /// </summary>
+        public static string EnvironmentPathsExtensionDeleteEnvironment {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionDeleteEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overview.
         /// </summary>
         public static string EnvironmentPathsExtensionDisplayName {
@@ -606,6 +725,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string EnvironmentPathsWindowsInterpreterPath {
             get {
                 return ResourceManager.GetString("EnvironmentPathsWindowsInterpreterPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create conda environment....
+        /// </summary>
+        public static string EnvironmentViewCondaLabel {
+            get {
+                return ResourceManager.GetString("EnvironmentViewCondaLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create new conda environment.
+        /// </summary>
+        public static string EnvironmentViewCreateNewCondaEnvironmentAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentViewCreateNewCondaEnvironmentAutomationName", resourceCulture);
             }
         }
         
