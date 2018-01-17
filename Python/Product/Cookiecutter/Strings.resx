@@ -176,6 +176,26 @@ Please delete the installed template and try again.</value>
   <data name="InstallingCookiecutterFailed" xml:space="preserve">
     <value>----- Failed to install cookiecutter -----</value>
   </data>
+  <data name="InstallingCookiecutterCreateEnv" xml:space="preserve">
+    <value>Creating virtual environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="InstallingCookiecutterCreateEnvWithoutPip" xml:space="preserve">
+    <value>Creating virtual environment without pip at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="InstallingCookiecutterDeleteEnv" xml:space="preserve">
+    <value>Deleting previous environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="InstallingCookiecutterInstallPip" xml:space="preserve">
+    <value>Installing pip into virtual environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="InstallingCookiecutterInstallPackages" xml:space="preserve">
+    <value>Installing packages into virtual environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
   <data name="CloningTemplateStarted" xml:space="preserve">
     <value>----- Cloning template '{0}' -----</value>
     <comment>{0} is a template name</comment>
