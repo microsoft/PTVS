@@ -40,8 +40,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         /// <summary>
-        /// Increments the counter and returns true if it is
-        /// no longer zero.
+        /// Increments the counter and returns true if it changes to non-zero.
         /// </summary>
         public bool Increment() {
             int newCount = Interlocked.Increment(ref _count);
@@ -50,9 +49,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         /// <summary>
-        /// Decrements the counter
+        /// Decrements the counter and returns true if it changes to zero.
         /// </summary>
-        /// <returns></returns>
         public bool Decrement() {
             int origCount, newCount;
             do {
@@ -97,10 +95,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public async Task WaitForChangeToZeroAsync() {
-            int v = -1;
-            while (v != 0) {
-                v = await WaitForChangeAsync();
+            var tcs = Volatile.Read(ref _waitForZero);
+            if (tcs == null) {
+                tcs = new TaskCompletionSource<object>();
+                tcs = Interlocked.CompareExchange(ref _waitForZero, tcs, null) ?? tcs;
             }
+            await tcs.Task;
         }
     }
 }
