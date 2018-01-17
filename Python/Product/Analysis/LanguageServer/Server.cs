@@ -501,6 +501,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Task<bool> UnloadFileAsync(Uri documentUri) {
             var entry = RemoveEntry(documentUri);
             if (entry != null) {
+                if (entry is IPythonProjectEntry pyEntry) {
+                    foreach (var e in _analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false)) {
+                        _queue.Enqueue(e, AnalysisPriority.Normal);
+                    }
+                }
                 _analyzer.RemoveModule(entry);
                 return Task.FromResult(true);
             }

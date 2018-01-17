@@ -55,7 +55,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
             CreationOptions = options ?? new InterpreterFactoryCreationOptions();
-            LanguageVersion = Configuration.Version.ToLanguageVersion();
+            try {
+                LanguageVersion = Configuration.Version.ToLanguageVersion();
+            } catch (InvalidOperationException ex) {
+                throw new ArgumentException(ex.Message, ex);
+            }
 
             _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {

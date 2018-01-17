@@ -92,8 +92,7 @@ namespace TestUtilities.Mocks {
                     );
                 }
                 if (endOfLine == -1) {
-                    Assert.Fail($"Line {lineNumber} not in snapshot \"{_text}\"");
-                    return null;
+                    throw new ArgumentOutOfRangeException($"Line {lineNumber} not in snapshot \"{_text}\"");
                 }
                 curPosition = endOfLine + eolChar.Length;
             }
