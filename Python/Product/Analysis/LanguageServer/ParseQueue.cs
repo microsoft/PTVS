@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -142,6 +143,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                 } else {
+                    Debug.Fail($"Don't know how to parse {doc.GetType().FullName}");
                 }
             } finally {
                 _parsingInProgress.Decrement();
@@ -180,11 +182,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var u = entry.DocumentUri;
             if (u != null) {
-                diagnostics = new List<Diagnostic>();
-                opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, diagnostics);
+                var diags = new List<Diagnostic>();
+                diagnostics = diags;
+                opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, d => { lock (diags) diags.Add(d); });
                 var tcm = TaskCommentMap;
                 if (tcm != null && tcm.Any()) {
-                    opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, diagnostics, tcm).ProcessTaskComment;
+                    opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, d => { lock (diags) diags.Add(d); }, tcm).ProcessTaskComment;
                 }
             } else {
                 diagnostics = null;

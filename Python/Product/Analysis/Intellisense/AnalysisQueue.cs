@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     sealed class AnalysisQueue : IDisposable {
         private readonly Thread _workThread;
-        private readonly AutoResetEvent _workEvent, _activityEvent;
+        private readonly AutoResetEvent _workEvent;
         private readonly object _queueLock = new object();
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
@@ -43,7 +43,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal AnalysisQueue() {
             _workEvent = new AutoResetEvent(false);
-            _activityEvent = new AutoResetEvent(false);
             _cancel = new CancellationTokenSource();
 
             _queue = new List<IAnalyzable>[PriorityCount];
@@ -96,8 +95,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
-
-        public TaskScheduler Scheduler { get; private set; }
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
             int iPri = (int)priority;
@@ -174,15 +171,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void WaitForActivity(int millisecondsTimeout) {
-            _activityEvent.WaitOne(millisecondsTimeout);
-        }
-
         #region IDisposable Members
 
         public void Dispose() {
             Stop();
-            _activityEvent.Dispose();
             _workEvent.Dispose();
             _cancel.Dispose();
         }
@@ -206,7 +198,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Worker(object threadStarted) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
-                Scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             } finally {
                 ((AutoResetEvent)threadStarted).Set();
             }
@@ -255,7 +246,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
                     }
                     try {
-                        WaitHandle.SignalAndWait(_activityEvent, _workEvent);
+                        _workEvent.WaitOne();
                     } catch (ApplicationException) {
                         // No idea where this is coming from...
                         try {

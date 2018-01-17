@@ -650,22 +650,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return false;
         }
 
+        private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {
+            if (t.IsCompleted) {
+                lock (_pendingParse) {
+                    if (counter.IsZero) {
+                        if (_pendingParse.TryGetValue(doc, out var existing) && existing == counter) {
+                            _pendingParse.Remove(doc);
+                        }
+                        return;
+                    }
+                }
+            }
+            counter.WaitForChangeToZeroAsync().ContinueWith(t2 => RemoveDocumentParseCounter(t, doc, counter));
+        }
+
         private IDisposable GetDocumentParseCounter(IDocument doc, out int count) {
             VolatileCounter counter;
             lock (_pendingParse) {
                 if (!_pendingParse.TryGetValue(doc, out counter)) {
                     _pendingParse[doc] = counter = new VolatileCounter();
-                    // Automatically remove counter from the dictionary when it
-                    // reaches zero.
-                    counter.WaitForZeroAsync().ContinueWith(t => {
-                        if (t.IsCompleted) {
-                            lock (_pendingParse) {
-                                if (counter.IsZero && _pendingParse.TryGetValue(doc, out var existing) && existing == counter) {
-                                    _pendingParse.Remove(doc);
-                                }
-                            }
-                        }
-                    });
+                    // Automatically remove counter from the dictionary when it reaches zero.
+                    counter.WaitForChangeToZeroAsync().ContinueWith(t => RemoveDocumentParseCounter(t, doc, counter));
                 }
                 var res = counter.Incremented();
                 count = counter.Count;

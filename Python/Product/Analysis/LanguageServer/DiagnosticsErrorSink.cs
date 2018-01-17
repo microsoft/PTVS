@@ -23,16 +23,14 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class DiagnosticsErrorSink : ErrorSink {
         private readonly string _source;
-        private readonly List<Diagnostic> _diagnostics;
+        private readonly Action<Diagnostic> _onDiagnostic;
         private readonly IReadOnlyList<KeyValuePair<string, DiagnosticSeverity>> _taskCommentMap;
 
-        public DiagnosticsErrorSink(string source, List<Diagnostic> diagnostics, IReadOnlyDictionary<string, DiagnosticSeverity> taskCommentMap = null) {
+        public DiagnosticsErrorSink(string source, Action<Diagnostic> onDiagnostic, IReadOnlyDictionary<string, DiagnosticSeverity> taskCommentMap = null) {
             _source = source;
-            _diagnostics = diagnostics;
+            _onDiagnostic = onDiagnostic;
             _taskCommentMap = taskCommentMap?.ToArray();
         }
-
-        public IReadOnlyList<Diagnostic> Diagnostics => _diagnostics;
 
         public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
             var d = new Diagnostic {
@@ -46,9 +44,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             };
 
-            lock (_diagnostics) {
-                _diagnostics.Add(d);
-            }
+            _onDiagnostic(d);
         }
 
         public void ProcessTaskComment(object sender, CommentEventArgs e) {
@@ -66,9 +62,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            lock (_diagnostics) {
-                _diagnostics.Add(d);
-            }
+            _onDiagnostic(d);
         }
 
         internal static DiagnosticSeverity GetSeverity(Severity severity) {

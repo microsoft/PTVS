@@ -88,7 +88,6 @@
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
-    <Compile Include="Intellisense\ProjectEntryMap.cs" />
     <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
     <Compile Include="Intellisense\SelectionTarget.cs" />
     <Compile Include="Intellisense\TaggedSpan.cs" />

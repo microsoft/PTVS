@@ -18,20 +18,23 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class LineInfo {
-        public int Start, Length;
-        /// <summary>
-        /// 0-based line number
-        /// </summary>
-        public int LineNo;
-        public NewLineKind LineBreak;
-
+    struct LineInfo {
         public LineInfo(int start, int length, int lineNo, NewLineKind lineBreak) {
             Start = start;
             Length = length;
             LineNo = lineNo;
             LineBreak = lineBreak;
         }
+
+        public int Start { get; }
+        public int Length { get; }
+
+        /// <summary>
+        /// 0-based line number
+        /// </summary>
+        public int LineNo { get; }
+
+        public NewLineKind LineBreak { get; }
 
         public int End {
             get {

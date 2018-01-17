@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private sealed class DecrementOnDispose : IDisposable {
             public VolatileCounter _self;
-            public void Dispose() => _self.Decrement();
+            public void Dispose() => Interlocked.Exchange(ref _self, null)?.Decrement();
         }
 
         public IDisposable Incremented() {
@@ -90,7 +90,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 tcs = new TaskCompletionSource<object>();
                 tcs = Interlocked.CompareExchange(ref _waitForZero, tcs, null) ?? tcs;
             }
+            if (IsZero) {
+                tcs.TrySetResult(null);
+            }
             return tcs.Task;
+        }
+
+        public async Task WaitForChangeToZeroAsync() {
+            int v = -1;
+            while (v != 0) {
+                v = await WaitForChangeAsync();
+            }
         }
     }
 }

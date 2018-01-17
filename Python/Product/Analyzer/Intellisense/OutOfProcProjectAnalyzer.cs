@@ -268,11 +268,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             lock (_extensions) {
-                if (_extensions.TryGetValue(request.extension, out oldExtension)) {
-                    (oldExtension as IDisposable)?.Dispose();
-                }
+                _extensions.TryGetValue(request.extension, out oldExtension);
                 _extensions[request.extension] = extension;
             }
+            (oldExtension as IDisposable)?.Dispose();
 
             return new AP.LoadExtensionResponse();
         }
