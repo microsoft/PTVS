@@ -41,12 +41,13 @@ namespace Microsoft.CookiecutterTools.Model {
             var all = interpreters
                 .Where(x => File.Exists(x.Configuration.InterpreterPath))
                 .Where(x => x.Configuration.Version >= new Version(3, 3))
-                .OrderByDescending(x => x.Configuration.Version);
+                .OrderByDescending(x => x.Configuration.Version)
+                .ToArray();
 
             // Prefer a CPython installation if there is one because
             // some Anaconda installs have trouble creating a venv.
             var cpython = all
-                .Where(x => x.Vendor.IndexOf("Python Software Foundation", StringComparison.InvariantCultureIgnoreCase) == 0);
+                .Where(x => x.Vendor.IndexOf("Python Software Foundation", StringComparison.OrdinalIgnoreCase) == 0);
             var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
 
             return best != null ? new CookiecutterPythonInterpreter(

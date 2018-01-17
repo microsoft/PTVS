@@ -81,10 +81,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private async Task CreateVenv() {
-            if (Directory.Exists(_envFolderPath)) {
-                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
-                Directory.Delete(_envFolderPath, true);
-            }
+            RemoveExistingVenv();
 
             _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnv.FormatUI(_envFolderPath));
             var output = ProcessOutput.Run(
@@ -99,10 +96,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private async Task CreateVenvWithoutPipThenInstallPip() {
-            if (Directory.Exists(_envFolderPath)) {
-                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
-                Directory.Delete(_envFolderPath, true);
-            }
+            RemoveExistingVenv();
 
             _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_envFolderPath));
             var output = ProcessOutput.Run(
@@ -126,6 +120,16 @@ namespace Microsoft.CookiecutterTools.Model {
                 _redirector
             );
             await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+        }
+
+        private void RemoveExistingVenv() {
+            if (Directory.Exists(_envFolderPath)) {
+                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
+                try {
+                    Directory.Delete(_envFolderPath, true);
+                } catch (DirectoryNotFoundException) {
+                }
+            }
         }
 
         public async Task InstallPackage() {
