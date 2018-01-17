@@ -24,7 +24,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
     [Export(typeof(IPackageManagerProvider))]
     sealed class IronPythonPipPackageManagerProvider : IPackageManagerProvider {
         class IPyPipCommands : PipPackageManagerCommands {
-            public override IEnumerable<string> Base() => new[] { "-X:Frames", "-c", "import pip; pip.main()" };
+            public override IEnumerable<string> Base() => new[] { "-X:Frames", "-c", ProcessOutput.QuoteSingleArgument("import pip; pip.main()") };
             public override IEnumerable<string> CheckIsReady() => new[] { "-X:Frames", "-c", "import pip" };
             public override IEnumerable<string> Prepare() => new[] { "-X:Frames", PythonToolsInstallPath.GetFile("pip_downloader.py", typeof(PipPackageManager).Assembly) };
         }
