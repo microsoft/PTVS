@@ -57,6 +57,8 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri rootUri;
             public bool analyzeAllFiles;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool traceLogging;
         }
 
         public sealed class InterpreterInfo {
@@ -865,6 +867,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public Severity indentationInconsistencySeverity;
             public Dictionary<string, LS.DiagnosticSeverity> commentTokens;
             public Dictionary<string, int> analysisLimits;
+            public LS.MessageType? traceLevel;
         }
 
 

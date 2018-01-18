@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             int part = GetPart(uri);
 
             if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Received changes for {uri} (part {part})");
+                LogMessage(MessageType.Log, $"Received changes for {uri}");
             }
 
             if (entry is IDocument doc) {
@@ -736,7 +736,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
             } catch (BadSourceException) {
-            } catch (OperationCanceledException) {
+            } catch (OperationCanceledException ex) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Warning, "Parse cancelled");
+                    LogMessage(MessageType.Log, ex.ToString());
+                }
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
             }

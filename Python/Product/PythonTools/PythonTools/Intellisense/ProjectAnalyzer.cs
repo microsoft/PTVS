@@ -184,6 +184,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _analysisOptions = new AP.AnalysisOptions {
                 indentationInconsistencySeverity = Severity.Ignore,
+#if DEBUG
+                traceLevel = LS.MessageType.Info,
+#else
+                traceLevel = LS.MessageType.Warning,
+#endif
                 commentTokens = new Dictionary<string, LS.DiagnosticSeverity>() {
                     { "TODO", LS.DiagnosticSeverity.Warning },
                     { "HACK", LS.DiagnosticSeverity.Warning },
@@ -220,6 +225,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 rootUri = string.IsNullOrEmpty(rootDir) ? null : new Uri(rootDir),
                 analyzeAllFiles = analyzeAllFiles
             };
+
+            if (comment?.Contains("PTVS_TEST") ?? false) {
+                initialize.traceLogging = true;
+                _analysisOptions.traceLevel = LS.MessageType.Log;
+            }
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
@@ -657,9 +667,8 @@ namespace Microsoft.PythonTools.Intellisense {
             OutOfProcProjectAnalyzer analyzer;
             int exitCode = 0;
             try {
-                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput);
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, m => Trace.WriteLine("Analyzer: {0}", m));
                 info.CancellationToken.Register(() => {
-                    analyzer.Cancel();
                     analyzer.Dispose();
                 });
                 using (analyzer) {

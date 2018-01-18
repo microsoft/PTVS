@@ -65,8 +65,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Task<IAnalysisCookie> result = null;
             try {
                 result = _parsing.AddOrUpdate(doc,
-                    _ => Parse(doc, languageVersion, null),
-                    (_, prev) => Parse(doc, languageVersion, prev)
+                    _ => ParseAndClearEntry(doc, languageVersion, null),
+                    (_, prev) => ParseAndClearEntry(doc, languageVersion, prev)
                 );
                 return result;
             } finally {
@@ -77,24 +77,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private Task<IAnalysisCookie> Parse(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
-            if (previousTask != null && previousTask.Status == TaskStatus.Running) {
-                var callingThread = Thread.CurrentThread;
-                var res = previousTask.ContinueWith(t => {
-                    // We need to cancel immediately if we're running on the same thread
-                    // This can happen if the task completes before we call ContinueWith,
-                    // though the RunContinuationsAsynchronously should protect against this too
-                    if (Thread.CurrentThread == callingThread) {
-                        throw new OperationCanceledException();
-                    }
-                    return ParseWorker(doc, languageVersion);
-                });
-                if (!res.IsCanceled) {
-                    return res;
-                }
+        private Task<IAnalysisCookie> ParseAndClearEntry(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
+            var task = Parse(doc, languageVersion, previousTask);
+            task.ContinueWith(_ => _parsing.TryUpdate(doc, null, task));
+            return task;
+        }
+
+        private async Task<IAnalysisCookie> Parse(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
+            if (previousTask != null) {
+                await previousTask.ConfigureAwait(false);
             }
 
-            return Task.Factory.StartNew(() => ParseWorker(doc, languageVersion), TaskCreationOptions.RunContinuationsAsynchronously);
+            return await Task.Factory.StartNew(
+                () => ParseWorker(doc, languageVersion),
+                TaskCreationOptions.RunContinuationsAsynchronously
+            ).ConfigureAwait(false);
         }
 
         private IAnalysisCookie ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
@@ -152,16 +149,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IAnalysisCookie UpdateTree(IPythonProjectEntry entry, SortedDictionary<int, BufferVersion> buffers) {
-            var cookie = new VersionCookie(buffers);
+            bool needAbort = true;
+            try {
+                var cookie = new VersionCookie(buffers);
 
-            if (buffers.Count == 1) {
-                entry.UpdateTree(buffers.First().Value.Ast, cookie);
+                if (buffers.Count == 1) {
+                    entry.UpdateTree(buffers.First().Value.Ast, cookie);
+                    needAbort = false;
+                    return cookie;
+                }
+
+                var tree = new PythonAst(buffers.Values.Select(v => v.Ast));
+                entry.UpdateTree(tree, cookie);
+                needAbort = false;
                 return cookie;
+            } finally {
+                if (needAbort) {
+                    AbortParsingTree(entry);
+                }
             }
-
-            var tree = new PythonAst(buffers.Values.Select(v => v.Ast));
-            entry.UpdateTree(tree, cookie);
-            return cookie;
         }
 
         public Dictionary<string, DiagnosticSeverity> TaskCommentMap { get; set; }

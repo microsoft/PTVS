@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class OutOfProcProjectAnalyzer : IDisposable {
         private readonly LS.Server _server;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
+        private readonly Action<string> _log;
 
         private bool _isDisposed;
 
@@ -62,14 +63,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly Connection _connection;
 
-        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
+        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {
             _server = new LS.Server();
             _server.OnParseComplete += OnParseComplete;
             _server.OnAnalysisComplete += OnAnalysisComplete;
+            _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
+            _log = log;
             Options = new AP.AnalysisOptions();
 
             _extensions = new Dictionary<string, IAnalysisExtension>();
@@ -86,9 +89,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _connection.EventReceived += ConectionReceivedEvent;
         }
 
-        // TODO: These are to progressively move functionality to the language server
-        // These will eventually be removed
-        private AnalysisQueue _analysisQueue => _server._queue;
+        private void Server_OnLogMessage(object sender, LS.LogMessageEventArgs e) {
+            if (_log != null && Options.traceLevel.HasValue && e.type <= Options.traceLevel.Value) {
+                _log(e.message);
+            }
+        }
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
@@ -233,7 +238,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
                             analysisUpdates = true,
-                            manualFileLoad = !request.analyzeAllFiles
+                            manualFileLoad = !request.analyzeAllFiles,
+                            traceLogging = request.traceLogging
                         }
                     }
                 });
@@ -2091,14 +2097,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
         }
-
-        #region Implementation Details
-
-        internal void Cancel() {
-            _analysisQueue.Stop();
-        }
-
-        #endregion
 
         #region IDisposable Members
 

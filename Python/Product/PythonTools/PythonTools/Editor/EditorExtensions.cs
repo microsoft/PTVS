@@ -230,8 +230,8 @@ namespace Microsoft.PythonTools.Editor.Core {
             try {
                 line = snapshot.GetLineFromLineNumber(location.Line - 1);
             } catch (ArgumentOutOfRangeException) {
-                Debug.Assert(location.Line == snapshot.LineCount && location.Column == 1,
-                    $"Out of range should only occur at end of snapshot, not at {location}");
+                Debug.Assert(location.Line == snapshot.LineCount + 1 && location.Column == 1,
+                    $"Out of range should only occur at end of snapshot ({snapshot.LineCount + 1}, 1), not at {location}");
                 return new SnapshotPoint(snapshot, snapshot.Length);
             }
 
