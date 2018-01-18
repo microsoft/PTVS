@@ -1433,6 +1433,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response GetSignatures(AP.SignaturesRequest request) {
             var entry = GetPythonEntry(request.documentUri);
+            if (entry == null) {
+                return IncorrectFileType();
+            }
             IEnumerable<IOverloadResult> sigs;
             if (entry.Analysis != null) {
                 using (new DebugTimer("GetSignaturesByIndex")) {
@@ -2067,19 +2070,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public PythonAnalyzer Project => _server._analyzer;
 
         private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
-            IPythonProjectEntry entry;
-            try {
-                entry = GetPythonEntry(e.uri);
-            } catch (LS.LanguageServerException) {
-                // Likely racing with the addition of the file, so delay a bit in case it appears
-                await Task.Delay(500);
-                try {
-                    entry = GetPythonEntry(e.uri);
-                } catch (LS.LanguageServerException) {
-                    return;
-                }
-            }
-            var tree = entry.Tree;
             await _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {
                     documentUri = e.uri,
