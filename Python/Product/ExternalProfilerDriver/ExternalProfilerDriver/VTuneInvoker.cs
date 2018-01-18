@@ -16,7 +16,7 @@ namespace ExternalProfilerDriver
         {
             // expecting something like "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
             string envvarval;
-	    var os = Environment.OSVersion.Platform;
+    	    var os = Environment.OSVersion.Platform;
             if (os == PlatformID.Win32NT ||
 	        os == PlatformID.Win32Windows ||
 	        os == PlatformID.Unix
@@ -327,7 +327,7 @@ namespace ExternalProfilerDriver
             _knobs.Add("column-by", "CPUTime"); // these are case-sensitive
             _knobs.Add("query-type", "overtime");
             _knobs.Add("bin_count", "15");
-            _knobs.Add("group-by", "Process/Thread");
+            //_knobs.Add("group-by", "Process/Thread");
         }
 
         public override string ReportName { get { return "time"; } }

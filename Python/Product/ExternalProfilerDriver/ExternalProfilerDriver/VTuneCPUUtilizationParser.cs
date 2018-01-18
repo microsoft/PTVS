@@ -38,23 +38,6 @@ namespace ExternalProfilerDriver
                 yield return new CPUUtilRecord(Int64.Parse(ss[0]), Single.Parse(ss[1]) * 1000, Single.Parse(ss[2]) * 1000, Single.Parse(ss[3]));
             }
         }
-
-        public static void CPURecordsFromFilename(string filename)
-        {
-            var cpuRecords = VTuneStackParser.ReadFromFile(filename)
-                .Skip(2)
-                .ParseCPURecords();
-            CPUUtilRecord first = cpuRecords.First();
-            CPUUtilRecord last = cpuRecords.Last();
-
-            CPUUtilTrace trace = new CPUUtilTrace();
-            trace.beginTime = new LongInt(0, (long)(first.Start));
-            trace.duration = new LongInt(0, (long)(last.End - first.Start));
-            trace.counters = new List<ValueTrace> { new ValueTrace(cpuRecords.Select(r => new CPUSample(new LongInt(0, (long)r.Start), (float)r.CPUUtil)).ToList()) };
-
-            // drop to file
-            string json = JsonConvert.SerializeObject(trace, Formatting.Indented);
-            Console.WriteLine($"JSON serialization: << {json} >>");
-        }
+       
     }
 }

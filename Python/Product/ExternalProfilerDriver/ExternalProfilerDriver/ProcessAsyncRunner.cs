@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ExternalProfilerDriver
 {
@@ -17,15 +18,18 @@ namespace ExternalProfilerDriver
 
             bool stdoutToProgress = (progress != null);
 
+            ProcessStartInfo psi = new ProcessStartInfo(execfname)
+            {
+                UseShellExecute = false,
+                Arguments = args,
+                CreateNoWindow = false,
+                RedirectStandardOutput = stdoutToProgress
+            };
+            psi.EnvironmentVariables["AMPLXE_EXPERIMENTAL"] = "time-cl";
+
             Process process = new Process
             {
-                StartInfo = new ProcessStartInfo(execfname)
-                {
-                    UseShellExecute = false,
-                    Arguments = args,
-                    CreateNoWindow = false,
-                    RedirectStandardOutput = stdoutToProgress
-                },
+                StartInfo = psi,
                 EnableRaisingEvents = true
             };
 
@@ -77,9 +81,7 @@ namespace ExternalProfilerDriver
                 bool processRunning = true;
                 t.ContinueWith((p) => { processRunning = false; });
 
-#if false
                 int count = 0;
-#endif
                 while (processRunning)
                 {
 #if false
