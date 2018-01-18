@@ -51,10 +51,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var task = new ParseTask(this, doc, languageVersion);
             try {
-                var c = _parsing.AddOrUpdate(doc, task, (d, prev) => prev?.ContinueWith(task) ?? task);
-                if (c == task) {
-                    task.Start();
-                }
+                _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
                 return task.Task;
             } finally {
                 task.DisposeIfNotStarted();
@@ -127,10 +124,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private readonly IPythonParse _parse;
 
             private readonly TaskCompletionSource<IAnalysisCookie> _tcs;
-            private ParseTask _next;
+            private Task<IAnalysisCookie> _previous;
 
             // State transitions:
-            //  UNSTARTED -> QUEUED     when passed to ContinueWith
+            //  UNSTARTED -> QUEUED     when Start() called and _previous is set
             //  UNSTARTED -> DISPOSED   when DisposeIfNotStarted() is called
             //  UNSTARTED -> STARTED    when Start() is called
             //  QUEUED    -> STARTED    when Start(QUEUED) is called
@@ -166,43 +163,47 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private void DisposeWorker() {
                 Debug.Assert(Volatile.Read(ref _state) == DISPOSED);
 
-                var next = Interlocked.Exchange(ref _next, null);
                 _queue._parsingInProgress.Decrement();
-                _queue._parsing.TryUpdate(_document, next, this);
-                next?.Start(QUEUED);
             }
 
-            public ParseTask ContinueWith(ParseTask nextTask) {
-                // Set our subsequent task
-                var actualNext = Interlocked.CompareExchange(ref _next, nextTask, null);
-                if (actualNext != null) {
-                    // Already set, so pass the new task along
-                    return actualNext.ContinueWith(nextTask);
-                }
+            public ParseTask ContinueAfter(ParseTask currentTask) {
+                // Set our previous task
+                Volatile.Write(ref _previous, currentTask?.Task);
 
-                // Set the subsequent to QUEUED
-                if (Interlocked.CompareExchange(ref nextTask._state, QUEUED, UNSTARTED) != UNSTARTED) {
-                    Interlocked.Exchange(ref _next, null);
-                    throw new InvalidOperationException("cannot queue task that has been started");
-                }
-
-                // We were complete, or completed while adding the task,
-                // so make sure it runs
-                if (Volatile.Read(ref _state) == DISPOSED) {
-                    actualNext = Interlocked.Exchange(ref _next, null);
-                    if (actualNext != null) {
-                        return actualNext;
-                    }
-                }
                 return this;
             }
 
-            public void Start() => Start(UNSTARTED);
+            public void Start() {
+                // If we were pending, calling start ensures we are queued
+                var previous = Interlocked.Exchange(ref _previous, null);
+                if (previous != null && Interlocked.CompareExchange(ref _state, QUEUED, UNSTARTED) == UNSTARTED) {
+                    previous.ContinueWith(StartFromQueue);
+                    return;
+                }
 
-            private void Start(int expectedState) {
-                if (Interlocked.CompareExchange(ref _state, STARTED, expectedState) != expectedState) {
+                int actualState = Interlocked.CompareExchange(ref _state, STARTED, UNSTARTED);
+                if (actualState != UNSTARTED) {
+                    if (actualState == DISPOSED) {
+                        throw new ObjectDisposedException(GetType().FullName);
+                    }
                     throw new InvalidOperationException("cannot start parsing");
                 }
+
+                StartWork();
+            }
+
+            private void StartFromQueue(Task<IAnalysisCookie> previous) {
+                int actualState = Interlocked.CompareExchange(ref _state, STARTED, QUEUED);
+                if (actualState != QUEUED) {
+                    // Silently complete if we are not queued.
+                    return;
+                }
+
+                StartWork();
+            }
+
+            private void StartWork() {
+                Debug.Assert(Volatile.Read(ref _state) == STARTED);
 
                 try {
                     var r = _queue.ParseWorker(_document, _languageVersion);

@@ -143,7 +143,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public IPythonParse WaitForCurrentParse(int timeout = -1) {
-            _pendingParse.Wait(timeout);
+            if (!_pendingParse.Wait(timeout)) {
+                return null;
+            }
             return GetCurrentParse();
         }
 

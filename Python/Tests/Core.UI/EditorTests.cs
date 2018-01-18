@@ -590,6 +590,8 @@ pass");
 
             var doc = app.GetDocument(item.Document.FullName);
             doc.InvokeTask(() => doc.WaitForAnalysisAtCaretAsync());
+            // A little extra time for things to load, because VS...
+            System.Threading.Thread.Sleep(500);
 
             Keyboard.Type(typedText);
 
