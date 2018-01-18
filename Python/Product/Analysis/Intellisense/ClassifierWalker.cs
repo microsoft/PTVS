@@ -17,24 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Ipc;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     class ClassifierWalker : PythonWalker {
         class StackData {
             public readonly string Name;
@@ -67,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonAst _ast;
         private readonly ModuleAnalysis _analysis;
         private StackData _head;
-        public readonly List<AP.AnalysisClassification> Spans;
+        public readonly List<TaggedSpan> Spans;
 
         public static class Classifications {
             public const string Keyword = "keyword";
@@ -82,17 +72,17 @@ namespace Microsoft.PythonTools.Intellisense {
         public ClassifierWalker(PythonAst ast, ModuleAnalysis analysis) {
             _ast = ast;
             _analysis = analysis;
-            Spans = new List<AP.AnalysisClassification>();
+            Spans = new List<TaggedSpan>();
         }
 
         private void AddSpan(Tuple<string, Span> node, string type) {
-            Spans.Add(
-                new AP.AnalysisClassification() {
-                    start = node.Item2.Start,
-                    length = node.Item2.Length,
-                    type = type
-                }
-            );
+            Spans.Add(new TaggedSpan(
+                new SourceSpan(
+                    _ast.IndexToLocation(node.Item2.Start),
+                    _ast.IndexToLocation(node.Item2.Start + node.Item2.Length)
+                ),
+                type
+            ));
         }
 
         private void BeginScope(string name = null) {

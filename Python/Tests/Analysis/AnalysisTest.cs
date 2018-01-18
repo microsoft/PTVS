@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
@@ -5634,6 +5635,7 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
+                new VariableLocation(5, 9, VariableType.Value),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );

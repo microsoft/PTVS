@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,14 +24,14 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Analysis {
     sealed class XamlProjectEntry : IXamlProjectEntry {
         private XamlAnalysis _analysis;
-        private readonly string _filename;
         private int _version;
         private string _content;
         private Dictionary<object, object> _properties;
         private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
 
         public XamlProjectEntry(string filename) {
-            _filename = filename;
+            FilePath = filename;
+            DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
         }
 
         public void ParseContent(TextReader content, IAnalysisCookie fileCookie) {
@@ -85,7 +86,8 @@ namespace Microsoft.PythonTools.Analysis {
             return deps;
         }
 
-        public string FilePath { get { return _filename; } }
+        public string FilePath { get; }
+        public Uri DocumentUri { get; }
 
         public int AnalysisVersion {
             get {

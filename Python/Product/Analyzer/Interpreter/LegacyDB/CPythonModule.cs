@@ -286,6 +286,12 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             }
         }
 
+        public Uri DocumentUri {
+            get {
+                return ProjectEntry.MakeDocumentUri(FilePath);
+            }
+        }
+
         public Dictionary<object, object> Properties {
             get {
                 if (_properties == null) {

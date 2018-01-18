@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private SelectionTarget _targetNode;
         private List<ScopeStatement> _parents = new List<ScopeStatement>();
         private List<SuiteStatement> _suites = new List<SuiteStatement>();
-        private Dictionary<ScopeStatement, int> _insertLocations = new Dictionary<ScopeStatement, int>();
+        private Dictionary<ScopeStatement, SourceLocation> _insertLocations = new Dictionary<ScopeStatement, SourceLocation>();
 
         public EnclosingNodeWalker(PythonAst root, int start, int end) {
             _start = start;

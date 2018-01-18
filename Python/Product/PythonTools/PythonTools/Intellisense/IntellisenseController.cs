@@ -161,17 +161,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static async Task<AnalysisEntry> AnalyzeBufferAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
             ProjectAnalyzer analyzer;
-            string filename;
             var services = bufferInfo.Services;
 
             bool isTemporaryFile = false;
-            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out filename)) {
+            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out _)) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
                 // to analyze against the project we're diffing from).  But in either case this
                 // is just a temporary file which should be closed when the view is closed.
                 isTemporaryFile = true;
-                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out filename)) {
+                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out _)) {
                     analyzer = services.AnalysisEntryService.DefaultAnalyzer;
                 }
             }
@@ -182,7 +181,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bool suppressErrorList = textView.Properties.ContainsProperty(SuppressErrorLists);
-            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.Filename, null, isTemporaryFile, suppressErrorList);
+            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
         }
 
         private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
@@ -197,7 +196,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (entry == null) {
-                    Debug.Fail($"Failed to analyze file {bi.Filename}");
+                    Debug.Fail($"Failed to analyze {bi.DocumentUri}");
                     return;
                 }
 
@@ -303,7 +302,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
-                            TriggerCompletionSession(false);
+                            TriggerCompletionSession(false, ch);
                         }
                         break;
                     case '(':
@@ -336,7 +335,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ((session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
-                                TriggerCompletionSession(false, commitByDefault);
+                                TriggerCompletionSession(false, ch, commitByDefault);
                             }
                         }
                         break;
@@ -859,11 +858,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
+        internal void TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             DismissCompletionSession();
 
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
             }
@@ -893,7 +893,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void TriggerSignatureHelp() {
             Volatile.Read(ref _sigHelpSession)?.Dismiss();
 
-            var sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            ISignatureHelpSession sigHelpSession = null;
+            try {
+                sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            } catch (ObjectDisposedException) {
+            }
 
             if (sigHelpSession != null) {
                 sigHelpSession.Dismissed += OnSignatureSessionDismissed;

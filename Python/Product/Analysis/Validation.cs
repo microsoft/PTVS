@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     throw new ValidationException();
                 } catch (ValidationException ex) {
-                    Console.WriteLine(ex.ToString());
+                    Console.Error.WriteLine(ex.ToString());
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     throw new T();
                 } catch (ValidationException ex) {
-                    Console.WriteLine(ex.ToString());
+                    Console.Error.WriteLine(ex.ToString());
                 }
             }
         }
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     throw new ValidationException(string.Format(message, args));
                 } catch (ValidationException ex) {
-                    Console.WriteLine(ex.ToString());
+                    Console.Error.WriteLine(ex.ToString());
                 }
             }
         }

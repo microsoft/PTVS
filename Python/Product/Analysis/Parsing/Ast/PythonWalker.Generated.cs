@@ -232,6 +232,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public virtual bool Walk(WithStatement node) { return true; }
         public virtual void PostWalk(WithStatement node) { }
 
+        // WithItem
+        public virtual bool Walk(WithItem node) { return true; }
+        public virtual void PostWalk(WithItem node) { }
+
         // Arg
         public virtual bool Walk(Arg node) { return true; }
         public virtual void PostWalk(Arg node) { }
@@ -498,6 +502,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(WithStatement node) { return false; }
         public override void PostWalk(WithStatement node) { }
 
+        // WithItem
+        public override bool Walk(WithItem node) { return false; }
+        public override void PostWalk(WithItem node) { }
+
         // Arg
         public override bool Walk(Arg node) { return false; }
         public override void PostWalk(Arg node) { }
@@ -716,6 +724,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // WithStatement
         public override bool Walk(WithStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // WithItem
+        public override bool Walk(WithItem node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
 
         // Arg
         public override bool Walk(Arg node) { return Location >= node.StartIndex && Location <= node.EndIndex; }

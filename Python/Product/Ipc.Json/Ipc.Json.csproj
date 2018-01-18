@@ -62,6 +62,7 @@
     <Compile Include="RequestArgs.cs" />
     <Compile Include="Response.cs" />
     <Compile Include="ProtocolReader.cs" />
+    <Compile Include="UriJsonConverter.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

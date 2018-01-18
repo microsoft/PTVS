@@ -16,6 +16,7 @@
 
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -25,7 +26,7 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class ExpressionFinderTests {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FindExpressionsForTooltip() {
             var code = Parse(@"class C(object):
     def f(a):
@@ -63,7 +64,7 @@ b = C().f(1)
             AssertExpr(code, 5, 10, 5, 12, "C().f(1)");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FindExpressionsForEvaluate() {
             var code = Parse(@"class C(object):
     def f(a):
@@ -113,7 +114,143 @@ C().fff", GetExpressionOptions.Evaluate);
             AssertExpr(code, 4, 6, 4, 8, "C().fff");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
+        public void FindExpressionsForComplete() {
+            var code = Parse(@"class C(object):
+    def f(a):
+        return a
+
+b = C().f(1)
+", GetExpressionOptions.Complete);
+            var clsCode = code.Source.Substring(0, code.Source.IndexOfEnd("return a"));
+            var funcCode = clsCode.Substring(clsCode.IndexOf("def"));
+
+            AssertExpr(code, 1, 1, "class");
+            AssertNoExpr(code, 1, 7);
+            AssertNoExpr(code, 1, 8);
+            AssertNoExpr(code, 1, 7, 1, 9);
+            AssertExpr(code, 1, 9, "object");
+            AssertExpr(code, 1, 15, "object");
+            AssertNoExpr(code, 1, 16);
+            AssertNoExpr(code, 1, 15, 1, 16);
+
+            AssertNoExpr(code, 2, 1);
+            AssertExpr(code, 2, 5, "def");
+            AssertNoExpr(code, 2, 9);
+            AssertNoExpr(code, 2, 10);
+
+            AssertExpr(code, 3, 15, "return");
+            AssertExpr(code, 3, 16, "a");
+            AssertExpr(code, 3, 17, "a");
+
+            AssertExpr(code, 5, 5, "C");
+            AssertExpr(code, 5, 6, "C");
+            AssertNoExpr(code, 5, 7);
+            AssertExpr(code, 5, 9, "f");
+            AssertExpr(code, 5, 10, "f");
+            AssertExpr(code, 5, 9, 5, 10, "f");
+            AssertNoExpr(code, 5, 11);
+
+            // Same code as in the GotoDefinition test
+            code = Parse(@"class C:
+    def fff(self, x=a): pass
+i=1+2
+C().fff", GetExpressionOptions.Complete);
+
+            AssertNoExpr(code, 1, 8);
+            AssertNoExpr(code, 2, 9, 2, 12);
+            AssertNoExpr(code, 2, 13, 2, 17);
+            AssertExpr(code, 2, 22, "a");
+            AssertExpr(code, 2, 29, "pass");
+            AssertNoExpr(code, 3, 4);
+            AssertNoExpr(code, 3, 6);
+            AssertExpr(code, 4, 1, 4, 2, "C");
+            AssertExpr(code, 4, 6, 4, 8, "fff");
+        }
+
+        [TestMethod, Priority(0)]
+        public void FindKeywords() {
+            var code = Parse(@"a and b
+assert a
+async def f():
+    global a
+    nonlocal b
+    await a
+    async for x in y:
+        return
+while True:
+    break
+    continue
+class A():
+    def f(self):
+        (yield x) + (yield from y)
+[a for x in a]
+del a
+import b
+from a import b
+x = lambda: a
+a or b
+raise a
+with a as b:
+    pass
+a in b
+a not in b
+a is b
+a is not b
+a if a else b
+if a: pass
+not a
+try: pass
+except: pass
+while a: pass
+", new GetExpressionOptions { Keywords = true });
+            AssertExpr(code, 1, 3, "and");
+            AssertExpr(code, 2, 4, "assert");
+            AssertExpr(code, 3, 2, "async");
+            AssertExpr(code, 3, 8, "def");
+            AssertExpr(code, 4, 6, "global");
+            AssertExpr(code, 5, 6, "nonlocal");
+            AssertExpr(code, 6, 6, "await");
+            AssertExpr(code, 7, 6, "async");
+            AssertExpr(code, 7, 12, "for");
+            AssertExpr(code, 7, 17, "in");
+            AssertExpr(code, 8, 10, "return");
+            AssertExpr(code, 9, 2, "while");
+            AssertExpr(code, 10, 6, "break");
+            AssertExpr(code, 11, 6, "continue");
+            AssertExpr(code, 12, 2, "class");
+            AssertExpr(code, 13, 6, "def");
+            AssertExpr(code, 14, 13, "yield");
+            AssertExpr(code, 14, 26, "yield");
+            AssertExpr(code, 14, 28, "from");
+            AssertExpr(code, 15, 6, "for");
+            AssertExpr(code, 15, 12, "in");
+            AssertExpr(code, 16, 2, "del");
+            AssertExpr(code, 17, 2, "import");
+            AssertExpr(code, 18, 2, "from");
+            AssertExpr(code, 18, 12, "import");
+            AssertExpr(code, 19, 8, "lambda");
+            AssertExpr(code, 20, 4, "or");
+            AssertExpr(code, 21, 1, "raise");
+            AssertExpr(code, 22, 3, "with");
+            AssertExpr(code, 22, 9, "as");
+            AssertExpr(code, 23, 8, "pass");
+            AssertExpr(code, 24, 5, "in");
+            AssertExpr(code, 25, 5, "not");
+            AssertExpr(code, 25, 7, "in");
+            AssertExpr(code, 26, 5, "is");
+            AssertExpr(code, 27, 5, "is");
+            AssertExpr(code, 27, 9, "not");
+            AssertExpr(code, 28, 3, "if");
+            AssertExpr(code, 28, 10, "else");
+            AssertExpr(code, 29, 1, "if");
+            AssertExpr(code, 30, 1, "not");
+            AssertExpr(code, 31, 1, "try");
+            //AssertExpr(code, 32, 1, "except");
+            AssertExpr(code, 33, 1, "while");
+        }
+
+        [TestMethod, Priority(0)]
         public void FindExpressionsForEvaluateMembers() {
             var code = Parse(@"a.b.c.d.", GetExpressionOptions.EvaluateMembers);
             AssertNoExpr(code, 1, 2);
@@ -143,7 +280,7 @@ C().fff", GetExpressionOptions.Evaluate);
             AssertExpr(code, 1, 5, "a");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FindExpressionsForRename() {
             var code = Parse(@"class C(object):
     def f(a, *b, **c = True):

@@ -82,6 +82,11 @@ namespace TestUtilities.Python {
             set;
         }
 
+        public Uri DocumentUri {
+            get;
+            set;
+        }
+
         public string GetLine(int lineNo) {
             throw new NotImplementedException();
         }
@@ -101,6 +106,10 @@ namespace TestUtilities.Python {
         }
 
         public void Analyze(CancellationToken cancel) {
+            throw new NotImplementedException();
+        }
+
+        public PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie) {
             throw new NotImplementedException();
         }
     }

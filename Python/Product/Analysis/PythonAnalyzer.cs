@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             _defaultContext = _interpreter.CreateModuleContext();
 
-            _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
+            _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
         }
 
@@ -206,8 +206,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="filePath">The path to the file on disk</param>
         /// <param name="cookie">An application-specific identifier for the module</param>
         /// <returns>The project entry for the new module.</returns>
-        public IPythonProjectEntry AddModule(string moduleName, string filePath, IAnalysisCookie cookie = null) {
-            var entry = new ProjectEntry(this, moduleName, filePath, cookie);
+        public IPythonProjectEntry AddModule(string moduleName, string filePath, Uri documentUri = null, IAnalysisCookie cookie = null) {
+            var entry = new ProjectEntry(this, moduleName, filePath, documentUri, cookie);
 
             if (moduleName != null) {
                 var moduleRef = Modules.GetOrAdd(moduleName);
@@ -834,7 +834,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return _noneInst;
             }
 
-            var attrType = (attr != null) ? attr.GetType() : typeof(NoneType);
+            var attrType = attr.GetType();
             if (attr is IPythonType) {
                 return GetBuiltinType((IPythonType)attr);
             } else if (attr is IPythonFunction) {

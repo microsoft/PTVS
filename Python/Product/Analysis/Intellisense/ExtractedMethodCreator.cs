@@ -24,7 +24,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Intellisense {
     class OutOfProcExtractedMethodCreator {
         private readonly PythonAst _ast;
-        private readonly ScopeStatement[] _scopes;
+        private readonly IReadOnlyList<ScopeStatement> _scopes;
         private readonly List<PythonVariable> _inputVars, _outputVars;
         private readonly SelectionTarget _target;
         private readonly int _indentSize;
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string[] _parameters;
         private readonly ScopeStatement _targetScope;
 
-        public OutOfProcExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline, string name, string[] parameters, ScopeStatement targetScope) {
+        public OutOfProcExtractedMethodCreator(PythonAst ast, IReadOnlyList<ScopeStatement> scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline, string name, string[] parameters, ScopeStatement targetScope) {
             _ast = ast;
             _scopes = scopes;
             _inputVars = new List<PythonVariable>(inputVariables);
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var parameters = new List<Parameter>();
             NameExpression selfParam = null;
             if (_targetScope is ClassDefinition) {
-                var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
+                var fromScope = _scopes[_scopes.Count - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
                 if (fromScope != null) {
                     if (fromScope.Decorators != null) {
@@ -114,12 +114,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            var body = _target.GetBody(_ast);
+            var body = _target.GetBody();
             var isCoroutine = IsCoroutine(body);
 
             // reset leading indentation to single newline + indentation, this
             // strips out any proceeding comments which we don't extract
-            var leading = _newline + body.GetIndentationLevel(_ast);
+            var leading = _newline + _target.IndentationLevel;
             body.SetLeadingWhiteSpace(_ast, leading);
 
             if (_outputVars.Count > 0) {
@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var method = res.ToCodeString(_ast);
 
             // fix up indentation...
-            for (int curScope = 0; curScope < _scopes.Length; curScope++) {
+            for (int curScope = 0; curScope < _scopes.Count; curScope++) {
                 if (_scopes[curScope] == _targetScope) {
                     // this is our target indentation level.
                     var indentationLevel = _scopes[curScope].Body.GetIndentationLevel(_ast);
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (_targetScope is ClassDefinition) {
-                var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
+                var fromScope = _scopes[_scopes.Count - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
 
                 if (isStaticMethod) {
@@ -287,7 +287,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public ScopeStatement[] Scopes {
+        public IReadOnlyList<ScopeStatement> Scopes {
             get {
                 return _scopes;
             }

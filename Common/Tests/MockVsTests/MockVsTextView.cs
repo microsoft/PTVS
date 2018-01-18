@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualStudio;
@@ -375,7 +376,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 if (sessionStack.TopSession is T) {
                     break;
                 }
-                System.Threading.Thread.Sleep(25);
+                Thread.Sleep(Debugger.IsAttached ? 1000 : 25);
             }
 
             if (!(sessionStack.TopSession is T)) {

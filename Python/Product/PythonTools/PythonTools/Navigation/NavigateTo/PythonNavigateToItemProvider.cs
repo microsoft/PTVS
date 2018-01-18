@@ -93,6 +93,14 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         }
 
         private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token) {
+#if USE_15_5
+            foreach (var a in _analyzers) {
+                a.Task = null;
+                a.Result = null;
+            }
+            callback.Done();
+        }
+#else
             var matcher = _services.PatternMatcherFactory.CreatePatternMatcher(
                 searchValue,
                 new PatternMatcherCreationOptions(CultureInfo.CurrentUICulture, PatternMatcherCreationFlags.AllowFuzzyMatching | PatternMatcherCreationFlags.AllowSimpleSubstringMatching)
@@ -152,6 +160,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 );
             }
         }
+#endif
 
         public void StopSearch() {
             try {

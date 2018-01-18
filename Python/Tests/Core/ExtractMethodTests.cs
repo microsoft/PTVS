@@ -1707,9 +1707,12 @@ async def f():
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 var bi = services.GetBufferInfo(buffer);
-                var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
+                bi.ParseImmediately = true;
+                var entry = await analyzer.AnalyzeFileAsync(bi.DocumentUri);
                 Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
-                entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
+                var bp = entry.GetOrCreateBufferParser(services);
+                bp.AddBuffer(buffer);
+                await bp.EnsureCodeSyncedAsync(bi.Buffer, true);
 
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
@@ -1718,7 +1721,7 @@ async def f():
                     false
                 );
 
-                await new MethodExtractor(services.Site, view).ExtractMethod(extractInput);
+                await new Microsoft.PythonTools.Refactoring.MethodExtractor(services, view).ExtractMethod(extractInput);
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);

@@ -161,6 +161,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     
                     if (exitCode == null) {
                         proc.Kill();
+                        fact.Log(TraceLevel.Error, "ScrapeTimeout", proc.FileName, proc.Arguments);
                         return;
                     } else if (exitCode != 0) {
                         fact.Log(TraceLevel.Error, "Scrape", "ExitCode", exitCode);

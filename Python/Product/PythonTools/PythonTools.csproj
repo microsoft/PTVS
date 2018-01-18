@@ -86,9 +86,6 @@
       <Name>Microsoft.PythonTools.Ipc.Json</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference2 Include="..\..\Templates\Templates.csproj">
-      <IncludeInVSIX>false</IncludeInVSIX>
-    </ProjectReference2>
     <ProjectReference2 Include="..\Analyzer\Analyzer.csproj" />
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
@@ -295,7 +292,6 @@
     <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
     <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />

@@ -29,6 +29,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     switch (text[i]) {
                         case '\r': target.Enter(); break;
                         case '\t': target.Tab(); break;
+                        case '\x08': target.Backspace(); break;
                         default:
                             Marshal.GetNativeVariantForObject((ushort)text[i], variantMem);
                             target.Exec(

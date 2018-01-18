@@ -14,8 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -28,10 +31,26 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Dictionary from buffer ID to VersionInfo.
         /// </summary>
-        public readonly Dictionary<int, BufferVersion> Buffers;
+        public readonly IReadOnlyDictionary<int, BufferVersion> Versions;
 
-        public VersionCookie(Dictionary<int, BufferVersion> versions) {
-            Buffers = versions;
+        public VersionCookie(int version) {
+            Versions = new Dictionary<int, BufferVersion> {
+                [0] = new BufferVersion(version, null, null)
+            };
+        }
+
+        public VersionCookie(IDictionary<int, BufferVersion> versions) {
+            Versions = new SortedDictionary<int, BufferVersion>(versions);
+        }
+
+        public IEnumerable<KeyValuePair<Uri, BufferVersion>> GetAllParts(Uri documentUri) {
+            foreach (var kv in Versions) {
+                var u = documentUri;
+                if (kv.Key > 0) {
+                    u = new Uri(u, $"#{kv.Key}");
+                }
+                yield return new KeyValuePair<Uri, BufferVersion>(u, kv.Value);
+            }
         }
     }
 
@@ -44,13 +63,18 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public readonly int Version;
         /// <summary>
-        /// The ASP that was produced from the last version parsed
+        /// The AST that was produced from the last version parsed
         /// </summary>
         public readonly PythonAst Ast;
+        /// <summary>
+        /// The diagnostic messages produced for this buffer
+        /// </summary>
+        public readonly IReadOnlyList<Analysis.LanguageServer.Diagnostic> Diagnostics;
 
-        public BufferVersion(int version, PythonAst ast) {
+        public BufferVersion(int version, PythonAst ast, IEnumerable<Analysis.LanguageServer.Diagnostic> diagnostics) {
             Version = version;
             Ast = ast;
+            Diagnostics = diagnostics.MaybeEnumerate().ToArray();
         }
     }
 }

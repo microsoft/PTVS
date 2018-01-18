@@ -60,6 +60,7 @@
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="CompletionOptions.cs" />
+    <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
@@ -69,9 +70,40 @@
     <Compile Include="Infrastructure\ProcessHelper.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Infrastructure\UriEqualityComparer.cs" />
+    <Compile Include="Intellisense\AnalysisPriority.cs" />
+    <Compile Include="Intellisense\AnalysisQueue.cs" />
+    <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
+    <Compile Include="Intellisense\AssignmentWalker.cs" />
+    <Compile Include="DocumentChange.cs" />
+    <Compile Include="Intellisense\ClassifierWalker.cs" />
+    <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
+    <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
+    <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
+    <Compile Include="Intellisense\ExtractMethodResult.cs" />
+    <Compile Include="Intellisense\FlowChecker.cs" />
+    <Compile Include="Intellisense\ImportedModuleNameWalker.cs" />
+    <Compile Include="Intellisense\ImportRemover.cs" />
+    <Compile Include="Intellisense\LineInfo.cs" />
+    <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
+    <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
+    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
+    <Compile Include="Intellisense\SelectionTarget.cs" />
+    <Compile Include="Intellisense\TaggedSpan.cs" />
+    <Compile Include="Intellisense\VersionCookie.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
+    <Compile Include="LanguageServer\CallbackEventArgs.cs" />
+    <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
+    <Compile Include="LanguageServer\Enums.cs" />
+    <Compile Include="LanguageServer\Messages.cs" />
+    <Compile Include="LanguageServer\ParseQueue.cs" />
+    <Compile Include="LanguageServer\Server.cs" />
+    <Compile Include="LanguageServer\ServerBase.cs" />
+    <Compile Include="LanguageServer\Structures.cs" />
+    <Compile Include="LanguageServer\VolatileCounter.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
@@ -188,7 +220,6 @@
     <Compile Include="Deque.cs" />
     <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
-    <Compile Include="NoneType.cs" />
     <Compile Include="HashSetExtensions.cs" />
     <Compile Include="IAnalysisCookie.cs" />
     <Compile Include="IAnalysisVariable.cs" />
@@ -318,7 +349,7 @@
     <Compile Include="SetOfOneEnumerator.cs" />
     <Compile Include="Parsing\Severity.cs" />
     <Compile Include="Parsing\SourceCodeKind.cs" />
-    <Compile Include="Parsing\SourceSpan.cs" />
+    <Compile Include="SourceSpan.cs" />
     <Compile Include="Parsing\Token.cs" />
     <Compile Include="Parsing\TokenCategory.cs" />
     <Compile Include="Parsing\TokenInfo.cs" />
@@ -329,7 +360,7 @@
     <Compile Include="PythonAnalyzer.cs" />
     <Compile Include="EncodedLocation.cs" />
     <Compile Include="AnalysisUnit.cs" />
-    <Compile Include="Parsing\SourceLocation.cs" />
+    <Compile Include="SourceLocation.cs" />
     <Compile Include="Validation.cs" />
     <Compile Include="Values\ArgumentSet.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
@@ -420,9 +451,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Python3DB>
       <Content Include="@(Python3DB)" />
+      <FileWrites Include="@(Python3DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython3DB" Inputs="$(PackagePath)python\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v3\python.pyi" BeforeTargets="_IncludePython3DB">
+  <Target Name="_RegeneratePython3DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v3\python.pyi')" BeforeTargets="_IncludePython3DB">
     <PropertyGroup>
       <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>
@@ -438,9 +470,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Python2DB>
       <Content Include="@(Python2DB)" />
+      <FileWrites Include="@(Python2DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython2DB" Inputs="$(PackagePath)python2.2.7.14\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v2\python.pyi" BeforeTargets="_IncludePython2DB">
+  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v2\python.pyi')" BeforeTargets="_IncludePython2DB">
     <PropertyGroup>
       <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>

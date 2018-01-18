@@ -236,7 +236,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     this);
             }
         }
-        
+
+        public int GetIndexOfDef(PythonAst ast) {
+            if (!IsCoroutine) {
+                return DefIndex;
+            }
+            return DefIndex + NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync).Length + 5;
+        }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 _name?.Walk(walker);

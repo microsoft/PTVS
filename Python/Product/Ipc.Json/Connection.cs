@@ -45,6 +45,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
         private const string LoggingRegistrySubkey = @"Software\Microsoft\PythonTools\ConnectionLog";
 
+        private static readonly Encoding TextEncoding = new UTF8Encoding(false);
+
         /// <summary>
         /// Creates a new connection object for doing client/server communication.  
         /// </summary>
@@ -122,7 +124,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             for (int counter = 0; counter < int.MaxValue; ++counter) {
                 try {
                     var file = new FileStream(filename, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
-                    return new StreamWriter(file, Encoding.UTF8);
+                    return new StreamWriter(file, TextEncoding);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 }
@@ -439,6 +441,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             if (packet == null) {
+                Debug.WriteLine("Failed to parse {0}{1}", line, message);
                 throw new InvalidDataException("Failed to parse packet" + message);
             }
 
@@ -451,10 +454,15 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// header specifying the length of the body.
         /// </summary>
         private static async Task<string> ReadPacket(ProtocolReader reader) {
-            Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var lines = new List<string>();
             string line;
             while ((line = await reader.ReadHeaderLineAsync().ConfigureAwait(false)) != null) {
+                lines.Add(line ?? "(null)");
                 if (String.IsNullOrEmpty(line)) {
+                    if (headers.Count == 0) {
+                        continue;
+                    }
                     // end of headers for this request...
                     break;
                 }
@@ -464,7 +472,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     var error = line;
                     try {
                         // Encoding is uncertain since this is malformed
-                        error += Encoding.UTF8.GetString(await reader.ReadToEndAsync());
+                        error += TextEncoding.GetString(await reader.ReadToEndAsync());
                     } catch (ArgumentException) {
                     }
                     throw new InvalidDataException("Malformed header, expected 'name: value'" + Environment.NewLine + error);
@@ -480,6 +488,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
             int contentLength;
 
             if (!headers.TryGetValue(Headers.ContentLength, out contentLengthStr)) {
+                // HACK: Attempting to find problem with message content
+                Console.Error.WriteLine("Content-Length not specified on request. Lines follow:");
+                foreach (var l in lines) {
+                    Console.Error.WriteLine($"> {l}");
+                }
+                Console.Error.Flush();
                 throw new InvalidDataException("Content-Length not specified on request");
             }
 
@@ -497,7 +511,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             try {
-                var text = Encoding.UTF8.GetString(contentBinary);
+                var text = TextEncoding.GetString(contentBinary);
                 return text;
             } catch (ArgumentException ex) {
                 throw new InvalidDataException("Content is not valid UTF-8.", ex);
@@ -548,7 +562,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 try {
                     // The content part is encoded using the charset provided in the Content-Type field.
                     // It defaults to utf-8, which is the only encoding supported right now.
-                    var contentBytes = Encoding.UTF8.GetBytes(str);
+                    var contentBytes = TextEncoding.GetBytes(str);
 
                     // The header part is encoded using the 'ascii' encoding.
                     // This includes the '\r\n' separating the header and content part.

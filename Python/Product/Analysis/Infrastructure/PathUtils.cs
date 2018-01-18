@@ -318,5 +318,87 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             // likely nothing we can do.
             return !Directory.Exists(path);
         }
+
+        public static FileStream OpenWithRetry(string file, FileMode mode, FileAccess access, FileShare share) {
+            // Retry for up to one second
+            bool create = mode != FileMode.Open;
+            for (int retries = 100; retries > 0; --retries) {
+                try {
+                    return new FileStream(file, mode, access, share);
+                } catch (FileNotFoundException) when (!create) {
+                    return null;
+                } catch (DirectoryNotFoundException) when (!create) {
+                    return null;
+                } catch (IOException) {
+                    if (create) {
+                        var dir = Path.GetDirectoryName(file);
+                        try {
+                            Directory.CreateDirectory(dir);
+                        } catch (IOException) {
+                            // Cannot create directory for DB, so just bail out
+                            return null;
+                        }
+                    }
+                    Thread.Sleep(10);
+                } catch (NotSupportedException) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Normalizes and returns the provided path.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// If the provided path contains invalid characters.
+        /// </exception>
+        public static string NormalizePath(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return string.Empty;
+            }
+
+            var root = EnsureEndSeparator(Path.GetPathRoot(path));
+            var parts = path.Substring(root.Length).Split(DirectorySeparators);
+            bool isDir = string.IsNullOrWhiteSpace(parts[parts.Length - 1]);
+
+            for (int i = 0; i < parts.Length; ++i) {
+                if (string.IsNullOrEmpty(parts[i])) {
+                    if (i > 0) {
+                        parts[i] = null;
+                    }
+                    continue;
+                }
+
+                if (parts[i] == ".") {
+                    parts[i] = null;
+                    continue;
+                }
+
+                if (parts[i] == "..") {
+                    bool found = false;
+                    for (int j = i - 1; j >= 0; --j) {
+                        if (!string.IsNullOrEmpty(parts[j])) {
+                            parts[i] = null;
+                            parts[j] = null;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found && !string.IsNullOrEmpty(root)) {
+                        parts[i] = null;
+                    }
+                    continue;
+                }
+
+                parts[i] = parts[i].TrimEnd(' ', '.');
+            }
+
+            var newPath = root + string.Join(
+                Path.DirectorySeparatorChar.ToString(),
+                parts.Where(s => s != null)
+            );
+            return isDir ? EnsureEndSeparator(newPath) : newPath;
+        }
     }
 }

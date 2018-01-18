@@ -15,10 +15,13 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.PythonTools.Editor;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
+using System.Threading;
+using Microsoft.PythonTools.Intellisense;
 
 namespace PythonToolsUITests {
     public class RemoveImportTests {
@@ -271,11 +274,15 @@ def f():
 
             var doc = app.GetDocument(item.Document.FullName);
 
+            VsProjectAnalyzer analyzer = null;
             doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
-                await doc.WaitForAnalyzerAtCaretAsync();
+                analyzer = await doc.WaitForAnalyzerAtCaretAsync();
             });
+
+            Assert.IsNotNull(analyzer, "Failed to get analyzer");
+            analyzer.WaitForCompleteAnalysis(_ => true);
 
             if (allScopes) {
                 app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes");
