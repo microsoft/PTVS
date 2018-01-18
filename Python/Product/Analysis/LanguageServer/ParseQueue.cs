@@ -85,7 +85,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task<IAnalysisCookie> Parse(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
             if (previousTask != null) {
-                await previousTask.ConfigureAwait(false);
+                try {
+                    await previousTask.ConfigureAwait(false);
+                } catch {
+                    // Don't care about any errors in the previous task.
+                    // We just do not want to start until it is finished.
+                }
             }
 
             return await Task.Factory.StartNew(
