@@ -667,7 +667,7 @@ namespace Microsoft.PythonTools.Intellisense {
             OutOfProcProjectAnalyzer analyzer;
             int exitCode = 0;
             try {
-                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, m => Trace.WriteLine("Analyzer: {0}", m));
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, m => Trace.WriteLine($"Analysis Std Err: {m}"));
                 info.CancellationToken.Register(() => {
                     analyzer.Dispose();
                 });
