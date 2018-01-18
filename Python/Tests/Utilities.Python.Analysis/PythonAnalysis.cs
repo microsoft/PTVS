@@ -144,15 +144,15 @@ namespace TestUtilities.Python {
         public void UpdateModule(IPythonProjectEntry entry, string code) {
             CollectingErrorSink errors = null;
             if (code != null) {
-                PythonAst ast;
                 errors = new CollectingErrorSink();
-                var p = Parser.CreateParser(
+                var parser = Parser.CreateParser(
                     new StringReader(code),
                     _analyzer.LanguageVersion,
                     new ParserOptions { BindReferences = true, ErrorSink = errors }
                 );
-                ast = p.ParseFile();
-                entry.UpdateTree(ast, null);
+                using (var p = entry.BeginParse()) {
+                    p.Tree = parser.ParseFile();
+                }
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
                         var errorMsg = MakeMessage(errors);

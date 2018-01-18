@@ -265,7 +265,10 @@ import System
                 var ast = nodes[i];
 
                 if (ast != null) {
-                    modules[i].UpdateTree(ast, null);
+                    using (var p = modules[i].BeginParse()) {
+                        p.Tree = ast;
+                        p.Complete();
+                    }
                 }
             }
 

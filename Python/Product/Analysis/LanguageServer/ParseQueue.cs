@@ -44,15 +44,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
-        private static void AbortParsingTree(IPythonProjectEntry entry) {
-            if (entry == null) {
-                return;
-            }
-
-            entry.GetTreeAndCookie(out var tree, out var cookie);
-            entry.UpdateTree(tree, cookie);
-        }
-
         public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
             if (doc == null) {
                 throw new ArgumentNullException(nameof(doc));
@@ -70,28 +61,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private IAnalysisCookie ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
-            IAnalysisCookie result = null;
+        private IPythonParse ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
+            IPythonParse result = null;
 
             if (doc is IExternalProjectEntry externalEntry) {
                 using (var r = doc.ReadDocument(0, out var version)) {
                     if (r == null) {
                         throw new FileNotFoundException("failed to parse file", externalEntry.FilePath);
                     }
-                    result = new VersionCookie(version);
-                    externalEntry.ParseContent(r, result);
+                    result = new StaticPythonParse(null, new VersionCookie(version));
+                    externalEntry.ParseContent(r, result.Cookie);
                 }
             } else if (doc is IPythonProjectEntry pyEntry) {
-                pyEntry.GetTreeAndCookie(out _, out var lastCookie);
-                var lastVc = lastCookie as VersionCookie;
-                result = ParsePythonEntry(pyEntry, languageVersion, lastCookie as VersionCookie);
+                var lastParse = pyEntry.GetCurrentParse();
+                result = ParsePythonEntry(pyEntry, languageVersion, lastParse?.Cookie as VersionCookie);
             } else {
                 Debug.Fail($"Don't know how to parse {doc.GetType().FullName}");
             }
             return result;
         }
 
-        private IAnalysisCookie ParsePythonEntry(IPythonProjectEntry entry, PythonLanguageVersion languageVersion, VersionCookie lastParseCookie) {
+        private IPythonParse ParsePythonEntry(IPythonProjectEntry entry, PythonLanguageVersion languageVersion, VersionCookie lastParseCookie) {
             PythonAst tree;
             var doc = (IDocument)entry;
             var buffers = new SortedDictionary<int, BufferVersion>();
@@ -122,8 +112,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 tree = new PythonAst(buffers.Values.Select(v => v.Ast));
             }
 
-            entry.UpdateTree(tree, cookie);
-            return cookie;
+            return new StaticPythonParse(tree, cookie);
         }
 
         public Dictionary<string, DiagnosticSeverity> TaskCommentMap { get; set; }
@@ -134,6 +123,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private readonly ParseQueue _queue;
             private readonly IDocument _document;
             private readonly PythonLanguageVersion _languageVersion;
+
+            private readonly IPythonParse _parse;
 
             private readonly TaskCompletionSource<IAnalysisCookie> _tcs;
             private ParseTask _next;
@@ -158,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _languageVersion = languageVersion;
 
                 _queue._parsingInProgress.Increment();
-                (_document as IPythonProjectEntry)?.BeginParsingTree();
+                _parse = (_document as IPythonProjectEntry)?.BeginParse();
 
                 _tcs = new TaskCompletionSource<IAnalysisCookie>();
             }
@@ -167,6 +158,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             public void DisposeIfNotStarted() {
                 if (Interlocked.CompareExchange(ref _state, DISPOSED, UNSTARTED) == UNSTARTED) {
+                    _parse?.Dispose();
                     DisposeWorker();
                 }
             }
@@ -213,7 +205,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 try {
-                    _tcs.SetResult(_queue.ParseWorker(_document, _languageVersion));
+                    var r = _queue.ParseWorker(_document, _languageVersion);
+                    if (r != null && _parse != null) {
+                        _parse.Tree = r.Tree;
+                        _parse.Cookie = r.Cookie;
+                        _parse.Complete();
+                    }
+                    _tcs.SetResult(r?.Cookie);
                 } catch (Exception ex) {
                     _tcs.SetException(ex);
                 } finally {

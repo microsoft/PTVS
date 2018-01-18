@@ -290,15 +290,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
 
-            var latestTree = entry.WaitForCurrentTree(_clientCaps?.python?.completionsTimeout ?? -1, out var cookie);
-            if (_traceLogging && latestTree != null) {
-                if (cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            if (_traceLogging) {
+                if (parse == null) {
+                    LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
+                } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
                     LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
                 } else {
                     LogMessage(MessageType.Log, $"Got AST for {uri}");
                 }
             }
-            tree = latestTree ?? tree;
+            tree = parse?.Tree ?? tree;
 
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
@@ -415,8 +417,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (entry == null) {
                 throw new LanguageServerException(LanguageServerException.UnsupportedDocumentType, "unsupported document");
             }
-            entry.GetTreeAndCookie(out tree, out var cookie);
-            if (expectedVersion.HasValue && cookie is VersionCookie vc) {
+            var parse = entry.GetCurrentParse();
+            tree = parse?.Tree;
+            if (expectedVersion.HasValue && parse?.Cookie is VersionCookie vc) {
                 if (vc.Versions.TryGetValue(GetPart(document.uri), out var bv)) {
                     if (bv.Version != expectedVersion.Value) {
                         throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
@@ -756,8 +759,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
-                entry.GetTreeAndCookie(out _, out var cookie);
-                if (cookie is VersionCookie vc) {
+                var parse = entry.GetCurrentParse();
+                if (parse?.Cookie is VersionCookie vc) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
                     }

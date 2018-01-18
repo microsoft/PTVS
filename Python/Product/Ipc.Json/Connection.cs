@@ -80,13 +80,16 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _reader = reader;
             _disposeReader = disposeReader;
             _basicLog = basicLog ?? new DebugTextWriter();
-            _logFile = OpenLogFile(connectionLogKey);
+            _logFile = OpenLogFile(connectionLogKey, out var filename);
             // FxCop won't let us lock a MarshalByRefObject, so we create
             // a plain old object that we can log against.
             if (_logFile != null) {
                 _logFileLock = new object();
+                LogFilename = filename;
             }
         }
+
+        public string LogFilename { get; }
 
         /// <summary>
         /// Opens the log file for this connection. The log must be enabled in
@@ -94,7 +97,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// with the connectionLogKey value set to a non-zero integer or
         /// non-empty string.
         /// </summary>
-        private static TextWriter OpenLogFile(string connectionLogKey) {
+        private static TextWriter OpenLogFile(string connectionLogKey, out string filename) {
+            filename = null;
             if (!AlwaysLog) {
                 if (string.IsNullOrEmpty(connectionLogKey)) {
                     return null;
@@ -120,7 +124,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 string.Format("PythonTools_{0}_{1}_{2:yyyyMMddHHmmss}", connectionLogKey, Process.GetCurrentProcess().Id.ToString(), DateTime.Now)
             );
 
-            string filename = filenameBase + ".log";
+            filename = filenameBase + ".log";
             for (int counter = 0; counter < int.MaxValue; ++counter) {
                 try {
                     var file = new FileStream(filename, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);

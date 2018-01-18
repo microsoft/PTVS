@@ -1340,7 +1340,10 @@ namespace Microsoft.PythonTools.Analysis {
                         }
 
                         if (item.Tree != null) {
-                            item.Entry.UpdateTree(item.Tree, null);
+                            using (var parse = item.Entry.BeginParse()) {
+                                parse.Tree = item.Tree;
+                                parse.Complete();
+                            }
                         }
                     }
 

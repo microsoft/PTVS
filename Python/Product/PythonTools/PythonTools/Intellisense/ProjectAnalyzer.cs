@@ -226,6 +226,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 _conn = StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
             }
 
+            if (!string.IsNullOrEmpty(_conn.LogFilename)) {
+                Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
+            }
+
             Task.Run(() => _conn.ProcessMessages()).DoNotWait();
 
             _userCount = 1;
