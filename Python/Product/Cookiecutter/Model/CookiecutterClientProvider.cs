@@ -38,11 +38,22 @@ namespace Microsoft.CookiecutterTools.Model {
 
         private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
             var interpreters = PythonRegistrySearch.PerformDefaultSearch();
-            var compatible = interpreters
+            var all = interpreters
                 .Where(x => File.Exists(x.Configuration.InterpreterPath))
+                .Where(x => x.Configuration.Version >= new Version(3, 3))
                 .OrderByDescending(x => x.Configuration.Version)
-                .FirstOrDefault(x => x.Configuration.Version >= new Version(3, 3));
-            return compatible != null ? new CookiecutterPythonInterpreter(compatible.Configuration.InterpreterPath) : null;
+                .ToArray();
+
+            // Prefer a CPython installation if there is one because
+            // some Anaconda installs have trouble creating a venv.
+            var cpython = all
+                .Where(x => x.Vendor.IndexOf("Python Software Foundation", StringComparison.OrdinalIgnoreCase) == 0);
+            var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
+
+            return best != null ? new CookiecutterPythonInterpreter(
+                best.Configuration.PrefixPath,
+                best.Configuration.InterpreterPath
+            ) : null;
         }
     }
 }

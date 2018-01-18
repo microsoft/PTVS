@@ -45,13 +45,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public AnalysisEntry(
             VsProjectAnalyzer analyzer,
             string path,
-            int fileId,
+            Uri documentUri,
             bool isTemporaryFile = false,
             bool suppressErrorList = false
         ) {
             Analyzer = analyzer;
             Path = path;
-            FileId = fileId;
+            DocumentUri = documentUri;
             Properties = new Dictionary<object, object>();
             IsTemporaryFile = isTemporaryFile;
             SuppressErrorList = suppressErrorList;
@@ -96,29 +96,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public IIntellisenseCookie AnalysisCookie { get; set; }
 
         public string Path { get; }
-        public int FileId { get; }
+        public Uri DocumentUri { get; }
         public bool IsAnalyzed { get; internal set; }
 
         public Dictionary<object, object> Properties { get; }
 
         public string GetLine(int line) {
             return AnalysisCookie?.GetLine(line);
-        }
-
-        public int GetBufferId(ITextBuffer buffer) {
-            // May get null if there is no analysis entry associated with the file yet.
-            // This can happen when you have a document that is open but hasn't had focus
-            // causing the full load of our intellisense controller.  In that case there
-            // is only a single buffer which is buffer 0.  An easy repro for this is to
-            // open a IronPython WPF project and close it with the XAML file focused and
-            // the .py file still open. Re-open the project, and double click on a button
-            // on the XAML page.  The python file isn't loaded and we have no 
-            // PythonTextBufferInfo associated with it.
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisBufferId ?? 0;
-        }
-
-        public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.LastAnalysisReceivedVersion ?? buffer.CurrentSnapshot.Version;
         }
 
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {

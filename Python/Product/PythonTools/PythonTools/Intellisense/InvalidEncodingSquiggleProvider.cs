@@ -72,7 +72,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                 VSTASKPRIORITY.TP_NORMAL,
                                 VSTASKCATEGORY.CAT_CODESENSE,
                                 true,
-                                new LocationTracker(snapshot.Version, bi.Buffer, snapshot.Version.VersionNumber)
+                                bi.LocationTracker,
+                                snapshot.Version.VersionNumber
                             )
                         });
                 }

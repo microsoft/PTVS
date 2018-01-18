@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 input.CannotRename(Strings.RenameVariable_UnableGetExpressionAnalysis);
                 return;
             }
-            
+
             string privatePrefix = null;
             var originalName = analysis.MemberName;
 

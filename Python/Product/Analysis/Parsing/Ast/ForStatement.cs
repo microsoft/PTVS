@@ -87,6 +87,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        public int GetIndexOfFor(PythonAst ast) {
+            if (!IsAsync) {
+                return StartIndex;
+            }
+            return StartIndex + this.GetFourthWhiteSpace(ast).Length + 5;
+        }
+
+        public int GetIndexOfIn(PythonAst ast) {
+            if (this.IsIncompleteNode(ast)) {
+                return -1;
+            }
+            return Left.EndIndex + this.GetSecondWhiteSpace(ast).Length;
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             if (IsAsync) {

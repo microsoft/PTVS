@@ -72,10 +72,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             _target.AppendCodeString(res, ast, format);
-            res.Append(this.GetPreceedingWhiteSpaceDefaultNull(ast));
+            format.Append(res, format.SpaceBeforeDot, " ", "", this.GetPreceedingWhiteSpaceDefaultNull(ast));
             res.Append('.');
             if (!this.IsIncompleteNode(ast)) {
-                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
+                format.Append(res, format.SpaceAfterDot, " ", "", this.GetSecondWhiteSpaceDefaultNull(ast));
                 if (format.UseVerbatimImage) {
                     res.Append(this.GetVerbatimImage(ast) ?? _name);
                 } else {

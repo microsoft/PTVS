@@ -100,6 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Name = moduleName;
             Documentation = ast.Documentation;
             FilePath = filePath;
+            DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
             Locations = new[] { new LocationInfo(filePath, 1, 1) };
             _interpreter = interpreter;
 
@@ -129,6 +130,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public string Name { get; }
         public string Documentation { get; }
         public string FilePath { get; }
+        public Uri DocumentUri { get; }
         public PythonMemberType MemberType => PythonMemberType.Module;
         public Dictionary<object, object> Properties => _properties;
         public IEnumerable<LocationInfo> Locations { get; }

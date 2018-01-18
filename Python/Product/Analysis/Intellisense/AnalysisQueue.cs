@@ -18,10 +18,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -31,21 +32,18 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class AnalysisQueue : IDisposable {
         private readonly Thread _workThread;
         private readonly AutoResetEvent _workEvent;
-        private readonly OutOfProcProjectAnalyzer _analyzer;
         private readonly object _queueLock = new object();
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
-        private TaskScheduler _scheduler;
         private CancellationTokenSource _cancel;
         private bool _isAnalyzing;
         private int _analysisPending;
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
-        internal AnalysisQueue(OutOfProcProjectAnalyzer analyzer) {
+        internal AnalysisQueue() {
             _workEvent = new AutoResetEvent(false);
             _cancel = new CancellationTokenSource();
-            _analyzer = analyzer;
 
             _queue = new List<IAnalyzable>[PriorityCount];
             for (int i = 0; i < PriorityCount; i++) {
@@ -64,11 +62,39 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public TaskScheduler Scheduler {
-            get {
-                return _scheduler;
+        sealed class WaitAnalyzableTask : IAnalyzable {
+            private readonly TaskCompletionSource<object> _tcs;
+
+            public WaitAnalyzableTask() {
+                _tcs = new TaskCompletionSource<object>();
+            }
+
+            public Task Task => _tcs.Task;
+
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    _tcs.TrySetCanceled();
+                } else {
+                    _tcs.TrySetResult(null);
+                }
             }
         }
+
+        public int Count {
+            get {
+                lock (_queueLock) {
+                    return _queue.Sum(q => q.Count);
+                }
+            }
+        }
+
+        public Task WaitForCompleteAsync(AnalysisPriority priority = AnalysisPriority.None) {
+            var task = new WaitAnalyzableTask();
+            Enqueue(task, priority);
+            return task.Task;
+        }
+
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
             int iPri = (int)priority;
@@ -172,7 +198,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Worker(object threadStarted) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
-                _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             } finally {
                 ((AutoResetEvent)threadStarted).Set();
             }
@@ -209,11 +234,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         } else {
                             workItem.Analyze(cancel);
                         }
-                    } catch (Exception ex) {
-                        if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
-                            throw;
-                        }
-                        _analyzer.ReportUnhandledException(ex);
+                    } catch (Exception ex) when (!ex.IsCriticalException() && !Debugger.IsAttached) {
+                        UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(ex, false));
                         _cancel.Cancel();
                     }
                 } else if (!_workEvent.WaitOne(50)) {
@@ -224,7 +246,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
                     }
                     try {
-                        WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                        _workEvent.WaitOne();
                     } catch (ApplicationException) {
                         // No idea where this is coming from...
                         try {

@@ -323,6 +323,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="..\PythonTools\pip_downloader.py">
+      <Link>pip_downloader.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
     <Content Include="cookiecutter_render.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

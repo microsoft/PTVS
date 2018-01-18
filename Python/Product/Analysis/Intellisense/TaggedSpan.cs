@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,9 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Analysis {
-    class NoneType {
-        private NoneType() {
+using Microsoft.PythonTools.Parsing;
+
+namespace Microsoft.PythonTools.Intellisense {
+    public sealed class TaggedSpan {
+        public SourceSpan Span { get; }
+        public string Tag { get; }
+
+        public TaggedSpan(SourceSpan span, string tag) {
+            Span = span;
+            Tag = tag;
         }
     }
 }

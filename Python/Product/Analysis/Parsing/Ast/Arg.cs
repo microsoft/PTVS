@@ -45,6 +45,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        internal string GetPreceedingWhiteSpaceDefaultNull(PythonAst ast) {
+            if (_name != null) {
+                return _name.GetPreceedingWhiteSpaceDefaultNull(ast);
+            }
+            return _expression?.GetPreceedingWhiteSpaceDefaultNull(ast);
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format)
         {
             if (_name != null) {

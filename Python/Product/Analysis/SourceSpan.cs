@@ -15,15 +15,17 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Parsing {
+namespace Microsoft.PythonTools {
 
     /// <summary>
     /// Stores the location of a span of text in a source file.
     /// </summary>
     [Serializable]
+    [DebuggerDisplay("({_start._line}, {_start._column})-({_end._line}, {_end._column})")]
     public struct SourceSpan {
         private readonly SourceLocation _start;
         private readonly SourceLocation _end;

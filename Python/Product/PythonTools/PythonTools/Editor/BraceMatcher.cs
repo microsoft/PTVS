@@ -150,12 +150,16 @@ namespace Microsoft.PythonTools.Editor {
 
                 var tspan = token.ToSnapshotSpan(snapshot);
                 var txt = tspan.GetText();
-                if (IsSameBraceKind(txt, brace)) {
-                    if (txt.IsCloseGrouping()) {
-                        depth -= direction;
-                    } else {
-                        depth += direction;
+                try {
+                    if (IsSameBraceKind(txt, brace)) {
+                        if (txt.IsCloseGrouping()) {
+                            depth -= direction;
+                        } else {
+                            depth += direction;
+                        }
                     }
+                } catch (InvalidOperationException) {
+                    return false;
                 }
 
                 if (depth == 0) {

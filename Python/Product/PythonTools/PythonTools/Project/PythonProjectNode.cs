@@ -31,7 +31,6 @@ using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -41,12 +40,10 @@ using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -81,6 +78,10 @@ namespace Microsoft.PythonTools.Project {
         private readonly HashSet<string> _validFactories = new HashSet<string>();
         public IPythonInterpreterFactory _active;
 
+        private FileWatcher _projectFileWatcher;
+        private readonly HashSet<AnalysisEntry> _pendingChanges, _pendingDeletes;
+        private readonly System.Threading.Timer _deferredChangeNotification;
+
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
@@ -91,6 +92,10 @@ namespace Microsoft.PythonTools.Project {
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             _searchPaths = new SearchPathManager(serviceProvider);
             _searchPaths.Changed += SearchPaths_Changed;
+
+            _pendingChanges = new HashSet<AnalysisEntry>();
+            _pendingDeletes = new HashSet<AnalysisEntry>();
+            _deferredChangeNotification = new System.Threading.Timer(ProjectFile_Notify);
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -1070,6 +1075,11 @@ namespace Microsoft.PythonTools.Project {
 
                 _searchPaths.Dispose();
 
+                var watcher = _projectFileWatcher;
+                _projectFileWatcher = null;
+                watcher?.Dispose();
+                _deferredChangeNotification.Dispose();
+
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
                     _interpretersContainer = null;
@@ -1112,12 +1122,19 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                return Site.GetUIThread().InvokeTaskSync(async() => {
-                    if (_analyzer == null) {
-                        _analyzer = await CreateAnalyzerAsync();
+                // So many deadlocks, but can't force all callers to become async, so do the best we can
+                for (int retries = 3; retries > 0; --retries) {
+                    var cts = new CancellationTokenSource(10000);
+                    try {
+                        return Site.GetUIThread().InvokeTaskSync(async () => {
+                            if (_analyzer == null) {
+                                _analyzer = await CreateAnalyzerAsync();
+                            }
+                            return _analyzer;
+                        }, cts.Token);
+                    } catch (OperationCanceledException) {
                     }
-                    return _analyzer;
-                }, CancellationToken.None);
+                }
             }
             return _analyzer;
         }
@@ -1142,7 +1159,8 @@ namespace Microsoft.PythonTools.Project {
             var res = await VsProjectAnalyzer.CreateForProjectAsync(
                 model.GetService<PythonEditorServices>(),
                 factory,
-                BuildProject,
+                Url,
+                ProjectHome,
                 inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
@@ -1369,6 +1387,16 @@ namespace Microsoft.PythonTools.Project {
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                 }
+                var oldWatcher = _projectFileWatcher;
+                _projectFileWatcher = new FileWatcher(ProjectHome) {
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+                };
+                _projectFileWatcher.Changed += ProjectFile_Changed;
+                _projectFileWatcher.Deleted += ProjectFile_Deleted;
+                oldWatcher?.Dispose();
+
                 var analyzer = await CreateAnalyzerAsync();
                 Debug.Assert(analyzer != null);
 
@@ -1422,6 +1450,46 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
             }
+        }
+
+        private void ProjectFile_Deleted(object sender, FileSystemEventArgs e) {
+            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
+            if (entry != null) {
+                lock (_pendingChanges) {
+                    _pendingDeletes.Add(entry);
+                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                }
+            }
+        }
+
+        private void ProjectFile_Changed(object sender, FileSystemEventArgs e) {
+            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
+            if (entry != null) {
+                lock (_pendingChanges) {
+                    _pendingChanges.Add(entry);
+                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                }
+            }
+        }
+
+        private void ProjectFile_Notify(object state) {
+            var analyzer = _analyzer;
+            Uri[] changed, deleted;
+
+            lock (_pendingChanges) {
+                _deferredChangeNotification.Change(Timeout.Infinite, Timeout.Infinite);
+                if (analyzer == null) {
+                    return;
+                }
+                changed = _pendingChanges.Concat(_pendingDeletes.Where(e => File.Exists(e.Path))).Select(e => e.DocumentUri).ToArray();
+                deleted = _pendingDeletes.Where(e => !File.Exists(e.Path)).Select(e => e.DocumentUri).ToArray();
+                _pendingChanges.Clear();
+                _pendingDeletes.Clear();
+            }
+
+            analyzer.NotifyFileChangesAsync(Enumerable.Empty<Uri>(), deleted, changed)
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
         }
 
         protected override string AssemblyReferenceTargetMoniker {

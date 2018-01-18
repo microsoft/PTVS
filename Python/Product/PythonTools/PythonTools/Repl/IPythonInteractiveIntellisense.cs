@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Intellisense;
 
@@ -24,6 +25,8 @@ namespace Microsoft.PythonTools.Repl {
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
         VsProjectAnalyzer Analyzer { get; }
-        string AnalysisFilename { get; }
+        Uri DocumentUri { get; }
+
+        Uri NextDocumentUri();
     }
 }

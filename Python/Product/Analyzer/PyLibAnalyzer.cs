@@ -184,7 +184,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (_interactive) {
                 var analyzer = new OutOfProcProjectAnalyzer(
                     Console.OpenStandardOutput(),
-                    Console.OpenStandardInput()
+                    Console.OpenStandardInput(),
+                    Console.Error.WriteLine
                 );
 
                 await analyzer.ProcessMessages();

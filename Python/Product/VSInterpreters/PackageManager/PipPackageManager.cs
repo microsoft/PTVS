@@ -263,6 +263,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
+                        quoteArgs: false,
                         elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {

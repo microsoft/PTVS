@@ -93,8 +93,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private Stack<BitArray> _loops;
         private Dictionary<string, PythonVariable> _variables;
         private Dictionary<PythonVariable, int> _variableIndices;
-        private HashSet<PythonVariable> _readBeforeInitialized = new HashSet<PythonVariable>();
-
         private readonly ScopeStatement _scope;
         private readonly FlowDefiner _fdef;
         private readonly FlowDeleter _fdel;
@@ -125,11 +123,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public HashSet<PythonVariable> ReadBeforeInitializedVariables {
-            get {
-                return _readBeforeInitialized;
-            }
-        }
+        public HashSet<PythonVariable> ReadBeforeInitializedVariables { get; } = new HashSet<PythonVariable>();
 
         [Conditional("DEBUG")]
         public void Dump(BitArray bits) {
@@ -155,7 +149,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private bool ReadBeforeInitialized(PythonVariable variable) {
-            return _readBeforeInitialized.Contains(variable);
+            return ReadBeforeInitializedVariables.Contains(variable);
         }
 
         private void SetAssigned(PythonVariable/*!*/ variable, bool value) {
@@ -259,7 +253,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_variables.TryGetValue(node.Name, out binding)) {
                 //node.Assigned = IsAssigned(binding);
                 if (!IsInitialized(binding)) {
-                    _readBeforeInitialized.Add(binding);
+                    ReadBeforeInitializedVariables.Add(binding);
                 }
             }
             return true;

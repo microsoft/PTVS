@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPackageManagerProvider))]
     sealed class CPythonPipPackageManagerProvider : IPackageManagerProvider {
         class PipCommandsV2 : PipPackageManagerCommands {
-            public override IEnumerable<string> Base() => new[] { "-c", "import pip; pip.main()" };
+            public override IEnumerable<string> Base() => new[] { "-c", ProcessOutput.QuoteSingleArgument("import pip; pip.main()") };
             public override IEnumerable<string> Prepare() => new[] { PythonToolsInstallPath.GetFile("pip_downloader.py", typeof(PipPackageManager).Assembly) };
         }
 

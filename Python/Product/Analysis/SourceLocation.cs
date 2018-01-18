@@ -15,15 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 
-namespace Microsoft.PythonTools.Parsing {
+namespace Microsoft.PythonTools {
     /// <summary>
     /// Represents a location in source code.
     /// </summary>
     [Serializable]
-    public struct SourceLocation {
-        // TODO: remove index
+    [DebuggerDisplay("({_line}, {_column})")]
+    public struct SourceLocation : IComparable<SourceLocation>, IEquatable<SourceLocation> {
         private readonly int _index;
 
         private readonly int _line;
@@ -199,8 +200,45 @@ namespace Microsoft.PythonTools.Parsing {
         /// <returns>True if the location is valid, False otherwise.</returns>
         public bool IsValid {
             get {
-                return this._line != 0 && this._column != 0;
+                return this._line > 0 && this._column > 0;
             }
+        }
+
+        /// <summary>
+        /// Returns a new SourceLocation with modified column. This will never
+        /// result in a column less than 1 (unless the original location is invalid),
+        /// and will not modify the line number.
+        /// </summary>
+        public SourceLocation AddColumns(int columns) {
+            if (!IsValid) {
+                return Invalid;
+            }
+
+            int newIndex = this._index, newCol = this._column;
+
+            // These comparisons have been arranged to allow columns to
+            // be int.MaxValue without the arithmetic overflowing.
+            // The naive version is shown as a comment.
+
+            // if (this._column + columns > int.MaxValue)
+            if (columns > int.MaxValue - this._column) {
+                newCol = int.MaxValue;
+                if (newIndex >= 0) {
+                    newIndex = int.MaxValue;
+                }
+            // if (this._column + columns <= 0)
+            } else if (columns == int.MinValue || (columns < 0 && this._column <= -columns)) {
+                newCol = 1;
+                if (newIndex >= 0) {
+                    newIndex += 1 - this._column;
+                }
+            } else {
+                newCol += columns;
+                if (newIndex >= 0) {
+                    newIndex += columns;
+                }
+            }
+            return newIndex >= 0 ? new SourceLocation(newIndex, this._line, newCol) : new SourceLocation(this._line, newCol);
         }
 
         public override bool Equals(object obj) {
@@ -220,6 +258,18 @@ namespace Microsoft.PythonTools.Parsing {
 
         internal string ToDebugString() {
             return String.Format(CultureInfo.CurrentCulture, "({0},{1},{2})", _index, _line, _column);
+        }
+
+        public bool Equals(SourceLocation other) {
+            return other._line == _line && other._column == _column;
+        }
+
+        public int CompareTo(SourceLocation other) {
+            int c = _line.CompareTo(other._line);
+            if (c == 0) {
+                return _column.CompareTo(other._column);
+            }
+            return c;
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
-        private bool _disposed;
+        private bool _disposed, _loggedBadDbPath;
         private readonly bool _skipCache, _skipWriteToCache;
 
         private AnalysisLogWriter _log;
@@ -55,7 +55,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
             CreationOptions = options ?? new InterpreterFactoryCreationOptions();
-            LanguageVersion = Configuration.Version.ToLanguageVersion();
+            try {
+                LanguageVersion = Configuration.Version.ToLanguageVersion();
+            } catch (InvalidOperationException ex) {
+                throw new ArgumentException(ex.Message, ex);
+            }
 
             _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
@@ -156,13 +160,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         internal string GetCacheFilePath(string filePath) {
             var dbPath = _databasePath;
             if (!PathEqualityComparer.IsValidPath(dbPath)) {
+                if (!_loggedBadDbPath) {
+                    _loggedBadDbPath = true;
+                    _log?.Log(TraceLevel.Warning, "InvalidDatabasePath", dbPath);
+                }
                 return null;
             }
 
             var name = PathUtils.GetFileName(filePath);
-            var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
-            if (File.Exists(candidate)) {
-                return candidate;
+            if (!PathEqualityComparer.IsValidPath(name)) {
+                _log?.Log(TraceLevel.Warning, "InvalidCacheName", name);
+                return null;
+            }
+            try {
+                var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
+                if (File.Exists(candidate)) {
+                    return candidate;
+                }
+            } catch (ArgumentException) {
+                return null;
             }
 
             var hash = SHA256.Create();
@@ -183,97 +199,38 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            FileStream file = null;
             var path = GetCacheFilePath(filePath);
             if (string.IsNullOrEmpty(path)) {
                 return null;
             }
 
-            for (int retries = 5; retries > 0; --retries) {
-                try {
-                    file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                } catch (DirectoryNotFoundException) {
-                    return null;
-                } catch (FileNotFoundException) {
-                    return null;
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Thread.Sleep(10);
-                }
+            var file = PathUtils.OpenWithRetry(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            if (file == null || _skipWriteToCache) {
+                return file;
             }
 
-            if (file != null && !_skipWriteToCache) {
-                bool fileIsOkay = false;
-                try {
-                    var cacheTime = File.GetLastWriteTimeUtc(path);
-                    var sourceTime = File.GetLastWriteTimeUtc(filePath);
-                    if (sourceTime <= cacheTime) {
-                        fileIsOkay = true;
-                    }
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+            bool fileIsOkay = false;
+            try {
+                var cacheTime = File.GetLastWriteTimeUtc(path);
+                var sourceTime = File.GetLastWriteTimeUtc(filePath);
+                if (sourceTime <= cacheTime) {
+                    fileIsOkay = true;
                 }
-
-                if (!fileIsOkay) {
-                    file.Dispose();
-                    file = null;
-
-                    Log(TraceLevel.Info, "InvalidateCachedModule", path);
-
-                    try {
-                        File.Delete(path);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    }
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
 
-            return file;
-        }
-
-        private static FileStream OpenAndOverwrite(string path) {
-            for (int retries = 5; retries > 0; --retries) {
-                try {
-                    return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
-                } catch (DirectoryNotFoundException) {
-                    var dir = Path.GetDirectoryName(path);
-                    if (Directory.Exists(dir)) {
-                        break;
-                    }
-
-                    // Directory does not exist, so try to create it.
-                    try {
-                        Directory.CreateDirectory(dir);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        Debug.Fail(ex.ToString());
-                        break;
-                    }
-                } catch (UnauthorizedAccessException) {
-                    if (!File.Exists(path)) {
-                        break;
-                    }
-
-                    // File exists, so may be marked readonly. Try and delete it
-                    File_ReallyDelete(path);
-                } catch (IOException) {
-                    break;
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToString());
-                    break;
-                }
-
-                Thread.Sleep(10);
+            if (fileIsOkay) {
+                return file;
             }
+
+            file.Dispose();
+            file = null;
+
+            Log(TraceLevel.Info, "InvalidateCachedModule", path);
+
+            PathUtils.DeleteFile(path);
             return null;
-        }
-
-        private static void File_ReallyDelete(string path) {
-            for (int retries = 5; retries > 0 && File.Exists(path); --retries) {
-                try {
-                    File.SetAttributes(path, FileAttributes.Normal);
-                    File.Delete(path);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToString());
-                    break;
-                }
-            }
         }
 
         internal void WriteCachedModule(string filePath, Stream code) {
@@ -289,7 +246,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Log(TraceLevel.Info, "WriteCachedModule", cache);
 
             try {
-                using (var stream = OpenAndOverwrite(cache)) {
+                using (var stream = PathUtils.OpenWithRetry(cache, FileMode.Create, FileAccess.Write, FileShare.Read)) {
                     if (stream == null) {
                         return;
                     }

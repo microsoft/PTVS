@@ -14,26 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class AndExpression : Expression {
-        private readonly Expression _left, _right;
-
-        public AndExpression(Expression left, Expression right) {
-            _left = left;
-            _right = right;
+        public AndExpression(Expression left, Expression right, int andIndex) {
+            Left = left ?? throw new ArgumentNullException(nameof(left));
+            Right = right;
             StartIndex = left.StartIndex;
             EndIndex = right.EndIndex;
+            AndIndex = andIndex;
         }
 
-        public Expression Left {
-            get { return _left; }
-        }
-
-        public Expression Right {
-            get { return _right; }
-        }
+        public Expression Left { get; }
+        public Expression Right { get; }
+        public int AndIndex { get; }
 
         public override string NodeName {
             get {
@@ -43,26 +39,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_left != null) {
-                    _left.Walk(walker);
-                }
-                if (_right != null) {
-                    _right.Walk(walker);
-                }
+                Left.Walk(walker);
+                Right?.Walk(walker);
             }
             walker.PostWalk(this);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            BinaryExpression.BinaryToCodeString(res, ast, format, this, _left, _right, "and");
+            BinaryExpression.BinaryToCodeString(res, ast, format, this, Left, Right, "and");
         }
 
         public override string GetLeadingWhiteSpace(PythonAst ast) {
-            return _left.GetLeadingWhiteSpace(ast);
+            return Left.GetLeadingWhiteSpace(ast);
         }
 
         public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
-            _left.SetLeadingWhiteSpace(ast, whiteSpace);
+            Left.SetLeadingWhiteSpace(ast, whiteSpace);
         }
     }
 }

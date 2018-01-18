@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,17 +23,16 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using analysis::Microsoft.PythonTools.Interpreter;
+using pythontools::Microsoft.PythonTools.Options;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
@@ -90,38 +91,38 @@ namespace PythonToolsMockTests {
                     do {
                         filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), Path.GetRandomFileName()) + ".py";
                     } while (File.Exists(filename));
+                } else if (!Path.IsPathRooted(filename)) {
+                    filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), filename);
                 }
 
                 var cancel = CancellationTokens.After60s;
-                using (var mre = new ManualResetEventSlim()) {
-                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
-                        v => {
-                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
-                            v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
-                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
-                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
-                        },
-                        filename);
+                view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
+                    v => {
+                        v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                        v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                    },
+                    filename);
 
-                    var entry = analyzer.GetAnalysisEntryFromPath(filename);
-                    while (entry == null && !cancel.IsCancellationRequested) {
-                        Thread.Sleep(50);
-                        entry = analyzer.GetAnalysisEntryFromPath(filename);
-                    }
+                var services = vs.ComponentModel.GetService<PythonEditorServices>();
+                var bi = services.GetBufferInfo(view.TextView.TextBuffer);
+                var entry = bi.GetAnalysisEntryAsync(cancel).WaitAndUnwrapExceptions();
+                Assert.IsNotNull(entry, "failed to get analysis entry");
 
-                    if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                    using (var mre = new ManualResetEventSlim()) {
                         EventHandler evt = (s, e) => mre.SetIfNotDisposed();
 
                         try {
                             entry.AnalysisComplete += evt;
+                            entry.TryGetBufferParser()?.EnsureCodeSyncedAsync(bi.Buffer, true).WaitAndUnwrapExceptions();
+                            bool hasStarted = false;
                             while (!mre.Wait(50, cancel) && !vs.HasPendingException && !entry.IsAnalyzed) {
-                                if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
-                                    var bp = entry.TryGetBufferParser();
-                                    Assert.IsNotNull(bp, "No buffer parser was ever created");
-                                    var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
-                                    Assert.IsNotNull(bi, "No BufferInfo was ever created");
-                                    bi.LastSentSnapshot = null;
-                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer).WaitAndUnwrapExceptions();
+                                if (!hasStarted) {
+                                    hasStarted = analyzer.IsAnalyzing;
+                                } else if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
+                                    Assert.Fail("analyzer is not analyzing");
                                 }
                             }
                         } catch (OperationCanceledException) {
@@ -129,12 +130,12 @@ namespace PythonToolsMockTests {
                             entry.AnalysisComplete -= evt;
                         }
                     }
-                    if (cancel.IsCancellationRequested) {
-                        Assert.Fail("Timed out waiting for code analysis");
-                    }
-
-                    vs.ThrowPendingException();
                 }
+                if (cancel.IsCancellationRequested) {
+                    Assert.Fail("Timed out waiting for code analysis");
+                }
+
+                vs.ThrowPendingException();
 
                 View = view;
                 view = null;
@@ -251,13 +252,14 @@ namespace PythonToolsMockTests {
 
             public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
-                    for (int retries = 100; retries > 0 && _info.LastAnalysisReceivedVersion == null; --retries) {
+                    var snapshot = _info.LastAnalysisSnapshot;
+                    for (int retries = 100; retries > 0 && (snapshot = _info.LastAnalysisSnapshot) == null; --retries) {
                         await Task.Delay(100);
                     }
-                    if (_info.LastAnalysisReceivedVersion == null) {
-                        throw new NullReferenceException("LastAnalysisReceivedVersion was not set");
+                    if (snapshot == null) {
+                        throw new NullReferenceException("LastAnalysisSnapshot was not set");
                     }
-                    if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
+                    if (snapshot.Version.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
                         try {
                             _event.Set();
                         } catch (ObjectDisposedException) {

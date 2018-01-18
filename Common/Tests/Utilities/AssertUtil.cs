@@ -180,7 +180,6 @@ namespace TestUtilities
                 string.Join("\n", value),
                 string.Join("\n", items)
             );
-            Console.WriteLine(message);
 
             Assert.AreEqual(value.Length, items.Length, message);
             for (int i = 0; i < value.Length; i++) {
@@ -264,7 +263,7 @@ namespace TestUtilities
             IEnumerable<T> unexpectedSubset,
             IEqualityComparer<T> comparer = null
         ) {
-            var set = new HashSet<T>(source, comparer);
+            var set = new HashSet<T>(source ?? Enumerable.Empty<T>(), comparer);
             var expected = new HashSet<T>(expectedSubset ?? Enumerable.Empty<T>(), comparer);
 
             var missing = new HashSet<T>(expected, comparer);
