@@ -289,6 +289,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    public sealed class FileFoundEventArgs : EventArgs {
+        public Uri uri { get; set; }
+    }
+
     public sealed class ParseCompleteEventArgs : EventArgs {
         public Uri uri { get; set; }
         public int version { get; set; }

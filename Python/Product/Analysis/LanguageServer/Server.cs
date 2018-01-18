@@ -564,6 +564,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         }
 
+        public event EventHandler<FileFoundEventArgs> OnFileFound;
+        private void FileFound(Uri uri) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Found file to analyze {uri}");
+            }
+            OnFileFound?.Invoke(this, new FileFoundEventArgs { uri = uri });
+        }
+
         #endregion
 
         private string GetLocalPath(Uri uri) {
@@ -768,7 +776,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     continue;
                 }
 
-                await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
+                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
+                if (entry != null) {
+                    FileFound(entry.DocumentUri);
+                }
             }
             foreach (var dir in PathUtils.EnumerateDirectories(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
                 if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||

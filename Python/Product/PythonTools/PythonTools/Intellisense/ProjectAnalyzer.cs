@@ -780,8 +780,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             this,
                             childFile.filename,
                             childFile.documentUri,
-                            childFile.isTemporaryFile,
-                            childFile.suppressErrorList
+                            false,
+                            false
                         );
                         _projectFilesByUri[childFile.documentUri] = _projectFiles[childFile.filename] = entry;
                     }

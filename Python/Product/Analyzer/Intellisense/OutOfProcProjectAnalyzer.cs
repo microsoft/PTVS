@@ -69,6 +69,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
+            _server.OnFileFound += OnFileFound;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -1716,12 +1717,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
             var uri = request.uri ?? ProjectEntry.MakeDocumentUri(request.path);
             var entry = await AddNewFile(uri, request.path, request.addingFromDir);
-            
-            await done(new AP.AddFileResponse { documentUri = uri });
 
-            if (entry != null) {
-                await BeginAnalyzingFileAsync(entry, uri, request.isTemporaryFile, request.suppressErrorLists);
-            }
+            await done(new AP.AddFileResponse { documentUri = uri });
         }
 
         private async Task AnalyzeFileAsync(AP.AddBulkFileRequest request, Func<Response, Task> done) {
@@ -1739,12 +1736,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             await done(response);
-
-            for (int i = 0; i < entries.Length; ++i) {
-                if (entries[i] != null) {
-                    await BeginAnalyzingFileAsync(entries[i], response.documentUri[i], false, false);
-                }
-            }
         }
 
         private async Task<IProjectEntry> AddNewFile(Uri documentUri, string path, string addingFromDir) {
@@ -1975,23 +1966,6 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
-        internal async Task BeginAnalyzingFileAsync(IProjectEntry item, Uri documentUri, bool isTemporaryFile, bool suppressErrorList) {
-            if (Project == null) {
-                // We aren't able to analyze code, so don't create an entry.
-                return;
-            }
-
-            // Send a notification for this file before starting analysis
-            // An AnalyzeFile event will send the same details in its
-            // response.
-            await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = documentUri,
-                filename = item.FilePath,
-                isTemporaryFile = isTemporaryFile,
-                suppressErrorList = suppressErrorList
-            });
-        }
-
         private void OnAnalysisComplete(object sender, LS.AnalysisCompleteEventArgs e) {
             _connection.SendEventAsync(
                 new AP.FileAnalysisCompleteEvent() {
@@ -2087,6 +2061,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
         }
+
+        private async void OnFileFound(object sender, LS.FileFoundEventArgs e) {
+            // Send a notification for this file
+            await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
+                documentUri = e.uri,
+                filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
+            });
+        }
+
 
         #region IDisposable Members
 

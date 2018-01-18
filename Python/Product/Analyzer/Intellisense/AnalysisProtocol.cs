@@ -667,9 +667,6 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
 
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            public bool isTemporaryFile, suppressErrorList;
-
             public override string name => Name;
         }
 
