@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly ConcurrentDictionary<IDocument, ParseTask> _parsing;
         private readonly VolatileCounter _parsingInProgress;
 
-        public ParseQueue(Action<string> logError) {
+        public ParseQueue() {
             _parsingInProgress = new VolatileCounter();
             _parsing = new ConcurrentDictionary<IDocument, ParseTask>();
         }
