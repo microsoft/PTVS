@@ -184,7 +184,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }
-        public virtual Uri NextDocumentUri() => new Uri(DocumentUri, $"#{++_nextDocumentIndex}");
+        public virtual Uri NextDocumentUri() {
+            var d = DocumentUri;
+            if (d != null) {
+                return new Uri(d, $"#{++_nextDocumentIndex}");
+            }
+            return null;
+        }
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
