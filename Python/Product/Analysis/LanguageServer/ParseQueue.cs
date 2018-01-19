@@ -181,11 +181,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // If we were pending, calling start ensures we are queued
                 var previous = Interlocked.Exchange(ref _previous, null);
                 if (previous != null) {
-                    try {
-                        previous.ContinueWith(StartAfterTask);
-                        return Task;
-                    } catch (ObjectDisposedException) {
-                    }
+                    previous.ContinueWith(StartAfterTask);
+                    return Task;
                 }
 
                 ThreadPool.QueueUserWorkItem(StartWork);
