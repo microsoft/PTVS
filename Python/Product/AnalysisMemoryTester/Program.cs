@@ -212,7 +212,10 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                                 analyzer.LanguageVersion,
                                 new ParserOptions() { BindReferences = true }
                             );
-                            entry.UpdateTree(parser.ParseFile(), null);
+                            using (var p = entry.BeginParse()) {
+                                p.Tree = parser.ParseFile();
+                                p.Complete();
+                            }
                         }
                     }
                     break;
