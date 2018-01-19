@@ -336,7 +336,11 @@ namespace Microsoft.PythonTools.Repl {
             if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
                 Configuration = pyProj.GetLaunchConfigurationOrThrow();
                 if (Configuration?.Interpreter != null) {
-                    ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    try {
+                        ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        ScriptsPath = null;
+                    }
                 }
             }
 
@@ -372,22 +376,23 @@ namespace Microsoft.PythonTools.Repl {
             if (string.IsNullOrEmpty(root)) {
                 try {
                     if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root)) {
-                        root = PathUtils.GetAbsoluteDirectoryPath(
-                            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                            "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName)
-                        );
+                        root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                        root = PathUtils.GetAbsoluteDirectoryPath(root, "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName));
                     }
 
                     root = PathUtils.GetAbsoluteDirectoryPath(root, "Python Scripts");
-                } catch (ArgumentException ex) {
-                    ex.ReportUnhandledException(provider, typeof(PythonInteractiveEvaluator));
-                    return null;
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
                 }
             }
 
             string candidate;
             if (!string.IsNullOrEmpty(displayName)) {
-                candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
+                try {
+                    candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
+                }
                 if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }
@@ -395,7 +400,11 @@ namespace Microsoft.PythonTools.Repl {
 
             var version = config?.Version?.ToString();
             if (!string.IsNullOrEmpty(version)) {
-                candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
+                try {
+                    candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
+                }
                 if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }

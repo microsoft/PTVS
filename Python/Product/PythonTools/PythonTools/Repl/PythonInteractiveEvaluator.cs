@@ -149,7 +149,11 @@ namespace Microsoft.PythonTools.Repl {
 
                 var scriptsPath = ScriptsPath;
                 if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null) {
-                    scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    try {
+                        scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        scriptsPath = null;
+                    }
                 }
 
                 // Allow tests to control the backend without relying on the mode.txt file
