@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (c.OldLength > 0) {
                             // Deletion may span lines, so combine them until we can delete
                             int cutAtCol = oldLoc.Column - 1;
-                            for (int toRemove = c.OldLength; toRemove > 0 && lineNo < asLengths.Count; lineNo += 1) {
+                            for (int toRemove = c.OldLength; lineNo < asLengths.Count; lineNo += 1) {
                                 line = asLengths[lineNo];
                                 int lineLen = line.EndIndex - cutAtCol;
                                 cutAtCol = 0;
@@ -205,6 +205,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 } else {
                                     asLengths[lineNo] = new NewLineLocation(line.EndIndex - lineLen, NewLineKind.None);
                                     toRemove -= lineLen;
+                                    if (toRemove <= 0) {
+                                        break;
+                                    }
                                 }
                             }
                         }
