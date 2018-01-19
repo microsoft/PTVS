@@ -194,6 +194,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
             }
 
+            _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:unstarted>";
+
+
             _analysisOptions = new AP.AnalysisOptions {
                 indentationInconsistencySeverity = Severity.Ignore,
 #if DEBUG
@@ -217,6 +220,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private string _toString;
+        public override string ToString() => _toString;
+
+
         private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
@@ -228,6 +235,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Task.Run(() => _conn.ProcessMessages()).DoNotWait();
 
+            _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
 
             var interp = new AP.InterpreterInfo();
@@ -600,6 +608,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool WaitForExit(int millisecondsTimeout) => _thread.Join(millisecondsTimeout);
+
+            public override string ToString() => $"<Thread: {_thread.ManagedThreadId}>";
         }
 
         private Connection StartSubprocessConnection(string comment, out AnalysisProcessInfo proc) {
