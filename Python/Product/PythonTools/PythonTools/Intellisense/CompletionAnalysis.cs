@@ -66,8 +66,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal static bool IsKeyword(ClassificationSpan token, string keyword) {
-            return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && token.Span.GetText() == keyword;
+        internal static bool IsKeyword(ClassificationSpan token, string keyword, Lazy<string> text = null) {
+            return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && (text?.Value ?? token.Span.GetText()) == keyword;
         }
 
         internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {

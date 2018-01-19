@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 namespace Microsoft.PythonTools.Intellisense {
     public static class CompletionSessionExtensions {
         private const string CompleteWord = nameof(CompleteWord);
+        private const string TriggerChar = nameof(TriggerChar);
 
         public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider) {
             var pyService = serviceProvider.GetPythonToolsService();
@@ -34,7 +35,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 IntersectMembers = pyService.AdvancedOptions.IntersectMembers,
                 HideAdvancedMembers = pyService.LangPrefs.HideAdvancedMembers,
                 FilterCompletions = pyService.AdvancedOptions.FilterCompletions,
-                SearchMode = pyService.AdvancedOptions.SearchMode
             };
 
             return options;
@@ -43,8 +43,17 @@ namespace Microsoft.PythonTools.Intellisense {
         public static void SetCompleteWordMode(this IIntellisenseSession session) 
             => session.Properties[CompleteWord] = true;
 
+        public static void ClearCompleteWordMode(this IIntellisenseSession session)
+            => session.Properties.RemoveProperty(CompleteWord);
+
         public static bool IsCompleteWordMode(this IIntellisenseSession session) 
             => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
+
+        public static void SetTriggerCharacter(this IIntellisenseSession session, char triggerChar)
+            => session.Properties[TriggerChar] = triggerChar;
+
+        public static char GetTriggerCharacter(this IIntellisenseSession session)
+            => session.Properties.TryGetProperty(TriggerChar, out char c) ? c : '\0';
     }
 
     class CompletionSource : ICompletionSource {

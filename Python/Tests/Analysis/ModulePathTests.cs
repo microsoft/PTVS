@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTests {
@@ -93,7 +94,7 @@ namespace AnalysisTests {
 
             // Replace the usual File.Exists(p + '__init__.py') check so we can
             // test without real files.
-            var packagePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+            var packagePaths = new HashSet<string>(PathEqualityComparer.Instance) {
                 basePath + @"A\",
                 basePath + @"A\B\"
             };

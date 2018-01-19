@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
@@ -105,6 +106,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                         vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                     }
                     vsPath = Path.Combine(vsPath, "Microsoft Visual Studio", AssemblyVersionInfo.VSVersionSuffix);
+                    foreach (var sku in new[] { "Enterprise", "Professional", "Community" }) {
+                        if (Directory.Exists(Path.Combine(vsPath, sku))) {
+                            vsPath = Path.Combine(vsPath, sku);
+                            break;
+                        }
+                    }
                 }
                 if (Directory.Exists(vsPath)) {
                     var msbuildPath = Path.Combine(vsPath, "MSBuild");
@@ -315,50 +322,61 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        public void InvokeSync(Action action) {
-            Invoke<int>(() => {
+        public void InvokeSync(Action action, int timeout = 30000) {
+            Invoke(() => {
                 action();
                 return 0;
             });
         }
 
-        public T InvokeTask<T>(Func<Task<T>> taskCreator) {
-            var t = Invoke(taskCreator);
-            t.Wait();
-            return t.Result;
+        public T InvokeTask<T>(Func<Task<T>> taskCreator, int timeout = 30000) {
+            return WaitForTask(Invoke(taskCreator, timeout), timeout);
         }
 
-        public T Invoke<T>(Func<T> func) {
+        public T Invoke<T>(Func<T> func, int timeout = 30000) {
             ThrowPendingException();
             if (Thread.CurrentThread == UIThread) {
                 return func();
             }
 
-            T res = default(T);
-            using (var tmp = new AutoResetEvent(false)) {
-                Action action = () => {
-                    try {
-                        res = func();
-                    } finally {
-                        tmp.Set();
-                    }
-                };
-
-                lock (_uiEvents) {
-                    _uiEvents.Add(action);
-                    _uiEvent.Set();
+            var tcs = new TaskCompletionSource<T>();
+            Action action = () => {
+                try {
+                    tcs.SetResult(func());
+                } catch (Exception ex) {
+                    tcs.SetException(ex);
                 }
+            };
 
-                while (!tmp.WaitOne(100)) {
-                    if (!UIThread.IsAlive) {
-                        ThrowPendingException(checkThread: false);
-                        Debug.Fail("UIThread was terminated");
-                        return res;
+            lock (_uiEvents) {
+                _uiEvents.Add(action);
+                _uiEvent.Set();
+            }
+
+            return WaitForTask(tcs.Task, timeout);
+        }
+
+        private T WaitForTask<T>(Task<T> task, int timeout) {
+            try {
+                if (timeout > 0) {
+                    if (!task.Wait(timeout)) {
+                        Assert.Fail("Timed out waiting for operation");
+                        throw new OperationCanceledException();
+                    }
+                } else {
+                    while (!task.Wait(100)) {
+                        if (!UIThread.IsAlive) {
+                            ThrowPendingException(checkThread: false);
+                            Debug.Fail("UIThread was terminated");
+                            return default(T);
+                        }
                     }
                 }
+            } catch (AggregateException ae) when (ae.InnerException != null) {
+                throw ae.InnerException;
             }
             ThrowPendingException(checkThread: false);
-            return res;
+            return task.Result;
         }
 
 
@@ -467,13 +485,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-#region Composition Container Initialization
+        #region Composition Container Initialization
 
         private CompositionContainer CreateCompositionContainer() {
             var container = new CompositionContainer(CachedInfo.Catalog);
-            container.ComposeExportedValue<MockVs>(this);
-            var batch = new CompositionBatch();
 
+            var batch = new CompositionBatch();
+            batch.AddExportedValue(this);
             container.Compose(batch);
 
             return container;
@@ -491,8 +509,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var _excludedAssemblies = new HashSet<string>(new string[] {
                     "Microsoft.VisualStudio.Text.Internal.dll",
                     "Microsoft.VisualStudio.Utilities.dll",
+                    "Microsoft.VisualStudio.Validation.dll",
                     "Microsoft.VisualStudio.Workspace.dll",
-                    "Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll"
+                    "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
@@ -731,7 +750,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     guid = VSConstants.VSStd2K;
                     Exec(ref guid, (int)VSConstants.VSStd2KCmdID.TAB, 0, IntPtr.Zero, IntPtr.Zero);
                     break;
-                case Key.Delete: 
+                case Key.Delete:
                     guid = VSConstants.VSStd2K;
                     Exec(ref guid, (int)VSConstants.VSStd2KCmdID.DELETE, 0, IntPtr.Zero, IntPtr.Zero);
                     break;

@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Intellisense {
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
     [Export(typeof(IQuickInfoSourceProvider)), ContentType(PythonCoreConstants.ContentType), Order, Name("Python Quick Info Source")]
     class QuickInfoSourceProvider : IQuickInfoSourceProvider {
         private readonly IServiceProvider _serviceProvider;
@@ -35,4 +36,5 @@ namespace Microsoft.PythonTools.Intellisense {
             return new QuickInfoSource(textBuffer);
         }
     }
+#pragma warning restore 618
 }

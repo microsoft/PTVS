@@ -302,9 +302,11 @@ namespace TestUtilities.UI.Python {
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {
-                    factory.InstallPip();
+                    var pm = OptionsService.GetPackageManagers(factory).FirstOrDefault();
+                    var ui = new TestPackageManagerUI();
+                    pm.PrepareAsync(ui, CancellationTokens.After60s).WaitAndUnwrapExceptions();
                     foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
-                        factory.PipInstall("-U " + package);
+                        pm.InstallAsync(new PackageSpec(package), ui, CancellationTokens.After60s).WaitAndUnwrapExceptions();
                     }
                 }
 

@@ -23,43 +23,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class FromImportStatement : Statement {
         private static readonly string[] _star = new[] { "*" };
-        private readonly ModuleName _root;
-        private readonly NameExpression[] _names;
-        private readonly NameExpression[] _asNames;
-        private readonly bool _fromFuture;
-        private readonly bool _forceAbsolute;
-
         private PythonVariable[] _variables;
 
-        public FromImportStatement(ModuleName root, NameExpression/*!*/[] names, NameExpression[] asNames, bool fromFuture, bool forceAbsolute) {
-            _root = root;
-            _names = names;
-            _asNames = asNames;
-            _fromFuture = fromFuture;
-            _forceAbsolute = forceAbsolute;
+        public FromImportStatement(ModuleName root, NameExpression/*!*/[] names, NameExpression[] asNames, bool fromFuture, bool forceAbsolute, int importIndex) {
+            Root = root;
+            Names = names;
+            AsNames = asNames;
+            IsFromFuture = fromFuture;
+            ForceAbsolute = forceAbsolute;
+            ImportIndex = importIndex;
         }
 
-        public DottedName Root {
-            get { return _root; }
-        }
-
-        public bool IsFromFuture {
-            get { return _fromFuture; }
-        }
-
-        public bool ForceAbsolute {
-            get {
-                return _forceAbsolute;
-            }
-        }
-
-        public IList<NameExpression/*!*/> Names {
-            get { return _names; }
-        }
-
-        public IList<NameExpression> AsNames {
-            get { return _asNames; }
-        }
+        public ModuleName Root { get; }
+        public bool IsFromFuture { get; }
+        public bool ForceAbsolute { get; }
+        public IList<NameExpression/*!*/> Names { get; }
+        public IList<NameExpression> AsNames { get; }
+        public int ImportIndex { get; }
 
         /// <summary>
         /// Gets the variables associated with each imported name.
@@ -91,19 +71,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <param name="index">The index in Names of the import to be removed.</param>
         /// </summary>
         public FromImportStatement RemoveImport(PythonAst ast, int index) {
-            if (index < 0 || index >= _names.Length) {
+            if (index < 0 || index >= Names.Count) {
                 throw new ArgumentOutOfRangeException("index");
             }
             if (ast == null) {
                 throw new ArgumentNullException("ast");
             }
 
-            NameExpression[] names = new NameExpression[_names.Length - 1];
-            NameExpression[] asNames = _asNames == null ? null : new NameExpression[_asNames.Length - 1];
+            NameExpression[] names = new NameExpression[Names.Count - 1];
+            NameExpression[] asNames = AsNames == null ? null : new NameExpression[AsNames.Count - 1];
             var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
             List<string> newAsNameWhiteSpace = new List<string>();
+            int importIndex = ImportIndex;
             int asIndex = 0;
-            for (int i = 0, write = 0; i < _names.Length; i++) {
+            for (int i = 0, write = 0; i < Names.Count; i++) {
                 bool includingCurrentName = i != index;
 
                 // track the white space, this needs to be kept in sync w/ ToCodeString and how the
@@ -136,10 +117,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
 
                 if (includingCurrentName) {
-                    names[write] = _names[i];
+                    names[write] = Names[i];
 
-                    if (_asNames != null) {
-                        asNames[write] = _asNames[i];
+                    if (AsNames != null) {
+                        asNames[write] = AsNames[i];
                     }
 
                     write++;
@@ -154,7 +135,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         }
                     }
 
-                    if (_asNames[i].Name.Length != 0) {
+                    if (AsNames[i].Name.Length != 0) {
                         if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             if (i != index) {
                                 newAsNameWhiteSpace.Add(asNameWhiteSpace[asIndex++]);
@@ -173,7 +154,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 newAsNameWhiteSpace.Add(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
             }
 
-            var res = new FromImportStatement(_root, names, asNames, IsFromFuture, ForceAbsolute);
+            var res = new FromImportStatement(Root, names, asNames, IsFromFuture, ForceAbsolute, importIndex);
             ast.CopyAttributes(this, res);
             ast.SetAttribute(res, NodeAttributes.NamesWhiteSpace, newAsNameWhiteSpace.ToArray());
 
@@ -195,7 +176,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
                 var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
                 int asIndex = 0;
-                for (int i = 0; i < _names.Length; i++) {
+                for (int i = 0; i < Names.Count; i++) {
                     if (i > 0) {
                         if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
@@ -209,17 +190,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(' ');
                     }
 
-                    _names[i].AppendCodeString(res, ast, format);
+                    Names[i].AppendCodeString(res, ast, format);
                     if (AsNames != null && AsNames[i] != null) {
                         if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
                         }
                         res.Append("as");
-                        if (_asNames[i].Name.Length != 0) {
+                        if (AsNames[i].Name.Length != 0) {
                             if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                                 res.Append(asNameWhiteSpace[asIndex++]);
                             }
-                            _asNames[i].AppendCodeString(res, ast, format);
+                            AsNames[i].AppendCodeString(res, ast, format);
                         } else {
                             asIndex++;
                         }

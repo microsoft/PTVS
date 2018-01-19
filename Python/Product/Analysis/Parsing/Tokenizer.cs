@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -225,12 +226,9 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public void Uninitialize() {
-            if (_reader != null) {
-                _reader.Dispose();
-                _reader = null;
-            }
             _start = _end = 0;
             _position = 0;
+            _reader = null;
         }
 
         public TokenInfo ReadToken() {
@@ -2044,7 +2042,7 @@ namespace Microsoft.PythonTools.Parsing {
                             // the same way (i.e. has the same mix of spaces and
                             // tabs etc.).
                             if (IndentationInconsistencySeverity != Severity.Ignore) {
-                                CheckIndent(sb, noAllocWhiteSpace);
+                                CheckIndent(sb, noAllocWhiteSpace, _tokenStartIndex + startingKind.GetSize());
                             }
                         }
 
@@ -2079,7 +2077,7 @@ namespace Microsoft.PythonTools.Parsing {
             return ((StringBuilder)previousIndent).Length;
         }
 
-        private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace) {
+        private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace, int indentStart) {
             if (_state.Indent[_state.IndentLevel] > 0) {
                 var previousIndent = _state.IndentFormat[_state.IndentLevel];
                 int checkLength;
@@ -2096,12 +2094,10 @@ namespace Microsoft.PythonTools.Parsing {
                         neq = sb[i] != previousIndent[i];
                     }
                     if (neq) {
-                        SourceLocation eoln_token_end = BufferTokenEnd;
-
                         // We've hit a difference in the way we're indenting, report it.
                         _errors.Add("inconsistent whitespace",
-                            this._newLineLocations.ToArray(),
-                            _tokenStartIndex + 1,
+                            _newLineLocations.ToArray(),
+                            indentStart,
                             _tokenEndIndex,
                             ErrorCodes.TabError, _indentationInconsistencySeverity
                         );
@@ -2666,9 +2662,10 @@ namespace Microsoft.PythonTools.Parsing {
         CarriageReturnLineFeed
     }
 
+    [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
     public struct NewLineLocation : IComparable<NewLineLocation> {
-        private int _endIndex;
-        private NewLineKind _kind;
+        private readonly int _endIndex;
+        private readonly NewLineKind _kind;
 
         public NewLineLocation(int lineEnd, NewLineKind kind) {
             _endIndex = lineEnd;
@@ -2690,9 +2687,10 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static SourceLocation IndexToLocation(NewLineLocation[] lineLocations, int index) {
-            if (lineLocations == null) {
+            if (lineLocations == null || index == 0) {
                 return new SourceLocation(index, 1, 1);
             }
+
             int match = Array.BinarySearch(lineLocations, new NewLineLocation(index, NewLineKind.None));
             if (match < 0) {
                 // If our index = -1, it means we're on the first line.
@@ -2704,7 +2702,9 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
-            return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
+            int line = match + 2;
+            int col = index - lineLocations[match].EndIndex + 1;
+            return new SourceLocation(index, line, col);
         }
 
         public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location, int endIndex) {
@@ -2729,11 +2729,33 @@ namespace Microsoft.PythonTools.Parsing {
                 return lineLocations[line].EndIndex;
             }
 
+            if (endIndex < 0) {
+                endIndex = lineLocations[lineLocations.Length - 1].EndIndex;
+            }
+
             return (int)Math.Min((long)index + location.Column - 1, endIndex);
         }
+
+        private static char[] _lineSeparators = new[] { '\r', '\n' };
+
+        public static NewLineLocation FindNewLine(string text, int start) {
+            int i = text.IndexOfAny(_lineSeparators, start);
+            if (i < start) {
+                return new NewLineLocation(text.Length, NewLineKind.None);
+            }
+            if (text[i] == '\n') {
+                return new NewLineLocation(i + 1, NewLineKind.LineFeed);
+            }
+            if (text.Length > i + 1 && text[i + 1] == '\n') {
+                return new NewLineLocation(i + 2, NewLineKind.CarriageReturnLineFeed);
+            }
+            return new NewLineLocation(i + 1, NewLineKind.CarriageReturn);
+        }
+
+        public override string ToString() => $"<NewLineLocation({_endIndex}, NewLineKind.{_kind})>";
     }
 
-    static class NewLineKindExtensions {
+    public static class NewLineKindExtensions {
         public static int GetSize(this NewLineKind kind) {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;

@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 
+using System;
+using Microsoft.PythonTools.Parsing;
+
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Well known built-in types that the analysis engine needs for doing interpretation.
@@ -109,7 +112,7 @@ namespace Microsoft.PythonTools.Interpreter {
         CallableIterator,
     }
 
-    internal static class BuiltinTypeIdExtensions {
+    public static class BuiltinTypeIdExtensions {
         /// <summary>
         /// Indicates whether an ID should be remapped by an interpreter.
         /// </summary>
@@ -119,10 +122,75 @@ namespace Microsoft.PythonTools.Interpreter {
                 (int)id > (int)LastTypeId;
         }
 
-        public static BuiltinTypeId LastTypeId {
-            get {
-                return BuiltinTypeId.CallableIterator;
-            }
+        public static BuiltinTypeId LastTypeId => BuiltinTypeId.CallableIterator;
+
+        public static string GetModuleName(this BuiltinTypeId id, Version version) {
+            return id.GetModuleName(version.Major == 3);
         }
+
+        public static string GetModuleName(this BuiltinTypeId id, PythonLanguageVersion languageVersion) {
+            return id.GetModuleName(languageVersion.IsNone() || languageVersion.Is3x());
+        }
+
+        private static string GetModuleName(this BuiltinTypeId id, bool is3x) {
+            return is3x ? "builtins" : "__builtin__";
+        }
+
+        public static string GetTypeName(this BuiltinTypeId id, Version version) {
+            return id.GetTypeName(version.Major == 3);
+        }
+
+        public static string GetTypeName(this BuiltinTypeId id, PythonLanguageVersion languageVersion) {
+            return id.GetTypeName(languageVersion.IsNone() || languageVersion.Is3x());
+        }
+
+        private static string GetTypeName(this BuiltinTypeId id, bool is3x) {
+            string name;
+            switch (id) {
+                case BuiltinTypeId.Bool: name = "bool"; break;
+                case BuiltinTypeId.Complex: name = "complex"; break;
+                case BuiltinTypeId.Dict: name = "dict"; break;
+                case BuiltinTypeId.Float: name = "float"; break;
+                case BuiltinTypeId.Int: name = "int"; break;
+                case BuiltinTypeId.List: name = "list"; break;
+                case BuiltinTypeId.Long: name = is3x ? "int" : "long"; break;
+                case BuiltinTypeId.Object: name = "object"; break;
+                case BuiltinTypeId.Set: name = "set"; break;
+                case BuiltinTypeId.Str: name = "str"; break;
+                case BuiltinTypeId.Unicode: name = is3x ? "str" : "unicode"; break;
+                case BuiltinTypeId.Bytes: name = is3x ? "bytes" : "str"; break;
+                case BuiltinTypeId.Tuple: name = "tuple"; break;
+                case BuiltinTypeId.Type: name = "type"; break;
+
+                case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
+                case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
+                case BuiltinTypeId.DictKeys: name = "dict_keys"; break;
+                case BuiltinTypeId.DictValues: name = "dict_values"; break;
+                case BuiltinTypeId.DictItems: name = "dict_items"; break;
+                case BuiltinTypeId.Function: name = "function"; break;
+                case BuiltinTypeId.Generator: name = "generator"; break;
+                case BuiltinTypeId.NoneType: name = "NoneType"; break;
+                case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
+                case BuiltinTypeId.Module: name = "module_type"; break;
+                case BuiltinTypeId.ListIterator: name = "list_iterator"; break;
+                case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
+                case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
+                case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
+                case BuiltinTypeId.UnicodeIterator: name = is3x ? "str_iterator" : "unicode_iterator"; break;
+                case BuiltinTypeId.BytesIterator: name = is3x ? "bytes_iterator" : "str_iterator"; break;
+                case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
+
+                case BuiltinTypeId.Property: name = "property"; break;
+                case BuiltinTypeId.ClassMethod: name = "classmethod"; break;
+                case BuiltinTypeId.StaticMethod: name = "staticmethod"; break;
+                case BuiltinTypeId.FrozenSet: name = "frozenset"; break;
+
+                case BuiltinTypeId.Unknown:
+                default:
+                    return null;
+            }
+            return name;
+        }
+
     }
 }

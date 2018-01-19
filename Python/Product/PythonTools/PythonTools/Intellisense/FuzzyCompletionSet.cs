@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 .Where(c => c != null && !string.IsNullOrWhiteSpace(c.DisplayText))
                 .OrderBy(c => c, comparer)
             );
-            _comparer = new FuzzyStringMatcher(options.SearchMode);
+            _comparer = new FuzzyStringMatcher(FuzzyMatchMode.Default);
 
             _shouldFilter = options.FilterCompletions;
             _shouldHideAdvanced = options.HideAdvancedMembers && !_completions.All(IsAdvanced);

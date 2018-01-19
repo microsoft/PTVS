@@ -20,5 +20,6 @@ namespace Microsoft.PythonTools.Parsing {
         Warning,
         Error,
         FatalError,
+        Information
     }
 }

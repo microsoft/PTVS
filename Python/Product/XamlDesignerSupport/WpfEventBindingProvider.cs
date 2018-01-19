@@ -19,9 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 

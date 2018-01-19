@@ -64,19 +64,26 @@ namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IAnalysisEntryService))]
     [Export(typeof(AnalysisEntryService))]
     class AnalysisEntryService : IAnalysisEntryService {
-        private readonly PythonEditorServices _services;
-        private readonly IWpfDifferenceViewerFactoryService _diffService;
+        private readonly Lazy<PythonEditorServices> _services;
+        private IWpfDifferenceViewerFactoryService _diffService;
 
         private static readonly object _waitForAnalyzerKey = new object();
 
         [ImportingConstructor]
-        public AnalysisEntryService([Import] PythonEditorServices services) {
+        public AnalysisEntryService([Import] Lazy<PythonEditorServices> services) {
             _services = services;
+        }
 
-            try {
-                _diffService = _services.ComponentModel.GetService<IWpfDifferenceViewerFactoryService>();
-            } catch (CompositionException) {
-            } catch (ImportCardinalityMismatchException) {
+        private IWpfDifferenceViewerFactoryService DifferenceViewerFactory {
+            get {
+                if (_diffService == null) {
+                    try {
+                        _diffService = _services.Value.ComponentModel.GetService<IWpfDifferenceViewerFactoryService>();
+                    } catch (CompositionException) {
+                    } catch (ImportCardinalityMismatchException) {
+                    }
+                }
+                return _diffService;
             }
         }
 
@@ -103,7 +110,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (textView != null) {
                 // If we have a difference viewer we'll match the LHS w/ the RHS
-                var viewer = _diffService?.TryGetViewerForTextView(textView);
+                var viewer = DifferenceViewerFactory?.TryGetViewerForTextView(textView);
                 if (viewer != null) {
                     if (TryGetAnalysisEntry(viewer.DifferenceBuffer.RightBuffer, out entry)) {
                         return true;
@@ -135,7 +142,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                entry = evaluator.Analyzer?.GetAnalysisEntryFromPath(evaluator.AnalysisFilename);
+                entry = evaluator.Analyzer?.GetAnalysisEntryFromUri(evaluator.DocumentUri);
                 if (entry != null) {
                     return true;
                 }
@@ -198,7 +205,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = buffer.GetFilePath();
             if (path != null) {
-                analyzer = _services.Site.GetProjectFromFile(path)?.GetAnalyzer();
+                analyzer = _services.Value.Site.GetProjectFromFile(path)?.GetAnalyzer();
                 if (analyzer is VsProjectAnalyzer vpa) {
                     return vpa;
                 }
@@ -209,7 +216,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IAnalysisEntryService members
 
-        public ProjectAnalyzer DefaultAnalyzer => _services.Python?.DefaultAnalyzer;
+        public ProjectAnalyzer DefaultAnalyzer => _services.Value.Python?.DefaultAnalyzer;
 
         public bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename) {
             // If we have an analyzer in Properties, we will use that
@@ -233,7 +240,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
                 analyzer = evaluator.Analyzer;
-                filename = evaluator.AnalysisFilename;
+                filename = evaluator.DocumentUri.IsFile ? evaluator.DocumentUri.LocalPath : null;
                 return analyzer != null;
             }
 
@@ -241,7 +248,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = PythonTextBufferInfo.TryGetForBuffer(textBuffer)?.Filename ?? textBuffer.GetFilePath();
             if (path != null) {
-                analyzer = _services.Site.GetUIThread().Invoke(() => _services.Site.GetProjectFromFile(path)?.GetAnalyzer());
+                analyzer = _services.Value.Site.GetUIThread().Invoke(() => _services.Value.Site.GetProjectFromFile(path)?.GetAnalyzer());
                 if (analyzer != null) {
                     // Don't check whether the analyzer knows about us yet,
                     // since this request is probably finding out which analyzer
@@ -268,7 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (textView != null) {
                 // If we have a difference viewer we'll match the LHS w/ the RHS
-                var viewer = _diffService?.TryGetViewerForTextView(textView);
+                var viewer = DifferenceViewerFactory?.TryGetViewerForTextView(textView);
                 if (viewer != null) {
                     if (TryGetAnalyzer(viewer.DifferenceBuffer.RightBuffer, out analyzer, out filename)) {
                         return true;
@@ -292,7 +299,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var seen = new HashSet<VsProjectAnalyzer>();
 
             // If we have an open document, return that
-            var buffer = _services.Site.GetTextBufferFromOpenFile(filename);
+            var buffer = _services.Value.Site.GetTextBufferFromOpenFile(filename);
             if (buffer != null) {
                 var analyzer = GetVsAnalyzer(null, buffer);
                 if (analyzer != null && seen.Add(analyzer)) {
@@ -301,7 +308,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             // Yield all loaded projects containing the file
-            var sln = (IVsSolution)_services.Site.GetService(typeof(SVsSolution));
+            var sln = (IVsSolution)_services.Value.Site.GetService(typeof(SVsSolution));
             if (sln != null) {
                 if (Path.IsPathRooted(filename)) {
                     foreach (var project in sln.EnumerateLoadedPythonProjects()) {

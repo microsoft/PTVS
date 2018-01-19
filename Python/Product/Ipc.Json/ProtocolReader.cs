@@ -53,8 +53,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             var line = _buffer.Take(newLineIndex).ToArray();
             _buffer.RemoveRange(0, newLineIndex + 2);
-            var text = Encoding.ASCII.GetString(line);
-            return text;
+            return Encoding.ASCII.GetString(line);
         }
 
         /// <summary>

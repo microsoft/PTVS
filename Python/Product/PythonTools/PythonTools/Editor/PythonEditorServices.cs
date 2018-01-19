@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.Text.PatternMatching;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
@@ -51,11 +52,12 @@ namespace Microsoft.PythonTools.Editor {
         [ImportingConstructor]
         public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
             Site = site;
-            ComponentModel = Site.GetComponentModel();
+            _componentModel = new Lazy<IComponentModel>(() => site.GetComponentModel());
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
             _mismatchedEncodingSquiggleProvider = new Lazy<InvalidEncodingSquiggleProvider>(CreateSquiggleProvider<InvalidEncodingSquiggleProvider>);
+            _previewChangesService = new Lazy<PreviewChangesService>(() => _componentModel.Value.GetService<PreviewChangesService>());
         }
 
         public readonly IServiceProvider Site;
@@ -83,7 +85,8 @@ namespace Microsoft.PythonTools.Editor {
             return PythonTextBufferInfo.ForBuffer(this, textBuffer);
         }
 
-        public IComponentModel ComponentModel { get; }
+        private readonly Lazy<IComponentModel> _componentModel;
+        public IComponentModel ComponentModel => _componentModel.Value;
 
         [Import]
         public IClassificationTypeRegistryService ClassificationTypeRegistryService;
@@ -113,8 +116,10 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public ISignatureHelpBroker SignatureHelpBroker = null;
 
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
         [Import]
         public IQuickInfoBroker QuickInfoBroker = null;
+#pragma warning restore 618
 
         [Import]
         public IPeekBroker PeekBroker = null;
@@ -122,11 +127,24 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public IIncrementalSearchFactoryService IncrementalSearch = null;
 
+        // Cannot compose this service for mocks, so it's a traditional Lazy
+        private Lazy<PreviewChangesService> _previewChangesService = null;
+        public PreviewChangesService PreviewChangesService => _previewChangesService.Value;
+
         [Import]
         public ITextMarkerProviderFactory TextMarkerProviderFactory = null;
 
         [Import]
         public ITextBufferUndoManagerProvider UndoManagerFactory = null;
+
+        [Import]
+        public IGlyphService GlyphService = null;
+
+#if !USE_15_5
+        [Import(AllowDefault = true)]
+        private Lazy<IPatternMatcherFactory> _patternMatcherFactory = null;
+        public IPatternMatcherFactory PatternMatcherFactory => _patternMatcherFactory.Value;
+#endif
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

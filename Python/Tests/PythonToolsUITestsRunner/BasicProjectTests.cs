@@ -174,6 +174,12 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void AddProjectReference() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.AddProjectReference));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void DotNetReferences() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetReferences));
         }

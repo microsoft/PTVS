@@ -192,7 +192,7 @@ namespace Microsoft.PythonTools {
         /// </summary>
         internal void EnsureCompletionDb(IPythonInterpreterFactory factory) {
             if (GeneralOptions.AutoAnalyzeStandardLibrary) {
-                var withDb = factory as IPythonInterpreterFactoryWithDatabase;
+                var withDb = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
                 if (withDb != null && !withDb.IsCurrent) {
                     withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                 }

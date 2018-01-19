@@ -89,6 +89,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Page Include="CondaExtension.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -167,6 +171,9 @@
     <Compile Include="..\PythonTools\PythonTools\Intellisense\FuzzyStringMatcher.cs">
       <Link>FuzzyStringMatcher.cs</Link>
     </Compile>
+    <Compile Include="CondaExtension.xaml.cs">
+      <DependentUpon>CondaExtension.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ConfigurationExtension.xaml.cs">
       <DependentUpon>ConfigurationExtension.xaml</DependentUpon>
     </Compile>
@@ -215,6 +222,10 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Microsoft.PythonTools.Analyzer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>

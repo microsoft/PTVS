@@ -48,6 +48,10 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         PythonPackage,
         /// <summary>
+        /// The analyzer is initializing for project, REPL, etc.
+        /// </summary>
+        AnalysisInitializing,
+        /// <summary>
         /// The number of seconds that it took to analyze a DB
         /// </summary>
         AnalysisCompleted,

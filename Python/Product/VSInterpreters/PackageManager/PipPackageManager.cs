@@ -28,15 +28,17 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PipPackageManager : IPackageManager, IDisposable {
+    sealed class PipPackageManager : IPackageManager, IDisposable {
         private IPythonInterpreterFactory _factory;
         private PipPackageCache _cache;
-        private readonly Timer _refreshIsCurrentTrigger;
-        private readonly List<FileSystemWatcher> _libWatchers;
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
         private bool _isReady, _everCached;
-        private readonly string[] _extraInterpreterArgs;
+
+        private List<FileSystemWatcher> _libWatchers;
+        private Timer _refreshIsCurrentTrigger;
+
+        private readonly PipPackageManagerCommands _commands;
 
         internal readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
@@ -55,22 +57,14 @@ namespace Microsoft.PythonTools.Interpreter {
             "^(?!__pycache__)(?<name>[a-z0-9_]+)(-.+)?",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-
         public PipPackageManager(
-            bool allowFileSystemWatchers = true,
-            IEnumerable<string> extraInterpreterArgs = null
+            IPythonInterpreterFactory factory,
+            PipPackageManagerCommands commands,
+            int priority
         ) {
             _packages = new List<PackageSpec>();
-            _extraInterpreterArgs = extraInterpreterArgs?.ToArray() ?? Array.Empty<string>();
             _pipListHasFormatOption = true;
 
-            if (allowFileSystemWatchers) {
-                _libWatchers = new List<FileSystemWatcher>();
-                _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
-            }
-        }
-
-        public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
             if (factory == null) {
                 throw new ArgumentNullException(nameof(factory));
             }
@@ -79,53 +73,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             _factory = factory;
+            _commands = commands ?? new PipPackageManagerCommands();
+            Priority = priority;
 
             _cache = PipPackageCache.GetCache();
-
-            if (_libWatchers != null) {
-                CreateLibraryWatchers().DoNotWait();
-            }
-
-            Task.Delay(100).ContinueWith(async t => {
-                try {
-                    await UpdateIsReadyAsync(false, CancellationToken.None);
-                } catch (OperationCanceledException) {
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                }
-            }).DoNotWait();
         }
+
+        public string UniqueKey => "pip";
+        public int Priority { get; }
 
         public IPythonInterpreterFactory Factory => _factory;
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~PipPackageManager() {
-            Dispose(false);
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_refreshIsCurrentTrigger")]
-        protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (disposing) {
-                if (_libWatchers != null) {
-                    lock (_libWatchers) {
-                        foreach (var w in _libWatchers) {
-                            w.EnableRaisingEvents = false;
-                            w.Dispose();
-                        }
-                    }
-                }
-                _refreshIsCurrentTrigger?.Dispose();
-                _working.Dispose();
-            }
+            DisableNotifications();
+            _working.Dispose();
         }
 
         private void AbortOnInvalidConfiguration() {
@@ -162,9 +128,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler IsReadyChanged;
 
         private async Task UpdateIsReadyAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
-            var args = _extraInterpreterArgs
-                .Concat(new[] { "-c", "import pip" });
-
             IDisposable workingLock = null;
             if (!alreadyHasLock) {
                 try {
@@ -176,7 +139,7 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
-                    args,
+                    _commands.CheckIsReady(),
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
@@ -207,15 +170,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             var operation = "pip_downloader.py";
-            var args = _extraInterpreterArgs
-                .Concat(new[] { PythonToolsInstallPath.GetFile("pip_downloader.py", GetType().Assembly) });
             using (await _working.LockAsync(cancellationToken)) {
                 ui?.OnOperationStarted(this, operation);
                 ui?.OnOutputTextReceived(this, Strings.InstallingPipStarted);
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
-                    args,
+                    _commands.Prepare(),
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
@@ -241,25 +202,15 @@ namespace Microsoft.PythonTools.Interpreter {
             using (await _working.LockAsync(cancellationToken)) {
                 bool success = false;
 
-                var args = _extraInterpreterArgs.ToList();
-
-                if (!SupportsDashMPip) {
-                    args.Add("-c");
-                    args.Add("\"import pip; pip.main()\"");
-                } else {
-                    args.Add("-m");
-                    args.Add("pip");
-                }
-                string argStr = (string.Join(" ", args.Select(ProcessOutput.QuoteSingleArgument)) + " " + arguments).Trim();
-
-                var operation = argStr;
+                var args = string.Join(" ", _commands.Base().Select(ProcessOutput.QuoteSingleArgument)) + " " + arguments;
+                var operation = args.Trim();
                 ui?.OnOutputTextReceived(this, operation);
                 ui?.OnOperationStarted(this, Strings.ExecutingCommandStarted.FormatUI(arguments));
 
                 try {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
-                        new[] { argStr },
+                        new[] { args.Trim() },
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
@@ -295,20 +246,10 @@ namespace Microsoft.PythonTools.Interpreter {
             await AbortIfNotReady(cancellationToken);
 
             bool success = false;
-            var args = _extraInterpreterArgs.ToList();
 
-            if (!SupportsDashMPip) {
-                args.Add("-c");
-                args.Add("\"import pip; pip.main()\"");
-            } else {
-                args.Add("-m");
-                args.Add("pip");
-            }
-            args.Add("install");
-
-            args.Add(package.FullSpec);
-            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
+            var args = _commands.Install(package.FullSpec).ToArray();
             var operation = string.Join(" ", args);
+            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
 
             using (await _working.LockAsync(cancellationToken)) {
                 ui?.OnOperationStarted(this, operation);
@@ -353,21 +294,9 @@ namespace Microsoft.PythonTools.Interpreter {
             await AbortIfNotReady(cancellationToken);
 
             bool success = false;
-            var args = _extraInterpreterArgs.ToList();
-
-            if (!SupportsDashMPip) {
-                args.Add("-c");
-                args.Add("\"import pip; pip.main()\"");
-            } else {
-                args.Add("-m");
-                args.Add("pip");
-            }
-            args.Add("uninstall");
-            args.Add("-y");
-
-            args.Add(package.FullSpec);
-            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
+            var args = _commands.Uninstall(package.FullSpec).ToArray();
             var operation = string.Join(" ", args);
+            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
 
             try {
                 using (await _working.LockAsync(cancellationToken)) {
@@ -458,19 +387,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
-                var args = _extraInterpreterArgs.ToList();
-
-                if (!SupportsDashMPip) {
-                    args.Add("-c");
-                    args.Add("\"import pip; pip.main()\"");
-                } else {
-                    args.Add("-m");
-                    args.Add("pip");
-                }
-                args.Add("list");
-                if (_pipListHasFormatOption) {
-                    args.Add("--format=json");
-                }
+                var args = _pipListHasFormatOption ? _commands.ListJson() : _commands.List();
 
                 var concurrencyLock = alreadyHasConcurrencyLock ? null : await _concurrencyLock.LockAsync(cancellationToken);
                 try {
@@ -524,7 +441,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     if (packages == null) {
                         // Pip failed, so return a directory listing
-                        var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
+                        var paths = await LegacyDB.PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
 
                         packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
                             .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
@@ -550,6 +467,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
+            _factory.NotifyImportNamesChanged();
         }
 
         public async Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
@@ -598,6 +516,30 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (Interlocked.Decrement(ref _manager._suppressCount) == 0) {
                     _manager.WatchingLibrary = true;
                 }
+            }
+        }
+
+        public void EnableNotifications() {
+            if (_libWatchers == null) {
+                _libWatchers = new List<FileSystemWatcher>();
+                _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
+                CreateLibraryWatchers().DoNotWait();
+
+                UpdateIsReadyAsync(false, CancellationToken.None)
+                    .SilenceException<OperationCanceledException>()
+                    .DoNotWait();
+            }
+        }
+
+        public void DisableNotifications() {
+            if (_libWatchers != null) {
+                lock (_libWatchers) {
+                    foreach (var w in _libWatchers) {
+                        w.EnableRaisingEvents = false;
+                        w.Dispose();
+                    }
+                }
+                _refreshIsCurrentTrigger.Dispose();
             }
         }
 
@@ -653,23 +595,35 @@ namespace Microsoft.PythonTools.Interpreter {
         private async Task CreateLibraryWatchers() {
             Debug.Assert(_libWatchers != null, "Should not create watchers when suppressed");
 
-            IList<PythonLibraryPath> paths;
-            try {
-                paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
-            } catch (InvalidOperationException) {
-                return;
+            IReadOnlyList<string> paths = null;
+            string cachePath = null;
+
+            if (_factory is Ast.AstPythonInterpreterFactory astFactory) {
+                paths = await astFactory.GetSearchPathsAsync();
+            } else if (_factory is LegacyDB.PythonInterpreterFactoryWithDatabase dbFactory) {
+                cachePath = PathUtils.GetAbsoluteFilePath(dbFactory.DatabasePath, "database.path");
+            }
+
+            if (paths == null) {
+                try {
+                    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, cachePath))
+                        .Select(p => p.Path)
+                        .ToArray();
+                } catch (InvalidOperationException) {
+                    return;
+                }
             }
 
             paths = paths
-                .Where(p => Directory.Exists(p.Path))
-                .OrderBy(p => p.Path.Length)
+                .Where(p => Directory.Exists(p))
+                .OrderBy(p => p.Length)
                 .ToList();
 
             var watching = new List<string>();
             var watchers = new List<FileSystemWatcher>();
 
             foreach (var path in paths) {
-                if (watching.Any(p => PathUtils.IsSubpathOf(p, path.Path))) {
+                if (watching.Any(p => PathUtils.IsSubpathOf(p, path))) {
                     continue;
                 }
 
@@ -677,7 +631,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 try {
                     watcher = new FileSystemWatcher {
                         IncludeSubdirectories = true,
-                        Path = path.Path,
+                        Path = path,
                         NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
                     };
                     watcher.Created += OnChanged;
@@ -686,7 +640,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     watcher.Renamed += OnRenamed;
                     watcher.EnableRaisingEvents = true;
 
-                    watching.Add(path.Path);
+                    watching.Add(path);
                     watchers.Add(watcher);
                 } catch (IOException) {
                     // Raced with directory deletion. We normally handle the
@@ -725,6 +679,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
+            _factory.NotifyImportNamesChanged();
 
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
@@ -738,6 +693,8 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 await CacheInstalledPackagesAsync(false, false, cancellationToken);
             } catch (OperationCanceledException) {
+            } catch (FileNotFoundException) {
+                // Happens if we attempt to refresh an environment that was just deleted
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }

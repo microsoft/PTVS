@@ -28,8 +28,8 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this._condaEnvironments = new System.Windows.Forms.CheckBox();
             this._condaPackageManager = new System.Windows.Forms.CheckBox();
-            this._mustRestartLabel = new System.Windows.Forms.Label();
             this._useVsCodeDebugger = new System.Windows.Forms.CheckBox();
+            this._mustRestartLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -64,17 +64,17 @@ namespace Microsoft.PythonTools.Options {
             this._condaPackageManager.Name = "_condaPackageManager";
             this._condaPackageManager.UseVisualStyleBackColor = true;
             // 
-            // _mustRestartLabel
-            // 
-            resources.ApplyResources(this._mustRestartLabel, "_mustRestartLabel");
-            this._mustRestartLabel.Name = "_mustRestartLabel";
-            // 
             // _useVsCodeDebugger
             // 
             resources.ApplyResources(this._useVsCodeDebugger, "_useVsCodeDebugger");
             this._useVsCodeDebugger.AutoEllipsis = true;
             this._useVsCodeDebugger.Name = "_useVsCodeDebugger";
             this._useVsCodeDebugger.UseVisualStyleBackColor = true;
+            // 
+            // _mustRestartLabel
+            // 
+            resources.ApplyResources(this._mustRestartLabel, "_mustRestartLabel");
+            this._mustRestartLabel.Name = "_mustRestartLabel";
             // 
             // PythonExperimentalOptionsControl
             // 

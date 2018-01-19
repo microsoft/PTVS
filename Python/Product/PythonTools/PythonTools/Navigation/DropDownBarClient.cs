@@ -511,7 +511,7 @@ namespace Microsoft.PythonTools.Navigation {
                 return;
             }
 
-            var navigations = await _uiThread.InvokeTask(() => analysisEntry.Analyzer.GetNavigationsAsync(_textView));
+            var navigations = await _uiThread.InvokeTask(() => analysisEntry.Analyzer.GetNavigationsAsync(_textView.TextSnapshot));
             lock (_navigationsLock) {
                 _navigations = navigations;
                 for (int i = 0; i < _curSelection.Length; i++) {

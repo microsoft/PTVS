@@ -46,6 +46,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return CheckAssign();
         }
 
+        public int GetIndexOfFrom(PythonAst ast) {
+            return StartIndex + 5 + this.GetSecondWhiteSpace(ast).Length;
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             res.Append(this.GetPreceedingWhiteSpace(ast));
             res.Append("yield");

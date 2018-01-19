@@ -25,9 +25,10 @@ using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
-    class UIThread : UIThreadBase {
+    class UIThread : UIThreadBase, IDisposable {
         private readonly JoinableTaskContext _context;
         private readonly JoinableTaskFactory _factory;
+        private readonly bool _needDispose;
 
         private UIThread() {
             try {
@@ -35,6 +36,7 @@ namespace Microsoft.VisualStudioTools {
                 _context = _factory.Context;
                 Trace.TraceInformation("Using TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
             } catch (NullReferenceException) {
+                _needDispose = true;
                 _context = new JoinableTaskContext();
                 _factory = new JoinableTaskFactory(_context);
                 Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
@@ -44,6 +46,23 @@ namespace Microsoft.VisualStudioTools {
         public static void EnsureService(IServiceContainer container) {
             if (container.GetService(typeof(UIThreadBase)) == null) {
                 container.AddService(typeof(UIThreadBase), new UIThread(), true);
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~UIThread() {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                if (_needDispose) {
+                    _context.Dispose();
+                }
             }
         }
 

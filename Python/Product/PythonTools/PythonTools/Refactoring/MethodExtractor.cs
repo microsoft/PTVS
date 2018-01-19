@@ -16,7 +16,10 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
@@ -25,11 +28,11 @@ namespace Microsoft.PythonTools.Refactoring {
 
     class MethodExtractor {
         private readonly ITextView _view;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly PythonEditorServices _services;
 
-        public MethodExtractor(IServiceProvider serviceProvider, ITextView textView) {
+        public MethodExtractor(PythonEditorServices services, ITextView textView) {
             _view = textView;
-            _serviceProvider = serviceProvider;
+            _services = services;
         }
 
         public static bool? CanExtract(ITextView view) {
@@ -47,32 +50,27 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public async Task<bool> ExtractMethod(IExtractMethodInput input) {
-            var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
-            if (analyzer == null) {
+            var buffer = _view.GetPythonBufferAtCaret();
+            var bi = _services.GetBufferInfo(buffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry?.Analyzer == null) {
                 return false;
             }
 
-            var buffer = _view.GetPythonBufferAtCaret();
             var snapshot = buffer.CurrentSnapshot;
-            var projectFile = _view.GetAnalysisAtCaret(_serviceProvider);
-            if (projectFile == null) {
-                return false;
-            }
             
             // extract once to validate the selection
-            var extractInfo = await analyzer.ExtractMethodAsync(
-                projectFile,
-                buffer,
+            var extract = await entry.Analyzer.ExtractMethodAsync(
+                bi,
                 _view,
                 "method_name",
                 null,
                 null
             );
-            if (extractInfo == null) {
+            if (extract == null) {
                 return false;
             }
 
-            var extract = extractInfo.Data;
             if (extract.cannotExtractMsg != null) {
                 input.CannotExtract(extract.cannotExtractMsg);
                 return false;
@@ -82,12 +80,12 @@ namespace Microsoft.PythonTools.Refactoring {
                 return false;
             }
 
-            if (extract.startIndex != null && extract.endIndex != null) {
+            if (extract.startLine > 0 && extract.endLine > 0) {
                 var selectionSpan = _view.BufferGraph.MapUpToBuffer(
-                    new SnapshotSpan(
-                        snapshot,
-                        Span.FromBounds(extract.startIndex.Value, extract.endIndex.Value)
-                    ),
+                    new SourceSpan(
+                        new SourceLocation(extract.startLine, extract.startCol),
+                        new SourceLocation(extract.endLine, extract.endCol)
+                    ).ToSnapshotSpan(snapshot),
                     SpanTrackingMode.EdgeInclusive,
                     _view.TextBuffer
                 );
@@ -98,30 +96,30 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            var info = input.GetExtractionInfo(new ExtractedMethodCreator(analyzer, projectFile, _view, buffer, extract));
+            var info = input.GetExtractionInfo(new ExtractedMethodCreator(bi, _view, extract));
             if (info == null) {
                 // user cancelled extract method
                 return false;
             }
 
             // extract again to get the final result...
-            extractInfo = await analyzer.ExtractMethodAsync(
-                projectFile,
-                buffer,
+            extract = await entry.Analyzer.ExtractMethodAsync(
+                bi,
                 _view,
                 info.Name,
                 info.Parameters,
                 info.TargetScope?.Scope.id
             );
 
-            if (extractInfo == null) {
+            if (extract == null) {
                 return false;
             }
 
             VsProjectAnalyzer.ApplyChanges(
-                extractInfo.Data.changes,
+                extract.changes,
                 buffer,
-                extractInfo.GetTracker(extractInfo.Data.version)
+                bi.LocationTracker,
+                extract.version
             );
 
             return true;
@@ -129,30 +127,25 @@ namespace Microsoft.PythonTools.Refactoring {
     }
 
     class ExtractedMethodCreator {
-        private readonly VsProjectAnalyzer _analyzer;
-        private readonly AnalysisEntry _analysisEntry;
+        private readonly PythonTextBufferInfo _buffer;
         private readonly ITextView _view;
-        private readonly ITextBuffer _buffer;
         public AP.ExtractMethodResponse LastExtraction;
 
-        public ExtractedMethodCreator(VsProjectAnalyzer analyzer, AnalysisEntry file, ITextView view, ITextBuffer buffer, AP.ExtractMethodResponse initialExtraction) {
-            _analyzer = analyzer;
-            _analysisEntry = file;
-            _view = view;
+        public ExtractedMethodCreator(PythonTextBufferInfo buffer, ITextView view, AP.ExtractMethodResponse initialExtraction) {
             _buffer = buffer;
+            _view = view;
             LastExtraction = initialExtraction;
         }
         
 
         internal async Task<AP.ExtractMethodResponse> GetExtractionResult(ExtractMethodRequest info) {
-            return LastExtraction = (await _analyzer.ExtractMethodAsync(
-                _analysisEntry,
+            return LastExtraction = (await _buffer.AnalysisEntry.Analyzer.ExtractMethodAsync(
                 _buffer,
                 _view,
                 info.Name,
                 info.Parameters,
                 info.TargetScope?.Scope.id
-            ).ConfigureAwait(false))?.Data;
+            ).ConfigureAwait(false));
         }
     }
 }

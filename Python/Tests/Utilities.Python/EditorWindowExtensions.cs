@@ -16,20 +16,22 @@
 
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {
     static class EditorWindowExtensions {
-        public static async Task WaitForAnalyzerAtCaretAsync(this EditorWindow doc) {
+        public static async Task<VsProjectAnalyzer> WaitForAnalyzerAtCaretAsync(this EditorWindow doc) {
             for (int i = 0; i < 100; i++) {
                 var analyzer = doc.TextView.GetAnalyzerAtCaret(doc.VisualStudioApp.ServiceProvider);
                 if (analyzer != null) {
-                    return;
+                    return analyzer;
                 }
                 await Task.Delay(100);
             }
 
             Assert.Fail("Timed out waiting for analyzer");
+            return null;
         }
 
         public static async Task WaitForAnalysisAtCaretAsync(this EditorWindow doc) {

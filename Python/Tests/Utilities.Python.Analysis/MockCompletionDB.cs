@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -33,8 +33,8 @@ namespace TestUtilities.Mocks {
         public MockCompletionDB(string path, PythonLanguageVersion version) {
             DBPath = path;
             LanguageVersion = version;
-            _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, DBPath);
             Directory.CreateDirectory(DBPath);
+            _factory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(version.ToVersion(), DBPath);
         }
 
         /// <summary>

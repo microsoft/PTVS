@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
@@ -61,6 +62,7 @@ namespace Microsoft.PythonTools {
         }
 
         public event EventHandler Changed;
+
 
         public IList<string> GetRelativeSearchPaths(string root) {
             lock (_paths) {
@@ -349,7 +351,7 @@ namespace Microsoft.PythonTools {
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        int IVsFileChangeEvents.FilesChanged(uint cChanges, string[] rgpszFile, uint[] rggrfChange) {
+        public int FilesChanged(uint cChanges, string[] rgpszFile, uint[] rggrfChange) {
             return VSConstants.S_OK;
         }
 

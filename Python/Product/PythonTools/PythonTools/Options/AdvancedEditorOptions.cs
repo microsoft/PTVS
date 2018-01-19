@@ -30,7 +30,6 @@ namespace Microsoft.PythonTools.Options {
         private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
         private const string FilterCompletionsSetting = "FilterCompletions";
-        private const string SearchModeSetting = "SearchMode";
         private const string ColorNamesSetting = "ColorNames";
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
         private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
@@ -54,7 +53,6 @@ namespace Microsoft.PythonTools.Options {
             EnterOutliningModeOnOpen = _service.LoadBool(EnterOutlingModeOnOpenSetting, Category) ?? true;
             PasteRemovesReplPrompts = _service.LoadBool(PasteRemovesReplPromptsSetting, Category) ?? true;
             FilterCompletions = _service.LoadBool(FilterCompletionsSetting, Category) ?? true;
-            SearchMode = _service.LoadEnum<FuzzyMatchMode>(SearchModeSetting, Category) ?? FuzzyMatchMode.Default;
             ColorNames = _service.LoadBool(ColorNamesSetting, Category) ?? true;
             ColorNamesWithAnalysis = _service.LoadBool(ColorNamesWithAnalysisSetting, Category) ?? true;
             AutoListIdentifiers = _service.LoadBool(AutoListIdentifiersSetting, Category) ?? true;
@@ -69,7 +67,6 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(EnterOutlingModeOnOpenSetting, Category, EnterOutliningModeOnOpen);
             _service.SaveBool(PasteRemovesReplPromptsSetting, Category, PasteRemovesReplPrompts);
             _service.SaveBool(FilterCompletionsSetting, Category, FilterCompletions);
-            _service.SaveEnum(SearchModeSetting, Category, SearchMode);
             _service.SaveBool(ColorNamesSetting, Category, ColorNames);
             _service.SaveBool(ColorNamesWithAnalysisSetting, Category, ColorNamesWithAnalysis);
             _service.SaveBool(AutoListIdentifiersSetting, Category, AutoListIdentifiers);
@@ -84,7 +81,6 @@ namespace Microsoft.PythonTools.Options {
             EnterOutliningModeOnOpen = true;
             PasteRemovesReplPrompts = true;
             FilterCompletions = true;
-            SearchMode = FuzzyMatchMode.Default;
             ColorNames = true;
             ColorNamesWithAnalysis = true;
             AutoListIdentifiers = true;
@@ -114,11 +110,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public bool IntersectMembers {
-            get;
-            set;
-        }
-
-        public FuzzyMatchMode SearchMode {
             get;
             set;
         }

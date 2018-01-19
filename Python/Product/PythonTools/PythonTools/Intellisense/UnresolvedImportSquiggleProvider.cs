@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
@@ -34,30 +35,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var missingImports = await entry.Analyzer.GetMissingImportsAsync(entry, bi.Buffer);
+            var missingImports = await entry.Analyzer.GetMissingImportsAsync(bi);
             if (missingImports == null) {
                 return;
             }
 
-            if (missingImports.Data.unresolved.Any()) {
-                var translator = missingImports.GetTracker(missingImports.Data.version);
-                if (translator != null) {
-                    var f = new TaskProviderItemFactory(translator);
+            if (missingImports.unresolved.MaybeEnumerate().Any()) {
+                var f = new TaskProviderItemFactory(bi.LocationTracker, missingImports.version);
 
-                    TaskProvider.ReplaceItems(
-                        bi.Filename,
-                        VsProjectAnalyzer.UnresolvedImportMoniker,
-                        missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
-                            Services.Site,
-                            entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
-                            t.name,
-                            new SourceSpan(
-                                new SourceLocation(t.startLine, t.startColumn),
-                                new SourceLocation(t.endLine, t.endColumn)
-                            )
-                        )).ToList()
-                    );
-                }
+                TaskProvider.ReplaceItems(
+                    bi.Filename,
+                    VsProjectAnalyzer.UnresolvedImportMoniker,
+                    missingImports.unresolved.Select(t => f.FromUnresolvedImport(
+                        Services.Site,
+                        entry.Analyzer.InterpreterFactory,
+                        t.name,
+                        new SourceSpan(
+                            new SourceLocation(t.startLine, t.startColumn),
+                            new SourceLocation(t.endLine, t.endColumn)
+                        )
+                    )).ToList()
+                );
             } else {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
             }

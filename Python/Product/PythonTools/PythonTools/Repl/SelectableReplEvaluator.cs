@@ -146,7 +146,8 @@ namespace Microsoft.PythonTools.Repl {
         public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
 
         public VsProjectAnalyzer Analyzer => (_evaluator as IPythonInteractiveIntellisense)?.Analyzer;
-        public string AnalysisFilename => (_evaluator as IPythonInteractiveIntellisense)?.AnalysisFilename;
+        public Uri DocumentUri => (_evaluator as IPythonInteractiveIntellisense)?.DocumentUri;
+        public Uri NextDocumentUri() => (_evaluator as IPythonInteractiveIntellisense)?.NextDocumentUri();
 
         // Test methods
         internal string PrimaryPrompt => ((dynamic)_evaluator)?.PrimaryPrompt ?? ">>> ";
@@ -162,8 +163,8 @@ namespace Microsoft.PythonTools.Repl {
                 eval = string.IsNullOrEmpty(id) ?
                     null :
                     _providers.Select(p => p.GetEvaluator(id)).FirstOrDefault(e => e != null);
-            } catch (NoInterpretersException ex) {
-                _window.WriteErrorLine(ex.Message);
+            } catch (NoInterpretersException) {
+                _window.WriteErrorLine(Strings.NoInterpretersAvailable);
             } catch (MissingInterpreterException ex) {
                 _window.WriteErrorLine(ex.Message);
             } catch (DirectoryNotFoundException ex) {

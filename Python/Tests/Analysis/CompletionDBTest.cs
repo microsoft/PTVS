@@ -14,24 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace PythonToolsTests {
@@ -182,7 +176,7 @@ namespace PythonToolsTests {
 
             File.Copy(Path.Combine(CompletionDB, "__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var fact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(new Version(2, 7));
             var paths = new List<string> { outputPath };
             paths.AddRange(Directory.EnumerateDirectories(outputPath));
             var typeDb = new PythonTypeDatabase(fact, paths);
@@ -225,7 +219,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(0, output.ExitCode);
             }
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var fact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(new Version(2, 7));
             var paths = new List<string> { outputPath };
             paths.AddRange(Directory.EnumerateDirectories(outputPath));
             var typeDb = new PythonTypeDatabase(fact, paths);

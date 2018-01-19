@@ -27,12 +27,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class CondaPackageManager : IPackageManager, IDisposable {
-        private IPythonInterpreterFactory _factory;
-        private string _condaPath;
+    sealed class CondaPackageManager : IPackageManager, IDisposable {
+        private readonly IPythonInterpreterFactory _factory;
+        private readonly string _condaPath;
         private FileSystemWatcher _historyWatcher;
         private Timer _historyWatcherTimer;
-        private string _historyPath;
+        private readonly string _historyPath;
         private readonly List<PackageSpec> _installedPackages;
         private readonly List<PackageSpec> _availablePackages;
         private CancellationTokenSource _currentRefresh;
@@ -51,16 +51,54 @@ namespace Microsoft.PythonTools.Interpreter {
         };
 
         public CondaPackageManager(
-            bool allowFileSystemWatchers = true
+            IPythonInterpreterFactory factory,
+            string condaPath
         ) {
+            _factory = factory;
             _installedPackages = new List<PackageSpec>();
             _availablePackages = new List<PackageSpec>();
+            _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath);
+            if (!File.Exists(_condaPath)) {
+                throw new NotSupportedException();
+            }
+            _historyPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta", "history");
+        }
 
-            if (allowFileSystemWatchers) {
-                _historyWatcher = new FileSystemWatcher();
-                _historyWatcher.Changed += _historyWatcher_Changed;
-                _historyWatcher.Created += _historyWatcher_Changed;
-                _historyWatcherTimer = new Timer(_historyWatcherTimer_Elapsed);
+        public string UniqueKey => "conda";
+        public int Priority => 1000;
+
+        public void EnableNotifications() {
+            _historyWatcher = new FileSystemWatcher();
+            _historyWatcher.Changed += _historyWatcher_Changed;
+            _historyWatcher.Created += _historyWatcher_Changed;
+            _historyWatcherTimer = new Timer(_historyWatcherTimer_Elapsed);
+
+            // Watch the conda-meta/history file, which is updated after 
+            // a package is installed or uninstalled successfully.
+            // Note: conda packages don't all install under lib/site-packages.
+            try {
+                _historyWatcher.Path = PathUtils.GetParent(_historyPath);
+                _historyWatcher.EnableRaisingEvents = true;
+            } catch (ArgumentException) {
+            } catch (IOException) {
+            }
+
+            UpdateIsReadyAsync(false, CancellationToken.None)
+                .SilenceException<OperationCanceledException>()
+                .DoNotWait();
+        }
+
+        public void DisableNotifications() {
+            if (_historyWatcher != null) {
+                _historyWatcher.Changed -= _historyWatcher_Changed;
+                _historyWatcher.Created -= _historyWatcher_Changed;
+                _historyWatcher.Dispose();
+                _historyWatcher = null;
+            }
+
+            if (_historyWatcherTimer != null) {
+                _historyWatcherTimer.Dispose();
+                _historyWatcherTimer = null;
             }
         }
 
@@ -82,68 +120,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
-            if (factory == null) {
-                throw new ArgumentNullException(nameof(factory));
-            }
-            if (!File.Exists(factory.Configuration?.InterpreterPath)) {
-                throw new NotSupportedException();
-            }
-
-            _factory = factory;
-            _condaPath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath);
-            _historyPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta", "history");
-
-            if (_historyWatcher != null) {
-                // Watch the conda-meta/history file, which is updated after 
-                // a package is installed or uninstalled successfully.
-                // Note: conda packages don't all install under lib/site-packages.
-                try {
-                    _historyWatcher.Path = Path.GetDirectoryName(_historyPath);
-                    _historyWatcher.EnableRaisingEvents = true;
-                } catch (ArgumentException) {
-                } catch (IOException) {
-                }
-            }
-
-            Task.Delay(100).ContinueWith(async t => {
-                try {
-                    await UpdateIsReadyAsync(false, CancellationToken.None);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                }
-            }).DoNotWait();
-        }
-
         public IPythonInterpreterFactory Factory => _factory;
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~CondaPackageManager() {
-            Dispose(false);
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_refreshIsCurrentTrigger")]
-        protected void Dispose(bool disposing) {
-            if (_isDisposed) {
-                return;
-            }
-            _isDisposed = true;
-
-            if (disposing) {
-                if (_historyWatcher != null) {
-                    _historyWatcher.Changed -= _historyWatcher_Changed;
-                    _historyWatcher.Created -= _historyWatcher_Changed;
-                    _historyWatcher.Dispose();
-                }
-
-                if (_historyWatcherTimer != null) {
-                    _historyWatcherTimer.Dispose();
-                }
-
+            if (!_isDisposed) {
+                _isDisposed = true;
+                DisableNotifications();
                 _working.Dispose();
             }
         }
@@ -469,6 +451,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
+            _factory.NotifyImportNamesChanged();
         }
 
         private async Task CacheInstallablePackagesAsync(
@@ -676,6 +659,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
+            _factory.NotifyImportNamesChanged();
 
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;

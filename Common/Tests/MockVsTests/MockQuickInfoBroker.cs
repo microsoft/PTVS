@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
     [Export(typeof(IQuickInfoBroker))]
     class MockQuickInfoBroker : IQuickInfoBroker {
         public IQuickInfoSession CreateQuickInfoSession(VisualStudio.Text.Editor.ITextView textView, VisualStudio.Text.ITrackingPoint triggerPoint, bool trackMouse) {
@@ -41,4 +42,5 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
     }
+#pragma warning disable 618
 }

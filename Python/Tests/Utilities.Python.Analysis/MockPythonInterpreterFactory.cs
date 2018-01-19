@@ -17,9 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace TestUtilities.Python {
     public class MockPythonInterpreterFactory : IPythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization, IDisposable {
@@ -38,8 +38,7 @@ namespace TestUtilities.Python {
 
         public MockPythonInterpreterFactory(
             InterpreterConfiguration config,
-            bool withStatusUpdater = false,
-            IPackageManager packageManager = null
+            bool withStatusUpdater = false
         ) {
             _config = config;
 
@@ -47,7 +46,6 @@ namespace TestUtilities.Python {
             IsCurrentReason = NoDatabaseReason;
 
             _useUpdater = withStatusUpdater;
-            PackageManager = packageManager;
         }
 
         private MockPythonInterpreterFactory(Dictionary<string, object> properties) {
@@ -57,7 +55,6 @@ namespace TestUtilities.Python {
             IsCurrentReason = null;
 
             _useUpdater = false;
-            PackageManager = null;
         }
 
         public void Dispose() {
@@ -76,8 +73,6 @@ namespace TestUtilities.Python {
         public IPythonInterpreter CreateInterpreter() {
             return new MockPythonInterpreter(this);
         }
-
-        public IPackageManager PackageManager { get; set; }
 
         public void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrentReason = GeneratingReason;
@@ -212,5 +207,7 @@ namespace TestUtilities.Python {
             Configuration.WriteToDictionary(properties);
             return true;
         }
+
+        public void NotifyImportNamesChanged() { }
     }
 }

@@ -86,6 +86,7 @@ Closed Key: Projects\{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}
 ", mockCtx._result.ToString());
         }
 
+#if DJANGO_HTML_EDITOR
         [TestMethod, Priority(2)]
         public void ProvideEditorExtension2AttributeTests() {
             var attr = new ProvideEditorExtension2Attribute(
@@ -118,6 +119,7 @@ RemovedKey: Editors\{e1b7abde-cdde-4874-a8a6-5b5c7597a848}
 RemovedKey: Projects\{a2fe74e1-b743-11d0-ae1a-00a0c90fffc3}\AddItemTemplates\TemplateDirs\{a8637c34-aa55-46e2-973c-9c3e09afc17b}
 ", mockCtx._result.ToString());
         }
+#endif
     }
 
     class MockRegistrationContext : RegistrationAttribute.RegistrationContext {

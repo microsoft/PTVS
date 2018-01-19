@@ -135,7 +135,7 @@ namespace CookiecutterTests {
             Assert.AreEqual(6, _vm.Recommended.Templates.Count);
 
             // For GitHub results, check for a range since the exact count is bit inconsistent.
-            Assert.IsTrue(_vm.GitHub.Templates.Count > 25 && _vm.GitHub.Templates.Count < 32);
+            Assert.IsTrue(_vm.GitHub.Templates.Count > 20 && _vm.GitHub.Templates.Count < 32);
             Assert.AreEqual(_vm.GitHub.Templates.Count - 1, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
 
@@ -144,7 +144,7 @@ namespace CookiecutterTests {
             Assert.IsFalse(string.IsNullOrEmpty(continuationVM.ContinuationToken));
 
             await _vm.LoadMoreTemplatesAsync(continuationVM.ContinuationToken);
-            Assert.IsTrue(_vm.GitHub.Templates.Count > 50 && _vm.GitHub.Templates.Count < 64);
+            Assert.IsTrue(_vm.GitHub.Templates.Count > 40 && _vm.GitHub.Templates.Count < 64);
             Assert.AreEqual(_vm.GitHub.Templates.Count - 1, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
 

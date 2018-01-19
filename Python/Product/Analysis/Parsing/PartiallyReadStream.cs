@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -24,13 +25,20 @@ namespace Microsoft.PythonTools.Parsing {
     /// not require a seekable stream for our parser.
     /// </summary>
     class PartiallyReadStream : Stream {
-        private readonly List<byte> _readBytes;
+        private readonly byte[] _readBytes;
         private readonly Stream _stream;
         private long _position;
 
-        public PartiallyReadStream(List<byte> readBytes, Stream stream) {
-            _readBytes = readBytes;
-            _stream = stream;
+        public PartiallyReadStream(IEnumerable<byte> readBytes, Stream stream) {
+            _readBytes = readBytes?.ToArray() ?? throw new ArgumentNullException(nameof(readBytes));
+            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            if (disposing) {
+                _stream.Dispose();
+            }
         }
 
         public override bool CanRead {
@@ -70,13 +78,13 @@ namespace Microsoft.PythonTools.Parsing {
                 return _stream.Read(buffer, offset, count);
             } else {
                 int bytesRead = 0;
-                for (int i = 0; i < count && _position < _readBytes.Count; i++) {
+                for (int i = 0; i < count && _position < _readBytes.Length; i++) {
                     buffer[i + offset] = _readBytes[(int)_position];
                     _position++;
                     bytesRead++;
                 }
 
-                if (_position == _readBytes.Count) {
+                if (_position == _readBytes.LongLength) {
                     _position = -1;
                     if (bytesRead != count) {
                         var res = _stream.Read(buffer, offset + bytesRead, count - bytesRead);

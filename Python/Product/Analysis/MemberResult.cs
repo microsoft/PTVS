@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -146,10 +146,8 @@ namespace Microsoft.PythonTools.Analysis {
 
                     string typeDisplay = "unknown type";
                     var types = docType.Value.OrderBy(s => s).ToList();
-                    if (types.Count == 0) {
+                    if (types.Count <= 1) {
                         typeDisplay = "";
-                    } else if (types.Count == 1) {
-                        typeDisplay = types[0] + ": ";
                     } else {
                         var orStr = types.Count == 2 ? " or " : ", or ";
                         typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last() + ": ";

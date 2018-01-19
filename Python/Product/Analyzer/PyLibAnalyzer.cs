@@ -31,6 +31,7 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Win32;
@@ -183,7 +184,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (_interactive) {
                 var analyzer = new OutOfProcProjectAnalyzer(
                     Console.OpenStandardOutput(),
-                    Console.OpenStandardInput()
+                    Console.OpenStandardInput(),
+                    Console.Error.WriteLine
                 );
 
                 await analyzer.ProcessMessages();
@@ -555,7 +557,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // Execute the interpreter to get actual paths
                 for (int retries = 3; retries >= 0; --retries) {
                     try {
-                        library = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(_interpreter);
+                        library = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(_interpreter);
                         break;
                     } catch (InvalidOperationException ex) {
                         if (retries == 0) {
@@ -703,7 +705,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 for (int retries = 3; retries >= 0; --retries) {
                     try {
-                        PythonTypeDatabase.WriteDatabaseSearchPaths(_outDir, _library);
+                        PythonLibraryPath.WriteDatabaseSearchPaths(Path.Combine(_outDir, "database.path"), _library);
                         break;
                     } catch (IOException ex) {
                         if (retries == 0) {
@@ -1249,11 +1251,7 @@ namespace Microsoft.PythonTools.Analysis {
                     currentLibrary = PathUtils.GetFileOrDirectoryName(files[0].LibraryPath);
                 }
 
-                using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
-                    _version,
-                    null,
-                    GetDatabasePaths(outDir).ToArray()
-                ))
+                using (var factory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(_version, outDir))
                 using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
                     if (_updater != null) {

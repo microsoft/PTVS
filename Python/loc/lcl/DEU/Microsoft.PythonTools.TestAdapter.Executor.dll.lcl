@@ -36,14 +36,14 @@
       <Str Cat="Text">
         <Val><![CDATA[Visual Studio - Python test execution engine]]></Val>
         <Tgt Cat="Text" Stat="Loc" Orig="New">
-          <Val><![CDATA[Visual Studio – Python-Testausführungsmodul]]></Val>
+          <Val><![CDATA[Visual Studio – Python-Testausführungs-Engine]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17355.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -79,7 +79,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17355.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

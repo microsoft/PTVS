@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstNestedPythonModule : IPythonModule, ILocatedMember {

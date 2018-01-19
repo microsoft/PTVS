@@ -1,0 +1,6 @@
+name: conda-and-pip
+dependencies:
+  - python=3.4
+  - flask
+  - pip:
+    - Flask-Testing

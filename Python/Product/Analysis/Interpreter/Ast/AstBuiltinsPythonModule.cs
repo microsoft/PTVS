@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly HashSet<string> _hiddenNames;
 
         public AstBuiltinsPythonModule(PythonLanguageVersion version)
-            : base(version.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x, null) {
+            : base(BuiltinTypeId.Unknown.GetModuleName(version), null) {
             _hiddenNames = new HashSet<string>();
         }
 
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected override Stream LoadCachedCode(AstPythonInterpreter interpreter) {
             var fact = interpreter.Factory as AstPythonInterpreterFactory;
             if (fact?.Configuration.InterpreterPath == null) {
-                return null;
+                return fact.ReadCachedModule("python.exe");
             }
             return fact.ReadCachedModule(fact.Configuration.InterpreterPath);
         }
@@ -72,15 +72,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
-            var args = new List<string> { "-B", "-E" };
-
-            var sb = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sb)) {
+            if (!InstallPath.TryGetFile("scrape_module.py", out string sb)) {
                 return null;
             }
-            args.Add(sb);
 
-            return args;
+            return new List<string> { "-B", "-E", sb };
         }
 
         protected override PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
@@ -91,10 +87,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override void PostWalk(PythonWalker walker) {
+            IPythonType boolType = null;
+
             foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
                 IMember m;
                 AstPythonBuiltinType biType;
-                if (_members.TryGetValue($"__{typeId}", out m) && (biType = m as AstPythonBuiltinType) != null) {
+                if (_members.TryGetValue($"__{typeId}__", out m) && (biType = m as AstPythonBuiltinType) != null) {
                     if (typeId != BuiltinTypeId.Str &&
                         typeId != BuiltinTypeId.StrIterator) {
                         biType.TrySetTypeId(typeId);
@@ -103,10 +101,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     if (biType.IsHidden) {
                         _hiddenNames.Add(biType.Name);
                     }
-                    _hiddenNames.Add($"__{typeId}");
+                    _hiddenNames.Add($"__{typeId}__");
+
+                    if (typeId == BuiltinTypeId.Bool) {
+                        boolType = m as IPythonType;
+                    }
                 }
             }
-            _hiddenNames.Add("__builtin_module_names");
+            _hiddenNames.Add("__builtin_module_names__");
+
+            if (boolType != null) {
+                _members["True"] = _members["False"] = new AstPythonConstant(boolType);
+            }
+
+            base.PostWalk(walker);
         }
 
     }

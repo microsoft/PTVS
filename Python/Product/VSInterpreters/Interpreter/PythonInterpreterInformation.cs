@@ -47,13 +47,5 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             return _factory;
         }
-
-        private IPackageManager CreatePackageManager() {
-            if (ExperimentalOptions.UseCondaPackageManager && !string.IsNullOrEmpty(CondaUtils.GetCondaExecutablePath(Configuration.PrefixPath))) {
-                return new CondaPackageManager();
-            } else {
-                return new PipPackageManager();
-            }
-        }
     }
 }

@@ -22,13 +22,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -132,7 +129,7 @@ namespace Microsoft.PythonTools {
                         regions.Push(line);
                     } else if (_closingRegionRegex.IsMatch(lineText) && regions.Count > 0) {
                         var openLine = regions.Pop();
-                        var outline = GetTagSpan(snapshot, openLine.Start, line.End);
+                        var outline = GetTagSpan(openLine.Start, line.End);
 
                         yield return outline;
                     }
@@ -160,7 +157,7 @@ namespace Microsoft.PythonTools {
                         previousCellStart = cellStart.LineNumber;
                         var cellEnd = CodeCellAnalysis.FindEndOfCell(cellStart, line);
                         if (cellEnd.LineNumber > cellStart.LineNumber) {
-                            yield return GetTagSpan(snapshot, cellStart.Start, cellEnd.End);
+                            yield return GetTagSpan(cellStart.End, cellEnd.End);
                         }
                         if (cellEnd.LineNumber + 1 < snapshot.LineCount) {
                             line = snapshot.GetLineFromLineNumber(cellEnd.LineNumber + 1);
@@ -171,30 +168,19 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            internal static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex = -1) {
+            internal static TagSpan GetTagSpan(SnapshotPoint start, SnapshotPoint end) {
                 TagSpan tagSpan = null;
+                var snapshot = start.Snapshot;
                 try {
-                    // if the user provided a -1, we should figure out the end of the first line
-                    if (headerIndex < 0) {
-                        headerIndex = snapshot.GetLineFromPosition(start).End.Position;
+                    SnapshotPoint hintEnd = end;
+                    if (start.GetContainingLine().LineNumber + 5 < hintEnd.GetContainingLine().LineNumber) {
+                        hintEnd = start.Snapshot.GetLineFromLineNumber(start.GetContainingLine().LineNumber + 5).End;
                     }
 
-                    if (start != -1 && end != -1) {
-                        int length = end - headerIndex;
-                        if (length > 0) {
-                            Debug.Assert(start + length <= snapshot.Length, String.Format("{0} + {1} <= {2} end was {3}", start, length, snapshot.Length, end));
-                            var span = GetFinalSpan(
-                                snapshot,
-                                headerIndex,
-                                length
-                            );
-
-                            tagSpan = new TagSpan(
-                                new SnapshotSpan(snapshot, span),
-                                new OutliningTag(snapshot, span)
-                            );
-                        }
-                    }
+                    return new TagSpan(
+                        new SnapshotSpan(start, end),
+                        new SnapshotSpan(start, hintEnd)
+                    );
                 } catch (ArgumentException) {
                     // sometimes Python's parser gives us bad spans, ignore those and fix the parser
                     Debug.Assert(false, "bad argument when making span/tag");
@@ -244,81 +230,30 @@ namespace Microsoft.PythonTools {
 
 
         internal class TagSpan : ITagSpan<IOutliningRegionTag> {
-            private readonly SnapshotSpan _span;
-            private readonly OutliningTag _tag;
-
-            public TagSpan(SnapshotSpan span, OutliningTag tag) {
-                _span = span;
-                _tag = tag;
+            public TagSpan(SnapshotSpan span, SnapshotSpan? hintSpan) {
+                Span = span;
+                Tag = new OutliningTag(hintSpan ?? span.Start.GetContainingLine().Extent);
             }
 
-            #region ITagSpan<IOutliningRegionTag> Members
+            public SnapshotSpan Span { get; }
 
-            public SnapshotSpan Span {
-                get { return _span; }
-            }
-
-            public IOutliningRegionTag Tag {
-                get { return _tag; }
-            }
-
-            #endregion
+            public IOutliningRegionTag Tag { get; }
         }
 
         internal class OutliningTag : IOutliningRegionTag {
-            private readonly ITextSnapshot _snapshot;
-            private readonly Span _span;
+            private readonly SnapshotSpan _hintSpan;
 
-            public OutliningTag(ITextSnapshot iTextSnapshot, Span span) {
-                _snapshot = iTextSnapshot;
-                _span = span;
+            public OutliningTag(SnapshotSpan hintSpan) {
+                _hintSpan = hintSpan;
             }
 
-            #region IOutliningRegionTag Members
+            public object CollapsedForm => "...";
 
-            public object CollapsedForm {
-                get { return "..."; }
-            }
+            public object CollapsedHintForm => _hintSpan.GetText();
 
-            public object CollapsedHintForm {
-                get {
-                    string collapsedHint = _snapshot.GetText(_span);
+            public bool IsDefaultCollapsed => false;
 
-                    string[] lines = collapsedHint.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-                    // remove any leading white space for the preview
-                    if (lines.Length > 0) {
-                        int smallestWhiteSpace = Int32.MaxValue;
-                        for (int i = 0; i < lines.Length; i++) {
-                            string curLine = lines[i];
-
-                            for (int j = 0; j < curLine.Length; j++) {
-                                if (curLine[j] != ' ') {
-                                    smallestWhiteSpace = Math.Min(j, smallestWhiteSpace);
-                                }
-                            }
-                        }
-
-                        for (int i = 0; i < lines.Length; i++) {
-                            if (lines[i].Length >= smallestWhiteSpace) {
-                                lines[i] = lines[i].Substring(smallestWhiteSpace);
-                            }
-                        }
-
-                        return String.Join("\r\n", lines);
-                    }
-                    return collapsedHint;
-                }
-            }
-
-            public bool IsDefaultCollapsed {
-                get { return false; }
-            }
-
-            public bool IsImplementation {
-                get { return true; }
-            }
-
-            #endregion
+            public bool IsImplementation => true;
         }
     }
 

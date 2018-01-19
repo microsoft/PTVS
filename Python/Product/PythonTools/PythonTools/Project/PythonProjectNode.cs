@@ -31,7 +31,6 @@ using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -41,12 +40,10 @@ using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -81,6 +78,10 @@ namespace Microsoft.PythonTools.Project {
         private readonly HashSet<string> _validFactories = new HashSet<string>();
         public IPythonInterpreterFactory _active;
 
+        private FileWatcher _projectFileWatcher;
+        private readonly HashSet<AnalysisEntry> _pendingChanges, _pendingDeletes;
+        private readonly System.Threading.Timer _deferredChangeNotification;
+
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
@@ -91,6 +92,10 @@ namespace Microsoft.PythonTools.Project {
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             _searchPaths = new SearchPathManager(serviceProvider);
             _searchPaths.Changed += SearchPaths_Changed;
+
+            _pendingChanges = new HashSet<AnalysisEntry>();
+            _pendingDeletes = new HashSet<AnalysisEntry>();
+            _deferredChangeNotification = new System.Threading.Timer(ProjectFile_Notify);
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -231,19 +236,19 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_active != oldActive) {
                     if (oldActive == null) {
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
                     } else {
-                        var oldInterpWithDb = oldActive as PythonInterpreterFactoryWithDatabase;
+                        var oldInterpWithDb = oldActive as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (oldInterpWithDb != null) {
                             oldInterpWithDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
                     }
 
                     if (_active != null) {
-                        var newInterpWithDb = _active as PythonInterpreterFactoryWithDatabase;
+                        var newInterpWithDb = _active as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (newInterpWithDb != null) {
                             newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
@@ -253,7 +258,7 @@ namespace Microsoft.PythonTools.Project {
                         );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
@@ -1070,6 +1075,11 @@ namespace Microsoft.PythonTools.Project {
 
                 _searchPaths.Dispose();
 
+                var watcher = _projectFileWatcher;
+                _projectFileWatcher = null;
+                watcher?.Dispose();
+                _deferredChangeNotification.Dispose();
+
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
                     _interpretersContainer = null;
@@ -1112,12 +1122,19 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                return Site.GetUIThread().InvokeTaskSync(async() => {
-                    if (_analyzer == null) {
-                        _analyzer = await CreateAnalyzerAsync();
+                // So many deadlocks, but can't force all callers to become async, so do the best we can
+                for (int retries = 3; retries > 0; --retries) {
+                    var cts = new CancellationTokenSource(10000);
+                    try {
+                        return Site.GetUIThread().InvokeTaskSync(async () => {
+                            if (_analyzer == null) {
+                                _analyzer = await CreateAnalyzerAsync();
+                            }
+                            return _analyzer;
+                        }, cts.Token);
+                    } catch (OperationCanceledException) {
                     }
-                    return _analyzer;
-                }, CancellationToken.None);
+                }
             }
             return _analyzer;
         }
@@ -1142,7 +1159,8 @@ namespace Microsoft.PythonTools.Project {
             var res = await VsProjectAnalyzer.CreateForProjectAsync(
                 model.GetService<PythonEditorServices>(),
                 factory,
-                BuildProject,
+                Url,
+                ProjectHome,
                 inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
@@ -1369,6 +1387,16 @@ namespace Microsoft.PythonTools.Project {
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                 }
+                var oldWatcher = _projectFileWatcher;
+                _projectFileWatcher = new FileWatcher(ProjectHome) {
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+                };
+                _projectFileWatcher.Changed += ProjectFile_Changed;
+                _projectFileWatcher.Deleted += ProjectFile_Deleted;
+                oldWatcher?.Dispose();
+
                 var analyzer = await CreateAnalyzerAsync();
                 Debug.Assert(analyzer != null);
 
@@ -1424,6 +1452,46 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private void ProjectFile_Deleted(object sender, FileSystemEventArgs e) {
+            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
+            if (entry != null) {
+                lock (_pendingChanges) {
+                    _pendingDeletes.Add(entry);
+                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                }
+            }
+        }
+
+        private void ProjectFile_Changed(object sender, FileSystemEventArgs e) {
+            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
+            if (entry != null) {
+                lock (_pendingChanges) {
+                    _pendingChanges.Add(entry);
+                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                }
+            }
+        }
+
+        private void ProjectFile_Notify(object state) {
+            var analyzer = _analyzer;
+            Uri[] changed, deleted;
+
+            lock (_pendingChanges) {
+                _deferredChangeNotification.Change(Timeout.Infinite, Timeout.Infinite);
+                if (analyzer == null) {
+                    return;
+                }
+                changed = _pendingChanges.Concat(_pendingDeletes.Where(e => File.Exists(e.Path))).Select(e => e.DocumentUri).ToArray();
+                deleted = _pendingDeletes.Where(e => !File.Exists(e.Path)).Select(e => e.DocumentUri).ToArray();
+                _pendingChanges.Clear();
+                _pendingDeletes.Clear();
+            }
+
+            analyzer.NotifyFileChangesAsync(Enumerable.Empty<Uri>(), deleted, changed)
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
+        }
+
         protected override string AssemblyReferenceTargetMoniker {
             get {
                 return GetProjectProperty("TargetFrameworkMoniker", false); // ?? ".NETFramework, version=4.5";
@@ -1445,7 +1513,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 config = GetLaunchConfigurationOrThrow();
             } catch (NoInterpretersException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                PythonToolsPackage.OpenNoInterpretersHelpPage(Site, ex.HelpPage);
                 return VSConstants.S_OK;
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
@@ -1532,7 +1600,7 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.InstallRequirementsTxt:
                     case PythonConstants.GenerateRequirementsTxt:
                         factory = GetInterpreterFactory();
-                        if (factory.IsRunnable() && factory.PackageManager != null) {
+                        if (factory.IsRunnable()) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             result |= QueryStatusResult.INVISIBLE;
@@ -1652,6 +1720,8 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.AddEnvironment:
                         ShowAddInterpreter();
                         return VSConstants.S_OK;
+                    case PythonConstants.CreateCondaEnv:
+                        return ExecCreateCondaEnv();
                     case PythonConstants.AddExistingVirtualEnv:
                     case PythonConstants.AddVirtualEnv:
                         ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv, Path.Combine(ProjectHome, "requirements.txt"));
@@ -1717,7 +1787,9 @@ namespace Microsoft.PythonTools.Project {
 
             // Install into the currently active environment
             TaskDialogButton install = null;
-            if (factory.PackageManager != null) {
+
+            var pm = InterpreterOptions.GetPackageManagers(factory).FirstOrDefault();
+            if (pm != null) {
                 var description = factory.Configuration.Description ?? Strings.CurrentInterpreterDescription;
                 install = new TaskDialogButton(
                     string.Format(Strings.InstallRequirementsIntoCurrentEnv, description),
@@ -1877,6 +1949,7 @@ namespace Microsoft.PythonTools.Project {
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             return true;
                         case PythonConstants.ActivateEnvironment:
+                        case PythonConstants.CreateCondaEnv:
                         case PythonConstants.AddEnvironment:
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
@@ -1896,6 +1969,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if (this.IsAppxPackageableProject()) {
                     // Disable adding environment for UWP projects
                     switch ((int)cmd) {
+                        case PythonConstants.CreateCondaEnv:
                         case PythonConstants.AddEnvironment:
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
@@ -2048,7 +2122,8 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
 
-            if (selectedInterpreterFactory?.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2060,7 +2135,7 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("p", out name)) {
                 // Don't prompt, just install
                 bool elevated = args.ContainsKey("a");
-                selectedInterpreterFactory.PackageManager.InstallAsync(
+                pm.InstallAsync(
                     PackageSpec.FromArguments(name),
                     new VsPackageManagerUI(Site, elevated),
                     CancellationToken.None
@@ -2090,7 +2165,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int InstallRequirements(Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
-            if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2109,7 +2185,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            selectedInterpreterFactory.PackageManager.InstallAsync(
+            pm.InstallAsync(
                 PackageSpec.FromArguments(name),
                 new VsPackageManagerUI(Site),
                 CancellationToken.None
@@ -2163,7 +2239,8 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
-            if (selectedInterpreterFactory?.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2171,21 +2248,21 @@ namespace Microsoft.PythonTools.Project {
                 return VSConstants.S_OK;
             }
 
-            GenerateRequirementsTxtAsync(selectedInterpreterFactory)
+            GenerateRequirementsTxtAsync(pm)
                 .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(Site, GetType())
                 .DoNotWait();
             return VSConstants.S_OK;
         }
 
-        private async Task GenerateRequirementsTxtAsync(IPythonInterpreterFactory factory) {
+        private async Task GenerateRequirementsTxtAsync(IPackageManager packageManager) {
             var projectHome = ProjectHome;
             var txt = PathUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
 
             IList<PackageSpec> items = null;
 
             try {
-                items = await factory.PackageManager.GetInstalledPackagesAsync(CancellationToken.None);
+                items = await packageManager.GetInstalledPackagesAsync(CancellationToken.None);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ex.ReportUnhandledException(Site, GetType(), allowUI: Utilities.IsInAutomationFunction(Site));
                 return;
@@ -2510,6 +2587,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         #endregion
+
+        private int ExecCreateCondaEnv() {
+            InterpreterList.InterpreterListToolWindow.OpenAt(
+                Site,
+                EnvironmentsList.EnvironmentView.CondaEnvironmentViewId,
+                typeof(EnvironmentsList.CondaExtensionProvider)
+            );
+            return VSConstants.S_OK;
+        }
 
         public override Guid SharedCommandGuid {
             get {

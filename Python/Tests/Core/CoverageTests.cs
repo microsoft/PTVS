@@ -1,7 +1,4 @@
-﻿extern alias pythontools;
-extern alias analysis;
-
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -21,10 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using analysis::Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pythontools::Microsoft.PythonTools.CodeCoverage;
-using pythontools::Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.CodeCoverage;
+using Microsoft.PythonTools.Commands;
 using TestUtilities;
 using TestUtilities.Python;
 

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
@@ -141,6 +142,52 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 res.Append(')');
             }
+        }
+
+        /// <summary>
+        /// Returns the index of the argument in Args at a given index.
+        /// </summary>
+        /// <returns>False if not within the call. -1 if it is in
+        /// an argument not in Args.</returns>
+        internal bool GetArgumentAtIndex(PythonAst ast, int index, out int argIndex) {
+            argIndex = -1;
+            if (index <= Target.EndIndex || index > EndIndex) {
+                return false;
+            }
+            if (Args == null) {
+                return true;
+            }
+            if (index == EndIndex) {
+                if (this.IsMissingCloseGrouping(ast)) {
+                    // No closing parenthesis, so assume last argument
+                    argIndex = Args.Count - 1;
+                    return true;
+                }
+                return false;
+            }
+
+            var listWhiteSpace = this.GetListWhiteSpace(ast);
+            for (int i = 0; i < Args.Count; ++i) {
+                var a = Args[i];
+                int preWs = a.GetPreceedingWhiteSpaceDefaultNull(ast)?.Length ?? 0;
+                int preCommaWs = listWhiteSpace?.ElementAtOrDefault(i)?.Length ?? 0;
+                if (index < a.StartIndex - preWs) {
+                    break;
+                }
+                if (index <= a.EndIndex + preCommaWs) {
+                    argIndex = i;
+                    return true;
+                }
+            }
+
+            if (listWhiteSpace.Length == Args.Count) {
+                // Trailing comma, so we are not in any argument
+                argIndex = -1;
+                return true;
+            }
+
+            argIndex = Args.Count - 1;
+            return true;
         }
 
         public override string GetLeadingWhiteSpace(PythonAst ast) {
