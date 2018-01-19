@@ -51,8 +51,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var task = new ParseTask(this, doc, languageVersion);
             try {
-                _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
-                return task.Task;
+                return _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
             } finally {
                 task.DisposeIfNotStarted();
             }
@@ -127,13 +126,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private Task<IAnalysisCookie> _previous;
 
             // State transitions:
-            //  UNSTARTED -> QUEUED     when Start() called and _previous is set
-            //  UNSTARTED -> DISPOSED   when DisposeIfNotStarted() is called
-            //  UNSTARTED -> STARTED    when Start() is called
-            //  QUEUED    -> STARTED    when Start(QUEUED) is called
+            //  UNSTARTED -> QUEUED     when Start() called
+            //  QUEUED    -> STARTED    when worker starts running on worker thread
             //  STARTED   -> DISPOSED   when task completes
-            // Note that calling Dispose() only has an effect on a task that
-            // has not been started or queued.
+            //  UNSTARTED -> DISPOSED   when DisposeIfNotStarted() is called
             private const int UNSTARTED = 0;
             private const int QUEUED = 1;
             private const int STARTED = 2;
@@ -155,7 +151,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             public void DisposeIfNotStarted() {
                 if (Interlocked.CompareExchange(ref _state, DISPOSED, UNSTARTED) == UNSTARTED) {
-                    _parse?.Dispose();
                     DisposeWorker();
                 }
             }
@@ -163,6 +158,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private void DisposeWorker() {
                 Debug.Assert(Volatile.Read(ref _state) == DISPOSED);
 
+                _parse?.Dispose();
                 _queue._parsingInProgress.Decrement();
             }
 
@@ -173,15 +169,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return this;
             }
 
-            public void Start() {
-                // If we were pending, calling start ensures we are queued
-                var previous = Interlocked.Exchange(ref _previous, null);
-                if (previous != null && Interlocked.CompareExchange(ref _state, QUEUED, UNSTARTED) == UNSTARTED) {
-                    previous.ContinueWith(StartFromQueue);
-                    return;
-                }
-
-                int actualState = Interlocked.CompareExchange(ref _state, STARTED, UNSTARTED);
+            public Task<IAnalysisCookie> Start() {
+                int actualState = Interlocked.CompareExchange(ref _state, QUEUED, UNSTARTED);
                 if (actualState != UNSTARTED) {
                     if (actualState == DISPOSED) {
                         throw new ObjectDisposedException(GetType().FullName);
@@ -189,21 +178,33 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     throw new InvalidOperationException("cannot start parsing");
                 }
 
-                StartWork();
+                // If we were pending, calling start ensures we are queued
+                var previous = Interlocked.Exchange(ref _previous, null);
+                if (previous != null) {
+                    try {
+                        previous.ContinueWith(StartAfterTask);
+                        return Task;
+                    } catch (ObjectDisposedException) {
+                    }
+                }
+
+                ThreadPool.QueueUserWorkItem(StartWork);
+                return Task;
             }
 
-            private void StartFromQueue(Task<IAnalysisCookie> previous) {
+            private void StartAfterTask(Task<IAnalysisCookie> previous) {
+                ThreadPool.QueueUserWorkItem(StartWork);
+            }
+
+            private void StartWork(object state) {
                 int actualState = Interlocked.CompareExchange(ref _state, STARTED, QUEUED);
                 if (actualState != QUEUED) {
                     // Silently complete if we are not queued.
+                    if (Interlocked.Exchange(ref _state, DISPOSED) != DISPOSED) {
+                        DisposeWorker();
+                    }
                     return;
                 }
-
-                StartWork();
-            }
-
-            private void StartWork() {
-                Debug.Assert(Volatile.Read(ref _state) == STARTED);
 
                 try {
                     var r = _queue.ParseWorker(_document, _languageVersion);
