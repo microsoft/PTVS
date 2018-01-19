@@ -2533,16 +2533,17 @@ def new_external_thread():
     sys.settrace(thread.trace_func)
 
 def do_wait():
-    try:
-        import msvcrt
-    except ImportError:
-        sys.__stdout__.write('Press Enter to continue . . . ')
-        sys.__stdout__.flush()
-        sys.__stdin__.read(1)
-    else:
-        sys.__stdout__.write('Press any key to continue . . . ')
-        sys.__stdout__.flush()
-        msvcrt.getch()
+    if sys.__stdout__ is not None:
+        try:
+            import msvcrt
+        except ImportError:
+            sys.__stdout__.write('Press Enter to continue . . . ')
+            sys.__stdout__.flush()
+            sys.__stdin__.read(1)
+        else:
+            sys.__stdout__.write('Press any key to continue . . . ')
+            sys.__stdout__.flush()
+            msvcrt.getch()
 
 def enable_output_redirection():
     sys.stdout = _DebuggerOutput(sys.stdout, 'stdout')
