@@ -152,6 +152,7 @@ namespace TestUtilities.Python {
                 );
                 using (var p = entry.BeginParse()) {
                     p.Tree = parser.ParseFile();
+                    p.Complete();
                 }
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
