@@ -41,8 +41,6 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
-        private ManualResetEventSlim _curWaiter;
-        private int _updatesPending, _waiters;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
@@ -84,86 +82,76 @@ namespace Microsoft.PythonTools.Analysis {
         public event EventHandler<EventArgs> OnNewParseTree;
         public event EventHandler<EventArgs> OnNewAnalysis;
 
-        public void UpdateTree(PythonAst newAst, IAnalysisCookie newCookie) {
-            lock (this) {
-                if (_updatesPending > 0) {
-                    _updatesPending--;
-                }
-                if (newAst == null) {
-                    // there was an error in parsing, just let the waiter go...
-                    if (_curWaiter != null) {
-                        _curWaiter.Set();
-                    }
-                    Tree = null;
+        private readonly ManualResetEventSlim _pendingParse = new ManualResetEventSlim(true);
+        private long _expectedParse;
+
+        private class ActivePythonParse : IPythonParse {
+            private readonly ProjectEntry _entry;
+            private readonly long _expected;
+            private bool _completed;
+
+            public ActivePythonParse(ProjectEntry entry, long expected) {
+                _entry = entry;
+                _expected = expected;
+            }
+
+            public PythonAst Tree { get; set; }
+            public IAnalysisCookie Cookie { get; set; }
+
+            public void Dispose() {
+                if (_completed) {
                     return;
                 }
-
-                Tree = newAst;
-                Cookie = newCookie;
-
-                if (_curWaiter != null) {
-                    _curWaiter.Set();
+                lock (_entry) {
+                    if (_entry._expectedParse == _expected) {
+                        _entry._pendingParse.Set();
+                    }
                 }
             }
 
+            public void Complete() {
+                _completed = true;
+                lock (_entry) {
+                    if (_entry._expectedParse == _expected) {
+                        _entry.SetCurrentParse(Tree, Cookie);
+                        _entry._pendingParse.Set();
+                    }
+                }
+            }
+        }
+
+        public IPythonParse BeginParse() {
+            _pendingParse.Reset();
+            lock (this) {
+                _expectedParse += 1;
+                return new ActivePythonParse(this, _expectedParse);
+            }
+        }
+
+        public IPythonParse GetCurrentParse() {
+            lock (this) {
+                return new StaticPythonParse(Tree, Cookie);
+            }
+        }
+
+        public void SetCurrentParse(PythonAst tree, IAnalysisCookie cookie) {
+            lock (this) {
+                Tree = tree;
+                Cookie = cookie;
+            }
             OnNewParseTree?.Invoke(this, EventArgs.Empty);
         }
 
+        public IPythonParse WaitForCurrentParse(int timeout = -1) {
+            if (!_pendingParse.Wait(timeout)) {
+                return null;
+            }
+            return GetCurrentParse();
+        }
+
+
         internal bool IsVisible(ProjectEntry assigningScope) {
             return true;
-        }
-
-        public void GetTreeAndCookie(out PythonAst tree, out IAnalysisCookie cookie) {
-            lock (this) {
-                tree = Tree;
-                cookie = Cookie;
-            }
-        }
-
-        public void BeginParsingTree() {
-            lock (this) {
-                _updatesPending++;
-            }
-        }
-
-        public PythonAst WaitForCurrentTree(int timeout = -1) => WaitForCurrentTree(timeout, out _);
-
-        public PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie) {
-            lock (this) {
-                if (_updatesPending == 0) {
-                    cookie = Cookie;
-                    return Tree;
-                }
-
-                _waiters++;
-                if (_curWaiter == null) {
-                    _curWaiter = Interlocked.Exchange(ref _sharedWaitEvent, null);
-                    if (_curWaiter == null) {
-                        _curWaiter = new ManualResetEventSlim(false);
-                    } else {
-                        _curWaiter.Reset();
-                    }
-                }
-            }
-
-            bool gotNewTree = _curWaiter.Wait(timeout);
-
-            lock (this) {
-                _waiters--;
-                if (_waiters == 0 &&
-                    Interlocked.CompareExchange(ref _sharedWaitEvent, _curWaiter, null) != null) {
-                    _curWaiter.Dispose();
-                }
-                _curWaiter = null;
-
-                if (gotNewTree) {
-                    cookie = Cookie;
-                    return Tree;
-                }
-            }
-
-            cookie = null;
-            return null;
         }
 
         public void Analyze(CancellationToken cancel) {
@@ -199,9 +187,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsAnalyzed => Analysis != null;
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
-            PythonAst tree;
-            IAnalysisCookie cookie;
-            GetTreeAndCookie(out tree, out cookie);
+            var parse = GetCurrentParse();
+            var tree = parse?.Tree;
+            var cookie = parse?.Cookie;
             if (tree == null) {
                 return;
             }
@@ -534,15 +522,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns the last parsed AST.
         /// </summary>
-        PythonAst Tree {
-            get;
-        }
+        PythonAst Tree { get; }
 
         string ModuleName { get; }
 
-        ModuleAnalysis Analysis {
-            get;
-        }
+        ModuleAnalysis Analysis { get; }
 
         event EventHandler<EventArgs> OnNewParseTree;
         event EventHandler<EventArgs> OnNewAnalysis;
@@ -552,21 +536,35 @@ namespace Microsoft.PythonTools.Analysis {
         /// a call to UpdateTree.  Calling this method will cause WaitForCurrentTree to block until
         /// UpdateTree has been called.
         /// 
-        /// Calls to BeginParsingTree should be balanced with calls to UpdateTree.
-        /// 
-        /// This method is thread safe.
+        /// To complete the parse, call either Complete or Cancel on the returned object.
         /// </summary>
-        void BeginParsingTree();
+        IPythonParse BeginParse();
 
-        void UpdateTree(PythonAst ast, IAnalysisCookie fileCookie);
-        void GetTreeAndCookie(out PythonAst ast, out IAnalysisCookie cookie);
+        IPythonParse GetCurrentParse();
 
         /// <summary>
         /// Returns the current tree if no parsing is currently pending, otherwise waits for the 
         /// current parse to finish and returns the up-to-date tree.
         /// </summary>
-        PythonAst WaitForCurrentTree(int timeout = -1);
-
-        PythonAst WaitForCurrentTree(int timeout, out IAnalysisCookie cookie);
+        IPythonParse WaitForCurrentParse(int timeout = -1);
     }
+
+    public interface IPythonParse : IDisposable {
+        PythonAst Tree { get; set; }
+        IAnalysisCookie Cookie { get; set; }
+        void Complete();
+    }
+
+    sealed class StaticPythonParse : IPythonParse {
+        public StaticPythonParse(PythonAst tree, IAnalysisCookie cookie) {
+            Tree = tree;
+            Cookie = cookie;
+        }
+
+        public PythonAst Tree { get; set; }
+        public IAnalysisCookie Cookie { get; set; }
+        public void Dispose() { }
+        public void Complete() => throw new NotSupportedException();
+    }
+
 }

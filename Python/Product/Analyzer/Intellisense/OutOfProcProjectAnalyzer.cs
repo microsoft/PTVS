@@ -88,6 +88,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 "Analyzer"
             );
             _connection.EventReceived += ConectionReceivedEvent;
+            if (!string.IsNullOrEmpty(_connection.LogFilename)) {
+                _log?.Invoke($"Connection log: {_connection.LogFilename}");
+            }
         }
 
         private void Server_OnLogMessage(object sender, LS.LogMessageEventArgs e) {
@@ -239,6 +242,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
                             analysisUpdates = true,
+                            completionsTimeout = 5000,
                             manualFileLoad = !request.analyzeAllFiles,
                             traceLogging = request.traceLogging
                         }
@@ -917,9 +921,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 return default(VersionedAst);
             }
 
-            PythonAst ast;
-            IAnalysisCookie cookie;
-            entry.GetTreeAndCookie(out ast, out cookie);
+            var parse = entry.GetCurrentParse();
+            var ast = parse?.Tree;
+            var cookie = parse?.Cookie;
 
             if (cookie is VersionCookie vc) {
                 int i = _server.GetPart(documentUri);

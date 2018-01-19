@@ -2702,6 +2702,13 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
+            while (match >= 0 && index == lineLocations[match].EndIndex && lineLocations[match].Kind == NewLineKind.None) {
+                match -= 1;
+            }
+            if (match < 0) {
+                return new SourceLocation(index, 1, checked(index + 1));
+            }
+
             int line = match + 2;
             int col = index - lineLocations[match].EndIndex + 1;
             return new SourceLocation(index, line, col);

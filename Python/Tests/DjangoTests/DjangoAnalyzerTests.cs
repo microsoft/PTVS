@@ -77,7 +77,10 @@ namespace DjangoTests {
                 new StringReader(File.ReadAllText(entry.FilePath).Replace("test_filter_2", "test_filter_3")),
                 PythonLanguageVersion.V27
             );
-            entry.UpdateTree(parser.ParseFile(), null);
+            using (var p = entry.BeginParse()) {
+                p.Tree = parser.ParseFile();
+                p.Complete();
+            }
             entry.Analyze(CancellationToken.None, false);
 
             AssertUtil.ContainsExactly(
@@ -104,7 +107,10 @@ namespace DjangoTests {
                 new StringReader(File.ReadAllText(entry.FilePath).Replace("test_tag_2", "test_tag_3")),
                 PythonLanguageVersion.V27
             );
-            entry.UpdateTree(parser.ParseFile(), null);
+            using (var p = entry.BeginParse()) {
+                p.Tree = parser.ParseFile();
+                p.Complete();
+            }
             entry.Analyze(CancellationToken.None, false);
 
             AssertUtil.ContainsExactly(
@@ -167,7 +173,10 @@ namespace DjangoTests {
                     new FileStream(file, FileMode.Open, FileAccess.Read),
                     PythonLanguageVersion.V27
                 );
-                entry.UpdateTree(parser.ParseFile(), null);
+                using (var p = entry.BeginParse()) {
+                    p.Tree = parser.ParseFile();
+                    p.Complete();
+                }
                 entries.Add(entry);
             }
 

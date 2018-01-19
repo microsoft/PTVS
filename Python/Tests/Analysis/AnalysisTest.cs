@@ -4712,7 +4712,10 @@ min(a, D())
                     var ast = nodes[i];
 
                     if (ast != null) {
-                        modules[i].UpdateTree(ast, null);
+                        using (var p = modules[i].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
                 }
 
@@ -4740,7 +4743,10 @@ min(a, D())
                     using (var reader = new FileStreamReader(modules[index].FilePath)) {
                         var ast = Parser.CreateParser(reader, projectState.LanguageVersion).ParseFile();
 
-                        modules[index].UpdateTree(ast, null);
+                        using (var p = modules[index].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
 
                     modules[index].Analyze(CancellationToken.None, true);

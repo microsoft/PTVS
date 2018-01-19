@@ -492,7 +492,10 @@ from System.Windows.Media import Colors
 
                 using (var stream = new FileStreamReader(pyPath)) {
                     var parser = Parser.CreateParser(stream, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true });
-                    pyEntry.UpdateTree(parser.ParseFile(), null);
+                    using (var p = pyEntry.BeginParse()) {
+                        p.Tree = parser.ParseFile();
+                        p.Complete();
+                    }
                 }
 
                 pyEntry.Analyze(CancellationToken.None);

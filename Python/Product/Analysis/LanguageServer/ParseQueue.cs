@@ -32,181 +32,222 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const string PythonParserSource = "Python";
         private const string TaskCommentSource = "Task comment";
 
-        private readonly ConcurrentDictionary<IDocument, Task<IAnalysisCookie>> _parsing;
-
+        private readonly ConcurrentDictionary<IDocument, ParseTask> _parsing;
         private readonly VolatileCounter _parsingInProgress;
 
         public ParseQueue() {
             _parsingInProgress = new VolatileCounter();
-            _parsing = new ConcurrentDictionary<IDocument, Task<IAnalysisCookie>>();
+            _parsing = new ConcurrentDictionary<IDocument, ParseTask>();
         }
 
         public int Count => _parsingInProgress.Count;
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
-        private static void AbortParsingTree(IPythonProjectEntry entry) {
-            if (entry == null) {
-                return;
-            }
-
-            entry.GetTreeAndCookie(out var tree, out var cookie);
-            entry.UpdateTree(tree, cookie);
-        }
-
         public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
             if (doc == null) {
                 throw new ArgumentNullException(nameof(doc));
             }
 
-            (doc as IPythonProjectEntry)?.BeginParsingTree();
-            _parsingInProgress.Increment();
-
-            Task<IAnalysisCookie> result = null;
+            var task = new ParseTask(this, doc, languageVersion);
             try {
-                result = _parsing.AddOrUpdate(doc,
-                    _ => ParseAndClearEntry(doc, languageVersion, null),
-                    (_, prev) => ParseAndClearEntry(doc, languageVersion, prev)
-                );
-                return result;
+                return _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
             } finally {
-                if (result == null) {
-                    AbortParsingTree(doc as IPythonProjectEntry);
-                    _parsingInProgress.Decrement();
-                }
+                task.DisposeIfNotStarted();
             }
         }
 
-        private Task<IAnalysisCookie> ParseAndClearEntry(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
-            var task = Parse(doc, languageVersion, previousTask);
-            task.ContinueWith(_ => _parsing.TryUpdate(doc, null, task));
-            return task;
-        }
+        private IPythonParse ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
+            IPythonParse result = null;
 
-        private async Task<IAnalysisCookie> Parse(IDocument doc, PythonLanguageVersion languageVersion, Task<IAnalysisCookie> previousTask) {
-            if (previousTask != null) {
-                try {
-                    await previousTask.ConfigureAwait(false);
-                } catch {
-                    // Don't care about any errors in the previous task.
-                    // We just do not want to start until it is finished.
-                }
-            }
-
-            return await Task.Factory.StartNew(
-                () => ParseWorker(doc, languageVersion),
-                TaskCreationOptions.RunContinuationsAsynchronously
-            ).ConfigureAwait(false);
-        }
-
-        private IAnalysisCookie ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
-            IAnalysisCookie result = null;
-
-            try {
-                if (doc is IExternalProjectEntry externalEntry) {
-                    using (var r = doc.ReadDocument(0, out var version)) {
-                        if (r == null) {
-                            throw new FileNotFoundException("failed to parse file", externalEntry.FilePath);
-                        }
-                        result = new VersionCookie(version);
-                        externalEntry.ParseContent(r, result);
+            if (doc is IExternalProjectEntry externalEntry) {
+                using (var r = doc.ReadDocument(0, out var version)) {
+                    if (r == null) {
+                        throw new FileNotFoundException("failed to parse file", externalEntry.FilePath);
                     }
-                } else if (doc is IPythonProjectEntry pyEntry) {
-                    bool complete = false;
-                    pyEntry.GetTreeAndCookie(out _, out var lastCookie);
-                    var lastVc = lastCookie as VersionCookie;
-                    try {
-                        var buffers = new SortedDictionary<int, BufferVersion>();
-                        foreach (var part in doc.DocumentParts.Reverse()) {
-                            using (var r = doc.ReadDocumentBytes(part, out var version)) {
-                                if (r == null) {
-                                    continue;
-                                }
-                                if (version >= 0 && lastVc != null && lastVc.Versions.TryGetValue(part, out var lastParse) && lastParse.Version >= version) {
-                                    buffers[part] = lastParse;
-                                    continue;
-                                }
-                                ParsePython(r, pyEntry, languageVersion, out var tree, out List<Diagnostic> diags);
-                                buffers[part] = new BufferVersion(
-                                    version,
-                                    tree,
-                                    diags.MaybeEnumerate()
-                                );
-                            }
-                        }
-                        if (!buffers.Any()) {
-                            throw new FileNotFoundException($"failed to parse file {pyEntry.DocumentUri.AbsoluteUri}", pyEntry.FilePath);
-                        }
-                        complete = true;
-                        result = UpdateTree(pyEntry, buffers);
-                    } finally {
-                        if (!complete) {
-                            AbortParsingTree(pyEntry);
-                        }
-                    }
-                } else {
-                    Debug.Fail($"Don't know how to parse {doc.GetType().FullName}");
+                    result = new StaticPythonParse(null, new VersionCookie(version));
+                    externalEntry.ParseContent(r, result.Cookie);
                 }
-            } finally {
-                _parsingInProgress.Decrement();
+            } else if (doc is IPythonProjectEntry pyEntry) {
+                var lastParse = pyEntry.GetCurrentParse();
+                result = ParsePythonEntry(pyEntry, languageVersion, lastParse?.Cookie as VersionCookie);
+            } else {
+                Debug.Fail($"Don't know how to parse {doc.GetType().FullName}");
             }
             return result;
         }
 
-        private IAnalysisCookie UpdateTree(IPythonProjectEntry entry, SortedDictionary<int, BufferVersion> buffers) {
-            bool needAbort = true;
-            try {
-                var cookie = new VersionCookie(buffers);
+        private IPythonParse ParsePythonEntry(IPythonProjectEntry entry, PythonLanguageVersion languageVersion, VersionCookie lastParseCookie) {
+            PythonAst tree;
+            var doc = (IDocument)entry;
+            var buffers = new SortedDictionary<int, BufferVersion>();
+            foreach (var part in doc.DocumentParts.Reverse()) {
+                using (var r = doc.ReadDocumentBytes(part, out int version)) {
+                    if (r == null) {
+                        continue;
+                    }
 
-                if (buffers.Count == 1) {
-                    entry.UpdateTree(buffers.First().Value.Ast, cookie);
-                    needAbort = false;
-                    return cookie;
-                }
+                    if (version >= 0 && lastParseCookie != null && lastParseCookie.Versions.TryGetValue(part, out var lastParse) && lastParse.Version >= version) {
+                        buffers[part] = lastParse;
+                        continue;
+                    }
 
-                var tree = new PythonAst(buffers.Values.Select(v => v.Ast));
-                entry.UpdateTree(tree, cookie);
-                needAbort = false;
-                return cookie;
-            } finally {
-                if (needAbort) {
-                    AbortParsingTree(entry);
+                    buffers[part] = ParsePython(r, entry, languageVersion, version);
                 }
             }
+
+            if (!buffers.Any()) {
+                throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
+            }
+
+            var cookie = new VersionCookie(buffers);
+
+            if (buffers.Count == 1) {
+                tree = buffers.First().Value.Ast;
+            } else {
+                tree = new PythonAst(buffers.Values.Select(v => v.Ast));
+            }
+
+            return new StaticPythonParse(tree, cookie);
         }
 
         public Dictionary<string, DiagnosticSeverity> TaskCommentMap { get; set; }
 
         public DiagnosticSeverity InconsistentIndentation { get; set; }
 
-        private void ParsePython(
+        sealed class ParseTask {
+            private readonly ParseQueue _queue;
+            private readonly IDocument _document;
+            private readonly PythonLanguageVersion _languageVersion;
+
+            private readonly IPythonParse _parse;
+
+            private readonly TaskCompletionSource<IAnalysisCookie> _tcs;
+            private Task<IAnalysisCookie> _previous;
+
+            // State transitions:
+            //  UNSTARTED -> QUEUED     when Start() called
+            //  QUEUED    -> STARTED    when worker starts running on worker thread
+            //  STARTED   -> DISPOSED   when task completes
+            //  UNSTARTED -> DISPOSED   when DisposeIfNotStarted() is called
+            private const int UNSTARTED = 0;
+            private const int QUEUED = 1;
+            private const int STARTED = 2;
+            private const int DISPOSED = 3;
+            private int _state = UNSTARTED;
+
+            public ParseTask(ParseQueue queue, IDocument document, PythonLanguageVersion languageVersion) {
+                _queue = queue;
+                _document = document;
+                _languageVersion = languageVersion;
+
+                _queue._parsingInProgress.Increment();
+                _parse = (_document as IPythonProjectEntry)?.BeginParse();
+
+                _tcs = new TaskCompletionSource<IAnalysisCookie>();
+            }
+
+            public Task<IAnalysisCookie> Task => _tcs.Task;
+
+            public void DisposeIfNotStarted() {
+                if (Interlocked.CompareExchange(ref _state, DISPOSED, UNSTARTED) == UNSTARTED) {
+                    DisposeWorker();
+                }
+            }
+
+            private void DisposeWorker() {
+                Debug.Assert(Volatile.Read(ref _state) == DISPOSED);
+
+                _parse?.Dispose();
+                _queue._parsingInProgress.Decrement();
+            }
+
+            public ParseTask ContinueAfter(ParseTask currentTask) {
+                // Set our previous task
+                Volatile.Write(ref _previous, currentTask?.Task);
+
+                return this;
+            }
+
+            public Task<IAnalysisCookie> Start() {
+                int actualState = Interlocked.CompareExchange(ref _state, QUEUED, UNSTARTED);
+                if (actualState != UNSTARTED) {
+                    if (actualState == DISPOSED) {
+                        throw new ObjectDisposedException(GetType().FullName);
+                    }
+                    throw new InvalidOperationException("cannot start parsing");
+                }
+
+                // If we were pending, calling start ensures we are queued
+                var previous = Interlocked.Exchange(ref _previous, null);
+                if (previous != null) {
+                    previous.ContinueWith(StartAfterTask);
+                    return Task;
+                }
+
+                ThreadPool.QueueUserWorkItem(StartWork);
+                return Task;
+            }
+
+            private void StartAfterTask(Task<IAnalysisCookie> previous) {
+                ThreadPool.QueueUserWorkItem(StartWork);
+            }
+
+            private void StartWork(object state) {
+                int actualState = Interlocked.CompareExchange(ref _state, STARTED, QUEUED);
+                if (actualState != QUEUED) {
+                    // Silently complete if we are not queued.
+                    if (Interlocked.Exchange(ref _state, DISPOSED) != DISPOSED) {
+                        DisposeWorker();
+                    }
+                    return;
+                }
+
+                try {
+                    var r = _queue.ParseWorker(_document, _languageVersion);
+                    if (r != null && _parse != null) {
+                        _parse.Tree = r.Tree;
+                        _parse.Cookie = r.Cookie;
+                        _parse.Complete();
+                    }
+                    _tcs.SetResult(r?.Cookie);
+                } catch (Exception ex) {
+                    _tcs.SetException(ex);
+                } finally {
+                    if (Interlocked.CompareExchange(ref _state, DISPOSED, STARTED) == STARTED) {
+                        DisposeWorker();
+                    }
+                }
+            }
+        }
+
+
+        private BufferVersion ParsePython(
             Stream stream,
             IPythonProjectEntry entry,
-            PythonLanguageVersion version,
-            out PythonAst tree,
-            out List<Diagnostic> diagnostics
+            PythonLanguageVersion languageVersion,
+            int version
         ) {
             var opts = new ParserOptions {
                 BindReferences = true,
                 IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation)
             };
 
-            var u = entry.DocumentUri;
-            if (u != null) {
-                var diags = new List<Diagnostic>();
-                diagnostics = diags;
+            List<Diagnostic> diags = null;
+
+            if (entry.DocumentUri != null) {
+                diags = new List<Diagnostic>();
                 opts.ErrorSink = new DiagnosticsErrorSink(PythonParserSource, d => { lock (diags) diags.Add(d); });
                 var tcm = TaskCommentMap;
                 if (tcm != null && tcm.Any()) {
                     opts.ProcessComment += new DiagnosticsErrorSink(TaskCommentSource, d => { lock (diags) diags.Add(d); }, tcm).ProcessTaskComment;
                 }
-            } else {
-                diagnostics = null;
             }
 
-            var parser = Parser.CreateParser(stream, version, opts);
+            var parser = Parser.CreateParser(stream, languageVersion, opts);
+            var tree = parser.ParseFile();
 
-            tree = parser.ParseFile();
+            return new BufferVersion(version, tree, diags.MaybeEnumerate());
         }
     }
 }
