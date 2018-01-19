@@ -186,6 +186,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
             var bi = _services.GetBufferInfo(subjectBuffer);
+            // Cannot analyze buffers without a URI
+            if (bi.DocumentUri == null) {
+                return;
+            }
+
             var entry = bi.AnalysisEntry;
 
             if (entry == null) {

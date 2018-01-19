@@ -239,12 +239,15 @@ namespace Microsoft.PythonTools.Intellisense {
             // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                analyzer = evaluator.Analyzer;
-                filename = null;
-                if (evaluator.DocumentUri != null && evaluator.DocumentUri.IsFile) {
-                    filename = evaluator.DocumentUri.LocalPath;
+                var uri = evaluator.DocumentUri;
+                if (uri?.IsFile ?? false) {
+                    analyzer = evaluator.Analyzer;
+                    filename = uri.LocalPath;
+                    return analyzer != null;
                 }
-                return analyzer != null;
+                analyzer = null;
+                filename = null;
+                return false;
             }
 
             // If we find an associated project, use its analyzer
