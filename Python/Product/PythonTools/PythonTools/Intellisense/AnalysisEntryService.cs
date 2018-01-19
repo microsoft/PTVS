@@ -240,7 +240,10 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
                 analyzer = evaluator.Analyzer;
-                filename = evaluator.DocumentUri.IsFile ? evaluator.DocumentUri.LocalPath : null;
+                filename = null;
+                if (evaluator.DocumentUri != null && evaluator.DocumentUri.IsFile) {
+                    filename = evaluator.DocumentUri.LocalPath;
+                }
                 return analyzer != null;
             }
 
