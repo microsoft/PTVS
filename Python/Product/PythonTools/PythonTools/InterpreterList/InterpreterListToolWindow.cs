@@ -47,7 +47,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
 
-        public InterpreterListToolWindow() { }
+        private readonly Dictionary<EnvironmentView, string> _cachedScriptPaths;
+
+        public InterpreterListToolWindow() {
+            _cachedScriptPaths = new Dictionary<EnvironmentView, string>();
+        }
 
         protected override void OnCreate() {
             base.OnCreate();
@@ -56,6 +60,8 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             _pyService = _site.GetPythonToolsService();
             _uiThread = _site.GetUIThread();
+
+            _pyService.InteractiveOptions.Changed += InteractiveOptions_Changed;
 
             // TODO: Get PYEnvironment added to image list
             BitmapImageMoniker = KnownMonikers.DockPanel;
@@ -129,17 +135,41 @@ namespace Microsoft.PythonTools.InterpreterList {
             Content = list;
         }
 
+        private void InteractiveOptions_Changed(object sender, EventArgs e) {
+            lock (_cachedScriptPaths) {
+                _cachedScriptPaths.Clear();
+            }
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         private string GetScriptPath(EnvironmentView view) {
             if (view == null) {
                 return null;
             }
 
-            return _uiThread.Invoke(() => PythonInteractiveEvaluator.GetScriptsPath(
-                _site,
-                view.Description,
-                view.Factory.Configuration,
-                false
-            ));
+            string path;
+            lock (_cachedScriptPaths) {
+                if (_cachedScriptPaths.TryGetValue(view, out path)) {
+                    return path;
+                }
+            }
+
+            try {
+                path = _uiThread.Invoke(() => PythonInteractiveEvaluator.GetScriptsPath(
+                    _site,
+                    view.Description,
+                    view.Factory.Configuration,
+                    false
+                ));
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                view.Dispatcher.BeginInvoke((Action)(() => ex.ReportUnhandledException(_site, GetType())), DispatcherPriority.ApplicationIdle);
+                path = null;
+            }
+
+            lock (_cachedScriptPaths) {
+                _cachedScriptPaths[view] = path;
+            }
+            return path;
         }
 
         private void OpenInteractiveScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
