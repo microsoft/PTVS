@@ -35,14 +35,15 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor {
     sealed class PythonTextBufferInfo {
+        private static readonly object PythonTextBufferInfoKey = new { Id = "PythonTextBufferInfo" };
+
         public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
             var bi = (buffer ?? throw new ArgumentNullException(nameof(buffer))).Properties.GetOrCreateSingletonProperty(
-                typeof(PythonTextBufferInfo),
+                PythonTextBufferInfoKey,
                 () => new PythonTextBufferInfo(services, buffer)
             );
             if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
-                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
             }
             return bi;
         }
@@ -52,12 +53,11 @@ namespace Microsoft.PythonTools.Editor {
             if (buffer == null) {
                 return null;
             }
-            if (!buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi) || bi == null) {
+            if (!buffer.Properties.TryGetProperty(PythonTextBufferInfoKey, out bi) || bi == null) {
                 return null;
             }
             if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
-                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
             }
             return bi;
         }
@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Editor {
                 newInfo._eventSinks[sink.Key] = sink.Value;
             }
 
-            Buffer.Properties[typeof(PythonTextBufferInfo)] = newInfo;
+            Buffer.Properties[PythonTextBufferInfoKey] = newInfo;
 
             Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
             Buffer.Changed -= Buffer_TextContentChanged;

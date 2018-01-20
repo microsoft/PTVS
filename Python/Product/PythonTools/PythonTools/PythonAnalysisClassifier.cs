@@ -220,6 +220,11 @@ namespace Microsoft.PythonTools {
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
                 return OnNewAnalysisAsync(sender, e.AnalysisEntry);
+            } else if (e.Event == PythonTextBufferInfoEvents.NewTextBufferInfo) {
+                var entry = sender.AnalysisEntry;
+                if (entry != null) {
+                    return OnNewAnalysisAsync(sender, entry);
+                }
             }
             return Task.CompletedTask;
         }
