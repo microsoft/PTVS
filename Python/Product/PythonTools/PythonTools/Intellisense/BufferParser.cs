@@ -289,40 +289,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static bool CanMerge(AP.ChangeInfo prevChange, ITextChange change, LocationTracker tracker, int version) {
-            if (prevChange == null || tracker == null || change == null) {
-                return false;
-            }
-            if (string.IsNullOrEmpty(prevChange.newText)) {
-                return false;
-            }
-
-            if (change.OldLength != 0 || prevChange.startLine != prevChange.endLine || prevChange.startColumn != prevChange.endColumn) {
-                return false;
-            }
-
-            var prevEnd = new SourceLocation(prevChange.startLine, prevChange.startColumn).AddColumns(prevChange.newText?.Length ?? 0);
-            if (tracker.GetIndex(prevEnd, version) != change.OldPosition) {
-                return false;
-            }
-
-            return true;
-        }
-
         internal static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
-                AP.ChangeInfo prev = null;
                 foreach (var change in curVersion.Changes) {
-                    if (CanMerge(prev, change, buffer.LocationTracker, curVersion.VersionNumber)) {
-                        // we can merge the two changes together
-                        prev.newText += change.NewText;
-                        continue;
-                    }
-
                     var oldPos = buffer.LocationTracker.GetSourceLocation(change.OldPosition, curVersion.VersionNumber);
                     var oldEnd = buffer.LocationTracker.GetSourceLocation(change.OldEnd, curVersion.VersionNumber);
-                    prev = new AP.ChangeInfo {
+                    changes.Add(new AP.ChangeInfo {
                         startLine = oldPos.Line,
                         startColumn = oldPos.Column,
                         endLine = oldEnd.Line,
@@ -332,8 +305,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _startIndex = change.OldPosition,
                         _endIndex = change.OldEnd
 #endif
-                    };
-                    changes.Add(prev);
+                    });
                 }
             }
 
