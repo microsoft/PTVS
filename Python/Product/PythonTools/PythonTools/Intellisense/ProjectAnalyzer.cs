@@ -1586,7 +1586,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _services.Site,
                         e,
                         ge.Key,
-                        VSTASKCATEGORY.CAT_BUILDCOMPILE,
+                        VSTASKCATEGORY.CAT_CODESENSE,
                         true
                     ))).ToList();
 

@@ -436,7 +436,7 @@ sys.modules['test.imported'] = test_import_2
             )) {
                 var entry = newPs.NewModule("test2", "import test as t; import test.imported as p");
                 AssertUtil.ContainsExactly(
-                    entry.Analysis.GetMemberNamesByIndex("t", 0),
+                    entry.Analysis.GetMemberNamesByIndex("t", 0).Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__")),
                     "test_import_1",
                     "test_import_2",
                     "imported"

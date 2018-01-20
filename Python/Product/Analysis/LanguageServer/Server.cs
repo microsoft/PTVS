@@ -759,14 +759,26 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
+                int version = 0;
                 var parse = entry.GetCurrentParse();
                 if (parse?.Cookie is VersionCookie vc) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
+                        if (kv.Value.Version > version) {
+                            version = kv.Value.Version;
+                        }
                     }
                 } else {
                     AnalysisComplete(entry.DocumentUri, 0);
                 }
+
+                var diags = _analyzer.GetDiagnostics(entry);
+
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                    diagnostics = _analyzer.GetDiagnostics(entry),
+                    uri = entry.DocumentUri,
+                    _version = version
+                });
             }
         }
 

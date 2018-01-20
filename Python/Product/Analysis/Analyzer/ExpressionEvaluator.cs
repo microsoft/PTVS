@@ -133,8 +133,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
-            if (createIn != null && !res.Any()) {
-                createIn.CreateVariable(node, _unit, name, addRef);
+            if (!_unit.ForEval && !res.Any()) {
+                ProjectState.AddDiagnostic(node, _unit, $"unknown variable '{name}'", LanguageServer.DiagnosticSeverity.Warning, "used-before-assignment");
+                createIn?.CreateVariable(node, _unit, name, addRef);
             }
             return res;
         }

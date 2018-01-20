@@ -22,6 +22,7 @@ using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -59,6 +60,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _scope.ClearNodeScopes();
             _referencedModules.Clear();
             _unresolvedModules.Clear();
+        }
+
+        internal void EnsureModuleVariables(PythonAnalyzer state) {
+            var entry = ProjectEntry;
+
+            _scope.SetModuleVariable("__builtins__", state.ClassInfos[BuiltinTypeId.Dict].Instance);
+            _scope.SetModuleVariable("__file__", GetStr(state, entry.FilePath));
+            _scope.SetModuleVariable("__name__", GetStr(state, Name));
+            _scope.SetModuleVariable("__package__", GetStr(state, ParentPackage?.Name));
+            if (state.LanguageVersion.Is3x()) {
+                _scope.SetModuleVariable("__cached__", GetStr(state));
+                if (ModulePath.IsInitPyFile(entry.FilePath)) {
+                    _scope.SetModuleVariable("__path__", state.ClassInfos[BuiltinTypeId.List].Instance);
+                }
+                _scope.SetModuleVariable("__spec__", state.ClassInfos[BuiltinTypeId.Object].Instance);
+            }
+            ModuleDefinition.EnqueueDependents();
+
+        }
+        private static IAnalysisSet GetStr(PythonAnalyzer state, string s = null) {
+            if (string.IsNullOrEmpty(s)) {
+                return state.ClassInfos[BuiltinTypeId.Str].Instance;
+            }
+            if (state.LanguageVersion.Is2x()) {
+                return state.GetConstant(new AsciiString(new UTF8Encoding(false).GetBytes(s), s));
+            }
+            return state.GetConstant(s);
         }
 
         /// <summary>
