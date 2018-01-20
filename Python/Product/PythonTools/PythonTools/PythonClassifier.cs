@@ -154,6 +154,11 @@ namespace Microsoft.PythonTools {
                 return OnNewAnalysisEntryAsync(sender, e.AnalysisEntry);
             } else if (e.Event == PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread) {
                 return OnTextContentChangedAsync(sender, (e as PythonTextBufferInfoNestedEventArgs)?.NestedEventArgs as TextContentChangedEventArgs);
+            } else if (e.Event == PythonTextBufferInfoEvents.NewTextBufferInfo) {
+                var entry = sender.AnalysisEntry;
+                if (entry != null) {
+                    return OnNewAnalysisEntryAsync(sender, entry);
+                }
             }
             return Task.CompletedTask;
         }
