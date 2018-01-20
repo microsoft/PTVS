@@ -327,6 +327,10 @@ def f(a, *b, **c): pass
                 new string[0]
             );
 
+            if (Default.Configuration.Version.Major != 3) {
+                return;
+            }
+
             await s.UnloadFileAsync(mod);
 
             mod = await AddModule(s, @"f()
