@@ -358,26 +358,6 @@ mc";
             Assert.AreEqual(Tuple.Create("test", 1), await ApplyChange(s, mod, DocumentChange.Insert("test", SourceLocation.MinValue)));
         }
 
-        private static async Task<PublishDiagnosticsEventArgs> WaitForDiagnostics(Server s, int minimumVersion, Func<Task> action, CancellationToken cancellationToken) {
-            var tcs = new TaskCompletionSource<PublishDiagnosticsEventArgs>();
-
-            if (cancellationToken.CanBeCanceled) {
-                cancellationToken.Register(() => tcs.TrySetCanceled());
-            }
-
-            EventHandler<PublishDiagnosticsEventArgs> handler = null;
-            handler = (sender, pdea) => {
-                if (pdea._version >= minimumVersion) {
-                    tcs.TrySetResult(pdea);
-                    s.OnPublishDiagnostics -= handler;
-                }
-            };
-            s.OnPublishDiagnostics += handler;
-
-            await action().ConfigureAwait(false);
-            return await tcs.Task.ConfigureAwait(false);
-        }
-
         [TestMethod, Priority(0)]
         public async Task ParseErrorDiagnostics() {
             var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
