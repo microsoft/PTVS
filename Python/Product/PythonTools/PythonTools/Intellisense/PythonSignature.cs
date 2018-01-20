@@ -117,10 +117,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 parameters[i] = new PythonParameter(
                     this,
-                    param,
+                    param.name,
+                    param.doc,
                     paramSpan,
-                    ppParamSpan,
-                    param.variables != null ? param.variables.Select(_analyzer.ToAnalysisVariable).ToArray() : null
+                    ppParamSpan
                 );
 
                 if (isDict && _dictParamIndex == int.MaxValue) {

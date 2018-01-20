@@ -132,9 +132,10 @@ namespace Microsoft.PythonTools.Refactoring {
                     PythonSignature overloadRes = sig as PythonSignature;
                     if (overloadRes != null) {
                         foreach (PythonParameter param in overloadRes.Parameters) {
-                            if (param.Name == originalName && param.Variables != null) {
-                                paramVars.AddRange(param.Variables);
-                            }
+                            // UNDONE: Need to get parameter references some other way
+                            //if (param.Name == originalName && param.Variables != null) {
+                            //    paramVars.AddRange(param.Variables);
+                            //}
                         }
                     }
                 }

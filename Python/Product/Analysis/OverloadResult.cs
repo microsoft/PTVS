@@ -138,6 +138,104 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
+    class AccumulatedOverloadResult {
+        private string _name;
+        private string _doc;
+        private string[] _pnames;
+        private IAnalysisSet[] _ptypes;
+        private string[] _pdefaults;
+
+        public AccumulatedOverloadResult(string name, string documentation, int parameters) {
+            _name = name;
+            _doc = documentation;
+            _pnames = new string[parameters];
+            _ptypes = new IAnalysisSet[parameters];
+            _pdefaults = new string[parameters];
+            ParameterCount = parameters;
+        }
+
+        public int ParameterCount { get; }
+
+        private bool AreNullOrEqual(string x, string y) {
+            return string.IsNullOrEmpty(x) || string.IsNullOrEmpty(y) || string.Equals(x, y, StringComparison.Ordinal);
+        }
+
+        private bool AreNullOrEqual(IAnalysisSet x, IAnalysisSet y) {
+            return x == null || x.IsObjectOrUnknown() ||
+                y == null || y.IsObjectOrUnknown() ||
+                x.SetEquals(y);
+        }
+
+        private string ChooseBest(string x, string y) {
+            if (string.IsNullOrEmpty(x)) {
+                return string.IsNullOrEmpty(y) ? null : y;
+            }
+            if (string.IsNullOrEmpty(y)) {
+                return null;
+            }
+            return x.Length >= y.Length ? x : y;
+        }
+
+        private IAnalysisSet ChooseBest(IAnalysisSet x, IAnalysisSet y) {
+            if (x == null || x.IsObjectOrUnknown()) {
+                return (y == null || y.IsObjectOrUnknown()) ? AnalysisSet.Empty : y;
+            }
+            if (y == null || y.IsObjectOrUnknown()) {
+                return AnalysisSet.Empty;
+            }
+            return x.Union(y);
+        }
+
+        public bool TryAddOverload(string name, string documentation, string[] names, IAnalysisSet[] types, string[] defaults) {
+            if (names.Length != _pnames.Length || types.Length != _ptypes.Length) {
+                return false;
+            }
+            if (!names.Zip(_pnames, AreNullOrEqual).All(b => b)) {
+                return false;
+            }
+            if (!types.Zip(_ptypes, AreNullOrEqual).All(b => b)) {
+                return false;
+            }
+            if (!defaults.Zip(_pdefaults, AreNullOrEqual).All(b => b)) {
+                return false;
+            }
+
+            for (int i = 0; i < _pnames.Length; ++i) {
+                _pnames[i] = ChooseBest(_pnames[i], names[i]);
+                _ptypes[i] = ChooseBest(_ptypes[i], types[i]);
+                _pdefaults[i] = ChooseBest(_pdefaults[i], defaults[i]);
+            }
+
+            if (string.IsNullOrEmpty(_name)) {
+                _name = name;
+            }
+            if (string.IsNullOrEmpty(_doc)) {
+                _doc = documentation;
+            }
+
+            return true;
+        }
+
+        public OverloadResult ToOverloadResult() {
+            var parameters = new ParameterResult[_pnames.Length];
+            for (int i = 0; i < parameters.Length; ++i) {
+                if (string.IsNullOrEmpty(_pnames[i])) {
+                    return null;
+                }
+
+                parameters[i] = new ParameterResult(
+                    _pnames[i],
+                    null,
+                    (_ptypes[i] == null || _ptypes[i].IsObjectOrUnknown()) ? null : string.Join(", ", _ptypes[i].GetShortDescriptions()),
+                    false,
+                    null,
+                    _pdefaults[i]
+                );
+            }
+            return new SimpleOverloadResult(parameters, _name, _doc);
+        }
+    }
+
     class BuiltinFunctionOverloadResult : OverloadResult {
         private readonly IPythonFunctionOverload _overload;
         private ParameterResult[] _parameters;

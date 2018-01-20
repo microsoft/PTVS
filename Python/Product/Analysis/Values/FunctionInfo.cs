@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
 
-                var references = new Dictionary<string[], IEnumerable<AnalysisVariable>[]>(new StringArrayComparer());
+                var parameterSets = new List<AccumulatedOverloadResult>();
 
                 var units = new HashSet<AnalysisUnit>();
                 units.Add(AnalysisUnit);
@@ -445,51 +445,46 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 foreach (var unit in units) {
+                    var names = FunctionDefinition.Parameters.Select(MakeParameterName).ToArray();
+
                     var vars = FunctionDefinition.Parameters.Select(p => {
                         VariableDef param;
                         if (unit.Scope.TryGetVariable(p.Name, out param)) {
-                            return param;
+                            return param.Types;
                         }
                         return null;
                     }).ToArray();
 
-                    var parameters = vars
-                        .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
-                        .ToArray();
+                    var defaults = FunctionDefinition.Parameters.Select(p => GetDefaultValue(unit.ProjectState, p, DeclaringModule.Tree)).ToArray();
 
-                    IEnumerable<AnalysisVariable>[] refs;
-                    if (references.TryGetValue(parameters, out refs)) {
-                        refs = refs.Zip(vars, (r, v) => r.Concat(ProjectEntry.Analysis.ToVariables(v))).ToArray();
-                    } else {
-                        refs = vars.Select(v => ProjectEntry.Analysis.ToVariables(v)).ToArray();
+                    bool needNewSet = true;
+                    foreach (var set in parameterSets) {
+                        if (set.ParameterCount == names.Length) {
+                            if (set.TryAddOverload(null, null, names, vars, defaults)) {
+                                needNewSet = false;
+                                break;
+                            }
+                        }
                     }
-                    references[parameters] = refs;
+
+                    if (needNewSet) {
+                        var set = new AccumulatedOverloadResult(FunctionDefinition.Name, Documentation, names.Length);
+                        parameterSets.Add(set);
+                        set.TryAddOverload(null, null, names, vars, defaults);
+                    }
                 }
 
-                foreach (var keyValue in references) {
-                    yield return new SimpleOverloadResult(
-                        FunctionDefinition.Parameters.Select((p, i) => ToParameterResult(p, keyValue.Key[i], keyValue.Value[i], ProjectState, DeclaringModule.Tree)).ToArray(),
-                        FunctionDefinition.Name,
-                        Documentation
-                    );
+                foreach (var s in parameterSets) {
+                    var o = s.ToOverloadResult();
+                    if (o != null) {
+                        yield return o;
+                    }
                 }
             }
-        }
-
-        internal static ParameterResult ToParameterResult(Parameter p, string type, IEnumerable<AnalysisVariable> refs, PythonAnalyzer state, PythonAst tree) {
-            if (p.IsDictionary) {
-                return new ParameterResult("**" + p.Name ?? "", null, null, false, refs, null);
-            } else if (p.IsList) {
-                return new ParameterResult("*" + p.Name ?? "", null, null, false, refs, null);
-            }
-
-            var name = p.Name ?? "";
-            var defaultValue = GetDefaultValue(state, p, tree);
-            return new ParameterResult(name, null, type, false, refs, defaultValue);
         }
 
         internal static string MakeParameterName(Parameter curParam) {
-            string name = curParam.Name;
+            string name = curParam.Name ?? "";
             if (curParam.IsDictionary) {
                 name = "**" + name;
             } else if (curParam.IsList) {
@@ -518,12 +513,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal static string GetAnnotation(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
-            var a = curParam.Annotation;
-            if (a == null) {
-                return null;
+        internal string GetAnnotation(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
+            var vars = AnalysisSet.EmptyUnion;
+            if (!string.IsNullOrEmpty(curParam.Name)) {
+                var limit = state.Limits.NormalArgumentTypes;
+                if (curParam.IsList) {
+                    limit = state.Limits.ListArgumentTypes;
+                } else if (curParam.IsDictionary) {
+                    limit = state.Limits.DictArgumentTypes;
+                }
+
+                if (_analysisUnit.Scope.TryGetVariable(curParam.Name, out var vd)) {
+                    vars = vars.Union(vd.TypesNoCopy);
+                    if (vars.Count > limit) {
+                        vars = vars.AsStrongerUnion();
+                    }
+                }
+                foreach (var unit in _allCalls.Values) {
+                    if (unit.Scope.TryGetVariable(curParam.Name, out vd)) {
+                        vars = vars.Union(vd.TypesNoCopy);
+                        if (vars.Count > limit) {
+                            vars = vars.AsStrongerUnion();
+                        }
+                    }
+                }
+
+                if (!vars.IsObjectOrUnknown()) {
+                    return string.Join(", ", vars.GetShortDescriptions());
+                }
             }
-            return a.ToCodeString(tree, CodeFormattingOptions.Traditional).Trim();
+
+            var a = curParam.Annotation;
+            if (a != null) {
+                return a.ToCodeString(tree, CodeFormattingOptions.Traditional).Trim();
+            }
+            return null;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {

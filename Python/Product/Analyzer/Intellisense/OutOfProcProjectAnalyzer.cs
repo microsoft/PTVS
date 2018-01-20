@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.CompletionsRequest.Command: response = await GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = await GetModules(request); break;
-                case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
+                case AP.SignaturesRequest.Command: response = await GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
@@ -1436,25 +1436,33 @@ namespace Microsoft.PythonTools.Intellisense {
             return prettyPrinted.ToString().Trim();
         }
 
-        private Response GetSignatures(AP.SignaturesRequest request) {
-            var entry = GetPythonEntry(request.documentUri);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-            IEnumerable<IOverloadResult> sigs;
-            if (entry.Analysis != null) {
-                using (new DebugTimer("GetSignaturesByIndex")) {
-                    sigs = entry.Analysis.GetSignatures(
-                        request.text,
-                        new SourceLocation(request.line, request.column)
-                    );
-                }
-            } else {
-                sigs = Enumerable.Empty<IOverloadResult>();
+        private async Task<Response> GetSignatures(AP.SignaturesRequest request) {
+            LS.SignatureHelp sigs;
+
+            using (new DebugTimer("SignatureHelp")) {
+                sigs = await _server.SignatureHelp(new LS.TextDocumentPositionParams {
+                    textDocument = request.documentUri,
+                    position = new SourceLocation(request.line, request.column),
+                    _expr = request.text
+                });
             }
 
-            return new AP.SignaturesResponse() {
-                sigs = ToSignatures(sigs)
+            return new AP.SignaturesResponse {
+                sigs = sigs.signatures.Select(
+                    s => new AP.Signature {
+                        name = s.label,
+                        doc = s.documentation?.value,
+                        parameters = s.parameters.MaybeEnumerate().Select(
+                            p => new AP.Parameter {
+                                name = p.label,
+                                defaultValue = p._defaultValue,
+                                optional = p._isOptional ?? false,
+                                doc = p.documentation?.value,
+                                type = p._type
+                            }
+                        ).ToArray()
+                    }
+                ).ToArray()
             };
         }
 
@@ -1507,25 +1515,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.CompletionsResponse() {
                 completions = await ToCompletions(members)
             };
-        }
-
-        private AP.Signature[] ToSignatures(IEnumerable<IOverloadResult> sigs) {
-            return sigs.Select(
-                sig => new AP.Signature() {
-                    name = sig.Name,
-                    doc = sig.Documentation,
-                    parameters = sig.Parameters.Select(
-                        param => new AP.Parameter() {
-                            name = param.Name,
-                            defaultValue = param.DefaultValue,
-                            optional = param.IsOptional,
-                            doc = param.Documentation,
-                            type = param.Type,
-                            variables = param.Variables?.Select(MakeReference).Where(r => r != null).ToArray()
-                        }
-                    ).ToArray()
-                }
-            ).ToArray();
         }
 
         private async Task<AP.Completion[]> ToCompletions(IEnumerable<LS.SymbolInformation> symbols) {

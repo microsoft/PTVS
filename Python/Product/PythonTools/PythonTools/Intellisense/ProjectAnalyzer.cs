@@ -1322,7 +1322,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
+        /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal async Task<SignatureAnalysis> GetSignaturesAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;

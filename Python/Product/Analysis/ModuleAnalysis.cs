@@ -567,7 +567,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
-            // TODO: Include relevant type info on the parameter...
             result.UnionWith(lookup
                 // Exclude constant values first time through
                 .Where(av => av.MemberType != PythonMemberType.Constant)

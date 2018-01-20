@@ -239,8 +239,11 @@ namespace PythonToolsUITests {
                 doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
                 ((UIElement)doc.TextView).Focus();
             }));
-
-            Keyboard.Type("f(");
+            doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
+            
+            Keyboard.Type("f");
+            System.Threading.Thread.Sleep(500);
+            Keyboard.Type("(");
 
             using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
                 var session = sh.Session;
@@ -281,6 +284,7 @@ namespace PythonToolsUITests {
                 doc.TextView.Caret.MoveTo(point);
                 ((UIElement)doc.TextView).Focus();
             }));
+            doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
 
             app.ExecuteCommand("Edit.ParameterInfo");
 

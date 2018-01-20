@@ -310,6 +310,40 @@ mc";
         }
 
         [TestMethod, Priority(0)]
+        public async Task SignatureHelp() {
+            var s = await CreateServer(null);
+            var mod = await AddModule(s, @"f()
+def f(): pass
+def f(a): pass
+def f(a, b): pass
+def f(a, *b): pass
+def f(a, **b): pass
+def f(a, *b, **c): pass
+
+");
+
+            await AssertSignature(s, mod, 0, 2,
+                new string[] { "f()", "f(a:=)", "f(a:=,b:=)", "f(a:=,*b:tuple=)", "f(a:=,**b:dict=)", "f(a:=,*b:tuple=,**c:dict=)" },
+                new string[0]
+            );
+
+            await s.UnloadFileAsync(mod);
+
+            mod = await AddModule(s, @"f()
+def f(a : int): pass
+def f(a : int, b: int): pass
+def f(x : str, y: str): pass
+def f(a = 2, b): pass
+
+");
+
+            await AssertSignature(s, mod, 0, 2,
+                new string[] { "f(a:int=)", "f(a:int=2,b:int=)", "f(x:str=,y:str=)" },
+                new string[0]
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public async Task MultiPartDocument() {
             var s = await CreateServer(null);
 
@@ -443,6 +477,20 @@ mc";
                     context = context,
                     _expr = expr
                 })).items?.Select(cmpKey),
+                contains,
+                excludes
+            );
+        }
+
+        public static async Task AssertSignature(Server s, TextDocumentIdentifier document, int line, int character, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null) {
+            var sigs = (await s.SignatureHelp(new TextDocumentPositionParams {
+                textDocument = document,
+                position = new Position { line = line, character = character },
+                _expr = expr
+            })).signatures;
+
+            AssertUtil.CheckCollection(
+                sigs.Select(sig => $"{sig.label}({string.Join(",", sig.parameters.Select(p => $"{p.label}:{p._type}={p._defaultValue}"))})"),
                 contains,
                 excludes
             );

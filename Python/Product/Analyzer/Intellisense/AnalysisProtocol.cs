@@ -749,7 +749,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public class Parameter {
             public string name, defaultValue, doc, type;
             public bool optional;
-            public AnalysisReference[] variables;
         }
 
         public class FileAnalysisCompleteEvent : Event {

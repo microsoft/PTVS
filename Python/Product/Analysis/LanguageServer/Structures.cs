@@ -604,13 +604,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     public struct SignatureInformation {
         public string label;
-        public MarkupContent documentation;
+        public MarkupContent? documentation;
         public ParameterInformation[] parameters;
     }
 
     public struct ParameterInformation {
         public string label;
-        public MarkupContent documentation;
+        public MarkupContent? documentation;
+
+        public string _type;
+        public string _defaultValue;
+        public bool? _isOptional;
     }
 
     /// <summary>

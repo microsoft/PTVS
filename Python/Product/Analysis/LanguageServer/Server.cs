@@ -305,13 +305,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Completing expression {@params._expr}");
+                }
                 members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
+                    if (_traceLogging) {
+                        LogMessage(MessageType.Log, $"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    }
                     members = analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
+                    if (_traceLogging) {
+                        LogMessage(MessageType.Log, "Completing all names");
+                    }
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
@@ -319,6 +328,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?._includeAllModules ?? false) {
                 var mods = _analyzer.GetModules();
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Including {mods?.Length ?? 0} modules");
+                }
                 members = members?.Concat(mods) ?? mods;
             }
 
@@ -334,6 +346,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
                         .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
+                    if (_traceLogging) {
+                        argNames = argNames.MaybeEnumerate().ToArray();
+                        LogMessage(MessageType.Log, $"Including {argNames.Count()} named arguments");
+                    }
                     members = members?.Concat(argNames) ?? argNames;
                 }
             }
@@ -348,6 +364,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var filtered = members.Select(m => ToCompletionItem(m, opts));
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Only returning {filterKind.Value} items");
+                }
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
@@ -359,6 +378,63 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
             return item;
+        }
+
+        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            var uri = @params.textDocument.uri;
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"Signatures in {uri} at {@params.position}");
+            }
+
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"No analysis found for {uri}");
+                }
+                return new SignatureHelp { };
+            }
+
+            IEnumerable<IOverloadResult> overloads;
+            int activeSignature = -1, activeParameter = -1;
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Getting signatures for {@params._expr}");
+                }
+                overloads = analysis.GetSignatures(@params._expr, @params.position);
+            } else {
+                var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
+                int index = tree.LocationToIndex(@params.position);
+                if (finder.GetExpression(@params.position) is CallExpression callExpr) {
+                    if (_traceLogging) {
+                        LogMessage(MessageType.Log, $"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    }
+                    overloads = analysis.GetSignatures(callExpr.Target, @params.position);
+                    if (!callExpr.GetArgumentAtIndex(tree, index, out activeParameter)) {
+                        activeParameter = -1;
+                    }
+                } else {
+                    LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
+                    return new SignatureHelp { };
+                }
+            }
+
+            var sigs = overloads.Select(ToSignatureInformation).ToArray();
+            if (activeParameter >= 0 && activeSignature < 0) {
+                // TODO: Better selection of active signature
+                activeSignature = sigs
+                    .Select((s, i) => Tuple.Create(s, i))
+                    .OrderBy(t => t.Item1.parameters.Length)
+                    .FirstOrDefault(t => t.Item1.parameters.Length > activeParameter)
+                    ?.Item2 ?? -1;
+            }
+
+            return new SignatureHelp {
+                signatures = sigs,
+                activeSignature = activeSignature,
+                activeParameter = activeParameter
+            };
         }
 
         public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
@@ -875,6 +951,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 case PythonMemberType.NamedArgument: return SymbolKind.None;
                 default: return SymbolKind.None;
             }
+        }
+
+        private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
+            return new SignatureInformation {
+                label = overload.Name,
+                documentation = string.IsNullOrEmpty(overload.Documentation) ? (MarkupContent?)null : new MarkupContent {
+                    kind = MarkupKind.PlainText,
+                    value = overload.Documentation
+                },
+                parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
+                    label = p.Name,
+                    documentation = string.IsNullOrEmpty(p.Documentation) ? (MarkupContent?)null : new MarkupContent {
+                        kind = MarkupKind.PlainText,
+                        value = p.Documentation
+                    },
+                    _type = p.Type,
+                    _defaultValue = p.DefaultValue
+                }).ToArray()
+            };
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(
