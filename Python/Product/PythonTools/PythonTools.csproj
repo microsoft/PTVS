@@ -580,7 +580,6 @@
     </Compile>
     <Compile Include="PythonTools\Editor\AutoIndent.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
-    <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
