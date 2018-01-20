@@ -6846,6 +6846,28 @@ for x in []:
             entry.AssertDiagnostics();
         }
 
+        [TestMethod, Priority(0)]
+        public void UncallableObjectDiagnostic() {
+            var code = @"class MyClass:
+    pass
+
+class MyCallableClass:
+    def __call__(self): return 123
+
+mc = MyClass()
+mcc = MyCallableClass()
+
+x = mc()
+y = mcc()
+";
+            var entry = ProcessTextV3(code);
+            entry.AssertIsInstance("x");
+            entry.AssertIsInstance("y", BuiltinTypeId.Int);
+            entry.AssertDiagnostics(
+                "not-callable:'MyClass' may not be callable:(10,5) - (10,7)"
+            );
+        }
+
         #endregion
 
         #region Helpers

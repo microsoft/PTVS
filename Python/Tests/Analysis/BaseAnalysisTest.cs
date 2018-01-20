@@ -65,6 +65,7 @@ namespace AnalysisTests {
         public PythonAnalysis CreateAnalyzer(IPythonInterpreterFactory factory = null, bool allowParseErrors = false) {
             var analysis = CreateAnalyzerInternal(factory ?? DefaultFactoryV2);
             analysis.AssertOnParseErrors = !allowParseErrors;
+            analysis.Analyzer.EnableDiagnostics = true;
             analysis.ModuleContext = DefaultContext;
             analysis.SetLimits(GetLimits());
 

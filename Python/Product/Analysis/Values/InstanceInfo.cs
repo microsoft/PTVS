@@ -122,6 +122,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var callRes = GetTypeMember(node, unit, "__call__");
                     if (callRes.Any()) {
                         res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
+                    } else {
+                        var message = string.IsNullOrEmpty(ClassInfo?.ShortDescription) ?
+                            "object may not be callable" :
+                            $"'{ClassInfo.ShortDescription}' may not be callable";
+                        unit.ProjectState.AddDiagnostic(
+                            (node as CallExpression)?.Target ?? node,
+                            unit,
+                            message,
+                            LanguageServer.DiagnosticSeverity.Warning, "not-callable"
+                        );
                     }
                 } finally {
                     Pop();
