@@ -253,6 +253,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ProvideFeatureFlagAttribute.cs" />
     <Compile Include="ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
@@ -268,6 +269,7 @@
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttrributes.cs" />
     <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
+    <Compile Include="PythonTools\Editor\IVsFeatureFlags.cs" />
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
     <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />

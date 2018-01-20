@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
-        private readonly ConcurrentDictionary<Uri, Dictionary<int, int>> _lastReportedDiagnostics;
+        private readonly ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>> _lastReportedDiagnostics;
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
-            _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, int>>();
+            _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>>();
         }
 
         public void Dispose() {
@@ -732,12 +732,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 await Task.Yield();
 
                 if (vc != null) {
-                    var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, int>());
+                    var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, BufferVersion>());
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            int part = GetPart(kv.Key), lastVersion;
-                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion < kv.Value.Version) {
-                                reported[part] = kv.Value.Version;
+                            int part = GetPart(kv.Key);
+                            BufferVersion lastVersion;
+                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion.Version < kv.Value.Version) {
+                                reported[part] = kv.Value;
                                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                                     uri = kv.Key,
                                     diagnostics = kv.Value.Diagnostics,
@@ -774,9 +775,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var diags = _analyzer.GetDiagnostics(entry);
+                if (!diags.Any()) {
+                    return;
+                }
+
+                if (entry is IDocument doc && _lastReportedDiagnostics.TryGetValue(doc.DocumentUri, out var reported)) {
+                    lock (reported) {
+                        if (reported.TryGetValue(0, out var lastVersion)) {
+                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+                        }
+                    }
+                }
 
                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    diagnostics = _analyzer.GetDiagnostics(entry),
+                    diagnostics = diags,
                     uri = entry.DocumentUri,
                     _version = version
                 });

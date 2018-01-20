@@ -16,11 +16,11 @@
 
 using System;
 using System.ComponentModel.Composition;
+using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.FeatureFlags;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools.Editor {
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
             _mismatchedEncodingSquiggleProvider = new Lazy<InvalidEncodingSquiggleProvider>(CreateSquiggleProvider<InvalidEncodingSquiggleProvider>);
             _previewChangesService = new Lazy<PreviewChangesService>(() => _componentModel.Value.GetService<PreviewChangesService>());
+            _featureFlags = new Lazy<IVsFeatureFlags>(() => (IVsFeatureFlags)site.GetService(typeof(SVsFeatureFlags)));
         }
 
         public readonly IServiceProvider Site;
@@ -147,8 +148,8 @@ namespace Microsoft.PythonTools.Editor {
         public IPatternMatcherFactory PatternMatcherFactory => _patternMatcherFactory.Value;
 #endif
 
-        [Import(AllowDefault = true)]
-        public FeatureFlags FeatureFlags = null;
+        private Lazy<IVsFeatureFlags> _featureFlags;
+        internal IVsFeatureFlags FeatureFlags => _featureFlags.Value;
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

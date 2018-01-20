@@ -255,7 +255,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
-            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.LiveLinting", true) ?? true;
+            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", true) ?? true;
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
