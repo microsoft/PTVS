@@ -1023,8 +1023,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int GetCategory(out uint pCategory) {
-            pCategory = (uint)Category;
-            return VSConstants.S_OK;
+            pCategory = 0;
+            return VSConstants.E_NOTIMPL;
         }
     }
 

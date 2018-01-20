@@ -244,7 +244,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysisUpdates = true,
                             completionsTimeout = 5000,
                             manualFileLoad = !request.analyzeAllFiles,
-                            traceLogging = request.traceLogging
+                            traceLogging = request.traceLogging,
+                            liveLinting = request.liveLinting
                         }
                     }
                 });

@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool analyzeAllFiles;
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public bool traceLogging;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool liveLinting;
         }
 
         public sealed class InterpreterInfo {

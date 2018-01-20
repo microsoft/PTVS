@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.FeatureFlags;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -145,6 +146,9 @@ namespace Microsoft.PythonTools.Editor {
         private Lazy<IPatternMatcherFactory> _patternMatcherFactory = null;
         public IPatternMatcherFactory PatternMatcherFactory => _patternMatcherFactory.Value;
 #endif
+
+        [Import(AllowDefault = true)]
+        public FeatureFlags FeatureFlags = null;
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

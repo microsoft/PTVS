@@ -743,7 +743,13 @@ namespace Microsoft.PythonTools.Analysis {
             set { _limits = value; }
         }
 
+        public bool EnableDiagnostics { get; set; }
+
         public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, object code = null, string source = null) {
+            if (!EnableDiagnostics) {
+                return;
+            }
+
             lock (_diagnostics) {
                 if (!_diagnostics.TryGetValue(unit.ProjectEntry, out var diags)) {
                     _diagnostics[unit.ProjectEntry] = diags = new Dictionary<Node, LanguageServer.Diagnostic>();
