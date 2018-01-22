@@ -17,11 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
@@ -280,13 +279,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 } else if (impName == "*") {
                     // Handle "import *"
                     if (userMod != null) {
+                        userMod.Imported(_unit);
+
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
                             if (!varName.StartsWith("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
-
-                        userMod.Imported(_unit);
                     }
                 } else {
                     WalkFromImportWorker(nameNode, userMod, impName, newName);

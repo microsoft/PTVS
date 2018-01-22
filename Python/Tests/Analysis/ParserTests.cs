@@ -22,6 +22,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2882,9 +2883,8 @@ namespace AnalysisTests {
                         break;
                 }
 
-                using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
-                    var ast = parser.ParseFile();
-                }
+                var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink });
+                var ast = parser.ParseFile();
 
                 if (errorSink.Errors.Count != 0) {
                     var fileErrors = errorSink.Errors.ToList();
@@ -2913,6 +2913,79 @@ namespace AnalysisTests {
                 }
                 return errorList.ToString();
             }
+            return null;
+        }
+
+        [TestMethod, Priority(0)]
+        public void SourceLocationTests() {
+            Assert.AreEqual(0, new SourceLocation().Index);
+            Assert.AreEqual(100, new SourceLocation(100, 1, 1).Index);
+            try {
+                int i = new SourceLocation(1, 1).Index;
+                Assert.Fail("Expected InvalidOperationException");
+            } catch (InvalidOperationException) {
+            }
+
+            var x = new SourceLocation(100, 5, 10);
+            var y = x.AddColumns(int.MaxValue);
+            Assert.AreEqual(int.MaxValue, y.Column);
+            Assert.AreEqual(int.MaxValue, y.Index);
+
+            y = x.AddColumns(int.MaxValue - 9);
+            Assert.AreEqual(int.MaxValue, y.Column);
+            Assert.AreEqual(int.MaxValue, y.Index);
+
+            y = x.AddColumns(-5);
+            Assert.AreEqual(5, y.Column);
+            Assert.AreEqual(95, y.Index);
+
+            y = x.AddColumns(-10);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
+
+            y = x.AddColumns(-100);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
+
+            y = x.AddColumns(int.MinValue);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
+        }
+
+        [TestMethod, Priority(0)]
+        public void FindArgument() {
+            var AssertArg = ParseCall("f( a ,   b, c,d,*  x   , )");
+            AssertArg(0, null);
+            AssertArg(2, 0);
+            AssertArg(5, 0);
+            AssertArg(6, 1);
+            AssertArg(10, 1);
+            AssertArg(11, 2);
+            AssertArg(13, 2);
+            AssertArg(14, 3);
+            AssertArg(15, 3);
+            AssertArg(16, 4);
+            AssertArg(23, 4);
+            AssertArg(24, -1);
+            AssertArg(25, -1);
+            AssertArg(26, null);
+
+            AssertArg = ParseCall("f(");
+            AssertArg(0, null);
+            AssertArg(1, null);
+            AssertArg(2, 0);
+        }
+
+        private static Action<int, int?> ParseCall(string code) {
+            var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V36);
+            var tree = parser.ParseTopExpression();
+            if (Statement.GetExpression(tree.Body) is CallExpression ce) {
+                return (index, expected) => {
+                    int? actual = ce.GetArgumentAtIndex(tree, index, out int i) ? i : (int?)null;
+                    Assert.AreEqual(expected, actual);
+                };
+            }
+            Assert.Fail($"Unexpected expression {tree}");
             return null;
         }
 

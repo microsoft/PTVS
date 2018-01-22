@@ -335,11 +335,56 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creating virtual environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterCreateEnv {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterCreateEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating virtual environment without pip at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterCreateEnvWithoutPip {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterCreateEnvWithoutPip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting previous environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterDeleteEnv {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterDeleteEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Failed to install cookiecutter -----.
         /// </summary>
         public static string InstallingCookiecutterFailed {
             get {
                 return ResourceManager.GetString("InstallingCookiecutterFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing packages into virtual environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterInstallPackages {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterInstallPackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing pip into virtual environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterInstallPip {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterInstallPip", resourceCulture);
             }
         }
         

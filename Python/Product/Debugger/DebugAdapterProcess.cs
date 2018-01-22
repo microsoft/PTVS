@@ -16,19 +16,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
+using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    public sealed class DebugAdapterProcess : ITargetHostProcess {
+    public sealed class DebugAdapterProcess :
+#if !USE_15_5
+        ITargetHostProcess,
+#endif
+        IDisposable {
         private const int _debuggerConnectionTimeout = 5000; // 5000 ms
         private const int _connectionCloseTimeout = 5000; // 5000 ms
 
@@ -38,11 +43,25 @@ namespace Microsoft.PythonTools.Debugger {
         private string _interpreterOptions;
         private int _listenerPort = -1;
         private Stream _stream;
-        private Socket _socket;
-        private ManualResetEvent _connectedEvent = new ManualResetEvent(false);
 
         public DebugAdapterProcess() {
             _processGuid = Guid.NewGuid();
+        }
+
+        public void Dispose() {
+            if (_stream != null) {
+                _stream.Dispose();
+            }
+            if (_process != null) {
+                try {
+                    if (!_process.HasExited) {
+                        _process.Kill();
+                    }
+                } catch (InvalidOperationException) {
+                } catch (Win32Exception) {
+                }
+                _process.Dispose();
+            }
         }
 
         public static DebugAdapterProcess Start(string launchJson) {
@@ -52,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void StartProcess(string launchJson) {
-            InitializeListenerSocket();
+            var connection = InitializeListenerSocket();
 
             var json = JObject.Parse(launchJson);
             var exe = json["exe"].Value<string>();
@@ -76,7 +95,7 @@ namespace Microsoft.PythonTools.Debugger {
                 FileName = exe,
                 Arguments = arguments,
                 WorkingDirectory = cwd,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 RedirectStandardInput = false,
                 RedirectStandardOutput = false,
                 UseShellExecute = false,
@@ -98,21 +117,31 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
             _process.Exited += OnExited;
-            _process.ErrorDataReceived += OnErrorDataReceived;
             _process.Start();
-            _process.BeginErrorReadLine();
-            if (!_connectedEvent.WaitOne(_debuggerConnectionTimeout)){
-                Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
-            }
-        }
 
-        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            Debug.WriteLine($"Debug adapter stderr: {e.Data}", nameof(DebugAdapterProcess));
+            try {
+                if (connection.Wait(_debuggerConnectionTimeout)) {
+                    var socket = connection.Result;
+                    if (socket != null) {
+                        _stream = new NetworkStream(connection.Result, ownsSocket: true);
+                    }
+                } else {
+                    Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
+                }
+            } catch (AggregateException ex) {
+                Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
+            }
+
+            if (_stream == null) {
+                _process.Kill();
+            }
         }
 
         private void OnExited(object sender, EventArgs e) {
             Debug.WriteLine($"Debug adapter exited with code: {_process.ExitCode}", nameof(DebugAdapterProcess));
-            _socket?.Close(_connectionCloseTimeout);
+            if (_stream != null) {
+                _stream.Dispose();
+            }
         }
 
         public IntPtr Handle => _process.Handle;
@@ -135,32 +164,17 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void Terminate() => _process.Kill();
 
-        private void InitializeListenerSocket() {
+        private Task<Socket> InitializeListenerSocket() {
             if (_listenerPort < 0) {
                 var socketSource = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 socketSource.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 socketSource.Listen(0);
                 _listenerPort = ((IPEndPoint)socketSource.LocalEndPoint).Port;
                 Debug.WriteLine("Listening for debug connections on port {0}", _listenerPort);
-                socketSource.BeginAccept(AcceptConnection, socketSource);
-            }
-        }
-
-        private void AcceptConnection(IAsyncResult iar) {
-            var socketSource = ((Socket)iar.AsyncState);
-            try {
-                _socket = socketSource.EndAccept(iar);
-            } catch (SocketException ex) {
-                Debug.WriteLine("Debug Adapter Host socket failed");
-                Debug.WriteLine(ex);
-            } catch (ObjectDisposedException) {
-                Debug.WriteLine("Debug Adapter Host socket closed");
+                return Task.Factory.FromAsync(socketSource.BeginAccept, socketSource.EndAccept, null);
             }
 
-            if (_socket != null) {
-                _stream = new NetworkStream(_socket, ownsSocket: true);
-                _connectedEvent.Set();
-            }
+            return Task.FromResult((Socket)null);
         }
 
         

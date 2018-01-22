@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -28,10 +28,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         public ExpressionFinder(string expression, PythonLanguageVersion version, GetExpressionOptions options) {
             var parserOpts = new ParserOptions { Verbatim = true };
-            using (var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts)) {
-                Ast = parser.ParseTopExpression();
-                Ast.Body.SetLoc(0, expression.Length);
-            }
+            var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts);
+            Ast = parser.ParseTopExpression();
+            Ast.Body.SetLoc(0, expression.Length);
             Options = options.Clone();
         }
 
@@ -56,6 +55,13 @@ namespace Microsoft.PythonTools.Analysis {
 
         public Node GetExpression(int startIndex, int endIndex) {
             ExpressionWalker walker;
+            if (Options.Keywords) {
+                walker = new KeywordWalker(Ast, startIndex, endIndex);
+                Ast.Walk(walker);
+                if (walker.Expression != null) {
+                    return walker.Expression;
+                }
+            }
             if (Options.MemberTarget) {
                 walker = new MemberTargetExpressionWalker(Ast, startIndex);
             } else {
@@ -88,8 +94,6 @@ namespace Microsoft.PythonTools.Analysis {
             private readonly int _endLocation;
             private readonly PythonAst _ast;
             private readonly GetExpressionOptions _options;
-
-            private bool _walkingClassBases;
 
             public NormalExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
                 _ast = ast;
@@ -128,9 +132,29 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(CallExpression node) => Save(node, base.Walk(node), _options.Calls);
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
-            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
-            public override bool Walk(FunctionDefinition node) => Save(node, base.Walk(node), _options.FunctionDefinition && BeforeBody(node.Body));
+
+            public override bool Walk(FunctionDefinition node) {
+                if (base.Walk(node)) {
+                    if (_options.FunctionDefinition && BeforeBody(node.Body)) {
+                        Expression = node;
+                    }
+
+                    if (_options.FunctionDefinitionName) {
+                        node.NameExpression?.Walk(this);
+                    }
+
+                    node.Decorators?.Walk(this);
+                    foreach (var p in node.Parameters.MaybeEnumerate()) {
+                        p?.Walk(this);
+                    }
+                    node.ReturnAnnotation?.Walk(this);
+                    node.Body?.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
 
             public override bool Walk(Parameter node) {
                 if (base.Walk(node)) {
@@ -143,13 +167,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             public override bool Walk(MemberExpression node) {
-                if (Save(node, base.Walk(node), _options.Members && Location >= node.NameHeader)) {
-                    if (_options.MemberName && Location >= node.NameHeader) {
+                if (base.Walk(node)) {
+                    if (_options.MemberName && Location >= node.NameHeader && _endLocation <= node.EndIndex) {
                         var nameNode = new NameExpression(node.Name);
                         nameNode.SetLoc(node.NameHeader, node.EndIndex);
                         Expression = nameNode;
+                        return false;
                     }
-                    return true;
+                    return Save(node, true, _options.Members);
                 }
                 return false;
             }
@@ -163,37 +188,29 @@ namespace Microsoft.PythonTools.Analysis {
                     Expression = node;
                 }
 
-                node.NameExpression?.Walk(this);
+                if (_options.ClassDefinitionName) {
+                    node.NameExpression?.Walk(this);
+                }
                 node.Decorators?.Walk(this);
-                _walkingClassBases = true;
-                try {
-                    foreach (var b in node.Bases.MaybeEnumerate()) {
-                        b.Walk(this);
-                    }
-                } finally {
-                    _walkingClassBases = false;
+                foreach (var b in node.Bases.MaybeEnumerate()) {
+                    b.Walk(this);
                 }
                 node.Body?.Walk(this);
 
-                return true;
+                return false;
             }
 
             public override bool Walk(Arg node) {
-                if (!base.Walk(node)) {
-                    return false;
-                }
-
-                if (_walkingClassBases) {
+                if (base.Walk(node)) {
                     node.Expression?.Walk(this);
-                    return true;
+
+                    var n = node.NameExpression;
+                    if (_options.NamedArgumentNames && n != null && Location >= n.StartIndex && Location <= n.EndIndex) {
+                        Expression = n;
+                    }
                 }
 
-                var n = node.NameExpression;
-                if (_options.NamedArgumentNames && n != null && Location >= n.StartIndex && Location <= n.EndIndex) {
-                    Expression = n;
-                }
-
-                return true;
+                return false;
             }
 
             public override bool Walk(DottedName node) {
@@ -274,6 +291,228 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
         }
+
+        private class KeywordWalker : ExpressionWalker {
+            private readonly int _endLocation;
+            private readonly PythonAst _ast;
+
+            public KeywordWalker(PythonAst ast, int location, int endLocation) : base(location) {
+                _ast = ast;
+                _endLocation = endLocation;
+            }
+
+            private bool Save(int startIndex, bool baseWalk, string keyword) {
+                if (!baseWalk) {
+                    return false;
+                }
+
+                if (startIndex < 0) {
+                    return true;
+                }
+
+                if (_endLocation <= startIndex + keyword.Length) {
+                    var ne = new NameExpression(keyword);
+                    ne.SetLoc(startIndex, startIndex + keyword.Length);
+                    Expression = ne;
+                    return false;
+                }
+
+                return true;
+            }
+
+            private bool Save(Node node, bool baseWalk, string keyword) => Save(node.StartIndex, baseWalk, keyword);
+
+            public override bool Walk(AndExpression node) => Save(node.AndIndex, base.Walk(node), "and");
+            public override bool Walk(AssertStatement node) => Save(node, base.Walk(node), "assert");
+            public override bool Walk(AwaitExpression node) => Save(node, base.Walk(node), "await");
+            public override bool Walk(BreakStatement node) => Save(node, base.Walk(node), "break");
+            public override bool Walk(ClassDefinition node) => Save(node, base.Walk(node), "class");
+            public override bool Walk(ComprehensionIf node) => Save(node, base.Walk(node), "if");
+            public override bool Walk(ContinueStatement node) => Save(node, base.Walk(node), "continue");
+            public override bool Walk(DelStatement node) => Save(node, base.Walk(node), "del");
+            public override bool Walk(EmptyStatement node) => Save(node, base.Walk(node), "pass");
+            public override bool Walk(ExecStatement node) => Save(node, base.Walk(node), "exec");
+            public override bool Walk(GlobalStatement node) => Save(node, base.Walk(node), "global");
+            public override bool Walk(ImportStatement node) => Save(node, base.Walk(node), "import");
+            public override bool Walk(LambdaExpression node) => Save(node, base.Walk(node), "lambda");
+            public override bool Walk(NonlocalStatement node) => Save(node, base.Walk(node), "nonlocal");
+            public override bool Walk(PrintStatement node) => Save(node, base.Walk(node), "print");
+            public override bool Walk(OrExpression node) => Save(node.OrIndex, base.Walk(node), "or");
+            public override bool Walk(RaiseStatement node) => Save(node, base.Walk(node), "raise");
+            public override bool Walk(ReturnStatement node) => Save(node, base.Walk(node), "return");
+            public override bool Walk(WithItem node) => Save(node.AsIndex, base.Walk(node), "as");
+            public override bool Walk(YieldExpression node) => Save(node, base.Walk(node), "yield");
+
+            public override bool Walk(BinaryExpression node) {
+                if (base.Walk(node)) {
+                    switch (node.Operator) {
+                        case PythonOperator.In:
+                            return Save(node.OperatorIndex, true, "in");
+                        case PythonOperator.NotIn:
+                            return Save(node.OperatorIndex, true, "not") &&
+                                Save(node.GetIndexOfSecondOp(_ast), true, "in");
+                        case PythonOperator.Is:
+                        case PythonOperator.IsNot:
+                            return Save(node.OperatorIndex, true, "is") &&
+                                Save(node.GetIndexOfSecondOp(_ast), true, "not");
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(ComprehensionFor node) {
+                if (base.Walk(node)) {
+                    if (node.IsAsync && !Save(node, true, "async")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfFor(_ast), true, "for")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfIn(_ast), true, "in")) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(ConditionalExpression node) {
+                if (base.Walk(node)) {
+                    if (!Save(node.IfIndex, true, "if")) {
+                        return false;
+                    }
+                    if (!Save(node.ElseIndex, true, "else")) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(ForStatement node) {
+                if (base.Walk(node)) {
+                    if (node.IsAsync && !Save(node, true, "async")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfFor(_ast), true, "for")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfIn(_ast), true, "in")) {
+                        return false;
+                    }
+                    if (node.Else != null) {
+                        return Save(node.Else.StartIndex, true, "else");
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(FromImportStatement node) {
+                if (base.Walk(node)) {
+                    if (!Save(node, true, "from")) {
+                        return false;
+                    }
+                    if (node.ImportIndex > 0) {
+                        return Save(node.ImportIndex, true, "import");
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(FunctionDefinition node) {
+                if (base.Walk(node)) {
+                    if (node.IsCoroutine && !Save(node, true, "async")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfDef(_ast), true, "def")) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+
+            public override bool Walk(IfStatement node) {
+                if (base.Walk(node)) {
+                    if (!Save(node, true, "if")) {
+                        return false;
+                    }
+                    // TODO: elif and if locations
+                    // These cannot be trivially obtained from the node
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(UnaryExpression node) {
+                if (base.Walk(node)) {
+                    if (node.Op == PythonOperator.Not) {
+                        return Save(node, true, "not");
+                    }
+                }
+                return false;
+            }
+
+            public override bool Walk(TryStatement node) {
+                if (base.Walk(node)) {
+                    if (!Save(node, true, "try")) {
+                        return false;
+                    }
+                    // TODO: except, finally and else locations
+                    // These cannot be trivially obtained from the node
+                    return true;
+                }
+                return base.Walk(node);
+            }
+
+            public override bool Walk(WhileStatement node) {
+                if (base.Walk(node)) {
+                    if (!Save(node, true, "while")) {
+                        return false;
+                    }
+                    if (node.ElseStatement != null) {
+                        return Save(node.ElseStatement.StartIndex, true, "else");
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(WithStatement node) {
+                if (base.Walk(node)) {
+                    if (node.IsAsync && !Save(node, true, "async")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfWith(_ast), true, "with")) {
+                        return false;
+                    }
+                    foreach (var item in node.Items.MaybeEnumerate()) {
+                        if (!Save(item.AsIndex, true, "as")) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public override bool Walk(YieldFromExpression node) {
+                if (base.Walk(node)) {
+                    if (!Save(node, true, "yield")) {
+                        return false;
+                    }
+                    if (!Save(node.GetIndexOfFrom(_ast), true, "from")) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
     }
 
     public sealed class GetExpressionOptions {
@@ -287,6 +526,8 @@ namespace Microsoft.PythonTools.Analysis {
             Literals = true,
             ImportNames = true,
             ImportAsNames = true,
+            ClassDefinitionName = true,
+            FunctionDefinitionName = true,
         };
         public static GetExpressionOptions Evaluate => new GetExpressionOptions {
             Calls = true,
@@ -300,6 +541,8 @@ namespace Microsoft.PythonTools.Analysis {
             FunctionDefinition = true,
             ImportNames = true,
             ImportAsNames = true,
+            ClassDefinitionName = true,
+            FunctionDefinitionName = true,
         };
         public static GetExpressionOptions EvaluateMembers => new GetExpressionOptions {
             Members = true,
@@ -312,6 +555,8 @@ namespace Microsoft.PythonTools.Analysis {
             NamedArgumentNames = true,
             ImportNames = true,
             ImportAsNames = true,
+            ClassDefinitionName = true,
+            FunctionDefinitionName = true,
         };
         public static GetExpressionOptions Rename => new GetExpressionOptions {
             Names = true,
@@ -320,6 +565,15 @@ namespace Microsoft.PythonTools.Analysis {
             ParameterNames = true,
             ImportNames = true,
             ImportAsNames = true,
+            ClassDefinitionName = true,
+            FunctionDefinitionName = true,
+        };
+        public static GetExpressionOptions Complete => new GetExpressionOptions {
+            Names = true,
+            MemberName = true,
+            NamedArgumentNames = true,
+            ImportNames = true,
+            Keywords = true
         };
 
         public bool Calls { get; set; } = false;
@@ -329,11 +583,14 @@ namespace Microsoft.PythonTools.Analysis {
         public bool MemberTarget { get; set; } = false;
         public bool MemberName { get; set; } = false;
         public bool Literals { get; set; } = false;
+        public bool Keywords { get; set; } = false;
         public bool ParenthesisedExpression { get; set; } = false;
         public bool NamedArgumentNames { get; set; } = false;
         public bool ParameterNames { get; set; } = false;
         public bool ClassDefinition { get; set; } = false;
+        public bool ClassDefinitionName { get; set; } = false;
         public bool FunctionDefinition { get; set; } = false;
+        public bool FunctionDefinitionName { get; set; } = false;
         public bool ImportNames { get; set; } = false;
         public bool ImportAsNames { get; set; } = false;
 

@@ -133,8 +133,8 @@ namespace Microsoft.PythonTools.Repl {
             return await _serviceProvider.GetUIThread().InvokeTask(async () => {
                 try {
                     UpdatePropertiesFromProjectMoniker();
-                } catch (NoInterpretersException ex) {
-                    WriteError(ex.ToString());
+                } catch (NoInterpretersException) {
+                    WriteError(Strings.NoInterpretersAvailable);
                     return null;
                 } catch (MissingInterpreterException ex) {
                     WriteError(ex.ToString());
@@ -149,7 +149,11 @@ namespace Microsoft.PythonTools.Repl {
 
                 var scriptsPath = ScriptsPath;
                 if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null) {
-                    scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    try {
+                        scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        scriptsPath = null;
+                    }
                 }
 
                 // Allow tests to control the backend without relying on the mode.txt file

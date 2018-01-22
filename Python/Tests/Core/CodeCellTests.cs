@@ -274,7 +274,7 @@ x
 # comment before
 #%% cell after empty cell
 
-"), "[39..66)");
+"), "[39..70)");
         }
     }
 }

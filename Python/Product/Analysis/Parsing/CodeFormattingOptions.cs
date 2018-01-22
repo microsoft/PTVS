@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         internal static CodeFormattingOptions Traditional = new CodeFormattingOptions {
             SpaceAfterComma = true,
+            SpaceAfterDot = false,
             SpaceAroundAnnotationArrow = true,
             SpaceAroundDefaultValueEquals = true,
             SpaceBeforeCallParen = false,
@@ -51,6 +53,7 @@ namespace Microsoft.PythonTools.Parsing {
             SpaceBeforeComma = false,
             SpaceBeforeFunctionDeclarationParen = false,
             SpaceBeforeIndexBracket = false,
+            SpaceBeforeDot = false,
             SpacesAroundAssignmentOperator = true,
             SpacesAroundBinaryOperators = true,
             SpacesWithinEmptyListExpression = false,
@@ -227,6 +230,9 @@ namespace Microsoft.PythonTools.Parsing {
         public bool? SpaceBeforeComma { get; set; }
         public bool? SpaceAfterComma { get; set; }
 
+        public bool? SpaceBeforeDot { get; set; }
+        public bool? SpaceAfterDot { get; set; }
+
         #endregion
 
         #region Operators
@@ -313,12 +319,18 @@ namespace Microsoft.PythonTools.Parsing {
         /// settings as well as the original formatting if the setting is not set.
         /// </summary>
         internal void Append(StringBuilder res, bool? setting, string ifOn, string ifOff, string originalFormatting) {
-            if (!String.IsNullOrWhiteSpace(originalFormatting) || setting == null) {
+            if (!setting.HasValue) {
+                // no preference, so use the original formatting
+                if (!string.IsNullOrEmpty(originalFormatting)) {
+                    ReflowComment(res, originalFormatting);
+                }
+            } else if (originalFormatting == null || originalFormatting.IndexOf('#') < 0) {
+                // no original text, so use the setting
+                res.Append(setting.Value ? ifOn : ifOff);
+            } else {
                 // there's a comment in the formatting, so we need to preserve it.
                 ReflowComment(res, originalFormatting);
-            } else {
-                res.Append(setting.Value ? ifOn : ifOff);
-            }
+            } 
         }
 
         /// <summary>

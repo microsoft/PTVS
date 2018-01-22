@@ -123,6 +123,40 @@
   <data name="ConfigurationExtensionHelpContent" xml:space="preserve">
     <value>These environment settings may be configured. The tooltips on each field include more information and examples.</value>
   </data>
+  <data name="CondaExtensionDisplayName" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CondaExtensionHelpContent" xml:space="preserve">
+    <value>These environment settings may be configured. The tooltips on each field include more information and examples.</value>
+  </data>
+  <data name="CondaExtensionCreateLabel" xml:space="preserve">
+    <value>_Create</value>
+  </data>
+  <data name="CondaExtensionCreateTooltip" xml:space="preserve">
+    <value>Create the environment.</value>
+  </data>
+  <data name="CondaExtensionEnvironmentNameLabel" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CondaExtensionEnvironmentNameHelp" xml:space="preserve">
+    <value>The name of the new environment.</value>
+  </data>
+  <data name="CondaExtensionEnvironmentNameWatermark" xml:space="preserve">
+    <value>env</value>
+  </data>
+  <data name="CondaExtensionLanguageVersionLabel" xml:space="preserve">
+    <value>Python</value>
+  </data>
+  <data name="CondaExtensionLanguageVersionWatermark" xml:space="preserve">
+    <value>Python</value>
+  </data>
+  <data name="CondaExtensionLanguageVersionHelp" xml:space="preserve">
+    <value>The version of Python to install into the new environment.</value>
+  </data>
+  <data name="CondaExtensionNotAvailable" xml:space="preserve">
+    <value>This functionality requires Anaconda. You can install it using the Visual Studio installer.</value>
+    <comment>Do not translate 'Anaconda'</comment>
+  </data>
   <data name="DBExtensionDisplayName" xml:space="preserve">
     <value>IntelliSense</value>
   </data>
@@ -323,6 +357,9 @@
   <data name="EnvironmentViewCustomLabel" xml:space="preserve">
     <value>Custom...</value>
   </data>
+  <data name="EnvironmentViewCondaLabel" xml:space="preserve">
+    <value>Create conda environment...</value>
+  </data>
   <data name="EnvironmentViewOnlineHelpLabel" xml:space="preserve">
     <value>Go online and help me find other environments</value>
   </data>
@@ -337,6 +374,17 @@
   </data>
   <data name="EnvironmentViewCustomAutomationName" xml:space="preserve">
     <value>Add new environment</value>
+  </data>
+  <data name="EnvironmentViewCreateNewCondaEnvironmentAutomationName" xml:space="preserve">
+    <value>Create new conda environment</value>
+  </data>
+  <data name="EnvironmentPathsExtensionDeleteEnvironment" xml:space="preserve">
+    <value>Delete this environment from disk</value>
+  </data>
+  <data name="EnvironmentPathsExtensionDeleteConfirmation" xml:space="preserve">
+    <value>Are you sure you want to delete '{0}'?
+
+The folder will be deleted from disk. This operation cannot be undone.</value>
   </data>
   <data name="EnvironmentPathsExtensionMakeDefaultLabel" xml:space="preserve">
     <value>Make this the default environment for new projects</value>

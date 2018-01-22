@@ -24,10 +24,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -45,6 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
         private readonly LocationTracker _spanTranslator;
+        private readonly int _fromVersion;
         private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
@@ -54,12 +54,14 @@ namespace Microsoft.PythonTools.Intellisense {
             VSTASKPRIORITY priority,
             VSTASKCATEGORY category,
             bool squiggle,
-            LocationTracker spanTranslator
+            LocationTracker spanTranslator,
+            int fromVersion
         ) {
             _serviceProvider = serviceProvider;
             _message = message;
             _rawSpan = rawSpan;
             _spanTranslator = spanTranslator;
+            _fromVersion = fromVersion;
             _rawSpan = rawSpan;
             _priority = priority;
             _category = category;
@@ -90,12 +92,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            // TODO: Map between versions rather than using the current snapshot
             var snapshot = _spanTranslator.TextBuffer.CurrentSnapshot;
-            var target = _rawSpan.ToSnapshotSpan(snapshot);
-            //SnapshotSpan target = _spanTranslator.TranslateForward(
-            //    new Span(_rawSpan.Start.Index, _rawSpan.Length)
-            //);
+            var target = _spanTranslator.Translate(_rawSpan, _fromVersion, snapshot);
 
             if (target.Length <= 0) {
                 return;
@@ -129,41 +127,23 @@ namespace Microsoft.PythonTools.Intellisense {
 
     sealed class TaskProviderItemFactory {
         private readonly LocationTracker _spanTranslator;
+        private readonly int _fromVersion;
 
-        public TaskProviderItemFactory(LocationTracker spanTranslator) {
+        public TaskProviderItemFactory(LocationTracker spanTranslator, int fromVersion) {
             _spanTranslator = spanTranslator;
+            _fromVersion = fromVersion;
         }
 
         #region Factory Functions
 
-        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, AP.Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
-            return new TaskProviderItem(
-                serviceProvider,
-                result.message,
-                GetSpan
-                (result),
-                priority,
-                category,
-                true,
-                _spanTranslator
-            );
-        }
-
-        internal static SourceSpan GetSpan(AP.Error result) {
-            return new SourceSpan(
-                new SourceLocation(result.startLine, result.startColumn),
-                new SourceLocation(result.endLine, result.endColumn)
-            );
-        }
-
         internal TaskProviderItem FromUnresolvedImport(
             IServiceProvider serviceProvider, 
-            IPythonInterpreterFactoryWithDatabase factory,
+            IPythonInterpreterFactory factory,
             string importName,
             SourceSpan span
         ) {
             string message;
-            if (factory != null && !factory.IsCurrent) {
+            if ((factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)?.IsCurrent == false) {
                 message = Strings.UnresolvedModuleTooltipRefreshing.FormatUI(importName);
             } else {
                 message = Strings.UnresolvedModuleTooltip.FormatUI(importName);
@@ -176,7 +156,31 @@ namespace Microsoft.PythonTools.Intellisense {
                 VSTASKPRIORITY.TP_NORMAL,
                 VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
-                _spanTranslator
+                _spanTranslator,
+                _fromVersion
+            );
+        }
+
+        internal TaskProviderItem FromDiagnostic(IServiceProvider site, Diagnostic diagnostic, DiagnosticSeverity severity, VSTASKCATEGORY category, bool squiggle) {
+            var priority = VSTASKPRIORITY.TP_LOW;
+            switch (severity) {
+                case DiagnosticSeverity.Error:
+                    priority = VSTASKPRIORITY.TP_HIGH;
+                    break;
+                case DiagnosticSeverity.Warning:
+                    priority = VSTASKPRIORITY.TP_NORMAL;
+                    break;
+            }
+
+            return new TaskProviderItem(
+                site,
+                diagnostic.message,
+                diagnostic.range,
+                priority,
+                category,
+                squiggle,
+                _spanTranslator,
+                _fromVersion
             );
         }
 
@@ -659,7 +663,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            await _serviceProvider.GetUIThread().InvokeAsync(() => {
+            var uiThreadTask = _serviceProvider.GetUIThread().InvokeAsync(() => {
                 if (_taskList != null) {
                     if (_cookie == 0) {
                         ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
@@ -670,32 +674,34 @@ namespace Microsoft.PythonTools.Intellisense {
                         // DevDiv2 759317 - Watson bug, COM object can go away...
                     }
                 }
+            }, cancellationToken);
 
-                if (_errorProvider != null) {
-                    foreach (var kv in bufferToErrorList) {
-                        var tagger = _errorProvider.GetErrorTagger(kv.Key);
-                        if (tagger == null) {
-                            continue;
-                        }
+            foreach (var kv in bufferToErrorList) {
+                var tagger = _errorProvider.GetErrorTagger(kv.Key);
+                if (tagger == null) {
+                    continue;
+                }
 
-                        if (buffers.Remove(kv.Key)) {
-                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
-                        }
-
-                        foreach (var taskProviderItem in kv.Value) {
-                            taskProviderItem.CreateSquiggleSpan(tagger);
-                        }
+                using (tagger.Update()) {
+                    if (buffers.Remove(kv.Key)) {
+                        tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
                     }
 
-                    if (buffers.Any()) {
-                        // Clear tags for any remaining buffers.
-                        foreach (var buffer in buffers) {
-                            var tagger = _errorProvider.GetErrorTagger(buffer);
-                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
-                        }
+                    foreach (var taskProviderItem in kv.Value) {
+                        taskProviderItem.CreateSquiggleSpan(tagger);
                     }
                 }
-            }, cancellationToken);
+            }
+
+            if (buffers.Any()) {
+                // Clear tags for any remaining buffers.
+                foreach (var buffer in buffers) {
+                    var tagger = _errorProvider.GetErrorTagger(buffer);
+                    tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
+                }
+            }
+
+            await uiThreadTask;
         }
 
         private void SendMessage(WorkerMessage message) {

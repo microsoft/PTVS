@@ -51,7 +51,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsExpansionManager _expansionMgr;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
         private IQuickInfoSession _quickInfoSession;
+#pragma warning restore 618
         internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
         private static readonly string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
@@ -151,25 +153,30 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static object _intellisenseAnalysisEntry = new object();
 
-        public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            ConnectSubjectBufferAsync(subjectBuffer)
-                .HandleAllExceptions(_services.Site, GetType())
-                .DoNotWait();
+        public async void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
+            for (int retries = 5; retries > 0; --retries) {
+                try {
+                    await ConnectSubjectBufferAsync(subjectBuffer);
+                    return;
+                } catch (InvalidOperationException) {
+                    // Analysis entry changed, so we should retry
+                }
+            }
+            Debug.Fail("Failed to connect subject buffer after multiple retries");
         }
 
         private static async Task<AnalysisEntry> AnalyzeBufferAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
             ProjectAnalyzer analyzer;
-            string filename;
             var services = bufferInfo.Services;
 
             bool isTemporaryFile = false;
-            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out filename)) {
+            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out _)) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
                 // to analyze against the project we're diffing from).  But in either case this
                 // is just a temporary file which should be closed when the view is closed.
                 isTemporaryFile = true;
-                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out filename)) {
+                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out _)) {
                     analyzer = services.AnalysisEntryService.DefaultAnalyzer;
                 }
             }
@@ -180,11 +187,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bool suppressErrorList = textView.Properties.ContainsProperty(SuppressErrorLists);
-            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.Filename, null, isTemporaryFile, suppressErrorList);
+            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
         }
 
         private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
             var bi = _services.GetBufferInfo(subjectBuffer);
+            // Cannot analyze buffers without a URI
+            if (bi.DocumentUri == null) {
+                return;
+            }
+
             var entry = bi.AnalysisEntry;
 
             if (entry == null) {
@@ -195,7 +207,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (entry == null) {
-                    Debug.Fail($"Failed to analyze file {bi.Filename}");
+                    Debug.Fail($"Failed to analyze {bi.DocumentUri}");
                     return;
                 }
 
@@ -208,15 +220,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var parser = entry.GetOrCreateBufferParser(_services);
-            try {
-                parser.AddBuffer(subjectBuffer);
-            } catch (InvalidOperationException ex) {
-                // Should not fail here due to missing analysis entry
-                // But if we do, it probably means someone else owns
-                // the buffer now and we should quietly let them.
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                return;
-            }
+
+            // This may raise InvalidOperationException if we have raced with
+            // an analyzer being closed. Our caller will retry in this case.
+            parser.AddBuffer(subjectBuffer);
+
             await parser.EnsureCodeSyncedAsync(subjectBuffer);
         }
 
@@ -301,7 +309,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
-                            TriggerCompletionSession(false);
+                            TriggerCompletionSession(false, ch);
                         }
                         break;
                     case '(':
@@ -334,7 +342,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ((session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
-                                TriggerCompletionSession(false, commitByDefault);
+                                TriggerCompletionSession(false, ch, commitByDefault);
                             }
                         }
                         break;
@@ -401,10 +409,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var languageVersion = entry.Analyzer.LanguageVersion;
-            PythonAst ast;
-            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true })) {
-                ast = parser.ParseSingleStatement();
-            }
+            var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true });
+            var ast = parser.ParseSingleStatement();
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
             ast.Walk(walker);
@@ -859,11 +865,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
+        internal void TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             DismissCompletionSession();
 
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
             }
@@ -893,7 +900,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void TriggerSignatureHelp() {
             Volatile.Read(ref _sigHelpSession)?.Dismiss();
 
-            var sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            ISignatureHelpSession sigHelpSession = null;
+            try {
+                sigHelpSession = _services.SignatureHelpBroker.TriggerSignatureHelp(_textView);
+            } catch (ObjectDisposedException) {
+            }
 
             if (sigHelpSession != null) {
                 sigHelpSession.Dismissed += OnSignatureSessionDismissed;

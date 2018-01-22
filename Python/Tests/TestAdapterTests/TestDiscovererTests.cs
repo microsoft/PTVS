@@ -248,10 +248,11 @@ class TestBase(unittest.TestCase):
                     TestData.GetPath("Fob\\" + (moduleFile ?? moduleName.Replace('.', '\\') + ".py"))
                 );
 
-                using (var parser = Parser.CreateParser(source, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true })) {
-                    entry.UpdateTree(parser.ParseFile(), null);
+                var parser = Parser.CreateParser(source, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true });
+                using (var p = entry.BeginParse()) {
+                    p.Tree = parser.ParseFile();
+                    p.Complete();
                 }
-
                 return entry;
             }
         }

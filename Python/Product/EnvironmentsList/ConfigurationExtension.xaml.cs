@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                var arch = InterpreterArchitecture.FromExe(view.InterpreterPath);
+                var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(view.InterpreterPath);
                 if (arch != InterpreterArchitecture.Unknown) {
                     view.ArchitectureName = arch.ToString();
                 }

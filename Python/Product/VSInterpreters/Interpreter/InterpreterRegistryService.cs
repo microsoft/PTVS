@@ -452,7 +452,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            var fallback = typeof(Default.AnalysisOnlyInterpreterFactory);
+            var fallback = typeof(AnalysisOnlyInterpreterFactory);
             assembly = fallback.Assembly.Location;
             typeName = fallback.FullName;
             properties = new Dictionary<string, object>();

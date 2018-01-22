@@ -18,7 +18,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
@@ -67,23 +66,27 @@ namespace Microsoft.PythonTools.Project {
             UpdateSearchPathAsync().DoNotWait();
         }
 
-        private async Task UpdateSearchPathAsync(int retries = 10) {
+        private async Task UpdateSearchPathAsync() {
+            var searchPath = ReferencedProjectObject?.GetPythonProject()?.ProjectHome;
+            if (string.IsNullOrEmpty(searchPath)) {
+                searchPath = await GetOutputPathAsync();
+            }
+
+            (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+        }
+
+        private async Task<string> GetOutputPathAsync(int retries = 10) {
             while (true) {
                 await Task.Delay(50);
                 try {
-                    var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
-                    (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
-                    return;
+                    return PathUtils.GetParent(ReferencedProjectOutputPath);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
                 }
 
                 if (--retries < 0) {
-                    // Failed to get output path for some reason. Remove the
-                    // existing search path for now.
                     Debug.Fail("failed to get output path");
-                    (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
-                    return;
+                    return null;
                 }
             }
         }

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
@@ -30,6 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
     sealed class InterpreterOptionsService : IInterpreterOptionsService {
         private readonly Lazy<IInterpreterRegistryService> _registryService;
         private readonly Lazy<CPythonInterpreterFactoryProvider> _cpythonProvider;
+        private readonly Lazy<IPackageManagerProvider>[] _packageManagerProviders;
         private bool _defaultInterpreterWatched;
         private string _defaultInterpreterId;
         IPythonInterpreterFactory _defaultInterpreter;
@@ -58,10 +60,12 @@ namespace Microsoft.PythonTools.Interpreter {
         [ImportingConstructor]
         public InterpreterOptionsService(
             [Import] Lazy<IInterpreterRegistryService> registryService,
-            [Import] Lazy<CPythonInterpreterFactoryProvider> cpythonProvider
+            [Import] Lazy<CPythonInterpreterFactoryProvider> cpythonProvider,
+            [ImportMany] Lazy<IPackageManagerProvider>[] packageManagerProviders
         ) {
             _registryService = registryService;
             _cpythonProvider = cpythonProvider;
+            _packageManagerProviders = packageManagerProviders;
         }
 
 
@@ -331,5 +335,19 @@ namespace Microsoft.PythonTools.Interpreter {
             return CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag) &&
                 company == CustomCompany;
         }
+
+        public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
+            if (_packageManagerProviders == null || !_packageManagerProviders.Any()) {
+                return Enumerable.Empty<IPackageManager>();
+            }
+
+            return _packageManagerProviders.SelectMany(p => p.Value.GetPackageManagers(factory))
+                .GroupBy(p => p.UniqueKey)
+                .Select(g => g.OrderBy(p => p.Priority).FirstOrDefault())
+                .Where(p => p != null)
+                .OrderBy(p => p.Priority)
+                .ToArray();
+        }
+
     }
 }

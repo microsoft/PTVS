@@ -14,7 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class CondaUtils {
@@ -38,8 +42,32 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        internal static bool HasConda(string prefixPath) {
-            return !string.IsNullOrEmpty(GetCondaExecutablePath(prefixPath));
+        internal static string GetLatestCondaExecutablePath(IEnumerable<IPythonInterpreterFactory> factories) {
+            var condaPaths = factories
+                .Select(factory => CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false))
+                .Where(path => !string.IsNullOrEmpty(path))
+                .OrderByDescending(path => GetCondaVersion(path));
+
+            return condaPaths.FirstOrDefault();
+        }
+
+        private static PackageVersion GetCondaVersion(string exePath) {
+            using (var output = ProcessOutput.RunHiddenAndCapture(exePath, "-V")) {
+                output.Wait();
+                if (output.ExitCode == 0) {
+                    // Version is currently being printed to stderr, and nothing in stdout
+                    foreach (var line in output.StandardErrorLines.Union(output.StandardOutputLines)) {
+                        if (!string.IsNullOrEmpty(line) && line.StartsWith("conda ")) {
+                            var version = line.Substring("conda ".Length);
+                            if (PackageVersion.TryParse(version, out PackageVersion ver)) {
+                                return ver;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return PackageVersion.Empty;
         }
     }
 }

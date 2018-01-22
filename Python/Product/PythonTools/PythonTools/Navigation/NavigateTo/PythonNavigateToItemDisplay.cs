@@ -21,6 +21,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
@@ -30,7 +31,7 @@ using Completion = Microsoft.PythonTools.Intellisense.AnalysisProtocol.Completio
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemDisplay : INavigateToItemDisplay {
         private static readonly Dictionary<StandardGlyphGroup, Icon> _iconCache = new Dictionary<StandardGlyphGroup, Icon>();
-        private readonly IServiceProvider _site;
+        private readonly PythonEditorServices _services;
         private readonly NavigateToItem _item;
         private readonly Completion _completion;
         private readonly Icon _icon;
@@ -40,9 +41,9 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         public PythonNavigateToItemDisplay(NavigateToItem item) {
             _item = item;
             var tag = (PythonNavigateToItemProvider.ItemTag)item.Tag;
-            _site = tag.Site;
+            _services = tag.Services;
             _completion = tag.Completion;
-            _icon = GetIcon(tag.GlyphService, _completion.memberType.ToGlyphGroup());
+            _icon = GetIcon(_services.GlyphService, _completion.memberType.ToGlyphGroup());
 
             foreach (var v in _completion.detailedValues.MaybeEnumerate()) {
                 foreach (var loc in v.locations.MaybeEnumerate()) {
@@ -107,7 +108,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 return;
             }
 
-            PythonToolsPackage.NavigateTo(_site, _location.file, Guid.Empty, _location.line - 1, _location.column - 1);
+            PythonToolsPackage.NavigateTo(_services.Site, _location.file, Guid.Empty, _location.line - 1, _location.column - 1);
         }
 
         private static Icon GetIcon(IGlyphService glyphService, StandardGlyphGroup glyphGroup) {

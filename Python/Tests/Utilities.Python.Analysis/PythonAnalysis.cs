@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
@@ -143,15 +144,15 @@ namespace TestUtilities.Python {
         public void UpdateModule(IPythonProjectEntry entry, string code) {
             CollectingErrorSink errors = null;
             if (code != null) {
-                PythonAst ast;
                 errors = new CollectingErrorSink();
-                using (var p = Parser.CreateParser(
+                var parser = Parser.CreateParser(
                     new StringReader(code),
                     _analyzer.LanguageVersion,
                     new ParserOptions { BindReferences = true, ErrorSink = errors }
-                )) {
-                    ast = p.ParseFile();
-                    entry.UpdateTree(ast, null);
+                );
+                using (var p = entry.BeginParse()) {
+                    p.Tree = parser.ParseFile();
+                    p.Complete();
                 }
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
@@ -422,7 +423,12 @@ namespace TestUtilities.Python {
         }
 
         public void AssertHasParameters(IPythonProjectEntry module, string expr, int index, params string[] paramNames) {
-            AssertUtil.AreEqual(module.Analysis.GetSignaturesByIndex(expr, index).Single().Parameters.Select(p => p.Name), paramNames);
+            var sigs = module.Analysis.GetSignaturesByIndex(expr, index).ToArray();
+            foreach (var s in sigs) {
+                var parameters = string.Join(", ", s.Parameters.Select(p => $"{p.Name} : {p.Type ?? "(null)"} = {p.DefaultValue ?? "(null)"}"));
+                Trace.WriteLine($"{s.Name}({parameters})");
+            }
+            AssertUtil.AreEqual(sigs.Single().Parameters.Select(p => p.Name), paramNames);
         }
 
         public void AssertIsInstance(string expr) {

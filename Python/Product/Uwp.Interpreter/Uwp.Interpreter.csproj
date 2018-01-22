@@ -41,11 +41,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Microsoft.PythonTools.Analyzer</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
+      <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

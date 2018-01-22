@@ -16,29 +16,29 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.PatternMatching;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly PythonEditorServices _services;
         private readonly AnalyzerInfo[] _analyzers;
-        private readonly FuzzyMatchMode _matchMode;
-        private readonly IGlyphService _glyphService;
         private CancellationTokenSource _searchCts;
 
         // Used to propagate information to PythonNavigateToItemDisplay inside NavigateToItem.Tag.
         internal class ItemTag {
-            public IServiceProvider Site { get; set; }
-            public IGlyphService GlyphService { get; set; }
+            public PythonEditorServices Services { get; set; }
             public AP.Completion Completion { get; set; }
             public string ProjectName { get; set; }
         }
@@ -50,16 +50,13 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             public AP.CompletionsResponse Result;
         }
 
-        public PythonNavigateToItemProvider(IServiceProvider serviceProvider, IGlyphService glyphService) {
-            _serviceProvider = serviceProvider;
-            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+        public PythonNavigateToItemProvider(PythonEditorServices services) {
+            _services = services;
+            var solution = (IVsSolution)_services.Site.GetService(typeof(SVsSolution));
             _analyzers = solution.EnumerateLoadedPythonProjects()
                 .Select(p => new AnalyzerInfo { Analyzer = p.GetAnalyzer(), ProjectName = p.Caption })
                 .Where(a => a.Analyzer != null)
                 .ToArray();
-            _glyphService = glyphService;
-            var pyService = _serviceProvider.GetPythonToolsService();
-            _matchMode = pyService?.AdvancedOptions.SearchMode ?? FuzzyMatchMode.FuzzyIgnoreLowerCase;
         }
 
         public async void StartSearch(INavigateToCallback callback, string searchValue) {
@@ -85,7 +82,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 await FindMatchesAsync(callback, searchValue, token);
             } catch (OperationCanceledException) {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(_serviceProvider, GetType());
+                ex.ReportUnhandledException(_services.Site, GetType());
             } finally {
                 callback.Done();
                 if (searchCts != null) {
@@ -95,21 +92,19 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             }
         }
 
-#pragma warning disable 618 // TODO: deal with 15.6 MatchKind deprecation later
-
         private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token) {
-            var matchers = new List<Tuple<FuzzyStringMatcher, string, MatchKind>> {
-                    Tuple.Create(new FuzzyStringMatcher(FuzzyMatchMode.Prefix), searchValue, MatchKind.Prefix),
-                    Tuple.Create(new FuzzyStringMatcher(_matchMode), searchValue, MatchKind.Regular)
-                };
-
-            if (searchValue.Length > 2 && searchValue.StartsWith("/") && searchValue.EndsWith("/")) {
-                matchers.Insert(0, Tuple.Create(
-                    new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase),
-                    searchValue.Substring(1, searchValue.Length - 2),
-                    MatchKind.Regular
-                ));
+#if USE_15_5
+            foreach (var a in _analyzers) {
+                a.Task = null;
+                a.Result = null;
             }
+            callback.Done();
+        }
+#else
+            var matcher = _services.PatternMatcherFactory.CreatePatternMatcher(
+                searchValue,
+                new PatternMatcherCreationOptions(CultureInfo.CurrentUICulture, PatternMatcherCreationFlags.AllowFuzzyMatching | PatternMatcherCreationFlags.AllowSimpleSubstringMatching)
+            );
 
             var opts = GetMemberOptions.NoMemberRecursion | GetMemberOptions.IntersectMultipleResults | GetMemberOptions.DetailedInformation;
             foreach (var a in _analyzers) {
@@ -128,7 +123,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                     continue;
                 }
 
-                foreach (var res in FilterResults(a.ProjectName, a.Result.completions, matchers)) {
+                foreach (var res in FilterResults(a.ProjectName, a.Result.completions, matcher)) {
                     callback.AddItem(res);
                 }
 
@@ -136,27 +131,21 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 callback.ReportProgress(progress, total);
             }
         }
+
         private IEnumerable<NavigateToItem> FilterResults(
             string projectName,
             IEnumerable<AP.Completion> completions,
-            IEnumerable<Tuple<FuzzyStringMatcher, string, MatchKind>> matchers
+            IPatternMatcher matcher
         ) {
             foreach (var c in completions) {
-                MatchKind matchKind = MatchKind.None;
-                foreach (var m in matchers) {
-                    if (m.Item1.IsCandidateMatch(c.name, m.Item2)) {
-                        matchKind = m.Item3;
-                        break;
-                    }
-                }
-                if (matchKind == MatchKind.None) {
+                var match = matcher.TryMatch(c.name);
+                if (match == null) {
                     continue;
                 }
 
                 var itemTag = new ItemTag {
-                    Site = _serviceProvider,
+                    Services = _services,
                     Completion = c,
-                    GlyphService = _glyphService,
                     ProjectName = projectName
                 };
 
@@ -166,13 +155,12 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                     "Python",
                     "",
                     itemTag,
-                    matchKind,
+                    match.Value,
                     PythonNavigateToItemDisplayFactory.Instance
                 );
             }
         }
-
-#pragma warning restore 618
+#endif
 
         public void StopSearch() {
             try {

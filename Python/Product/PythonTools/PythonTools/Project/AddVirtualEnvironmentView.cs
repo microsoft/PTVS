@@ -396,14 +396,18 @@ namespace Microsoft.PythonTools.Project {
                 //MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
-                var installed = await interp.FindModulesAsync("pip", "virtualenv", "venv");
+                var opts = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-                if (installed.Contains("venv") || installed.Contains("virtualenv")) {
+                if (await interp.HasModuleAsync("venv", opts)) {
                     WillInstallPip = false;
                     WillInstallVirtualEnv = false;
-                    UseVEnv = !installed.Contains("virtualenv");
+                    UseVEnv = true;
+                } else if (await interp.HasModuleAsync("virtualenv", opts)) {
+                    WillInstallPip = false;
+                    WillInstallVirtualEnv = false;
+                    UseVEnv = false;
                 } else {
-                    WillInstallPip = !installed.Contains("pip");
+                    WillInstallPip = await interp.HasModuleAsync("pip", opts);
                     WillInstallVirtualEnv = true;
                     UseVEnv = false;
                 }

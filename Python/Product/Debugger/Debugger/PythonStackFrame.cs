@@ -17,10 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -200,21 +202,12 @@ namespace Microsoft.PythonTools.Debugger {
                 return functionName;
             }
 
-            var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
-            try {
-                ast.Walk(walker);
-            } catch (InvalidDataException) {
-                // Walker ran into a mismatch between expected function name and AST, so we cannot
-                // rely on AST to construct an accurate qualified name. Just return what we have.
-                return functionName;
-            }
-
-            string qualName = walker.Name;
-            if (string.IsNullOrEmpty(qualName)) {
-                return functionName;
-            }
-
-            return qualName;
+            return QualifiedFunctionNameWalker.GetDisplayName(
+                lineNo,
+                functionName,
+                ast,
+                (a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(n, a)
+            );
         }
     }
 

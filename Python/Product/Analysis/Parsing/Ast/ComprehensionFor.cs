@@ -53,6 +53,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        public int GetIndexOfFor(PythonAst ast) {
+            if (!IsAsync) {
+                return StartIndex;
+            }
+            return StartIndex + 5 + this.GetPreceedingWhiteSpace(ast).Length;
+        }
+
+        public int GetIndexOfIn(PythonAst ast) {
+            if (this.IsIncompleteNode(ast)) {
+                return -1;
+            }
+            return Left.EndIndex + this.GetSecondWhiteSpace(ast).Length;
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             if (_isAsync) {
                 res.Append(this.GetThirdWhiteSpace(ast));

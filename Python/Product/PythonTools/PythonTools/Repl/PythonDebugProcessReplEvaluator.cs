@@ -153,8 +153,6 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public override string AnalysisFilename => _currentFrameFilename ?? base.AnalysisFilename;
-
         internal async Task<KeyValuePair<string, string>[]> RefreshAvailableScopes() {
             var modules = await _process.GetModuleNamesAndPaths();
 

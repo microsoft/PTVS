@@ -14,17 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pythontools;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -262,22 +266,38 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
+        private static void WaitForEmptySet(WaitHandle activity, HashSet<string> set, CancellationToken token) {
+            while (true) {
+                lock (set) {
+                    if (!set.Any()) {
+                        return;
+                    }
+                }
+                token.ThrowIfCancellationRequested();
+                activity.WaitOne(1000);
+            }
+        }
+
         [TestMethod, Priority(0)]
         public async Task LoadAndUnloadModule() {
-            var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, factories[0])) {
+            using (var are = new AutoResetEvent(false))
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6)))) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
+                var toAnalyze = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { m1Path, m2Path };
+                analyzer.AnalysisComplete += (s, e) => {
+                    lock (toAnalyze) {
+                        toAnalyze.Remove(e.Path);
+                    }
+                    are.Set();
+                };
                 var entry1 = await analyzer.AnalyzeFileAsync(m1Path);
                 var entry2 = await analyzer.AnalyzeFileAsync(m2Path);
+                WaitForEmptySet(are, toAnalyze, CancellationTokens.After60s);
 
-                var cancel = CancellationTokens.After60s;
-                analyzer.WaitForCompleteAnalysis(_ => !cancel.IsCancellationRequested);
-                cancel.ThrowIfCancellationRequested();
-
-                var loc = new Microsoft.PythonTools.Parsing.SourceLocation(1, 1);
+                var loc = new Microsoft.PythonTools.SourceLocation(1, 1);
                 AssertUtil.ContainsExactly(
                     analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
@@ -288,8 +308,9 @@ namespace PythonToolsTests {
                     "int"
                 );
 
+                toAnalyze.Add(m2Path);
                 await analyzer.UnloadFileAsync(entry1);
-                analyzer.WaitForCompleteAnalysis(_ => true);
+                WaitForEmptySet(are, toAnalyze, CancellationTokens.After15s);
 
                 // Even though module1 has been unloaded, we still know that
                 // module2 imports it.
@@ -302,8 +323,10 @@ namespace PythonToolsTests {
                     analyzer.GetValueDescriptions(entry2, "x", loc)
                 );
 
+                toAnalyze.Add(m1Path);
+                toAnalyze.Add(m2Path);
                 await analyzer.AnalyzeFileAsync(m1Path);
-                analyzer.WaitForCompleteAnalysis(_ => true);
+                WaitForEmptySet(are, toAnalyze, CancellationTokens.After5s);
 
                 AssertUtil.ContainsExactly(
                     analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),

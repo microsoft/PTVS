@@ -14,10 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstBuiltinPythonModule : AstScrapedPythonModule {
@@ -27,15 +26,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private static string MakeFakeFilePath(string interpreterPath, string name) {
             if (string.IsNullOrEmpty(interpreterPath)) {
-                throw new ArgumentNullException(nameof(interpreterPath));
+                return $"python.{name}.exe";
             }
             var ext = Path.GetExtension(interpreterPath);
             return Path.ChangeExtension(interpreterPath, name) + ext;
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
-            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sm)) {
+            if (!InstallPath.TryGetFile("scrape_module.py", out string sm)) {
                 return null;
             }
 

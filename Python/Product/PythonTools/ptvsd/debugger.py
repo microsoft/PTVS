@@ -776,6 +776,7 @@ class Thread(object):
         self.django_stepping = None
         self.is_sending = False
         self.is_importing_stdlib = False
+        self.is_importing_stdlib_warned = False
 
         # stackless changes
         if stackless is not None:
@@ -938,7 +939,8 @@ class Thread(object):
         # If we're importing stdlib, don't trace nested calls until we return from the import that started it,
         # but notify the user if these nested calls end up in non-stdlib code.
         if self.is_importing_stdlib:
-            if not is_stdlib(path.normcase(co_filename)):
+            if not self.is_importing_stdlib_warned and not co_filename.startswith('<') and should_debug_code(f_code):
+                self.is_importing_stdlib_warned = True
                 debug_output.write('Standard library module invoked user code during import; breakpoints disabled for invoked code.\n')
             return self.prev_trace_func
 
@@ -2531,16 +2533,17 @@ def new_external_thread():
     sys.settrace(thread.trace_func)
 
 def do_wait():
-    try:
-        import msvcrt
-    except ImportError:
-        sys.__stdout__.write('Press Enter to continue . . . ')
-        sys.__stdout__.flush()
-        sys.__stdin__.read(1)
-    else:
-        sys.__stdout__.write('Press any key to continue . . . ')
-        sys.__stdout__.flush()
-        msvcrt.getch()
+    if sys.__stdout__ is not None:
+        try:
+            import msvcrt
+        except ImportError:
+            sys.__stdout__.write('Press Enter to continue . . . ')
+            sys.__stdout__.flush()
+            sys.__stdin__.read(1)
+        else:
+            sys.__stdout__.write('Press any key to continue . . . ')
+            sys.__stdout__.flush()
+            msvcrt.getch()
 
 def enable_output_redirection():
     sys.stdout = _DebuggerOutput(sys.stdout, 'stdout')

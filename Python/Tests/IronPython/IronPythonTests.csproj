@@ -103,6 +103,10 @@
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
       <Project>{5ae43c93-8ef6-4d57-bc10-511035ef56c5}</Project>
       <Name>Microsoft.IronPythonTools</Name>

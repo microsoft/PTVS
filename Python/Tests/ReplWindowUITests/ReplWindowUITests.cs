@@ -227,14 +227,15 @@ namespace ReplWindowUITests {
                     Console.WriteLine("{0} ({1})", c.Span.GetText(), c.ClassificationType.Classification);
                 }
 
-                Assert.AreEqual(3, classifications.Count());
-                Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
-                Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
-                Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
+                Assert.AreEqual(5, classifications.Count());
+                Assert.AreEqual(PredefinedClassificationTypeNames.Keyword, classifications[0].ClassificationType.Classification);
+                Assert.AreEqual(PredefinedClassificationTypeNames.Identifier, classifications[1].ClassificationType.Classification);
+                Assert.AreEqual("Python grouping", classifications[2].ClassificationType.Classification);
+                Assert.AreEqual(PredefinedClassificationTypeNames.WhiteSpace, classifications[3].ClassificationType.Classification);
 
-                Assert.AreEqual(classifications[0].Span.GetText(), "raise");
-                Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
-                Assert.AreEqual(classifications[2].Span.GetText(), "()");
+                Assert.AreEqual("raise", classifications[0].Span.GetText());
+                Assert.AreEqual("Exception", classifications[1].Span.GetText());
+                Assert.AreEqual("()", classifications[2].Span.GetText());
             }
         }
 

@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateCompletionController : CompletionController {
         private readonly PythonToolsService _pyService;
 
+#pragma warning disable 618 // Microsoft.Web.Editor.Completion.CompletionController uses the deprecated IQuickInfoBroker
         public TemplateCompletionController(
             PythonToolsService pyService,
             ITextView textView,
@@ -34,6 +35,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             base(textView, subjectBuffers, completionBroker, quickInfoBroker, signatureBroker) {
             _pyService = pyService;
         }
+#pragma warning restore 618
 
         public override bool IsTriggerChar(char typedCharacter) {
             const string triggerChars = " |.";

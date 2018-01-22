@@ -107,10 +107,8 @@ namespace Microsoft.PythonTools.Commands {
         internal static Dictionary<CoverageFileInfo, CoverageMapper>  Import(CoverageFileInfo[] fileInfo, PythonLanguageVersion version = PythonLanguageVersion.V27) {
             Dictionary<CoverageFileInfo, CoverageMapper> files = new Dictionary<CoverageFileInfo, CoverageMapper>();
             foreach (var file in fileInfo) {
-                using (var parser = Parser.CreateParser(
-                   new FileStream(file.Filename, FileMode.Open),
-                   version
-                )) {
+                using (var stream = new FileStream(file.Filename, FileMode.Open)) {
+                    var parser = Parser.CreateParser(stream, version);
                     var ast = parser.ParseFile();
 
                     var collector = new CoverageMapper(ast, file.Filename, file.Hits);

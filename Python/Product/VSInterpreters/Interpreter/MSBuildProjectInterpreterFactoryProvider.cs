@@ -485,22 +485,23 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             protected override void CreateFactory() {
-                var dbPath = PathUtils.GetAbsoluteDirectoryPath(
-                    Config.PrefixPath,
-                    ".ptvs"
-                );
-
-                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                    Config,
-                    new InterpreterFactoryCreationOptions {
-                        PackageManager = new PipPackageManager(),
-                        WatchFileSystem = true,
-                        NoDatabase = ExperimentalOptions.NoDatabaseFactory,
-                        DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
-                            DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 1) :
-                            DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 0)
-                    }
-                );
+                if (!ExperimentalOptions.NoDatabaseFactory) {
+                    _factory = new LegacyDB.CPythonInterpreterFactory(
+                        Config,
+                        new InterpreterFactoryCreationOptions {
+                            WatchFileSystem = true,
+                            DatabasePath = DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 0)
+                        }
+                    );
+                } else {
+                    _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                        Config,
+                        new InterpreterFactoryCreationOptions {
+                            WatchFileSystem = true,
+                            DatabasePath = DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 1)
+                        }
+                    );
+                }
             }
 
             public override bool Equals(object obj) {

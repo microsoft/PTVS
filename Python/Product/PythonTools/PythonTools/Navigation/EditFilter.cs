@@ -713,6 +713,7 @@ namespace Microsoft.PythonTools.Language {
                         if (controller != null) {
                             controller.TriggerCompletionSession(
                                 (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                '\0',
                                 true
                             );
                             return VSConstants.S_OK;
@@ -784,7 +785,7 @@ namespace Microsoft.PythonTools.Language {
 
 
         private void ExtractMethod() {
-            new MethodExtractor(_editorServices.Site, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
+            new Refactoring.MethodExtractor(_editorServices, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
@@ -938,7 +939,7 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
-            switch (MethodExtractor.CanExtract(_textView)) {
+            switch (Refactoring.MethodExtractor.CanExtract(_textView)) {
                 case true:
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                     break;

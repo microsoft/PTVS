@@ -71,15 +71,77 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task CreateCookiecutterEnv() {
             // Create a virtual environment using the global interpreter
-            var interpreterPath = _interpreter.InterpreterExecutablePath;
-            var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-m", "venv", _envFolderPath);
+            try {
+                await CreateVenv();
+            } catch (ProcessException ex) when (ex.Result.ExitCode == 1) {
+                // Create fails on some Anaconda due to venv failing to install pip.
+                // Try again by installing pip ourselves.
+                await CreateVenvWithoutPipThenInstallPip();
+            }
+        }
 
-            await WaitForOutput(interpreterPath, output);
+        private async Task CreateVenv() {
+            RemoveExistingVenv();
+
+            _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnv.FormatUI(_envFolderPath));
+            var output = ProcessOutput.Run(
+                _interpreter.InterpreterExecutablePath,
+                new[] { "-m", "venv", _envFolderPath },
+                null,
+                null,
+                false,
+                _redirector
+            );
+            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+        }
+
+        private async Task CreateVenvWithoutPipThenInstallPip() {
+            RemoveExistingVenv();
+
+            _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_envFolderPath));
+            var output = ProcessOutput.Run(
+                _interpreter.InterpreterExecutablePath,
+                new[] { "-m", "venv", _envFolderPath, "--without-pip" },
+                null,
+                null,
+                false,
+                _redirector
+            );
+            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+
+            _redirector.WriteLine(Strings.InstallingCookiecutterInstallPip.FormatUI(_envFolderPath));
+            var pipScriptPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
+            output = ProcessOutput.Run(
+                _envInterpreterPath,
+                new[] { pipScriptPath },
+                _interpreter.PrefixPath,
+                null,
+                false,
+                _redirector
+            );
+            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+        }
+
+        private void RemoveExistingVenv() {
+            if (Directory.Exists(_envFolderPath)) {
+                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
+                try {
+                    Directory.Delete(_envFolderPath, true);
+                } catch (DirectoryNotFoundException) {
+                }
+            }
         }
 
         public async Task InstallPackage() {
-            // Install the package into the virtual environment
-            var output = ProcessOutput.RunHiddenAndCapture(_envInterpreterPath, "-m", "pip", "install", "cookiecutter<1.5");
+            _redirector.WriteLine(Strings.InstallingCookiecutterInstallPackages.FormatUI(_envFolderPath));
+            var output = ProcessOutput.Run(
+                _envInterpreterPath,
+                new[] { "-m", "pip", "install", "cookiecutter<1.5" },
+                null,
+                null,
+                false,
+                _redirector
+            );
 
             await WaitForOutput(_envInterpreterPath, output);
         }

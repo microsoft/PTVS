@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.MockVsTests;
@@ -70,7 +72,7 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(0)]
         public void SigHelpInClass() {
             using (var view = new PythonEditor()) {
-                view.TypeAndWaitForAnalysis("class C(): pass");
+                view.TypeAndWaitForAnalysis("class C(): pass\n");
                 view.MoveCaret(1, 9);
 
                 view.ParamInfo();

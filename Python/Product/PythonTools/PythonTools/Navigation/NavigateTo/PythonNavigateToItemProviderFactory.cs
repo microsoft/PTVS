@@ -19,17 +19,19 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
+using Microsoft.VisualStudio.Text.PatternMatching;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Editor;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     [Export(typeof(INavigateToItemProviderFactory))]
     internal class PythonNavigateToItemProviderFactory : INavigateToItemProviderFactory {
-        private readonly IGlyphService _glyphService;
+        private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public PythonNavigateToItemProviderFactory(IGlyphService glyphService) {
-            _glyphService = glyphService;
+        public PythonNavigateToItemProviderFactory(PythonEditorServices editorServices) {
+            _services = editorServices;
         }
 
         public bool TryCreateNavigateToItemProvider(IServiceProvider serviceProvider, out INavigateToItemProvider provider) {
@@ -38,7 +40,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             IVsPackage pkg;
             if (shell.IsPackageLoaded(ref guid, out pkg) == VSConstants.S_OK && pkg != null) {
                 provider = serviceProvider.GetUIThread().Invoke(() => {
-                    return new PythonNavigateToItemProvider(serviceProvider, _glyphService);
+                    return new PythonNavigateToItemProvider(_services);
                 });
                 return true;
             }

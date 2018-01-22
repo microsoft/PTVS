@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -34,14 +35,15 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor {
     sealed class PythonTextBufferInfo {
+        private static readonly object PythonTextBufferInfoKey = new { Id = "PythonTextBufferInfo" };
+
         public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
             var bi = (buffer ?? throw new ArgumentNullException(nameof(buffer))).Properties.GetOrCreateSingletonProperty(
-                typeof(PythonTextBufferInfo),
+                PythonTextBufferInfoKey,
                 () => new PythonTextBufferInfo(services, buffer)
             );
             if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
-                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
             }
             return bi;
         }
@@ -51,12 +53,11 @@ namespace Microsoft.PythonTools.Editor {
             if (buffer == null) {
                 return null;
             }
-            if (!buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi) || bi == null) {
+            if (!buffer.Properties.TryGetProperty(PythonTextBufferInfoKey, out bi) || bi == null) {
                 return null;
             }
             if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
-                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
             }
             return bi;
         }
@@ -80,13 +81,15 @@ namespace Microsoft.PythonTools.Editor {
 
         private readonly object _lock = new object();
 
-        private int _bufferId;
         private AnalysisEntry _analysisEntry;
+        private TaskCompletionSource<AnalysisEntry> _waitingForEntry;
 
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
         private readonly Lazy<string> _filename;
+        private readonly Lazy<Uri> _documentUri;
         private readonly TokenCache _tokenCache;
+        private readonly LocationTracker _locationTracker;
 
         private readonly bool _hasChangedOnBackground;
         private bool _replace;
@@ -98,8 +101,8 @@ namespace Microsoft.PythonTools.Editor {
             Buffer = buffer;
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
+            _documentUri = new Lazy<Uri>(GetOrCreateDocumentUri);
             _tokenCache = new TokenCache();
-            _bufferId = -1;
             _defaultLanguageVersion = PythonLanguageVersion.None;
 
             ITextDocument doc;
@@ -115,6 +118,8 @@ namespace Microsoft.PythonTools.Editor {
                 _hasChangedOnBackground = true;
                 buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
             }
+
+            _locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
         }
 
         private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
@@ -138,7 +143,7 @@ namespace Microsoft.PythonTools.Editor {
                 newInfo._eventSinks[sink.Key] = sink.Value;
             }
 
-            Buffer.Properties[typeof(PythonTextBufferInfo)] = newInfo;
+            Buffer.Properties[PythonTextBufferInfoKey] = newInfo;
 
             Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
             Buffer.Changed -= Buffer_TextContentChanged;
@@ -148,27 +153,42 @@ namespace Microsoft.PythonTools.Editor {
                 buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
             }
 
+            Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(null);
+
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
             return newInfo;
         }
 
         private string GetOrCreateFilename() {
-            var replEval = Buffer.GetInteractiveWindow()?.Evaluator;
-            if (replEval is PythonCommonInteractiveEvaluator pyEval) {
-                return pyEval.AnalysisFilename;
-            } else if (replEval is SelectableReplEvaluator selectEval) {
-                return selectEval.AnalysisFilename;
+            string path;
+            var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            var docUri = replEval?.DocumentUri;
+            if (docUri != null && docUri.IsFile) {
+                return docUri.LocalPath;
             }
 
-            ITextDocument doc;
-            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
-                return doc.FilePath;
+            if (Buffer.GetInteractiveWindow() != null) {
+                return null;
             }
 
-            return "{0}.py".FormatInvariant(Guid.NewGuid());
+            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc) &&
+                !string.IsNullOrEmpty(path = doc.FilePath)) {
+                return PathUtils.NormalizePath(path);
+            }
+
+            return null;
         }
 
+        private Uri GetOrCreateDocumentUri() {
+            var path = Filename;
+            if (!string.IsNullOrEmpty(path)) {
+                return new Uri(path);
+            }
+
+            var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            return replEval?.NextDocumentUri();
+        }
 
 
         public ITextBuffer Buffer { get; }
@@ -176,6 +196,7 @@ namespace Microsoft.PythonTools.Editor {
         public ITextSnapshot CurrentSnapshot => Buffer.CurrentSnapshot;
         public IContentType ContentType => Buffer.ContentType;
         public string Filename => _filename.Value;
+        public Uri DocumentUri => _documentUri.Value;
 
         public PythonEditorServices Services { get; }
 
@@ -288,6 +309,31 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         /// <summary>
+        /// Returns the current analysis entry if it is not null. Otherwise
+        /// waits for a non-null entry to be set and returns it. If cancelled,
+        /// return null.
+        /// </summary>
+        public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
+            var entry = AnalysisEntry;
+            if (entry != null) {
+                return Task.FromResult(entry);
+            }
+            var tcs = Volatile.Read(ref _waitingForEntry);
+            if (tcs != null) {
+                return tcs.Task;
+            }
+            tcs = new TaskCompletionSource<AnalysisEntry>();
+            tcs = Interlocked.CompareExchange(ref _waitingForEntry, tcs, null) ?? tcs;
+            entry = AnalysisEntry;
+            if (entry != null) {
+                tcs.TrySetResult(entry);
+            } else if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetResult(null));
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// Changes the analysis entry to <paramref name="entry"/> if the current
         /// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
         /// entry, regardless of whether it changed or not.
@@ -307,6 +353,8 @@ namespace Microsoft.PythonTools.Editor {
             if (entry != null) {
                 entry.AnalysisComplete += AnalysisEntry_AnalysisComplete;
                 entry.ParseComplete += AnalysisEntry_ParseComplete;
+
+                Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(entry);
             }
 
             OnNewAnalysisEntry(entry);
@@ -325,43 +373,72 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        public int AnalysisBufferId => Volatile.Read(ref _bufferId);
+        private readonly SortedDictionary<int, ITextSnapshot> _expectParse = new SortedDictionary<int, ITextSnapshot>();
+        private readonly SortedDictionary<int, ITextSnapshot> _expectAnalysis = new SortedDictionary<int, ITextSnapshot>();
+        private ITextSnapshot _lastSentSnapshot;
 
-        public bool SetAnalysisBufferId(int id) {
-            if (id < 0) {
-                Volatile.Write(ref _bufferId, -1);
-                return true;
-            }
-            return Interlocked.CompareExchange(ref _bufferId, id, -1) == -1;
-        }
+        public ITextSnapshot LastAnalysisSnapshot { get; private set; }
 
-        public ITextSnapshot LastSentSnapshot { get; set; }
-        public ITextVersion LastParseReceivedVersion { get; private set; }
-        public ITextVersion LastAnalysisReceivedVersion { get; private set; }
-
-        public ITextVersion UpdateLastReceivedParse(int version) {
-            lock (_lock) {
-                var ver = LastParseReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-                while (ver?.Next != null && ver.VersionNumber < version) {
-                    ver = ver.Next;
+        public ITextSnapshot LastSentSnapshot {
+            get {
+                lock (_lock) {
+                    return _lastSentSnapshot;
                 }
-                var r = ver != null && ver.VersionNumber >= version;
-                LastParseReceivedVersion = ver;
-                return r ? ver : null;
             }
         }
 
-        public ITextVersion UpdateLastReceivedAnalysis(int version) {
+        public void ClearSentSnapshot() {
             lock (_lock) {
-                var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-                while (ver?.Next != null && ver.VersionNumber < version) {
-                    ver = ver.Next;
-                }
-                var r = ver != null && ver.VersionNumber >= version;
-                LastAnalysisReceivedVersion = ver;
-                return r ? ver : null;
+                _lastSentSnapshot = null;
+                _expectAnalysis.Clear();
+                _expectParse.Clear();
             }
         }
+
+        public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
+            lock (_lock) {
+                var prevSent = _lastSentSnapshot;
+                if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
+                    return prevSent;
+                }
+                _lastSentSnapshot = sent;
+                _expectAnalysis[sent.Version.VersionNumber] = sent;
+                _expectParse[sent.Version.VersionNumber] = sent;
+                return prevSent;
+            }
+        }
+
+        public bool UpdateLastReceivedParse(int version) {
+            lock (_lock) {
+                var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
+                foreach (var i in toRemove) {
+                    Debug.WriteLine($"Skipped parse for version {i}");
+                    _expectParse.Remove(i);
+                }
+                return _expectParse.Remove(version);
+            }
+        }
+
+        public bool UpdateLastReceivedAnalysis(int version) {
+            lock (_lock) {
+                var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
+                foreach (var i in toRemove) {
+                    Debug.WriteLine($"Skipped analysis for version {i}");
+                    _expectAnalysis.Remove(i);
+                }
+                if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
+                    _expectAnalysis.Remove(version);
+                    if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {
+                        LastAnalysisSnapshot = snapshot;
+                        _locationTracker.UpdateBaseSnapshot(snapshot);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        public LocationTracker LocationTracker => _locationTracker;
 
         /// <summary>
         /// Gets the smallest expression that fully contains the span.
@@ -540,9 +617,8 @@ namespace Microsoft.PythonTools.Editor {
             );
 
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceSpan, LanguageVersion)) {
-                ast = parser.ParseFile();
-            }
+            var parser = Parser.CreateParser(sourceSpan, LanguageVersion);
+            ast = parser.ParseFile();
 
             var finder = new ExpressionFinder(ast, options);
             var actualExpr = finder.GetExpressionSpan(span.ToSourceSpan());

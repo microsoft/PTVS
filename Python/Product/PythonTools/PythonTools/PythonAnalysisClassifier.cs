@@ -21,8 +21,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -45,9 +47,9 @@ namespace Microsoft.PythonTools {
     /// </summary>
     internal class PythonAnalysisClassifier : IClassifier, IPythonTextBufferInfoEventSink {
         private AP.AnalysisClassification[] _spanCache;
+        private int _spanFromVersion;
         private readonly object _spanCacheLock = new object();
         private readonly PythonAnalysisClassifierProvider _provider;
-        private LocationTracker _spanTranslator;
 
         internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider) {
             _provider = provider;
@@ -70,26 +72,23 @@ namespace Microsoft.PythonTools {
             }
 
 
-            var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(
-                entry,
-                sender.Buffer,
-                _provider._colorNamesWithAnalysis
-            );
+            var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(sender, _provider._colorNamesWithAnalysis, entry);
 
             if (classifications != null) {
-                Debug.WriteLine("Received {0} classifications", classifications.Data.classifications?.Length ?? 0);
+                Debug.WriteLine("Received {0} classifications", classifications.classifications?.Length ?? 0);
 
                 lock (_spanCacheLock) {
                     // sort the spans by starting position so we can use binary search when handing them out
-                    _spanCache = classifications.Data.classifications
+                    _spanCache = classifications.classifications
                         .MaybeEnumerate()
-                        .OrderBy(c => c.start)
+                        .OrderBy(c => c.startLine)
+                        .ThenBy(c => c.startColumn)
                         .Distinct(ClassificationComparer.Instance)
                         .ToArray();
-                    _spanTranslator = classifications.GetTracker(classifications.Data.version);
+                    _spanFromVersion = classifications.version;
                 }
 
-                if (_spanTranslator != null) {
+                if (_spanCache != null) {
                     OnNewClassifications(sender.CurrentSnapshot);
                 }
             }
@@ -99,10 +98,14 @@ namespace Microsoft.PythonTools {
             public static readonly IEqualityComparer<AP.AnalysisClassification> Instance = new ClassificationComparer();
 
             public bool Equals(AP.AnalysisClassification x, AP.AnalysisClassification y) {
-                return x.start == y.start && x.length == y.length && x.type == y.type;
+                return x.startLine == y.startLine &&
+                    x.startColumn == y.startColumn &&
+                    x.endLine == y.endLine &&
+                    x.endColumn == y.endColumn &&
+                    x.type == y.type;
             }
 
-            public int GetHashCode(AP.AnalysisClassification obj) => obj.start;
+            public int GetHashCode(AP.AnalysisClassification obj) => obj.startLine << 8 + obj.startColumn;
         }
 
         private void OnNewClassifications(ITextSnapshot snapshot) {
@@ -112,25 +115,23 @@ namespace Microsoft.PythonTools {
         public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
         class IndexComparer : IComparer {
-            public static readonly IndexComparer Instance = new IndexComparer();
+            public static readonly IComparer Instance = new IndexComparer();
+
+            private IndexComparer() { }
 
             public int Compare(object x, object y) {
-                int xValue = GetStart(x), yValue = GetStart(y);
-
-                return xValue - yValue;
+                return GetStart(x).CompareTo(GetStart(y));
             }
 
-            private static int GetStart(object value) {
-                int indexValue;
-
-                AP.AnalysisClassification xClass = value as AP.AnalysisClassification;
-                if (xClass != null) {
-                    indexValue = xClass.start;
+            private SourceLocation GetStart(object value) {
+                if (value is AP.AnalysisClassification xClass) {
+                    return new SourceLocation(xClass.startLine, xClass.startColumn);
+                } else if (value is SourceLocation s) {
+                    return s;
                 } else {
-                    indexValue = (int)value;
+                    Debug.Fail($"Unexpected value {value ?? "(null)"} ({value?.GetType().FullName ?? "null"})");
+                    throw new InvalidCastException();
                 }
-
-                return indexValue;
             }
         }
 
@@ -139,19 +140,23 @@ namespace Microsoft.PythonTools {
             var snapshot = span.Snapshot;
 
             AP.AnalysisClassification[] spans;
-            LocationTracker spanTranslator;
+            int fromVersion;
             lock (_spanCacheLock) {
                 spans = _spanCache;
-                spanTranslator = _spanTranslator;
+                fromVersion = _spanFromVersion;
             }
 
-            if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans?.Length == 0) {
+            if (span.Length <= 0 || snapshot.IsReplBufferWithCommand() || spans?.Length == 0) {
                 return classifications;
             }
 
-            if (spans == null || spanTranslator == null) {
+            var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+            if (bi == null) {
+                return classifications;
+            }
+
+            if (spans == null) {
                 if (_provider._colorNames) {
-                    var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
                     if (bi?.AnalysisEntry != null && bi.AnalysisEntry.IsAnalyzed) {
                         // Trigger the request so we get info on first open
                         OnNewAnalysisAsync(bi, bi.AnalysisEntry).HandleAllExceptions(bi.Services.Site, GetType()).DoNotWait();
@@ -163,8 +168,8 @@ namespace Microsoft.PythonTools {
 
             // find where in the spans we should start scanning from (they're sorted by
             // starting position in the old buffer)
-            var start = spanTranslator.TranslateBack(span.Start, span.Snapshot.Version);
-            var end = spanTranslator.TranslateBack(span.End, span.Snapshot.Version);
+            var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
+            var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
             var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
@@ -174,15 +179,18 @@ namespace Microsoft.PythonTools {
             }
 
             for (int i = startIndex; i < spans.Length; i++) {
-                if (spans[i].start > end) {
+                var spanSpan = new SourceSpan(
+                    new SourceLocation(spans[i].startLine, spans[i].startColumn),
+                    new SourceLocation(spans[i].endLine, spans[i].endColumn)
+                );
+                if (spanSpan.Start > end) {
                     // we're past the span our caller is interested in, stop scanning...
                     break;
                 }
 
-                var classification = spans[i];
-                var cs = spanTranslator.TranslateForward(new Span(classification.start, classification.length));
+                var cs = bi.LocationTracker.Translate(spanSpan, fromVersion, snapshot);
 
-                string typeName = ToVsClassificationName(classification);
+                string typeName = ToVsClassificationName(spans[i]);
 
                 IClassificationType classificationType;
                 if (typeName != null &&
@@ -212,6 +220,11 @@ namespace Microsoft.PythonTools {
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
                 return OnNewAnalysisAsync(sender, e.AnalysisEntry);
+            } else if (e.Event == PythonTextBufferInfoEvents.NewTextBufferInfo) {
+                var entry = sender.AnalysisEntry;
+                if (entry != null) {
+                    return OnNewAnalysisAsync(sender, entry);
+                }
             }
             return Task.CompletedTask;
         }

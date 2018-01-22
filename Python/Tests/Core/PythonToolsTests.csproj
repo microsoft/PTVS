@@ -106,10 +106,12 @@
     <Compile Include="BuildTasksTests.cs" />
     <Compile Include="CodeCellTests.cs" />
     <Compile Include="CoverageTests.cs" />
+    <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="InvalidEncodingSquiggleProviderTests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
+    <Compile Include="LocationTrackerTests.cs" />
     <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
@@ -130,7 +132,7 @@
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
-      <Aliases>global,analysis</Aliases>
+      <Aliases>global</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>

@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     class AnalysisLogWriter : IDisposable {
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Analysis {
             int i = 0;
             bool hitMaxLines = false;
 
-            using (var log = OpenRawLogFile(appendOnly: false, create: false)) {
+            using (var log = PathUtils.OpenWithRetry(_outputFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
                 if (log == null) {
                     return;
                 }
@@ -223,36 +223,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private FileStream OpenRawLogFile(bool appendOnly, bool create) {
-            // Retry for up to one second
-            for (int retries = 100; retries > 0; --retries) {
-                try {
-                    return appendOnly ? new FileStream(_outputFile, FileMode.Append, FileAccess.Write, FileShare.Read)
-                                      : new FileStream(_outputFile, create ? FileMode.OpenOrCreate : FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-                } catch (FileNotFoundException) when (!create) {
-                    return null;
-                } catch (DirectoryNotFoundException) when (!create) {
-                    return null;
-                } catch (IOException) {
-                    var dir = PathUtils.GetParent(_outputFile);
-                    try {
-                        Directory.CreateDirectory(dir);
-                    } catch (IOException) {
-                        // Cannot create directory for DB, so just bail out
-                        return null;
-                    }
-                    Thread.Sleep(10);
-                }
-            }
-            return null;
-        }
-
         private TextWriter OpenLogFile() {
             if (string.IsNullOrEmpty(_outputFile)) {
                 return null;
             }
             var enc = new UTF8Encoding(false);
-            var stream = OpenRawLogFile(true, true);
+            var stream = PathUtils.OpenWithRetry(_outputFile, FileMode.Append, FileAccess.Write, FileShare.Read);
             return stream == null ? null : new StreamWriter(stream, enc);
         }
 

@@ -16,7 +16,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -50,12 +49,6 @@ namespace Microsoft.PythonTools.Options {
         public bool FilterCompletions {
             get { return PyService.AdvancedOptions.FilterCompletions; }
             set { PyService.AdvancedOptions.FilterCompletions = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public FuzzyMatchMode SearchMode {
-            get { return PyService.AdvancedOptions.SearchMode; }
-            set { PyService.AdvancedOptions.SearchMode = value; }
         }
 
         [Obsolete("Use PythonToolsService.AdvancedOptions instead")]

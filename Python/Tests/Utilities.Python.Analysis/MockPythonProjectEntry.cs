@@ -42,22 +42,6 @@ namespace TestUtilities.Python {
 
         public event EventHandler<EventArgs> OnNewAnalysis { add { } remove { } }
 
-        public void BeginParsingTree() {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateTree(PythonAst ast, IAnalysisCookie fileCookie) {
-            throw new NotImplementedException();
-        }
-
-        public void GetTreeAndCookie(out PythonAst ast, out IAnalysisCookie cookie) {
-            throw new NotImplementedException();
-        }
-
-        public PythonAst WaitForCurrentTree(int timeout = -1) {
-            throw new NotImplementedException();
-        }
-
         public void Analyze(System.Threading.CancellationToken cancel, bool enqueueOnly) {
             throw new NotImplementedException();
         }
@@ -82,6 +66,11 @@ namespace TestUtilities.Python {
             set;
         }
 
+        public Uri DocumentUri {
+            get;
+            set;
+        }
+
         public string GetLine(int lineNo) {
             throw new NotImplementedException();
         }
@@ -101,6 +90,18 @@ namespace TestUtilities.Python {
         }
 
         public void Analyze(CancellationToken cancel) {
+            throw new NotImplementedException();
+        }
+
+        public IPythonParse BeginParse() {
+            throw new NotImplementedException();
+        }
+
+        public IPythonParse GetCurrentParse() {
+            throw new NotImplementedException();
+        }
+
+        public IPythonParse WaitForCurrentParse(int timeout = -1) {
             throw new NotImplementedException();
         }
     }

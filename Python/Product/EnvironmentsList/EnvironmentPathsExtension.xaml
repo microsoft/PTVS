@@ -392,6 +392,41 @@
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="DeleteEnv">
+                        <Grid>
+                            <Button x:Name="DeleteEnvButton"
+                                    Margin="6 9 6 6"
+                                    Style="{StaticResource NavigationButton}"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{x:Static l:EnvironmentView.Delete}"
+                                    CommandParameter="{Binding}"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionDeleteEnvironment}">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource DeleteFolderImage}"
+                                             IsTabStop="False"/>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionDeleteEnvironment}"/>
+                                </Grid>
+                            </Button>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding CanBeDeleted}" Value="True">
+                                <Setter TargetName="DeleteEnvButton" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CanBeDeleted}" Value="False">
+                                <Setter TargetName="DeleteEnvButton" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -409,6 +444,7 @@
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SupportInformation}" Margin="0" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" Visibility="{Binding IsBroken, Converter={StaticResource BoolToCollapsed}}" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource DeleteEnv}" Margin="0 3" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -64,8 +64,7 @@ namespace Microsoft.PythonTools.Project {
             public InsertionPoint GetInsertionPoint(string className) {
                 var fileInfo = _node.GetAnalysisEntry();
                 return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
-                    fileInfo,
-                    _node.GetTextBuffer(),
+                    Buffer.CurrentSnapshot,
                     className
                 ), "PythonNonCodeFileNode.GetInsertionPoint");
             }

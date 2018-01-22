@@ -21,9 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -177,7 +176,7 @@ namespace PythonToolsTests {
 
             File.Copy(Path.Combine(CompletionDB, "__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var fact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(new Version(2, 7));
             var paths = new List<string> { outputPath };
             paths.AddRange(Directory.EnumerateDirectories(outputPath));
             var typeDb = new PythonTypeDatabase(fact, paths);
@@ -220,7 +219,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(0, output.ExitCode);
             }
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var fact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(new Version(2, 7));
             var paths = new List<string> { outputPath };
             paths.AddRange(Directory.EnumerateDirectories(outputPath));
             var typeDb = new PythonTypeDatabase(fact, paths);

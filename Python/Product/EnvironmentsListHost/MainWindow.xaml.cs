@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
@@ -39,13 +40,18 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
                 new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly)
             ));
 
-            EnvironmentsToolWindow.Interpreters = _container.GetExport<IInterpreterRegistryService>().Value;
-            EnvironmentsToolWindow.Service = _container.GetExport<IInterpreterOptionsService>().Value;
+            EnvironmentsToolWindow.InitializeEnvironments(
+                _container.GetExport<IInterpreterRegistryService>().Value,
+                _container.GetExport<IInterpreterOptionsService>().Value
+            );
         }
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {
-            e.View.Extensions.Add(new PipExtensionProvider(e.View.Factory));
-            var withDb = e.View.Factory as PythonInterpreterFactoryWithDatabase;
+            var pm = EnvironmentsToolWindow.OptionsService.GetPackageManagers(e.View.Factory).FirstOrDefault();
+            if (pm != null) {
+                e.View.Extensions.Add(new PipExtensionProvider(e.View.Factory, pm));
+            }
+            var withDb = e.View.Factory as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
             if (withDb != null && !string.IsNullOrEmpty(withDb.DatabasePath)) {
                 e.View.Extensions.Add(new DBExtensionProvider(withDb));
             }

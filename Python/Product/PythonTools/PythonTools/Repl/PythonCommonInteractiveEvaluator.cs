@@ -61,7 +61,8 @@ namespace Microsoft.PythonTools.Repl {
         private PythonInteractiveOptions _options;
 
         protected VsProjectAnalyzer _analyzer;
-        private readonly string _analysisFilename;
+        private Uri _documentUri;
+        private int _nextDocumentIndex;
 
         private bool _enableMultipleScopes;
         private IReadOnlyList<string> _availableScopes;
@@ -73,7 +74,7 @@ namespace Microsoft.PythonTools.Repl {
         public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _deferredOutput = new StringBuilder();
-            _analysisFilename = Guid.NewGuid().ToString() + ".py";
+            _documentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
@@ -157,19 +158,39 @@ namespace Microsoft.PythonTools.Repl {
                 if (factory == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
-                    var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractiveAsync(
-                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
-                        factory,
-                        DisplayName.IfNullOrEmpty("Unnamed"),
-                        projectFile
-                    ), CancellationToken.None);
+                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
+                        var pyProject = GetAssociatedPythonProject(config.Interpreter);
+
+                        var a = await VsProjectAnalyzer.CreateForInteractiveAsync(
+                            _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
+                            factory,
+                            DisplayName.IfNullOrEmpty("Unnamed")
+                        );
+
+                        IEnumerable<string> sp;
+                        if (pyProject != null) {
+                            sp = pyProject.GetSearchPaths();
+                        } else {
+                            var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                            sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
+                        }
+                        await a.SetSearchPathsAsync(sp.MaybeEnumerate());
+
+                        return a;
+                    }, CancellationToken.None);
                 }
                 return _analyzer;
             }
         }
 
-        public virtual string AnalysisFilename => _analysisFilename;
+        public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }
+        public virtual Uri NextDocumentUri() {
+            var d = DocumentUri;
+            if (d != null) {
+                return new Uri(d, $"#{++_nextDocumentIndex}");
+            }
+            return null;
+        }
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
@@ -292,14 +313,13 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var config = Configuration;
-            using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
-                parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                    return text.EndsWith("\n");
-                }
-                if (pr == ParseResult.IncompleteToken) {
-                    return false;
-                }
+            var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
+            parser.ParseInteractiveCode(out pr);
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+                return text.EndsWith("\n");
+            }
+            if (pr == ParseResult.IncompleteToken) {
+                return false;
             }
             return true;
         }
@@ -322,7 +342,11 @@ namespace Microsoft.PythonTools.Repl {
             if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
                 Configuration = pyProj.GetLaunchConfigurationOrThrow();
                 if (Configuration?.Interpreter != null) {
-                    ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    try {
+                        ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        ScriptsPath = null;
+                    }
                 }
             }
 
@@ -358,22 +382,23 @@ namespace Microsoft.PythonTools.Repl {
             if (string.IsNullOrEmpty(root)) {
                 try {
                     if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root)) {
-                        root = PathUtils.GetAbsoluteDirectoryPath(
-                            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                            "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName)
-                        );
+                        root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                        root = PathUtils.GetAbsoluteDirectoryPath(root, "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName));
                     }
 
                     root = PathUtils.GetAbsoluteDirectoryPath(root, "Python Scripts");
-                } catch (ArgumentException ex) {
-                    ex.ReportUnhandledException(provider, typeof(PythonInteractiveEvaluator));
-                    return null;
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
                 }
             }
 
             string candidate;
             if (!string.IsNullOrEmpty(displayName)) {
-                candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
+                try {
+                    candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
+                }
                 if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }
@@ -381,7 +406,11 @@ namespace Microsoft.PythonTools.Repl {
 
             var version = config?.Version?.ToString();
             if (!string.IsNullOrEmpty(version)) {
-                candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
+                try {
+                    candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
+                } catch (ArgumentException argEx) {
+                    throw new DirectoryNotFoundException(root, argEx);
+                }
                 if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }

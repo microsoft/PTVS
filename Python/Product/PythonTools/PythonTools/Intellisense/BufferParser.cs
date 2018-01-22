@@ -21,7 +21,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -34,11 +36,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private PythonTextBufferInfoWithRefCount[] _buffers;
         private bool _parsing, _requeue, _textChange, _parseImmediately;
-
-        /// <summary>
-        /// Maps between buffer ID and buffer info.
-        /// </summary>
-        private Dictionary<int, PythonTextBufferInfo> _bufferIdMapping = new Dictionary<int, PythonTextBufferInfo>();
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
@@ -61,18 +58,9 @@ namespace Microsoft.PythonTools.Intellisense {
             return buffer == null ? null : _services.GetBufferInfo(buffer);
         }
 
-        public PythonTextBufferInfo GetBuffer(int bufferId) {
-            lock (this) {
-                PythonTextBufferInfo res;
-                _bufferIdMapping.TryGetValue(bufferId, out res);
-                return res;
-            }
-        }
-
-        internal ITextSnapshot GetLastSentSnapshot(ITextBuffer buffer) {
-            return GetBuffer(buffer)?.LastSentSnapshot;
-        }
-
+        // UNDONE: This is a temporary workaround while we migrate
+        // from multiple buffers in a single entry to chained entries
+        public PythonTextBufferInfo DefaultBufferInfo { get; private set; }
         public ITextBuffer[] AllBuffers => _buffers.Select(x => x.Buffer.Buffer).ToArray();
         public ITextBuffer[] Buffers => _buffers.Where(x => !x.Buffer.DoNotParse).Select(x => x.Buffer.Buffer).ToArray();
 
@@ -87,6 +75,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             lock (this) {
+                if (DefaultBufferInfo == null) {
+                    DefaultBufferInfo = bi;
+                }
+
                 var existing = _buffers.FirstOrDefault(b => b.Buffer == bi);
                 if (existing != null) {
                     existing.AddRef();
@@ -95,14 +87,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 _buffers = _buffers.Concat(Enumerable.Repeat(new PythonTextBufferInfoWithRefCount(bi), 1)).ToArray();
                 newId = _buffers.Length - 1;
-
-                if (!bi.SetAnalysisBufferId(newId)) {
-                    // Raced, and now the buffer belongs somewhere else.
-                    Debug.Fail("Race condition adding the buffer to a parser");
-                    _buffers[newId] = null;
-                    return;
-                }
-                _bufferIdMapping[newId] = bi;
             }
 
             if (bi.ParseImmediately) {
@@ -117,9 +101,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void ClearBuffers() {
             lock (this) {
-                _bufferIdMapping.Clear();
+                DefaultBufferInfo = null;
                 foreach (var bi in _buffers) {
-                    bi.Buffer.SetAnalysisBufferId(-1);
                     bi.Buffer.ClearAnalysisEntry();
                     bi.Buffer.RemoveSink(this);
                     VsProjectAnalyzer.DisconnectErrorList(bi.Buffer);
@@ -141,8 +124,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         bi.RemoveSink(this);
 
                         VsProjectAnalyzer.DisconnectErrorList(bi);
-                        _bufferIdMapping.Remove(bi.AnalysisBufferId);
-                        bi.SetAnalysisBufferId(-1);
 
                         bi.Buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
                     }
@@ -181,16 +162,18 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
-            var lastSent = GetLastSentSnapshot(buffer);
+        public Task EnsureCodeSyncedAsync(ITextBuffer buffer) => EnsureCodeSyncedAsync(buffer, false);
+
+        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer, bool force) {
+            var lastSent = force ? null : _services.GetBufferInfo(buffer).LastSentSnapshot;
             var snapshot = buffer.CurrentSnapshot;
-            if (lastSent != buffer.CurrentSnapshot) {
-                await ParseBuffers(Enumerable.Repeat(snapshot, 1));
+            if (force || lastSent != buffer.CurrentSnapshot) {
+                await ParseBuffers(Enumerable.Repeat(snapshot, 1)).ConfigureAwait(false);
             }
         }
 
         private Task ParseBuffers(IEnumerable<ITextSnapshot> snapshots) {
-            return ParseBuffersAsync(_services, _analyzer, snapshots);
+            return ParseBuffersAsync(_services, _analyzer, snapshots, true);
         }
 
         private static IEnumerable<ITextVersion> GetVersions(ITextVersion from, ITextVersion to) {
@@ -199,74 +182,55 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static AP.FileUpdate GetUpdateForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
-            if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand() || buffer.AnalysisBufferId < 0) {
-                return null;
+        internal static IEnumerable<AP.FileUpdate> GetUpdatesForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
+            if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand()) {
+                yield break;
             }
 
-            var lastSent = buffer.LastSentSnapshot;
-
-            if (lastSent?.Version == snapshot.Version) {
-                // this snapshot is up to date...
-                return null;
-            }
+            var lastSent = buffer.AddSentSnapshot(snapshot);
 
             // Update last sent snapshot and the analysis cookie to our
             // current snapshot.
-            buffer.LastSentSnapshot = snapshot;
             var entry = buffer.AnalysisEntry;
             if (entry != null) {
                 entry.AnalysisCookie = new SnapshotCookie(snapshot);
             }
 
-            if (lastSent == null || lastSent.TextBuffer != buffer.Buffer) {
+            if (lastSent == null || lastSent == snapshot || lastSent.TextBuffer != buffer.Buffer) {
                 // First time parsing from a live buffer, send the entire
                 // file and set our initial snapshot.  We'll roll forward
                 // to new snapshots when we receive the errors event.  This
                 // just makes sure that the content is in sync.
-                return new AP.FileUpdate {
+                yield return new AP.FileUpdate {
                     content = snapshot.GetText(),
                     version = snapshot.Version.VersionNumber,
-                    bufferId = buffer.AnalysisBufferId,
                     kind = AP.FileUpdateKind.reset
                 };
+                yield break;
             }
 
-            var versions = GetVersions(lastSent.Version, snapshot.Version).Select(v => new AP.VersionChanges {
-                changes = GetChanges(v)
-            }).ToArray();
-
-            return new AP.FileUpdate() {
-                versions = versions,
-                version = snapshot.Version.VersionNumber,
-                bufferId = buffer.AnalysisBufferId,
-                kind = AP.FileUpdateKind.changes
-            };
+            foreach (var v in GetVersions(lastSent.Version, snapshot.Version)) {
+                yield return new AP.FileUpdate {
+                    version = v.VersionNumber + 1,
+                    changes = GetChanges(buffer, v).Reverse().ToArray(),
+                    kind = AP.FileUpdateKind.changes
+                };
+            }
         }
 
         [Conditional("DEBUG")]
         private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, AP.FileUpdateResponse response) {
 #if DEBUG
-            if (response.newCode == null) {
+            if (response?.newCode == null) {
                 return;
             }
 
-            foreach (var snapshot in snapshots) {
-                var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
-                if (bi == null) {
-                    continue;
-                }
+            var total = snapshots.Aggregate(string.Empty, (t, s) => t + s.GetText());
 
-                string newCode;
-                if (!response.newCode.TryGetValue(bi.AnalysisBufferId, out newCode)) {
-                    continue;
-                }
-
-                if (newCode.TrimEnd() != snapshot.GetText().TrimEnd()) {
-                    Console.Error.WriteLine($"New Code: [{newCode}]");
-                    Console.Error.WriteLine($"Snapshot: [{snapshot.GetText()}]");
-                    Debug.Fail("Buffer content mismatch");
-                }
+            if (response.newCode.TrimEnd() != total.TrimEnd()) {
+                Console.Error.WriteLine($"New Code: {response.version} [{response.newCode}]");
+                Console.Error.WriteLine($"Snapshot: {string.Join(", ", snapshots.Select(s => s.Version.VersionNumber))} [{total}]");
+                Debug.Fail("Buffer content mismatch");
             }
 #endif
         }
@@ -274,7 +238,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static async Task ParseBuffersAsync(
             PythonEditorServices services,
             VsProjectAnalyzer analyzer,
-            IEnumerable<ITextSnapshot> snapshots
+            IEnumerable<ITextSnapshot> snapshots,
+            bool retryOnFailure
         ) {
             var tasks = new List<Tuple<ITextSnapshot[], Task<AP.FileUpdateResponse>>>();
 
@@ -284,7 +249,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                var updates = snapshotGroup.Select(s => GetUpdateForSnapshot(snapshotGroup.Key, s)).Where(u => u != null).ToArray();
+                var updates = snapshotGroup.SelectMany(s => GetUpdatesForSnapshot(snapshotGroup.Key, s)).Where(u => u != null).ToArray();
                 if (!updates.Any()) {
                     continue;
                 }
@@ -294,48 +259,62 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 tasks.Add(Tuple.Create(snapshotGroup.ToArray(), analyzer.SendRequestAsync(
                     new AP.FileUpdateRequest {
-                        fileId = entry.FileId,
+                        documentUri = entry.DocumentUri,
                         updates = updates
                     }
                 )));
             }
 
+            var needRetry = new List<ITextSnapshot>();
             foreach (var task in tasks) {
                 var res = await task.Item2;
 
-                if (res != null) {
-                    Debug.Assert(res.failed != true);
+                if (res?.failed ?? false) {
+                    Interlocked.Decrement(ref analyzer._parsePending);
+                    if (res != null) {
+                        needRetry.AddRange(task.Item1);
+                    }
+                } else {
                     analyzer.OnAnalysisStarted();
                     ValidateBufferContents(task.Item1, res);
-                } else {
-                    Interlocked.Decrement(ref analyzer._parsePending);
                 }
+            }
+
+            if (retryOnFailure && needRetry.Any()) {
+                foreach (var bi in needRetry.Select(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer))) {
+                    bi.ClearSentSnapshot();
+                }
+
+                await ParseBuffersAsync(services, analyzer, needRetry, false);
             }
         }
 
-        private static AP.ChangeInfo[] GetChanges(ITextVersion curVersion) {
-            Debug.WriteLine("Changes for version {0}", curVersion.VersionNumber);
+        internal static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
-                AP.ChangeInfo prev = null;
                 foreach (var change in curVersion.Changes) {
-                    Debug.WriteLine("Changes for version {0} {1} {2}", change.OldPosition, change.OldLength, change.NewText);
-
-                    if (prev != null && !string.IsNullOrEmpty(prev.newText) &&
-                        change.OldLength == 0 && prev.length == 0 && prev.start + prev.newText.Length == change.OldPosition) {
-                        // we can merge the two changes together
-                        prev.newText += change.NewText;
-                        continue;
-                    }
-
-                    prev = new AP.ChangeInfo() {
-                        start = change.OldPosition,
-                        length = change.OldLength,
-                        newText = change.NewText
-                    };
-                    changes.Add(prev);
+                    var oldPos = buffer.LocationTracker.GetSourceLocation(change.OldPosition, curVersion.VersionNumber);
+                    var oldEnd = buffer.LocationTracker.GetSourceLocation(change.OldEnd, curVersion.VersionNumber);
+                    changes.Add(new AP.ChangeInfo {
+                        startLine = oldPos.Line,
+                        startColumn = oldPos.Column,
+                        endLine = oldEnd.Line,
+                        endColumn = oldEnd.Column,
+                        newText = change.NewText,
+#if DEBUG
+                        _startIndex = change.OldPosition,
+                        _endIndex = change.OldEnd
+#endif
+                    });
                 }
             }
+
+#if DEBUG
+            Debug.WriteLine("Getting changes for version {0}", curVersion.VersionNumber);
+            foreach (var c in changes) {
+                Debug.WriteLine($" - ({c.startLine}, {c.startColumn})-({c.endLine}, {c.endColumn}): \"{c.newText}\"");
+            }
+#endif
             return changes.ToArray();
         }
 

@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
@@ -1009,6 +1010,19 @@ z = None
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
+
+            entry = ProcessTextV3(code);
+            clsA = entry.GetValue<ClassInfo>("A");
+            mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+
+            clsB = entry.GetValue<ClassInfo>("B");
+            mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+
+            clsC = entry.GetValue<ClassInfo>("C");
+            mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
         }
 
@@ -1978,8 +1992,8 @@ constructed = str().capitalize
             string[] testCapitalize = new[] { "const", "constructed" };
             foreach (var test in testCapitalize) {
                 var result = entry.GetSignatures(test, 1).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 0);
+                Assert.AreEqual(1, result.Length, $"Expected one signature for {test}");
+                Assert.AreEqual(0, result[0].Parameters.Length, $"Expected no parameters for {test}.capitalize");
             }
 
             entry = ProcessText(@"
@@ -1987,11 +2001,12 @@ const = [].append
 constructed = list().append
 ");
 
-            testCapitalize = new[] { "const", "constructed" };
-            foreach (var test in testCapitalize) {
+            var testAppend = new[] { "const", "constructed" };
+            foreach (var test in testAppend) {
                 var result = entry.GetSignatures(test, 1).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 1);
+                Console.WriteLine(string.Join(Environment.NewLine, result.Select(s => $"{s.Name}({string.Join(", ", s.Parameters.Select(p => p.Name))})")));
+                Assert.AreEqual(1, result.Length, $"Expected one signature for {test}");
+                Assert.AreEqual(1, result[0].Parameters.Length, $"Expected one parameter for {test}.append");
             }
         }
 
@@ -3366,7 +3381,7 @@ f('abc')
             var entry = ProcessText(@"
 cls = object
 
-class cls(cls): 
+class cls(cls):
     abc = 42
 ");
 
@@ -3374,8 +3389,10 @@ class cls(cls):
             entry.AssertIsInstance("cls().abc", BuiltinTypeId.Int);
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
-            var sigs = entry.GetSignatures("cls", 1).ToArray();
-            AssertUtil.ContainsExactly(sigs.Select(s => s.Documentation), null, "The most base type");
+            AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
+                "The most base type",
+                "cls"
+            );
         }
 
         [TestMethod, Priority(0)]
@@ -3779,15 +3796,7 @@ f('a', 'b', 1)
             foreach (var sig in f) {
                 Console.WriteLine(sig);
             }
-            Assert.AreEqual(6, f.Count);
-            AssertUtil.ContainsExactly(f,
-                "f(a := (), b := (), c = 0 := (int))",
-                "f(a := (int), b := (int), c = 0 := (int))",
-                "f(a := (float), b := (float), c = 0 := (float, int))",
-                "f(a := (str), b := (str), c = 0 := (int, str))",
-                "f(a := (int), b := (float), c = 0 := (int, str))",
-                "f(a := (str), b := (str), c = 0 := (int))"
-            );
+            AssertUtil.ContainsExactly(f, "f(a := (float, int, str), b := (float, int, str), c = 0 := (float, int, str))");
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
@@ -3799,7 +3808,7 @@ f('a', 'b', 1)
 
 
         protected virtual string ListInitParameterName {
-            get { return "sequence"; }
+            get { return "object"; }
         }
 
         /// <summary>
@@ -3811,10 +3820,15 @@ f('a', 'b', 1)
 class oar(list):
     pass
 ";
-            var entry = ProcessText(text);
+            var entry = ProcessTextV2(text);
             
-            var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "__init__");
-            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", ListInitParameterName);
+            var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "object");
+
+            entry = ProcessTextV3(text);
+
+            init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "value");
 
             // Ensure that nested classes are correctly resolved.
             text = @"
@@ -3985,17 +3999,23 @@ y = range(5)
 def f(x): pass
 f.abc = 32
 ";
-            var entry = ProcessText(text);
-            entry.AssertHasAttr("f", "abc");
+            var entry2 = ProcessTextV2(text);
+            var entry3 = ProcessTextV3(text);
+            entry2.AssertHasAttr("f", "abc");
+            entry3.AssertHasAttr("f", "abc");
 
             text = @"
 def f(x): pass
 
 ";
-            entry = ProcessText(text);
-            entry.AssertHasAttr("f", entry.FunctionMembers);
-            entry.AssertNotHasAttr("f", "x");
-            entry.AssertIsInstance("f.func_name", BuiltinTypeId.Str);
+            entry2 = ProcessTextV2(text);
+            entry3 = ProcessTextV3(text);
+            entry2.AssertHasAttr("f", entry2.FunctionMembers);
+            entry2.AssertNotHasAttr("f", "x");
+            entry2.AssertIsInstance("f.func_name", BuiltinTypeId.Str);
+            entry3.AssertHasAttr("f", entry3.FunctionMembers);
+            entry3.AssertNotHasAttr("f", "x");
+            entry3.AssertIsInstance("f.__name__", BuiltinTypeId.Str);
         }
 
         [TestMethod, Priority(0)]
@@ -4693,7 +4713,10 @@ min(a, D())
                     var ast = nodes[i];
 
                     if (ast != null) {
-                        modules[i].UpdateTree(ast, null);
+                        using (var p = modules[i].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
                 }
 
@@ -4721,7 +4744,10 @@ min(a, D())
                     using (var reader = new FileStreamReader(modules[index].FilePath)) {
                         var ast = Parser.CreateParser(reader, projectState.LanguageVersion).ParseFile();
 
-                        modules[index].UpdateTree(ast, null);
+                        using (var p = modules[index].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
 
                     modules[index].Analyze(CancellationToken.None, true);
@@ -5177,6 +5203,7 @@ a = x(2)
         [TestMethod, Priority(0)]
         public void ImportScopesOrder() {
             var text1 = @"
+import _io
 import mod2
 import mmap as mm
 
@@ -5185,13 +5212,14 @@ def f():
     return sys
 
 def g():
-    return re
+    return _io
 
 def h():
     return mod2.sys
 
 def i():
-    return op
+    import zlib
+    return zlib
 
 def j():
     return mm
@@ -5211,10 +5239,10 @@ import imp as impp
 ";
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 state.DefaultModule = "mod1";
-                state.AssertDescription("g", "def mod1.g() -> built-in module re");
+                state.AssertDescription("g", "def mod1.g() -> built-in module _io");
                 state.AssertDescription("f", "def mod1.f() -> built-in module sys");
                 state.AssertDescription("h", "def mod1.h() -> built-in module sys");
-                state.AssertDescription("i", "def mod1.i() -> built-in module operator");
+                state.AssertDescription("i", "def mod1.i() -> built-in module zlib");
                 state.AssertDescription("j", "def mod1.j() -> built-in module mmap");
                 state.AssertDescription("k", "def mod1.k() -> built-in module imp");
             });
@@ -5514,10 +5542,9 @@ def fn(a, b, c):
     assert isinstance(a, str)
     result.a = a
 
-    assert isinstance(b, type) or isinstance(b, tuple)
+    assert isinstance(b, type)
     if isinstance(b, tuple):
-        for x in b:
-            assert isinstance(x, type)
+        pass
     result.b = b
 
     assert isinstance(c, str)
@@ -5526,22 +5553,15 @@ def fn(a, b, c):
 
 r1 = fn('fob', (int, str), 'oar')
 r2 = fn(123, None, 4.5)
-
-# b1 and b2 will only be type (from the tuple), since indexing into 'type'
-# will result in nothing
-b1 = r1.b[0]
-b2 = r2.b[0]
 ";
 
             var entry = ProcessText(text);
             entry.AssertIsInstance("r1.a", BuiltinTypeId.Str);
             entry.AssertIsInstance("r1.b", BuiltinTypeId.Type, BuiltinTypeId.Tuple);
-            entry.AssertIsInstance("b1", BuiltinTypeId.Type);
             entry.AssertIsInstance("r1.c", BuiltinTypeId.Str);
 
             entry.AssertIsInstance("r2.a", BuiltinTypeId.Str);
             entry.AssertIsInstance("r2.b", BuiltinTypeId.Type, BuiltinTypeId.Tuple);
-            entry.AssertIsInstance("b2", BuiltinTypeId.Type);
             entry.AssertIsInstance("r2.c", BuiltinTypeId.Str);
         }
 
@@ -5622,6 +5642,7 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
+                new VariableLocation(5, 9, VariableType.Value),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );
@@ -5731,8 +5752,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("x", BuiltinTypeId.Tuple);
             entry.AssertIsInstance("y", BuiltinTypeId.List);
             entry.AssertDescription("z", "int");
-            entry.AssertDescriptionContains("min", "built-in function min", "min(x: object)");
-            entry.AssertDescription("list.append", "built-in method list.append(item)\r\nappend(self: list, item: object)");
+            entry.AssertDescriptionContains("min", "built-in function min", "min(");
+            entry.AssertDescriptionContains("list.append", "built-in function list.append(");
             entry.AssertIsInstance("\"abc\".Length");
             entry.AssertIsInstance("c.Length");
             entry.AssertIsInstance("d", "fob");
@@ -6756,7 +6777,7 @@ x = ClsB.x");
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x");
 
-            entryA.Parse(entryA.Tree.LanguageVersion, @"class ClsA(object): x = 123");
+            analyzer.UpdateModule(entryA, @"class ClsA(object): x = 123");
             entryA.Analyze(CancellationToken.None, true);
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);

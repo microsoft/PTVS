@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -43,6 +44,11 @@ namespace Microsoft.PythonTools.Intellisense {
             parentExpression = string.Empty;
             expressionExtent = default(SnapshotSpan);
 
+            // We never want normal completions on space
+            if (Session.GetTriggerCharacter() == ' ' && !Session.IsCompleteWordMode()) {
+                return false;
+            }
+
             var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
             if (bi == null) {
                 return false;
@@ -55,7 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return true;
             }
 
-            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Rename);
+            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Complete);
             if (expr != null) {
                 expressionExtent = expr.Value;
                 return true;
@@ -68,6 +74,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             switch (tok.Value.Category) {
+                case TokenCategory.Comment:
+                    return false;
                 case TokenCategory.Delimiter:
                 case TokenCategory.Grouping:
                 case TokenCategory.Operator:
@@ -75,13 +83,25 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Expect top-level completions after these
                     expressionExtent = span;
                     return true;
-                case TokenCategory.BuiltinIdentifier:
-                case TokenCategory.Identifier:
+                //case TokenCategory.BuiltinIdentifier:
                 case TokenCategory.Keyword:
                     // Expect filtered top-level completions here
                     // (but the return value is no different)
                     expressionExtent = span;
                     return true;
+                case TokenCategory.Identifier:
+                    // When preceded by a delimiter, grouping, or operator
+                    var tok2 = bi.GetTokensInReverseFromPoint(span.End).Where(t => t.Category != TokenCategory.WhiteSpace && t.Category != TokenCategory.Comment).Take(2).ToArray();
+                    if (tok2.Length == 2 && tok2[0].Category == tok.Value.Category) {
+                        switch (tok2[1].Category) {
+                            case TokenCategory.Delimiter:
+                            case TokenCategory.Grouping:
+                            case TokenCategory.Operator:
+                                expressionExtent = span;
+                                return true;
+                        }
+                    }
+                    break;
             }
 
             return false;
@@ -220,18 +240,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     point.Snapshot,
                     analysis
                 );
-                var parameters = Enumerable.Empty<CompletionResult>();
-                var sigs = analyzer.WaitForRequest(analyzer.GetSignaturesAsync(analysis, View, _snapshot, Span), "GetCompletions.GetSignatures");
-                if (sigs != null && sigs.Signatures.Any()) {
-                    parameters = sigs.Signatures
-                        .SelectMany(s => s.Parameters)
-                        .Select(p => p.Name)
-                        .Distinct()
-                        .Select(n => new CompletionResult(n + "=", PythonMemberType.NamedArgument));
-                }
                 return analyzer.WaitForRequest(analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
-                    .MaybeEnumerate()
-                    .Union(parameters, CompletionComparer.MemberEquality);
+                    .MaybeEnumerate();
             }
         }
     }

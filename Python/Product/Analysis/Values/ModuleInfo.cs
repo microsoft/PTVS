@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -349,7 +349,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
         public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
-            return Scope.AllVariables.Keys();
+            return Scope.AllVariables.Select(kv => kv.Key);
         }
 
         public bool IsMemberDefined(IModuleContext context, string member) {
