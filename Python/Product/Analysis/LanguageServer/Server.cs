@@ -510,10 +510,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var filtered = result.Where(v => v.Type != VariableType.None);
-            if (!@params.context?.includeDeclaration ?? false) {
+            if (!(@params.context?.includeDeclaration ?? false)) {
                 filtered = filtered.Where(v => v.Type != VariableType.Definition);
             }
-            if (!@params.context?._includeValues ?? false) {
+            if (!(@params.context?._includeValues ?? false)) {
                 filtered = filtered.Where(v => v.Type != VariableType.Value);
             }
 
@@ -651,7 +651,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath);
+                var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
             }
         }

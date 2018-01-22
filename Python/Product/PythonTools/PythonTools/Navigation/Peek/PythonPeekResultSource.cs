@@ -57,14 +57,15 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 lengthOfTokenInLabel: 0
             );
 
+            var defSpan = location.DefinitionSpan ?? location.Span;
             return _peekResultFactory.Create(
                 displayInfo,
                 default(ImageMoniker),
                 location.FilePath,
-                (location.DefinitionSpan?.Start.Line ?? location.Span.Start.Line) - 1,
-                (location.DefinitionSpan?.Start.Column ?? location.Span.Start.Column) - 1,
-                (location.DefinitionSpan?.End.Line ?? location.Span.End.Line) - 1,
-                (location.DefinitionSpan?.End.Column ?? location.Span.End.Column) - 1,
+                defSpan.Start.Line - 1,
+                defSpan.Start.Column - 1,
+                defSpan.End.Line - 1,
+                defSpan.End.Column - 1,
                 location.Span.Start.Line - 1,
                 location.Span.Start.Column - 1,
                 location.Span.End.Line - 1,

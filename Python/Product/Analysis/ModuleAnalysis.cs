@@ -257,8 +257,8 @@ namespace Microsoft.PythonTools.Analysis {
                         .Select(v => (v as BoundMethodInfo)?.Function ?? v as FunctionInfo)
                         .Select(f => f?.AnalysisUnit?.Scope)
                         .Where(s => s != null)
-                        .SelectMany(s => GetVariablesInScope(argNode, s)
-                        .Distinct()), unit.Tree);
+                        .SelectMany(s => GetVariablesInScope(argNode, s).Distinct()),
+                        unit.Tree);
                 }
             }
 
@@ -275,12 +275,8 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (expr is MemberExpression member && !string.IsNullOrEmpty(member.Name)) {
                 var objects = eval.Evaluate(member.Target);
 
-                foreach (var v in objects) {
-                    var container = v as IReferenceableContainer;
-                    if (container != null) {
-                        variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
-                        break;
-                    }
+                foreach (var v in objects.OfType<IReferenceableContainer>()) {
+                    variables = variables.Union(v.GetDefinitions(member.Name).SelectMany(ToVariables));
                 }
             }
 
