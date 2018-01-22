@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -530,7 +531,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         vars = vars.AsStrongerUnion();
                     }
                 }
-                foreach (var unit in _allCalls.Values) {
+                foreach (var unit in (_allCalls?.Values).MaybeEnumerate()) {
                     if (unit.Scope.TryGetVariable(curParam.Name, out vd)) {
                         vars = vars.Union(vd.TypesNoCopy);
                         if (vars.Count > limit) {
