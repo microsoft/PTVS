@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,43 +25,34 @@ namespace Microsoft.PythonTools.Intellisense {
     /// number.
     /// </summary>
     public sealed class AnalysisLocation : IEquatable<AnalysisLocation> {
-        private readonly string _filePath;
-        public readonly int Line, Column;
-        public readonly int? DefinitionStartLine, DefinitionStartColumn;
-        public readonly int? DefinitionEndLine, DefinitionEndColumn;
+        public readonly SourceSpan Span;
+        public readonly SourceSpan? DefinitionSpan;
         private static readonly IEqualityComparer<AnalysisLocation> _fullComparer = new FullLocationComparer();
 
         internal AnalysisLocation(
             string filePath,
-            int line,
-            int column,
-            int? definitionStartLine = null,
-            int? definitionStartColumn = null,
-            int? definitionEndLine = null,
-            int? definitionEndColumn = null) {
-            _filePath = filePath;
-            Line = line;
-            Column = column;
-            DefinitionStartLine = definitionStartLine;
-            DefinitionStartColumn = definitionStartColumn;
-            DefinitionEndLine = definitionEndLine;
-            DefinitionEndColumn = definitionEndColumn;
+            Uri documentUri,
+            SourceSpan span,
+            SourceSpan? definitionSpan
+        ) {
+            FilePath = filePath;
+            DocumentUri = documentUri;
+            Span = span;
+            DefinitionSpan = definitionSpan;
         }
 
-        public string FilePath {
-            get {
-                return _filePath;
-            }
-        }
+        public string FilePath { get; }
+
+        public Uri DocumentUri { get; }
 
         internal void GotoSource(IServiceProvider serviceProvider) {
-            if (File.Exists(_filePath)) {
+            if (File.Exists(FilePath)) {
                 PythonToolsPackage.NavigateTo(
                     serviceProvider,
-                    _filePath,
+                    FilePath,
                     Guid.Empty,
-                    Line - 1,
-                    Column - 1
+                    Span.Start.Line - 1,
+                    Span.Start.Column - 1
                 );
             }
         }
@@ -74,40 +66,33 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override int GetHashCode() {
-            return Line.GetHashCode() ^ _filePath.GetHashCode();
+            return Span.Start.Line.GetHashCode() ^ FilePath.GetHashCode();
         }
 
         public bool Equals(AnalysisLocation other) {
             // currently we filter only to line & file - so we'll only show 1 ref per each line
             // This works nicely for get and call which can both add refs and when they're broken
             // apart you still see both refs, but when they're together you only see 1.
-            return Line == other.Line &&
-                String.Equals(_filePath, other._filePath, StringComparison.OrdinalIgnoreCase);
+            return Span.Start.Line == other.Span.Start.Line &&
+                String.Equals(FilePath, other.FilePath, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Provides an IEqualityComparer that compares line, column and project entries.  By
         /// default locations are equaitable based upon only line/project entry.
         /// </summary>
-        public static IEqualityComparer<AnalysisLocation> FullComparer {
-            get {
-                return _fullComparer;
-            }
-        }
+        public static IEqualityComparer<AnalysisLocation> FullComparer { get; } = new FullLocationComparer();
 
         sealed class FullLocationComparer : IEqualityComparer<AnalysisLocation> {
             public bool Equals(AnalysisLocation x, AnalysisLocation y) {
-                return x.Line == y.Line &&
-                    x.Column == y.Column &&
-                    x.DefinitionStartLine == y.DefinitionStartLine &&
-                    x.DefinitionStartColumn == y.DefinitionStartColumn &&
-                    x.DefinitionEndLine == y.DefinitionEndLine &&
-                    x.DefinitionEndColumn == y.DefinitionEndColumn &&
-                    String.Equals(x._filePath, y._filePath, StringComparison.OrdinalIgnoreCase);
+                return x.Span == y.Span &&
+                    x.DefinitionSpan == y.DefinitionSpan &&
+                    String.Equals(x.FilePath, y.FilePath, StringComparison.OrdinalIgnoreCase) &&
+                    UriEqualityComparer.IncludeFragment.Equals(x.DocumentUri, y.DocumentUri);
             }
 
             public int GetHashCode(AnalysisLocation obj) {
-                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj._filePath.GetHashCode();
+                return obj.Span.GetHashCode() ^ (obj.DefinitionSpan?.GetHashCode() ?? 0) ^ obj.FilePath.GetHashCode();
             }
         }
     }

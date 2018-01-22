@@ -172,13 +172,13 @@ namespace Microsoft.PythonTools.Language {
         /// </summary>
         private void GotoLocation(AnalysisLocation location) {
             Debug.Assert(location != null);
-            Debug.Assert(location.Line > 0);
-            Debug.Assert(location.Column > 0);
+            Debug.Assert(location.Span.Start.Line > 0);
+            Debug.Assert(location.Span.Start.Column > 0);
 
             if (PathUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
                 var viewAdapter = _vsTextView;
-                viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
-                viewAdapter.CenterLines(location.Line - 1, 1);
+                viewAdapter.SetCaretPos(location.Span.Start.Line - 1, location.Span.Start.Column - 1);
+                viewAdapter.CenterLines(location.Span.Start.Line - 1, 1);
             } else {
                 location.GotoSource(_editorServices.Site);
             }
@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Language {
                 _pathText = GetSearchDisplayText();
                 AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
                 if (entry != null) {
-                    _lineText = entry.GetLine(_locationInfo.Line) ?? "";
+                    _lineText = entry.GetLine(_locationInfo.Span.Start.Line) ?? "";
                 } else {
                     _lineText = "";
                 }
@@ -362,10 +362,9 @@ namespace Microsoft.PythonTools.Language {
             }
 
             private string GetSearchDisplayText() {
-                return String.Format("{0} - ({1}, {2}): ",
+                return String.Format("{0} - {1}: ",
                     _locationInfo.FilePath,
-                    _locationInfo.Line,
-                    _locationInfo.Column);
+                    _locationInfo.Span.Start);
             }
 
             public override string UniqueName {

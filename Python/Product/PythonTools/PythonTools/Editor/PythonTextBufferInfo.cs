@@ -162,6 +162,10 @@ namespace Microsoft.PythonTools.Editor {
 
         private string GetOrCreateFilename() {
             string path;
+            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out path)) {
+                return path;
+            }
+
             var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             var docUri = replEval?.DocumentUri;
             if (docUri != null && docUri.IsFile) {
@@ -181,6 +185,10 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private Uri GetOrCreateDocumentUri() {
+            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testDocumentUri, out Uri uri)) {
+                return uri;
+            }
+
             var path = Filename;
             if (!string.IsNullOrEmpty(path)) {
                 return new Uri(path);

@@ -22,14 +22,16 @@ namespace Microsoft.PythonTools.Analysis {
         internal static readonly LocationInfo[] Empty = new LocationInfo[0];
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
-        public LocationInfo(string path, int line, int column) {
+        public LocationInfo(string path, Uri documentUri, int line, int column) {
             FilePath = path ?? throw new ArgumentNullException(nameof(path));
+            DocumentUri = documentUri;
             StartLine = line;
             StartColumn = column;
         }
 
-        public LocationInfo(string path, int line, int column, int? endLine, int? endColumn) {
+        public LocationInfo(string path, Uri documentUri, int line, int column, int? endLine, int? endColumn) {
             FilePath = path ?? throw new ArgumentNullException(nameof(path));
+            DocumentUri = documentUri;
             StartLine = line;
             StartColumn = column;
             EndLine = endLine;
@@ -38,6 +40,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string FilePath { get; }
 
+        public Uri DocumentUri { get; }
+
         public int StartLine { get; }
 
         public int StartColumn { get; }
@@ -45,6 +49,11 @@ namespace Microsoft.PythonTools.Analysis {
         public int? EndLine { get; }
 
         public int? EndColumn { get; }
+
+        public SourceSpan Span => new SourceSpan(
+            new SourceLocation(StartLine, StartColumn),
+            new SourceLocation(EndLine ?? StartLine, EndColumn ?? StartColumn)
+        );
 
         public override bool Equals(object obj) => Equals(obj as LocationInfo);
 

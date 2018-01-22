@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
             var fileName = PathUtils.GetFileOrDirectoryName(location.FilePath);
 
             var displayInfo = new PeekResultDisplayInfo2(
-                label: string.Format("{0} - ({1}, {2})", fileName, location.Line, location.Column),
+                label: string.Format("{0} - {1}", fileName, location.Span.Start),
                 labelTooltip: location.FilePath,
                 title: fileName,
                 titleTooltip: location.FilePath,
@@ -57,35 +57,18 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 lengthOfTokenInLabel: 0
             );
 
-            int startLine = location.Line - 1;
-            int startColumn = location.Column - 1;
-            int endLine = startLine;
-            int endColumn = startColumn;
-            if (location.DefinitionStartLine.HasValue) {
-                startLine = location.DefinitionStartLine.Value - 1;
-            }
-            if (location.DefinitionStartColumn.HasValue) {
-                startColumn = location.DefinitionStartColumn.Value - 1;
-            }
-            if (location.DefinitionEndLine.HasValue) {
-                endLine = location.DefinitionEndLine.Value - 1;
-            }
-            if (location.DefinitionEndColumn.HasValue) {
-                endColumn = location.DefinitionEndColumn.Value - 1;
-            }
-
             return _peekResultFactory.Create(
                 displayInfo,
                 default(ImageMoniker),
                 location.FilePath,
-                startLine,
-                startColumn,
-                endLine,
-                endColumn,
-                location.Line - 1,
-                location.Column - 1,
-                location.Line - 1,
-                location.Column - 1,
+                (location.DefinitionSpan?.Start.Line ?? location.Span.Start.Line) - 1,
+                (location.DefinitionSpan?.Start.Column ?? location.Span.Start.Column) - 1,
+                (location.DefinitionSpan?.End.Line ?? location.Span.End.Line) - 1,
+                (location.DefinitionSpan?.End.Column ?? location.Span.End.Column) - 1,
+                location.Span.Start.Line - 1,
+                location.Span.Start.Column - 1,
+                location.Span.End.Line - 1,
+                location.Span.End.Column - 1,
                 isReadOnly: false
             );
         }

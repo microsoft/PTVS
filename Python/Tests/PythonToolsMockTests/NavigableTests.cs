@@ -14,17 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Navigation.Navigable;
+extern alias analysis;
+extern alias pythontools;
+using analysis::Microsoft.PythonTools;
+using analysis::Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Navigation.Navigable;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -218,10 +220,10 @@ res = my_var * 10
         }
 
         private AnalysisLocation Location(int line, int col) =>
-            new AnalysisLocation(null, line, col);
+            new AnalysisLocation(null, null, new SourceSpan(line, col, line, col), null);
 
         private AnalysisLocation ExternalLocation(int line, int col, string filename) =>
-            new AnalysisLocation(filename, line, col);
+            new AnalysisLocation(filename, null, new SourceSpan(line, col, line, col), null);
 
         #region NavigableHelper class
 
@@ -251,13 +253,12 @@ res = my_var * 10
 
                     Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
                     foreach (var actualLocation in actualLocations) {
-                        Console.WriteLine($"{actualLocation.Line}, {actualLocation.Column}");
+                        Console.WriteLine(actualLocation.Span);
                     }
 
                     Assert.AreEqual(expectedLocations.Length, actualLocations.Length);
                     for (int i = 0; i < expectedLocations.Length; i++) {
-                        Assert.AreEqual(expectedLocations[i].Line, actualLocations[i].Line);
-                        Assert.AreEqual(expectedLocations[i].Column, actualLocations[i].Column);
+                        Assert.AreEqual(expectedLocations[i].Span, actualLocations[i].Span);
                         if (expectedLocations[i].FilePath != null) {
                             Assert.AreEqual(expectedLocations[i].FilePath, Path.GetFileName(actualLocations[i].FilePath));
                         }

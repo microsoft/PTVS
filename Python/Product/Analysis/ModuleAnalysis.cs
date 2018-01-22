@@ -106,6 +106,7 @@ namespace Microsoft.PythonTools.Analysis {
                 locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
                 locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
                 var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
+                var identifierEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
 
                 // For classes and functions, find the ClassDefinition or
                 // FunctionDefinition to get the full span of the definition.
@@ -127,12 +128,16 @@ namespace Microsoft.PythonTools.Analysis {
                     // Location of the identifier only
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         identifierStart.Line,
-                        identifierStart.Column
+                        identifierStart.Column,
+                        identifierEnd.Line,
+                        identifierEnd.Column
                     ),
                     // Location of the full definition
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         definitionStart.Line,
                         definitionStart.Column,
                         definitionEnd.Line,
@@ -223,21 +228,28 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
-            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             if (expr == null) {
-                return new VariablesResult(variables, ast);
+                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), ast);
             }
 
+            return GetVariables(expr, location, exprText);
+        }
+
+        internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null) {
+            var scope = FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var tree = unit.Tree;
+
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             var finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { Calls = true });
             var callNode = finder.GetExpression(location) as CallExpression;
             if (callNode != null) {
                 finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { NamedArgumentNames = true });
                 var argNode = finder.GetExpression(location) as NameExpression;
-                if (argNode != null && argNode.Name == exprText) {
+                if (argNode != null && (string.IsNullOrEmpty(originalText) || argNode.Name == originalText)) {
                     var objects = eval.Evaluate(callNode.Target);
 
                     return new VariablesResult(objects
@@ -246,7 +258,7 @@ namespace Microsoft.PythonTools.Analysis {
                         .Select(f => f?.AnalysisUnit?.Scope)
                         .Where(s => s != null)
                         .SelectMany(s => GetVariablesInScope(argNode, s)
-                        .Distinct()), ast);
+                        .Distinct()), unit.Tree);
                 }
             }
 
@@ -272,7 +284,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return new VariablesResult(variables, ast);
+            return new VariablesResult(variables, unit.Tree);
         }
 
         private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
@@ -1199,6 +1211,10 @@ namespace Microsoft.PythonTools.Analysis {
                 return name;
             }
             return null;
+        }
+
+        internal string GetPrivatePrefix(SourceLocation sourceLocation) {
+            return GetPrivatePrefix(FindScope(sourceLocation));
         }
 
         private static string GetPrivatePrefixClassName(InterpreterScope scope) {

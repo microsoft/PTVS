@@ -379,6 +379,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new[] {
                     new LocationInfo(
                         ProjectEntry.FilePath,
+                        ProjectEntry.DocumentUri,
                         start.Line,
                         start.Column,
                         end.Line,

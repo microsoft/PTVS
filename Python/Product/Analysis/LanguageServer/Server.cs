@@ -437,6 +437,97 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
         }
 
+        public async override Task<Reference[]> FindReferences(ReferencesParams @params) {
+            var uri = @params.textDocument.uri;
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, $"References in {uri} at {@params.position}");
+            }
+
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"No analysis found for {uri}");
+                }
+                return Array.Empty<Reference>();
+            }
+
+            int? version = null;
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
+                        }
+                    }
+                }
+            }
+
+            var extras = new List<Reference>();
+
+            if (@params.context?.includeDeclaration ?? false) {
+                int index = tree.LocationToIndex(@params.position);
+                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+                tree.Walk(w);
+                ModuleReference modRef;
+                if (!string.IsNullOrEmpty(w.ImportedName) &&
+                    _analyzer.Modules.TryImport(w.ImportedName, out modRef)) {
+
+                    // Return a module reference
+                    extras.AddRange(modRef.AnalysisModule.Locations
+                        .Select(l => new Reference {
+                            uri = uri,
+                            range = l.Span,
+                            _version = version,
+                            _kind = ReferenceKind.Definition
+                        })
+                        .ToArray()
+                    );
+                }
+            }
+
+            VariablesResult result;
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Getting references for {@params._expr}");
+                }
+                result = analysis.GetVariables(@params._expr, @params.position);
+            } else {
+                var finder = new ExpressionFinder(tree, GetExpressionOptions.FindDefinition);
+                if (finder.GetExpression(@params.position) is Expression expr) {
+                    if (_traceLogging) {
+                        LogMessage(MessageType.Log, $"Getting references for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    }
+                    result = analysis.GetVariables(expr, @params.position);
+                } else {
+                    LogMessage(MessageType.Info, $"No references found in {uri} at {@params.position}");
+                    return Array.Empty<Reference>();
+                }
+            }
+
+            var filtered = result.Where(v => v.Type != VariableType.None);
+            if (!@params.context?.includeDeclaration ?? false) {
+                filtered = filtered.Where(v => v.Type != VariableType.Definition);
+            }
+            if (!@params.context?._includeValues ?? false) {
+                filtered = filtered.Where(v => v.Type != VariableType.Value);
+            }
+
+            bool includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
+
+            return filtered.Select(v => new Reference {
+                uri = v.Location.DocumentUri,
+                range = v.Location.Span,
+                _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
+                _kind = ToReferenceKind(v.Type),
+                _version = version
+            }).Concat(extras).ToArray();
+        }
+
         public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
@@ -950,6 +1041,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 case PythonMemberType.CodeSnippet: return SymbolKind.None;
                 case PythonMemberType.NamedArgument: return SymbolKind.None;
                 default: return SymbolKind.None;
+            }
+        }
+
+        private ReferenceKind ToReferenceKind(VariableType type) {
+            switch (type) {
+                case VariableType.None: return ReferenceKind.Value;
+                case VariableType.Definition: return ReferenceKind.Definition;
+                case VariableType.Reference: return ReferenceKind.Reference;
+                case VariableType.Value: return ReferenceKind.Value;
+                default: return ReferenceKind.Value;
             }
         }
 

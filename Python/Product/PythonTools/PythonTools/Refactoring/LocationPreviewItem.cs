@@ -37,8 +37,8 @@ namespace Microsoft.PythonTools.Refactoring {
         private static readonly char[] _whitespace = new[] { ' ', '\t', '\f' };
 
         public LocationPreviewItem(VsProjectAnalyzer analyzer, FilePreviewItem parent, AnalysisLocation locationInfo, VariableType type) {
-            Debug.Assert(locationInfo.Column >= 1, "Invalid location info (Column)");
-            Debug.Assert(locationInfo.Line >= 1, "Invalid location info (Line)");
+            Debug.Assert(locationInfo.Span.Start.Column >= 1, "Invalid location info (Column)");
+            Debug.Assert(locationInfo.Span.Start.Line >= 1, "Invalid location info (Line)");
             _parent = parent;
             Type = type;
             _text = string.Empty;
@@ -48,12 +48,13 @@ namespace Microsoft.PythonTools.Refactoring {
                 return;
             }
 
-            var analysis = analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
+            var analysis = analyzer.GetAnalysisEntryFromUri(locationInfo.DocumentUri) ??
+                analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
             if (analysis == null) {
                 return;
             }
 
-            var text = analysis.GetLine(locationInfo.Line);
+            var text = analysis.GetLine(locationInfo.Span.Start.Line);
             if (string.IsNullOrEmpty(text)) {
                 return;
             }
@@ -88,7 +89,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             _text = text.TrimStart(_whitespace);
-            Line = locationInfo.Line;
+            Line = locationInfo.Span.Start.Line;
             Column = start + 1;
             _span = new Span(start - (text.Length - _text.Length), length);
         }
@@ -101,7 +102,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 throw new ArgumentNullException(nameof(origName));
             }
 
-            start = loc.Column - 1;
+            start = loc.Span.Start.Column - 1;
             length = origName.Length;
             if (start < 0 || length <= 0) {
                 Debug.Fail("Invalid span for '{0}': [{1}..{2})".FormatInvariant(origName, start, start + length));

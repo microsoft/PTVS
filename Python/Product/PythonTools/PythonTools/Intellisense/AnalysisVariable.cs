@@ -27,20 +27,16 @@ namespace Microsoft.PythonTools.Intellisense {
     /// is an extension method defined in <see cref="Microsoft.PythonTools.Intellisense.PythonAnalysisExtensions"/>
     /// </summary>
     public sealed class AnalysisVariable {
-        private readonly AnalysisLocation _loc;
-        private readonly VariableType _type;
-
-        public AnalysisVariable(VariableType type, AnalysisLocation location) {
-            _loc = location;
-            _type = type;
+        public AnalysisVariable(VariableType type, AnalysisLocation location, int version) {
+            Location = location;
+            Type = type;
+            Version = version;
         }
 
-        public AnalysisLocation Location {
-            get { return _loc; }
-        }
+        public AnalysisLocation Location { get; }
 
-        public VariableType Type {
-            get { return _type; }
-        }
+        public VariableType Type { get; }
+
+        public int Version { get; }
     }
 }

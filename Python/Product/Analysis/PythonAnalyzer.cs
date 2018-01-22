@@ -526,7 +526,7 @@ namespace Microsoft.PythonTools.Analysis {
                         null,
                         string.IsNullOrEmpty(value.MaybeSourceFile) ?
                             Enumerable.Empty<LocationInfo>() :
-                            new[] { new LocationInfo(value.MaybeSourceFile, 0, 0) }
+                            new[] { new LocationInfo(value.MaybeSourceFile, null, 0, 0) }
                     );
                 }
             }

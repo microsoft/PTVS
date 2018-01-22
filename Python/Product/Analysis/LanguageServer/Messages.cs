@@ -217,10 +217,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// the server cannot map correctly.
         /// </summary>
         public int? _version;
+
+        /// <summary>
+        /// Override the expression to evaluate. If omitted, uses the context at the
+        /// specified position.
+        /// </summary>
+        public string _expr;
     }
 
     public struct ReferenceContext {
         public bool includeDeclaration;
+
+        public bool _includeValues;
+        public bool _includeDefinitionRanges;
     }
 
     public struct DocumentSymbolParams {

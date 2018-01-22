@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         public IEnumerable<LocationInfo> Locations {
             get {
                 if (_hasLocation) {
-                    yield return new LocationInfo(_declaringModule.FilePath, _line, _column);
+                    yield return new LocationInfo(_declaringModule.FilePath, _declaringModule.DocumentUri, _line, _column);
                 }
             }
         }

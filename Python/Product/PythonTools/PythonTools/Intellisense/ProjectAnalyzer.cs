@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
         internal static readonly object _testAnalyzer = new { Name = "TestAnalyzer" };
         internal static readonly object _testFilename = new { Name = "TestFilename" };
+        internal static readonly object _testDocumentUri = new { Name = "DocumentUri" };
 
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
@@ -100,6 +101,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IPythonToolsLogger _logger;
 
         internal int _parsePending;
+        private TaskCompletionSource<object> _waitForCompleteAnalysis;
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
@@ -463,6 +465,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Dispose() {
             _disposing = true;
 
+            Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetCanceled();
+
             var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable -= Factory_NewDatabaseAvailable;
@@ -776,6 +780,7 @@ namespace Microsoft.PythonTools.Intellisense {
             switch (e.Event.name) {
                 case AP.AnalysisCompleteEvent.Name:
                     _analysisComplete = true;
+                    Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetResult(null);
                     break;
                 case AP.FileAnalysisCompleteEvent.Name:
                     OnAnalysisComplete(e);
@@ -1273,8 +1278,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         .Where(x => x.file != null)
                         .Select(ToAnalysisVariable)
                         .ToArray(),
-                    definitions.privatePrefix,
-                    definitions.memberName
+                    definitions.privatePrefix
                 );
             }
             return null;
@@ -1304,8 +1308,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             .Where(x => x.file != null)
                             .Select(ToAnalysisVariable)
                             .ToArray(),
-                        definitions.privatePrefix,
-                        definitions.memberName
+                        definitions.privatePrefix
                     );
                 }
             }
@@ -1541,6 +1544,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalysisStarted -= evt;
                 mre.Dispose();
             }
+        }
+
+        internal Task WaitForNextCompleteAnalysis() {
+            var tcs = Volatile.Read(ref _waitForCompleteAnalysis);
+            if (tcs == null) {
+                tcs = new TaskCompletionSource<object>();
+                tcs = Interlocked.CompareExchange(ref _waitForCompleteAnalysis, tcs, null) ?? tcs;
+            }
+            return tcs.Task;
         }
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
@@ -2539,16 +2551,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
+            SourceSpan? def = null;
+            if (arg.definitionStartLine.HasValue && arg.definitionStartColumn.HasValue &&
+                arg.definitionEndLine.HasValue && arg.definitionEndColumn.HasValue) {
+                def = new SourceSpan(
+                    arg.definitionStartLine.Value, arg.definitionStartColumn.Value,
+                    arg.definitionEndLine.Value, arg.definitionEndColumn.Value
+                );
+            }
+
             var location = new AnalysisLocation(
                 arg.file,
-                arg.line,
-                arg.column,
-                arg.definitionStartLine,
-                arg.definitionStartColumn,
-                arg.definitionEndLine,
-                arg.definitionEndColumn
+                arg.documentUri,
+                new SourceSpan(arg.startLine, arg.startColumn, arg.endLine, arg.endColumn),
+                def
             );
-            return new AnalysisVariable(type, location);
+            return new AnalysisVariable(type, location, arg.version ?? -1);
         }
 
         internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {
