@@ -73,15 +73,6 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Create a ProfilingTargetView with values taken from a template.
         /// </summary>
-        /// <param name="template"></param>
-        [Obsolete("An IServiceProvider should be provided")]
-        public ProfilingTargetView(ProfilingTarget template)
-            : this(PythonProfilingPackage.Instance, template) {
-        }
-
-        /// <summary>
-        /// Create a ProfilingTargetView with values taken from a template.
-        /// </summary>
         public ProfilingTargetView(IServiceProvider serviceProvider, ProfilingTarget template)
             : this(serviceProvider) {
             if (template.ProjectTarget != null) {

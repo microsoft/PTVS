@@ -312,51 +312,6 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        /// <summary>
-        /// Gets the list of modules known by the current analysis.
-        /// </summary>
-        /// <param name="topLevelOnly">Only return top-level modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
-
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                res.Add(new MemberResult(child.Key, PythonMemberType.Module));
-            }
-
-            return res.ToArray();
-        }
-
-        /// <summary>
-        /// Gets the list of modules and members matching the provided names.
-        /// </summary>
-        /// <param name="names">The dotted name parts to match</param>
-        /// <param name="includeMembers">Include module members that match as
-        /// well as just modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
-            var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                var mod = (ModuleInfo)child.Value;
-
-                if (string.IsNullOrEmpty(mod.Name)) {
-                    // Module does not have an importable name
-                    continue;
-                }
-
-                var childName = mod.Name.Split('.');
-                if (childName.Length >= 2 && childName[0] == GlobalScope.Name && childName[1] == names[0]) {
-                    res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
-                }
-            }
-
-            return res.ToArray();
-        }
-
         private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, SourceLocation location) {
             if (innerScope.OuterScope == outerScope && innerScope is FunctionScope) {
                 var funcScope = (FunctionScope)innerScope;
