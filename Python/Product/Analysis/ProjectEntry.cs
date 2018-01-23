@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
-            MyScope.EnsureModuleVariables(_unit.ProjectState);
+            MyScope.EnsureModuleVariables(_unit.State);
 
             foreach (var value in MyScope.Scope.AllVariables) {
                 value.Value.EnqueueDependents();
@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
-            _unit.ProjectState.ClearDiagnostics(this);
+            _unit.State.ClearDiagnostics(this);
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit, tree);

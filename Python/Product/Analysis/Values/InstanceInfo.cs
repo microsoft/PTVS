@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         var message = string.IsNullOrEmpty(ClassInfo?.ShortDescription) ?
                             "object may not be callable" :
                             $"'{ClassInfo.ShortDescription}' may not be callable";
-                        unit.ProjectState.AddDiagnostic(
+                        unit.State.AddDiagnostic(
                             (node as CallExpression)?.Target ?? node,
                             unit,
                             message,
