@@ -9,7 +9,6 @@
     <ProjectFile Include="..\Product\dirs.proj" Condition="'$(SkipProduct)' != 'true'"/>
     <ProjectFile Include="loclayout.proj" />
     <ProjectFile Include="signlayout.proj" />
-    <ProjectFile Include="msi.proj" Condition="'$(IncludeMSI)' == 'true'" />
     <ProjectFile Include="vsix.proj" />
     <ProjectFile Include="swix\dirs.proj" />
     <ProjectFile Include="release.proj"/>

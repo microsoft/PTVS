@@ -2,7 +2,6 @@
   <Import Project="$(TargetsPath)\Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
-  <Import Project="$(TargetsPath)\Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
 
   <!--
