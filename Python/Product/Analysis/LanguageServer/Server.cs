@@ -838,7 +838,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
-            var loc = m.Locations.FirstOrDefault();
+            var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
                     uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
