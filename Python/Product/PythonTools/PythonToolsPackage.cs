@@ -386,13 +386,6 @@ namespace Microsoft.PythonTools {
             return typeof(IPythonLibraryManager);
         }
 
-
-        private new IComponentModel ComponentModel {
-            get {
-                return (IComponentModel)GetService(typeof(SComponentModel));
-            }
-        }
-
         internal override LibraryManager CreateLibraryManager(CommonPackage package) {
             return new PythonLibraryManager((PythonToolsPackage)package);
         }
