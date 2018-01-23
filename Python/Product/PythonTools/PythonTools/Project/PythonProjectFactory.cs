@@ -68,8 +68,6 @@ namespace Microsoft.PythonTools.Project {
 
 #if DEV15
         internal const string ToolsVersion = "15.1";
-#elif DEV14
-        internal const string ToolsVersion = "14.0";
 #else
         internal const string ToolsVersion = "4.0";
 #endif

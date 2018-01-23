@@ -24,7 +24,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -33,20 +41,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
-using Microsoft.PythonTools.Parsing;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
-#endif
 
 namespace TestUtilities.UI.Python {
     public sealed class ReplWindowProxy : IDisposable {
@@ -57,9 +52,6 @@ namespace TestUtilities.UI.Python {
         private readonly ReplWindowInfo _replWindowInfo;
         private readonly IEditorOperations _editorOperations;
 
-#if !DEV14_OR_LATER
-        private Dictionary<ReplOptions, object> _restoreOptions;
-#endif
         private List<Action> _onDispose;
 
         private static ConditionalWeakTable<ToolWindowPane, ReplWindowInfo> _replWindows =
@@ -85,13 +77,6 @@ namespace TestUtilities.UI.Python {
             Invoke(() => {
                 ClearInput();
 
-#if !DEV14_OR_LATER
-                if (_restoreOptions != null) {
-                    foreach (var kv in _restoreOptions) {
-                        _window.SetOptionValue(kv.Key, kv.Value);
-                    }
-                }
-#endif
                 if (_onDispose != null) {
                     foreach (var a in _onDispose) {
                         a();
@@ -231,23 +216,15 @@ namespace TestUtilities.UI.Python {
 
         public string CurrentPrimaryPrompt {
             get {
-#if DEV14_OR_LATER
                 dynamic eval = _window.Evaluator;
                 return eval.PrimaryPrompt as string ?? ">>>";
-#else
-                return _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
-#endif
             }
         }
 
         public string CurrentSecondaryPrompt {
             get {
-#if DEV14_OR_LATER
                 dynamic eval = _window.Evaluator;
                 return eval.SecondaryPrompt as string ?? "...";
-#else
-                return _window.GetOptionValue(ReplOptions.SecondaryPrompt) as string ?? "...";
-#endif
             }
         }
 
@@ -259,11 +236,7 @@ namespace TestUtilities.UI.Python {
         ) {
             var toolWindow = ActivateInteractiveWindow(settings, app, projectName, backend);
 
-#if DEV14_OR_LATER
             var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
-#else
-            var interactive = toolWindow as IInteractiveWindow;
-#endif
 
             Assert.IsNotNull(interactive, "Could not find interactive window");
             return new ReplWindowProxy(app, interactive, toolWindow, settings);
@@ -276,11 +249,7 @@ namespace TestUtilities.UI.Python {
         public ReplWindowProxySettings Settings { get { return _settings; } }
 
         public Task<ExecutionResult> ExecuteText(string text) {
-#if DEV14_OR_LATER
             return _window.Evaluator.ExecuteCodeAsync(text);
-#else
-            return _window.Evaluator.ExecuteText(text);
-#endif
         }
 
         /// <summary>
@@ -367,20 +336,10 @@ namespace TestUtilities.UI.Python {
         }
 
         private List<string> GetReplLines(IEnumerable<string> lines) {
-#if DEV14_OR_LATER
             dynamic eval = _window.Evaluator;
             var primary = eval.PrimaryPrompt as string ?? ">>>";
             var secondary = eval.SecondaryPrompt as string ?? "...";
             var input = "";
-#else
-            var primary = _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
-            var secondary = _window.GetOptionValue(ReplOptions.SecondaryPrompt) as string ?? "...";
-            var input = _window.GetOptionValue(ReplOptions.StandardInputPrompt) as string ?? "";
-
-            if (_window.GetOptionValue(ReplOptions.DisplayPromptInMargin) as bool? ?? false) {
-                primary = secondary = input = "";
-            }
-#endif
 
             // IPython prompts include an incrementing index, which we must remove for comparison
             primary = RemoveIndexFromIPythonPrompt(primary);
@@ -625,24 +584,7 @@ namespace TestUtilities.UI.Python {
                     _editorOperations.InsertText(line);
                 });
             }
-#if DEV14_OR_LATER
             bool canExecute = Invoke(() => _window.Operations.TrySubmitStandardInput() || _window.Operations.Return());
-#else
-            bool canExecute = Invoke(() => {
-                var rw = (ReplWindow)_window;
-                var res = _window.Evaluator.CanExecuteText(_window.CurrentLanguageBuffer.CurrentSnapshot.GetText());
-                if (res && rw.CaretInStandardInputRegion) {
-                    var pkgCmdSet = VSConstants.VSStd2K;
-                    ErrorHandler.ThrowOnFailure(rw.Exec(ref pkgCmdSet, (uint)VSConstants.VSStd2KCmdID.RETURN, 0, IntPtr.Zero, IntPtr.Zero));
-                } else if (res) {
-                    rw.Submit();
-                } else {
-                    var pkgCmdSet = Microsoft.VisualStudio.Repl.Guids.guidReplWindowCmdSet;
-                    ErrorHandler.ThrowOnFailure(rw.Exec(ref pkgCmdSet, (uint)Microsoft.VisualStudio.Repl.PkgCmdIDList.cmdidBreakLine, 0, IntPtr.Zero, IntPtr.Zero));
-                }
-                return res;
-            });
-#endif
 
             if (wait && canExecute) {
                 Assert.IsTrue(
@@ -732,11 +674,7 @@ namespace TestUtilities.UI.Python {
                 _replWindowInfo.ReadyForInput.Reset();
             }
             var code = SplitCodeIntoBlocks(text.Split('\n').Select(s => s.Trim('\r')));
-#if DEV14_OR_LATER
             _window.SubmitAsync(code);
-#else
-            _window.Submit(code);
-#endif
             if (wait) {
                 Assert.IsTrue(
                     WaitForReadyForInput(timeout ?? TimeSpan.FromSeconds(60)),
@@ -767,22 +705,17 @@ namespace TestUtilities.UI.Python {
 
         private bool IsCaretInStandardInputRegion {
             get {
-#if DEV14_OR_LATER
                 var point = _window.TextView.BufferGraph.MapDownToInsertionPoint(
                     _window.TextView.Caret.Position.BufferPosition,
                     PointTrackingMode.Positive,
                     _ => true
                 );
                 return point.HasValue && point.Value.Snapshot.ContentType.IsOfType(PredefinedInteractiveContentTypes.InteractiveContentTypeName);
-#else
-                return ((ReplWindow)_window).CaretInActiveCodeRegion;
-#endif
             }
         }
 
         private bool IsCaretInActiveCodeRegion {
             get {
-#if DEV14_OR_LATER
                 if (_window.CurrentLanguageBuffer == null) {
                     return false;
                 }
@@ -793,9 +726,6 @@ namespace TestUtilities.UI.Python {
                     _window.CurrentLanguageBuffer,
                     PositionAffinity.Successor
                 ) != null;
-#else
-                return ((ReplWindow)_window).CaretInActiveCodeRegion;
-#endif
             }
         }
 
@@ -807,24 +737,8 @@ namespace TestUtilities.UI.Python {
             ((UIElement)_window.TextView).Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
 
             _replWindowInfo.ReadyForInput.Reset();
-#if DEV14_OR_LATER
             Invoke(_window.Operations.ClearHistory);
             Invoke(_window.Operations.ClearView);
-#else
-            Invoke(() => {
-                _window.ClearHistory();
-                var pkgCmdSet = Guids.guidReplWindowCmdSet;
-                for (int i = 2; i > 0; --i) {
-                    ErrorHandler.ThrowOnFailure(((ReplWindow)_window).Exec(
-                        ref pkgCmdSet,
-                        (uint)Microsoft.VisualStudio.Repl.PkgCmdIDList.cmdidReplClearScreen,
-                        0,
-                        IntPtr.Zero,
-                        IntPtr.Zero
-                    ));
-                }
-            });
-#endif
             Assert.IsTrue(
                 _replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(10.0)),
                 "Timed out waiting for ClearScreen()"
@@ -832,69 +746,39 @@ namespace TestUtilities.UI.Python {
         }
 
         public void ClearHistory() {
-#if DEV14_OR_LATER
             Invoke(_window.Operations.ClearHistory);
-#else
-            Invoke(_window.ClearHistory);
-#endif
         }
 
         public void SubmitCurrentText() {
-#if DEV14_OR_LATER
             Invoke(_window.Operations.ExecuteInput);
-#else
-            Invoke(((ReplWindow)_window).Submit);
-#endif
         }
 
         public void Backspace(int count = 1) {
             while (count-- > 0) {
-#if DEV14_OR_LATER
                 Invoke(_window.Operations.Backspace);
-#else
-                _app.ExecuteCommand("Edit.DeleteBackwards");
-#endif
             }
         }
 
         public void PreviousHistoryItem(int count = 1, bool search = false) {
             while (count-- > 0) {
-#if DEV14_OR_LATER
                 Invoke(search ?
                     (Action)(() => _window.Operations.HistorySearchPrevious()) :
                     (Action)(() => _window.Operations.HistoryPrevious())
                 );
-#else
-                _app.ExecuteCommand(search ?
-                    "PythonInteractive.SearchHistoryPrevious" :
-                    "PythonInteractive.HistoryPrevious"
-                );
-#endif
             }
         }
 
         public void NextHistoryItem(int count = 1, bool search = false) {
             while (count-- > 0) {
-#if DEV14_OR_LATER
                 Invoke(search ?
                     (Action)(() => _window.Operations.HistorySearchNext()) :
                     (Action)(() => _window.Operations.HistoryNext())
                 );
-#else
-                _app.ExecuteCommand(search ?
-                    "PythonInteractive.SearchHistoryNext" :
-                    "PythonInteractive.HistoryNext"
-                );
-#endif
             }
         }
 
         public void Reset() {
-#if DEV14_OR_LATER
             var t = _window.Operations.ResetAsync();
-#else
-            var t = _window.Reset();
-#endif
             Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(15)), "Timed out resetting the window");
             Assert.IsTrue(t.Result.IsSuccessful, "Window failed to reset");
         }
@@ -906,13 +790,9 @@ namespace TestUtilities.UI.Python {
             for (int i = 0; i < attempts && !rfi.WaitOne(0); i++) {
                 rfi.Reset();
                 try {
-#if DEV14_OR_LATER
                     Invoke(() => {
                         _window.Evaluator.AbortExecution();
                     });
-#else
-                    _app.ExecuteCommand("PythonInteractive.Cancel");
-#endif
                     // The command succeeded, so wait longer
                     if (rfi.WaitOne(1000)) {
                         break;
@@ -926,25 +806,6 @@ namespace TestUtilities.UI.Python {
             }
             Assert.IsTrue(rfi.WaitOne(10000));
         }
-
-#if !DEV14_OR_LATER
-        public object GetOptionValue(ReplOptions option) {
-            return _window.GetOptionValue(option);
-        }
-
-        public void SetOptionValue(ReplOptions option, object value) {
-            if (_restoreOptions == null) {
-                _restoreOptions = new Dictionary<ReplOptions, object>();
-            }
-
-            try {
-                _restoreOptions.Add(option, _window.GetOptionValue(option));
-            } catch (ArgumentException) {
-                // Don't overwrite existing 'restore' values
-            }
-            _window.SetOptionValue(option, value);
-        }
-#endif
 
         public IWpfTextView TextView {
             get {
@@ -968,7 +829,6 @@ namespace TestUtilities.UI.Python {
         }
 
         internal SnapshotSpan? GetContainingRegion(SnapshotPoint snapshotPoint) {
-#if DEV14_OR_LATER
             var point = _window.TextView.BufferGraph.MapDownToInsertionPoint(
                 snapshotPoint,
                 PointTrackingMode.Positive,
@@ -978,9 +838,6 @@ namespace TestUtilities.UI.Python {
                 return null;
             }
             return new SnapshotSpan(point.Value.Snapshot, 0, point.Value.Snapshot.Length);
-#else
-            return ((ReplWindow)_window).GetContainingRegion(snapshotPoint);
-#endif
         }
     }
 }

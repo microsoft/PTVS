@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         internal static HtmlEditorDocument HtmlEditorDocumentFromTextBuffer(ITextBuffer buffer) {
             var doc = HtmlEditorDocument.FromTextBuffer(buffer);
-#if DEV14_OR_LATER
             if (doc == null) {
                 var projBuffer = buffer as IProjectionBuffer;
                 if (projBuffer != null) {
@@ -48,7 +47,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     }
                 }
             }
-#endif
             return doc;
         }
 
