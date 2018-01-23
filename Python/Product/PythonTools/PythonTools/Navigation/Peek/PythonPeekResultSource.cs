@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return;
             }
 
-            foreach (var variable in _variables) {
+            foreach (var variable in _variables.Where(v => !string.IsNullOrEmpty(v.Location.FilePath))) {
                 resultCollection.Add(CreateResult(variable));
             }
         }

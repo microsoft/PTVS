@@ -52,6 +52,10 @@ namespace Microsoft.PythonTools.Refactoring {
             Dictionary<FilePreviewItem, HashSet<LocationInfo>> allItems = new Dictionary<FilePreviewItem, HashSet<LocationInfo>>();
 
             foreach (var variable in _variables) {
+                if (string.IsNullOrEmpty(variable.Location?.FilePath)) {
+                    continue;
+                }
+
                 switch (variable.Type) {
                     case VariableType.Definition:
                     case VariableType.Reference:
