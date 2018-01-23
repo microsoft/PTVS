@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
-    public sealed class ExpressionFinder {
+    sealed class ExpressionFinder {
         public ExpressionFinder(PythonAst ast, GetExpressionOptions options) {
             Ast = ast;
             Options = options.Clone();
@@ -515,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    public sealed class GetExpressionOptions {
+    sealed class GetExpressionOptions {
         public static GetExpressionOptions Hover => new GetExpressionOptions {
             Calls = true,
             Indexing = true,

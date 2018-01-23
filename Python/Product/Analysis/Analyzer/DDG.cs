@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public PythonAnalyzer ProjectState {
-            get { return _unit.ProjectState; }
+            get { return _unit.State; }
         }
 
         public override bool Walk(PythonAst node) {

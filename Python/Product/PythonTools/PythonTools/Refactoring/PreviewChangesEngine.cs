@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private List<FilePreviewItem> CreatePreviewItems() {
             Dictionary<string, FilePreviewItem> files = new Dictionary<string, FilePreviewItem>();
-            Dictionary<FilePreviewItem, HashSet<AnalysisLocation>> allItems = new Dictionary<FilePreviewItem, HashSet<AnalysisLocation>>();
+            Dictionary<FilePreviewItem, HashSet<LocationInfo>> allItems = new Dictionary<FilePreviewItem, HashSet<LocationInfo>>();
 
             foreach (var variable in _variables) {
                 switch (variable.Type) {
@@ -57,10 +57,10 @@ namespace Microsoft.PythonTools.Refactoring {
                     case VariableType.Reference:
                         string file = variable.Location.FilePath;
                         FilePreviewItem fileItem;
-                        HashSet<AnalysisLocation> curLocations;
+                        HashSet<LocationInfo> curLocations;
                         if (!files.TryGetValue(file, out fileItem)) {
                             files[file] = fileItem = new FilePreviewItem(this, file);
-                            allItems[fileItem] = curLocations = new HashSet<AnalysisLocation>(AnalysisLocation.FullComparer);
+                            allItems[fileItem] = curLocations = new HashSet<LocationInfo>(LocationInfo.FullComparer);
                         } else {
                             curLocations = allItems[fileItem];
                         }

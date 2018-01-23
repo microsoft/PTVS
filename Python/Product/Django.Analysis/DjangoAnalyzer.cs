@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                         foreach (var value in values) {
                             var str = value.GetConstantValueAsString();
                             if (str != null) {
-                                RegisterTag(unit.Project, _tags, str);
+                                RegisterTag(unit.Entry, _tags, str);
                             }
                         }
                     }
@@ -300,11 +300,11 @@ namespace Microsoft.PythonTools.Django.Analysis {
             } else if (model != null) {
                 // template name is [app]/[modelname]_[template_name_suffix]
                 string appName;
-                int firstDot = unit.Project.ModuleName.IndexOf('.');
+                int firstDot = unit.Entry.ModuleName.IndexOf('.');
                 if (firstDot != -1) {
-                    appName = unit.Project.ModuleName.Substring(0, firstDot);
+                    appName = unit.Entry.ModuleName.Substring(0, firstDot);
                 } else {
-                    appName = unit.Project.ModuleName;
+                    appName = unit.Entry.ModuleName;
                 }
 
                 foreach (var modelInst in model) {
@@ -402,12 +402,12 @@ namespace Microsoft.PythonTools.Django.Analysis {
                     var constName = name.GetConstantValue();
                     if (constName == Type.Missing) {
                         if (name.Name != null) {
-                            RegisterTag(unit.Project, tags, name.Name, name.Documentation);
+                            RegisterTag(unit.Entry, tags, name.Name, name.Documentation);
                         }
                     } else {
                         var strName = name.GetConstantValueAsString();
                         if (strName != null) {
-                            RegisterTag(unit.Project, tags, strName);
+                            RegisterTag(unit.Entry, tags, strName);
                         }
                     }
                 }
@@ -423,7 +423,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                 foreach (var name in args[1]) {
                     string tagName = name.Name ?? name.GetConstantValueAsString();
                     if (tagName != null) {
-                        RegisterTag(unit.Project, tags, tagName, name.Documentation);
+                        RegisterTag(unit.Entry, tags, tagName, name.Documentation);
                     }
                     if (name.MemberType != PythonMemberType.Constant) {
                         var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
@@ -444,7 +444,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                         return dec;
                     } else if (name.Name != null) {
                         // library.filter
-                        RegisterTag(unit.Project, tags, name.Name, name.Documentation);
+                        RegisterTag(unit.Entry, tags, name.Name, name.Documentation);
                     }
                 }
             }

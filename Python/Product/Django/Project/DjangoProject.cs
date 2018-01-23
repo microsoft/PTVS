@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         public VsProjectAnalyzer Analyzer {
             get {
-                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer();
+                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer() as VsProjectAnalyzer;
             }
         }
 
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Django.Project {
 #if DJANGO_HTML_EDITOR
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                RegisterExtension(pyProj.GetProjectAnalyzer());
+                RegisterExtension(pyProj.GetProjectAnalyzer() as VsProjectAnalyzer);
                 pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 #endif
@@ -159,11 +159,14 @@ namespace Microsoft.PythonTools.Django.Project {
         private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
-                RegisterExtension(e.New);
+                RegisterExtension(e.New as VsProjectAnalyzer);
             }
         }
 
         private void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
+            if (newAnalyzer == null) {
+                return;
+            }
             newAnalyzer.RegisterExtensionAsync(typeof(DjangoAnalyzer))
                 .HandleAllExceptions(serviceProvider, GetType(), allowUI: false)
                 .DoNotWait();
@@ -991,7 +994,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         #region IDjangoProject Members
 
-        public ProjectSmuggler GetDjangoProject() {
+        ProjectSmuggler IDjangoProject.GetDjangoProject() {
             return new ProjectSmuggler(this);
         }
 

@@ -33,9 +33,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0.</remarks>
         void RemoveReference(ProjectReference reference);
-    }
 
-    public interface IPythonInterpreterWithProjectReferences2 : IPythonInterpreterWithProjectReferences {
+        /// <summary>
+        /// Returns a sequence of the references in the current interpreter.
+        /// </summary>
+        /// <returns></returns>
         IEnumerable<ProjectReference> GetReferences();
     }
 }

@@ -16,12 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class AnalysisOnlyInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization {
+    sealed class AnalysisOnlyInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization {
         private readonly static InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
             WatchFileSystem = false
         };

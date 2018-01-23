@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// The possible modes for a <see cref="FuzzyStringMatcher"/>.
     /// </summary>
-    public enum FuzzyMatchMode {
+    enum FuzzyMatchMode {
         Prefix = 0,
         PrefixIgnoreCase = 1,
         Substring = 2,
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Compares strings against patterns for sorting and filtering.
     /// </summary>
-    public class FuzzyStringMatcher {
+    class FuzzyStringMatcher {
         delegate int Matcher(string text, string pattern, bool ignoreCase);
         readonly Matcher _matcher;
         readonly bool _ignoreCase;

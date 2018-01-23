@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (_type == null) {
-                return unit.ProjectState.ClassInfos[BuiltinTypeId.NoneType].Instance;
+                return unit.State.ClassInfos[BuiltinTypeId.NoneType].Instance;
             }
 
             var member = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);

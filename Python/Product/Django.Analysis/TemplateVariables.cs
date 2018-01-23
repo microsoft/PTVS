@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
             }
 
             foreach (var value in values) {
-                var module = value.DeclaringModule ?? unit.Project;
+                var module = value.DeclaringModule ?? unit.Entry;
                 ValuesAndVersion valsAndVersion;
                 if (!entryMappedValues.TryGetValue(module, out valsAndVersion) || valsAndVersion.DeclaringVersion != module.AnalysisVersion) {
                     entryMappedValues[module] = valsAndVersion = new ValuesAndVersion(module.AnalysisVersion);

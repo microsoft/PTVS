@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             vd.AddTypes(unit, v, false, DeclaringModule);
                             return vd;
                         }).ToArray(),
-                        unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                        unit.State.ClassInfos[BuiltinTypeId.Tuple],
                         node,
                         unit.ProjectEntry
                     );
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         if (j >= 0 && j < _args.Length) {
                             dict._keysAndValues.AddTypes(
                                 unit,
-                                unit.ProjectState.GetConstant(_keywordArgNames[i].Name),
+                                unit.State.GetConstant(_keywordArgNames[i].Name),
                                 _args[j],
                                 false
                             );

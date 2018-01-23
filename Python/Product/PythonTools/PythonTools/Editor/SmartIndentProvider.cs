@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Editor {
     [Export(typeof(ISmartIndentProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    public sealed class SmartIndentProvider : ISmartIndentProvider {
+    sealed class SmartIndentProvider : ISmartIndentProvider {
         private readonly PythonToolsService _pyService;
         private readonly PythonEditorServices _editorServices;
 

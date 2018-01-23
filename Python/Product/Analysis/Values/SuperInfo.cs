@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {
-            return AnalysisUnit.ProjectState.GetAnalysisValueFromObjects(AnalysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
+            return AnalysisUnit.State.GetAnalysisValueFromObjects(AnalysisUnit.State.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return AnalysisSet.Empty;
             }
 
-            var instances = _instances.Any() ? _instances : unit.ProjectState._noneInst.SelfSet;
+            var instances = _instances.Any() ? _instances : unit.State._noneInst.SelfSet;
             IAnalysisSet result = AnalysisSet.Empty;
             foreach (var instance in instances) {
                 var desc = member.GetDescriptor(node, instance, this, unit);

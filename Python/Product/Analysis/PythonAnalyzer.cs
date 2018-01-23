@@ -259,10 +259,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This method is thread safe.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="cookie"></param>
-        /// <returns></returns>
-        public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
+        internal IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
             var entry = new XamlProjectEntry(filePath);
 
             _xamlByFilename[filePath] = entry;

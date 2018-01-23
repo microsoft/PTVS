@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.Fail("Unexpected DefaultPythonProject.SetProperty() call");
         }
 
-        public VsProjectAnalyzer GetProjectAnalyzer() {
+        public Projects.ProjectAnalyzer GetProjectAnalyzer() {
             return _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
         }
 

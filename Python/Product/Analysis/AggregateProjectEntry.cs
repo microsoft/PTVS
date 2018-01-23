@@ -27,10 +27,10 @@ namespace Microsoft.PythonTools.Analysis {
     /// entries to exist in the system and be cleared out when any one of the project
     /// entries which contributed the dependency get updated.
     /// </summary>
-    public sealed class AggregateProjectEntry : IVersioned {
+    sealed class AggregateProjectEntry : IVersioned {
         private int _version;
         /// <summary>
-        /// The proejct entries which we are an aggregate of
+        /// The project entries which we are an aggregate of
         /// </summary>
         internal readonly HashSet<IProjectEntry> _aggregating;
         /// <summary>

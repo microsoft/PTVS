@@ -107,12 +107,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (d != null) {
                         var decorator = ddg._eval.Evaluate(d);
 
-                        if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.Property])) {
+                        if (decorator.Contains(State.ClassInfos[BuiltinTypeId.Property])) {
                             Function.IsProperty = true;
-                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.StaticMethod])) {
+                        } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.StaticMethod])) {
                             // TODO: Warn if IsClassMethod is set
                             Function.IsStatic = true;
-                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.ClassMethod])) {
+                        } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.ClassMethod])) {
                             // TODO: Warn if IsStatic is set
                             Function.IsClassMethod = true;
                         } else {
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 IAnalysisSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
                 if (clsScope == null) {
-                    firstParam = Function.IsClassMethod ? ProjectState.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
+                    firstParam = Function.IsClassMethod ? State.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
                 } else {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }

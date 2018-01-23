@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -26,15 +27,15 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbol : INavigableSymbol {
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigableSymbol(IServiceProvider serviceProvider, AnalysisLocation location, SnapshotSpan span) {
+        public NavigableSymbol(IServiceProvider serviceProvider, IAnalysisVariable variable, SnapshotSpan span) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            Location = location ?? throw new ArgumentNullException(nameof(location));
+            Variable = variable ?? throw new ArgumentNullException(nameof(variable));
             SymbolSpan = span;
         }
 
         public SnapshotSpan SymbolSpan { get; }
 
-        internal AnalysisLocation Location { get; }
+        internal IAnalysisVariable Variable { get; }
 
         // FYI: This is for future extensibility, it's currently ignored (in 15.3)
         public IEnumerable<INavigableRelationship> Relationships =>
@@ -42,7 +43,13 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
         public void Navigate(INavigableRelationship relationship) {
             try {
-                Location.GotoSource(_serviceProvider);
+                PythonToolsPackage.NavigateTo(
+                    _serviceProvider,
+                    Variable.Location.FilePath,
+                    Guid.Empty,
+                    Variable.Location.StartLine - 1,
+                    Variable.Location.StartColumn - 1
+                );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(SymbolSpan.GetText()), Strings.ProductTitle);
             }

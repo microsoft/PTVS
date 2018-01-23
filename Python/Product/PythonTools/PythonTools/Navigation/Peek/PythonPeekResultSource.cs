@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -24,11 +25,11 @@ using Microsoft.VisualStudio.Language.Intellisense;
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekResultSource : IPeekResultSource {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly AnalysisLocation[] _locations;
+        private readonly IAnalysisVariable[] _variables;
 
-        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisLocation[] locations) {
+        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, IAnalysisVariable[] variables) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
-            _locations = locations ?? throw new ArgumentNullException(nameof(locations));
+            _variables = variables ?? throw new ArgumentNullException(nameof(variables));
         }
 
         public void FindResults(string relationshipName, IPeekResultCollection resultCollection, CancellationToken cancellationToken, IFindPeekResultsCallback callback) {
@@ -40,52 +41,35 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return;
             }
 
-            foreach (var location in _locations) {
-                resultCollection.Add(CreateResult(location));
+            foreach (var variable in _variables) {
+                resultCollection.Add(CreateResult(variable));
             }
         }
 
-        private IDocumentPeekResult CreateResult(AnalysisLocation location) {
-            var fileName = PathUtils.GetFileOrDirectoryName(location.FilePath);
+        private IDocumentPeekResult CreateResult(IAnalysisVariable variable) {
+            var fileName = PathUtils.GetFileOrDirectoryName(variable.Location.FilePath);
 
             var displayInfo = new PeekResultDisplayInfo2(
-                label: string.Format("{0} - ({1}, {2})", fileName, location.Line, location.Column),
-                labelTooltip: location.FilePath,
+                label: string.Format("{0} - ({1}, {2})", fileName, variable.Location.StartLine, variable.Location.StartColumn),
+                labelTooltip: variable.Location.FilePath,
                 title: fileName,
-                titleTooltip: location.FilePath,
+                titleTooltip: variable.Location.FilePath,
                 startIndexOfTokenInLabel: 0,
                 lengthOfTokenInLabel: 0
             );
 
-            int startLine = location.Line - 1;
-            int startColumn = location.Column - 1;
-            int endLine = startLine;
-            int endColumn = startColumn;
-            if (location.DefinitionStartLine.HasValue) {
-                startLine = location.DefinitionStartLine.Value - 1;
-            }
-            if (location.DefinitionStartColumn.HasValue) {
-                startColumn = location.DefinitionStartColumn.Value - 1;
-            }
-            if (location.DefinitionEndLine.HasValue) {
-                endLine = location.DefinitionEndLine.Value - 1;
-            }
-            if (location.DefinitionEndColumn.HasValue) {
-                endColumn = location.DefinitionEndColumn.Value - 1;
-            }
-
             return _peekResultFactory.Create(
                 displayInfo,
                 default(ImageMoniker),
-                location.FilePath,
-                startLine,
-                startColumn,
-                endLine,
-                endColumn,
-                location.Line - 1,
-                location.Column - 1,
-                location.Line - 1,
-                location.Column - 1,
+                variable.Location.FilePath,
+                variable.DefinitionLocation.StartLine - 1,
+                variable.DefinitionLocation.StartColumn - 1,
+                (variable.DefinitionLocation.EndLine ?? variable.DefinitionLocation.StartLine) - 1,
+                (variable.DefinitionLocation.EndColumn ?? variable.DefinitionLocation.StartColumn) - 1,
+                variable.Location.StartLine - 1,
+                variable.Location.StartColumn - 1,
+                (variable.Location.EndLine ?? variable.Location.StartLine) - 1,
+                (variable.Location.EndColumn ?? variable.Location.StartColumn) - 1,
                 isReadOnly: false
             );
         }

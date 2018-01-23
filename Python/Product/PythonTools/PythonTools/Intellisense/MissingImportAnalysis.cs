@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// 
     /// New in 1.1.
     /// </summary>
-    public sealed class MissingImportAnalysis {
+    sealed class MissingImportAnalysis {
         internal static MissingImportAnalysis Empty = new MissingImportAnalysis();
         private readonly ITrackingSpan _span;
         private readonly string _name;
