@@ -102,25 +102,26 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
-            if (locatedDef != null &&
-                locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
-                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
-                var identifierEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+            var parse = locatedDef?.Entry?.GetCurrentParse();
+            if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
+                var tree = parse.Tree;
+                var version = (parse.Cookie as Intellisense.VersionCookie)?.DefaultVersion;
+                var identifierStart = locatedDef.Node.GetStart(tree);
+                var identifierEnd = locatedDef.Node.GetEnd(tree);
 
                 // For classes and functions, find the ClassDefinition or
                 // FunctionDefinition to get the full span of the definition.
                 var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
-                locatedDef.Entry.Tree.Walk(walker);
+                tree.Walk(walker);
 
                 SourceLocation definitionStart;
                 SourceLocation definitionEnd;
                 if (walker.Definition != null) {
-                    definitionStart = walker.Definition.GetStart(locatedDef.Entry.Tree);
-                    definitionEnd = walker.Definition.GetEnd(locatedDef.Entry.Tree);
+                    definitionStart = walker.Definition.GetStart(tree);
+                    definitionEnd = walker.Definition.GetEnd(tree);
                 } else {
                     definitionStart = identifierStart;
-                    definitionEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+                    definitionEnd = locatedDef.Node.GetEnd(tree);
                 }
 
                 yield return new AnalysisVariable(
@@ -142,7 +143,8 @@ namespace Microsoft.PythonTools.Analysis {
                         definitionStart.Column,
                         definitionEnd.Line,
                         definitionEnd.Column
-                    )
+                    ),
+                    version
                 );
             }
 

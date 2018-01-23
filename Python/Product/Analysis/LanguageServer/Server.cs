@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            VariablesResult result;
+            IEnumerable<IAnalysisVariable> result;
             if (!string.IsNullOrEmpty(@params._expr)) {
                 TraceMessage($"Getting references for {@params._expr}");
                 result = analysis.GetVariables(@params._expr, @params.position);

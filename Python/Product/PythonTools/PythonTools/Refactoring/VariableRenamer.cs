@@ -64,11 +64,11 @@ namespace Microsoft.PythonTools.Refactoring {
 
             string privatePrefix = analysis.PrivatePrefix;
             var originalName = analysis.Variables
-                .Where(r => r.Location.DocumentUri == buffer.DocumentUri && buffer.LocationTracker.CanTranslateFrom(r.Version))
+                .Where(r => r.Location.DocumentUri == buffer.DocumentUri && buffer.LocationTracker.CanTranslateFrom(r.Version ?? -1))
                 .Select(r => {
                     var snapshot = buffer.CurrentSnapshot;
                     try {
-                        return buffer.LocationTracker.Translate(r.Location.Span, r.Version, snapshot).GetText();
+                        return buffer.LocationTracker.Translate(r.Location.Span, r.Version ?? -1, snapshot).GetText();
                     } catch (ArgumentException) {
                         return null;
                     }

@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
+extern alias pythontools;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Navigation.Navigable;
+using analysis::Microsoft.PythonTools.Analysis;
+using analysis::Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Navigation.Navigable;
 using TestUtilities;
 
 namespace PythonToolsMockTests {
@@ -218,10 +220,10 @@ res = my_var * 10
         }
 
         private LocationInfo Location(int line, int col) =>
-            new LocationInfo(null, line, col);
+            new LocationInfo(null, null, line, col);
 
         private LocationInfo ExternalLocation(int line, int col, string filename) =>
-            new LocationInfo(filename, line, col);
+            new LocationInfo(filename, null, line, col);
 
         #region NavigableHelper class
 

@@ -2553,15 +2553,17 @@ namespace Microsoft.PythonTools.Intellisense {
             var location = new LocationInfo(
                 arg.file,
                 arg.documentUri,
-                arg.line,
-                arg.column
+                arg.startLine,
+                arg.startColumn,
+                arg.endLine,
+                arg.endColumn
             );
 
             var defLocation = new LocationInfo(
                 arg.file,
                 arg.documentUri,
-                arg.definitionStartLine ?? arg.line,
-                arg.definitionStartColumn ?? arg.column,
+                arg.definitionStartLine ?? arg.startLine,
+                arg.definitionStartColumn ?? arg.startColumn,
                 arg.definitionEndLine,
                 arg.definitionEndColumn
             );

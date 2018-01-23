@@ -457,7 +457,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return null;
                     }).ToArray();
 
-                    var defaults = FunctionDefinition.Parameters.Select(p => GetDefaultValue(unit.ProjectState, p, DeclaringModule.Tree)).ToArray();
+                    var defaults = FunctionDefinition.Parameters.Select(p => GetDefaultValue(unit.State, p, DeclaringModule.Tree)).ToArray();
 
                     bool needNewSet = true;
                     foreach (var set in parameterSets) {
