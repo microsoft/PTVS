@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Compares various types of completions.
     /// </summary>
-    public class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
+    class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the end of the list.

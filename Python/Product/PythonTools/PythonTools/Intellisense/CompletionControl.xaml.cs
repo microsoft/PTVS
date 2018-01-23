@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static readonly DependencyProperty WarningVisibilityProperty = WarningVisibilityPropertyKey.DependencyProperty;
         private readonly IServiceProvider _serviceProvider;
 
-        public CompletionControl(IServiceProvider serviceProvider, UIElement view, ICompletionSession session) {
+        internal CompletionControl(IServiceProvider serviceProvider, UIElement view, ICompletionSession session) {
             _serviceProvider = serviceProvider;
 
             InitializeComponent();

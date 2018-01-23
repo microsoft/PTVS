@@ -670,7 +670,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            await _serviceProvider.GetUIThread().InvokeAsync(() => {
+            var uiThreadTask = _serviceProvider.GetUIThread().InvokeAsync(() => {
                 if (_taskList != null) {
                     if (_cookie == 0) {
                         ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
@@ -681,32 +681,34 @@ namespace Microsoft.PythonTools.Intellisense {
                         // DevDiv2 759317 - Watson bug, COM object can go away...
                     }
                 }
+            }, cancellationToken);
 
-                if (_errorProvider != null) {
-                    foreach (var kv in bufferToErrorList) {
-                        var tagger = _errorProvider.GetErrorTagger(kv.Key);
-                        if (tagger == null) {
-                            continue;
-                        }
+            foreach (var kv in bufferToErrorList) {
+                var tagger = _errorProvider.GetErrorTagger(kv.Key);
+                if (tagger == null) {
+                    continue;
+                }
 
-                        if (buffers.Remove(kv.Key)) {
-                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
-                        }
-
-                        foreach (var taskProviderItem in kv.Value) {
-                            taskProviderItem.CreateSquiggleSpan(tagger);
-                        }
+                using (tagger.Update()) {
+                    if (buffers.Remove(kv.Key)) {
+                        tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
                     }
 
-                    if (buffers.Any()) {
-                        // Clear tags for any remaining buffers.
-                        foreach (var buffer in buffers) {
-                            var tagger = _errorProvider.GetErrorTagger(buffer);
-                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
-                        }
+                    foreach (var taskProviderItem in kv.Value) {
+                        taskProviderItem.CreateSquiggleSpan(tagger);
                     }
                 }
-            }, cancellationToken);
+            }
+
+            if (buffers.Any()) {
+                // Clear tags for any remaining buffers.
+                foreach (var buffer in buffers) {
+                    var tagger = _errorProvider.GetErrorTagger(buffer);
+                    tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
+                }
+            }
+
+            await uiThreadTask;
         }
 
         private void SendMessage(WorkerMessage message) {

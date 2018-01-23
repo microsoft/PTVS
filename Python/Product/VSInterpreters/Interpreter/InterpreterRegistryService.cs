@@ -35,8 +35,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool _raiseInterpretersChanged, _factoryChangesWatched;
         private EventHandler _interpretersChanged;
 
-        private Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>> _locks;
-        private readonly object _locksLock = new object();
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
@@ -134,59 +132,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 return _noInterpretersValue;
             }
-        }
-
-        public async Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
-            LockInfo info;
-            Dictionary<object, LockInfo> locks;
-
-            lock (_locksLock) {
-                if (_locks == null) {
-                    _locks = new Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>>();
-                }
-
-                if (!_locks.TryGetValue(factory, out locks)) {
-                    _locks[factory] = locks = new Dictionary<object, LockInfo>();
-                }
-
-                if (!locks.TryGetValue(moniker, out info)) {
-                    locks[moniker] = info = new LockInfo();
-                }
-            }
-
-            Interlocked.Increment(ref info._lockCount);
-            bool result = false;
-            try {
-                result = await info._lock.WaitAsync(timeout.TotalDays > 1 ? Timeout.InfiniteTimeSpan : timeout);
-                return result ? (object)info : null;
-            } finally {
-                if (!result) {
-                    Interlocked.Decrement(ref info._lockCount);
-                }
-            }
-        }
-
-        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
-            LockInfo info;
-            Dictionary<object, LockInfo> locks;
-
-            lock (_locksLock) {
-                return _locks != null &&
-                    _locks.TryGetValue(factory, out locks) &&
-                    locks.TryGetValue(moniker, out info) &&
-                    info._lockCount > 0;
-            }
-        }
-
-        public bool UnlockInterpreter(object cookie) {
-            var info = cookie as LockInfo;
-            if (info == null) {
-                throw new ArgumentException("cookie was not returned from a call to LockInterpreterAsync");
-            }
-
-            bool res = Interlocked.Decrement(ref info._lockCount) == 0;
-            info._lock.Release();
-            return res;
         }
 
         private sealed class InterpretersEnumerator : IEnumerator<IPythonInterpreterFactory> {
@@ -287,17 +232,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         public void Dispose() {
-            lock (_locksLock) {
-                if (_locks != null) {
-                    foreach (var dict in _locks.Values) {
-                        foreach (var li in dict.Values) {
-                            li.Dispose();
-                        }
-                    }
-                    _locks = null;
-                }
-            }
-
             foreach (var provider in _providers.OfType<IDisposable>()) {
                 provider.Dispose();
             }
@@ -372,15 +306,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return null;
-        }
-
-        sealed class LockInfo : IDisposable {
-            public int _lockCount;
-            public readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
-
-            public void Dispose() {
-                _lock.Dispose();
-            }
         }
 
         private void Log(string msg, params object[] args) {

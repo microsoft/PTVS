@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.PythonTools.Intellisense {
-    public enum AnalysisPriority {
+    enum AnalysisPriority {
         None,
         Low,
         Normal,

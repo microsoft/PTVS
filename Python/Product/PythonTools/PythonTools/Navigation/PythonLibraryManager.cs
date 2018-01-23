@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Navigation {
                         Debug.Assert(_analyzer == e.Old, "Changing from wrong analyzer");
                         _analyzer.AnalysisComplete -= Analyzer_AnalysisComplete;
                     }
-                    _analyzer = e.New;
+                    _analyzer = e.New as VsProjectAnalyzer;
                     if (_analyzer != null) {
                         _analyzer.AnalysisComplete += Analyzer_AnalysisComplete;
                     }

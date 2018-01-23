@@ -20,7 +20,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class ObservableCollectionExtensions {
+    static class ObservableCollectionExtensions {
         public static void Merge<T>(
             this ObservableCollection<T> left,
             IEnumerable<T> right,

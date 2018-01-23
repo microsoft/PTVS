@@ -17,7 +17,7 @@
 using System;
 
 namespace Microsoft.PythonTools.DkmDebugger {
-    public static class Guids {
+    static class Guids {
         public const string RemoteComponentId = "BCFD7074-A4D3-42A9-B1B6-C975304C882A";
         public static readonly Guid RemoteComponentGuid = new Guid(RemoteComponentId);
 

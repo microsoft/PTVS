@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class ExceptionExtensions {
+    static class ExceptionExtensions {
         /// <summary>
         /// Returns true if an exception should not be handled by logging code.
         /// </summary>
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Infrastructure {
     /// An exception that should not be silently handled and logged.
     /// </summary>
     [Serializable]
-    public class CriticalException : Exception {
+    class CriticalException : Exception {
         public CriticalException() { }
         public CriticalException(string message) : base(message) { }
         public CriticalException(string message, Exception inner) : base(message, inner) { }

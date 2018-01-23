@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Logging {
     /// By default there is one logger which shows the stats in 
     /// Tools->Python Tools->Diagnostic Info.
     /// </summary>
-    public interface IPythonToolsLogger {
+    interface IPythonToolsLogger {
         /// <summary>
         /// Informs the logger of an event.  Unknown events should be ignored.
         /// </summary>

@@ -2203,7 +2203,7 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 
-        public NewLineLocation[] GetLineLocations() {
+        internal NewLineLocation[] GetLineLocations() {
             return _newLineLocations.ToArray();
         }
 
@@ -2655,7 +2655,7 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
     }
 
-    public enum NewLineKind {
+    enum NewLineKind {
         None,
         LineFeed,
         CarriageReturn,
@@ -2663,7 +2663,7 @@ namespace Microsoft.PythonTools.Parsing {
     }
 
     [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
-    public struct NewLineLocation : IComparable<NewLineLocation> {
+    struct NewLineLocation : IComparable<NewLineLocation> {
         private readonly int _endIndex;
         private readonly NewLineKind _kind;
 
@@ -2762,7 +2762,7 @@ namespace Microsoft.PythonTools.Parsing {
         public override string ToString() => $"<NewLineLocation({_endIndex}, NewLineKind.{_kind})>";
     }
 
-    public static class NewLineKindExtensions {
+    static class NewLineKindExtensions {
         public static int GetSize(this NewLineKind kind) {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;

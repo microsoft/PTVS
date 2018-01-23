@@ -47,9 +47,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         IProjectLauncher CreateLauncher(IPythonProject project);
-    }
 
-    public interface IPythonLauncherProvider2 : IPythonLauncherProvider {
         /// <summary>
         /// Gets the localized name of the launcher.
         /// </summary>

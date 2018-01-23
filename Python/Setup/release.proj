@@ -8,13 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
-      <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
-    </ReleaseFile>
-    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
-      <Name>PTVS$(_CBI.Replace(` `, `_`).Replace(`.`, `_`).Replace(`-`, `_`))_VS_$(VSTargetName).msi</Name>
-    </ReleaseFile>
-
     <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman">
       <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>

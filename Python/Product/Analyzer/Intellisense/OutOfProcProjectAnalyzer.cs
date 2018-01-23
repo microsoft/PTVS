@@ -1227,7 +1227,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (entry.Analysis != null) {
-                var variables = entry.Analysis.GetVariables(
+                var variables = (VariablesResult)entry.Analysis.GetVariables(
                     request.expr,
                     new SourceLocation(request.line, request.column)
                 );

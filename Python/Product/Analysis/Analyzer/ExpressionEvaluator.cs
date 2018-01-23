@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // don't care about the result.
             Evaluate(annotation);
 
-            return new TypeAnnotation(_unit.ProjectState.LanguageVersion, annotation)
+            return new TypeAnnotation(_unit.State.LanguageVersion, annotation)
                 .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
                 AnalysisSet.Empty;
         }
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private PythonAnalyzer ProjectState {
-            get { return _unit.ProjectState; }
+            get { return _unit.State; }
         }
 
         /// <summary>
@@ -418,7 +418,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private static IAnalysisSet EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
-            if (ee._unit.ProjectState.LanguageVersion.Is2x()) {
+            if (ee._unit.State.LanguageVersion.Is2x()) {
                 // list comprehension is in enclosing scope in 2.x
                 ListComprehension listComp = (ListComprehension)node;
 
@@ -429,7 +429,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     NodeValueKind.ListComprehension,
                     (x) => new ListInfo(
                         VariableDef.EmptyArray,
-                        ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        ee._unit.State.ClassInfos[BuiltinTypeId.List],
                         node,
                         ee._unit.ProjectEntry
                     ).SelfSet);
@@ -554,7 +554,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 if (node is ListExpression) {
                     return new ListInfo(
                         VariableDef.EmptyArray,
-                        _unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        _unit.State.ClassInfos[BuiltinTypeId.List],
                         node,
                         _unit.ProjectEntry
                     ).SelfSet;
@@ -562,7 +562,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     Debug.Assert(node is TupleExpression);
                     return new SequenceInfo(
                         VariableDef.EmptyArray,
-                        _unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                        _unit.State.ClassInfos[BuiltinTypeId.Tuple],
                         node,
                         _unit.ProjectEntry
                     ).SelfSet;

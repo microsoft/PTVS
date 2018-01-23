@@ -4889,12 +4889,12 @@ namespace Microsoft.PythonTools.Parsing {
                 _parser = parser;
             }
 
-            public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
+            public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
                 if (_parser._errorCode == 0 && (severity == Severity.Error || severity == Severity.FatalError)) {
                     _parser._errorCode = errorCode;
                 }
 
-                _parser.ErrorSink.Add(message, lineLocations, startIndex, endIndex, errorCode, severity);
+                _parser.ErrorSink.Add(message, span, errorCode, severity);
             }
         }
 

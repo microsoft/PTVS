@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -22,7 +23,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Represents information about an analyzed expression.  This is returned from 
     /// AnalyzeExpression which is defined as an extension method in <see cref="Microsoft.PythonTools.Intellisense.PythonAnalysisExtensions"/>
     /// </summary>
-    public sealed class ExpressionAnalysis {
+    sealed class ExpressionAnalysis {
         private readonly string _expr;
         private readonly ITrackingSpan _span;
         private readonly AnalysisVariable[] _variables;

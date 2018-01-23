@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (container != null) {
                     foreach (var testCase in container.TestCases) {
                         if (testCase.StartLine >= line && line <= testCase.EndLine) {
-                            var moduleName = CommonUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.Filename);
+                            var moduleName = PathUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.Filename);
                             return moduleName + "::" + testCase.ClassName + "::" + testCase.MethodName;
                         }
                     }

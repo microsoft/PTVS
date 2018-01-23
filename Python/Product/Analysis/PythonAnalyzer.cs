@@ -262,10 +262,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This method is thread safe.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="cookie"></param>
-        /// <returns></returns>
-        public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
+        internal IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
             var entry = new XamlProjectEntry(filePath);
 
             _xamlByFilename[filePath] = entry;
@@ -716,26 +713,6 @@ namespace Microsoft.PythonTools.Analysis {
                     return _searchPaths.ToArray();
                 }
             }
-        }
-
-        [Obsolete("Use ModulePath.FromFullPath() instead")]
-        public static string PathToModuleName(string path) {
-            return ModulePath.FromFullPath(path).ModuleName;
-        }
-
-        /// <summary>
-        /// Converts a given absolute path name to a fully qualified Python module name by walking the directory tree.
-        /// </summary>
-        /// <param name="path">Path to convert.</param>
-        /// <param name="fileExists">A function that is used to verify the existence of files (in particular, __init__.py)
-        /// in the tree. Its signature and semantics should match that of <see cref="File.Exists"/>.</param>
-        /// <returns>A fully qualified module name.</returns>
-        [Obsolete("Use ModulePath.FromFullPath() instead")]
-        public static string PathToModuleName(string path, Func<string, bool> fileExists) {
-            return ModulePath.FromFullPath(
-                path,
-                isPackage: dirName => fileExists(Path.Combine(dirName, "__init__.py"))
-            ).ModuleName;
         }
 
         public AnalysisLimits Limits {

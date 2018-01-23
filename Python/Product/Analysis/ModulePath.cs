@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
-    public struct ModulePath {
+    struct ModulePath {
         public static readonly ModulePath Empty = new ModulePath(null, null, null);
 
         /// <summary>

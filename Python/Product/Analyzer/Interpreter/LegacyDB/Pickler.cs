@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// Implements a subset of the Python pickling protocol for saving out intellisense databases.  Supports dictionary of str, object,
     /// object arrays, and list of object as well as primitive types.
     /// </summary>
-    public class Pickler {
+    class Pickler {
         private const char LowestPrintableChar = (char)32;
         private const char HighestPrintableChar = (char)126;
         private const string Newline = "\n";
