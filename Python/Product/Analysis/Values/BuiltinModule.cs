@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void Imported(AnalysisUnit unit) {
             InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
-            unit.ProjectState.Modules.ImportChildren(InterpreterModule);
+            unit.State.Modules.ImportChildren(InterpreterModule);
         }
     }
 }

@@ -16,17 +16,18 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekableItem : IPeekableItem {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly AnalysisLocation[] _locations;
+        private readonly IAnalysisVariable[] _variables;
 
-        public PythonPeekableItem(IPeekResultFactory peekResultFactory, AnalysisLocation[] locations) {
+        public PythonPeekableItem(IPeekResultFactory peekResultFactory, IAnalysisVariable[] variables) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
-            _locations = locations ?? throw new ArgumentNullException(nameof(locations));
+            _variables = variables ?? throw new ArgumentNullException(nameof(variables));
         }
 
         public string DisplayName => null; // Unused
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
             new List<IPeekRelationship>() { PredefinedPeekRelationships.Definitions };
 
         public IPeekResultSource GetOrCreateResultSource(string relationshipName) {
-            return new PythonPeekResultSource(_peekResultFactory, _locations);
+            return new PythonPeekResultSource(_peekResultFactory, _variables);
         }
     }
 }

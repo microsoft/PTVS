@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Mocks {
-    public class MockUIThread : MockUIThreadBase {
+    class MockUIThread : MockUIThreadBase {
         public MockUIThread() {
         }
 

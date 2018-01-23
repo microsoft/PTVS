@@ -64,11 +64,13 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\DebugTimer.cs">
       <Link>DebugTimer.cs</Link>
     </Compile>
+    <Compile Include="AnalyzerStatusUpdater.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Intellisense\AnalysisProtocol.cs" />
     <Compile Include="Intellisense\MethodExtractor.cs" />
     <Compile Include="Intellisense\OutOfProcMethodExtractor.cs" />
     <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
+    <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\LegacyDB\CPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\LegacyDB\CPythonConstant.cs" />
     <Compile Include="Interpreter\LegacyDB\CPythonFunction.cs" />
@@ -85,7 +87,6 @@
     <Compile Include="Interpreter\LegacyDB\GenerateDatabaseOptions.cs" />
     <Compile Include="Interpreter\LegacyDB\IPythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\LegacyDB\ITypeDatabaseReader.cs" />
-    <Compile Include="Interpreter\LegacyDB\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\LegacyDB\Pickler.cs" />
     <Compile Include="Interpreter\LegacyDB\PythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\LegacyDB\PythonTypeDatabase.cs" />

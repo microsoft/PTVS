@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Project {
                 if (prevChecked && anyChanges) {
                     var withDb = _factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
                     if (withDb != null) {
-                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                        withDb.GenerateDatabase(Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged);
                     }
                 }
             });
@@ -263,11 +263,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
-                // Prevent the environment from being deleted while installing.
-                return false;
-            }
-
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject) {
                 // Interpreter and InterpreterReference can both be removed from
                 // the project, but the default environment cannot
@@ -289,13 +284,6 @@ namespace Microsoft.PythonTools.Project {
                 // Prevent the environment from being deleted or removed if not
                 // supported.
                 throw new NotSupportedException();
-            }
-
-            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
-                // Prevent the environment from being deleted while installing.
-                // This situation should not occur through the UI, but might be
-                // invocable through DTE.
-                return false;
             }
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {

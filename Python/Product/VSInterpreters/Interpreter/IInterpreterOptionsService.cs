@@ -29,6 +29,9 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         IPythonInterpreterFactory DefaultInterpreter { get; set; }
 
+        /// <summary>
+        /// Gets or sets the default interpreter by its id.
+        /// </summary>
         string DefaultInterpreterId { get; set; }
 
         /// <summary>
@@ -37,15 +40,27 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler DefaultInterpreterChanged;
 
         /// <summary>
-        /// Adds a new user configured interpreter factory to the registry stored
-        /// under the provided name.  The id in the configuration is ignored and 
-        /// the newly registered id is returned.
+        /// Adds or updates a new user configured interpreter factory to the
+        /// registry stored under the provided name. The id in the configuration
+        /// is ignored and the newly registered id is returned.
         /// </summary>
         string AddConfigurableInterpreter(string name, InterpreterConfiguration config);
 
+        /// <summary>
+        /// Removes a user configured interpreter factory.
+        /// </summary>
         void RemoveConfigurableInterpreter(string id);
+
+        /// <summary>
+        /// Returns True if the interpreter factory with the specified id can be
+        /// configured or removed.
+        /// </summary>
         bool IsConfigurable(string id);
 
+        /// <summary>
+        /// Returns a sequence of zero or more package managers that can be used
+        /// with the specified factory.
+        /// </summary>
         IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory);
     }
 }

@@ -3879,7 +3879,7 @@ namespace AnalysisTests {
                 if (value is byte[]) {
                     Assert.AreEqual(typeof(AsciiString), ((ConstantExpression)expr).Value.GetType());
                     byte[] b1 = (byte[])value;
-                    byte[] b2 = ((AsciiString)((ConstantExpression)expr).Value).Bytes;
+                    byte[] b2 = ((AsciiString)((ConstantExpression)expr).Value).Bytes.ToArray();
                     Assert.AreEqual(b1.Length, b2.Length);
 
                     for (int i = 0; i < b1.Length; i++) {

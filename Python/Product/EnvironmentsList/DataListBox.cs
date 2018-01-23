@@ -18,7 +18,7 @@ using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    public sealed class DataListBox : ListBox {
+    sealed class DataListBox : ListBox {
         protected override AutomationPeer OnCreateAutomationPeer() {
             return new DataListBoxAutomationPeer(this);
         }

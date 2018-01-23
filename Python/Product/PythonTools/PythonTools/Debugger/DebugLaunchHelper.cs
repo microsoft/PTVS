@@ -32,7 +32,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    public static class DebugLaunchHelper {
+    static class DebugLaunchHelper {
         private static readonly Regex SubstitutionPattern = new Regex(@"\%([\w_]+)\%");
 
         private static IEnumerable<string> GetGlobalDebuggerOptions(
@@ -269,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
     }
 
-    public sealed class DebugTargetInfo : IDisposable {
+    sealed class DebugTargetInfo : IDisposable {
         private readonly IServiceProvider _provider;
         public VsDebugTargetInfo Info;
 

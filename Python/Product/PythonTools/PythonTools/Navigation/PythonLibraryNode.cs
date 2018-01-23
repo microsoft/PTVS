@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -176,7 +177,7 @@ namespace Microsoft.PythonTools.Navigation {
             var analyzer = this.Hierarchy.GetPythonProject().GetAnalyzer();
 
 
-            List<AnalysisVariable> vars = new List<AnalysisVariable>();
+            List<IAnalysisVariable> vars = new List<IAnalysisVariable>();
             if (analyzer != null) {
                 foreach (var value in _value.Values) {
                     foreach (var reference in value.locations.MaybeEnumerate()) {

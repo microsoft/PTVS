@@ -119,27 +119,9 @@ namespace Microsoft.PythonTools.Project {
                 LauncherOptions.LoadSettings();
             }
 
-            public string DisplayName {
-                get {
-                    var launcher2 = Launcher as IPythonLauncherProvider2;
-                    if (launcher2 != null) {
-                        return launcher2.LocalizedName;
-                    } else {
-                        return Launcher.Name;
-                    }
-                }
-            }
+            public string DisplayName => Launcher.LocalizedName;
 
-            public string SortKey {
-                get {
-                    var launcher2 = Launcher as IPythonLauncherProvider2;
-                    if (launcher2 != null) {
-                        return string.Format("{0:D011};{1}", launcher2.SortPriority, launcher2.LocalizedName);
-                    } else {
-                        return string.Format("{0:D011};{1}", Int32.MaxValue, Launcher.Name);
-                    }
-                }
-            }
+            public string SortKey => $"{Launcher.SortPriority:D011};{Launcher.LocalizedName}";
         }
 
         private void SwitchLauncher(LauncherInfo info) {

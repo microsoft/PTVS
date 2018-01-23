@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Parsing {
     /// based upon what syntactic elements they alter.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public sealed class CodeFormattingCategoryAttribute : Attribute {
+    sealed class CodeFormattingCategoryAttribute : Attribute {
         private readonly CodeFormattingCategory _category;
 
         internal CodeFormattingCategoryAttribute(CodeFormattingCategory category) {
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
-    public enum CodeFormattingCategory {
+    enum CodeFormattingCategory {
         None,
         /// <summary>
         /// The category applies to new line spacing between source elements.

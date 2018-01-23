@@ -19,10 +19,10 @@ namespace Microsoft.PythonTools.Django {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Django {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.PythonTools.Django.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Django {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Add Django App....
         /// </summary>
-        public static string AddDjangoApp {
+        internal static string AddDjangoApp {
             get {
                 return ResourceManager.GetString("AddDjangoApp", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided..
         /// </summary>
-        public static string AddWebRoleSupportFiles {
+        internal static string AddWebRoleSupportFiles {
             get {
                 return ResourceManager.GetString("AddWebRoleSupportFiles", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Cannot find Python Web launcher.
         /// </summary>
-        public static string CannotFindPythonWebLauncher {
+        internal static string CannotFindPythonWebLauncher {
             get {
                 return ResourceManager.GetString("CannotFindPythonWebLauncher", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django C&amp;heck (Django &gt;= 1.7).
         /// </summary>
-        public static string CheckLabel {
+        internal static string CheckLabel {
             get {
                 return ResourceManager.GetString("CheckLabel", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to &amp;Collect Static Files.
         /// </summary>
-        public static string CollectStaticLabel {
+        internal static string CollectStaticLabel {
             get {
                 return ResourceManager.GetString("CollectStaticLabel", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django Management Console - {ProjectName}.
         /// </summary>
-        public static string CommandReplTitle {
+        internal static string CommandReplTitle {
             get {
                 return ResourceManager.GetString("CommandReplTitle", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django Create S&amp;uperuser (Django &gt;= 1.7).
         /// </summary>
-        public static string CreateSuperUserLabel {
+        internal static string CreateSuperUserLabel {
             get {
                 return ResourceManager.GetString("CreateSuperUserLabel", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to C&amp;reate anyway.
         /// </summary>
-        public static string DjangoAppAlreadyExistsCreateAnyway {
+        internal static string DjangoAppAlreadyExistsCreateAnyway {
             get {
                 return ResourceManager.GetString("DjangoAppAlreadyExistsCreateAnyway", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to You may be prompted to replace files..
         /// </summary>
-        public static string DjangoAppAlreadyExistsCreateAnywaySubtitle {
+        internal static string DjangoAppAlreadyExistsCreateAnywaySubtitle {
             get {
                 return ResourceManager.GetString("DjangoAppAlreadyExistsCreateAnywaySubtitle", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to The folder &apos;{0}&apos; already exists and a new app cannot be created here. Please select a different name or remove the existing folder..
         /// </summary>
-        public static string DjangoAppAlreadyExistsInstruction {
+        internal static string DjangoAppAlreadyExistsInstruction {
             get {
                 return ResourceManager.GetString("DjangoAppAlreadyExistsInstruction", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Cannot create app &apos;{0}&apos;.
         /// </summary>
-        public static string DjangoAppAlreadyExistsTitle {
+        internal static string DjangoAppAlreadyExistsTitle {
             get {
                 return ResourceManager.GetString("DjangoAppAlreadyExistsTitle", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Launches Django web sites using the Python debugger. This enables launching and starting a web browser automatically. It launches using manage.py and passes the runserver flag as well as additional options to configure the port and other settings..
         /// </summary>
-        public static string DjangoLauncherDescription {
+        internal static string DjangoLauncherDescription {
             get {
                 return ResourceManager.GetString("DjangoLauncherDescription", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django Web launcher.
         /// </summary>
-        public static string DjangoLauncherName {
+        internal static string DjangoLauncherName {
             get {
                 return ResourceManager.GetString("DjangoLauncherName", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django.
         /// </summary>
-        public static string DjangoPropertyPageTitle {
+        internal static string DjangoPropertyPageTitle {
             get {
                 return ResourceManager.GetString("DjangoPropertyPageTitle", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to The full name of your settings module, for example, &quot;myproject.settings&quot;. If not provided, the DJANGO_SETTINGS_MODULE environment variable will be used..
         /// </summary>
-        public static string DjangoSettingsModuleHelp {
+        internal static string DjangoSettingsModuleHelp {
             get {
                 return ResourceManager.GetString("DjangoSettingsModuleHelp", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django Tags.
         /// </summary>
-        public static string DjangoTagsCompletionSetDisplayName {
+        internal static string DjangoTagsCompletionSetDisplayName {
             get {
                 return ResourceManager.GetString("DjangoTagsCompletionSetDisplayName", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django template tag.
         /// </summary>
-        public static string DjangoTemplateTag {
+        internal static string DjangoTemplateTag {
             get {
                 return ResourceManager.GetString("DjangoTemplateTag", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django Ma&amp;ke Migrations (Django &gt;= 1.7).
         /// </summary>
-        public static string MakeMigrationsLabel {
+        internal static string MakeMigrationsLabel {
             get {
                 return ResourceManager.GetString("MakeMigrationsLabel", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django &amp;Migrate... (Django &gt;= 1.7).
         /// </summary>
-        public static string MigrateLabel {
+        internal static string MigrateLabel {
             get {
                 return ResourceManager.GetString("MigrateLabel", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to C_ancel.
         /// </summary>
-        public static string NewAppDialog_Cancel {
+        internal static string NewAppDialog_Cancel {
             get {
                 return ResourceManager.GetString("NewAppDialog_Cancel", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to New App Name:.
         /// </summary>
-        public static string NewAppDialog_NewAppName {
+        internal static string NewAppDialog_NewAppName {
             get {
                 return ResourceManager.GetString("NewAppDialog_NewAppName", resourceCulture);
             }
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to O_K.
         /// </summary>
-        public static string NewAppDialog_OK {
+        internal static string NewAppDialog_OK {
             get {
                 return ResourceManager.GetString("NewAppDialog_OK", resourceCulture);
             }
@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Open &amp;Django Shell.
         /// </summary>
-        public static string OpenDjangoShellLabel {
+        internal static string OpenDjangoShellLabel {
             get {
                 return ResourceManager.GetString("OpenDjangoShellLabel", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Visual Studio - Python support.
         /// </summary>
-        public static string ProductTitle {
+        internal static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Select another &amp;name.
         /// </summary>
-        public static string SelectAnotherName {
+        internal static string SelectAnotherName {
             get {
                 return ResourceManager.GetString("SelectAnotherName", resourceCulture);
             }
@@ -290,7 +290,7 @@ namespace Microsoft.PythonTools.Django {
         ///The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.
         ///NOTE: This pattern is applied in addition to the static URI specified in the Django settings module..
         /// </summary>
-        public static string StaticUriHelp {
+        internal static string StaticUriHelp {
             get {
                 return ResourceManager.GetString("StaticUriHelp", resourceCulture);
             }
@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Django &amp;Sync DB... (Django &lt;= 1.6).
         /// </summary>
-        public static string SyncDbLabel {
+        internal static string SyncDbLabel {
             get {
                 return ResourceManager.GetString("SyncDbLabel", resourceCulture);
             }
@@ -308,7 +308,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to Unsupported TemplateTokenKind.
         /// </summary>
-        public static string UnsupportedTemplateTokenKind {
+        internal static string UnsupportedTemplateTokenKind {
             get {
                 return ResourceManager.GetString("UnsupportedTemplateTokenKind", resourceCulture);
             }
@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Django {
         /// <summary>
         ///   Looks up a localized string similar to &amp;Validate Django App... (Django &lt;= 1.6).
         /// </summary>
-        public static string ValidateAppLabel {
+        internal static string ValidateAppLabel {
             get {
                 return ResourceManager.GetString("ValidateAppLabel", resourceCulture);
             }

@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the StandaloneTarget class.
     /// </summary>
-    public sealed class StandaloneTargetView : INotifyPropertyChanged {
+    sealed class StandaloneTargetView : INotifyPropertyChanged {
         private readonly ReadOnlyCollection<PythonInterpreterView> _availableInterpreters;
         private readonly PythonInterpreterView _customInterpreter;
 
@@ -39,14 +39,6 @@ namespace Microsoft.PythonTools.Profiling {
         private string _arguments;
 
         private bool _isValid;
-
-        /// <summary>
-        /// Create a StandaloneTargetView with default values.
-        /// </summary>
-        [Obsolete("An IServiceProvider should be provided")]
-        public StandaloneTargetView()
-            : this(PythonProfilingPackage.Instance) {
-        }
 
         public StandaloneTargetView(IServiceProvider serviceProvider) {
             var componentService = serviceProvider.GetComponentModel();

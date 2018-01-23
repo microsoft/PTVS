@@ -37,7 +37,7 @@ using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
 namespace PythonToolsMockTests {
-    public sealed class PythonEditor : IDisposable {
+    sealed class PythonEditor : IDisposable {
         private readonly bool _disposeVS, _disposeFactory, _disposeAnalyzer;
         public readonly MockVs VS;
         public readonly IPythonInterpreterFactory Factory;

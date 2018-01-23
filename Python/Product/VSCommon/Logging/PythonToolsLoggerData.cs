@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Logging {
     /// <summary>
     /// Provides a base class for logging complicated event data.
     /// </summary>
-    public abstract class PythonToolsLoggerData {
+    abstract class PythonToolsLoggerData {
         public static IDictionary<string, object> AsDictionary(object obj) {
             IDictionary<string, object> res;
 
@@ -59,16 +59,16 @@ namespace Microsoft.PythonTools.Logging {
     }
 
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-    public sealed class PiiPropertyAttribute : Attribute {
+    sealed class PiiPropertyAttribute : Attribute {
         public PiiPropertyAttribute() { }
     }
 
-    internal sealed class PackageInfo : PythonToolsLoggerData {
+    sealed class PackageInfo : PythonToolsLoggerData {
         [PiiProperty]
         public string Name { get; set; }
     }
 
-    internal sealed class AnalysisInitialize : PythonToolsLoggerData {
+    sealed class AnalysisInitialize : PythonToolsLoggerData {
         [PiiProperty]
         public string InterpreterId { get; set; }
         public string Architecture { get; set; }
@@ -76,36 +76,36 @@ namespace Microsoft.PythonTools.Logging {
         public string Reason { get; set; }
     }
 
-    internal static class AnalysisInitializeReasons {
+    static class AnalysisInitializeReasons {
         public const string Project = "Project";
         public const string Interactive = "Interactive";
         public const string Default = "Default";
     }
 
-    internal sealed class AnalysisInfo : PythonToolsLoggerData {
+    sealed class AnalysisInfo : PythonToolsLoggerData {
         [PiiProperty]
         public string InterpreterId { get; set; }
         public int AnalysisSeconds { get; set; }
     }
 
-    internal sealed class LaunchInfo : PythonToolsLoggerData {
+    sealed class LaunchInfo : PythonToolsLoggerData {
         public bool IsDebug { get; set; }
         public bool IsWeb { get; set; }
         public string Version { get; set; }
     }
 
-    internal sealed class AnalysisTimingInfo : PythonToolsLoggerData {
+    sealed class AnalysisTimingInfo : PythonToolsLoggerData {
         public string RequestName { get; set; }
         public int Milliseconds { get; set; }
         public bool Timeout { get; set; }
     }
 
-    internal sealed class DebugReplInfo : PythonToolsLoggerData {
+    sealed class DebugReplInfo : PythonToolsLoggerData {
         public bool RemoteProcess { get; set; }
         public string Version { get; set; }
     }
 
-    internal sealed class GetExpressionAtPointInfo : PythonToolsLoggerData {
+    sealed class GetExpressionAtPointInfo : PythonToolsLoggerData {
         public int Milliseconds { get; set; }
         public int PartialAstLength { get; set; }
         public bool Success { get; set; }

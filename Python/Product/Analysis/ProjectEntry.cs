@@ -312,8 +312,10 @@ namespace Microsoft.PythonTools.Analysis {
             _unit.Enqueue();
         }
 
-        public void AggregatedInto(AggregateProjectEntry into) {
-            _aggregates.Add(into);
+        public void AggregatedInto(IVersioned into) {
+            if (into is AggregateProjectEntry agg) {
+                _aggregates.Add(agg);
+            }
         }
 
         public IEnumerable<int> DocumentParts => _buffers.Keys.AsLockedEnumerable(_buffers);

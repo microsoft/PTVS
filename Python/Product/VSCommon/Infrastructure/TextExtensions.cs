@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class TextExtensions {
+    static class TextExtensions {
         public static string GetFilePath(this ITextView textView) {
             return textView.TextBuffer.GetFilePath();
         }

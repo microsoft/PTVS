@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public IPythonToolsLogger TelemetryLogger { get; set; }
+        internal IPythonToolsLogger TelemetryLogger { get; set; }
 
         internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
             try {
@@ -332,8 +332,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             var tcs = new TaskCompletionSource<int>();
             ((Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
                 Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ?
-                    GenerateDatabaseOptions.None :
-                    GenerateDatabaseOptions.SkipUnchanged,
+                    Interpreter.LegacyDB.GenerateDatabaseOptions.None :
+                    Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged,
                 tcs.SetResult
             );
             await tcs.Task;
@@ -450,11 +450,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
 
-        public event EventHandler<CondaProviderEventArgs> CondaProviderCreated;
+        internal event EventHandler<CondaProviderEventArgs> CondaProviderCreated;
 
-        public IInterpreterOptionsService OptionsService => _options;
+        internal IInterpreterOptionsService OptionsService => _options;
 
-        public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
+        internal void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
             if (_interpreters != null) {
                 _interpreters.InterpretersChanged -= Service_InterpretersChanged;
             }
@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
+        private class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
             public static readonly InterpreterConfigurationComparer Instance = new InterpreterConfigurationComparer();
 
             public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) => x == y;
@@ -626,6 +626,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
+    /// <summary>
+    /// Contains the newly created view.
+    /// </summary>
     public class EnvironmentViewEventArgs : EventArgs {
         public EnvironmentViewEventArgs(EnvironmentView view) {
             View = view;
@@ -634,7 +637,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public EnvironmentView View { get; private set; }
     }
 
-    public class CondaProviderEventArgs : EventArgs {
+    class CondaProviderEventArgs : EventArgs {
         public CondaProviderEventArgs(CondaExtensionProvider provider) {
             Provider = provider;
         }

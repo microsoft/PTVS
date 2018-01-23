@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
-    class PythonUwpInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences2, IDisposable {
+    class PythonUwpInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences, IDisposable {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;

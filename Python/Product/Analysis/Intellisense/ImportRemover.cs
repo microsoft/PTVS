@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 

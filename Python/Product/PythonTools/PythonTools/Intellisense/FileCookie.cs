@@ -20,7 +20,7 @@ using System.IO;
 using System.IO.Compression;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public class FileCookie : IIntellisenseCookie {
+    class FileCookie : IIntellisenseCookie {
         private readonly string _path;
         private string[] _allLines;
 
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
     }
 
-    public class ZipFileCookie : IIntellisenseCookie {
+    class ZipFileCookie : IIntellisenseCookie {
         private readonly string _zipFileName;
         private readonly string _pathInZip;
         private List<string> _allLines;
