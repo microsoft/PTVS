@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else if (Generator != null) {
                 Generator.AddReturn(node, unit, types, enqueue);
             } else {
-                ReturnValue.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.ReturnTypes, types);
+                ReturnValue.MakeUnionStrongerIfMoreThan(unit.State.Limits.ReturnTypes, types);
                 ReturnValue.AddTypes(unit, types, enqueue);
             }
         }
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var astParams = Function.FunctionDefinition.Parameters;
             bool added = false;
             var entry = unit.DependencyProject;
-            var state = unit.ProjectState;
+            var state = unit.State;
             var limits = state.Limits;
 
             for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {

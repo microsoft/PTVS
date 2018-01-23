@@ -210,8 +210,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             #endregion
         }
-        private void AddNewFeedClick(object sender, EventArgs e) {
-            RequestFeeds(_newFeedUrl.Text).DoNotWait();
+        private async void AddNewFeedClick(object sender, EventArgs e) {
+            await RequestFeeds(_newFeedUrl.Text);
         }
 
         protected override void DefWndProc(ref Message m) {
@@ -220,7 +220,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     SetWindowStyleOnStaticHostControl();
                     goto default;
                 case VSConstants.CPPM_INITIALIZELIST:
-                    RequestFeeds(_defaultFeeds).DoNotWait();
+                    var t = RequestFeeds(_defaultFeeds);
                     break;
                 case VSConstants.CPPM_SETMULTISELECT:
                     _productsList.MultiSelect = (m.WParam != IntPtr.Zero);

@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Infrastructure {
     /// If this class implements <see cref="IDisposable"/>, it will be disposed
     /// when the <see cref="ProcessOutput"/> object is disposed.
     /// </summary>
-    public abstract class Redirector {
+    abstract class Redirector {
         /// <summary>
         /// Called when a line is written to standard output.
         /// </summary>
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public sealed class TeeRedirector : Redirector, IDisposable {
+    sealed class TeeRedirector : Redirector, IDisposable {
         private readonly Redirector[] _redirectors;
 
         public TeeRedirector(params Redirector[] redirectors) {
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public sealed class ListRedirector : Redirector {
+    sealed class ListRedirector : Redirector {
         private readonly List<string> _output, _error;
 
         public ListRedirector(List<string> output, List<string> error = null) {
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public sealed class StreamRedirector : Redirector {
+    sealed class StreamRedirector : Redirector {
         private readonly StreamWriter _output, _error;
         private readonly string _outputPrefix, _errorPrefix;
 
@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Infrastructure {
     /// <summary>
     /// Represents a process and its captured output.
     /// </summary>
-    public sealed class ProcessOutput : IDisposable {
+    sealed class ProcessOutput : IDisposable {
         private readonly Process _process;
         private readonly string _arguments;
         private readonly List<string> _output, _error;

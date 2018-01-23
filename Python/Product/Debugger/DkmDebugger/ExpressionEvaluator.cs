@@ -795,7 +795,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private class StringErrorSink : ErrorSink {
             private readonly StringBuilder _builder = new StringBuilder();
 
-            public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
+            public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
                 _builder.AppendLine(message);
             }
 

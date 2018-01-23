@@ -74,10 +74,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
             if (operation == PythonOperator.Not) {
-                return unit.ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
+                return unit.State.ClassInfos[BuiltinTypeId.Bool].Instance;
             }
 
-            string methodName = InstanceInfo.UnaryOpToString(unit.ProjectState, operation);
+            string methodName = InstanceInfo.UnaryOpToString(unit.State, operation);
             if (methodName != null) {
                 var method = GetMember(node, unit, methodName);
                 if (method.Count > 0) {
@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var iter = GetIterator(node, unit);
                     if (iter.Any()) {
                         return iter
-                            .GetMember(node, unit, unit.ProjectState.LanguageVersion.Is3x() ? "__next__" : "next")
+                            .GetMember(node, unit, unit.State.LanguageVersion.Is3x() ? "__next__" : "next")
                             .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
                     }
                 } finally {
@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
-            if (unit.ProjectState.LanguageVersion.Is3x() && Push()) {
+            if (unit.State.LanguageVersion.Is3x() && Push()) {
                 try {
                     var iter = GetAsyncIterator(node, unit);
                     if (iter.Any()) {

@@ -236,7 +236,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
-            VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
+            if (File.Exists(filename)) {
+                VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
+            }
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {
@@ -382,13 +384,6 @@ namespace Microsoft.PythonTools {
 
         public override Type GetLibraryManagerType() {
             return typeof(IPythonLibraryManager);
-        }
-
-
-        private new IComponentModel ComponentModel {
-            get {
-                return (IComponentModel)GetService(typeof(SComponentModel));
-            }
         }
 
         internal override LibraryManager CreateLibraryManager(CommonPackage package) {

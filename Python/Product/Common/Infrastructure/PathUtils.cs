@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class PathUtils {
+    static class PathUtils {
         private static readonly char[] InvalidPathChars = GetInvalidPathChars();
 
         private static readonly char[] DirectorySeparators = new[] {

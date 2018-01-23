@@ -17,7 +17,7 @@
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public static class MSBuildConstants {
+    static class MSBuildConstants {
 
         // keys used for storing information about user defined interpreters
         public const string InterpreterItem = "Interpreter";

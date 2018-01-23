@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Analysis {
             // TODO: need more than constant 0...
             //index = (VariableRef(ConstantInfo(0, self.ProjectState, False)), )
             //self.AssignTo(self._state.IndexInto(listRefs, index), node, node.Left)
-            return GetIndex(node, unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet);
+            return GetIndex(node, unit, unit.State.ClassInfos[BuiltinTypeId.Int].SelfSet);
         }
 
         public virtual IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {

@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the PythonInterpreter class.
     /// </summary>
-    public class PythonInterpreterView {
+    class PythonInterpreterView {
         readonly string _name;
         readonly string _id;
         readonly string _path;

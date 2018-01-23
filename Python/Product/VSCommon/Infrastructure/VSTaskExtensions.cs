@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class VSTaskExtensions {
+    static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
 
         /// <summary>

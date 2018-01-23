@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </code>
     /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
     /// </example>
-    public class QualifiedFunctionNameWalker : PythonWalker {
+    class QualifiedFunctionNameWalker : PythonWalker {
         private readonly PythonAst _ast;
         private readonly int _lineNumber;
         private readonly List<string> _names = new List<string>();

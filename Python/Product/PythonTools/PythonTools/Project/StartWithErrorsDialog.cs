@@ -29,15 +29,6 @@ namespace Microsoft.PythonTools.Project {
             _icon.Image = SystemIcons.Warning.ToBitmap();
         }
 
-        [Obsolete("Use PythonToolsService.DebuggerOptions.PromptBeforeRunningWithBuildError instead")]
-        public static bool ShouldShow {
-            get {
-                var pyService = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
-
-                return pyService.DebuggerOptions.PromptBeforeRunningWithBuildError;
-            }
-        }
-
         protected override void OnClosing(CancelEventArgs e) {
             if (_dontShowAgainCheckbox.Checked) {
                 _pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = false;

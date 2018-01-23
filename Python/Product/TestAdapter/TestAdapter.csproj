@@ -110,17 +110,8 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\ProjectFileConstants.cs">
       <Link>ProjectFileConstants.cs</Link>
     </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\SolutionEventsListener.cs">
       <Link>SolutionEventsListener.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
-      <Link>ProcessOutput.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
-      <Link>TaskExtensions.cs</Link>
     </Compile>
     <Compile Include="..\..\..\Common\Product\TestAdapter\TestContainer.cs">
       <Link>TestContainer.cs</Link>

@@ -125,19 +125,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "items":
                     return _itemsMethod = _itemsMethod ?? new SpecializedCallable(
                         res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
-                        unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterItems : DictionaryItems,
+                        unit.State.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterItems : DictionaryItems,
                         false
                     );
                 case "keys":
                     return _keysMethod = _keysMethod ?? new SpecializedCallable(
                         res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
-                        unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterKeys : DictionaryKeys,
+                        unit.State.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterKeys : DictionaryKeys,
                         false
                     );
                 case "values":
                     return _valuesMethod = _valuesMethod ?? new SpecializedCallable(
                         res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
-                        unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterValues : DictionaryValues,
+                        unit.State.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterValues : DictionaryValues,
                         false
                     );
                 case "pop":
@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         false
                     );
                 case "iterkeys":
-                    if (unit.ProjectState.LanguageVersion.Is2x()) {
+                    if (unit.State.LanguageVersion.Is2x()) {
                         return _iterKeysMethod = _iterKeysMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterKeys,
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 case "itervalues":
-                    if (unit.ProjectState.LanguageVersion.Is2x()) {
+                    if (unit.State.LanguageVersion.Is2x()) {
                         return _iterValuesMethod = _iterValuesMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterValues,
@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 case "iteritems":
-                    if (unit.ProjectState.LanguageVersion.Is2x()) {
+                    if (unit.State.LanguageVersion.Is2x()) {
                         return _iterItemsMethod = _iterItemsMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterItems,
@@ -414,7 +414,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_itemsList == null) {
                 _itemsList = new ListInfo(
                     new[] { KeyValueTupleVariable },
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    unit.State.ClassInfos[BuiltinTypeId.List],
                     node,
                     unit.ProjectEntry
                 );
@@ -429,7 +429,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_itemsIter == null) {
                 _itemsIter = new SingleIteratorValue(
                     KeyValueTupleVariable,
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.DictItems],
+                    unit.State.ClassInfos[BuiltinTypeId.DictItems],
                     DeclaringModule
                 );
             }
@@ -442,7 +442,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_keysList == null) {
                 _keysList = new ListInfo(
                     new[] { KeysVariable },
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    unit.State.ClassInfos[BuiltinTypeId.List],
                     node,
                     unit.ProjectEntry
                 );
@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_keysIter == null) {
                 _keysIter = new SingleIteratorValue(
                     KeysVariable,
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.DictKeys],
+                    unit.State.ClassInfos[BuiltinTypeId.DictKeys],
                     DeclaringModule
                 );
             }
@@ -469,7 +469,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_valuesList == null) {
                 _valuesList = new ListInfo(
                     new[] { ValuesVariable },
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    unit.State.ClassInfos[BuiltinTypeId.List],
                     node,
                     unit.ProjectEntry
                 );
@@ -483,7 +483,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_valuesIter == null) {
                 _valuesIter = new SingleIteratorValue(
                     ValuesVariable,
-                    unit.ProjectState.ClassInfos[BuiltinTypeId.DictValues],
+                    unit.State.ClassInfos[BuiltinTypeId.DictValues],
                     DeclaringModule
                 );
             }

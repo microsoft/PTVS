@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Parsing {
     /// which is available for tooltips or other UI elements.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public sealed class CodeFormattingDescriptionAttribute : Attribute {
+    sealed class CodeFormattingDescriptionAttribute : Attribute {
         private readonly string _short, _long;
 
         internal CodeFormattingDescriptionAttribute(string shortDescriptionResourceId, string longDescriptionResourceId) {

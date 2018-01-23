@@ -513,10 +513,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // TODO: Create one and add a dependency
             if (name == "__name__") {
-                return unit.ProjectState.GetConstant(FunctionDefinition.Name);
+                return unit.State.GetConstant(FunctionDefinition.Name);
             }
             if (name == "__doc__") {
-                return unit.ProjectState.GetConstant(Documentation);
+                return unit.State.GetConstant(Documentation);
             }
 
             return GetTypeMember(node, unit, name);

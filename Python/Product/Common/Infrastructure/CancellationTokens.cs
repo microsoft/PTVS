@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class CancellationTokens {
+    static class CancellationTokens {
         public static CancellationToken GetToken(TimeSpan delay) {
             if (Debugger.IsAttached) {
                 return CancellationToken.None;

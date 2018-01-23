@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
         /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated.</param>
-        public IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
+        internal IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
             return GetValues(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the expression should
         /// be evaluated.
         /// </param>
-        public VariablesResult GetVariablesByIndex(string exprText, int index) {
+        internal IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
             return GetVariables(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -226,8 +226,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="location">
         /// The location in the file where the expression should be evaluated.
         /// </param>
-        /// <remarks>New in 2.2</remarks>
-        public VariablesResult GetVariables(string exprText, SourceLocation location) {
+        public IEnumerable<IAnalysisVariable> GetVariables(string exprText, SourceLocation location) {
             var scope = FindScope(location);
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
@@ -264,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis {
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
-                    variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
+                    variables = _unit.State.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
                 } else {
                     variables = GetVariablesInScope(name, defScope).Distinct();
@@ -322,51 +321,6 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        /// <summary>
-        /// Gets the list of modules known by the current analysis.
-        /// </summary>
-        /// <param name="topLevelOnly">Only return top-level modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
-
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                res.Add(new MemberResult(child.Key, PythonMemberType.Module));
-            }
-
-            return res.ToArray();
-        }
-
-        /// <summary>
-        /// Gets the list of modules and members matching the provided names.
-        /// </summary>
-        /// <param name="names">The dotted name parts to match</param>
-        /// <param name="includeMembers">Include module members that match as
-        /// well as just modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
-            var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                var mod = (ModuleInfo)child.Value;
-
-                if (string.IsNullOrEmpty(mod.Name)) {
-                    // Module does not have an importable name
-                    continue;
-                }
-
-                var childName = mod.Name.Split('.');
-                if (childName.Length >= 2 && childName[0] == GlobalScope.Name && childName[1] == names[0]) {
-                    res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
-                }
-            }
-
-            return res.ToArray();
-        }
-
         private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, SourceLocation location) {
             if (innerScope.OuterScope == outerScope && innerScope is FunctionScope) {
                 var funcScope = (FunctionScope)innerScope;
@@ -406,7 +360,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the expression should
         /// be evaluated.
         /// </param>
-        public IEnumerable<MemberResult> GetMembersByIndex(
+        internal IEnumerable<MemberResult> GetMembersByIndex(
             string exprText,
             int index,
             GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
@@ -499,7 +453,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
             ModuleReference modRef;
-            var modules = unit.ProjectState.Modules;
+            var modules = unit.State.Modules;
 
             if (modules.TryImport(moduleName, out modRef)) {
                 return modRef.AnalysisModule ?? AnalysisSet.Empty;
@@ -536,7 +490,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="exprText">The expression to get signatures for.</param>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
+        internal IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             return GetSignatures(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -548,7 +502,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<IOverloadResult> GetSignatures(string exprText, SourceLocation location) {
             try {
-                var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion);
+                var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion);
                 var expr = GetExpression(parser.ParseTopExpression().Body);
                 if (expr is ListExpression ||
                     expr is TupleExpression ||
@@ -599,7 +553,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// specified location.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
+        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
             return GetDefinitionTree(_unit.Tree.IndexToLocation(index));
         }
 
@@ -626,7 +580,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// directly on the current class.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
+        internal IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
             return GetOverrideable(_unit.Tree.IndexToLocation(index));
         }
 
@@ -710,7 +664,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the available members
         /// should be looked up.
         /// </param>
-        public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(
+        internal IEnumerable<MemberResult> GetAllAvailableMembersByIndex(
             int index,
             GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
         ) {
@@ -977,7 +931,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// evaluated.
         /// </param>
         /// <remarks>New in 1.1</remarks>
-        public PythonAst GetAstFromTextByIndex(string exprText, int index) {
+        internal PythonAst GetAstFromTextByIndex(string exprText, int index) {
             return GetAstFromText(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -1009,7 +963,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
-            var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
+            var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
             return parser.ParseTopExpression();
         }
 

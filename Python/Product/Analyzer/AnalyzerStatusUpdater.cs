@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// Structure representing an analysis operation's progress.
     /// </summary>
-    public struct AnalysisProgress {
+    struct AnalysisProgress {
         /// <summary>
         /// The current progress of the operation.
         /// </summary>
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// indicates that the specified interpreter is already being analyzed.
     /// </summary>
     [Serializable]
-    public class IdentifierInUseException : Exception {
+    class IdentifierInUseException : Exception {
         public IdentifierInUseException() { }
         public IdentifierInUseException(string message) : base(message) { }
         public IdentifierInUseException(string message, Exception inner) : base(message, inner) { }
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// Provides interprocess communication for the analyzer so that progress
     /// updates can be sent to one or more VS processes.
     /// </summary>
-    public class AnalyzerStatusUpdater : AnalyzerStatusUpdaterImplementation {
+    class AnalyzerStatusUpdater : AnalyzerStatusUpdaterImplementation {
         /// <summary>
         /// Constructs an updater that will send events.
         /// </summary>
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// Provides interprocess communication so that VS can receive progress
     /// updates from analyzers.
     /// </summary>
-    public class AnalyzerStatusListener : AnalyzerStatusUpdaterImplementation {
+    class AnalyzerStatusListener : AnalyzerStatusUpdaterImplementation {
         /// <summary>
         /// Constructs an updater that will receive events.
         /// </summary>
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// Internal infrastructure. Use either <see cref="AnalyzerStatusUpdater"/>
     /// or <see cref="AnalyzerStatusListener"/>.
     /// </summary>
-    public class AnalyzerStatusUpdaterImplementation : IDisposable {
+    class AnalyzerStatusUpdaterImplementation : IDisposable {
         private readonly Thread _worker;
         private readonly string _identifier;
         private readonly TimeSpan _period;

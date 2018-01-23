@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns true if the set contains no or only the object type
         /// </summary>
-        internal static bool IsObjectOrUnknown(this IAnalysisSet res) {
+        public static bool IsObjectOrUnknown(this IAnalysisSet res) {
             return res.Count == 0 || (res.Count == 1 && res.First().TypeId == BuiltinTypeId.Object);
         }
 

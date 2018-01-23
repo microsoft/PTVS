@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 ModuleReference modRef;
-                if (unit.ProjectState.Modules.TryImport(name, out modRef)) {
+                if (unit.State.Modules.TryImport(name, out modRef)) {
                     return modRef.AnalysisModule;
                 }
 
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                     var modules = value.OfType<ModuleInfo>().ToArray();
 
-                    var modRef = unit.ProjectState.Modules.GetOrAdd(name);
+                    var modRef = unit.State.Modules.GetOrAdd(name);
 
                     MultipleMemberInfo mmi;
                     ModuleInfo mi;

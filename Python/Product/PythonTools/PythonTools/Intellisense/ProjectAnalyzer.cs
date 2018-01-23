@@ -27,7 +27,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -54,7 +53,7 @@ using MSBuild = Microsoft.Build.Evaluation;
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
-    public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
+    sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
         internal readonly PythonEditorServices _services;
         private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
@@ -211,7 +210,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
-            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(UriEqualityComparer.IncludeFragment);
+            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(Analysis.Infrastructure.UriEqualityComparer.IncludeFragment);
 
             _logger = _services.Python?.Logger;
 
@@ -2539,16 +2538,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
-            var location = new AnalysisLocation(
+            var location = new LocationInfo(
                 arg.file,
                 arg.line,
-                arg.column,
-                arg.definitionStartLine,
-                arg.definitionStartColumn,
+                arg.column
+            );
+
+            var defLocation = new LocationInfo(
+                arg.file,
+                arg.definitionStartLine ?? arg.line,
+                arg.definitionStartColumn ?? arg.column,
                 arg.definitionEndLine,
                 arg.definitionEndColumn
             );
-            return new AnalysisVariable(type, location);
+            return new AnalysisVariable(type, location, defLocation);
         }
 
         internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {

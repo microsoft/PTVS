@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -23,7 +22,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// Provides constants used to identify interpreters that are detected from
     /// globally registered conda environments.
     /// </summary>
-    public static class CondaEnvironmentFactoryConstants {
+    static class CondaEnvironmentFactoryConstants {
         public const string ConsoleExecutable = "python.exe";
         public const string WindowsExecutable = "pythonw.exe";
         public const string LibrarySubPath = "lib";
