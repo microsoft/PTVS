@@ -56,9 +56,9 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
-            var result = allocator.Allocate<PyBytesObject>(value.Bytes.Length);
-            result.ob_size.Write(value.Bytes.Length);
-            process.WriteMemory(result.ob_sval.Address, value.Bytes);
+            var result = allocator.Allocate<PyBytesObject>(value.Bytes.Count);
+            result.ob_size.Write(value.Bytes.Count);
+            process.WriteMemory(result.ob_sval.Address, value.Bytes.ToArray());
 
             return result;
         }

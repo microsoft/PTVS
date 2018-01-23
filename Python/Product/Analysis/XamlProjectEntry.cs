@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Analysis {
 
     }
 
-    public interface IXamlProjectEntry : IExternalProjectEntry {
+    interface IXamlProjectEntry : IExternalProjectEntry {
         XamlAnalysis Analysis {
             get;
         }

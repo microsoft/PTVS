@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             switch(name) {
                 case "next":
-                    if (unit.ProjectState.LanguageVersion.Is2x()) {
+                    if (unit.State.LanguageVersion.Is2x()) {
                         return _nextMethod = _nextMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             GeneratorNext,
@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 case "__next__":
-                    if (unit.ProjectState.LanguageVersion.Is3x()) {
+                    if (unit.State.LanguageVersion.Is3x()) {
                         return _nextMethod = _nextMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             GeneratorNext,

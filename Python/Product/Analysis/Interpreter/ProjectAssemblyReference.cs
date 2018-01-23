@@ -18,7 +18,7 @@ using System;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class ProjectAssemblyReference : ProjectReference, IEquatable<ProjectAssemblyReference> {
+    sealed class ProjectAssemblyReference : ProjectReference, IEquatable<ProjectAssemblyReference> {
         private readonly AssemblyName _asmName;
 
         public ProjectAssemblyReference(AssemblyName assemblyName, string filename)

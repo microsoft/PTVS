@@ -33,60 +33,6 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool EnterCommitsIntellisense {
-            get { return PyService.AdvancedOptions.EnterCommitsIntellisense; }
-            set { PyService.AdvancedOptions.EnterCommitsIntellisense = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool IntersectMembers {
-            get { return PyService.AdvancedOptions.IntersectMembers; }
-            set { PyService.AdvancedOptions.IntersectMembers = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool FilterCompletions {
-            get { return PyService.AdvancedOptions.FilterCompletions; }
-            set { PyService.AdvancedOptions.FilterCompletions = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool AddNewLineAtEndOfFullyTypedWord {
-            get { return PyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord; }
-            set { PyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool EnterOutliningModeOnOpen {
-            get { return PyService.AdvancedOptions.EnterOutliningModeOnOpen; }
-            set { PyService.AdvancedOptions.EnterOutliningModeOnOpen = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool PasteRemovesReplPrompts {
-            get { return PyService.AdvancedOptions.PasteRemovesReplPrompts; }
-            set { PyService.AdvancedOptions.PasteRemovesReplPrompts = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public string CompletionCommittedBy { 
-            get { return PyService.AdvancedOptions.CompletionCommittedBy; }
-            set { PyService.AdvancedOptions.CompletionCommittedBy = value; } 
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool ColorNames {
-            get { return PyService.AdvancedOptions.ColorNames; }
-            set { PyService.AdvancedOptions.ColorNames = value; }
-        }
-
-        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
-        public bool ColorNamesWithAnalysis {
-            get { return PyService.AdvancedOptions.ColorNamesWithAnalysis; }
-            set { PyService.AdvancedOptions.ColorNamesWithAnalysis = value; }
-        }
-
         public override void ResetSettings() {
             PyService.AdvancedOptions.Reset();
         }

@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public class SignatureAnalysis {
+    class SignatureAnalysis {
         private readonly string _text;
         private readonly int _paramIndex;
         private readonly ISignature[] _signatures;

@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
         private string _privatePrefix;
 
-        public PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
+        internal PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
             if (body == null) {
                 throw new ArgumentNullException("body");
             }

@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class AnalysisLimits {
+    public sealed class AnalysisLimits {
         /// <summary>
         /// Returns a new set of limits, set to the defaults for analyzing user
         /// projects.
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// standard library analysis. Otherwise, they are taken from the
         /// usual defaults.
         /// </param>
-        public static AnalysisLimits LoadFromStorage(RegistryKey key, bool defaultToStdLib = false) {
+        internal static AnalysisLimits LoadFromStorage(RegistryKey key, bool defaultToStdLib = false) {
             var limits = defaultToStdLib ? GetStandardLibraryLimits() : new AnalysisLimits();
 
             if (key != null) {
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Saves the current instance's settings to the specified registry key.
         /// </summary>
-        public void SaveToStorage(RegistryKey key) {
+        internal void SaveToStorage(RegistryKey key) {
             key.SetValue(CrossModuleId, CrossModule, RegistryValueKind.DWord);
             key.SetValue(CallDepthId, CallDepth, RegistryValueKind.DWord);
             key.SetValue(DecreaseCallDepthId, DecreaseCallDepth, RegistryValueKind.DWord);
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The key to use with ProjectEntry.Properties to override the call
         /// depth for functions in that module.
         /// </summary>
-        public static readonly object CallDepthKey = new object();
+        internal static readonly object CallDepthKey = new object();
 
         public AnalysisLimits() {
             CrossModule = 0;
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis {
             ProcessCustomDecorators = true;
         }
 
-        public AnalysisLimits(Dictionary<string, int> limits) : this() {
+        internal AnalysisLimits(Dictionary<string, int> limits) : this() {
             int i;
             if (limits.TryGetValue(CrossModuleId, out i)) CrossModule = i;
             if (limits.TryGetValue(CallDepthId, out i)) CallDepth = i;
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (limits.TryGetValue(ProcessCustomDecoratorsId, out i)) ProcessCustomDecorators = i != 0;
         }
 
-        public Dictionary<string, int> ToDictionary() {
+        internal Dictionary<string, int> ToDictionary() {
             return new Dictionary<string, int> {
                 { CrossModuleId, CrossModule },
                 { CallDepthId, CallDepth },

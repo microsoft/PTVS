@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (types != null) {
                     IAnalysisSet[] propagating = new IAnalysisSet[types.Count];
                     for (int i = 0; i < propagating.Length; i++) {
-                        propagating[i] = unit.ProjectState.GetInstance(types[i]).SelfSet;
+                        propagating[i] = unit.State.GetInstance(types[i]).SelfSet;
                     }
                     foreach (var arg in args) {
                         arg.Call(node, unit, propagating, ExpressionEvaluator.EmptyNames);
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
-                return res.GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
+                return res.GetDescriptor(node, unit.State._noneInst, this, unit);
             }
             return res;
         }

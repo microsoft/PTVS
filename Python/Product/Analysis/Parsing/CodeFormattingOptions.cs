@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         public string NewLineFormat { get; set; }
 
-        internal static CodeFormattingOptions Traditional = new CodeFormattingOptions {
+        public static CodeFormattingOptions Traditional { get; } = new CodeFormattingOptions {
             SpaceAfterComma = true,
             SpaceAfterDot = false,
             SpaceAroundAnnotationArrow = true,
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Parsing {
             SpacesWithinParenthesisExpression = false,
             SpaceWithinCallParens = false,
             SpaceWithinClassDeclarationParens = false,
-            SpaceWithinEmptyBaseClassList =false,
+            SpaceWithinEmptyBaseClassList = false,
             SpaceWithinEmptyCallArgumentList = false,
             SpaceWithinEmptyParameterList = false,
             SpaceWithinEmptyTupleExpression = false,

@@ -20,7 +20,7 @@ using System.IO;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Profiling {
-    public sealed class CompareReportsView : INotifyPropertyChanged {
+    sealed class CompareReportsView : INotifyPropertyChanged {
         private string _baselineFile;
         private string _comparisonFile;
         private bool _isValid;

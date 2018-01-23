@@ -30,12 +30,12 @@
     The version number that will identify a specific build. This appears in
     Programs and Features, Extension Manager, and Help About.
     -->
-    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">3.0</FileVersionPrefix>
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">15.7</FileVersionPrefix>
     <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
     <!--
     The version number that will identify assembly compatibility.
     -->
-    <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">3.0.0</StableVersionPrefix>
+    <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">15.0.0</StableVersionPrefix>
     <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
     
     <!-- When true, increases build restrictions to ensure complete public releases -->
@@ -187,7 +187,6 @@
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
-  <Import Project="$(TargetsPath)\Common.Build.Wix.settings" Condition="'$(MSBuildProjectExtension)' == '.wixproj'" />
   <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
   <Import Project="$(TargetsPath)\MicroBuild.props" />
 

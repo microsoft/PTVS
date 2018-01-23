@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public class PipPackageManagerCommands {
+    class PipPackageManagerCommands {
         public virtual IEnumerable<string> Base() => new[] { "-m", "pip" };
         public virtual IEnumerable<string> CheckIsReady() => new[] { "-c", "import pip" };
         public virtual IEnumerable<string> Prepare() => new[] { "-m", "ensurepip" };

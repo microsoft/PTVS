@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public class MessageFilter : IOleMessageFilter {
+    class MessageFilter : IOleMessageFilter {
         // Start the filter.
         public static void Register() {
             IOleMessageFilter newFilter = new MessageFilter();

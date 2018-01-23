@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PackageManagerFactoryExtensions {

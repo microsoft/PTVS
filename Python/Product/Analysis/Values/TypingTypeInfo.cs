@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         unit,
                         returnInternalTypes: true
                     );
-                    foreach (var type in ce.Args.MaybeEnumerate().Where(e => e?.Expression != null).Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e.Expression))) {
+                    foreach (var type in ce.Args.MaybeEnumerate().Where(e => e?.Expression != null).Select(e => new TypeAnnotation(unit.State.LanguageVersion, e.Expression))) {
                         newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
                     }
                     return new TypingTypeInfo(_baseName, newArgs);
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         unit,
                         returnInternalTypes: true
                     );
-                    foreach (var type in exprs.Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e))) {
+                    foreach (var type in exprs.Select(e => new TypeAnnotation(unit.State.LanguageVersion, e))) {
                         newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
                     }
                     return new TypingTypeInfo(_baseName, newArgs);
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private InterpreterScope Scope => _eval.Scope;
-        private PythonAnalyzer State => _unit.ProjectState;
+        private PythonAnalyzer State => _unit.State;
         private IKnownPythonTypes Types => State.Types;
         private IKnownClasses ClassInfo => State.ClassInfos;
         private AnalysisValue NoneType => ClassInfo[BuiltinTypeId.NoneType];

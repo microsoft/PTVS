@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public static class CompletionSessionExtensions {
+    static class CompletionSessionExtensions {
         private const string CompleteWord = nameof(CompleteWord);
         private const string TriggerChar = nameof(TriggerChar);
 
