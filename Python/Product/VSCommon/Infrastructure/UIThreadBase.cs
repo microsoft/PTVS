@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudioTools {
     /// doesn't take assembly names into account when generating an interfaces GUID, resulting 
     /// in resolution issues when we reference the interface from multiple assemblies.
     /// </summary>
-    public abstract class UIThreadBase {
+    abstract class UIThreadBase {
         public abstract void Invoke(Action action);
         public abstract T Invoke<T>(Func<T> func);
         public abstract Task InvokeAsync(Action action);
@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Identifies mock implementations of IUIThread.
     /// </summary>
-    public abstract class MockUIThreadBase : UIThreadBase {
+    abstract class MockUIThreadBase : UIThreadBase {
         public override void Invoke(Action action) {
             throw new NotImplementedException();
         }
@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudioTools {
     /// Provides a no-op implementation of <see cref="UIThreadBase"/> that will
     /// not execute any tasks.
     /// </summary>
-    public sealed class NoOpUIThread : MockUIThreadBase {
+    sealed class NoOpUIThread : MockUIThreadBase {
         public override void Invoke(Action action) { }
 
         public override T Invoke<T>(Func<T> func) {
@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Provides extension methods useful for using with UIThread.
     /// </summary>
-    public static class UIThreadExtensions {
+    static class UIThreadExtensions {
         /// <summary>
         /// Returns the <see cref="UIThreadBase"/> instance associated with
         /// the service provider. This is guaranteed to return an instance,

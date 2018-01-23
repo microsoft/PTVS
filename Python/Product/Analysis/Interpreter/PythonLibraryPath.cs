@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Interpreter;
 using IOPath = System.IO.Path;
 
 namespace Microsoft.PythonTools.Analysis {
-    public sealed class PythonLibraryPath {
+    sealed class PythonLibraryPath {
         private readonly string _path;
         private readonly bool _isStandardLibrary;
         private readonly string _modulePrefix;

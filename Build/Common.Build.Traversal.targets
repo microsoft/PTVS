@@ -12,20 +12,11 @@
 
   <Target Name="PrepareForBuild" />
 
-  <Target Name="_PrepareProjectFiles" BeforeTargets="PrepareForBuild">
-    <ItemGroup>
-      <_ProjectFile Include="@(ProjectFile)">
-        <Properties Condition="%(ProjectFile.Extension) != '.wixproj' or $(Platform) != 'Win32'">%(ProjectFile.Properties);Platform=$(Platform)</Properties>
-        <Properties Condition="%(ProjectFile.Extension) == '.wixproj' and $(Platform) == 'Win32'">%(ProjectFile.Properties);Platform=x86</Properties>
-      </_ProjectFile>
-    </ItemGroup>
-  </Target>
-
   <Target Name="Rebuild" DependsOnTargets="PrepareForBuild;Clean;Build">
   </Target>
 
   <Target Name="Build" DependsOnTargets="PrepareForBuild">
-    <MSBuild Projects="@(_ProjectFile)" Targets="%(BuildTarget)" StopOnFirstFailure="$(StopOnFirstFailure)"/>
+    <MSBuild Projects="@(ProjectFile)" Targets="%(BuildTarget)" StopOnFirstFailure="$(StopOnFirstFailure)"/>
     <MSBuild Projects="@(SequencedProjectFile)" Targets="%(BuildTarget)" StopOnFirstFailure="$(StopOnFirstFailure)"/>
   </Target>
 
@@ -33,7 +24,7 @@
   <Target Name="AfterBuild" AfterTargets="Build" />
 
   <Target Name="Clean" DependsOnTargets="PrepareForBuild">
-    <MSBuild Projects="@(_ProjectFile)" Targets="%(CleanTarget)"/>
+    <MSBuild Projects="@(ProjectFile)" Targets="%(CleanTarget)"/>
     <MSBuild Projects="@(SequencedProjectFile)" Targets="%(CleanTarget)"/>
   </Target>
 

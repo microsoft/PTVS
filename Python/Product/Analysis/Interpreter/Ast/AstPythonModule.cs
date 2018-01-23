@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -26,7 +25,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+    sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly IPythonInterpreter _interpreter;
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;

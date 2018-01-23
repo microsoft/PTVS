@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    public sealed class DebugAdapterProcess :
+    sealed class DebugAdapterProcess :
 #if !USE_15_5
         ITargetHostProcess,
 #endif

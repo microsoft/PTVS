@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools;
 using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -1207,18 +1207,6 @@ async def g():
             sigs = GetSignatureAnalysis(view, location);
             Assert.AreEqual(expectedExpression, sigs.Text, view.Text);
             Assert.AreEqual(paramIndex, sigs.ParameterIndex, view.Text);
-        }
-
-        private static List<Completion> GetCompletionList(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var view = new PythonEditor(code, version, vs)) {
-                return view.GetCompletionList(index);
-            }
-        }
-
-        private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, IPythonInterpreterFactory factory) {
-            using (var view = new PythonEditor(code, vs: vs, factory: factory)) {
-                return view.GetCompletions(index);
-            }
         }
 
         private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {

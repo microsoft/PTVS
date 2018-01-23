@@ -15,7 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -24,11 +26,11 @@ using Microsoft.VisualStudio.Language.Intellisense;
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekResultSource : IPeekResultSource {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly AnalysisLocation[] _locations;
+        private readonly IAnalysisVariable[] _variables;
 
-        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisLocation[] locations) {
+        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, IAnalysisVariable[] variables) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
-            _locations = locations ?? throw new ArgumentNullException(nameof(locations));
+            _variables = variables ?? throw new ArgumentNullException(nameof(variables));
         }
 
         public void FindResults(string relationshipName, IPeekResultCollection resultCollection, CancellationToken cancellationToken, IFindPeekResultsCallback callback) {
@@ -40,36 +42,35 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return;
             }
 
-            foreach (var location in _locations) {
-                resultCollection.Add(CreateResult(location));
+            foreach (var variable in _variables.Where(v => !string.IsNullOrEmpty(v.Location.FilePath))) {
+                resultCollection.Add(CreateResult(variable));
             }
         }
 
-        private IDocumentPeekResult CreateResult(AnalysisLocation location) {
-            var fileName = PathUtils.GetFileOrDirectoryName(location.FilePath);
+        private IDocumentPeekResult CreateResult(IAnalysisVariable variable) {
+            var fileName = PathUtils.GetFileOrDirectoryName(variable.Location.FilePath);
 
             var displayInfo = new PeekResultDisplayInfo2(
-                label: string.Format("{0} - {1}", fileName, location.Span.Start),
-                labelTooltip: location.FilePath,
+                label: string.Format("{0} - ({1}, {2})", fileName, variable.Location.StartLine, variable.Location.StartColumn),
+                labelTooltip: variable.Location.FilePath,
                 title: fileName,
-                titleTooltip: location.FilePath,
+                titleTooltip: variable.Location.FilePath,
                 startIndexOfTokenInLabel: 0,
                 lengthOfTokenInLabel: 0
             );
 
-            var defSpan = location.DefinitionSpan ?? location.Span;
             return _peekResultFactory.Create(
                 displayInfo,
                 default(ImageMoniker),
-                location.FilePath,
-                defSpan.Start.Line - 1,
-                defSpan.Start.Column - 1,
-                defSpan.End.Line - 1,
-                defSpan.End.Column - 1,
-                location.Span.Start.Line - 1,
-                location.Span.Start.Column - 1,
-                location.Span.End.Line - 1,
-                location.Span.End.Column - 1,
+                variable.Location.FilePath,
+                variable.DefinitionLocation.StartLine - 1,
+                variable.DefinitionLocation.StartColumn - 1,
+                (variable.DefinitionLocation.EndLine ?? variable.DefinitionLocation.StartLine) - 1,
+                (variable.DefinitionLocation.EndColumn ?? variable.DefinitionLocation.StartColumn) - 1,
+                variable.Location.StartLine - 1,
+                variable.Location.StartColumn - 1,
+                (variable.Location.EndLine ?? variable.Location.StartLine) - 1,
+                (variable.Location.EndColumn ?? variable.Location.StartColumn) - 1,
                 isReadOnly: false
             );
         }

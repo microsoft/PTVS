@@ -917,9 +917,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// If VS is already idle, we won't keep getting idle events, so we need to post a
         /// new event to the queue to flip away from idle and back again.
         /// </summary>
-        private void TriggerIdle() {
+        private async void TriggerIdle() {
             if (Interlocked.CompareExchange(ref _idleTriggered, 1, 0) == 0) {
-                Site.GetUIThread().InvokeAsync(Nop).DoNotWait();
+                await Site.GetUIThread().InvokeAsync(Nop);
             }
         }
 

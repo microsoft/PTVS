@@ -14,18 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
-extern alias pythontools;
-using analysis::Microsoft.PythonTools;
-using analysis::Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using pythontools::Microsoft.PythonTools.Navigation.Navigable;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Navigation.Navigable;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using TestUtilities;
 
 namespace PythonToolsMockTests {
@@ -219,11 +217,11 @@ res = my_var * 10
             }
         }
 
-        private AnalysisLocation Location(int line, int col) =>
-            new AnalysisLocation(null, null, new SourceSpan(line, col, line, col), null);
+        private LocationInfo Location(int line, int col) =>
+            new LocationInfo(null, line, col);
 
-        private AnalysisLocation ExternalLocation(int line, int col, string filename) =>
-            new AnalysisLocation(filename, null, new SourceSpan(line, col, line, col), null);
+        private LocationInfo ExternalLocation(int line, int col, string filename) =>
+            new LocationInfo(filename, line, col);
 
         #region NavigableHelper class
 
@@ -240,7 +238,7 @@ res = my_var * 10
                 _view.Dispose();
             }
 
-            public async Task CheckDefinitionLocations(int pos, int length, params AnalysisLocation[] expectedLocations) {
+            public async Task CheckDefinitionLocations(int pos, int length, params LocationInfo[] expectedLocations) {
                 var entry = (AnalysisEntry)_view.GetAnalysisEntry();
                 entry.Analyzer.WaitForCompleteAnalysis(_ => true);
 
@@ -253,14 +251,14 @@ res = my_var * 10
 
                     Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
                     foreach (var actualLocation in actualLocations) {
-                        Console.WriteLine(actualLocation.Span);
+                        Console.WriteLine(actualLocation.Location);
                     }
 
                     Assert.AreEqual(expectedLocations.Length, actualLocations.Length);
                     for (int i = 0; i < expectedLocations.Length; i++) {
-                        Assert.AreEqual(expectedLocations[i].Span, actualLocations[i].Span);
+                        Assert.AreEqual(expectedLocations[i], actualLocations[i].Location);
                         if (expectedLocations[i].FilePath != null) {
-                            Assert.AreEqual(expectedLocations[i].FilePath, Path.GetFileName(actualLocations[i].FilePath));
+                            Assert.AreEqual(expectedLocations[i].FilePath, Path.GetFileName(actualLocations[i].Location.FilePath));
                         }
                     }
                 } else {

@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Logging {
     /// <summary>
     /// Defines the list of events which PTVS will log to a IPythonToolsLogger.
     /// </summary>
-    public enum PythonLogEvent {
+    enum PythonLogEvent {
         /// <summary>
         /// Logs a debug launch.  Data supplied should be 1 or 0 indicating whether
         /// the launch was without debugging or with.

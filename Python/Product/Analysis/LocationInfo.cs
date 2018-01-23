@@ -23,14 +23,14 @@ namespace Microsoft.PythonTools.Analysis {
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
         public LocationInfo(string path, Uri documentUri, int line, int column) {
-            FilePath = path ?? throw new ArgumentNullException(nameof(path));
+            FilePath = path;
             DocumentUri = documentUri;
             StartLine = line;
             StartColumn = column;
         }
 
         public LocationInfo(string path, Uri documentUri, int line, int column, int? endLine, int? endColumn) {
-            FilePath = path ?? throw new ArgumentNullException(nameof(path));
+            FilePath = path;
             DocumentUri = documentUri;
             StartLine = line;
             StartColumn = column;
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
         public override bool Equals(object obj) => Equals(obj as LocationInfo);
 
         public override int GetHashCode() {
-            return StartLine.GetHashCode() ^ FilePath.GetHashCode();
+            return StartLine.GetHashCode() ^ (FilePath?.GetHashCode() ?? 0);
         }
 
         public bool Equals(LocationInfo other) {
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             public int GetHashCode(LocationInfo obj) {
-                return obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode() ^ obj.FilePath.GetHashCode();
+                return obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode() ^ (obj.FilePath?.GetHashCode() ?? 0);
             }
         }
 

@@ -28,10 +28,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
 class AssemblyVersionInfo {
-#if DEV14
-    public const string VSMajorVersion = "14";
-    public const string VSName = "2015";
-#elif DEV15
+#if DEV15
     public const string VSMajorVersion = "15";
     public const string VSName = "2017";
 #else
@@ -41,7 +38,7 @@ class AssemblyVersionInfo {
     public const string VSVersion = VSMajorVersion + ".0";
 
     // These version strings are automatically updated at build.
-    public const string StableVersionPrefix = "1.0.0";
-    public const string StableVersion = "1.0.0.0";
-    public const string Version = "1.0.0.0";
+    public const string StableVersionPrefix = "15.0.0";
+    public const string StableVersion = "15.0.0.0";
+    public const string Version = "15.6.0.0";
 }

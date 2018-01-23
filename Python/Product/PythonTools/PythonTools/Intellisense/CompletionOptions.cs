@@ -16,7 +16,7 @@
 
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Intellisense {
     public class CompletionOptions {
         /// <summary>
         /// The set of options used by the analyzer.

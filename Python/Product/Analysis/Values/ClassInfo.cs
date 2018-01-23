@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _instanceInfo = new InstanceInfo(this);
             _bases = new List<IAnalysisSet>();
             _declVersion = outerUnit.ProjectEntry.AnalysisVersion;
-            _projectState = outerUnit.ProjectState;
+            _projectState = outerUnit.State;
             _mro = new Mro(this);
         }
 
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             
 
-            if (newResult.Count == 0 || newResult.All(ns => ns.IsOfType(unit.ProjectState.ClassInfos[BuiltinTypeId.Object]))) {
+            if (newResult.Count == 0 || newResult.All(ns => ns.IsOfType(unit.State.ClassInfos[BuiltinTypeId.Object]))) {
                 if (_baseSpecialization != null && _baseSpecialization.Count != 0) {
                     var specializedInstances = _baseSpecialization.Call(
                         node, unit, args, keywordArgNames
@@ -440,7 +440,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {
-            return _analysisUnit.ProjectState.GetAnalysisValueFromObjects(_analysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
+            return _analysisUnit.State.GetAnalysisValueFromObjects(_analysisUnit.State.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
         }
 
         internal override void AddReference(Node node, AnalysisUnit unit) {
@@ -453,7 +453,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
-            return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
+            return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.State._noneInst, this, unit);
         }
 
         /// <summary>

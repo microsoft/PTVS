@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 AppendItem(node, unit, args[0]);
             }
 
-            return unit.ProjectState._noneInst;
+            return unit.State._noneInst;
         }
 
         private IAnalysisSet ListPop(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 AppendItem(node, unit, args[1]);
             }
 
-            return unit.ProjectState._noneInst;
+            return unit.State._noneInst;
         }
 
         private IAnalysisSet ListExtend(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            return unit.ProjectState._noneInst;
+            return unit.State._noneInst;
         }
 
         private void AppendItem(Node node, AnalysisUnit unit, IAnalysisSet set) {

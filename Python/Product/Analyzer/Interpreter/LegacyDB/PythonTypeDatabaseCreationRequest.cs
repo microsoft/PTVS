@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// Provides information to PythonTypeDatabase on how to generate a
     /// database.
     /// </summary>
-    public sealed class PythonTypeDatabaseCreationRequest {
+    sealed class PythonTypeDatabaseCreationRequest {
         public PythonTypeDatabaseCreationRequest() {
             ExtraInputDatabases = new List<string>();
         }

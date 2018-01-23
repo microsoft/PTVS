@@ -28,7 +28,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
         private readonly string _databasePath, _searchPathCachePath;
         private readonly object _searchPathsLock = new object();
         private IReadOnlyList<string> _searchPaths;
@@ -384,7 +384,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mp;
         }
 
-        public static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
+        internal static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
             try {
                 var apif = factory as AstPythonInterpreterFactory;
                 if (apif != null) {

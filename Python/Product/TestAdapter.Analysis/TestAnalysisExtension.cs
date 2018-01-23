@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
-                        .GetVariablesByIndex(name, 0)
+                        .GetVariables(name, SourceLocation.MinValue)
                         .FirstOrDefault(v => v.Type == VariableType.Definition);
 
                     var location = definition?.Location ?? member.Value;
@@ -216,8 +216,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
-            return analysis.GetAllAvailableMembersByIndex(0, GetMemberOptions.ExcludeBuiltins)
-                .SelectMany(m => analysis.GetValuesByIndex(m.Name, 0))
+            return analysis.GetAllAvailableMembers(SourceLocation.MinValue, GetMemberOptions.ExcludeBuiltins)
+                .SelectMany(m => analysis.GetValues(m.Name, SourceLocation.MinValue))
                 .Where(v => v.MemberType == PythonMemberType.Class)
                 .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
         }

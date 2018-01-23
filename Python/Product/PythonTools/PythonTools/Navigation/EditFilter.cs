@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Language {
                 if (defs == null) {
                     return;
                 }
-                Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+                Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
                 GetDefsRefsAndValues(analysis.Analyzer, _editorServices.Site, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
@@ -170,17 +170,23 @@ namespace Microsoft.PythonTools.Language {
         /// 
         /// https://pytools.codeplex.com/workitem/1649
         /// </summary>
-        private void GotoLocation(AnalysisLocation location) {
+        private void GotoLocation(LocationInfo location) {
             Debug.Assert(location != null);
-            Debug.Assert(location.Span.Start.Line > 0);
-            Debug.Assert(location.Span.Start.Column > 0);
+            Debug.Assert(location.StartLine > 0);
+            Debug.Assert(location.StartColumn > 0);
 
             if (PathUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
                 var viewAdapter = _vsTextView;
-                viewAdapter.SetCaretPos(location.Span.Start.Line - 1, location.Span.Start.Column - 1);
-                viewAdapter.CenterLines(location.Span.Start.Line - 1, 1);
+                viewAdapter.SetCaretPos(location.StartLine - 1, location.StartColumn - 1);
+                viewAdapter.CenterLines(location.StartLine - 1, 1);
             } else {
-                location.GotoSource(_editorServices.Site);
+                PythonToolsPackage.NavigateTo(
+                    _editorServices.Site,
+                    location.FilePath,
+                    Guid.Empty,
+                    location.StartLine - 1,
+                    location.StartColumn - 1
+                );
             }
         }
 
@@ -207,8 +213,8 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> analysis) {
-            Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<IAnalysisVariable> analysis) {
+            Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
             GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
             var locations = new LocationCategory(
@@ -219,10 +225,10 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
-            references = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
-            definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
-            values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
+        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<IAnalysisVariable> variables, out Dictionary<LocationInfo, SimpleLocationInfo> definitions, out Dictionary<LocationInfo, SimpleLocationInfo> references, out Dictionary<LocationInfo, SimpleLocationInfo> values) {
+            references = new Dictionary<LocationInfo, SimpleLocationInfo>();
+            definitions = new Dictionary<LocationInfo, SimpleLocationInfo>();
+            values = new Dictionary<LocationInfo, SimpleLocationInfo>();
 
             if (variables == null) {
                 Debug.Fail("unexpected null variables");
@@ -331,18 +337,18 @@ namespace Microsoft.PythonTools.Language {
 
         internal class SimpleLocationInfo : SimpleObject, IVsNavInfoNode {
             private readonly IServiceProvider _serviceProvider;
-            private readonly AnalysisLocation _locationInfo;
+            private readonly LocationInfo _locationInfo;
             private readonly StandardGlyphGroup _glyphType;
             private readonly string _pathText, _lineText;
 
-            public SimpleLocationInfo(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
+            public SimpleLocationInfo(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string searchText, LocationInfo locInfo, StandardGlyphGroup glyphType) {
                 _serviceProvider = serviceProvider;
                 _locationInfo = locInfo;
                 _glyphType = glyphType;
                 _pathText = GetSearchDisplayText();
                 AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
                 if (entry != null) {
-                    _lineText = entry.GetLine(_locationInfo.Span.Start.Line) ?? "";
+                    _lineText = entry.GetLine(_locationInfo.StartLine) ?? "";
                 } else {
                     _lineText = "";
                 }
@@ -364,7 +370,8 @@ namespace Microsoft.PythonTools.Language {
             private string GetSearchDisplayText() {
                 return String.Format("{0} - {1}: ",
                     _locationInfo.FilePath,
-                    _locationInfo.Span.Start);
+                    _locationInfo.StartLine,
+                    _locationInfo.StartColumn);
             }
 
             public override string UniqueName {
@@ -395,7 +402,13 @@ namespace Microsoft.PythonTools.Language {
             }
 
             public override void GotoSource(VSOBJGOTOSRCTYPE SrcType) {
-                _locationInfo.GotoSource(_serviceProvider);
+                PythonToolsPackage.NavigateTo(
+                    _serviceProvider,
+                    _locationInfo.FilePath,
+                    Guid.Empty,
+                    _locationInfo.StartLine - 1,
+                    _locationInfo.StartColumn - 1
+                );
             }
 
             #region IVsNavInfoNode Members

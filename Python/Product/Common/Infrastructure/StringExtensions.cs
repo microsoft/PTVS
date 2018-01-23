@@ -20,7 +20,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class StringExtensions {
+    static class StringExtensions {
 #if DEBUG
         private static readonly Regex SubstitutionRegex = new Regex(
             @"\{(\d+)",

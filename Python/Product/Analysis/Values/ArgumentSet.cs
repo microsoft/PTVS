@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var ns in args[i]) {
                         var sseq = ns as StarArgsSequenceInfo;
                         if (sseq != null && i < node.Parameters.Count && sseq._node == node.Parameters[i]) {
-                            seqArgs = seqArgs.Add(unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple].Instance);
+                            seqArgs = seqArgs.Add(unit.State.ClassInfos[BuiltinTypeId.Tuple].Instance);
                         } else {
                             seqArgs = seqArgs.Add(ns);
                         }
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            var limits = unit.ProjectState.Limits;
+            var limits = unit.State.Limits;
             for (int i = 0; i < argCount; ++i) {
                 newArgs[i] = ReduceArgs(newArgs[i], limits.NormalArgumentTypes);
             }

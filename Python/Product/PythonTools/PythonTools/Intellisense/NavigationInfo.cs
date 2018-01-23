@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    public enum NavigationKind {
+    enum NavigationKind {
         None,
         Class,
         Function,
