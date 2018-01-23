@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the ProfilingTarget class.
     /// </summary>
-    public sealed class ProfilingTargetView : INotifyPropertyChanged {
+    sealed class ProfilingTargetView : INotifyPropertyChanged {
         private readonly ReadOnlyCollection<ProjectTargetView> _availableProjects;
         
         private ProjectTargetView _project;
@@ -36,14 +36,6 @@ namespace Microsoft.PythonTools.Profiling {
 
         private bool _isValid;
         
-        /// <summary>
-        /// Create a ProfilingTargetView with default values.
-        /// </summary>
-        [Obsolete("An IServiceProvider should be provided")]
-        public ProfilingTargetView()
-            : this(PythonProfilingPackage.Instance) {
-        }
-
         /// <summary>
         /// Create a ProfilingTargetView with default values.
         /// </summary>

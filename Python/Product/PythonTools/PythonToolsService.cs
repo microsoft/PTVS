@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools {
             if (GeneralOptions.AutoAnalyzeStandardLibrary) {
                 var withDb = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
                 if (withDb != null && !withDb.IsCurrent) {
-                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                    withDb.GenerateDatabase(Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged);
                 }
             }
         }
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools {
 
         #region Public API
 
-        public VsProjectAnalyzer DefaultAnalyzer {
+        internal VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
                     _analyzer = _container.GetUIThread().InvokeTaskSync(() => CreateAnalyzerAsync(), CancellationToken.None);
@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
+        internal VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
@@ -566,11 +566,11 @@ namespace Microsoft.PythonTools {
 
         #region Intellisense
 
-        public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
         }
 
-        public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
+        internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
             if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
@@ -578,7 +578,7 @@ namespace Microsoft.PythonTools {
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
         }
 
-        public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
+        internal Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
             if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
@@ -586,15 +586,7 @@ namespace Microsoft.PythonTools {
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
         }
 
-        public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
-            AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
-                return null;
-            }
-            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, span.GetStartPoint(snapshot)), "AnalyzeExpression");
-        }
-
-        public Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
+        internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
             if (_expansionCompletions == null) {
                 return Task.FromResult<IEnumerable<CompletionResult>>(null);
             }
@@ -603,7 +595,7 @@ namespace Microsoft.PythonTools {
 
         #endregion
 
-        public Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
+        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
             if (config == null) {
                 throw new ArgumentNullException(nameof(config));
             }
@@ -639,7 +631,7 @@ namespace Microsoft.PythonTools {
             return env;
         }
 
-        public IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
+        internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath) {
                 string pythonPath = Environment.GetEnvironmentVariable(interpreter.PathEnvironmentVariable) ?? string.Empty;
                 return pythonPath

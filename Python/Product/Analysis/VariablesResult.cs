@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
-    public sealed class VariablesResult : IEnumerable<IAnalysisVariable> {
+    sealed class VariablesResult : IEnumerable<IAnalysisVariable> {
         private readonly IEnumerable<IAnalysisVariable> _vars;
         private readonly PythonAst _ast;
 

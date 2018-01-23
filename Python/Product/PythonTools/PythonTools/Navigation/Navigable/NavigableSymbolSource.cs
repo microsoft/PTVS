@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -100,14 +101,14 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             return null;
         }
 
-        internal static async Task<AnalysisLocation[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
-            var list = new List<AnalysisLocation>();
+        internal static async Task<IAnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
+            var list = new List<IAnalysisVariable>();
 
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt, ExpressionAtPointPurpose.FindDefinition).ConfigureAwait(false);
             foreach (var variable in (result?.Variables).MaybeEnumerate()) {
-                if (variable.Type == Analysis.VariableType.Definition &&
-                    !string.IsNullOrEmpty(variable.Location?.FilePath)) {
-                    list.Add(variable.Location);
+                if (variable.Type == VariableType.Definition &&
+                    !string.IsNullOrEmpty(variable.DefinitionLocation?.FilePath)) {
+                    list.Add(variable);
                 }
             }
 

@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.PythonTools.EnvironmentsList.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to _Create.
         /// </summary>
-        public static string CondaExtensionCreateLabel {
+        internal static string CondaExtensionCreateLabel {
             get {
                 return ResourceManager.GetString("CondaExtensionCreateLabel", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Create the environment..
         /// </summary>
-        public static string CondaExtensionCreateTooltip {
+        internal static string CondaExtensionCreateTooltip {
             get {
                 return ResourceManager.GetString("CondaExtensionCreateTooltip", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Create.
         /// </summary>
-        public static string CondaExtensionDisplayName {
+        internal static string CondaExtensionDisplayName {
             get {
                 return ResourceManager.GetString("CondaExtensionDisplayName", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The name of the new environment..
         /// </summary>
-        public static string CondaExtensionEnvironmentNameHelp {
+        internal static string CondaExtensionEnvironmentNameHelp {
             get {
                 return ResourceManager.GetString("CondaExtensionEnvironmentNameHelp", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
-        public static string CondaExtensionEnvironmentNameLabel {
+        internal static string CondaExtensionEnvironmentNameLabel {
             get {
                 return ResourceManager.GetString("CondaExtensionEnvironmentNameLabel", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to env.
         /// </summary>
-        public static string CondaExtensionEnvironmentNameWatermark {
+        internal static string CondaExtensionEnvironmentNameWatermark {
             get {
                 return ResourceManager.GetString("CondaExtensionEnvironmentNameWatermark", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to These environment settings may be configured. The tooltips on each field include more information and examples..
         /// </summary>
-        public static string CondaExtensionHelpContent {
+        internal static string CondaExtensionHelpContent {
             get {
                 return ResourceManager.GetString("CondaExtensionHelpContent", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The version of Python to install into the new environment..
         /// </summary>
-        public static string CondaExtensionLanguageVersionHelp {
+        internal static string CondaExtensionLanguageVersionHelp {
             get {
                 return ResourceManager.GetString("CondaExtensionLanguageVersionHelp", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Python.
         /// </summary>
-        public static string CondaExtensionLanguageVersionLabel {
+        internal static string CondaExtensionLanguageVersionLabel {
             get {
                 return ResourceManager.GetString("CondaExtensionLanguageVersionLabel", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Python.
         /// </summary>
-        public static string CondaExtensionLanguageVersionWatermark {
+        internal static string CondaExtensionLanguageVersionWatermark {
             get {
                 return ResourceManager.GetString("CondaExtensionLanguageVersionWatermark", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This functionality requires Anaconda. You can install it using the Visual Studio installer..
         /// </summary>
-        public static string CondaExtensionNotAvailable {
+        internal static string CondaExtensionNotAvailable {
             get {
                 return ResourceManager.GetString("CondaExtensionNotAvailable", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to _Apply.
         /// </summary>
-        public static string ConfigurationExtensionApplyLabel {
+        internal static string ConfigurationExtensionApplyLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionApplyLabel", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Saves the changes that have been made..
         /// </summary>
-        public static string ConfigurationExtensionApplyTooltip {
+        internal static string ConfigurationExtensionApplyTooltip {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionApplyTooltip", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The architecture helps distinguish similar interpreters. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system..
         /// </summary>
-        public static string ConfigurationExtensionArchitectureHelp {
+        internal static string ConfigurationExtensionArchitectureHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionArchitectureHelp", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Architecture.
         /// </summary>
-        public static string ConfigurationExtensionArchitectureLabel {
+        internal static string ConfigurationExtensionArchitectureLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionArchitectureLabel", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Architecture.
         /// </summary>
-        public static string ConfigurationExtensionArchitectureWatermark {
+        internal static string ConfigurationExtensionArchitectureWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionArchitectureWatermark", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to A_uto Detect.
         /// </summary>
-        public static string ConfigurationExtensionAutoDetectLabel {
+        internal static string ConfigurationExtensionAutoDetectLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionAutoDetectLabel", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Attempts to fill in blank settings based on those that are already filled in..
         /// </summary>
-        public static string ConfigurationExtensionAutoDetectTooltip {
+        internal static string ConfigurationExtensionAutoDetectTooltip {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionAutoDetectTooltip", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The description is displayed throughout Visual Studio to help you identify the environment..
         /// </summary>
-        public static string ConfigurationExtensionDescriptionHelp {
+        internal static string ConfigurationExtensionDescriptionHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionDescriptionHelp", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Description.
         /// </summary>
-        public static string ConfigurationExtensionDescriptionLabel {
+        internal static string ConfigurationExtensionDescriptionLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionDescriptionLabel", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to e.g. My Custom Environment.
         /// </summary>
-        public static string ConfigurationExtensionDescriptionWatermark {
+        internal static string ConfigurationExtensionDescriptionWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionDescriptionWatermark", resourceCulture);
             }
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Configure.
         /// </summary>
-        public static string ConfigurationExtensionDisplayName {
+        internal static string ConfigurationExtensionDisplayName {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionDisplayName", resourceCulture);
             }
@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to These environment settings may be configured. The tooltips on each field include more information and examples..
         /// </summary>
-        public static string ConfigurationExtensionHelpContent {
+        internal static string ConfigurationExtensionHelpContent {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionHelpContent", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Browse for interpreter path.
         /// </summary>
-        public static string ConfigurationExtensionInterpreterPathBrowseButton {
+        internal static string ConfigurationExtensionInterpreterPathBrowseButton {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionInterpreterPathBrowseButton", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Executable Files (*.exe)|*.exe|All Files (*.*)|*.*.
         /// </summary>
-        public static string ConfigurationExtensionInterpreterPathBrowseFilter {
+        internal static string ConfigurationExtensionInterpreterPathBrowseFilter {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionInterpreterPathBrowseFilter", resourceCulture);
             }
@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The interpreter path is the executable file used to run Python. Normally this is called &quot;python.exe&quot;, but it may be different for some interpreters..
         /// </summary>
-        public static string ConfigurationExtensionInterpreterPathHelp {
+        internal static string ConfigurationExtensionInterpreterPathHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionInterpreterPathHelp", resourceCulture);
             }
@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Interpreter path.
         /// </summary>
-        public static string ConfigurationExtensionInterpreterPathLabel {
+        internal static string ConfigurationExtensionInterpreterPathLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionInterpreterPathLabel", resourceCulture);
             }
@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to e.g. C:\PythonXY\python.exe.
         /// </summary>
-        public static string ConfigurationExtensionInterpreterPathWatermark {
+        internal static string ConfigurationExtensionInterpreterPathWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionInterpreterPathWatermark", resourceCulture);
             }
@@ -315,7 +315,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The language version determines whether certain syntax features are allowed or reported as errors. This should be set to match the interpreter version..
         /// </summary>
-        public static string ConfigurationExtensionLanguageVersionHelp {
+        internal static string ConfigurationExtensionLanguageVersionHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionLanguageVersionHelp", resourceCulture);
             }
@@ -324,7 +324,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Language version.
         /// </summary>
-        public static string ConfigurationExtensionLanguageVersionLabel {
+        internal static string ConfigurationExtensionLanguageVersionLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionLanguageVersionLabel", resourceCulture);
             }
@@ -333,7 +333,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Language version.
         /// </summary>
-        public static string ConfigurationExtensionLanguageVersionWatermark {
+        internal static string ConfigurationExtensionLanguageVersionWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionLanguageVersionWatermark", resourceCulture);
             }
@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to &quot;PYTHONPATH&quot;, but it may be different for some interpreters..
         /// </summary>
-        public static string ConfigurationExtensionPathEnvVarHelp {
+        internal static string ConfigurationExtensionPathEnvVarHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPathEnvVarHelp", resourceCulture);
             }
@@ -351,7 +351,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Path environment variable.
         /// </summary>
-        public static string ConfigurationExtensionPathEnvVarLabel {
+        internal static string ConfigurationExtensionPathEnvVarLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPathEnvVarLabel", resourceCulture);
             }
@@ -360,7 +360,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to e.g. PYTHONPATH.
         /// </summary>
-        public static string ConfigurationExtensionPathEnvVarWatermark {
+        internal static string ConfigurationExtensionPathEnvVarWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPathEnvVarWatermark", resourceCulture);
             }
@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Browse for prefix path.
         /// </summary>
-        public static string ConfigurationExtensionPrefixPathBrowseButton {
+        internal static string ConfigurationExtensionPrefixPathBrowseButton {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPrefixPathBrowseButton", resourceCulture);
             }
@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The prefix path specifies the directory containing all files needed for this environment. It may be used for searching installed libraries or deploying an environment to another machine..
         /// </summary>
-        public static string ConfigurationExtensionPrefixPathHelp {
+        internal static string ConfigurationExtensionPrefixPathHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPrefixPathHelp", resourceCulture);
             }
@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Prefix path.
         /// </summary>
-        public static string ConfigurationExtensionPrefixPathLabel {
+        internal static string ConfigurationExtensionPrefixPathLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPrefixPathLabel", resourceCulture);
             }
@@ -396,7 +396,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to e.g. C:\PythonXY.
         /// </summary>
-        public static string ConfigurationExtensionPrefixPathWatermark {
+        internal static string ConfigurationExtensionPrefixPathWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionPrefixPathWatermark", resourceCulture);
             }
@@ -405,7 +405,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Re_move.
         /// </summary>
-        public static string ConfigurationExtensionRemoveLabel {
+        internal static string ConfigurationExtensionRemoveLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionRemoveLabel", resourceCulture);
             }
@@ -414,7 +414,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Removes the environment. This operation cannot be undone..
         /// </summary>
-        public static string ConfigurationExtensionRemoveTooltip {
+        internal static string ConfigurationExtensionRemoveTooltip {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionRemoveTooltip", resourceCulture);
             }
@@ -423,7 +423,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to _Reset.
         /// </summary>
-        public static string ConfigurationExtensionResetLabel {
+        internal static string ConfigurationExtensionResetLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionResetLabel", resourceCulture);
             }
@@ -432,7 +432,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Clears any changes that have been made..
         /// </summary>
-        public static string ConfigurationExtensionResetTooltip {
+        internal static string ConfigurationExtensionResetTooltip {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionResetTooltip", resourceCulture);
             }
@@ -441,7 +441,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Browse for windowed interpreter path.
         /// </summary>
-        public static string ConfigurationExtensionWindowedInterpreterPathBrowseButton {
+        internal static string ConfigurationExtensionWindowedInterpreterPathBrowseButton {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathBrowseButton", resourceCulture);
             }
@@ -450,7 +450,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Executable Files (*.exe)|*.exe|All Files (*.*)|*.*.
         /// </summary>
-        public static string ConfigurationExtensionWindowedInterpreterPathBrowseFilter {
+        internal static string ConfigurationExtensionWindowedInterpreterPathBrowseFilter {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathBrowseFilter", resourceCulture);
             }
@@ -459,7 +459,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters..
         /// </summary>
-        public static string ConfigurationExtensionWindowedInterpreterPathHelp {
+        internal static string ConfigurationExtensionWindowedInterpreterPathHelp {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathHelp", resourceCulture);
             }
@@ -468,7 +468,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Windowed interpreter.
         /// </summary>
-        public static string ConfigurationExtensionWindowedInterpreterPathLabel {
+        internal static string ConfigurationExtensionWindowedInterpreterPathLabel {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathLabel", resourceCulture);
             }
@@ -477,7 +477,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to e.g. C:\PythonXY\pythonw.exe.
         /// </summary>
-        public static string ConfigurationExtensionWindowedInterpreterPathWatermark {
+        internal static string ConfigurationExtensionWindowedInterpreterPathWatermark {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathWatermark", resourceCulture);
             }
@@ -486,7 +486,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to IntelliSense.
         /// </summary>
-        public static string DBExtensionDisplayName {
+        internal static string DBExtensionDisplayName {
             get {
                 return ResourceManager.GetString("DBExtensionDisplayName", resourceCulture);
             }
@@ -495,7 +495,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This list shows the modules as detected by IntelliSense. If you do not see your library here, it may not be installed correctly..
         /// </summary>
-        public static string DBExtensionHelpContent {
+        internal static string DBExtensionHelpContent {
             get {
                 return ResourceManager.GetString("DBExtensionHelpContent", resourceCulture);
             }
@@ -504,7 +504,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to The completion DB does not have analysis results for all modules in this package..
         /// </summary>
-        public static string DBExtensionIsNotUpToDateToolTip {
+        internal static string DBExtensionIsNotUpToDateToolTip {
             get {
                 return ResourceManager.GetString("DBExtensionIsNotUpToDateToolTip", resourceCulture);
             }
@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This package is up to date in the completion DB..
         /// </summary>
-        public static string DBExtensionIsUpToDateToolTip {
+        internal static string DBExtensionIsUpToDateToolTip {
             get {
                 return ResourceManager.GetString("DBExtensionIsUpToDateToolTip", resourceCulture);
             }
@@ -522,7 +522,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to {0} ({1} modules).
         /// </summary>
-        public static string DBExtensionModuleAutomationName {
+        internal static string DBExtensionModuleAutomationName {
             get {
                 return ResourceManager.GetString("DBExtensionModuleAutomationName", resourceCulture);
             }
@@ -531,7 +531,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to ({0} modules).
         /// </summary>
-        public static string DBExtensionModuleCountLabel {
+        internal static string DBExtensionModuleCountLabel {
             get {
                 return ResourceManager.GetString("DBExtensionModuleCountLabel", resourceCulture);
             }
@@ -540,7 +540,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Refresh completion DB.
         /// </summary>
-        public static string DBExtensionRefreshDBAutomationName {
+        internal static string DBExtensionRefreshDBAutomationName {
             get {
                 return ResourceManager.GetString("DBExtensionRefreshDBAutomationName", resourceCulture);
             }
@@ -549,7 +549,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to _Refresh DB.
         /// </summary>
-        public static string DBExtensionRefreshDBLabel {
+        internal static string DBExtensionRefreshDBLabel {
             get {
                 return ResourceManager.GetString("DBExtensionRefreshDBLabel", resourceCulture);
             }
@@ -558,7 +558,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Help me fix this broken environment.
         /// </summary>
-        public static string EnvironmentPathsExtensionBrokenEnvironmentLabel {
+        internal static string EnvironmentPathsExtensionBrokenEnvironmentLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionBrokenEnvironmentLabel", resourceCulture);
             }
@@ -567,7 +567,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This environment cannot be made the default..
         /// </summary>
-        public static string EnvironmentPathsExtensionCannotBeDefaultLabel {
+        internal static string EnvironmentPathsExtensionCannotBeDefaultLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionCannotBeDefaultLabel", resourceCulture);
             }
@@ -576,7 +576,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Configure or remove environment.
         /// </summary>
-        public static string EnvironmentPathsExtensionConfigureEnvironmentLabel {
+        internal static string EnvironmentPathsExtensionConfigureEnvironmentLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionConfigureEnvironmentLabel", resourceCulture);
             }
@@ -587,7 +587,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///
         ///The folder will be deleted from disk. This operation cannot be undone..
         /// </summary>
-        public static string EnvironmentPathsExtensionDeleteConfirmation {
+        internal static string EnvironmentPathsExtensionDeleteConfirmation {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionDeleteConfirmation", resourceCulture);
             }
@@ -596,7 +596,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Delete this environment from disk.
         /// </summary>
-        public static string EnvironmentPathsExtensionDeleteEnvironment {
+        internal static string EnvironmentPathsExtensionDeleteEnvironment {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionDeleteEnvironment", resourceCulture);
             }
@@ -605,7 +605,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Overview.
         /// </summary>
-        public static string EnvironmentPathsExtensionDisplayName {
+        internal static string EnvironmentPathsExtensionDisplayName {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionDisplayName", resourceCulture);
             }
@@ -614,7 +614,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Enable IPython interactive mode.
         /// </summary>
-        public static string EnvironmentPathsExtensionEnableIPythonAutomationName {
+        internal static string EnvironmentPathsExtensionEnableIPythonAutomationName {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionEnableIPythonAutomationName", resourceCulture);
             }
@@ -623,7 +623,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Use IPython interactive mode.
         /// </summary>
-        public static string EnvironmentPathsExtensionEnableIPythonLabel {
+        internal static string EnvironmentPathsExtensionEnableIPythonLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionEnableIPythonLabel", resourceCulture);
             }
@@ -632,7 +632,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This is a quick overview of the environment. Use the links to open the paths, or right-click to copy them to the clipboard..
         /// </summary>
-        public static string EnvironmentPathsExtensionHelpContent {
+        internal static string EnvironmentPathsExtensionHelpContent {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionHelpContent", resourceCulture);
             }
@@ -641,7 +641,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to This is the default environment for new projects.
         /// </summary>
-        public static string EnvironmentPathsExtensionIsDefaultLabel {
+        internal static string EnvironmentPathsExtensionIsDefaultLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionIsDefaultLabel", resourceCulture);
             }
@@ -650,7 +650,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Make this the default environment for new projects.
         /// </summary>
-        public static string EnvironmentPathsExtensionMakeDefaultLabel {
+        internal static string EnvironmentPathsExtensionMakeDefaultLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionMakeDefaultLabel", resourceCulture);
             }
@@ -659,7 +659,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open in _Command Prompt.
         /// </summary>
-        public static string EnvironmentPathsExtensionOpenInCommandPromptMenuItem {
+        internal static string EnvironmentPathsExtensionOpenInCommandPromptMenuItem {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionOpenInCommandPromptMenuItem", resourceCulture);
             }
@@ -668,7 +668,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open in PowerShell.
         /// </summary>
-        public static string EnvironmentPathsExtensionOpenInPowerShell {
+        internal static string EnvironmentPathsExtensionOpenInPowerShell {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionOpenInPowerShell", resourceCulture);
             }
@@ -677,7 +677,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Explore interactive scripts.
         /// </summary>
-        public static string EnvironmentPathsExtensionOpenInteractiveScriptsLabel {
+        internal static string EnvironmentPathsExtensionOpenInteractiveScriptsLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionOpenInteractiveScriptsLabel", resourceCulture);
             }
@@ -686,7 +686,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open interactive window.
         /// </summary>
-        public static string EnvironmentPathsExtensionOpenInteractiveWindowLabel {
+        internal static string EnvironmentPathsExtensionOpenInteractiveWindowLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionOpenInteractiveWindowLabel", resourceCulture);
             }
@@ -695,7 +695,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Visit the distributor&apos;s website.
         /// </summary>
-        public static string EnvironmentPathsExtensionSupportInformationLabel {
+        internal static string EnvironmentPathsExtensionSupportInformationLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionSupportInformationLabel", resourceCulture);
             }
@@ -704,7 +704,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Interpreter path.
         /// </summary>
-        public static string EnvironmentPathsInterpreterPath {
+        internal static string EnvironmentPathsInterpreterPath {
             get {
                 return ResourceManager.GetString("EnvironmentPathsInterpreterPath", resourceCulture);
             }
@@ -713,7 +713,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Interpreter directory.
         /// </summary>
-        public static string EnvironmentPathsPrefixPath {
+        internal static string EnvironmentPathsPrefixPath {
             get {
                 return ResourceManager.GetString("EnvironmentPathsPrefixPath", resourceCulture);
             }
@@ -722,7 +722,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Windows interpreter path.
         /// </summary>
-        public static string EnvironmentPathsWindowsInterpreterPath {
+        internal static string EnvironmentPathsWindowsInterpreterPath {
             get {
                 return ResourceManager.GetString("EnvironmentPathsWindowsInterpreterPath", resourceCulture);
             }
@@ -731,7 +731,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Create conda environment....
         /// </summary>
-        public static string EnvironmentViewCondaLabel {
+        internal static string EnvironmentViewCondaLabel {
             get {
                 return ResourceManager.GetString("EnvironmentViewCondaLabel", resourceCulture);
             }
@@ -740,7 +740,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Create new conda environment.
         /// </summary>
-        public static string EnvironmentViewCreateNewCondaEnvironmentAutomationName {
+        internal static string EnvironmentViewCreateNewCondaEnvironmentAutomationName {
             get {
                 return ResourceManager.GetString("EnvironmentViewCreateNewCondaEnvironmentAutomationName", resourceCulture);
             }
@@ -749,7 +749,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Add new environment.
         /// </summary>
-        public static string EnvironmentViewCustomAutomationName {
+        internal static string EnvironmentViewCustomAutomationName {
             get {
                 return ResourceManager.GetString("EnvironmentViewCustomAutomationName", resourceCulture);
             }
@@ -758,7 +758,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Custom....
         /// </summary>
-        public static string EnvironmentViewCustomLabel {
+        internal static string EnvironmentViewCustomLabel {
             get {
                 return ResourceManager.GetString("EnvironmentViewCustomLabel", resourceCulture);
             }
@@ -767,7 +767,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open Interactive Window.
         /// </summary>
-        public static string EnvironmentViewInteractiveWindowAutomationName {
+        internal static string EnvironmentViewInteractiveWindowAutomationName {
             get {
                 return ResourceManager.GetString("EnvironmentViewInteractiveWindowAutomationName", resourceCulture);
             }
@@ -776,7 +776,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open Interactive Window.
         /// </summary>
-        public static string EnvironmentViewInteractiveWindowTooltip {
+        internal static string EnvironmentViewInteractiveWindowTooltip {
             get {
                 return ResourceManager.GetString("EnvironmentViewInteractiveWindowTooltip", resourceCulture);
             }
@@ -785,7 +785,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Completion DB is not up to date. Click to start refreshing.
         /// </summary>
-        public static string EnvironmentViewNeedRefreshAutomationHelp {
+        internal static string EnvironmentViewNeedRefreshAutomationHelp {
             get {
                 return ResourceManager.GetString("EnvironmentViewNeedRefreshAutomationHelp", resourceCulture);
             }
@@ -794,7 +794,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Refresh completion DB.
         /// </summary>
-        public static string EnvironmentViewNeedRefreshAutomationName {
+        internal static string EnvironmentViewNeedRefreshAutomationName {
             get {
                 return ResourceManager.GetString("EnvironmentViewNeedRefreshAutomationName", resourceCulture);
             }
@@ -803,7 +803,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Completion DB is not up to date. Click to start refreshing..
         /// </summary>
-        public static string EnvironmentViewNeedRefreshToolTip {
+        internal static string EnvironmentViewNeedRefreshToolTip {
             get {
                 return ResourceManager.GetString("EnvironmentViewNeedRefreshToolTip", resourceCulture);
             }
@@ -812,7 +812,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Go online and help me find other environments.
         /// </summary>
-        public static string EnvironmentViewOnlineHelpLabel {
+        internal static string EnvironmentViewOnlineHelpLabel {
             get {
                 return ResourceManager.GetString("EnvironmentViewOnlineHelpLabel", resourceCulture);
             }
@@ -821,7 +821,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Refreshing completion DB.
         /// </summary>
-        public static string EnvironmentViewRefreshDBProgressTooltip {
+        internal static string EnvironmentViewRefreshDBProgressTooltip {
             get {
                 return ResourceManager.GetString("EnvironmentViewRefreshDBProgressTooltip", resourceCulture);
             }
@@ -830,7 +830,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Installation failed.
         /// </summary>
-        public static string InstallationFailed {
+        internal static string InstallationFailed {
             get {
                 return ResourceManager.GetString("InstallationFailed", resourceCulture);
             }
@@ -840,7 +840,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   Looks up a localized string similar to ----- Failed to install &apos;{0}&apos; -----
         ///.
         /// </summary>
-        public static string InstallingPackageFailed {
+        internal static string InstallingPackageFailed {
             get {
                 return ResourceManager.GetString("InstallingPackageFailed", resourceCulture);
             }
@@ -849,7 +849,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to ----- Installing &apos;{0}&apos; -----.
         /// </summary>
-        public static string InstallingPackageStarted {
+        internal static string InstallingPackageStarted {
             get {
                 return ResourceManager.GetString("InstallingPackageStarted", resourceCulture);
             }
@@ -859,7 +859,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   Looks up a localized string similar to ----- Successfully installed &apos;{0}&apos; -----
         ///.
         /// </summary>
-        public static string InstallingPackageSuccess {
+        internal static string InstallingPackageSuccess {
             get {
                 return ResourceManager.GetString("InstallingPackageSuccess", resourceCulture);
             }
@@ -869,7 +869,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   Looks up a localized string similar to ----- Failed to install pip -----
         ///.
         /// </summary>
-        public static string InstallingPipFailed {
+        internal static string InstallingPipFailed {
             get {
                 return ResourceManager.GetString("InstallingPipFailed", resourceCulture);
             }
@@ -878,7 +878,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to ----- Installing pip -----.
         /// </summary>
-        public static string InstallingPipStarted {
+        internal static string InstallingPipStarted {
             get {
                 return ResourceManager.GetString("InstallingPipStarted", resourceCulture);
             }
@@ -888,7 +888,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///   Looks up a localized string similar to ----- Successfully installed pip -----
         ///.
         /// </summary>
-        public static string InstallingPipSuccess {
+        internal static string InstallingPipSuccess {
             get {
                 return ResourceManager.GetString("InstallingPipSuccess", resourceCulture);
             }
@@ -897,7 +897,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Enumerating packages failed.
         /// </summary>
-        public static string ListFailed {
+        internal static string ListFailed {
             get {
                 return ResourceManager.GetString("ListFailed", resourceCulture);
             }
@@ -906,7 +906,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to (Loading description...).
         /// </summary>
-        public static string LoadingDescription {
+        internal static string LoadingDescription {
             get {
                 return ResourceManager.GetString("LoadingDescription", resourceCulture);
             }
@@ -915,7 +915,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
-        public static string MisconfiguredEnvironment {
+        internal static string MisconfiguredEnvironment {
             get {
                 return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
             }
@@ -924,7 +924,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to IntelliSense [database disabled].
         /// </summary>
-        public static string NoDBExtensionDisplayName {
+        internal static string NoDBExtensionDisplayName {
             get {
                 return ResourceManager.GetString("NoDBExtensionDisplayName", resourceCulture);
             }
@@ -933,7 +933,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to IntelliSense databases will be removed in a future update and have been disabled to help with testing. See the link below to reactivate the database..
         /// </summary>
-        public static string NoDBExtensionHelpContent {
+        internal static string NoDBExtensionHelpContent {
             get {
                 return ResourceManager.GetString("NoDBExtensionHelpContent", resourceCulture);
             }
@@ -944,7 +944,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ///
         ///Click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python..
         /// </summary>
-        public static string NoDBExtensionMessage {
+        internal static string NoDBExtensionMessage {
             get {
                 return ResourceManager.GetString("NoDBExtensionMessage", resourceCulture);
             }
@@ -953,7 +953,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Reactivate IntelliSense databases in my next session.
         /// </summary>
-        public static string NoDBExtensionReactivate {
+        internal static string NoDBExtensionReactivate {
             get {
                 return ResourceManager.GetString("NoDBExtensionReactivate", resourceCulture);
             }
@@ -962,7 +962,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to (No description).
         /// </summary>
-        public static string NoDescription {
+        internal static string NoDescription {
             get {
                 return ResourceManager.GetString("NoDescription", resourceCulture);
             }
@@ -971,7 +971,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Clear search filter.
         /// </summary>
-        public static string PipExtensionClearSearchToolTip {
+        internal static string PipExtensionClearSearchToolTip {
             get {
                 return ResourceManager.GetString("PipExtensionClearSearchToolTip", resourceCulture);
             }
@@ -980,7 +980,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to These packages can be managed using your environment&apos;s package manager. Type in the search box to install new packages, or use the buttons on existing packages to update or remove them..
         /// </summary>
-        public static string PipExtensionHelpContent {
+        internal static string PipExtensionHelpContent {
             get {
                 return ResourceManager.GetString("PipExtensionHelpContent", resourceCulture);
             }
@@ -989,7 +989,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Install {0}.
         /// </summary>
-        public static string PipExtensionInstallLabel {
+        internal static string PipExtensionInstallLabel {
             get {
                 return ResourceManager.GetString("PipExtensionInstallLabel", resourceCulture);
             }
@@ -998,7 +998,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Download and install pip package manager.
         /// </summary>
-        public static string PipExtensionInstallPipLabel {
+        internal static string PipExtensionInstallPipLabel {
             get {
                 return ResourceManager.GetString("PipExtensionInstallPipLabel", resourceCulture);
             }
@@ -1007,7 +1007,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Install the setuptools and pip packages from PyPI. These packages are required to use this panel..
         /// </summary>
-        public static string PipExtensionInstallPipToolTip {
+        internal static string PipExtensionInstallPipToolTip {
             get {
                 return ResourceManager.GetString("PipExtensionInstallPipToolTip", resourceCulture);
             }
@@ -1016,7 +1016,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to (unknown).
         /// </summary>
-        public static string PipPackageUnknownPackageSpec {
+        internal static string PipPackageUnknownPackageSpec {
             get {
                 return ResourceManager.GetString("PipPackageUnknownPackageSpec", resourceCulture);
             }
@@ -1025,7 +1025,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Visual Studio.
         /// </summary>
-        public static string ProductTitle {
+        internal static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
             }
@@ -1034,7 +1034,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to (Standard Library).
         /// </summary>
-        public static string StandardLibraryModuleListItem {
+        internal static string StandardLibraryModuleListItem {
             get {
                 return ResourceManager.GetString("StandardLibraryModuleListItem", resourceCulture);
             }
@@ -1043,7 +1043,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Environment pages.
         /// </summary>
-        public static string ToolWindow_ExtensionsName {
+        internal static string ToolWindow_ExtensionsName {
             get {
                 return ResourceManager.GetString("ToolWindow_ExtensionsName", resourceCulture);
             }
@@ -1052,7 +1052,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Environment page help.
         /// </summary>
-        public static string ToolWindow_HelpContentName {
+        internal static string ToolWindow_HelpContentName {
             get {
                 return ResourceManager.GetString("ToolWindow_HelpContentName", resourceCulture);
             }
@@ -1061,7 +1061,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Toggle page help.
         /// </summary>
-        public static string ToolWindow_HelpVisibilityName {
+        internal static string ToolWindow_HelpVisibilityName {
             get {
                 return ResourceManager.GetString("ToolWindow_HelpVisibilityName", resourceCulture);
             }
@@ -1070,7 +1070,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Python environments.
         /// </summary>
-        public static string ToolWindow_ListOfEnvironmentsName {
+        internal static string ToolWindow_ListOfEnvironmentsName {
             get {
                 return ResourceManager.GetString("ToolWindow_ListOfEnvironmentsName", resourceCulture);
             }
@@ -1079,7 +1079,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Uninstallation failed.
         /// </summary>
-        public static string UninstallationFailed {
+        internal static string UninstallationFailed {
             get {
                 return ResourceManager.GetString("UninstallationFailed", resourceCulture);
             }

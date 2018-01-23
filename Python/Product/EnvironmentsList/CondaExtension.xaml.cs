@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    public sealed class CondaExtensionProvider : IEnvironmentViewExtension, ICondaEnvironmentManagerUI {
+    sealed class CondaExtensionProvider : IEnvironmentViewExtension, ICondaEnvironmentManagerUI {
         private FrameworkElement _wpfObject;
         private readonly IInterpreterOptionsService _options;
         private readonly IInterpreterRegistryService _registry;

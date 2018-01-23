@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
-    public sealed class UriEqualityComparer : IEqualityComparer<Uri> {
+    sealed class UriEqualityComparer : IEqualityComparer<Uri> {
         private readonly UriComponents _components;
 
         public static readonly IEqualityComparer<Uri> Default = new UriEqualityComparer(UriComponents.SchemeAndServer | UriComponents.PathAndQuery);

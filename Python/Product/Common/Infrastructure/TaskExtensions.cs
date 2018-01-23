@@ -21,7 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class TaskExtensions {
+    static class TaskExtensions {
         /// <summary>
         /// Suppresses warnings about unawaited tasks and ensures that unhandled
         /// errors will cause the process to terminate.

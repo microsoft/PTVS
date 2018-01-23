@@ -60,7 +60,6 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
-        IProjectInterpreterDbChanged,
         IPythonProjectProvider
     {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
@@ -235,33 +234,13 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (_active != oldActive) {
-                    if (oldActive == null) {
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (defaultInterp != null) {
-                            defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                        }
-                    } else {
-                        var oldInterpWithDb = oldActive as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (oldInterpWithDb != null) {
-                            oldInterpWithDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                        }
-                    }
-
                     if (_active != null) {
-                        var newInterpWithDb = _active as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (newInterpWithDb != null) {
-                            newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
-                        }
                         BuildProject.SetProperty(
                             MSBuildConstants.InterpreterIdProperty,
                             ReplaceMSBuildPath(_active.Configuration.Id)
                         );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (defaultInterp != null) {
-                            defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
-                        }
                     }
                     BuildProject.MarkDirty();
                 }
@@ -282,10 +261,6 @@ namespace Microsoft.PythonTools.Project {
                 id = id.Substring(0, index) + "$(MSBuildProjectFullPath)" + id.Substring(index + BuildProject.FullPath.Length);
             }
             return id;
-        }
-
-        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void GlobalDefaultInterpreterChanged(object sender, EventArgs e) {
@@ -1021,13 +996,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        Projects.ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
 
         public event EventHandler ProjectAnalyzerChanged;
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
-        public event EventHandler InterpreterDbChanged;
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
@@ -1342,7 +1316,6 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
             Site.GetUIThread().InvokeTask(async () => {
                 await ReanalyzeProject().HandleAllExceptions(Site, GetType());
             }).DoNotWait();

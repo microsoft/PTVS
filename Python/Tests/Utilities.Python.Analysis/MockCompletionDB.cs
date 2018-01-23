@@ -24,7 +24,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.Mocks {
-    public class MockCompletionDB : IDisposable {
+    class MockCompletionDB : IDisposable {
         public readonly PythonLanguageVersion LanguageVersion;
         public readonly string DBPath;
         private PythonTypeDatabase _database;

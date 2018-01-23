@@ -1468,7 +1468,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// 
         /// New in 1.5.
         /// </summary>
-        public static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
+        internal static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
             if (frame < 0) {
                 return null;
             }

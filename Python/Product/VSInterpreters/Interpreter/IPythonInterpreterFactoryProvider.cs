@@ -60,8 +60,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
     public static class PythonInterpreterExtensions {
         public static bool IsAvailable(this InterpreterConfiguration configuration) {
-            // TODO: Differs from original by not checking for base interpreter
-            // configuration
             return File.Exists(configuration.InterpreterPath) &&
                 File.Exists(configuration.WindowsInterpreterPath);
         }

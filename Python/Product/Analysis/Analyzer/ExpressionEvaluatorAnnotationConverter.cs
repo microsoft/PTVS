@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // Final annotation should be not be a string literal
             type.Split(out IReadOnlyList<ConstantInfo> constants, out type);
             if (constants.Any(c => c.TypeId == BuiltinTypeId.NoneType)) {
-                type = type.Add(_unit.ProjectState.ClassInfos[BuiltinTypeId.NoneType]);
+                type = type.Add(_unit.State.ClassInfos[BuiltinTypeId.NoneType]);
             }
             
             // Filter out any TypingTypeInfo items that have leaked through
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet MakeNameType(string name) {
-            return _unit.ProjectState.GetConstant(name);
+            return _unit.State.GetConstant(name);
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet MakeOptional(IAnalysisSet type) {
-            return type.Add(_unit.ProjectState._noneInst);
+            return type.Add(_unit.State._noneInst);
         }
 
         public override IAnalysisSet GetNonOptionalType(IAnalysisSet optionalType) {

@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             object value;
             if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out value) ||
                 (_callDepthLimit = (value as int?) ?? -1) < 0) {
-                _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
+                _callDepthLimit = declUnit.State.Limits.CallDepth;
             }
 
             _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, _projectEntry);
@@ -561,10 +561,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // TODO: Create one and add a dependency
             if (name == "__name__") {
-                return unit.ProjectState.GetConstant(FunctionDefinition.Name);
+                return unit.State.GetConstant(FunctionDefinition.Name);
             }
             if (name == "__doc__") {
-                return unit.ProjectState.GetConstant(Documentation);
+                return unit.State.GetConstant(Documentation);
             }
 
             return GetTypeMember(node, unit, name);

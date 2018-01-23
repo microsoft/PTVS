@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Profiling {
     [ComVisible(true)]
-    public sealed class ReportWrapper : IPythonPerformanceReport {
+    sealed class ReportWrapper : IPythonPerformanceReport {
         private readonly Report _report;
 
         internal ReportWrapper(Report report) {

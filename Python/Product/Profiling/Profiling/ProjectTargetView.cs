@@ -15,14 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the ProjectTarget class.
     /// </summary>
-    public class ProjectTargetView {
+    class ProjectTargetView {
         readonly string _name;
         readonly Guid _guid;
         

@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context
     /// </summary>
-    public class CompletionAnalysis {
+    class CompletionAnalysis {
         private readonly PythonEditorServices _services;
         private readonly ICompletionSession _session;
         private readonly ITextView _view;

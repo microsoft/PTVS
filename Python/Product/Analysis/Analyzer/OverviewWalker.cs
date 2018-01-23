@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // List comprehension runs in a new scope in 3.x, runs in the same
             // scope in 2.x.  But these don't get their own analysis units
             // because they are still just expressions.
-            if (_curUnit.ProjectState.LanguageVersion.Is3x()) {
+            if (_curUnit.State.LanguageVersion.Is3x()) {
                 EnsureComprehensionScope(node, MakeListComprehensionScope);
             }
 
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override void PostWalk(ListComprehension node) {
-            if (_curUnit.ProjectState.LanguageVersion.Is3x()) {
+            if (_curUnit.State.LanguageVersion.Is3x()) {
                 Debug.Assert(_scope is ComprehensionScope);
                 _scope = _scope.OuterScope;
             }

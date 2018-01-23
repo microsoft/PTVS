@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
         readonly ProfilingTargetView _viewModel;
         private readonly IServiceProvider _serviceProvider;
 
-        public LaunchProfiling(IServiceProvider serviceProvider, ProfilingTargetView viewModel) {
+        internal LaunchProfiling(IServiceProvider serviceProvider, ProfilingTargetView viewModel) {
             _serviceProvider = serviceProvider;
             _viewModel = viewModel;
             DataContext = _viewModel;

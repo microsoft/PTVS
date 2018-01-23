@@ -21,7 +21,7 @@ using System.Reflection;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class PythonToolsInstallPath {
+    static class PythonToolsInstallPath {
         private static string GetFromAssembly(Assembly assembly, string filename) {
             string path = Path.Combine(
                 Path.GetDirectoryName(assembly.Location),

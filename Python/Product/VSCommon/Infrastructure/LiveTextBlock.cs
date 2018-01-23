@@ -23,7 +23,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    //public sealed class LiveTextBlock : TextBlock {
+    //sealed class LiveTextBlock : TextBlock {
     //    public LiveTextBlock() {
     //        // Bind LiveText to the Text property.
     //        // They are not set independently - this just gives us the

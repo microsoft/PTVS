@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Analysis {
     public sealed class DocumentChangeSet {
         public DocumentChangeSet(int fromVersion, int toVersion, IEnumerable<DocumentChange> changes) {
             FromVersion = fromVersion;

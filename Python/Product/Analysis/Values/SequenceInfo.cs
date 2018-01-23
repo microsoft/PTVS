@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(unit.DeclaringModule.ProjectEntry, location) {
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
-                unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                unit.State.ClassInfos[BuiltinTypeId.Tuple],
                 location,
                 unit.ProjectEntry
             );
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
-                unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                unit.State.ClassInfos[BuiltinTypeId.Tuple],
                 location,
                 unit.ProjectEntry
             );
