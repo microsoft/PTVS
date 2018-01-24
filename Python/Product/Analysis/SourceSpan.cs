@@ -41,6 +41,9 @@ namespace Microsoft.PythonTools {
             this._end = end;
         }
 
+        public SourceSpan(int startLine, int startColumn, int endLine, int endColumn)
+            : this(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn)) { }
+
         private static void ValidateLocations(SourceLocation start, SourceLocation end) {
             if (start.IsValid && end.IsValid) {
                 if (start > end) {

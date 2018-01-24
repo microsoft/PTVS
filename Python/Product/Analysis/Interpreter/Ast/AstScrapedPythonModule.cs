@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false, true);
+            return new AstAnalysisWalker(interpreter, ast, this, _filePath, null, _members, false, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
@@ -203,7 +203,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (!string.IsNullOrEmpty(_filePath)) {
                 var cachePath = fact.GetCacheFilePath(_filePath);
                 if (!string.IsNullOrEmpty(cachePath)) {
-                    Locations = new[] { new LocationInfo(cachePath, 1, 1) };
+                    Locations = new[] { new LocationInfo(cachePath, null, 1, 1) };
                 }
             }
 #endif

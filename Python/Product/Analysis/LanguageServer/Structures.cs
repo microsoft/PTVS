@@ -609,13 +609,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     public struct SignatureInformation {
         public string label;
-        public MarkupContent documentation;
+        public MarkupContent? documentation;
         public ParameterInformation[] parameters;
     }
 
     public struct ParameterInformation {
         public string label;
-        public MarkupContent documentation;
+        public MarkupContent? documentation;
+
+        public string _type;
+        public string _defaultValue;
+        public bool? _isOptional;
     }
 
     /// <summary>
@@ -634,6 +638,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that range applies to
         /// </summary>
         public int? _version;
+        /// <summary>
+        /// The full range of the definition. For example, when 'range' points
+        /// to a function name, '_definitionRange' refers to the whole function.
+        /// </summary>
+        public Range? _definitionRange;
     }
 
     public struct DocumentHighlight {

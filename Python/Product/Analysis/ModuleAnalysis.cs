@@ -102,24 +102,26 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
-            if (locatedDef != null &&
-                locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
-                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
+            var parse = locatedDef?.Entry?.GetCurrentParse();
+            if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
+                var tree = parse.Tree;
+                var version = (parse.Cookie as Intellisense.VersionCookie)?.DefaultVersion;
+                var identifierStart = locatedDef.Node.GetStart(tree);
+                var identifierEnd = locatedDef.Node.GetEnd(tree);
 
                 // For classes and functions, find the ClassDefinition or
                 // FunctionDefinition to get the full span of the definition.
                 var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
-                locatedDef.Entry.Tree.Walk(walker);
+                tree.Walk(walker);
 
                 SourceLocation definitionStart;
                 SourceLocation definitionEnd;
                 if (walker.Definition != null) {
-                    definitionStart = walker.Definition.GetStart(locatedDef.Entry.Tree);
-                    definitionEnd = walker.Definition.GetEnd(locatedDef.Entry.Tree);
+                    definitionStart = walker.Definition.GetStart(tree);
+                    definitionEnd = walker.Definition.GetEnd(tree);
                 } else {
                     definitionStart = identifierStart;
-                    definitionEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+                    definitionEnd = locatedDef.Node.GetEnd(tree);
                 }
 
                 yield return new AnalysisVariable(
@@ -127,17 +129,22 @@ namespace Microsoft.PythonTools.Analysis {
                     // Location of the identifier only
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         identifierStart.Line,
-                        identifierStart.Column
+                        identifierStart.Column,
+                        identifierEnd.Line,
+                        identifierEnd.Column
                     ),
                     // Location of the full definition
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         definitionStart.Line,
                         definitionStart.Column,
                         definitionEnd.Line,
                         definitionEnd.Column
-                    )
+                    ),
+                    version
                 );
             }
 
@@ -222,21 +229,28 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
-            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             if (expr == null) {
-                return new VariablesResult(variables, ast);
+                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), ast);
             }
 
+            return GetVariables(expr, location, exprText);
+        }
+
+        internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null) {
+            var scope = FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var tree = unit.Tree;
+
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             var finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { Calls = true });
             var callNode = finder.GetExpression(location) as CallExpression;
             if (callNode != null) {
                 finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { NamedArgumentNames = true });
                 var argNode = finder.GetExpression(location) as NameExpression;
-                if (argNode != null && argNode.Name == exprText) {
+                if (argNode != null && (string.IsNullOrEmpty(originalText) || argNode.Name == originalText)) {
                     var objects = eval.Evaluate(callNode.Target);
 
                     return new VariablesResult(objects
@@ -244,8 +258,8 @@ namespace Microsoft.PythonTools.Analysis {
                         .Select(v => (v as BoundMethodInfo)?.Function ?? v as FunctionInfo)
                         .Select(f => f?.AnalysisUnit?.Scope)
                         .Where(s => s != null)
-                        .SelectMany(s => GetVariablesInScope(argNode, s)
-                        .Distinct()), ast);
+                        .SelectMany(s => GetVariablesInScope(argNode, s).Distinct()),
+                        unit.Tree);
                 }
             }
 
@@ -262,16 +276,12 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (expr is MemberExpression member && !string.IsNullOrEmpty(member.Name)) {
                 var objects = eval.Evaluate(member.Target);
 
-                foreach (var v in objects) {
-                    var container = v as IReferenceableContainer;
-                    if (container != null) {
-                        variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
-                        break;
-                    }
+                foreach (var v in objects.OfType<IReferenceableContainer>()) {
+                    variables = variables.Union(v.GetDefinitions(member.Name).SelectMany(ToVariables));
                 }
             }
 
-            return new VariablesResult(variables, ast);
+            return new VariablesResult(variables, unit.Tree);
         }
 
         private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
@@ -521,7 +531,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
-            // TODO: Include relevant type info on the parameter...
             result.UnionWith(lookup
                 // Exclude constant values first time through
                 .Where(av => av.MemberType != PythonMemberType.Constant)
@@ -1154,6 +1163,10 @@ namespace Microsoft.PythonTools.Analysis {
                 return name;
             }
             return null;
+        }
+
+        internal string GetPrivatePrefix(SourceLocation sourceLocation) {
+            return GetPrivatePrefix(FindScope(sourceLocation));
         }
 
         private static string GetPrivatePrefixClassName(InterpreterScope scope) {

@@ -75,10 +75,10 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 if (string.IsNullOrEmpty(AdditionalInformation)) {
                     AdditionalInformation = Strings.PythonNavigateToItemDisplay_FileInfo.FormatUI(_location.file);
                 }
-                if (_location.line > 0) {
+                if (_location.startLine > 0) {
                     descrItems.Add(new DescriptionItem(
                         Array.AsReadOnly(new[] { new DescriptionRun(Strings.PythonNavigateToItemDisplay_LineHeader, bold: true) }),
-                        Array.AsReadOnly(new[] { new DescriptionRun(_location.line.ToString()) })
+                        Array.AsReadOnly(new[] { new DescriptionRun(_location.startLine.ToString()) })
                     ));
                 }
             }
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 return;
             }
 
-            PythonToolsPackage.NavigateTo(_services.Site, _location.file, Guid.Empty, _location.line - 1, _location.column - 1);
+            PythonToolsPackage.NavigateTo(_services.Site, _location.file, Guid.Empty, _location.startLine - 1, _location.startColumn - 1);
         }
 
         private static Icon GetIcon(IGlyphService glyphService, StandardGlyphGroup glyphGroup) {

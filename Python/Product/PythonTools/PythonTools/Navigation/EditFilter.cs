@@ -368,10 +368,7 @@ namespace Microsoft.PythonTools.Language {
             }
 
             private string GetSearchDisplayText() {
-                return String.Format("{0} - ({1}, {2}): ",
-                    _locationInfo.FilePath,
-                    _locationInfo.StartLine,
-                    _locationInfo.StartColumn);
+                return $"{_locationInfo.FilePath} - {_locationInfo.Span.Start}: ";
             }
 
             public override string UniqueName {

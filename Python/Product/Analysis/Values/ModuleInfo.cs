@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                return new[] { new LocationInfo(ProjectEntry.FilePath, 1, 1) };
+                return new[] { new LocationInfo(ProjectEntry.FilePath, ProjectEntry.DocumentUri, 1, 1) };
             }
         }
 

@@ -190,14 +190,6 @@
   <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
   <Import Project="$(TargetsPath)\MicroBuild.props" />
 
-  <ItemGroup>
-    <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
   <!-- Check for the VSSDK Build Tools arbitrarily to see whether we should run the script. -->
   <Target Name="_EnsureDependenciesInstalled" BeforeTargets="PrepareForBuild" Condition="!Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')">
     <Exec Command='powershell.exe -ExecutionPolicy Bypass -File "$(TargetsPath)\PreBuild.ps1" -VsTarget $(VSTarget)' />
