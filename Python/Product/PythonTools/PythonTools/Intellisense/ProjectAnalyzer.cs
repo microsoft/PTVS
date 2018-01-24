@@ -254,6 +254,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
+            if (_analysisOptions.analysisLimits == null) {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
+                    var traceLogging = key?.GetValue("TraceLogging", null);
+                    if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
+                        initialize.traceLogging = true;
+                        _analysisOptions.traceLevel = LS.MessageType.Log;
+                    }
+                }
+            }
+
+
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
                 if (initResponse?.error != null) {
@@ -287,12 +299,6 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                     }
                     _analysisOptions.commentTokens[keyValue.Key] = sev;
-                }
-            }
-
-            if (_analysisOptions.analysisLimits == null) {
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
                 }
             }
 
