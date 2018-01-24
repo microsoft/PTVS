@@ -178,6 +178,9 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
                 List<NewLineLocation> asLengths = null;
                 while (ver.Changes != null && ver.VersionNumber < version) {
+#if DEBUG
+                    appliedVersions.Add(ver);
+#endif
                     if (asLengths == null) {
                         asLengths = LineEndsToLineLengths(initial).ToList();
                     }
