@@ -48,7 +48,8 @@ namespace Microsoft.PythonTools.Refactoring {
                 return;
             }
 
-            var analysis = analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
+            var analysis = analyzer.GetAnalysisEntryFromUri(locationInfo.DocumentUri) ??
+                analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
             if (analysis == null) {
                 return;
             }

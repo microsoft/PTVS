@@ -52,6 +52,30 @@ namespace Microsoft.PythonTools.Intellisense {
                 yield return new KeyValuePair<Uri, BufferVersion>(u, kv.Value);
             }
         }
+
+        /// <summary>
+        /// Returns the version of the default part (part #0).
+        /// </summary>
+        public int? DefaultVersion => Versions.TryGetValue(0, out var bv) ? bv.Version : (int?)null;
+
+        /// <summary>
+        /// Gets the version data for part identified by the specified URI.
+        /// Returns null if not found.
+        /// </summary>
+        public BufferVersion GetVersion(Uri documentUri) {
+            if (documentUri == null) {
+                return null;
+            }
+
+            BufferVersion result;
+            var f = documentUri.Fragment;
+            if (!string.IsNullOrEmpty(f) && f.StartsWith("#") && int.TryParse(f.Substring(1), out int part)) {
+                Versions.TryGetValue(part, out result);
+            } else {
+                Versions.TryGetValue(0, out result);
+            }
+            return result;
+        }
     }
 
     /// <summary>

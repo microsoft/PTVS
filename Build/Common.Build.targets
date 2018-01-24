@@ -4,6 +4,22 @@
   <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
 
+  <ItemGroup>
+    <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!--
+    We should conditionally override the rule set, so that we use the proper rules when building
+    in our CI system. However, we do not yet come anywhere near meeting them (mostly because
+    we don't pass a CultureInfo to string.Format everywhere), so this will be done later.
+    
+    <CodeAnalysisRuleSet Condition="$(CodeAnalysisRuleSet) == ''">$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+    -->
+    <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+
   <!--
   Transforms ProjectReference2 items into references that will be built
   but are not used as build references.

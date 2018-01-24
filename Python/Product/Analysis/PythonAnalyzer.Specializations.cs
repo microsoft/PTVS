@@ -644,7 +644,7 @@ namespace Microsoft.PythonTools.Analysis {
                                     if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
                                         def.AddAssignment(
                                             new EncodedLocation(
-                                                new LocationInfo(xamlProject.FilePath, type.LineNumber, type.LineOffset),
+                                                new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, type.LineNumber, type.LineOffset),
                                                 null
                                             ),
                                             xamlProject
@@ -670,7 +670,7 @@ namespace Microsoft.PythonTools.Analysis {
                                     if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
                                         def.AddReference(
                                             new EncodedLocation(
-                                                new LocationInfo(xamlProject.FilePath, member.LineNumber, member.LineOffset),
+                                                new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, member.LineNumber, member.LineOffset),
                                                 null
                                             ),
                                             xamlProject

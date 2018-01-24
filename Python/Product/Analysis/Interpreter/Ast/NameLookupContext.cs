@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonAst ast,
             IPythonModule self,
             string filePath,
+            Uri documentUri,
             bool includeLocationInfo, 
             IPythonModule builtinModule = null,
             AnalysisLogWriter log = null
@@ -47,6 +48,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Ast = ast ?? throw new ArgumentNullException(nameof(ast));
             Module = self;
             FilePath = filePath;
+            DocumentUri = documentUri;
             IncludeLocationInfo = includeLocationInfo;
 
             DefaultLookupOptions = LookupOptions.Normal;
@@ -64,6 +66,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public PythonAst Ast { get; }
         public IPythonModule Module { get; }
         public string FilePath { get; }
+        public Uri DocumentUri { get; }
         public bool IncludeLocationInfo { get; }
 
         public LookupOptions DefaultLookupOptions { get; set; }
@@ -76,6 +79,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 Ast,
                 Module,
                 FilePath,
+                DocumentUri,
                 IncludeLocationInfo,
                 _builtinModule.IsValueCreated ? _builtinModule.Value : null,
                 _log
@@ -123,7 +127,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var start = node.GetStart(Ast);
             var end = node.GetEnd(Ast);
-            return new LocationInfo(FilePath, start.Line, start.Column, end.Line, end.Column);
+            return new LocationInfo(FilePath, DocumentUri, start.Line, start.Column, end.Line, end.Column);
         }
 
         internal LocationInfo GetLocOfName(Node node, NameExpression header) {
@@ -138,7 +142,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (nameStart.Line > loc.StartLine || (nameStart.Line == loc.StartLine && nameStart.Column > loc.StartColumn)) {
-                return new LocationInfo(loc.FilePath, nameStart.Line, nameStart.Column, loc.EndLine, loc.EndColumn);
+                return new LocationInfo(loc.FilePath, loc.DocumentUri, nameStart.Line, nameStart.Column, loc.EndLine, loc.EndColumn);
             }
 
             return loc;

@@ -1,4 +1,3 @@
-extern alias pythontools;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -15,13 +14,9 @@ extern alias pythontools;
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Refactoring;
+extern alias analysis;
+extern alias pythontools;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -29,8 +24,13 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Refactoring;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -2378,12 +2378,10 @@ def g(a, b, c):
         class FileInput {
             public readonly string Input, Output, Filename;
 
-            static string DefaultFilename = Path.Combine(TestData.GetTempPath(), "test.py");
-
             public FileInput(string input, string output, string filename = null) {
                 Input = input;
                 Output = output;
-                Filename = filename ?? DefaultFilename;
+                Filename = filename ?? "test.py";
             }
         }
 
@@ -2433,7 +2431,7 @@ def g(a, b, c):
         }
 
         private void CannotRename(string caretText, string text, string error) {
-            OneRefactorTest("xyz", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", "C:\\abc.py") }, null, false, error, null);
+            OneRefactorTest("xyz", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", null) }, null, false, error, null);
         }
 
         private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null, string expectedSelectedText = null) {
@@ -2448,12 +2446,12 @@ def g(a, b, c):
 
                     views.Add(mainView);
                     var bufferTable = new Dictionary<string, ITextBuffer> {
-                        { inputs[0].Filename, mainView.CurrentSnapshot.TextBuffer }
+                        { mainView.BufferInfo.Filename, mainView.CurrentSnapshot.TextBuffer }
                     };
                     foreach (var i in inputs.Skip(1)) {
                         var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
                         views.Add(editor);
-                        bufferTable[i.Filename] = editor.CurrentSnapshot.TextBuffer;
+                        bufferTable[editor.BufferInfo.Filename] = editor.CurrentSnapshot.TextBuffer;
                     }
 
 
