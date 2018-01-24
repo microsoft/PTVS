@@ -4,6 +4,15 @@
   <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
 
+  <ItemGroup>
+    <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet Condition="$(CodeAnalysisRuleSet) == ''">$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+
   <!--
   Transforms ProjectReference2 items into references that will be built
   but are not used as build references.
