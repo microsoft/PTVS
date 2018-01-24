@@ -17,12 +17,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class FunctionScope : InterpreterScope {
         private readonly AnalysisDictionary<string, VariableDef> _parameters;
+        private List<FunctionScope> _linkedScope;
 
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
@@ -49,6 +51,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        internal void AddLinkedScope(FunctionScope scope) {
+            if (_linkedScope == null) {
+                _linkedScope = new List<FunctionScope>();
+            }
+            _linkedScope.Add(scope);
+        }
+
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
             if (types?.Any() != true) {
                 return;
@@ -60,6 +69,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else {
                 ReturnValue.MakeUnionStrongerIfMoreThan(unit.State.Limits.ReturnTypes, types);
                 ReturnValue.AddTypes(unit, types, enqueue);
+            }
+
+            foreach (var scope in _linkedScope.MaybeEnumerate()) {
+                scope.AddReturnTypes(node, unit, types, enqueue);
             }
         }
 
@@ -78,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return null;
         }
 
-        internal void EnsureParameters(FunctionAnalysisUnit unit) {
+        internal void EnsureParameters(FunctionAnalysisUnit unit, bool usePlaceholders) {
             var astParams = Function.FunctionDefinition.Parameters;
             for (int i = 0; i < astParams.Count; ++i) {
                 var name = astParams[i].Name;
@@ -91,21 +104,25 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 if (astParams[i].Kind == ParameterKind.List) {
                     if (_seqParameters == null) {
                         _seqParameters = new ListParameterVariableDef(unit, node, name);
-                        AddParameter(unit, name, node);
+                        AddParameter(unit, name, node, usePlaceholders ? null : _seqParameters);
                     }
                 } else if (astParams[i].Kind == ParameterKind.Dictionary) {
                     if (_dictParameters == null) {
                         _dictParameters = new DictParameterVariableDef(unit, node, name);
-                        AddParameter(unit, name, node);
+                        AddParameter(unit, name, node, usePlaceholders ? null : _dictParameters);
                     }
                 } else if (!_parameters.ContainsKey(name)) {
-                    _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, node);
-                    AddParameter(unit, name, node);
+                    var p = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, node);
+                    AddParameter(unit, name, node, usePlaceholders ? null : p);
                 }
             }
         }
 
-        private VariableDef AddParameter(AnalysisUnit unit, string name, Node node) {
+        private VariableDef AddParameter(AnalysisUnit unit, string name, Node node, VariableDef variableDef) {
+            if (variableDef != null) {
+                return AddVariable(name, variableDef);
+            }
+
             var p = CreateVariable(node, unit, name);
             p.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
             return p;
@@ -120,8 +137,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
-            EnsureParameters(unit);
+        internal bool UpdateParameters(
+            FunctionAnalysisUnit unit,
+            ArgumentSet others,
+            bool enqueue = true,
+            FunctionScope scopeWithDefaultParameters = null,
+            bool usePlaceholders = false
+        ) {
+            EnsureParameters(unit, usePlaceholders);
 
             var astParams = Function.FunctionDefinition.Parameters;
             bool added = false;

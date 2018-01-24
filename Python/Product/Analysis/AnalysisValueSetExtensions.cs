@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis {
             var res = AnalysisSet.Empty;
             foreach (var ns in self) {
                 if (ns is LazyValueInfo l) {
-                    res = res.Union(l.Resolve(unit, null, default(ArgumentSet)));
+                    res = res.Union(l.Resolve(unit, ResolutionContext.Empty));
                 } else {
                     res = res.Add(ns);
                 }

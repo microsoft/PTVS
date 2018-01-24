@@ -85,24 +85,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private IAnalysisSet Resolve(AnalysisUnit unit) {
-            Resolve(unit, null, default(ArgumentSet)).Split(out IReadOnlyList<LazyValueInfo> _, out var result);
+            Resolve(unit, new ResolutionContext()).Split(out IReadOnlyList<LazyValueInfo> _, out var result);
             return result;
         }
 
-        public virtual IAnalysisSet Resolve(AnalysisUnit unit, FunctionInfo calling, ArgumentSet callingArgs) {
+        public virtual IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
             if (!Push()) {
                 return AnalysisSet.Empty;
             }
 
             try {
                 if (_value is ParameterInfo pi) {
-                    return pi.Resolve(unit, calling, callingArgs);
+                    return pi.Resolve(unit, context);
                 } else if (_value != null) {
                     return _value;
                 }
 
-                var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, calling, callingArgs));
-                var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, calling, callingArgs));
+                var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context));
+                var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context));
 
                 switch (_lazyOp) {
                     case LazyOperation.Automatic:
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 if (_args != null) {
-                    return left.Value.Call(_node, unit, ResolveArgs(_args, unit, calling, callingArgs).ToArray(), _argNames);
+                    return left.Value.Call(_node, unit, ResolveArgs(_args, unit, context).ToArray(), _argNames);
                 }
 
                 if (_op.HasValue) {
@@ -139,10 +139,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private static IEnumerable<IAnalysisSet> ResolveArgs(IAnalysisSet[] args, AnalysisUnit unit, FunctionInfo calling, ArgumentSet callingArgs) {
+        private static IEnumerable<IAnalysisSet> ResolveArgs(IAnalysisSet[] args, AnalysisUnit unit, ResolutionContext context) {
             foreach (var a in args.MaybeEnumerate()) {
                 if (a.Split(out IReadOnlyList<LazyValueInfo> lvis, out var rest)) {
-                    yield return rest.UnionAll(lvis.Select(v => v.Resolve(unit, calling, callingArgs)));
+                    yield return rest.UnionAll(lvis.Select(v => v.Resolve(unit, context)));
                 }
                 yield return a;
             }
@@ -235,11 +235,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _indexTypes;
         }
 
-        public override IAnalysisSet Resolve(AnalysisUnit unit, FunctionInfo calling, ArgumentSet callingArgs) {
+        public override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
             if (_fallback().Split(out IReadOnlyList<LazyValueInfo> lvis, out IAnalysisSet rest)) {
-                return rest.UnionAll(lvis.Select(lvi => lvi.Resolve(unit, calling, callingArgs)));
+                return rest.UnionAll(lvis.Select(lvi => lvi.Resolve(unit, context)));
             }
             return rest;
         }
+    }
+
+    sealed class ResolutionContext {
+        public static readonly ResolutionContext Empty = new ResolutionContext();
+
+        public FunctionInfo Caller { get; set; }
+        public ArgumentSet CallArgs { get; set; }
+        public IReadOnlyDictionary<string, IAnalysisSet> Closure { get; set; }
     }
 }

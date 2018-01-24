@@ -28,81 +28,95 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class FunctionInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription {
         private Dictionary<AnalysisValue, IAnalysisSet> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
-        private readonly FunctionDefinition _functionDefinition;
         private readonly FunctionAnalysisUnit _analysisUnit;
-        private readonly ProjectEntry _projectEntry;
-        public bool IsStatic;
-        public bool IsClassMethod;
-        public bool IsProperty;
         private ReferenceDict _references;
         private readonly int _declVersion;
         private string _doc;
 
+        private readonly ClosureSetDefinition _closureDefinition;
+        private readonly Dictionary<ClosureSet, FunctionAnalysisUnit> _callsWithClosure;
+
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
-            _projectEntry = declUnit.ProjectEntry;
-            _functionDefinition = node;
+            ProjectEntry = declUnit.ProjectEntry;
+            FunctionDefinition = node;
             _declVersion = declUnit.ProjectEntry.AnalysisVersion;
 
-            if (_functionDefinition.Name == "__new__") {
+            if (FunctionDefinition.Name == "__new__") {
                 IsClassMethod = true;
             }
 
             _doc = node.Body?.Documentation?.TrimDocumentation();
 
-            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, _projectEntry);
-        }
+            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry);
 
-        public ProjectEntry ProjectEntry {
-            get {
-                return _projectEntry;
+            if (node.ContainsNestedFreeVariables) {
+                _closureDefinition = new ClosureSetDefinition(node.Variables);
+                _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
             }
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _analysisUnit.ProjectEntry;
-            }
-        }
+        public ProjectEntry ProjectEntry { get; }
 
-        public FunctionDefinition FunctionDefinition {
-            get {
-                return _functionDefinition;
-            }
-        }
+        public override IPythonProjectEntry DeclaringModule => _analysisUnit.ProjectEntry;
 
-        public override AnalysisUnit AnalysisUnit {
-            get {
-                return _analysisUnit;
-            }
-        }
+        public FunctionDefinition FunctionDefinition { get; }
 
-        public override int DeclaringVersion {
-            get {
-                return _declVersion;
-            }
-        }
+        public override AnalysisUnit AnalysisUnit => _analysisUnit;
+
+        public override int DeclaringVersion => _declVersion;
+
+        public IReadOnlyList<string> ClosureNames { get; }
+
+        public bool IsStatic { get; set; }
+        public bool IsClassMethod { get; set; }
+        public bool IsProperty { get; set; }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);
-
-            _analysisUnit.UpdateParameters(callArgs);
 
             if (keywordArgNames != null && keywordArgNames.Any()) {
                 _analysisUnit.AddNamedParameterReferences(unit, keywordArgNames);
             }
 
-            _analysisUnit.ReturnValue.AddDependency(unit);
+            var res = DoCall(node, unit, _analysisUnit, callArgs);
 
-            if (_analysisUnit.ReturnValue.Types.Split(out IReadOnlyList<LazyValueInfo> pi, out var res)) {
+            if (_closureDefinition != null) {
+                FunctionAnalysisUnit calledUnit;
+                var key = _closureDefinition.Get(node, unit);
+                lock (_callsWithClosure) {
+                    if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
+                        calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
+                    }
+                    // Always replace the key
+                    _callsWithClosure[key] = calledUnit;
+                }
+
+                res = res.Union(DoCall(node, unit, calledUnit, callArgs));
+            }
+
+
+            var context = new ResolutionContext {
+                Caller = this,
+                CallArgs = callArgs
+            };
+
+            if (res.Split(out IReadOnlyList<LazyValueInfo> pi, out res)) {
                 res = res.Union(pi.SelectMany(p => {
-                    var r = p.Resolve(unit, this, callArgs);
+                    var r = p.Resolve(unit, context);
                     if (!r.Any() && unit.ForEval) {
                         return p.Resolve(unit);
                     }
                     return r;
                 }));
             }
+
             return res;
+        }
+
+        private IAnalysisSet DoCall(Node node, AnalysisUnit callingUnit, FunctionAnalysisUnit calledUnit, ArgumentSet callArgs) {
+            calledUnit.UpdateParameters(callArgs);
+            calledUnit.ReturnValue.AddDependency(callingUnit);
+            return calledUnit.ReturnValue.Types;
         }
 
         public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name) {

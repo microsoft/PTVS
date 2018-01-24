@@ -408,7 +408,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         SpecializedInstance,
         Dictionary,
         TypeAnnotation,
-        ParameterInfo
+        ParameterInfo,
+        FunctionWithClosure
     }
 
 }

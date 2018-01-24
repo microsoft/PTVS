@@ -15,40 +15,27 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     struct ArgumentSet {
         public readonly IAnalysisSet[] Args;
+        public readonly IAnalysisSet SequenceArgs;
+        public readonly IAnalysisSet DictArgs;
+        public readonly IReadOnlyDictionary<PythonVariable, IAnalysisSet> Closure;
 
-        public ArgumentSet(IAnalysisSet[] args) {
-            this.Args = args;
-        }
-
-        public IAnalysisSet SequenceArgs {
-            get {
-                return Args[Args.Length - 2];
-            }
-        }
-
-        public IAnalysisSet DictArgs {
-            get {
-                return Args[Args.Length - 1];
-            }
-        }
-        public int Count {
-            get {
-                return Args.Length - 2;
-            }
+        public ArgumentSet(IAnalysisSet[] args, IAnalysisSet sequenceArgs, IAnalysisSet dictArgs, IReadOnlyDictionary<PythonVariable, IAnalysisSet> closure) {
+            Args = args;
+            SequenceArgs = sequenceArgs;
+            DictArgs = dictArgs;
+            Closure = closure;
         }
 
-        public int CombinationCount {
-            get {
-                return Args.Take(Count).Where(y => y.Count >= 2).Aggregate(1, (x, y) => x * y.Count);
-            }
-        }
+        public int Count => Args.Length;
 
         public override string ToString() {
             return string.Join(", ", Args.Take(Count).Select(a => a.ToString())) +
@@ -56,8 +43,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 (DictArgs.Any() ? ", **" + DictArgs.ToString() : "");
         }
 
-        public static bool AreCompatible(ArgumentSet x, ArgumentSet y) {
-            return x.Args.Length == y.Args.Length;
+        public ArgumentSet WithClosure(IReadOnlyDictionary<PythonVariable, IAnalysisSet> closure) {
+            //IAnalysisSet[] closure = null;
+            //if ((node.FreeVariables?.Count ?? 0) > 0) {
+            //    closure = new IAnalysisSet[node.FreeVariables.Count];
+            //    var eval = new ExpressionEvaluator(unit, unit.Scope.OuterScope);
+            //    for (int i = 0; i < node.FreeVariables.Count; ++i) {
+            //        closure[i] = ReduceArgs(eval.Evaluate(new NameExpression(node.FreeVariables[i].Name)), limits.ClosureTypes);
+            //    }
+            //}
+
+            return new ArgumentSet(Args, SequenceArgs, DictArgs, closure);
         }
 
         public static ArgumentSet FromArgs(FunctionDefinition node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgs) {
@@ -76,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             int dictArgsIndex = -1;
 
             int argCount = node.Parameters.Count;
-            var newArgs = new IAnalysisSet[argCount + 2];
+            var newArgs = new IAnalysisSet[argCount];
             for (int i = 0; i < node.Parameters.Count; ++i) {
                 if (node.Parameters[i].Kind == ParameterKind.List) {
                     listArgsIndex = i;
@@ -179,19 +175,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
             for (int i = 0; i < argCount; ++i) {
                 newArgs[i] = ReduceArgs(newArgs[i], limits.NormalArgumentTypes);
             }
-            newArgs[argCount] = ReduceArgs(seqArgs, limits.ListArgumentTypes);
-            newArgs[argCount + 1] = ReduceArgs(dictArgs, limits.DictArgumentTypes);
 
-            return new ArgumentSet(newArgs);
+            var set = new ArgumentSet(
+                newArgs,
+                ReduceArgs(seqArgs, limits.ListArgumentTypes),
+                ReduceArgs(dictArgs, limits.DictArgumentTypes),
+                null
+            );
+
+            return set;
         }
 
         private static IAnalysisSet ReduceArgs(IAnalysisSet args, int limit) {
-            for (int j = 0; j <= UnionComparer.MAX_STRENGTH; ++j) {
-                if (args.Count > limit) {
-                    args = args.AsUnion(j);
-                } else {
-                    break;
+            while (args.Count > limit) {
+                var newArgs = args.AsStrongerUnion();
+                if (ReferenceEquals(newArgs, args)) {
+                    return args;
                 }
+                args = newArgs;
             }
             return args;
         }

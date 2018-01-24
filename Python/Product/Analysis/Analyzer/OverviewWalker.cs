@@ -165,13 +165,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 prevScope.AddNodeScope(node, scope);
 
                 if (!node.IsLambda && node.Name != "<genexpr>") {
-                    // lambdas don't have their names published
-
-                    var funcVar = prevScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
-                    // Decorated functions don't have their type set yet
-                    if (node.Decorators == null) {
-                        funcVar.AddTypes(unit, func.SelfSet);
-                    }
+                    // Create the variable (except for lambdas) but do not add any
+                    // values yet. (This happens in FunctionAnalysisUnit.)
+                    prevScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
                 }
 
                 unit.Enqueue();

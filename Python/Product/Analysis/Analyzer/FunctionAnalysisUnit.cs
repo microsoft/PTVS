@@ -22,13 +22,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
-    /// <summary>
-    /// Provides analysis of a function called with a specific set of arguments.  We analyze each function
-    /// with each unique set of arguments (the cartesian product of the arguments).
-    /// 
-    /// It's possible that we still need to perform the analysis multiple times which can occur 
-    /// if we take a dependency on something which later gets updated.
-    /// </summary>
     class FunctionAnalysisUnit : AnalysisUnit {
         public readonly FunctionInfo Function;
 
@@ -56,7 +49,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _declUnit = declUnit;
             Function = function;
         }
-            
+
+        internal virtual void EnsureParameters() {
+            ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: true);
+        }
+
         internal virtual bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
             return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, null);
         }
@@ -70,20 +67,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            ((FunctionScope)Scope).EnsureParameters(this);
+            EnsureParameters();
 
             // Resolve default parameters and decorators in the outer scope but
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;
             AnalyzeDefaultParameters(ddg);
-            if (_decoratorCalls != null) {
-                ProcessFunctionDecorators(ddg);
-            }
+
+            var funcType = ProcessFunctionDecorators(ddg);
+
+            var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
+            v.AddAssignment(new EncodedLocation(this, Ast), ProjectEntry);
 
             // Set the scope to within the function
             ddg.Scope = Scope;
 
             Ast.Body.Walk(ddg);
+
+            v.AddTypes(this, funcType);
         }
 
 
@@ -99,9 +100,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        internal void ProcessFunctionDecorators(DDG ddg) {
+        internal IAnalysisSet ProcessFunctionDecorators(DDG ddg) {
+            var types = Function.SelfSet;
             if (Ast.Decorators != null) {
-                var types = Function.SelfSet;
                 Expression expr = Ast.NameExpression;
 
                 foreach (var d in Ast.Decorators.Decorators) {
@@ -140,8 +141,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         }
                     }
                 }
-
-                ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this).AddTypes(this, types);
             }
 
             if (!Function.IsStatic && Ast.Parameters.Count > 0) {
@@ -158,6 +157,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     param.AddTypes(this, firstParam, false);
                 }
             }
+
+            return types;
         }
 
         internal void AnalyzeDefaultParameters(DDG ddg) {
@@ -206,6 +207,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
+        }
+    }
+
+    class FunctionClosureAnalysisUnit : FunctionAnalysisUnit {
+        private readonly FunctionAnalysisUnit _inner;
+
+        internal FunctionClosureAnalysisUnit(FunctionAnalysisUnit inner) :
+            base(inner.Function, inner._declUnit, inner._declUnit.Scope, inner.ProjectEntry) {
+            _inner = inner;
+            ((FunctionScope)_inner.Scope).AddLinkedScope((FunctionScope)Scope);
+        }
+
+        internal override void EnsureParameters() {
+            ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
+        }
+
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            base.AnalyzeWorker(ddg, cancel);
         }
     }
 }
