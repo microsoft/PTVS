@@ -322,7 +322,7 @@ mc";
 
         [TestMethod, Priority(0)]
         public async Task SignatureHelp() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var mod = await AddModule(s, @"f()
 def f(): pass
 def f(a): pass
@@ -360,7 +360,7 @@ def f(a = 2, b): pass
 
         [TestMethod, Priority(0)]
         public async Task FindReferences() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var mod1 = await AddModule(s, @"
 def f(a):
     a.real
