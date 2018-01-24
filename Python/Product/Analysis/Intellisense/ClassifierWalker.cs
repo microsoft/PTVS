@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void AddParameter(Parameter node) {
             Debug.Assert(_head != null);
             _head.Parameters.Add(node.Name);
-            _head.Names.Add(Tuple.Create(node.Name, new Span(node.StartIndex, node.Name.Length)));
+            _head.Names.Add(Tuple.Create(node.Name, new Span(node.NameSpan.Start, node.NameSpan.Length)));
         }
 
         private void AddParameter(Node node) {
