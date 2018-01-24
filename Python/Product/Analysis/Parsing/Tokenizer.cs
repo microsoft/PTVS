@@ -2718,22 +2718,26 @@ namespace Microsoft.PythonTools.Parsing {
             if (lineLocations == null) {
                 return 0;
             }
+            int index = 0;
             if (lineLocations.Length == 0) {
                 // We have a single line, so the column is the index
-                return location.Column - 1;
+                index = location.Column - 1;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
             int line = location.Line - 1;
+
             if (line > lineLocations.Length) {
-                return lineLocations[lineLocations.Length - 1].EndIndex;
+                index = lineLocations[lineLocations.Length - 1].EndIndex;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
 
-            int index = 0;
             if (line > 0) {
                 index = lineLocations[line - 1].EndIndex;
             }
 
             if (line < lineLocations.Length && location.Column > (lineLocations[line].EndIndex - index)) {
-                return lineLocations[line].EndIndex;
+                index = lineLocations[line].EndIndex;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
 
             if (endIndex < 0) {
