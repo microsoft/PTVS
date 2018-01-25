@@ -156,5 +156,29 @@ namespace Microsoft.PythonTools.Intellisense {
         public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, string newCode, string newLine = "\r\n") {
             return LinePreservingCodeReplacer.Replace(oldCode, newCode, newLine);
         }
+
+        private static SourceSpan OffsetSpan(SourceSpan span, SourceLocation offset) {
+            var newStart = new SourceLocation(
+                span.Start.Line + offset.Line - 1,
+                span.Start.Column + (span.Start.Line == 1 ? offset.Column - 1 : 0)
+            );
+
+            var newEnd = new SourceLocation(
+                span.End.Line + offset.Line - 1,
+                span.End.Column + (span.End.Line == 1 ? offset.Column - 1 : 0)
+            );
+
+            return new SourceSpan(newStart, newEnd);
+        }
+
+        public static IEnumerable<DocumentChange> ApplyOffset(this IEnumerable<DocumentChange> changes, SourceLocation offset) {
+            foreach (var c in changes) {
+                yield return new DocumentChange {
+                    WholeBuffer = c.WholeBuffer,
+                    InsertedText = c.InsertedText,
+                    ReplacedSpan = OffsetSpan(c.ReplacedSpan, offset)
+                };
+            }
+        }
     }
 }
