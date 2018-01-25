@@ -319,22 +319,13 @@ namespace Microsoft.PythonTools.Infrastructure {
             TcpListener listener = null;
             Task<TcpClient> clientTask = null;
 
-            int port = SocketUtils.WithFreePort(p => {
-                listener = new TcpListener(IPAddress.Loopback, p);
-                listener.Start();
-
-                try {
-                    clientTask = listener.AcceptTcpClientAsync();
-                } catch (SocketException) {
-                    listener.Stop();
-                    throw;
-                }
-                return p;
-            });
-            psi.Arguments = port.ToString();
-
-            if (clientTask == null) {
-                throw new InvalidOperationException(Strings.UnableToElevate);
+            try {
+                listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
+                psi.Arguments = port.ToString();
+                clientTask = listener.AcceptTcpClientAsync();
+            } catch (Exception ex) {
+                listener?.Stop();
+                throw new InvalidOperationException(Strings.UnableToElevate, ex);
             }
 
             var process = new Process();
