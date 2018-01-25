@@ -710,10 +710,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.FormatCodeResponse() {
                 version = version,
                 changes = selectedCode.ReplaceByLines(
+                    walker.Target.StartIncludingLeadingWhiteSpace.Line,
                     body.ToCodeString(ast, request.options),
                     request.newLine
-                ).ApplyOffset(walker.Target.StartIncludingLeadingWhiteSpace)
-                .Select(AP.ChangeInfo.FromDocumentChange).ToArray()
+                ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()
             };
         }
 
