@@ -34,7 +34,6 @@
     <RootNamespace>Microsoft.PythonTools.ProjectWizards</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.ProjectWizards</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
