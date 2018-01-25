@@ -30,7 +30,6 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Django.Analysis,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.EnvironmentsList,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.EnvironmentsList.Host,B03F5F7F11D50A3A]
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.ImportWizard,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Ipc.Json,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.IronPython,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.IronPython.Interpreter,B03F5F7F11D50A3A]

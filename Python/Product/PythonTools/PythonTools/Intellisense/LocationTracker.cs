@@ -173,8 +173,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     ver = ver.Next;
                 }
 
+#if DEBUG
+                var appliedVersions = new List<ITextVersion>();
+#endif
                 List<NewLineLocation> asLengths = null;
                 while (ver.Changes != null && ver.VersionNumber < version) {
+#if DEBUG
+                    appliedVersions.Add(ver);
+#endif
                     if (asLengths == null) {
                         asLengths = LineEndsToLineLengths(initial).ToList();
                     }
@@ -186,9 +192,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         while (asLengths.Count <= lineNo) {
                             asLengths.Add(new NewLineLocation(0, NewLineKind.None));
                         }
-                        var line = asLengths[lineNo];
                         
                         if (c.OldLength > 0) {
+                            var line = asLengths[lineNo];
                             // Deletion may span lines, so combine them until we can delete
                             int cutAtCol = oldLoc.Column - 1;
                             for (int toRemove = c.OldLength; lineNo < asLengths.Count; lineNo += 1) {
@@ -212,6 +218,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                         }
                         if (!string.IsNullOrEmpty(c.NewText)) {
+                            var line = asLengths[lineNo];
                             NewLineLocation addedLine = new NewLineLocation(0, NewLineKind.None);
                             int lastLineEnd = 0, cutAtCol = oldLoc.Column - 1;
                             if (cutAtCol > line.EndIndex - line.Kind.GetSize() && lineNo + 1 < asLengths.Count) {
@@ -242,6 +249,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     initial = LineLengthsToLineEnds(asLengths).ToArray();
                     _lineCache[ver.VersionNumber + 1] = initial;
+
+#if DEBUG
+                    if (System.Diagnostics.Debugger.IsAttached && initial.Length > 0 && ver.Next != null && initial.Last().EndIndex != ver.Next.Length) {
+                        // Line calculations were wrong
+                        // Asserts do not work properly here, so we just break if the debugger is attached
+                        System.Diagnostics.Debugger.Break();
+                    }
+#endif
 
                     ver = ver.Next;
                 }

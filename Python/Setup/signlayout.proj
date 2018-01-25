@@ -30,7 +30,6 @@
         Microsoft.PythonTools.Debugger.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
-        Microsoft.PythonTools.ImportWizard.dll;
         Microsoft.PythonTools.Ipc.Json.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;

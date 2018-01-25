@@ -36,7 +36,7 @@
     The version number that will identify assembly compatibility.
     -->
     <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">15.0.0</StableVersionPrefix>
-    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
+    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).0</StableVersion>
     
     <!-- When true, increases build restrictions to ensure complete public releases -->
     <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
