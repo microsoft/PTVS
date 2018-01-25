@@ -30,8 +30,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.ImportWizard {
-    public sealed class Wizard : IWizard {
+namespace Microsoft.PythonTools.ProjectWizards {
+    public sealed class ImportWizard : IWizard {
         public void BeforeOpeningFile(EnvDTE.ProjectItem projectItem) { }
         public void ProjectFinishedGenerating(EnvDTE.Project project) { }
         public void ProjectItemFinishedGenerating(EnvDTE.ProjectItem projectItem) { }
