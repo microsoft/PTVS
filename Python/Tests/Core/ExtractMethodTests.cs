@@ -1687,7 +1687,7 @@ async def f():
                 if (exStr.IndexOf(" .. ") != -1) {
                     var pieces = exStr.Split(new[] { " .. " }, 2, StringSplitOptions.None);
                     int start = input.IndexOf(pieces[0]);
-                    int end = input.IndexOf(pieces[1]) + pieces[1].Length;
+                    int end = input.IndexOf(pieces[1], start) + pieces[1].Length;
                     return Span.FromBounds(start, end);
                 } else {
                     int start = input.IndexOf(exStr);
