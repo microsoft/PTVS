@@ -14,16 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pythontools;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -137,7 +137,7 @@ class Oar(object):
     def say_hello(self):
         method_end";
 
-            string selection = "def say_hello";
+            string selection = "def say_hello(s";
 
             string expected = @"print('Hello World')
 
@@ -157,7 +157,7 @@ class Oar(object):
                 SpaceWithinFunctionDeclarationParens = true
             };
 
-            await CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
+            await CodeFormattingTest(input, selection, expected, "    def say_hello .. ):", options);
         }
 
         [TestMethod, Priority(0)]
@@ -173,8 +173,8 @@ class Oar(object):
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
             using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
-                var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType);
+                buffer.AddProperty(VsProjectAnalyzer._testAnalyzer, analyzer);
                 var view = new MockTextView(buffer);
                 var bi = services.GetBufferInfo(buffer);
                 var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
