@@ -20,6 +20,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Visual Studio - Python project wizards")]
 [assembly: AssemblyDescription("Provides various wizards for use in project templates.")]
 
-[assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
-
 [assembly: ComVisible(false)]
