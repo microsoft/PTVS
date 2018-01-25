@@ -20,7 +20,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 
-namespace Microsoft.PythonTools.Infrastructure {
+namespace Microsoft.CookiecutterTools.Infrastructure {
     static class SocketUtils {
         private static readonly Random _freePortRandom = new Random();
 
