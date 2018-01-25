@@ -33,7 +33,6 @@
     <RootNamespace>Microsoft.PythonTools.Uwp.Wizards</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Uwp.Wizards</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
