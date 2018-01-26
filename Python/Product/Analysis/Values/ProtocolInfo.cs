@@ -53,6 +53,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _memberType = null;
         }
 
+        public IEnumerable<T> GetProtocols<T>() {
+            return _protocols.OfType<T>();
+        }
+
         public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name));
         public override string Documentation => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Documentation ?? string.Join(", ", _protocols.Select(p => p.Documentation).Where(d => !string.IsNullOrEmpty(d)));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);

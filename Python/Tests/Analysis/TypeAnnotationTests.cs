@@ -273,5 +273,30 @@ s = l_s[0]
             analyzer.AssertIsInstance("l_s", BuiltinTypeId.List);
             analyzer.AssertIsInstance("s", BuiltinTypeId.Str);
         }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleGenerator() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+            var code = @"from typing import *
+
+gen : Generator[str, None, int] = ...
+
+def g():
+    x = yield from gen
+
+g_g = g()
+g_i = next(g_g)
+";
+            analyzer.AddModule("test-module", code);
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("g_g", BuiltinTypeId.Generator);
+            analyzer.AssertIsInstance("g_i", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("x", code.IndexOf("x ="), BuiltinTypeId.Int);
+        }
     }
 }
