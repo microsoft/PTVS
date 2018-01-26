@@ -418,7 +418,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         SpecializedInstance,
         Dictionary,
         TypeAnnotation,
-        EvaluatedTypeAnnotation,
     }
 
 }

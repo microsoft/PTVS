@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -22,7 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    class TypingTypeInfo : AnalysisValue {
+    class TypingTypeInfo : AnalysisValue, IHasRichDescription {
         private readonly string _baseName;
         private readonly IReadOnlyList<IAnalysisSet> _args;
 
@@ -41,6 +42,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return this;
         }
+
+        public override IAnalysisSet GetInstanceType() => this;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (_args == null && node is CallExpression ce) {
@@ -121,6 +124,73 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return tti.Select(t => t.ToTypeList()).FirstOrDefault(t => t != null);
             }
             return null;
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            if (_baseName != " List") {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, _baseName);
+            }
+            if (_args != null && _args.Any()) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                bool addComma = false;
+                foreach (var arg in _args) {
+                    if (addComma) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    }
+                    addComma = true;
+                    foreach (var kv in arg.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            }
+        }
+
+        public override bool Equals(object obj) {
+            if (obj is TypingTypeInfo other) {
+                if (_baseName != other._baseName) {
+                    return false;
+                }
+                if ((_args == null) != (other._args == null)) {
+                    return false;
+                }
+                if (_args == null || other._args == null) {
+                    return true;
+                }
+                return _args.Zip(other._args, (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            if (_args != null) {
+                return _args.Aggregate(_baseName.GetHashCode(), (h, s) => h + 37 * ObjectComparer.Instance.GetHashCode(s));
+            }
+            return _baseName.GetHashCode();
+        }
+
+        internal override bool UnionEquals(AnalysisValue av, int strength) {
+            if (strength == 0) {
+                return Equals(av);
+            } else {
+                return _baseName == (av as TypingTypeInfo)?._baseName;
+            }
+        }
+
+        internal override int UnionHashCode(int strength) {
+            if (strength == 0) {
+                return GetHashCode();
+            } else {
+                return _baseName.GetHashCode();
+            }
+        }
+
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
+            if (strength == 0 || (_args != null && _args.Count == 0)) {
+                return this;
+            } else {
+                return new TypingTypeInfo(_baseName, Array.Empty<IAnalysisSet>());
+            }
         }
     }
 

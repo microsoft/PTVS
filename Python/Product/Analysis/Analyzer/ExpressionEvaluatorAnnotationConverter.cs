@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return _unit.State._noneInst;
             }
 
-            var res = _eval.LookupAnalysisSetByName(_node, name);
+            var res = _eval.LookupAnalysisSetByName(_node, name, addDependency: true).GetInstanceType();
 
             if (res.Any()) {
                 return res;

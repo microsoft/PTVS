@@ -88,6 +88,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
         }
+
+        protected abstract bool Equals(Protocol other);
+
+        public override bool Equals(object obj) {
+            if (obj is Protocol other && obj.GetType() == other.GetType()) {
+                return Equals(other);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() => GetType().GetHashCode();
     }
 
     class NameProtocol : Protocol {
@@ -109,6 +120,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => _name;
         public override string Documentation => _doc;
         internal override BuiltinTypeId TypeId => _typeId;
+
+        protected override bool Equals(Protocol other) => Name == other.Name;
+        public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
     }
 
     class CallableProtocol : Protocol {
@@ -172,6 +186,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return kv;
             }
         }
+
+        protected override bool Equals(Protocol other) {
+            if (Name != other.Name) {
+                return false;
+            }
+            if (!Arguments.Zip(((CallableProtocol)other).Arguments, (x, y) => x.SetEquals(y)).All(b => b)) {
+                return false;
+            }
+            return true;
+        }
+        public override int GetHashCode() => Name.GetHashCode();
     }
 
     class IterableProtocol : Protocol {
@@ -205,6 +230,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IterableProtocol)other)._yielded);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_yielded)
+        }.GetHashCode();
     }
 
     class IteratorProtocol : Protocol {
@@ -239,6 +270,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IteratorProtocol)other)._yielded);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_yielded)
+        }.GetHashCode();
     }
 
     class GetItemProtocol : Protocol {
@@ -282,6 +319,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) =>
+            ObjectComparer.Instance.Equals(_keyType, ((GetItemProtocol)other)._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, ((GetItemProtocol)other)._valueType);
+        public override int GetHashCode() => new {
+            x = ObjectComparer.Instance.GetHashCode(_keyType),
+            y = ObjectComparer.Instance.GetHashCode(_valueType)
+        }.GetHashCode();
     }
 
     class TupleProtocol : IterableProtocol {
@@ -333,6 +378,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) => _values.Zip(((TupleProtocol)other)._values,
+            (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
+        public override int GetHashCode() => _values.Aggregate(GetType().GetHashCode(), (h, s) => h + 37 * ObjectComparer.Instance.GetHashCode(s));
     }
 
     class MappingProtocol : IterableProtocol {
@@ -413,6 +462,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) =>
+            ObjectComparer.Instance.Equals(_keyType, ((MappingProtocol)other)._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, ((MappingProtocol)other)._valueType);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_keyType),
+            y = ObjectComparer.Instance.GetHashCode(_valueType)
+        }.GetHashCode();
     }
 
     class GeneratorProtocol : IteratorProtocol {
@@ -499,5 +557,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             _values.AddTypes(unit, value);
         }
+
+        protected override bool Equals(Protocol other) => Name == other.Name;
+        public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
     }
 }
