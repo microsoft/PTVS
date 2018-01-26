@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             // If processing decorators, update the current
                             // function type. Otherwise, we are acting as if
                             // each decorator returns the function unmodified.
-                            if (ddg.ProjectState.Limits.ProcessCustomDecorators) {
+                            if (ddg.ProjectState.Limits.ProcessCustomDecorators && !decorated.IsObjectOrUnknown()) {
                                 types = decorated;
                             }
                         }
