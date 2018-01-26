@@ -97,16 +97,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // don't care about the result.
             Evaluate(annotation);
 
-            return Scope.GetOrMakeNodeValue(annotation, NodeValueKind.EvaluatedTypeAnnotation, n =>
-                new TypeAnnotation(_unit.State.LanguageVersion, (Expression)n)
-                    .GetValue(new ExpressionEvaluatorAnnotationConverter(this, n, _unit)) ?? AnalysisSet.Empty
-            );
+            return new TypeAnnotation(_unit.State.LanguageVersion, annotation)
+                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ?? AnalysisSet.Empty;
         }
 
         /// <summary>
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
-        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
+        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true, bool addDependency = false) {
             InterpreterScope createIn = null;
 
             if (_mergeScopes) {
@@ -123,6 +121,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             if (addRef) {
                                 scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
+                            if (addDependency) {
+                                refs.AddDependency(_unit);
+                            }
                             return refs.Types;
                         } else if (addRef && createIn == null && scope.ContainsImportStar) {
                             // create the variable so that we can appropriately
@@ -135,7 +136,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
             if (createIn != null && !res.Any()) {
-                createIn.CreateVariable(node, _unit, name, addRef);
+                var refs = createIn.CreateVariable(node, _unit, name, addRef);
+                if (addDependency) {
+                    refs.AddDependency(_unit);
+                }
             }
             return res;
         }

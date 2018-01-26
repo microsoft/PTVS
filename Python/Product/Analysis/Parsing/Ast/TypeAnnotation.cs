@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     if (t == null) {
                         return false;
                     }
-                    stack.Push(new KeyValuePair<string, T>(null, t));
+                    stack.Push(new KeyValuePair<string, T>(Name, t));
                     return true;
                 }
 
@@ -177,10 +177,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         return false;
                     }
                     var t = stack.Pop();
-                    if (t.Key != null) {
-                        return false;
-                    }
-                    t = new KeyValuePair<string, T>(null, converter.GetTypeMember(t.Value, Member));
+                    t = new KeyValuePair<string, T>(t.Key == null ? null : $"{t.Key}.{Member}", converter.GetTypeMember(t.Value, Member));
                     if (t.Value == null) {
                         return false;
                     }
@@ -197,9 +194,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         return false;
                     }
                     var t = stack.Pop();
-                    if (t.Key != null) {
-                        return false;
-                    }
                     t = new KeyValuePair<string, T>(null, converter.MakeOptional(t.Value));
                     if (t.Value == null) {
                         return false;
@@ -269,9 +263,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         items.Add(t.Value);
                     }
                     var baseType = stack.Pop();
-                    if (baseType.Key != null) {
-                        return false;
-                    }
                     t = new KeyValuePair<string, T>(null, converter.MakeGeneric(baseType.Value, items));
                     if (t.Value == null) {
                         return false;

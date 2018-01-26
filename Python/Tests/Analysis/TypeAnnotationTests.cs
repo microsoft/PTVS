@@ -213,12 +213,12 @@ call_iis_i_ret = call_iis_i()
             analyzer.AddModule("test-module", @"from typing import *
 
 n : NamedTuple = ...
-n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
+n1 : NamedTuple('N1', [('x', int), ['y', str]]) = ...
 ");
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
-            analyzer.AssertDescription("n1", "n1(x, y)");
+            analyzer.AssertDescription("n1", "N1(x, y)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);

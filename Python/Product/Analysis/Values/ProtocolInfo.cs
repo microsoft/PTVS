@@ -245,26 +245,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return AnalysisSet.UnionAll(_protocols.Select(p => p.UnaryOperation(node, unit, operation)));
         }
 
+        public override bool Equals(object obj) {
+            if (obj is ProtocolInfo other) {
+                return !_protocols.Except(other._protocols).Any();
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return _protocols.Aggregate(GetType().GetHashCode(), (h, p) => h ^ p.GetHashCode());
+        }
+
         internal override bool UnionEquals(AnalysisValue av, int strength) {
-            return av.GetType() == GetType() && av.DeclaringModule == DeclaringModule;
+            if (strength < 2) {
+                return Equals(av);
+            }
+            if (av is ProtocolInfo pi) {
+                return Name == pi.Name;
+            }
+            return false;
         }
 
         internal override int UnionHashCode(int strength) {
-            return GetType().GetHashCode();
+            if (strength < 2) {
+                return GetHashCode();
+            }
+            return Name.GetHashCode();
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            if (av is ProtocolInfo other) {
-                var pi = new ProtocolInfo(DeclaringModule, State);
-                foreach (var p in _protocols.Concat(other._protocols).GroupBy(p => p.GetType())) {
-                    var newP = p.FirstOrDefault()?.Clone(pi);
-                    if (newP != null) {
-                        pi.AddProtocol(newP);
-                    }
-                }
-                return pi;
+            if (strength < 2) {
+                return this;
             }
-            return this;
+
+            var pi = new ProtocolInfo(DeclaringModule, State);
+            pi.AddProtocol(new NameProtocol(pi, Name));
+            return pi;
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
