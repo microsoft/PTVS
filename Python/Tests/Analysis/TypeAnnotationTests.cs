@@ -128,18 +128,18 @@ dct : Union[Mapping, MappingView, MutableMapping] = ...
 dct_s_i : Mapping[str, int] = ...
 dct_s_i_a = dct_s_i['a']
 dct_s_i_keys = dct_s_i.keys()
-dct_s_i_key = next(dct_s_i_keys)
+dct_s_i_key = next(iter(dct_s_i_keys))
 dct_s_i_values = dct_s_i.values()
-dct_s_i_value = next(dct_s_i_values)
+dct_s_i_value = next(iter(dct_s_i_values))
 dct_s_i_items = dct_s_i.items()
-dct_s_i_item_1, dct_s_i_item_2 = next(dct_s_i_items)
+dct_s_i_item_1, dct_s_i_item_2 = next(iter(dct_s_i_items))
 
 dctv_s_i_keys : KeysView[str] = ...
-dctv_s_i_key = next(dctv_s_i_keys)
+dctv_s_i_key = next(iter(dctv_s_i_keys))
 dctv_s_i_values : ValuesView[int] = ...
-dctv_s_i_value = next(dctv_s_i_values)
+dctv_s_i_value = next(iter(dctv_s_i_values))
 dctv_s_i_items : ItemsView[str, int] = ...
-dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
+dctv_s_i_item_1, dctv_s_i_item_2 = next(iter(dctv_s_i_items))
 ");
             analyzer.WaitForAnalysis();
 
@@ -250,6 +250,28 @@ n1 : MyNamedTuple = ...
             analyzer.AssertDescription("n1", "MyNamedTuple(x)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleNestedIndex() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+MyList = List[List[str]]
+
+l_l_s : MyList = ...
+l_s = l_l_s[0]
+s = l_s[0]
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("l_l_s", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("l_s", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("s", BuiltinTypeId.Str);
         }
     }
 }

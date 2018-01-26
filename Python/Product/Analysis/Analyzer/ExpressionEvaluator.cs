@@ -97,9 +97,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // don't care about the result.
             Evaluate(annotation);
 
-            return new TypeAnnotation(_unit.State.LanguageVersion, annotation)
-                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
-                AnalysisSet.Empty;
+            return Scope.GetOrMakeNodeValue(annotation, NodeValueKind.EvaluatedTypeAnnotation, n =>
+                new TypeAnnotation(_unit.State.LanguageVersion, (Expression)n)
+                    .GetValue(new ExpressionEvaluatorAnnotationConverter(this, n, _unit)) ?? AnalysisSet.Empty
+            );
         }
 
         /// <summary>
