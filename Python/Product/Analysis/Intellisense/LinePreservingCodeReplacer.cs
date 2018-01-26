@@ -29,12 +29,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _newLine, _oldCode, _newCode;
         private readonly IReadOnlyList<LineInfo> _newLines, _oldLines;
 
-        private LinePreservingCodeReplacer(string oldCode, string newCode, string newLine) {
+        private LinePreservingCodeReplacer(int startLine, string oldCode, string newCode, string newLine) {
             _newLine = newLine;
             _oldCode = oldCode;
             _newCode = newCode;
-            _oldLines = LineInfo.SplitLines(oldCode).ToArray();
-            _newLines = LineInfo.SplitLines(newCode).ToArray();
+            _oldLines = LineInfo.SplitLines(oldCode, startLine - 1).ToArray();
+            _newLines = LineInfo.SplitLines(newCode, startLine - 1).ToArray();
         }
 
         private string GetOldText(int line) {
@@ -45,8 +45,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return _newCode.Substring(_newLines[line].Start, _newLines[line].Length);
         }
 
-        public static IReadOnlyList<DocumentChange> Replace(string oldCode, string newCode, string newLine = "\r\n") {
-            return new LinePreservingCodeReplacer(oldCode, newCode, newLine).ReplaceCode();
+        public static IReadOnlyList<DocumentChange> Replace(int startLine, string oldCode, string newCode, string newLine = "\r\n") {
+            return new LinePreservingCodeReplacer(startLine, oldCode, newCode, newLine).ReplaceCode();
         }
 
         public IReadOnlyList<DocumentChange> ReplaceCode() {
@@ -153,8 +153,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Replaces a range of text with new text attempting only modifying lines which changed 
         /// and doing so in a single edit.
         /// </summary>
-        public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, string newCode, string newLine = "\r\n") {
-            return LinePreservingCodeReplacer.Replace(oldCode, newCode, newLine);
+        public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, int startLine, string newCode, string newLine = "\r\n") {
+            return LinePreservingCodeReplacer.Replace(startLine, oldCode, newCode, newLine);
         }
     }
 }

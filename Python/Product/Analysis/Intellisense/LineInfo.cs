@@ -54,16 +54,16 @@ namespace Microsoft.PythonTools.Intellisense {
         public SourceSpan SourceExtent => new SourceSpan(SourceStart, SourceEnd);
 
 
-        public static IEnumerable<LineInfo> SplitLines(string text) {
+        public static IEnumerable<LineInfo> SplitLines(string text, int firstLineNumber = 0) {
             NewLineLocation nextLine;
-            List<LineInfo> lines = new List<LineInfo>();
+            int lineNo = firstLineNumber;
 
             int lastLineEnd = 0;
             while ((nextLine = NewLineLocation.FindNewLine(text, lastLineEnd)).EndIndex != lastLineEnd) {
                 yield return new LineInfo(
                     lastLineEnd,
                     nextLine.EndIndex - lastLineEnd - nextLine.Kind.GetSize(),
-                    lines.Count,
+                    lineNo++,
                     nextLine.Kind
                 );
 
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 yield return new LineInfo(
                     lastLineEnd,
                     text.Length - lastLineEnd,
-                    lines.Count,
+                    lineNo++,
                     NewLineKind.None
                 );
 
