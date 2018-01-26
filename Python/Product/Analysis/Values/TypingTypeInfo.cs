@@ -145,39 +145,95 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
         private static IReadOnlyList<IAnalysisSet> GetTypeList(IAnalysisSet item) {
-            return item.OfType<TypingTypeInfo>().FirstOrDefault()?.ToTypeList();
+            return item.OfType<TypingTypeInfo>().FirstOrDefault()?.ToTypeList() ?? new[] { item };
         }
 
-        private SequenceBuiltinClassInfo GetSequenceType(string name) {
+        private IAnalysisSet MakeTuple(params IAnalysisSet[] types) {
+            var pi = new ProtocolInfo(Entry, State);
+            pi.AddProtocol(new NameProtocol(pi, Types[BuiltinTypeId.Tuple]));
+            pi.AddProtocol(new TupleProtocol(pi, types));
+            return pi;
+        }
+
+        private bool GetSequenceTypes(string name, IReadOnlyList<IAnalysisSet> args, out IPythonType realType, out IAnalysisSet keyTypes, out IAnalysisSet valueTypes) {
             switch (name) {
                 case "List":
                 case "Container":
                 case "MutableSequence":
-                    return ClassInfo[BuiltinTypeId.List] as SequenceBuiltinClassInfo;
+                    realType = Types[BuiltinTypeId.List];
+                    keyTypes = ClassInfo[BuiltinTypeId.Int].Instance;
+                    valueTypes = AnalysisSet.UnionAll(args.Select(ToInstance));
+                    return true;
                 case "Tuple":
-                case "Sequence":
-                    return ClassInfo[BuiltinTypeId.Tuple] as SequenceBuiltinClassInfo;
-            }
-
-            return null;
-        }
-
-        private BuiltinClassInfo GetSetType(string name) {
-            switch (name) {
+                    realType = Types[BuiltinTypeId.Tuple];
+                    keyTypes = ClassInfo[BuiltinTypeId.Int].Instance;
+                    valueTypes = AnalysisSet.UnionAll(args.Select(ToInstance));
+                    return true;
                 case "MutableSet":
                 case "Set":
-                    return ClassInfo[BuiltinTypeId.Set];
+                    realType = Types[BuiltinTypeId.Set];
+                    keyTypes = null;
+                    valueTypes = AnalysisSet.UnionAll(args.Select(ToInstance));
+                    return true;
                 case "FrozenSet":
-                    return ClassInfo[BuiltinTypeId.FrozenSet];
-            }
+                    realType = Types[BuiltinTypeId.FrozenSet];
+                    keyTypes = null;
+                    valueTypes = AnalysisSet.UnionAll(args.Select(ToInstance));
+                    return true;
 
-            return null;
+                case "KeysView":
+                    if (args.Count >= 1) {
+                        realType = Types[BuiltinTypeId.DictKeys];
+                        keyTypes = null;
+                        valueTypes = AnalysisSet.UnionAll(GetTypeList(args[0]).Select(ToInstance));
+                        return true;
+                    }
+                    break;
+                case "ValuesView":
+                    if (args.Count >= 1) {
+                        realType = Types[BuiltinTypeId.DictValues];
+                        keyTypes = null;
+                        valueTypes = AnalysisSet.UnionAll(GetTypeList(args[0]).Select(ToInstance));
+                        return true;
+                    }
+                    break;
+
+                case "ItemsView":
+                    if (args.Count >= 2) {
+                        realType = Types[BuiltinTypeId.DictItems];
+                        keyTypes = null;
+                        valueTypes = MakeTuple(
+                            AnalysisSet.UnionAll(GetTypeList(args[0]).Select(ToInstance)),
+                            AnalysisSet.UnionAll(GetTypeList(args[1]).Select(ToInstance))
+                        );
+                        return true;
+                    }
+                    break;
+
+                case "Dict":
+                case "Mapping":
+                    if (args.Count >= 2) {
+                        realType = Types[BuiltinTypeId.Dict];
+                        keyTypes = AnalysisSet.UnionAll(GetTypeList(args[0]).Select(ToInstance));
+                        valueTypes = AnalysisSet.UnionAll(GetTypeList(args[1]).Select(ToInstance));
+                        return true;
+                    }
+                    break;
+            }
+            realType = null;
+            keyTypes = null;
+            valueTypes = null;
+            return false;
         }
+
 
         public IAnalysisSet Finalize(string name, IReadOnlyList<IAnalysisSet> args) {
             if (string.IsNullOrEmpty(name) || args == null || args.Count == 0) {
                 return null;
             }
+
+            IPythonType realType;
+            IAnalysisSet keyTypes, valueTypes;
 
             switch (name) {
                 case "Union":
@@ -189,84 +245,51 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Container":
                 case "MutableSequence":
                 case "Sequence":
-                    try {
-                        return Scope.GetOrMakeNodeValue(_node, NodeValueKind.Sequence, n => {
-                            var t = GetSequenceType(name);
-                            if (t == null) {
-                                throw new KeyNotFoundException(name);
-                            }
-                            var seq = t.MakeFromIndexes(n, Entry);
-                            seq.AddTypes(_unit, args.Select(ToInstance).ToArray());
-                            return seq;
-                        });
-                    } catch (KeyNotFoundException) {
-                        return null;
-                    }
-                case "KeysView":
-                    return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
-                        var di = new DictionaryInfo(Entry, n);
-                        di.AddTypes(
-                            n,
-                            _unit,
-                            ToInstance(args[0]),
-                            None
-                        );
-                        return di;
-                    }) as DictionaryInfo)?.GetKeysView(_unit);
-                case "ValuesView":
-                    return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
-                        var di = new DictionaryInfo(Entry, n);
-                        di.AddTypes(
-                            n,
-                            _unit,
-                            None,
-                            ToInstance(args[0])
-                        );
-                        return di;
-                    }) as DictionaryInfo)?.GetValuesView(_unit);
-
                 case "MutableSet":
                 case "Set":
                 case "FrozenSet":
-                    try {
-                        return Scope.GetOrMakeNodeValue(_node, NodeValueKind.Set, n => {
-                            return new SetInfo(
-                                GetSetType(name) ?? throw new KeyNotFoundException(name),
-                                n,
-                                Entry,
-                                args.Select(ToVariableDef).ToArray()
-                            );
-                        });
-                    } catch (KeyNotFoundException) {
-                        return null;
+                case "KeysView":
+                case "ValuesView":
+                case "ItemsView":
+                    if (GetSequenceTypes(name, args, out realType, out keyTypes, out valueTypes)) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        if (realType == null) {
+                            p.AddProtocol(new NameProtocol(p, name));
+                        } else {
+                            p.AddProtocol(new NameProtocol(p, realType));
+                        }
+                        p.AddProtocol(new IterableProtocol(p, valueTypes));
+                        if (keyTypes != null) {
+                            p.AddProtocol(new GetItemProtocol(p, keyTypes, valueTypes));
+                        }
+                        return p;
                     }
+                    break;
+
                 case "Mapping":
                 case "MappingView":
                 case "MutableMapping":
                 case "Dict":
-                case "ItemsView":
-                    try {
-                        if (args.Count < 2) {
-                            return null;
+                    if (GetSequenceTypes(name, args, out realType, out keyTypes, out valueTypes)) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        if (realType == null) {
+                            p.AddProtocol(new NameProtocol(p, name));
+                        } else {
+                            p.AddProtocol(new NameProtocol(p, realType));
                         }
-                        var d = Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
-                            var di = new DictionaryInfo(Entry, n);
-                            di.AddTypes(n, _unit, ToInstance(args[0]), ToInstance(args[1]));
-                            return di;
-                        });
-                        if (name == "ItemsView") {
-                            return (d as DictionaryInfo).GetItemsView(_unit);
-                        }
-                        return d;
-                    } catch (KeyNotFoundException) {
-                        return null;
+                        p.AddProtocol(new MappingProtocol(p, keyTypes, valueTypes, MakeTuple(keyTypes, valueTypes)));
+                        return p;
                     }
+                    break;
 
                 case "Callable":
-                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => {
-                        var p = new ProtocolInfo(_unit.ProjectEntry);
-                        p.AddReference(n, _unit);
-                        var callArgs = GetTypeList(args[0]) ?? new[] { args[0] };
+                    if (args.Count > 0) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        var callArgs = GetTypeList(args[0]);
+                        p.AddProtocol(new NameProtocol(p, Types[BuiltinTypeId.Function]));
                         p.AddProtocol(new CallableProtocol(
                             p,
                             null,
@@ -274,36 +297,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             ToInstance(args.ElementAtOrDefault(1) ?? AnalysisSet.Empty)
                         ));
                         return p;
-                    });
-
+                    }
+                    break;
 
                 case "Iterable":
-                case "Iterator": {
-                        var iter = Scope.GetOrMakeNodeValue(_node, NodeValueKind.Iterator, n => {
-                            var p = new ProtocolInfo(_unit.ProjectEntry);
-                            p.AddReference(n, _unit);
-                            p.AddProtocol(new IterableProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
-                            return p;
-                        });
-                        return (name == "Iterator") ? iter.GetIterator(_node, _unit) : iter;
+                    if (args.Count > 0) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        p.AddProtocol(new IterableProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
+                        return p;
                     }
+                    break;
+
+                case "Iterator": 
+                    if (args.Count > 0) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        p.AddProtocol(new IteratorProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
+                        return p;
+                    }
+                    break;
 
                 case "Generator":
-                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.Iterator, n => {
-                        var gi = new GeneratorInfo(State, Entry);
-                        gi.AddYield(n, _unit, ToInstance(args[0]), false);
-                        if (args.Count >= 2) {
-                            gi.AddSend(n, _unit, ToInstance(args[1]), false);
-                        }
-                        if (args.Count >= 3) {
-                            gi.AddReturn(n, _unit, ToInstance(args[2]), false);
-                        }
-                        return gi;
-                    });
+                    if (args.Count > 0) {
+                        var p = new ProtocolInfo(Entry, State);
+                        p.AddReference(_node, _unit);
+                        var yielded = ToInstance(args[0]);
+                        var sent = args.Count > 1 ? ToInstance(args[1]) : AnalysisSet.Empty;
+                        var returned = args.Count > 2 ? ToInstance(args[2]) : AnalysisSet.Empty;
+                        p.AddProtocol(new GeneratorProtocol(p, yielded, sent, returned));
+                        return p;
+                    }
+                    break;
+
                 case "NamedTuple":
-                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.StrDict, n => CreateNamedTuple(
-                        n, _unit, args.ElementAtOrDefault(0), args.ElementAtOrDefault(1)
-                    ));
+                    return CreateNamedTuple(_node, _unit, args.ElementAtOrDefault(0), args.ElementAtOrDefault(1));
                 case " List":
                     return AnalysisSet.UnionAll(args.Select(ToInstance));
             }
@@ -314,7 +342,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleName, IAnalysisSet namedTupleArgs) {
             var args = namedTupleArgs == null ? null : TypingTypeInfo.ToTypeList(namedTupleArgs);
 
-            var res = new ProtocolInfo(unit.ProjectEntry);
+            var res = new ProtocolInfo(unit.ProjectEntry, unit.State);
 
             if (namedTupleName != null) {
                 var np = new NameProtocol(res, namedTupleName.GetConstantValueAsString().FirstOrDefault() ?? "tuple");
@@ -355,7 +383,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "ItemsView": return ClassInfo[BuiltinTypeId.DictItems];
                 case "Iterable":
                 case "Iterator": {
-                        var p = new ProtocolInfo(Entry);
+                        var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
                         p.AddProtocol(name == "Iterable" ? (Protocol)new IterableProtocol(p, AnalysisSet.Empty) : new IteratorProtocol(p, AnalysisSet.Empty));
                         return p;
