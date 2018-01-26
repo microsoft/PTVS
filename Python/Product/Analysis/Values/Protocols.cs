@@ -423,8 +423,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _returned = returns;
         }
 
+        public IAnalysisSet Returns => _returned;
+
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             base.EnsureMembers(members);
+
+            members["send"] = MakeMethod("send", new[] { _sent }, _yielded);
+            members["throw"] = MakeMethod("throw", new[] { AnalysisSet.Empty }, AnalysisSet.Empty);
         }
 
         public override string Name => "generator";

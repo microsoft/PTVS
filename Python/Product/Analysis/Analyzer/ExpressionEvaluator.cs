@@ -410,8 +410,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 gen.AddYieldFrom(node, ee._unit, res);
 
-                gen.Returns.AddDependency(ee._unit);
-                return gen.Returns.Types;
+                var returned = AnalysisSet.Empty;
+                if (res.Split(out IReadOnlyList<GeneratorInfo> generators, out var rest)) {
+                    foreach (var g in generators) {
+                        g.Returns.AddDependency(ee._unit);
+                        returned = returned.Union(g.Returns.Types);
+                    }
+                }
+                if (rest.Split(out IReadOnlyList<ProtocolInfo> protocols, out rest)) {
+                    foreach (var g in protocols.SelectMany(pi => pi.GetProtocols<GeneratorProtocol>())) {
+                        returned = returned.Union(g.Returns);
+                    }
+                }
+                return returned;
             }
 
             return AnalysisSet.Empty;

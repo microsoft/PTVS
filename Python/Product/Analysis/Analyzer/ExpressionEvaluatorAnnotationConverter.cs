@@ -55,6 +55,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet LookupName(string name) {
+            if (name == "None") {
+                return _unit.State._noneInst;
+            }
+
             var res = _eval.LookupAnalysisSetByName(_node, name);
 
             if (res.Any()) {

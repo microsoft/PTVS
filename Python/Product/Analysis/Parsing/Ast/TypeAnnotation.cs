@@ -87,6 +87,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     _parse(s)?.Walk(this);
                 } else if (node.Value is AsciiString a) {
                     _parse(a.String)?.Walk(this);
+                } else if (node.Value == null) {
+                    _ops.Add(new NameOp { Name = "None" });
                 }
                 return false;
             }
