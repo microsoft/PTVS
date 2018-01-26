@@ -1507,7 +1507,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override string AddReferenceExtensions {
             get {
-                return null;
+                return Strings.AddReferenceExtensions;
             }
         }
 
