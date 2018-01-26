@@ -17,8 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.NetworkInformation;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
@@ -174,7 +173,7 @@ namespace Microsoft.PythonTools.Project.Web {
             if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
                 port = p;
             } else {
-                port = GetTestServerPort();
+                SocketUtils.GetRandomPortListener(IPAddress.Loopback, out port).Stop();
                 p = -1;
             }
 
@@ -198,7 +197,8 @@ namespace Microsoft.PythonTools.Project.Web {
                 if (p >= 0) {
                     builder.Port = p;
                 } else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port)))) {
-                    builder.Port = GetTestServerPort();
+                    SocketUtils.GetRandomPortListener(IPAddress.Loopback, out port).Stop();
+                    builder.Port = port;
                 }
 
                 uri = builder.Uri;
@@ -212,12 +212,6 @@ namespace Microsoft.PythonTools.Project.Web {
                 output.ShowAndActivate();
                 uri = null;
             }
-        }
-
-        private static int GetTestServerPort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000)
-                .Except(IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Select(c => c.LocalEndPoint.Port))
-                .First();
         }
     }
 }
