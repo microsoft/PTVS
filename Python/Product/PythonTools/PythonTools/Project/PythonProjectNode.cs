@@ -227,6 +227,11 @@ namespace Microsoft.PythonTools.Project {
                 var oldPms = _activePackageManagers;
                 _activePackageManagers = null;
 
+                foreach (var pm in oldPms.MaybeEnumerate()) {
+                    pm.DisableNotifications();
+                    pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                }
+
                 lock (_validFactories) {
                     if (_validFactories.Count == 0) {
                         // No factories, so we must use the global default.
