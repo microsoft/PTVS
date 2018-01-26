@@ -20,7 +20,7 @@ using System.IO;
 using System.Text;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public sealed class StringListReader : TextReader {
+    sealed class StringListReader : TextReader {
         private readonly IEnumerator<string> _strings;
         private StringReader _current;
         private int _peekBuffer = -1;

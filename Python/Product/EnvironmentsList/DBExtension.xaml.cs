@@ -262,13 +262,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public int IsUpToDate { get { return _isUpToDate ? 1 : 0; } }
     }
 
-    public sealed class DBExtensionProvider : IEnvironmentViewExtension {
+    sealed class DBExtensionProvider : IEnvironmentViewExtension {
         private readonly PythonInterpreterFactoryWithDatabase _factory;
         private FrameworkElement _wpfObject;
         private List<string> _modules;
         private List<string> _stdLibModules;
 
-        public DBExtensionProvider(PythonInterpreterFactoryWithDatabase factory) {
+        internal DBExtensionProvider(PythonInterpreterFactoryWithDatabase factory) {
             _factory = factory;
             _factory.IsCurrentChanged += Factory_IsCurrentChanged;
             _factory.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
@@ -334,7 +334,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public async Task<List<string>> EnumerateStdLibModules(bool refresh = false) {
+        internal async Task<List<string>> EnumerateStdLibModules(bool refresh = false) {
             if (_stdLibModules == null || refresh) {
                 await EnumerateAllModules(true);
                 Debug.Assert(_stdLibModules != null);
@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return _stdLibModules;
         }
 
-        public async Task<List<string>> EnumerateAllModules(bool refresh = false) {
+        internal async Task<List<string>> EnumerateAllModules(bool refresh = false) {
             AbortOnInvalidConfiguration();
 
             if (_modules == null || refresh) {

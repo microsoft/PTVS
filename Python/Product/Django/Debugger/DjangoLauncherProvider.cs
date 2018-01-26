@@ -24,7 +24,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Debugger {
     [Export(typeof(IPythonLauncherProvider))]
-    class DjangoLauncherProvider : IPythonLauncherProvider2 {
+    class DjangoLauncherProvider : IPythonLauncherProvider {
         internal readonly IEnumerable<Lazy<IPythonLauncherProvider>> _providers;
 
         [ImportingConstructor]

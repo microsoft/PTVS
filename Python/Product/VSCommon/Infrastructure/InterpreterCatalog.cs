@@ -22,7 +22,7 @@ using System.Linq;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class InterpreterCatalog {
+    static class InterpreterCatalog {
         internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // If this collection exists in the settings provider, no factories will
         // be loaded. This is meant for tests.

@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Project {
     [Export(typeof(IPythonLauncherProvider))]
-    class DefaultLauncherProvider : IPythonLauncherProvider2 {
+    class DefaultLauncherProvider : IPythonLauncherProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
         internal const string DefaultLauncherName = "Standard Python launcher";

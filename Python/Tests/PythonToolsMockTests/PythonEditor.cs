@@ -37,7 +37,7 @@ using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
 namespace PythonToolsMockTests {
-    public sealed class PythonEditor : IDisposable {
+    sealed class PythonEditor : IDisposable {
         private readonly bool _disposeVS, _disposeFactory, _disposeAnalyzer;
         public readonly MockVs VS;
         public readonly IPythonInterpreterFactory Factory;
@@ -87,12 +87,16 @@ namespace PythonToolsMockTests {
                     _disposeAnalyzer = true;
                     analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTestsAsync(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer ?? Debugger.IsAttached), 10000);
                 }
+                Uri uri;
                 if (string.IsNullOrEmpty(filename)) {
-                    do {
-                        filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), Path.GetRandomFileName()) + ".py";
-                    } while (File.Exists(filename));
-                } else if (!Path.IsPathRooted(filename)) {
-                    filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), filename);
+                    filename = Path.ChangeExtension(Path.GetRandomFileName(), ".py");
+                }
+                if (Path.IsPathRooted(filename)) {
+                    uri = new Uri(filename);
+                } else {
+                    var d = Path.GetRandomFileName();
+                    uri = new Uri($"python://test/{d}/{filename}");
+                    filename = $"_:\\PYTHON\\{d}\\{filename}";
                 }
 
                 var cancel = CancellationTokens.After60s;
@@ -102,6 +106,7 @@ namespace PythonToolsMockTests {
                         v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
                         v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
                         v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testDocumentUri] = uri;
                     },
                     filename);
 
@@ -111,24 +116,19 @@ namespace PythonToolsMockTests {
                 Assert.IsNotNull(entry, "failed to get analysis entry");
 
                 if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
-                    using (var mre = new ManualResetEventSlim()) {
-                        EventHandler evt = (s, e) => mre.SetIfNotDisposed();
-
-                        try {
-                            entry.AnalysisComplete += evt;
-                            entry.TryGetBufferParser()?.EnsureCodeSyncedAsync(bi.Buffer, true).WaitAndUnwrapExceptions();
-                            bool hasStarted = false;
-                            while (!mre.Wait(50, cancel) && !vs.HasPendingException && !entry.IsAnalyzed) {
-                                if (!hasStarted) {
-                                    hasStarted = analyzer.IsAnalyzing;
-                                } else if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
-                                    Assert.Fail("analyzer is not analyzing");
-                                }
-                            }
-                        } catch (OperationCanceledException) {
-                        } finally {
-                            entry.AnalysisComplete -= evt;
-                        }
+                    var task = entry.Analyzer.WaitForNextCompleteAnalysis();
+                    var bp = entry.TryGetBufferParser();
+                    while (bp == null) {
+                        Thread.Sleep(50);
+                        cancel.ThrowIfCancellationRequested();
+                        bp = entry.TryGetBufferParser();
+                    }
+                    try {
+                        bp.EnsureCodeSyncedAsync(bi.Buffer, true).Wait(cancel);
+                        task.Wait(cancel);
+                    } catch (AggregateException ex) when (ex.InnerException != null) {
+                        throw ex.InnerException;
+                    } catch (OperationCanceledException) {
                     }
                 }
                 if (cancel.IsCancellationRequested) {
@@ -180,41 +180,16 @@ namespace PythonToolsMockTests {
                     return;
                 }
 
+                var t = Analyzer.WaitForNextCompleteAnalysis();
                 using (var edit = buffer.CreateEdit()) {
-                    edit.Delete(0, edit.Snapshot.Length);
+                    edit.Replace(0, edit.Snapshot.Length, value);
                     edit.Apply();
                 }
 
+                t.Wait(CancellationTokens.After60s);
+
                 if (string.IsNullOrEmpty(value)) {
                     return;
-                }
-
-                using (ManualResetEventSlim mre1 = new ManualResetEventSlim(), mre2 = new ManualResetEventSlim()) {
-                    EventHandler evt1 = (s, e) => mre1.SetIfNotDisposed();
-                    EventHandler evt2 = (s, e) => mre2.SetIfNotDisposed();
-                    Analyzer.AnalysisStarted += evt1;
-                    bi.AnalysisEntry.AnalysisComplete += evt2;
-
-                    try {
-                        using (var edit = View.TextView.TextBuffer.CreateEdit()) {
-                            edit.Insert(0, value);
-                            edit.Apply();
-                        }
-
-                        if (!mre1.Wait(0)) {
-                            mre2.Reset();
-                            if (!mre1.Wait(10000)) {
-                                throw new TimeoutException("Failed to see buffer start analyzer");
-                            }
-                        }
-
-                        if (!mre2.Wait(10000)) {
-                            throw new TimeoutException("Failed to see entry finish analyzing");
-                        }
-                    } finally {
-                        Analyzer.AnalysisStarted -= evt1;
-                        bi.AnalysisEntry.AnalysisComplete -= evt2;
-                    }
                 }
             }
         }
@@ -327,25 +302,16 @@ namespace PythonToolsMockTests {
         public void Type(string text) => VS.InvokeSync(() => View.Type(text));
 
         public void TypeAndWaitForAnalysis(string text) {
-            using (var mre = new ManualResetEventSlim()) {
-                EventHandler evt = (s, e) => mre.SetIfNotDisposed();
-                Analyzer.AnalysisStarted += evt;
+            var task = Analyzer.WaitForNextCompleteAnalysis();
 
-                Type(text);
+            Type(text);
 
-                var cts = CancellationTokens.After60s;
-                try {
-                    while (!mre.Wait(500, cts) && !VS.HasPendingException) { }
-                    Analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested && !VS.HasPendingException);
-                } catch (OperationCanceledException) {
-                } finally {
-                    Analyzer.AnalysisStarted -= evt;
-                }
-                if (cts.IsCancellationRequested) {
-                    Assert.Fail("Timed out waiting for code analysis");
-                }
-                VS.ThrowPendingException();
+            try {
+                task.Wait(CancellationTokens.After60s);
+            } catch (OperationCanceledException) {
+                Assert.Fail("Timed out waiting for code analysis");
             }
+            VS.ThrowPendingException();
         }
 
         public IEnumerable<string> GetCompletions(int index) {

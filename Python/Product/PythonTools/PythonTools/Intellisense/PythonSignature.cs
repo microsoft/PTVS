@@ -117,10 +117,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 parameters[i] = new PythonParameter(
                     this,
-                    param,
+                    param.name,
+                    param.doc,
                     paramSpan,
-                    ppParamSpan,
-                    param.variables != null ? param.variables.Select(_analyzer.ToAnalysisVariable).ToArray() : null
+                    ppParamSpan
                 );
 
                 if (isDict && _dictParamIndex == int.MaxValue) {
@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (index < 0 || index >= _parameters.Count) {
-                Debug.Assert(_parameters.Count == 0, $"Failed to select parameter {index}//'{name ?? "(null)"}'");
+                Debug.Assert(_parameters.Count == 0 || index == int.MaxValue, $"Failed to select parameter {index}//'{name ?? "(null)"}'");
                 SetCurrentParameter(null);
                 return -1;
             }

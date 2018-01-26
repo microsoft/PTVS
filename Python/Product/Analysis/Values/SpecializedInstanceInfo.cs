@@ -95,12 +95,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (TryInvokeMethod(node, unit, "__iter__", Array.Empty<IAnalysisSet>(), out res)) {
                         if (res.Any()) {
                             return res
-                                .GetMember(node, unit, unit.ProjectState.LanguageVersion.Is3x() ? "__next__" : "next")
+                                .GetMember(node, unit, unit.State.LanguageVersion.Is3x() ? "__next__" : "next")
                                 .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
                         }
                     }
 
-                    if (TryInvokeMethod(node, unit, "__getitem__", new[] { unit.ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet }, out res)) {
+                    if (TryInvokeMethod(node, unit, "__getitem__", new[] { unit.State.ClassInfos[BuiltinTypeId.Int].SelfSet }, out res)) {
                         return res;
                     }
                 } finally {

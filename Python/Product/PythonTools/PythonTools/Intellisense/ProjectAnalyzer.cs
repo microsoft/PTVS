@@ -27,7 +27,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -54,7 +53,7 @@ using MSBuild = Microsoft.Build.Evaluation;
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
-    public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
+    sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
         internal readonly PythonEditorServices _services;
         private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
@@ -62,6 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
         internal static readonly object _testAnalyzer = new { Name = "TestAnalyzer" };
         internal static readonly object _testFilename = new { Name = "TestFilename" };
+        internal static readonly object _testDocumentUri = new { Name = "DocumentUri" };
 
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
@@ -100,6 +100,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IPythonToolsLogger _logger;
 
         internal int _parsePending;
+        private TaskCompletionSource<object> _waitForCompleteAnalysis;
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
@@ -194,6 +195,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
             }
 
+            _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:unstarted>";
+
+
             _analysisOptions = new AP.AnalysisOptions {
                 indentationInconsistencySeverity = Severity.Ignore,
 #if DEBUG
@@ -208,7 +212,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
-            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(UriEqualityComparer.IncludeFragment);
+            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(Analysis.Infrastructure.UriEqualityComparer.IncludeFragment);
 
             _logger = _services.Python?.Logger;
 
@@ -216,6 +220,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 _services.CommentTaskProvider.TokensChanged += CommentTaskTokensChanged;
             }
         }
+
+        private string _toString;
+        public override string ToString() => _toString;
+
 
         private string DefaultComment => "Global Analysis";
 
@@ -232,6 +240,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Task.Run(() => _conn.ProcessMessages()).DoNotWait();
 
+            _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
 
             var interp = new AP.InterpreterInfo();
@@ -246,6 +255,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 initialize.traceLogging = true;
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
+
+            if (_analysisOptions.analysisLimits == null) {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
+                    var traceLogging = key?.GetValue("TraceLogging", null);
+                    if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
+                        initialize.traceLogging = true;
+                        _analysisOptions.traceLevel = LS.MessageType.Log;
+                    }
+                }
+            }
+
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
@@ -280,12 +301,6 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                     }
                     _analysisOptions.commentTokens[keyValue.Key] = sev;
-                }
-            }
-
-            if (_analysisOptions.analysisLimits == null) {
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
                 }
             }
 
@@ -455,6 +470,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Dispose() {
             _disposing = true;
 
+            Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetCanceled();
+
             var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable -= Factory_NewDatabaseAvailable;
@@ -604,6 +621,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool WaitForExit(int millisecondsTimeout) => _thread.Join(millisecondsTimeout);
+
+            public override string ToString() => $"<Thread: {_thread.ManagedThreadId}>";
         }
 
         private Connection StartSubprocessConnection(string comment, out AnalysisProcessInfo proc) {
@@ -766,6 +785,7 @@ namespace Microsoft.PythonTools.Intellisense {
             switch (e.Event.name) {
                 case AP.AnalysisCompleteEvent.Name:
                     _analysisComplete = true;
+                    Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetResult(null);
                     break;
                 case AP.FileAnalysisCompleteEvent.Name:
                     OnAnalysisComplete(e);
@@ -1171,13 +1191,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 var response = await SendRequestAsync(req).ConfigureAwait(false);
                 if (response != null) {
                     for (int i = 0; i < paths.Length; ++i) {
-                        AnalysisEntry entry = null;
+                        AnalysisEntry entry = res[i];
                         var path = paths[i];
                         var uri = response.documentUri[i];
                         if (!string.IsNullOrEmpty(path) && uri != null && !_projectFilesByUri.TryGetValue(uri, out entry)) {
                             entry = _projectFilesByUri[uri] = _projectFiles[path] = new AnalysisEntry(this, path, uri);
                             entry.AnalysisCookie = new FileCookie(path);
                         }
+                        Debug.Assert(entry != null);
                         res[i] = entry;
                     }
                 }
@@ -1262,8 +1283,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         .Where(x => x.file != null)
                         .Select(ToAnalysisVariable)
                         .ToArray(),
-                    definitions.privatePrefix,
-                    definitions.memberName
+                    definitions.privatePrefix
                 );
             }
             return null;
@@ -1293,8 +1313,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             .Where(x => x.file != null)
                             .Select(ToAnalysisVariable)
                             .ToArray(),
-                        definitions.privatePrefix,
-                        definitions.memberName
+                        definitions.privatePrefix
                     );
                 }
             }
@@ -1311,7 +1330,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
+        /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal async Task<SignatureAnalysis> GetSignaturesAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;
@@ -1530,6 +1549,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalysisStarted -= evt;
                 mre.Dispose();
             }
+        }
+
+        internal Task WaitForNextCompleteAnalysis() {
+            var tcs = Volatile.Read(ref _waitForCompleteAnalysis);
+            if (tcs == null) {
+                tcs = new TaskCompletionSource<object>();
+                tcs = Interlocked.CompareExchange(ref _waitForCompleteAnalysis, tcs, null) ?? tcs;
+            }
+            return tcs.Task;
         }
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
@@ -2528,16 +2556,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
-            var location = new AnalysisLocation(
+            var location = new LocationInfo(
                 arg.file,
-                arg.line,
-                arg.column,
-                arg.definitionStartLine,
-                arg.definitionStartColumn,
+                arg.documentUri,
+                arg.startLine,
+                arg.startColumn,
+                arg.endLine,
+                arg.endColumn
+            );
+
+            var defLocation = new LocationInfo(
+                arg.file,
+                arg.documentUri,
+                arg.definitionStartLine ?? arg.startLine,
+                arg.definitionStartColumn ?? arg.startColumn,
                 arg.definitionEndLine,
                 arg.definitionEndColumn
             );
-            return new AnalysisVariable(type, location);
+            return new AnalysisVariable(type, location, defLocation, arg.version ?? -1);
         }
 
         internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {

@@ -749,7 +749,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public class Parameter {
             public string name, defaultValue, doc, type;
             public bool optional;
-            public AnalysisReference[] variables;
         }
 
         public class FileAnalysisCompleteEvent : Event {
@@ -873,10 +872,13 @@ namespace Microsoft.PythonTools.Intellisense {
             public string kind; // definition, reference, value
             public string expr;
             public string file;
-            public int line, column;
+            [JsonConverter(typeof(UriJsonConverter))]
+            public Uri documentUri;
+            public int startLine, startColumn, endLine, endColumn;
             // the span of the whole definition, when applicable
             public int? definitionStartLine, definitionStartColumn;
             public int? definitionEndLine, definitionEndColumn;
+            public int? version;
         }
 
         public sealed class AnalyzeExpressionRequest : Request<AnalyzeExpressionResponse> {
@@ -896,10 +898,6 @@ namespace Microsoft.PythonTools.Intellisense {
             /// The private prefix for the member if defined inside a class with name mangling.
             /// </summary>
             public string privatePrefix;
-            /// <summary>
-            /// The plain member name, e.g. "member" in a statement like "container.member"
-            /// </summary>
-            public string memberName;
         }
 
         public sealed class OutliningRegionsRequest : Request<OutliningRegionsResponse> {

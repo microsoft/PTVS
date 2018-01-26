@@ -476,6 +476,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public IEnumerable<ProjectReference> GetReferences() {
+            lock (_projectReferenceSet) {
+                return _projectReferenceSet.ToArray();
+            }
+        }
+
         #endregion
 
         internal IPythonType GetTypeFromType(ObjectIdentityHandle type) {

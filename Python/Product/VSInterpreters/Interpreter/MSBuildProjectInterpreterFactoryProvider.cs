@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [InterpreterFactoryId(MSBuildProviderName)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    public sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+    sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly IServiceProvider _site;
         private readonly Dictionary<string, ProjectInfo> _projects = new Dictionary<string, ProjectInfo>();
         private readonly Lazy<IInterpreterLog>[] _loggers;

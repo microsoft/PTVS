@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class COMEnumerable {
+    static class COMEnumerable {
         public delegate int NextMethod<T>(uint count, T[] result, out uint fetched);
         public delegate int IntPtrNextMethod(uint count, IntPtr[] result, out uint fetched);
         public delegate int ResetMethod();
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public sealed class COMEnumerator<T> : IEnumerator<T> {
+    sealed class COMEnumerator<T> : IEnumerator<T> {
         private T _current;
         private readonly Queue<T> _buffer = new Queue<T>();
         private readonly COMEnumerable.IntPtrNextMethod _nextPtr;

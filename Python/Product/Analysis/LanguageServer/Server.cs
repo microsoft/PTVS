@@ -66,6 +66,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _queue.Dispose();
         }
 
+        private void TraceMessage(IFormattable message) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, message.ToString());
+            }
+        }
+
+        private void TraceMessage(string message) {
+            if (_traceLogging) {
+                LogMessage(MessageType.Log, message);
+            }
+        }
+
         #region Client message handling
 
         public async override Task<InitializeResult> Initialize(InitializeParams @params) {
@@ -109,9 +121,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Opening document {@params.textDocument.uri}");
-            }
+            TraceMessage($"Opening document {@params.textDocument.uri}");
 
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -145,9 +155,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var entry = GetEntry(uri);
             int part = GetPart(uri);
 
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Received changes for {uri}");
-            }
+            TraceMessage($"Received changes for {uri}");
 
             if (entry is IDocument doc) {
                 int docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
@@ -195,9 +203,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                if (_traceLogging) {
-                    LogMessage(MessageType.Log, $"Applied changes to {uri}");
-                }
+                TraceMessage($"Applied changes to {uri}");
                 EnqueueItem(doc);
             }
 
@@ -210,9 +216,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     case FileChangeType.Created:
                         entry = await LoadFileAsync(c.uri);
                         if (entry != null) {
-                            if (_traceLogging) {
-                                LogMessage(MessageType.Log, $"Saw {c.uri} created and loaded new entry");
-                            }
+                            TraceMessage($"Saw {c.uri} created and loaded new entry");
                         } else {
                             LogMessage(MessageType.Warning, $"Failed to load {c.uri}");
                         }
@@ -262,15 +266,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Completions in {uri} at {@params.position}");
-            }
+            TraceMessage($"Completions in {uri} at {@params.position}");
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
-                if (_traceLogging) {
-                    LogMessage(MessageType.Log, $"No analysis found for {uri}");
-                }
+                TraceMessage($"No analysis found for {uri}");
                 return new CompletionList { };
             }
 
@@ -305,13 +305,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
+                TraceMessage($"Completing expression {@params._expr}");
                 members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
+                    TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     members = analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
+                    TraceMessage("Completing all names");
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
@@ -319,6 +322,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?._includeAllModules ?? false) {
                 var mods = _analyzer.GetModules();
+                TraceMessage($"Including {mods?.Length ?? 0} modules");
                 members = members?.Concat(mods) ?? mods;
             }
 
@@ -334,20 +338,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
                         .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
+                    if (_traceLogging) {
+                        argNames = argNames.MaybeEnumerate().ToArray();
+                        LogMessage(MessageType.Log, $"Including {argNames.Count()} named arguments");
+                    }
                     members = members?.Concat(argNames) ?? argNames;
                 }
             }
 
             if (members == null) {
-                if (_traceLogging) {
-                    LogMessage(MessageType.Log, $"No members found in document {uri}");
-                }
+                TraceMessage($"No members found in document {uri}");
                 return new CompletionList { };
             }
 
             var filtered = members.Select(m => ToCompletionItem(m, opts));
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
+                TraceMessage($"Only returning {filterKind.Value} items");
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
@@ -359,6 +366,138 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
             return item;
+        }
+
+        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            var uri = @params.textDocument.uri;
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            TraceMessage($"Signatures in {uri} at {@params.position}");
+
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                TraceMessage($"No analysis found for {uri}");
+                return new SignatureHelp { };
+            }
+
+            IEnumerable<IOverloadResult> overloads;
+            int activeSignature = -1, activeParameter = -1;
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                TraceMessage($"Getting signatures for {@params._expr}");
+                overloads = analysis.GetSignatures(@params._expr, @params.position);
+            } else {
+                var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
+                int index = tree.LocationToIndex(@params.position);
+                if (finder.GetExpression(@params.position) is CallExpression callExpr) {
+                    TraceMessage($"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    overloads = analysis.GetSignatures(callExpr.Target, @params.position);
+                    if (!callExpr.GetArgumentAtIndex(tree, index, out activeParameter)) {
+                        activeParameter = -1;
+                    }
+                } else {
+                    LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
+                    return new SignatureHelp { };
+                }
+            }
+
+            var sigs = overloads.Select(ToSignatureInformation).ToArray();
+            if (activeParameter >= 0 && activeSignature < 0) {
+                // TODO: Better selection of active signature
+                activeSignature = sigs
+                    .Select((s, i) => Tuple.Create(s, i))
+                    .OrderBy(t => t.Item1.parameters.Length)
+                    .FirstOrDefault(t => t.Item1.parameters.Length > activeParameter)
+                    ?.Item2 ?? -1;
+            }
+
+            return new SignatureHelp {
+                signatures = sigs,
+                activeSignature = activeSignature,
+                activeParameter = activeParameter
+            };
+        }
+
+        public async override Task<Reference[]> FindReferences(ReferencesParams @params) {
+            var uri = @params.textDocument.uri;
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            TraceMessage($"References in {uri} at {@params.position}");
+
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                TraceMessage($"No analysis found for {uri}");
+                return Array.Empty<Reference>();
+            }
+
+            int? version = null;
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
+                        }
+                    }
+                }
+            }
+
+            var extras = new List<Reference>();
+
+            if (@params.context?.includeDeclaration ?? false) {
+                int index = tree.LocationToIndex(@params.position);
+                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+                tree.Walk(w);
+                ModuleReference modRef;
+                if (!string.IsNullOrEmpty(w.ImportedName) &&
+                    _analyzer.Modules.TryImport(w.ImportedName, out modRef)) {
+
+                    // Return a module reference
+                    extras.AddRange(modRef.AnalysisModule.Locations
+                        .Select(l => new Reference {
+                            uri = uri,
+                            range = l.Span,
+                            _version = version,
+                            _kind = ReferenceKind.Definition
+                        })
+                        .ToArray()
+                    );
+                }
+            }
+
+            IEnumerable<IAnalysisVariable> result;
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                TraceMessage($"Getting references for {@params._expr}");
+                result = analysis.GetVariables(@params._expr, @params.position);
+            } else {
+                var finder = new ExpressionFinder(tree, GetExpressionOptions.FindDefinition);
+                if (finder.GetExpression(@params.position) is Expression expr) {
+                    TraceMessage($"Getting references for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    result = analysis.GetVariables(expr, @params.position);
+                } else {
+                    LogMessage(MessageType.Info, $"No references found in {uri} at {@params.position}");
+                    return Array.Empty<Reference>();
+                }
+            }
+
+            var filtered = result.Where(v => v.Type != VariableType.None);
+            if (!(@params.context?.includeDeclaration ?? false)) {
+                filtered = filtered.Where(v => v.Type != VariableType.Definition);
+            }
+            if (!(@params.context?._includeValues ?? false)) {
+                filtered = filtered.Where(v => v.Type != VariableType.Value);
+            }
+
+            bool includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
+
+            return filtered.Select(v => new Reference {
+                uri = v.Location.DocumentUri,
+                range = v.Location.Span,
+                _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
+                _kind = ToReferenceKind(v.Type),
+                _version = version
+            }).Concat(extras).ToArray();
         }
 
         public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
@@ -484,7 +623,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath);
+                var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
             }
         }
@@ -526,21 +665,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public async Task WaitForCompleteAnalysisAsync() {
             // Wait for all current parsing to complete
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, "Waiting for parsing to complete");
-            }
+            TraceMessage("Waiting for parsing to complete");
             await _parseQueue.WaitForAllAsync();
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, "Parsing complete. Waiting for analysis entries to enqueue");
-            }
+            TraceMessage("Parsing complete. Waiting for analysis entries to enqueue");
             await _pendingAnalysisEnqueue.WaitForZeroAsync();
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, "Enqueue complete. Waiting for analysis to complete");
-            }
+            TraceMessage("Enqueue complete. Waiting for analysis to complete");
             await _queue.WaitForCompleteAsync();
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, "Analysis complete.");
-            }
+            TraceMessage("Analysis complete.");
         }
 
         public int EstimateRemainingWork() {
@@ -549,17 +680,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public event EventHandler<ParseCompleteEventArgs> OnParseComplete;
         private void ParseComplete(Uri uri, int version) {
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Parse complete for {uri} at version {version}");
-            }
+            TraceMessage($"Parse complete for {uri} at version {version}");
             OnParseComplete?.Invoke(this, new ParseCompleteEventArgs { uri = uri, version = version });
         }
 
         public event EventHandler<AnalysisCompleteEventArgs> OnAnalysisComplete;
         private void AnalysisComplete(Uri uri, int version) {
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Analysis complete for {uri} at version {version}");
-            }
+            TraceMessage($"Analysis complete for {uri} at version {version}");
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
         }
 
@@ -569,9 +696,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public event EventHandler<FileFoundEventArgs> OnFileFound;
         private void FileFound(Uri uri) {
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, $"Found file to analyze {uri}");
-            }
+            TraceMessage($"Found file to analyze {uri}");
             OnFileFound?.Invoke(this, new FileFoundEventArgs { uri = uri });
         }
 
@@ -707,9 +832,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             return;
                         }
 
-                        if (_traceLogging) {
-                            LogMessage(MessageType.Log, $"Parsing document {doc.DocumentUri}");
-                        }
+                        TraceMessage($"Parsing document {doc.DocumentUri}");
                         cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
                     }
 
@@ -748,8 +871,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             } catch (BadSourceException) {
             } catch (OperationCanceledException ex) {
+                LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
                 if (_traceLogging) {
-                    LogMessage(MessageType.Warning, "Parse cancelled");
                     LogMessage(MessageType.Log, ex.ToString());
                 }
             } catch (Exception ex) {
@@ -838,7 +961,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
-            var loc = m.Locations.FirstOrDefault();
+            var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
                     uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
@@ -875,6 +998,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 case PythonMemberType.NamedArgument: return SymbolKind.None;
                 default: return SymbolKind.None;
             }
+        }
+
+        private ReferenceKind ToReferenceKind(VariableType type) {
+            switch (type) {
+                case VariableType.None: return ReferenceKind.Value;
+                case VariableType.Definition: return ReferenceKind.Definition;
+                case VariableType.Reference: return ReferenceKind.Reference;
+                case VariableType.Value: return ReferenceKind.Value;
+                default: return ReferenceKind.Value;
+            }
+        }
+
+        private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
+            return new SignatureInformation {
+                label = overload.Name,
+                documentation = string.IsNullOrEmpty(overload.Documentation) ? (MarkupContent?)null : new MarkupContent {
+                    kind = MarkupKind.PlainText,
+                    value = overload.Documentation
+                },
+                parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
+                    label = p.Name,
+                    documentation = string.IsNullOrEmpty(p.Documentation) ? (MarkupContent?)null : new MarkupContent {
+                        kind = MarkupKind.PlainText,
+                        value = p.Documentation
+                    },
+                    _type = p.Type,
+                    _defaultValue = p.DefaultValue
+                }).ToArray()
+            };
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Xml.Serialization;
 
 namespace Microsoft.PythonTools.Profiling {
+    // XmlSerializer requires these types to be public
     [Serializable]
     public sealed class ProfilingTarget {
         internal static XmlSerializer Serializer = new XmlSerializer(typeof(ProfilingTarget));

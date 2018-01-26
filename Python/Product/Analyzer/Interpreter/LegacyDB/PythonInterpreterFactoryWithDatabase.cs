@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// stored on disk as .py files, and using <see cref="PythonTypeDatabase"/>
     /// for the completion database.
     /// </summary>
-    public class PythonInterpreterFactoryWithDatabase :
+    class PythonInterpreterFactoryWithDatabase :
         IPythonInterpreterFactoryWithDatabase,
         IPythonInterpreterFactoryWithLog,
         IDisposable

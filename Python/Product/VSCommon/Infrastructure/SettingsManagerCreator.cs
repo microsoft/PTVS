@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Shell.Settings;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public static class SettingsManagerCreator {
+    static class SettingsManagerCreator {
         public static SettingsManager GetSettingsManager(DTE dte) {
             return GetSettingsManager(new ServiceProvider(((IOleServiceProvider)dte)));
         }

@@ -14,32 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-
 namespace Microsoft.PythonTools.Analysis {
     class AnalysisVariable : IAnalysisVariable {
-        private readonly LocationInfo _loc;
-        private readonly VariableType _type;
-        private readonly LocationInfo _defLoc;
-
-        public AnalysisVariable(VariableType type, LocationInfo location, LocationInfo definitionLocation = null) {
-            _loc = location;
-            _type = type;
-            _defLoc = definitionLocation;
+        public AnalysisVariable(VariableType type, LocationInfo location, LocationInfo definitionLocation = null, int? version = null) {
+            Location = location;
+            Type = type;
+            DefinitionLocation = definitionLocation ?? location;
+            Version = version;
         }
 
         #region IAnalysisVariable Members
 
-        public LocationInfo Location {
-            get { return _loc; }
-        }
+        public LocationInfo Location { get; }
 
-        public LocationInfo DefinitionLocation {
-            get { return _defLoc ?? _loc; }
-        }
+        public LocationInfo DefinitionLocation { get; }
 
-        public VariableType Type {
-            get { return _type; }
-        }
+        public VariableType Type { get; }
+
+        public int? Version { get; }
 
         #endregion
 
@@ -48,13 +40,14 @@ namespace Microsoft.PythonTools.Analysis {
             if (other != null) {
                 return LocationInfo.FullComparer.Equals(Location, other.Location) &&
                        LocationInfo.FullComparer.Equals(DefinitionLocation, other.DefinitionLocation) &&
-                       Type.Equals(other.Type);
+                       Type.Equals(other.Type) &&
+                       Version == other.Version;
             }
             return false;
         }
 
         public override int GetHashCode() {
-            return _type.GetHashCode() ^ _loc?.GetHashCode() ?? 0 ^ _defLoc?.GetHashCode() ?? 0;
+            return Type.GetHashCode() ^ Location?.GetHashCode() ?? 0;
         }
     }
 }

@@ -87,7 +87,6 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="Infrastructure\InterpreterCatalog.cs" />
-    <Compile Include="Infrastructure\IProjectInterpreterDbChanged.cs" />
     <Compile Include="Infrastructure\LiveTextBlock.cs" />
     <Compile Include="Logging\IPythonToolsLogger.cs" />
     <Compile Include="Infrastructure\IXamlDesignerSupport.cs" />

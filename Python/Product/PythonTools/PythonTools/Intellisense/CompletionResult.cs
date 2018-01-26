@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
-    public sealed class CompletionResult {
+    sealed class CompletionResult {
         private readonly string _completion;
         private readonly PythonMemberType _memberType;
         private readonly string _name, _doc;

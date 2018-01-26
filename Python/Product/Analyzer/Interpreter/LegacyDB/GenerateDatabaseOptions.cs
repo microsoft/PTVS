@@ -16,7 +16,7 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// The options that may be passed to
     /// <see cref="IPythonInterpreterFactoryWithDatabase.GenerateDatabase"/>

@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns the project entry which this analysis unit analyzes.
         /// </summary>
-        public IPythonProjectEntry Project {
+        public IPythonProjectEntry Entry {
             get {
                 return ProjectEntry;
             }
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return DeclaringModule.ProjectEntry; }
         }
 
-        public PythonAnalyzer ProjectState {
+        public PythonAnalyzer State {
             get { return DeclaringModule.ProjectEntry.ProjectState; }
         }
 
@@ -125,8 +125,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal void Enqueue() {
             if (!ForEval && !IsInQueue) {
-                ProjectState.Queue.Append(this);
-                AnalysisLog.Enqueue(ProjectState.Queue, this);
+                State.Queue.Append(this);
+                AnalysisLog.Enqueue(State.Queue, this);
                 this.IsInQueue = true;
             }
         }
@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return ProjectState.BuiltinModule.GetMember(node, this, name);
+            return State.BuiltinModule.GetMember(node, this, name);
         }
 
         public LocationInfo ResolveLocation(object location) {
@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis {
                 span = node.GetSpan(Tree);
             }
 
-            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
+            return new LocationInfo(ProjectEntry.FilePath, Entry.DocumentUri, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }
 
         internal virtual ILocationResolver AlternateResolver => null;
@@ -476,7 +476,7 @@ namespace Microsoft.PythonTools.Analysis {
             : base(node, parent,
                 new ComprehensionScope(
                     new GeneratorInfo(
-                        outerUnit.ProjectState,
+                        outerUnit.State,
                         outerUnit.ProjectEntry
                     ),
                     node,
@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.Analysis {
     class SetComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public SetComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-            new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node, outerUnit.ProjectEntry), node, outerScope),
+            new ComprehensionScope(new SetInfo(outerUnit.State, node, outerUnit.ProjectEntry), node, outerScope),
             outerUnit) { }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
@@ -534,7 +534,7 @@ namespace Microsoft.PythonTools.Analysis {
             new ComprehensionScope(
                 new ListInfo(
                     VariableDef.EmptyArray,
-                    outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    outerUnit.State.ClassInfos[BuiltinTypeId.List],
                     node,
                     outerUnit.ProjectEntry
                 ), node, outerScope),

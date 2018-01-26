@@ -23,7 +23,7 @@ using System.Windows;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    public sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable {
+    sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable {
         private readonly IPythonInterpreterFactory _factory;
         internal readonly IPackageManager _packageManager;
         private FrameworkElement _wpfObject;

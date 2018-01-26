@@ -127,9 +127,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.CompletionsRequest.Command: response = await GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = await GetModules(request); break;
-                case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
+                case AP.SignaturesRequest.Command: response = await GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
-                case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
+                case AP.AnalyzeExpressionRequest.Command: response = await AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
                 case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
                 case AP.FileUpdateRequest.Command: response = await UpdateContent((AP.FileUpdateRequest)request); break;
@@ -1197,91 +1197,51 @@ namespace Microsoft.PythonTools.Intellisense {
             return true;
         }
 
-        private Response AnalyzeExpression(AP.AnalyzeExpressionRequest request) {
+        private async Task<Response> AnalyzeExpression(AP.AnalyzeExpressionRequest request) {
             var entry = GetPythonEntry(request.documentUri);
             if (entry == null) {
                 return IncorrectFileType();
             }
 
-            AP.AnalysisReference[] references;
-            string privatePrefix = null;
-            string memberName = null;
-
-            if (entry.Tree != null) {
-                int index = entry.Tree.LocationToIndex(new SourceLocation(request.line, request.column));
-                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
-                entry.Tree.Walk(w);
-                ModuleReference modRef;
-                if (!string.IsNullOrEmpty(w.ImportedName) &&
-                    Project.Modules.TryImport(w.ImportedName, out modRef)) {
-                    // Return a module reference
-                    return new AP.AnalyzeExpressionResponse {
-                        variables = modRef.AnalysisModule.Locations
-                            .Select(l => MakeReference(l, VariableType.Definition))
-                            .Where(r => r != null)
-                            .ToArray(),
-                        memberName = w.ImportedName
-                    };
+            var references = await _server.FindReferences(new LS.ReferencesParams {
+                textDocument = request.documentUri,
+                position = new SourceLocation(request.line, request.column),
+                context = new LS.ReferenceContext {
+                    includeDeclaration = true,
+                    _includeValues = true,
+                    _includeDefinitionRanges = true
                 }
-            }
+            });
 
-            if (entry.Analysis != null) {
-                var variables = entry.Analysis.GetVariables(
-                    request.expr,
-                    new SourceLocation(request.line, request.column)
-                );
+            var privatePrefix = entry.Analysis.GetPrivatePrefix(new SourceLocation(request.line, request.column));
 
-                var ast = variables.Ast;
-                var expr = Statement.GetExpression(ast.Body);
-
-                if (expr is NameExpression ne) {
-                    memberName = ne.Name;
-                } else if (expr is MemberExpression me) {
-                    memberName = me.Name;
-                }
-
-                privatePrefix = variables.Ast.PrivatePrefix;
-                references = variables.Select(MakeReference).Where(r => r != null).ToArray();
-            } else {
-                references = new AP.AnalysisReference[0];
-            }
-
-            return new AP.AnalyzeExpressionResponse() {
-                variables = references,
-                privatePrefix = privatePrefix,
-                memberName = memberName
+            return new AP.AnalyzeExpressionResponse {
+                variables = references.Select(MakeReference).ToArray(),
+                privatePrefix = privatePrefix
             };
         }
 
-        private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
-            var reference = MakeReference(arg.Location, arg.Type);
-            if (reference != null && arg.DefinitionLocation != null) {
-                reference.definitionStartLine = arg.DefinitionLocation.StartLine;
-                reference.definitionStartColumn = arg.DefinitionLocation.StartColumn;
-                if (arg.DefinitionLocation.EndLine.HasValue) {
-                    reference.definitionEndLine = arg.DefinitionLocation.EndLine.Value;
-                } else {
-                    reference.definitionEndLine = arg.DefinitionLocation.StartLine;
-                }
-                if (arg.DefinitionLocation.EndColumn.HasValue) {
-                    reference.definitionEndColumn = arg.DefinitionLocation.EndColumn.Value;
-                } else {
-                    reference.definitionEndColumn = arg.DefinitionLocation.StartColumn;
-                }
-            }
-            return reference;
-        }
+        private AP.AnalysisReference MakeReference(LS.Reference r) {
+            var range = (SourceSpan)r.range;
 
-        private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
-            if (location == null) {
-                return null;
-            }
-            return new AP.AnalysisReference() {
-                column = location.StartColumn,
-                line = location.StartLine,
-                kind = GetVariableType(type),
-                file = location.FilePath
+            var resp = new AP.AnalysisReference {
+                documentUri = r.uri,
+                file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
+                startLine = range.Start.Line,
+                startColumn = range.Start.Column,
+                endLine = range.End.Line,
+                endColumn = range.End.Column,
+                kind = GetVariableType(r._kind),
+                version = r._version
             };
+            if (r._definitionRange != null) {
+                var defRange = (SourceSpan)r._definitionRange.Value;
+                resp.definitionStartLine = defRange.Start.Line;
+                resp.definitionStartColumn = defRange.Start.Column;
+                resp.definitionEndLine = defRange.End.Line;
+                resp.definitionEndColumn = defRange.End.Column;
+            }
+            return resp;
         }
 
         private static string GetVariableType(VariableType type) {
@@ -1436,25 +1396,33 @@ namespace Microsoft.PythonTools.Intellisense {
             return prettyPrinted.ToString().Trim();
         }
 
-        private Response GetSignatures(AP.SignaturesRequest request) {
-            var entry = GetPythonEntry(request.documentUri);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-            IEnumerable<IOverloadResult> sigs;
-            if (entry.Analysis != null) {
-                using (new DebugTimer("GetSignaturesByIndex")) {
-                    sigs = entry.Analysis.GetSignatures(
-                        request.text,
-                        new SourceLocation(request.line, request.column)
-                    );
-                }
-            } else {
-                sigs = Enumerable.Empty<IOverloadResult>();
+        private async Task<Response> GetSignatures(AP.SignaturesRequest request) {
+            LS.SignatureHelp sigs;
+
+            using (new DebugTimer("SignatureHelp")) {
+                sigs = await _server.SignatureHelp(new LS.TextDocumentPositionParams {
+                    textDocument = request.documentUri,
+                    position = new SourceLocation(request.line, request.column),
+                    _expr = request.text
+                });
             }
 
-            return new AP.SignaturesResponse() {
-                sigs = ToSignatures(sigs)
+            return new AP.SignaturesResponse {
+                sigs = sigs.signatures.Select(
+                    s => new AP.Signature {
+                        name = s.label,
+                        doc = s.documentation?.value,
+                        parameters = s.parameters.MaybeEnumerate().Select(
+                            p => new AP.Parameter {
+                                name = p.label,
+                                defaultValue = p._defaultValue,
+                                optional = p._isOptional ?? false,
+                                doc = p.documentation?.value,
+                                type = p._type
+                            }
+                        ).ToArray()
+                    }
+                ).ToArray()
             };
         }
 
@@ -1509,25 +1477,6 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private AP.Signature[] ToSignatures(IEnumerable<IOverloadResult> sigs) {
-            return sigs.Select(
-                sig => new AP.Signature() {
-                    name = sig.Name,
-                    doc = sig.Documentation,
-                    parameters = sig.Parameters.Select(
-                        param => new AP.Parameter() {
-                            name = param.Name,
-                            defaultValue = param.DefaultValue,
-                            optional = param.IsOptional,
-                            doc = param.Documentation,
-                            type = param.Type,
-                            variables = param.Variables?.Select(MakeReference).Where(r => r != null).ToArray()
-                        }
-                    ).ToArray()
-                }
-            ).ToArray();
-        }
-
         private async Task<AP.Completion[]> ToCompletions(IEnumerable<LS.SymbolInformation> symbols) {
             if (symbols == null) {
                 return null;
@@ -1546,8 +1495,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             locations = new [] {
                                 new AP.AnalysisReference {
                                     file = s.location.uri.AbsolutePath,
-                                    line = s.location.range.start.line + 1,
-                                    column = s.location.range.start.character + 1
+                                    documentUri = s.location.uri,
+                                    startLine = s.location.range.start.line + 1,
+                                    startColumn = s.location.range.start.character + 1,
+                                    endLine = s.location.range.end.line + 1,
+                                    endColumn = s.location.range.end.character + 1
                                 }
                             }
                         }
@@ -1584,8 +1536,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             doc = v.documentation,
                             locations = v.references?.Where(r => r.uri.IsFile).Select(r => new AP.AnalysisReference {
                                 file = r.uri.AbsolutePath,
-                                line = r.range.start.line + 1,
-                                column = r.range.start.character + 1,
+                                documentUri = r.uri,
+                                startLine = r.range.start.line + 1,
+                                startColumn = r.range.start.character + 1,
+                                endLine = r.range.end.line + 1,
+                                endColumn = r.range.end.character + 1,
                                 definitionStartLine = r.range.start.line + 1,
                                 definitionStartColumn = r.range.start.character + 1,
                                 definitionEndLine = r.range.end.line + 1,
@@ -1675,47 +1630,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case LS.SymbolKind.TypeParameter: return PythonMemberType.NamedArgument;
                 default: return PythonMemberType.Unknown;
             }
-        }
-
-        private async Task<AP.Completion[]> ToCompletions(MemberResult[] memberResult, GetMemberOptions options) {
-            AP.Completion[] res = new AP.Completion[memberResult.Length];
-            for (int i = 0; i < memberResult.Length; i++) {
-                var member = memberResult[i];
-
-                res[i] = new AP.Completion() {
-                    name = member.Name,
-                    completion = member.Completion,
-                    doc = member.Documentation,
-                    memberType = member.MemberType
-                };
-
-                if (options.HasFlag(GetMemberOptions.DetailedInformation)) {
-                    List<AP.CompletionValue> values = new List<AnalysisProtocol.CompletionValue>();
-
-                    foreach (var value in member.Values) {
-                        var descComps = Array.Empty<AP.DescriptionComponent>();
-                        var hasDesc = value as IHasRichDescription;
-                        if (hasDesc != null) {
-                            descComps = hasDesc
-                                .GetRichDescription()
-                                .Select(kv => new AP.DescriptionComponent(kv.Value, kv.Key))
-                                .ToArray();
-                        }
-                        values.Add(
-                            new AP.CompletionValue() {
-                                description = descComps,
-                                doc = value.Documentation,
-                                locations = value.Locations
-                                    .Select(x => MakeReference(x, VariableType.Definition))
-                                    .Where(r => r != null)
-                                    .ToArray()
-                            }
-                        );
-                    }
-                    res[i].detailedValues = values.ToArray();
-                }
-            }
-            return res;
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {

@@ -153,10 +153,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static object _intellisenseAnalysisEntry = new object();
 
-        public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            ConnectSubjectBufferAsync(subjectBuffer)
-                .HandleAllExceptions(_services.Site, GetType())
-                .DoNotWait();
+        public async void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
+            for (int retries = 5; retries > 0; --retries) {
+                try {
+                    await ConnectSubjectBufferAsync(subjectBuffer);
+                    return;
+                } catch (InvalidOperationException) {
+                    // Analysis entry changed, so we should retry
+                }
+            }
+            Debug.Fail("Failed to connect subject buffer after multiple retries");
         }
 
         private static async Task<AnalysisEntry> AnalyzeBufferAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
@@ -214,15 +220,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var parser = entry.GetOrCreateBufferParser(_services);
-            try {
-                parser.AddBuffer(subjectBuffer);
-            } catch (InvalidOperationException ex) {
-                // Should not fail here due to missing analysis entry
-                // But if we do, it probably means someone else owns
-                // the buffer now and we should quietly let them.
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                return;
-            }
+
+            // This may raise InvalidOperationException if we have raced with
+            // an analyzer being closed. Our caller will retry in this case.
+            parser.AddBuffer(subjectBuffer);
+
             await parser.EnsureCodeSyncedAsync(subjectBuffer);
         }
 

@@ -60,7 +60,6 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
-        IProjectInterpreterDbChanged,
         IPythonProjectProvider
     {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
@@ -235,33 +234,13 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (_active != oldActive) {
-                    if (oldActive == null) {
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (defaultInterp != null) {
-                            defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                        }
-                    } else {
-                        var oldInterpWithDb = oldActive as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (oldInterpWithDb != null) {
-                            oldInterpWithDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                        }
-                    }
-
                     if (_active != null) {
-                        var newInterpWithDb = _active as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (newInterpWithDb != null) {
-                            newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
-                        }
                         BuildProject.SetProperty(
                             MSBuildConstants.InterpreterIdProperty,
                             ReplaceMSBuildPath(_active.Configuration.Id)
                         );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-                        if (defaultInterp != null) {
-                            defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
-                        }
                     }
                     BuildProject.MarkDirty();
                 }
@@ -282,10 +261,6 @@ namespace Microsoft.PythonTools.Project {
                 id = id.Substring(0, index) + "$(MSBuildProjectFullPath)" + id.Substring(index + BuildProject.FullPath.Length);
             }
             return id;
-        }
-
-        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void GlobalDefaultInterpreterChanged(object sender, EventArgs e) {
@@ -1021,13 +996,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        Projects.ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
 
         public event EventHandler ProjectAnalyzerChanged;
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
-        public event EventHandler InterpreterDbChanged;
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
@@ -1342,23 +1316,34 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
             Site.GetUIThread().InvokeTask(async () => {
                 await ReanalyzeProject().HandleAllExceptions(Site, GetType());
             }).DoNotWait();
         }
 
         private async Task ReanalyzeProject() {
+#if DEBUG
+            var output = OutputWindowRedirector.GetGeneral(Site);
+            await ReanalyzeProjectHelper(output);
+#else
+            await ReanalyzeProjectHelper(null);
+#endif
+        }
+
+        private async Task ReanalyzeProjectHelper(Redirector log) {
             if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
+                log?.WriteLine("Project has closed");
                 return;
             }
 
             try {
                 if (!_recreatingAnalyzer.Wait(0)) {
                     // Someone else is recreating, so wait for them to finish and return
+                    log?.WriteLine("Waiting for existing call");
                     await _recreatingAnalyzer.WaitAsync();
                     _recreatingAnalyzer.Release();
+                    log?.WriteLine("Existing call complete");
                     return;
                 }
             } catch (ObjectDisposedException) {
@@ -1382,10 +1367,14 @@ namespace Microsoft.PythonTools.Project {
                     statusBarConfigured = true;
                 }
 
+                log?.WriteLine("Refreshing interpreters");
                 RefreshInterpreters();
+                log?.WriteLine("Refreshed interpreters");
 
                 if (_analyzer != null) {
+                    log?.WriteLine($"Unhooking events from {_analyzer}");
                     UnHookErrorsAndWarnings(_analyzer);
+                    log?.WriteLine("Unhooked events");
                 }
                 var oldWatcher = _projectFileWatcher;
                 _projectFileWatcher = new FileWatcher(ProjectHome) {
@@ -1397,44 +1386,62 @@ namespace Microsoft.PythonTools.Project {
                 _projectFileWatcher.Deleted += ProjectFile_Deleted;
                 oldWatcher?.Dispose();
 
+                log?.WriteLine("Creating new analyzer");
                 var analyzer = await CreateAnalyzerAsync();
                 Debug.Assert(analyzer != null);
+                log?.WriteLine($"Created analyzer {analyzer}");
 
                 ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
 
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
+                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
 
                 if (oldAnalyzer != null) {
                     if (analyzer != null) {
+                        int beforeCount = analyzer.Files.Count();
+                        log?.WriteLine($"Transferring from old analyzer {oldAnalyzer}, which has {oldAnalyzer.Files.Count()} files");
                         await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
+                        log?.WriteLine($"Tranferred {analyzer.Files.Count() - beforeCount} files");
+                        log?.WriteLine($"Old analyzer now has {oldAnalyzer.Files.Count()} files");
                     }
                     if (oldAnalyzer.RemoveUser()) {
+                        log?.WriteLine("Disposing old analyzer");
                         oldAnalyzer.Dispose();
                     }
                 }
 
                 var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
 
-                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
+                log?.WriteLine($"Project includes files:{Environment.NewLine}    {string.Join(Environment.NewLine + "    ", files)}");
+
                 if (defAnalyzer != null) {
                     foreach (var f in files) {
                         var entry = defAnalyzer.GetAnalysisEntryFromPath(f);
                         if (entry != null) {
+                            log?.WriteLine($"Unloading {f} from default analyzer");
                             await defAnalyzer.UnloadFileAsync(entry);
+                            foreach (var b in entry.TryGetBufferParser().AllBuffers) {
+                                PythonTextBufferInfo.MarkForReplacement(b);
+                            }
                         }
                     }
                 }
 
                 if (analyzer != null) {
                     // Set search paths first, as it will save full reanalysis later
+                    log?.WriteLine("Setting search paths");
                     await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
                     // Add all our files into our analyzer
+                    log?.WriteLine($"Adding {files.Length} files");
                     await analyzer.AnalyzeFileAsync(files);
                 }
 
                 ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
             } catch (ObjectDisposedException) {
                 // Raced with project disposal
+            } catch (Exception ex) {
+                log?.WriteErrorLine(ex.ToString());
+                throw;
             } finally {
                 try {
                     if (statusBar != null && statusBarConfigured) {
@@ -2008,7 +2015,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-        #region IPythonProject Members
+#region IPythonProject Members
 
         string IPythonProject.ProjectName {
             get {
@@ -2077,9 +2084,9 @@ namespace Microsoft.PythonTools.Project {
             return base.GetUnevaluatedProperty(name);
         }
 
-        #endregion
+#endregion
 
-        #region Search Path support
+#region Search Path support
 
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
@@ -2113,9 +2120,9 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region Package Installation support
+#region Package Installation support
 
         private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
@@ -2422,9 +2429,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Virtual Env support
+#region Virtual Env support
 
         private void ShowAddInterpreter() {
             var service = InterpreterOptions;
@@ -2586,7 +2593,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         private int ExecCreateCondaEnv() {
             InterpreterList.InterpreterListToolWindow.OpenAt(

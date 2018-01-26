@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
     }
 
     [Export(typeof(IPythonLauncherProvider))]
-    class WslPythonLauncherProvider : IPythonLauncherProvider2 {
+    class WslPythonLauncherProvider : IPythonLauncherProvider {
         [Import(typeof(SVsServiceProvider))]
         internal IServiceProvider _provider = null;
 

@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// Walks the XAML file and provides data based upon things which should be provided via intellisense.
     /// </summary>
-    public sealed class XamlAnalysis {
+    sealed class XamlAnalysis {
         private readonly Dictionary<string, XamlTypeReference> _knownTypes = new Dictionary<string, XamlTypeReference>();
         private readonly Dictionary<string, XamlMemberReference> _eventInfo = new Dictionary<string, XamlMemberReference>();
 
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    public struct XamlMemberReference {
+    struct XamlMemberReference {
         public readonly XamlMember Member;
         public readonly int LineNumber;
         public readonly int LineOffset;
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    public struct XamlTypeReference {
+    struct XamlTypeReference {
         public readonly XamlType Type;
         public readonly int LineNumber;
         public readonly int LineOffset;

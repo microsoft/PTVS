@@ -249,7 +249,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         public IEnumerable<LocationInfo> Locations {
             get {
                 if (_hasLocation) {
-                    yield return new LocationInfo(_module.FilePath, _line, _column);
+                    yield return new LocationInfo(_module.FilePath, _module.DocumentUri, _line, _column);
                 }
             }
         }

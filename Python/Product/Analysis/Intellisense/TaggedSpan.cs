@@ -17,7 +17,7 @@
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public sealed class TaggedSpan {
+    sealed class TaggedSpan {
         public SourceSpan Span { get; }
         public string Tag { get; }
 

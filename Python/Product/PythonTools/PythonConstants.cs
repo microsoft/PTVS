@@ -17,7 +17,7 @@
 using System;
 
 namespace Microsoft.PythonTools {
-    public static class PythonConstants {
+    static class PythonConstants {
         //Language name
         public const string LanguageName = "Python";
         internal const string TextEditorSettingsRegistryKey = LanguageName;

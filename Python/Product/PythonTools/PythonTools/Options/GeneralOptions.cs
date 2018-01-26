@@ -145,47 +145,6 @@ namespace Microsoft.PythonTools.Options {
         public event EventHandler IndentationInconsistencyChanged;
 
         /// <summary>
-        /// The frequency at which to check for updated news. Default is once
-        /// per week.
-        /// </summary>
-        /// <remarks>New in 2.0</remarks>
-        [Obsolete]
-        public SurveyNewsPolicy SurveyNewsCheck {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// The date/time when the last check for news occurred.
-        /// </summary>
-        /// <remarks>New in 2.0</remarks>
-        [Obsolete]
-        public DateTime SurveyNewsLastCheck {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// The url of the news feed.
-        /// </summary>
-        /// <remarks>New in 2.0</remarks>
-        [Obsolete]
-        public string SurveyNewsFeedUrl {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// The url of the news index page.
-        /// </summary>
-        /// <remarks>New in 2.0</remarks>
-        [Obsolete]
-        public string SurveyNewsIndexUrl {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Show the output window for virtual environment creation.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
