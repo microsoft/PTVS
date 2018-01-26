@@ -454,7 +454,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         internal IInterpreterOptionsService OptionsService => _options;
 
-        internal void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
+        public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options, bool synchronous = false) {
             if (_interpreters != null) {
                 _interpreters.InterpretersChanged -= Service_InterpretersChanged;
             }
@@ -472,8 +472,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             if (_interpreters != null && _options != null) {
-                Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
-
                 _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(_options);
                 if (ExperimentalOptions.AutoDetectCondaEnvironments) {
                     _condaEnvironmentView = EnvironmentView.CreateCondaEnvironmentView(_options, _interpreters);
@@ -483,6 +481,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     _condaEnvironmentView = null;
                 }
                 _onlineHelpView = EnvironmentView.CreateOnlineHelpEnvironmentView();
+
+                if (synchronous) {
+                    Dispatcher.Invoke(FirstUpdateEnvironments);
+                } else {
+                    Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                }
             } else {
                 _addNewEnvironmentView = null;
                 _condaEnvironmentView = null;

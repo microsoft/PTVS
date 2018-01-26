@@ -164,8 +164,8 @@ namespace Microsoft.PythonTools.Navigation {
                             Site,
                             location.file,
                             Guid.Empty,
-                            location.line - 1,
-                            location.column - 1
+                            location.startLine - 1,
+                            location.startColumn - 1
                         );
                         break;
                     }
@@ -185,7 +185,7 @@ namespace Microsoft.PythonTools.Navigation {
                         var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
                             entry, 
                             Name, 
-                            new SourceLocation(reference.line, reference.column)
+                            new SourceLocation(reference.startLine, reference.startColumn)
                         ), "PythonLibraryNode.AnalyzeExpression");
                         vars.AddRange(analysis.Variables);
                     }

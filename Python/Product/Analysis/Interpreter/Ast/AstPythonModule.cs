@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Documentation = ast.Documentation;
             FilePath = filePath;
             DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
-            Locations = new[] { new LocationInfo(filePath, 1, 1) };
+            Locations = new[] { new LocationInfo(filePath, DocumentUri, 1, 1) };
             _interpreter = interpreter;
 
             _properties = new Dictionary<object, object>();
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _foundChildModules = true;
             }
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, DocumentUri, _members, true, true);
             ast.Walk(walker);
             walker.Complete();
         }

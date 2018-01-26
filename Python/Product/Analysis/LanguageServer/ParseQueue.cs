@@ -97,7 +97,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!buffers.Any()) {
-                throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
+                // If the document is a real file, we should have been able to parse.
+                if (entry.DocumentUri.IsFile) {
+                    throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
+                }
+                // Otherwise, it is likely just empty for now, so no need to cause a fuss
+                return null;
             }
 
             var cookie = new VersionCookie(buffers);

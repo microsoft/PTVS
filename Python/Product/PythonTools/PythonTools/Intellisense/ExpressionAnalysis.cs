@@ -28,14 +28,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private readonly AnalysisVariable[] _variables;
         private readonly string _privatePrefix;
-        private readonly string _memberName;
 
-        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix, string memberName) {
+        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix) {
             _span = span;
             _expr = text;
             _variables = variables;
             _privatePrefix = privatePrefix;
-            _memberName = memberName;
         }
 
         /// <summary>
@@ -63,11 +61,5 @@ namespace Microsoft.PythonTools.Intellisense {
         /// when inside of a class where names could be mangled.
         /// </summary>
         public string PrivatePrefix => _privatePrefix;
-
-        /// <summary>
-        /// If the expression is a member name (e.g. hello.world, or hello.good.world)
-        /// this gets the name of the member such as "hello".
-        /// </summary>
-        public string MemberName => _memberName;
     }
 }

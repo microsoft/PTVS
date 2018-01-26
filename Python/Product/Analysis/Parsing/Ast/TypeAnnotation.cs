@@ -66,10 +66,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             public T GetResult<T>(TypeAnnotationConverter<T> converter) where T : class {
                 var stack = new Stack<KeyValuePair<string, T>>();
-                foreach (var op in _ops) {
-                    if (!op.Apply(converter, stack)) {
-                        return default(T);
+                try {
+                    foreach (var op in _ops) {
+                        if (!op.Apply(converter, stack)) {
+                            return default(T);
+                        }
                     }
+                } catch (InvalidOperationException) {
+                    return default(T);
                 }
 
                 if (stack.Count == 1) {

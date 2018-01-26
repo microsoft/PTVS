@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis {
                 span = node.GetSpan(Tree);
             }
 
-            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
+            return new LocationInfo(ProjectEntry.FilePath, Entry.DocumentUri, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }
 
         internal virtual ILocationResolver AlternateResolver => null;

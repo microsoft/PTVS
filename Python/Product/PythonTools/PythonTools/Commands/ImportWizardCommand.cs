@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Commands {
 
             string initialProjectPath = null, initialSourcePath = null;
 
-            var oleArgs = args as Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs;
+            var oleArgs = args as OleMenuCmdEventArgs;
             if (oleArgs != null) {
                 string projectArgs = oleArgs.InValue as string;
                 if (projectArgs != null) {
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Commands {
                 }
             }
 
-            var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard(
+            var dlg = new Project.ImportWizard.ImportWizard(
                 _serviceProvider,
                 initialSourcePath,
                 initialProjectPath

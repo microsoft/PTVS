@@ -253,7 +253,7 @@ namespace Microsoft.PythonTools {
         }
 
         public override string ToString() {
-            return "(" + _line + "," + _column + ")";
+            return "(" + _line + ", " + _column + ")";
         }
 
         internal string ToDebugString() {

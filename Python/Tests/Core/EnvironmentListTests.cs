@@ -288,10 +288,13 @@ namespace PythonToolsUITests {
 
                 mockService.AddProvider(provider);
                 Assert.AreEqual(3, list.Environments.Count);
+
                 provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 4", new Version(2, 7))));
                 Assert.AreEqual(4, list.Environments.Count);
+
                 provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 5", new Version(3, 0))));
                 Assert.AreEqual(5, list.Environments.Count);
+
                 provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 6", new Version(3, 3))));
                 Assert.AreEqual(6, list.Environments.Count);
             }
@@ -683,7 +686,7 @@ namespace PythonToolsUITests {
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
                 list.InitializeEnvironments(service, service);
-
+                
                 var environment = list.Environments.Single();
                 var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
 
@@ -924,7 +927,7 @@ namespace PythonToolsUITests {
                 )
             );
             if (usePipPackageManager) {
-                service.AddPackageManagers(factory, new[] { new PipPackageManager(factory, null, 0) });
+                service.AddPackageManagers(factory, new CPythonPipPackageManagerProvider().GetPackageManagers(factory).ToList());
             }
             provider.AddFactory(factory);
             service.AddProvider(provider);
@@ -944,12 +947,13 @@ namespace PythonToolsUITests {
                 env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 DeleteFolder.Add(env);
             }
+            var condaExePath = Path.Combine(python.PrefixPath, "scripts", "conda.exe");
             using (var proc = ProcessOutput.RunHiddenAndCapture(
-                Path.Combine(python.PrefixPath, "scripts", "conda.exe"),
+                condaExePath,
                 "create",
                 "-p",
                 env,
-                "python=={0}".FormatInvariant(version.ToVersion().ToString()),
+                "python={0}".FormatInvariant(version.ToVersion().ToString()),
                 "-y"
             )) {
                 Console.WriteLine(proc.Arguments);
@@ -974,7 +978,7 @@ namespace PythonToolsUITests {
                     python.Version.ToVersion()
                 )
             );
-            service.AddPackageManagers(factory, new[] { new CondaPackageManager(factory, null) });
+            service.AddPackageManagers(factory, new[] { new CondaPackageManager(factory, condaExePath) });
             provider.AddFactory(factory);
             service.AddProvider(provider);
             return service;
@@ -1025,7 +1029,7 @@ namespace PythonToolsUITests {
             public bool CreatePipExtension { get; set; }
 
             public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
-                _proxy.Invoke(() => Window.InitializeEnvironments(interpreters, options));
+                _proxy.Invoke(() => Window.InitializeEnvironments(interpreters, options, synchronous: true));
             }
 
             public IInterpreterOptionsService Service {
@@ -1044,7 +1048,7 @@ namespace PythonToolsUITests {
                 get {
                     return _proxy.Invoke(() =>
                         Window._environments
-                            .Where(ev => !EnvironmentView.IsAddNewEnvironmentView(ev) && !EnvironmentView.IsOnlineHelpView(ev))
+                            .Where(ev => !EnvironmentView.IsAddNewEnvironmentView(ev) && !EnvironmentView.IsOnlineHelpView(ev) && !EnvironmentView.IsCondaEnvironmentView(ev))
                             .ToList()
                     );
                 }

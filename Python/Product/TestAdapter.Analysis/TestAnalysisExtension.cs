@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
-                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, analysis, classValue)) {
+                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, entry.DocumentUri, analysis, classValue)) {
                     var name = $"{classValue.Name}.{member.Key}";
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
@@ -185,13 +185,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static IEnumerable<KeyValuePair<string, LocationInfo>> GetTestCaseMembers(
             PythonAst ast,
             string sourceFile,
+            Uri documentUri,
             ModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
 
             IEnumerable<KeyValuePair<string, LocationInfo>> tests = null, runTest = null;
             if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
-                var walker = new TestMethodWalker(ast, sourceFile, classValue.Locations);
+                var walker = new TestMethodWalker(ast, sourceFile, documentUri, classValue.Locations);
                 ast.Walk(walker);
                 tests = walker.Methods.Where(v => v.Key.StartsWith("test"));
                 runTest = walker.Methods.Where(v => v.Key.Equals("runTest"));

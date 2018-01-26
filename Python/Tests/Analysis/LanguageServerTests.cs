@@ -310,6 +310,154 @@ mc";
         }
 
         [TestMethod, Priority(0)]
+        public async Task SignatureHelp() {
+            var s = await CreateServer(null);
+            var mod = await AddModule(s, @"f()
+def f(): pass
+def f(a): pass
+def f(a, b): pass
+def f(a, *b): pass
+def f(a, **b): pass
+def f(a, *b, **c): pass
+
+");
+
+            await AssertSignature(s, mod, new SourceLocation(1, 3),
+                new string[] { "f()", "f(a:=)", "f(a:=,b:=)", "f(a:=,*b:tuple=)", "f(a:=,**b:dict=)", "f(a:=,*b:tuple=,**c:dict=)" },
+                new string[0]
+            );
+
+            if (Default.Configuration.Version.Major != 3) {
+                return;
+            }
+
+            await s.UnloadFileAsync(mod);
+
+            mod = await AddModule(s, @"f()
+def f(a : int): pass
+def f(a : int, b: int): pass
+def f(x : str, y: str): pass
+def f(a = 2, b): pass
+
+");
+
+            await AssertSignature(s, mod, new SourceLocation(1, 3),
+                new string[] { "f(a:int=)", "f(a:int=2,b:int=)", "f(x:str=,y:str=)" },
+                new string[0]
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FindReferences() {
+            var s = await CreateServer(null);
+            var mod1 = await AddModule(s, @"
+def f(a):
+    a.real
+b = 1
+f(a=b)
+class C:
+    real = []
+    f = 2
+c=C()
+f(a=c)
+real = None", "mod1");
+
+            // Add 10 blank lines to ensure the line numbers do not collide
+            // We only check line numbers below, and by design we only get one
+            // reference per location, so we disambiguate by ensuring mod2's
+            // line numbers are larger than mod1's
+            var mod2 = await AddModule(s, @"import mod1
+" + "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n" + @"
+class D:
+    real = None
+    a = 1
+    b = a
+mod1.f(a=D)", "mod2");
+
+            // f
+            var expected = new[] {
+                "Definition;(2, 5) - (2, 6)",
+                "Value;(2, 5) - (3, 11)",
+                "Reference;(5, 1) - (5, 2)",
+                "Reference;(10, 1) - (10, 2)",
+                "Reference;(17, 6) - (17, 7)"
+            };
+            var unexpected = new[] {
+                "Definition;(8, 5) - (8, 6)",
+            };
+            await AssertReferences(s, mod1, SourceLocation.MinValue, expected, unexpected, "f");
+            await AssertReferences(s, mod1, new SourceLocation(2, 5), expected, unexpected);
+            await AssertReferences(s, mod1, new SourceLocation(5, 2), expected, unexpected);
+            await AssertReferences(s, mod1, new SourceLocation(10, 2), expected, unexpected);
+            await AssertReferences(s, mod2, new SourceLocation(17, 6), expected, unexpected);
+
+            await AssertReferences(s, mod1, new SourceLocation(8, 5), unexpected, expected);
+
+            Assert.AreEqual(new SourceSpan(2, 1, 3, 11), (await s.FindReferences(new ReferencesParams {
+                textDocument = mod1,
+                position = SourceLocation.MinValue,
+                _expr = "f",
+                context = new ReferenceContext { includeDeclaration = true, _includeDefinitionRanges = true }
+            })).First(r => r._kind == ReferenceKind.Definition)._definitionRange);
+
+            // a
+            expected = new[] {
+                "Definition;(2, 7) - (2, 8)",
+                "Reference;(3, 5) - (3, 6)",
+                "Reference;(5, 3) - (5, 4)",
+                "Reference;(10, 3) - (10, 4)",
+                "Reference;(17, 8) - (17, 9)"
+            };
+            unexpected = new[] {
+                "Definition;(15, 5) - (15, 6)",
+                "Reference;(16, 9) - (16, 10)"
+            };
+            await AssertReferences(s, mod1, new SourceLocation(3, 8), expected, unexpected, "a");
+            await AssertReferences(s, mod1, new SourceLocation(2, 8), expected, unexpected);
+            await AssertReferences(s, mod1, new SourceLocation(3, 5), expected, unexpected);
+            await AssertReferences(s, mod1, new SourceLocation(5, 3), expected, unexpected);
+            await AssertReferences(s, mod1, new SourceLocation(10, 3), expected, unexpected);
+            await AssertReferences(s, mod2, new SourceLocation(17, 8), expected, unexpected);
+
+            await AssertReferences(s, mod2, new SourceLocation(15, 5), unexpected, expected);
+            await AssertReferences(s, mod2, new SourceLocation(16, 9), unexpected, expected);
+
+            // real (in f)
+            expected = new[] {
+                "Reference;(3, 7) - (3, 11)",
+                "Definition;(7, 5) - (7, 9)",
+                "Definition;(14, 5) - (14, 9)"
+            };
+            unexpected = new[] {
+                "Definition;(11, 1) - (11, 5)"
+            };
+            await AssertReferences(s, mod1, new SourceLocation(3, 5), expected, unexpected, "a.real");
+            await AssertReferences(s, mod1, new SourceLocation(3, 8), expected, unexpected);
+
+            // C.real
+            expected = new[] {
+                "Reference;(3, 7) - (3, 11)",
+                "Definition;(7, 5) - (7, 9)"
+            };
+            unexpected = new[] {
+                "Definition;(11, 1) - (11, 5)",
+                "Definition;(14, 5) - (14, 9)"
+            };
+            await AssertReferences(s, mod1, new SourceLocation(7, 8), expected, unexpected);
+
+            // D.real
+            expected = new[] {
+                "Reference;(3, 7) - (3, 11)",
+                "Definition;(14, 5) - (14, 9)"
+            };
+            unexpected = new[] {
+                "Definition;(7, 5) - (7, 9)",
+                "Definition;(11, 1) - (11, 5)"
+            };
+            await AssertReferences(s, mod2, new SourceLocation(14, 8), expected, unexpected);
+        }
+
+        [TestMethod, Priority(0)]
         public async Task MultiPartDocument() {
             var s = await CreateServer(null);
 
@@ -443,6 +591,46 @@ mc";
                     context = context,
                     _expr = expr
                 })).items?.Select(cmpKey),
+                contains,
+                excludes
+            );
+        }
+
+        public static async Task AssertSignature(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null) {
+            var sigs = (await s.SignatureHelp(new TextDocumentPositionParams {
+                textDocument = document,
+                position = position,
+                _expr = expr
+            })).signatures;
+
+            AssertUtil.CheckCollection(
+                sigs.Select(sig => $"{sig.label}({string.Join(",", sig.parameters.Select(p => $"{p.label}:{p._type}={p._defaultValue}"))})"),
+                contains,
+                excludes
+            );
+        }
+
+        public static async Task AssertReferences(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null, bool returnDefinition = false) {
+            var refs = (await s.FindReferences(new ReferencesParams {
+                textDocument = document,
+                position = position,
+                _expr = expr,
+                context = new ReferenceContext {
+                    includeDeclaration = true,
+                    _includeDefinitionRanges = returnDefinition,
+                    _includeValues = true
+                }
+            }));
+
+            IEnumerable<string> set;
+            if (returnDefinition) {
+                set = refs.Select(r => $"{r._kind ?? ReferenceKind.Reference};{r._definitionRange}");
+            } else {
+                set = refs.Select(r => $"{r._kind ?? ReferenceKind.Reference};{r.range}");
+            }
+
+            AssertUtil.CheckCollection(
+                set,
                 contains,
                 excludes
             );

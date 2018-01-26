@@ -36,7 +36,7 @@
     The version number that will identify assembly compatibility.
     -->
     <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">15.0.0</StableVersionPrefix>
-    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
+    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).0</StableVersion>
     
     <!-- When true, increases build restrictions to ensure complete public releases -->
     <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
@@ -189,14 +189,6 @@
   <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
   <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
   <Import Project="$(TargetsPath)\MicroBuild.props" />
-
-  <ItemGroup>
-    <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
 
   <!-- Check for the VSSDK Build Tools arbitrarily to see whether we should run the script. -->
   <Target Name="_EnsureDependenciesInstalled" BeforeTargets="PrepareForBuild" Condition="!Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')">
