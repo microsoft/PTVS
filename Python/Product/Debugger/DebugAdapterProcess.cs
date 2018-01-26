@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
                     var socket = connection.Result;
                     if (socket != null) {
-                        _stream = new NetworkStream(connection.Result, ownsSocket: true);
+                        _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
                     }
                 } else {
                     Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
