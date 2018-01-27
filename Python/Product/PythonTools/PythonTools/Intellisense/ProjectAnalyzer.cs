@@ -532,6 +532,10 @@ namespace Microsoft.PythonTools.Intellisense {
             await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
         }
 
+        public async Task NotifyModulesChangedAsync() {
+            await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
+        }
+
         public async Task NotifyFileChangesAsync(IEnumerable<Uri> newFiles, IEnumerable<Uri> deletedFiles, IEnumerable<Uri> changedFiles) {
             await SendEventAsync(new AP.FileChangedEvent {
                 changes = newFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Created, documentUri = f })
