@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     if (match.Success) {
                         var name = match.Groups["name"].Value;
-                        if (name.EndsWith("_d") && file.EndsWith(".pyd", StringComparison.OrdinalIgnoreCase)) {
+                        if (name.EndsWithOrdinal("_d") && file.EndsWithOrdinal(".pyd")) {
                             name = name.Remove(name.Length - 2);
                         }
                         yield return new ModulePath(baseModule + name, file, libPath ?? path);
@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis {
                             string line;
                             while ((line = reader.ReadLine()) != null) {
                                 line = line.Trim();
-                                if (line.StartsWith("import ", StringComparison.Ordinal) ||
+                                if (line.StartsWithOrdinal("import ") ||
                                     !PathEqualityComparer.IsValidPath(line)) {
                                     continue;
                                 }

@@ -63,17 +63,17 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
 
                     // Get url name
                     if (urlName == null) {
-                        if (word.StartsWith("'", StringComparison.Ordinal)) {
+                        if (word.StartsWithOrdinal("'")) {
                             urlName = word.TrimStart('\'').TrimEnd('\'');
                             afterUrl = true;
-                        } else if (word.StartsWith("\"", StringComparison.Ordinal)) {
+                        } else if (word.StartsWithOrdinal("\"")) {
                             urlName = word.TrimStart('"').TrimEnd('"');
                             afterUrl = true;
                         }
                     }
 
                     // Test if word is a named parameter (but not in a string)
-                    if (word.Contains('=') && !word.StartsWith("'", StringComparison.Ordinal) && !word.StartsWith("\"", StringComparison.Ordinal)) {
+                    if (word.Contains('=') && !word.StartsWithOrdinal("'") && !word.StartsWithOrdinal("\"")) {
                         usedNamedParameters.Add(word.Split('=').First());
                     }
                 }

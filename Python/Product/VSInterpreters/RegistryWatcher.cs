@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
@@ -485,7 +486,7 @@ namespace Microsoft.PythonTools {
 
         private static RegistryHive ParseRegistryKey(string key, out string subkey) {
             int firstPart = key.IndexOf('\\');
-            if (firstPart < 0 || !key.StartsWith("HKEY", StringComparison.OrdinalIgnoreCase)) {
+            if (firstPart < 0 || !key.StartsWithOrdinal("HKEY", ignoreCase: true)) {
                 throw new ArgumentException("Invalid registry key: " + key, "key");
             }
             var hive = key.Remove(firstPart);

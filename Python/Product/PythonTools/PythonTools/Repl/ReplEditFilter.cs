@@ -657,7 +657,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var leadingIndent = lines[0].Substring(0, lines[0].TakeWhile(char.IsWhiteSpace).Count());
-            if (!lines.All(line => line.StartsWith(leadingIndent, StringComparison.Ordinal) || string.IsNullOrEmpty(line))) {
+            if (!lines.All(line => line.StartsWithOrdinal(leadingIndent) || string.IsNullOrEmpty(line))) {
                 return lines;
             }
 
@@ -677,9 +677,9 @@ namespace Microsoft.PythonTools.Repl {
             if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
                 (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
                 prevText = prevText.TrimEnd();
-            } else if (prevText.EndsWith("\r\n\r\n", StringComparison.Ordinal)) {
+            } else if (prevText.EndsWithOrdinal("\r\n\r\n")) {
                 prevText = prevText.Substring(0, prevText.Length - 2);
-            } else if (prevText.EndsWith("\n\n", StringComparison.Ordinal) || prevText.EndsWith("\r\r", StringComparison.Ordinal)) {
+            } else if (prevText.EndsWithOrdinal("\n\n") || prevText.EndsWithOrdinal("\r\r")) {
                 prevText = prevText.Substring(0, prevText.Length - 1);
             }
             return prevText;

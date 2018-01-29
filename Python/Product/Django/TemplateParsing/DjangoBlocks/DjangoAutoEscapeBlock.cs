@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using System;
@@ -38,7 +39,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
             for (int i = 0; i < args.Length; i++) {
                 var word = args[i];
                 if (!String.IsNullOrEmpty(word)) {
-                    if (word.StartsWith("\r", StringComparison.Ordinal) || word.StartsWith("\n", StringComparison.Ordinal)) {
+                    if (word.StartsWithOrdinal("\r") || word.StartsWithOrdinal("\n")) {
                         // unterminated tag
                         break;
                     }

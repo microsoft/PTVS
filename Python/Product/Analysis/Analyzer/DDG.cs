@@ -283,7 +283,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         userMod.Imported(_unit);
 
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
-                            if (!varName.StartsWith("_", StringComparison.Ordinal)) {
+                            if (!varName.StartsWithOrdinal("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }

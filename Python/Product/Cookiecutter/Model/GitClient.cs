@@ -107,7 +107,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 foreach (var line in output.StandardOutputLines) {
                     // Line with date starts with 'Date'. Example:
                     // Date:   2016-07-28 10:03:07 +0200
-                    if (line.StartsWith("Date:", StringComparison.Ordinal)) {
+                    if (line.StartsWithOrdinal("Date:")) {
                         try {
                             var text = line.Substring("Date:".Length);
                             return Convert.ToDateTime(text).ToUniversalTime();
@@ -160,7 +160,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private static bool HasFatalError(IEnumerable<string> standardErrorLines) {
-            return standardErrorLines.Any(line => line.StartsWith("fatal:", StringComparison.OrdinalIgnoreCase));
+            return standardErrorLines.Any(line => line.StartsWithOrdinal("fatal:", ignoreCase: true));
         }
 
         private static string GetClonedFolder(string repoUrl, string targetParentFolderPath) {
@@ -169,7 +169,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 throw new ArgumentOutOfRangeException(nameof(repoUrl));
             }
 
-            if (name.EndsWith(".git", StringComparison.OrdinalIgnoreCase)) {
+            if (name.EndsWithOrdinal(".git", ignoreCase: true)) {
                 name = name.Substring(0, name.Length - 4);
             }
 
@@ -180,7 +180,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private bool ParseOrigin(string remote, out string url) {
             url = null;
 
-            if (remote.StartsWith("origin", StringComparison.Ordinal)) {
+            if (remote.StartsWithOrdinal("origin")) {
                 int start = remote.IndexOf("https", StringComparison.OrdinalIgnoreCase);
                 if (start >= 0) {
                     int end = remote.IndexOf(' ', start);

@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -369,7 +370,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int lineCount = lines.Length;
-            if (text.EndsWith("\r", StringComparison.Ordinal) || text.EndsWith("\n", StringComparison.Ordinal)) {
+            if (text.EndsWithOrdinal("\r") || text.EndsWithOrdinal("\n")) {
                 // split will give us an extra entry, but there's not really an extra line
                 lineCount = lines.Length - 1;
             }

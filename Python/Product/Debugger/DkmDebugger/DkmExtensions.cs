@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.Dia;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CustomRuntimes;
@@ -133,7 +134,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             uint rva;
             using (var moduleSym = moduleInstance.GetSymbols()) {
                 if (objFileName != null) {
-                    using (var compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWith(objFileName, StringComparison.OrdinalIgnoreCase)))
+                    using (var compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWithOrdinal(objFileName, ignoreCase: true)))
                     using (var varSym = compiland.Object.GetSymbol(SymTagEnum.SymTagData, name)) {
                         rva = varSym.Object.relativeVirtualAddress;
                     }

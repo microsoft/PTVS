@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -88,9 +89,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         static int PrefixMatch(string text, string pattern, bool ignoreCase) {
-            if (text.StartsWith(pattern, StringComparison.Ordinal) || text.StartsWith(pattern, StringComparison.CurrentCulture)) {
+            if (text.StartsWithOrdinal(pattern) || text.StartsWith(pattern, StringComparison.CurrentCulture)) {
                 return pattern.Length * 2 + (text.Length == pattern.Length ? 1 : 0);
-            } else if (ignoreCase && (text.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) || text.StartsWith(pattern, StringComparison.CurrentCultureIgnoreCase))) {
+            } else if (ignoreCase && (text.StartsWithOrdinal(pattern, ignoreCase: true) || text.StartsWith(pattern, StringComparison.CurrentCultureIgnoreCase))) {
                 return pattern.Length + (text.Length == pattern.Length ? 1 : 0);
             } else {
                 return 0;

@@ -23,6 +23,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -4112,7 +4113,7 @@ namespace AnalysisTests {
 
         private static void CollectFiles(string dir, List<string> files, IEnumerable<string> exceptions = null) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (file.EndsWithOrdinal(".py", ignoreCase: true)) {
                     files.Add(file);
                 }
             }

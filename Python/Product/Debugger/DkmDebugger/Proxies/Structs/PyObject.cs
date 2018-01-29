@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
 
             private static string ComputeVariableName(Type proxyType) {
-                if (!proxyType.Name.EndsWith("Object", StringComparison.Ordinal)) {
+                if (!proxyType.Name.EndsWithOrdinal("Object")) {
                     Debug.Fail("PyObject-derived type " + proxyType.Name + " must have name ending with 'Object' to infer type variable name.");
                     throw new NotSupportedException();
                 }

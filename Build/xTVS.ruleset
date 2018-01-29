@@ -11,7 +11,7 @@
     <Rule Id="CA1033" Action="None" /> <!-- Explicit interface implementation on base classes -->
     <Rule Id="CA1060" Action="Warning" />
     <Rule Id="CA1061" Action="Warning" />
-    <Rule Id="CA1063" Action="Warning" />
+    <Rule Id="CA1063" Action="None" /> <!-- Implement IDisposable properly -->
     <Rule Id="CA1065" Action="None" /> <!-- Throw from property accessors -->
     <Rule Id="CA1301" Action="Warning" />
     <Rule Id="CA1400" Action="Warning" />

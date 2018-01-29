@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -251,8 +252,8 @@ namespace Microsoft.PythonTools.Navigation {
 
                 ImageListOverlay overlay = ImageListOverlay.ImageListOverlayNone;
                 string name = child.Name;
-                if (name != null && name.StartsWith("_", StringComparison.Ordinal) &&
-                    !(name.StartsWith("__", StringComparison.Ordinal) && name.EndsWith("__", StringComparison.Ordinal))) {
+                if (name != null && name.StartsWithOrdinal("_") &&
+                    !(name.StartsWithOrdinal("__") && name.EndsWithOrdinal("__"))) {
                     overlay = ImageListOverlay.ImageListOverlayPrivate;
                 }
 

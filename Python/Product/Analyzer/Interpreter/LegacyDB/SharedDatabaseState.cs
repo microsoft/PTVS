@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.LegacyDB {
@@ -101,7 +102,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             }
 
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
-                if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase) || file.IndexOf('$') != -1) {
+                if (!file.EndsWithOrdinal(".idb", ignoreCase: true) || file.IndexOf('$') != -1) {
                     continue;
                 } else if (String.Equals(Path.GetFileNameWithoutExtension(file), _builtinName, StringComparison.OrdinalIgnoreCase)) {
                     continue;
@@ -733,15 +734,15 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
 
         private bool OneVersionApplies(string strVer) {
             Version specifiedVer;
-            if (strVer.StartsWith(">=", StringComparison.Ordinal)) {
+            if (strVer.StartsWithOrdinal(">=")) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion >= specifiedVer) {
                     return true;
                 }
-            } else if (strVer.StartsWith("<=", StringComparison.Ordinal)) {
+            } else if (strVer.StartsWithOrdinal("<=")) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion <= specifiedVer) {
                     return true;
                 }
-            } else if (strVer.StartsWith("==", StringComparison.Ordinal)) {
+            } else if (strVer.StartsWithOrdinal("==")) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion == specifiedVer) {
                     return true;
                 }

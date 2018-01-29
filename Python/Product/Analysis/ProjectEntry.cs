@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis {
                     from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
-                    where fileName.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase)
+                    where fileName.StartsWithOrdinal(pathPrefix, ignoreCase: true)
                     let moduleName = pair.Value.Name
                     // Is the full name of the candidate child package qualified with the name of our package?
                     let lastDot = moduleName.LastIndexOf('.')

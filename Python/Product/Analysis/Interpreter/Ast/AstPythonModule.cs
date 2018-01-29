@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             PythonAst ast;
             var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
-                StubFile = fileName?.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase) ?? false,
+                StubFile = fileName.EndsWithOrdinal(".pyi", ignoreCase: true),
                 Verbatim = true
             });
             ast = parser.ParseFile();
