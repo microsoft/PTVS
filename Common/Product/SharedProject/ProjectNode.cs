@@ -631,15 +631,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public string ProjectHome {
             get {
-                if (projectHome == null) {
-                    projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                var home = projectHome;
+                if (home == null) {
+                    home = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
-                    projectHome = CommonUtils.TrimEndSeparator(projectHome);
+                    projectHome = home = CommonUtils.TrimEndSeparator(home);
                 }
 
-                Debug.Assert(projectHome != null, "ProjectHome should not be null");
-                return projectHome;
+                Debug.Assert(home != null, "ProjectHome should not be null");
+                return home;
             }
         }
 
