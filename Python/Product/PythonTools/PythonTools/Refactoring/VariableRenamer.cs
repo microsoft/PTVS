@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 .Where(n => !string.IsNullOrEmpty(n))
                 .FirstOrDefault() ?? analysis.Expression;
 
-            if (privatePrefix != null && (originalName?.StartsWith("_" + analysis.PrivatePrefix) ?? false)) {
+            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWithOrdinal("_" + analysis.PrivatePrefix)) {
                 originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
                 privatePrefix = analysis.PrivatePrefix;
             }

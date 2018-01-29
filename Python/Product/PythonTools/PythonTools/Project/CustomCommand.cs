@@ -589,7 +589,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task<bool> RunInRepl(IPythonProject project, CommandStartInfo startInfo) {
             var executeIn = string.IsNullOrEmpty(startInfo.ExecuteIn) ? CreatePythonCommandItem.ExecuteInRepl : startInfo.ExecuteIn;
-            bool resetRepl = executeIn.StartsWith("R", StringComparison.InvariantCulture);
+            bool resetRepl = executeIn.StartsWithOrdinal("R");
 
             var replTitle = executeIn.Substring(4).TrimStart(' ', ':');
             if (string.IsNullOrEmpty(replTitle)) {

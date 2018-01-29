@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             using (var e = args.GetEnumerator()) {
                 while (e.MoveNext()) {
-                    if (e.Current.StartsWith("/")) {
+                    if (e.Current.StartsWithOrdinal("/")) {
                         if (currentKey != null) {
                             yield return new KeyValuePair<string, string>(currentKey, null);
                         }
@@ -807,7 +807,7 @@ namespace Microsoft.PythonTools.Analysis {
             analyzeFileGroups.RemoveAll(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath));
             foreach (var package in GetPackageOrder()) {
                 var matching = analyzeFileGroups
-                    .Where(g => g[0].ModuleName.StartsWith(package + ".") || g[0].ModuleName == package)
+                    .Where(g => g[0].ModuleName.StartsWithOrdinal(package + ".") || g[0].ModuleName == package)
                     .ToList();
                 firstPackages.AddRange(matching);
                 analyzeFileGroups.RemoveAll(g => matching.Contains(g));

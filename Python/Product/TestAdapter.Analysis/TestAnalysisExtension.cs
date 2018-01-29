@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (cls != null) {
                     foreach (var baseCls in cls.Mro.MaybeEnumerate()) {
                         if (baseCls.Name == "TestCase" ||
-                            baseCls.Name.StartsWith("unittest.") && baseCls.Name.EndsWith(".TestCase")) {
+                            baseCls.Name.StartsWithOrdinal("unittest.") && baseCls.Name.EndsWithOrdinal(".TestCase")) {
                             yield return cls;
                         }
                     }

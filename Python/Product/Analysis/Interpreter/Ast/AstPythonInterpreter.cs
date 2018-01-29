@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            Debug.Assert(!name.EndsWith("."), $"{name} should not end with '.'");
+            Debug.Assert(!name.EndsWithOrdinal("."), $"{name} should not end with '.'");
 
             // Handle builtins explicitly
             if (name == BuiltinModuleName) {

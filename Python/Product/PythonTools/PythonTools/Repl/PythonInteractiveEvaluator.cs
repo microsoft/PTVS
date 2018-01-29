@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (File.Exists(modeFile)) {
                         try {
                             BackendName = File.ReadAllLines(modeFile).FirstOrDefault(line =>
-                                !string.IsNullOrEmpty(line) && !line.TrimStart().StartsWith("#")
+                                !string.IsNullOrEmpty(line) && !line.TrimStart().StartsWithOrdinal("#")
                             );
                         } catch (Exception ex) when (!ex.IsCriticalException()) {
                             WriteError(Strings.ReplCannotReadFile.FormatUI(modeFile));

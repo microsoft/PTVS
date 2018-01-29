@@ -615,14 +615,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 
@@ -673,7 +673,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool recurse = true,
             bool fullPaths = true
         ) {
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
 
@@ -774,7 +774,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     }
 
                     if (res != 0) {
-                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
+                        Debug.Assert(filePathBuilder.ToString().StartsWithOrdinal("\\\\?\\"));
                         return filePathBuilder.ToString().Substring(4);
                     }
                 }
