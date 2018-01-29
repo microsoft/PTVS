@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     templateText = templateText.Replace("$end$", "");
 
                     // we can finally figure out where the selected text began witin the original template...
-                    int selectedIndex = templateText.IndexOf("$selected$", StringComparison.OrdinalIgnoreCase);
+                    int selectedIndex = templateText.IndexOfOrdinal("$selected$", ignoreCase: true);
                     if (selectedIndex != -1) {
                         var selection = _textView.Selection;
                         

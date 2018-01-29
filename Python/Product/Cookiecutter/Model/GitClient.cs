@@ -181,7 +181,7 @@ namespace Microsoft.CookiecutterTools.Model {
             url = null;
 
             if (remote.StartsWithOrdinal("origin")) {
-                int start = remote.IndexOf("https", StringComparison.OrdinalIgnoreCase);
+                int start = remote.IndexOfOrdinal("https", ignoreCase: true);
                 if (start >= 0) {
                     int end = remote.IndexOf(' ', start);
                     if (end >= 0) {

@@ -285,7 +285,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private string ReplaceMSBuildPath(string id) {
-            int index = id.IndexOf(BuildProject.FullPath, StringComparison.OrdinalIgnoreCase);
+            int index = id.IndexOfOrdinal(BuildProject.FullPath, ignoreCase: true);
             if (index != -1) {
                 id = id.Substring(0, index) + "$(MSBuildProjectFullPath)" + id.Substring(index + BuildProject.FullPath.Length);
             }

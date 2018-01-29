@@ -628,7 +628,7 @@ namespace Microsoft.PythonTools.Repl {
             bool addNewLine,
             bool isError
         ) {
-            int start = 0, escape = text.IndexOf("\x1b[", StringComparison.Ordinal);
+            int start = 0, escape = text.IndexOfOrdinal("\x1b[");
             var colors = window.OutputBuffer.Properties.GetOrCreateSingletonProperty(
                 ReplOutputClassifier.ColorKey,
                 () => new List<ColoredSpan>()
@@ -646,7 +646,7 @@ namespace Microsoft.PythonTools.Repl {
 
                 start = escape + 2;
                 color = GetColorFromEscape(text, ref start);
-                escape = text.IndexOf("\x1b[", start, StringComparison.Ordinal);
+                escape = text.IndexOfOrdinal("\x1b[", start);
             }
 
             var rest = text.Substring(start);
