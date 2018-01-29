@@ -63,6 +63,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             : this(Python.CreateEngine(new Dictionary<string, object> { { "NoAssemblyResolveHook", true } })) {
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFile")]
         public RemoteInterpreter(ScriptEngine engine) {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -328,6 +329,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             });
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
         internal ObjectHandle LoadAssemblyFrom(string path) {
             return CallAndHandle(() => {
                 var res = Assembly.LoadFrom(path);
@@ -868,7 +870,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     BuiltinFunction overload = (ov as BuiltinFunction);
                     if (overload.Overloads.Targets[0].DeclaringType.IsAssignableFrom(func.DeclaringType) ||
                         (overload.Overloads.Targets[0].DeclaringType.FullName != null &&
-                        overload.Overloads.Targets[0].DeclaringType.FullName.StartsWith("IronPython.Runtime.Operations."))) {
+                        overload.Overloads.Targets[0].DeclaringType.FullName.StartsWith("IronPython.Runtime.Operations.", StringComparison.Ordinal))) {
                         result.Add(MakeHandle(overload.Targets[0]));
                     }
                 }

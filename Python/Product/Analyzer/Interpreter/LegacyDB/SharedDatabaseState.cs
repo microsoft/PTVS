@@ -733,15 +733,15 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
 
         private bool OneVersionApplies(string strVer) {
             Version specifiedVer;
-            if (strVer.StartsWith(">=")) {
+            if (strVer.StartsWith(">=", StringComparison.Ordinal)) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion >= specifiedVer) {
                     return true;
                 }
-            } else if (strVer.StartsWith("<=")) {
+            } else if (strVer.StartsWith("<=", StringComparison.Ordinal)) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion <= specifiedVer) {
                     return true;
                 }
-            } else if (strVer.StartsWith("==")) {
+            } else if (strVer.StartsWith("==", StringComparison.Ordinal)) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion == specifiedVer) {
                     return true;
                 }

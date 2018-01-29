@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             } else {
-                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                if (InstallPath.TryGetFile("DefaultDB\\v{0}\\python.pyi".FormatInvariant(Configuration.Version.Major), out string biPath)) {
                     CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
                     _skipWriteToCache = true;
                 }
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWith("\\")) {
+            if (p.StartsWith("\\", StringComparison.Ordinal)) {
                 return p.Substring(1);
             }
             return p;

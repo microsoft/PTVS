@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class SublistParameter : Parameter {
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _tuple = tuple;
         }
 
-        public override string Name => $".{_position}";
+        public override string Name => ".{0}".FormatUI(_position);
 
         public TupleExpression Tuple => _tuple;
 

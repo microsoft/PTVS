@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -61,6 +62,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Set();
         }
 
+        private static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
+        }
+
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(runContext, "runContext");
@@ -70,7 +77,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var executorUri = new Uri(PythonConstants.TestExecutorUriString);
             var tests = new List<TestCase>();
-            var doc = new XPathDocument(new StringReader(runContext.RunSettings.SettingsXml));
+            var doc = Read(runContext.RunSettings.SettingsXml);
             foreach (var t in TestReader.ReadTests(doc, new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase), m => {
                 frameworkHandle?.SendMessage(TestMessageLevel.Warning, m);
             })) {
@@ -89,7 +96,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private Dictionary<string, PythonProjectSettings> GetSourceToSettings(IRunSettings settings) {
-            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
             Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
 
@@ -265,7 +272,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static bool EnableCodeCoverage(IRunContext runContext) {
-            var doc = new XPathDocument(new StringReader(runContext.RunSettings.SettingsXml));
+            var doc = Read(runContext.RunSettings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/EnableCoverage");
             bool enableCoverage;
             if (nodes.MoveNext()) {
@@ -281,7 +288,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// &lt;DryRun value="true" /&gt; element under RunSettings/Python.
         /// </summary>
         private static bool IsDryRun(IRunSettings settings) {
-            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            var doc = Read(settings.SettingsXml);
             try {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
                 return node != null;
@@ -297,7 +304,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// RunSettings/Python.
         /// </summary>
         private static bool ShouldShowConsole(IRunSettings settings) {
-            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            var doc = Read(settings.SettingsXml);
             try {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
                 return node == null;

@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Designer.Interfaces;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -226,7 +225,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (string.IsNullOrEmpty(physicalView)) {
                 // create code window as default physical view
                 return CreateCodeView(documentMoniker, textLines, ref editorCaption, ref cmdUI);
-            } else if (string.Compare(physicalView, "design", true, CultureInfo.InvariantCulture) == 0) {
+            } else if (string.Compare(physicalView, "design", StringComparison.OrdinalIgnoreCase) == 0) {
                 // Create Form view
                 return CreateFormView(hierarchy, itemid, textLines, ref editorCaption, ref cmdUI);
             }

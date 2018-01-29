@@ -138,7 +138,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 return false;
             }
 
-            if (newName.StartsWith("__") && newName.Length > 2) {
+            if (newName.StartsWith("__", StringComparison.Ordinal) && newName.Length > 2) {
                 // renaming from private name to private name, so just rename the non-prefixed portion
                 start += prefix.Length;
                 length -= prefix.Length;

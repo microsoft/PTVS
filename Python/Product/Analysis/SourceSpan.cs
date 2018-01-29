@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal string ToDebugString() {
-            return String.Format(CultureInfo.CurrentCulture, "{0}-{1}", _start.ToDebugString(), _end.ToDebugString());
+            return "{0}-{1}".FormatInvariant(_start.ToDebugString(), _end.ToDebugString());
         }
     }
 }

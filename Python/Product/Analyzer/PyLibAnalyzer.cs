@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
             var options = ParseArguments(args)
-                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.InvariantCultureIgnoreCase);
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
 
             string value;
 
@@ -1203,7 +1203,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
                 try {
                     AnalysisLog.Output = _logDiagnostic;
-                    AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
+                    AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
                 } catch (Exception ex) {
                     TraceWarning("Failed to open \"{0}\" for logging{1}{2}", _logDiagnostic, Environment.NewLine, ex.ToString());
                 }

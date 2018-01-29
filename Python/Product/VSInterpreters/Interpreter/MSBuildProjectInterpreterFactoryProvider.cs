@@ -438,16 +438,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static ProcessorArchitecture ParseArchitecture(string value) {
-            if (string.IsNullOrEmpty(value)) {
-                return ProcessorArchitecture.None;
-            } else if (value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
-                return ProcessorArchitecture.Amd64;
-            } else {
-                return ProcessorArchitecture.X86;
-            }
-        }
-
         private static string GetValue(Dictionary<string, string> from, string name) {
             string res;
             if (!from.TryGetValue(name, out res)) {

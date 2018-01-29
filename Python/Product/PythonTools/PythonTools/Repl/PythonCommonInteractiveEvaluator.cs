@@ -307,7 +307,7 @@ namespace Microsoft.PythonTools.Repl {
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
-            if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n")) {
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n", StringComparison.Ordinal)) {
                 pr = ParseResult.Empty;
                 return true;
             }
@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Repl {
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
             parser.ParseInteractiveCode(out pr);
             if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                return text.EndsWith("\n");
+                return text.EndsWith("\n", StringComparison.Ordinal);
             }
             if (pr == ParseResult.IncompleteToken) {
                 return false;
@@ -628,7 +628,7 @@ namespace Microsoft.PythonTools.Repl {
             bool addNewLine,
             bool isError
         ) {
-            int start = 0, escape = text.IndexOf("\x1b[");
+            int start = 0, escape = text.IndexOf("\x1b[", StringComparison.Ordinal);
             var colors = window.OutputBuffer.Properties.GetOrCreateSingletonProperty(
                 ReplOutputClassifier.ColorKey,
                 () => new List<ColoredSpan>()
@@ -646,7 +646,7 @@ namespace Microsoft.PythonTools.Repl {
 
                 start = escape + 2;
                 color = GetColorFromEscape(text, ref start);
-                escape = text.IndexOf("\x1b[", start);
+                escape = text.IndexOf("\x1b[", start, StringComparison.Ordinal);
             }
 
             var rest = text.Substring(start);

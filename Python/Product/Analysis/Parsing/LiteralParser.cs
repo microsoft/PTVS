@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -67,7 +68,7 @@ namespace Microsoft.PythonTools.Parsing {
                                 buf.Append((char)val);
                                 i += len;
                             } else {
-                                throw new System.Text.DecoderFallbackException(String.Format(@"'unicodeescape' codec can't decode bytes in position {0}: truncated \uXXXX escape", i));
+                                throw new DecoderFallbackException(@"'unicodeescape' codec can't decode bytes in position {0}: truncated \uXXXX escape".FormatUI(i));
                             }
                         } else {
                             buf.Append('\\');
@@ -272,7 +273,7 @@ namespace Microsoft.PythonTools.Parsing {
         private static int CharValue(char ch, int b) {
             int val = HexValue(ch);
             if (val >= b) {
-                throw new ArgumentException(String.Format("bad char for the integer value: '{0}' (base {1})", ch, b));
+                throw new ArgumentException("bad char for the integer value: '{0}' (base {1})".FormatUI(ch, b));
             }
             return val;
         }
@@ -534,13 +535,13 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 return ParseFloatNoCatch(text);
             } catch (OverflowException) {
-                return text.TrimStart().StartsWith("-") ? Double.NegativeInfinity : Double.PositiveInfinity;
+                return text.TrimStart().StartsWith("-", StringComparison.Ordinal) ? Double.NegativeInfinity : Double.PositiveInfinity;
             }
         }
 
         private static double ParseFloatNoCatch(string text) {
             string s = ReplaceUnicodeDigits(text);
-            switch (s.ToLower().TrimStart()) {
+            switch (s.ToLowerInvariant().TrimStart()) {
                 case "nan":
                 case "+nan":
                 case "-nan":
@@ -553,7 +554,7 @@ namespace Microsoft.PythonTools.Parsing {
                 default:
                     // pass NumberStyles to disallow ,'s in float strings.
                     double res = double.Parse(s.Replace("_", ""), NumberStyles.Float, CultureInfo.InvariantCulture);
-                    return (res == 0.0 && text.TrimStart().StartsWith("-")) ? NegativeZero : res;
+                    return (res == 0.0 && text.TrimStart().StartsWith("-", StringComparison.Ordinal)) ? NegativeZero : res;
             }
         }
 

@@ -563,7 +563,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (cd1.StartIndex != cd2.StartIndex) {
                 return cd1.StartIndex > cd2.StartIndex;
             }
-            return cd1.NameExpression.Name.CompareTo(cd2.NameExpression.Name) > 0;
+            return string.CompareOrdinal(cd1.NameExpression.Name, cd2.NameExpression.Name) > 0;
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {

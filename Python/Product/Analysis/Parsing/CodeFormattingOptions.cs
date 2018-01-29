@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int lineCount = lines.Length;
-            if (text.EndsWith("\r") || text.EndsWith("\n")) {
+            if (text.EndsWith("\r", StringComparison.Ordinal) || text.EndsWith("\n", StringComparison.Ordinal)) {
                 // split will give us an extra entry, but there's not really an extra line
                 lineCount = lines.Length - 1;
             }

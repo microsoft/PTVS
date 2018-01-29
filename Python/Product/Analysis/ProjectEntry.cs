@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal static Uri MakeDocumentUri(string filePath) {
             Uri u;
             if (!Path.IsPathRooted(filePath)) {
-                u = new Uri($"file:///LOCAL-PATH/{filePath.Replace('\\', '/')}");
+                u = new Uri("file:///LOCAL-PATH/{0}".FormatInvariant(filePath.Replace('\\', '/')));
             } else {
                 u = new Uri(filePath);
             }
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis {
                     from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
-                    where fileName.StartsWith(pathPrefix)
+                    where fileName.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase)
                     let moduleName = pair.Value.Name
                     // Is the full name of the candidate child package qualified with the name of our package?
                     let lastDot = moduleName.LastIndexOf('.')

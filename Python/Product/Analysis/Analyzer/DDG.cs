@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -281,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         userMod.Imported(_unit);
 
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
-                            if (!varName.StartsWith("_")) {
+                            if (!varName.StartsWith("_", StringComparison.Ordinal)) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }

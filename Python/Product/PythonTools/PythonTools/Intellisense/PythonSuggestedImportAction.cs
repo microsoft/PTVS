@@ -169,13 +169,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             // Keys sort alphabetically
-            r = key1.CompareTo(key2);
+            r = string.Compare(key1, key2, StringComparison.CurrentCultureIgnoreCase);
             if (r != 0) {
                 return r;
             }
 
             // Sort by display text
-            return (DisplayText ?? "").CompareTo(other.DisplayText ?? "");
+            return string.Compare(DisplayText ?? "", other.DisplayText ?? "", StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

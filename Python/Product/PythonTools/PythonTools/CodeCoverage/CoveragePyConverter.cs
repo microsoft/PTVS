@@ -34,9 +34,12 @@ namespace Microsoft.PythonTools.CodeCoverage {
             _input = input;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         public CoverageFileInfo[] Parse() {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(_input);
+            XmlDocument doc = new XmlDocument { XmlResolver = null };
+            var settings = new XmlReaderSettings { XmlResolver = null };
+            using (var reader = XmlReader.Create(_input, settings))
+                doc.Load(reader);
             Dictionary<string, HashSet<int>> data = new Dictionary<string, HashSet<int>>();
 
             var root = doc.DocumentElement.CreateNavigator();

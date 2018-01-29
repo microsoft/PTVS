@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IInteractiveEvaluator GetEvaluator(string replId) {
-            if (replId.StartsWith(_debugReplGuid)) {
+            if (replId.StartsWith(_debugReplGuid, StringComparison.OrdinalIgnoreCase)) {
                 return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;

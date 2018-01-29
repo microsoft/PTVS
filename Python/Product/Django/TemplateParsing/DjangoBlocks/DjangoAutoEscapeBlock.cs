@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
             for (int i = 0; i < args.Length; i++) {
                 var word = args[i];
                 if (!String.IsNullOrEmpty(word)) {
-                    if (word.StartsWith("\r") || word.StartsWith("\n")) {
+                    if (word.StartsWith("\r", StringComparison.Ordinal) || word.StartsWith("\n", StringComparison.Ordinal)) {
                         // unterminated tag
                         break;
                     }
