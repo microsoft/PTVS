@@ -23,7 +23,7 @@ namespace Microsoft.CookiecutterTools.Model {
             Selector = selector;
             DefaultValue = defaultValue;
             Values = items ?? new string[0];
-            Visible = !name.StartsWith("_", StringComparison.InvariantCulture);
+            Visible = !name.StartsWith("_", StringComparison.Ordinal);
         }
 
         public string Name { get; }

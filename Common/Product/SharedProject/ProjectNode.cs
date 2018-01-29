@@ -3666,16 +3666,20 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="iPersistXMLFragment">Object that support being initialized with an XML fragment</param>
         /// <param name="configName">Name of the configuration being initialized, null if it is the project</param>
         /// <param name="platformName">Name of the platform being initialized, null is ok</param>
+        [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         protected internal void LoadXmlFragment(IPersistXMLFragment persistXmlFragment, string configName, string platformName) {
             Utilities.ArgumentNotNull("persistXmlFragment", persistXmlFragment);
 
             if (xmlFragments == null) {
                 // Retrieve the xml fragments from MSBuild
-                xmlFragments = new XmlDocument();
+                xmlFragments = new XmlDocument { XmlResolver = null };
 
                 string fragments = GetProjectExtensions()[ProjectFileConstants.VisualStudio];
                 fragments = String.Format(CultureInfo.InvariantCulture, "<root>{0}</root>", fragments);
-                xmlFragments.LoadXml(fragments);
+
+                var settings = new XmlReaderSettings { XmlResolver = null };
+                using (var reader = XmlReader.Create(new StringReader(fragments), settings))
+                    xmlFragments.Load(reader);
             }
 
             // We need to loop through all the flavors
@@ -3732,6 +3736,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Retrieve all XML fragments that need to be saved from the flavors and store the information in msbuild.
         /// </summary>
+        [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         protected void PersistXMLFragments() {
             if (IsFlavorDirty()) {
                 XmlDocument doc = new XmlDocument();

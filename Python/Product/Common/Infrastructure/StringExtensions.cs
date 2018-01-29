@@ -43,17 +43,17 @@ namespace Microsoft.PythonTools.Infrastructure {
 
         public static string FormatUI(this string str, object arg0) {
             ValidateFormatString(str, 1);
-            return string.Format(CultureInfo.CurrentUICulture, str, arg0);
+            return string.Format(CultureInfo.CurrentCulture, str, arg0);
         }
 
         public static string FormatUI(this string str, object arg0, object arg1) {
             ValidateFormatString(str, 2);
-            return string.Format(CultureInfo.CurrentUICulture, str, arg0, arg1);
+            return string.Format(CultureInfo.CurrentCulture, str, arg0, arg1);
         }
 
         public static string FormatUI(this string str, params object[] args) {
             ValidateFormatString(str, args.Length);
-            return string.Format(CultureInfo.CurrentUICulture, str, args);
+            return string.Format(CultureInfo.CurrentCulture, str, args);
         }
 
         public static string FormatInvariant(this string str, object arg0) {
@@ -78,8 +78,8 @@ namespace Microsoft.PythonTools.Infrastructure {
         public static bool IsTrue(this string str) {
             bool asBool;
             return !string.IsNullOrWhiteSpace(str) && (
-                str.Equals("1") ||
-                str.Equals("yes", StringComparison.InvariantCultureIgnoreCase) ||
+                str.Equals("1", StringComparison.Ordinal) ||
+                str.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
                 (bool.TryParse(str, out asBool) && asBool)
             );
         }
@@ -96,6 +96,18 @@ namespace Microsoft.PythonTools.Infrastructure {
                 return str.Remove(str.Length - 1);
             }
             return str;
+        }
+
+        public static string Truncate(this string str, int length) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            if (str.Length < length) {
+                return str;
+            }
+
+            return str.Substring(0, length);
         }
     }
 }

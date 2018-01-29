@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override string ToString() {
-            return string.Format("{0}|{1}|{2}", _path, _isStandardLibrary ? "stdlib" : "", _modulePrefix ?? "");
+            return "{0}|{1}|{2}".FormatInvariant(_path, _isStandardLibrary ? "stdlib" : "", _modulePrefix ?? "");
         }
 
         public static PythonLibraryPath Parse(string s) {

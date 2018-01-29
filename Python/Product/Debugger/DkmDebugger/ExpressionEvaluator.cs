@@ -217,10 +217,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                         string childFullName = child.Name;
                         if (FullName != null) {
-                            if (childFullName.EndsWith("()")) { // len()
+                            if (childFullName.EndsWith("()", StringComparison.Ordinal)) { // len()
                                 childFullName = childFullName.Substring(0, childFullName.Length - 2) + "(" + FullName + ")";
                             } else {
-                                if (!childFullName.StartsWith("[")) { // [0], ['fob'] etc
+                                if (!childFullName.StartsWith("[", StringComparison.Ordinal)) { // [0], ['fob'] etc
                                     childFullName = "." + childFullName;
                                 }
                                 childFullName = FullName + childFullName;
@@ -350,7 +350,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             string fullName = name;
             if (parentName != null) {
-                if (!fullName.StartsWith("[")) {
+                if (!fullName.StartsWith("[", StringComparison.Ordinal)) {
                     fullName = "." + fullName;
                 }
                 fullName = parentName + fullName;

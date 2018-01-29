@@ -367,9 +367,9 @@ namespace Microsoft.PythonTools.Infrastructure {
                     Task.Run(() => {
                         try {
                             for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                                if (line.StartsWith("OUT:")) {
+                                if (line.StartsWith("OUT:", StringComparison.Ordinal)) {
                                     redirector.WriteLine(line.Substring(4));
-                                } else if (line.StartsWith("ERR:")) {
+                                } else if (line.StartsWith("ERR:", StringComparison.Ordinal)) {
                                     redirector.WriteErrorLine(line.Substring(4));
                                 } else {
                                     redirector.WriteLine(line);
@@ -418,7 +418,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 return arg;
             }
 
-            if (arg.StartsWith("\"") && arg.EndsWith("\"")) {
+            if (arg.StartsWith("\"", StringComparison.Ordinal) && arg.EndsWith("\"", StringComparison.Ordinal)) {
                 bool inQuote = false;
                 int consecutiveBackslashes = 0;
                 foreach (var c in arg) {
@@ -440,7 +440,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             var newArg = arg.Replace("\"", "\\\"");
-            if (newArg.EndsWith("\\")) {
+            if (newArg.EndsWith("\\", StringComparison.Ordinal)) {
                 newArg += "\\";
             }
             return "\"" + newArg + "\"";

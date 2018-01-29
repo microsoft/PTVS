@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Commands {
 
         private bool PrevNotParaStart(FillPrefix prefix, int prev_num, int ln_num, string prev_txt, Regex regexp) {
             var notBufFirstLn = prev_num != ln_num;
-            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && prev_txt.StartsWith(prefix.Prefix);
+            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && prev_txt.StartsWith(prefix.Prefix, StringComparison.Ordinal);
             var isFileDocStrAndNotEmptyLine = string.IsNullOrEmpty(prefix.Prefix) && !string.IsNullOrEmpty(prev_txt);
             var notDocStringOrNoTripleQuotesYet = !(prefix.IsDocString && regexp.Match(prev_txt).Success);
             return (notBufFirstLn &&
@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Commands {
 
         private bool NextNotParaEnd(FillPrefix prefix, int next_num, int ln_num, string next_txt, Regex regexp) {
             var notBufLastLn = next_num != ln_num;
-            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && next_txt.StartsWith(prefix.Prefix);
+            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && next_txt.StartsWith(prefix.Prefix, StringComparison.Ordinal);
             var isFileDocStrAndNotEmptyLine = string.IsNullOrEmpty(prefix.Prefix) && string.IsNullOrEmpty(next_txt);
             var notDocStringOrNoTripleQuotesYet = !(prefix.IsDocString && regexp.Match(next_txt).Success);
             return (notBufLastLn &&

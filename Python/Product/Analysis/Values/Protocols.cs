@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -128,7 +129,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private ParameterResult ToParameterResult(IAnalysisSet set, int i) {
-            return new ParameterResult($"${i + 1}", $"Parameter {i + 1}", string.Join(", ", set.GetShortDescriptions()));
+            return new ParameterResult("${0}".FormatInvariant(i + 1), "Parameter {0}".FormatUI(i + 1), string.Join(", ", set.GetShortDescriptions()));
         }
 
         public IReadOnlyList<IAnalysisSet> Arguments { get; }

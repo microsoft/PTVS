@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
             var res = _builtinModule.GetAnyMember(id.GetTypeName(PythonLanguageVersion.V37)) as IPythonType;
             if (res == null) {
-                throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
+                throw new KeyNotFoundException("{0} ({1})".FormatInvariant(id, (int)id));
             }
             return res;
         }

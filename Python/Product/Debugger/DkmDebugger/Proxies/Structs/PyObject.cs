@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
 
             private static string ComputeVariableName(Type proxyType) {
-                if (!proxyType.Name.EndsWith("Object")) {
+                if (!proxyType.Name.EndsWith("Object", StringComparison.Ordinal)) {
                     Debug.Fail("PyObject-derived type " + proxyType.Name + " must have name ending with 'Object' to infer type variable name.");
                     throw new NotSupportedException();
                 }

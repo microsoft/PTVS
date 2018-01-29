@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static readonly char[] _badChars = Enumerable.Range(0, 32).Select(c => (char)c).ToArray();
 
         private static string SafeFormat(string format, params object[] args) {
-            var s = string.Format(format, args);
+            var s = format.FormatInvariant(args);
 
             // Last chance attempt at producing output that can be embedded in
             // test results file.
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             for (char c = '\0'; c < ' '; ++c) {
-                s = s.Replace(c.ToString(), string.Format("\\x{0:X2}", (int)c));
+                s = s.Replace(c.ToString(), "\\x{0:X2}".FormatInvariant((int)c));
             }
             return s;
         }

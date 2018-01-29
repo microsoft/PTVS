@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!buffers.Any()) {
-                throw new FileNotFoundException($"failed to parse file {entry.DocumentUri.AbsoluteUri}", entry.FilePath);
+                throw new FileNotFoundException("failed to parse file {0}".FormatInvariant(entry.DocumentUri.AbsoluteUri), entry.FilePath);
             }
 
             var cookie = new VersionCookie(buffers);

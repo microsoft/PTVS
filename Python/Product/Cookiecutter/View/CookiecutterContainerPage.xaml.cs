@@ -220,7 +220,7 @@ namespace Microsoft.CookiecutterTools.View {
                 return;
             }
 
-            var result = MessageBox.Show(string.Format(CultureInfo.CurrentUICulture, Strings.DeleteConfirmation, ViewModel.SelectedTemplate.ClonedPath), Strings.ProductTitle, MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+            var result = MessageBox.Show(Strings.DeleteConfirmation.FormatUI(ViewModel.SelectedTemplate.ClonedPath), Strings.ProductTitle, MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
             if (result == MessageBoxResult.Yes) {
                 ViewModel.DeleteTemplateAsync(ViewModel.SelectedTemplate).DoNotWait();
             }

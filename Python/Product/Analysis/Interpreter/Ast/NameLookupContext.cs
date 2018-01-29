@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (expr is MemberExpression me) {
-                return $"{GetNameFromExpressionWorker(me.Target)}.{me.Name}";
+                return "{0}.{1}".FormatInvariant(GetNameFromExpressionWorker(me.Target), me.Name);
             }
 
             throw new FormatException();

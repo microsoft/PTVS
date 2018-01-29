@@ -251,7 +251,8 @@ namespace Microsoft.PythonTools.Navigation {
 
                 ImageListOverlay overlay = ImageListOverlay.ImageListOverlayNone;
                 string name = child.Name;
-                if (name != null && name.StartsWith("_") && !(name.StartsWith("__") && name.EndsWith("__"))) {
+                if (name != null && name.StartsWith("_", StringComparison.Ordinal) &&
+                    !(name.StartsWith("__", StringComparison.Ordinal) && name.EndsWith("__", StringComparison.Ordinal))) {
                     overlay = ImageListOverlay.ImageListOverlayPrivate;
                 }
 

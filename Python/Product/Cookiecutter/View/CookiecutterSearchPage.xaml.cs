@@ -158,7 +158,7 @@ namespace Microsoft.CookiecutterTools.View {
         public void LoadTemplate() {
             TemplateViewModel collidingTemplate;
             if (ViewModel.IsCloneNeeded(ViewModel.SelectedTemplate) && ViewModel.IsCloneCollision(ViewModel.SelectedTemplate, out collidingTemplate)) {
-                MessageBox.Show(string.Format(CultureInfo.CurrentUICulture, Strings.CloneCollisionMessage, ViewModel.SelectedTemplate.RepositoryName, collidingTemplate.ClonedPath), Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Strings.CloneCollisionMessage.FormatUI(ViewModel.SelectedTemplate.RepositoryName, collidingTemplate.ClonedPath), Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 

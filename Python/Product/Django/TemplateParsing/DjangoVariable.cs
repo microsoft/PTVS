@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public static DjangoVariable Parse(string filterText, int start = 0) {
-            if (filterText.StartsWith("{{")) {
+            if (filterText.StartsWith("{{", StringComparison.Ordinal)) {
                 filterText = GetTrimmedFilterText(filterText, ref start);
                 if (filterText == null) {
                     return null;
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 }
             }
             if (tmpStart != null) {
-                if (text.EndsWith("%}") || text.EndsWith("}}")) {
+                if (text.EndsWith("%}", StringComparison.Ordinal) || text.EndsWith("}}", StringComparison.Ordinal)) {
                     for (int i = text.Length - 3; i >= tmpStart.Value; i--) {
                         if (!Char.IsWhiteSpace(text[i])) {
                             filterText = text.Substring(tmpStart.Value, i + 1 - tmpStart.Value);

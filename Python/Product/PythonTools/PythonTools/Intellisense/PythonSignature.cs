@@ -85,8 +85,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var name = param.name ?? "";
-                var isDict = name.StartsWith("**");
-                var isList = !isDict && name.StartsWith("*");
+                var isDict = name.StartsWith("**", StringComparison.Ordinal);
+                var isList = !isDict && name.StartsWith("*", StringComparison.Ordinal);
 
                 content.Append(name);
                 ppContent.Append(name);

@@ -1854,9 +1854,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (match.Success) {
                 return match.Value;
-            } else if (result.Name.StartsWith("**")) {
+            } else if (result.Name.StartsWith("**", StringComparison.Ordinal)) {
                 return "**kwargs";
-            } else if (result.Name.StartsWith("*")) {
+            } else if (result.Name.StartsWith("*", StringComparison.Ordinal)) {
                 return "*args";
             } else {
                 return "arg" + index.ToString();

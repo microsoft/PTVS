@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            if (dir.EndsWith("\\")) {
+            if (dir.EndsWith("\\", StringComparison.Ordinal)) {
                 dir = dir.Substring(0, dir.Length - 1);
             }
             _dirMapping = dirMapping;
@@ -943,7 +943,7 @@ namespace Microsoft.PythonTools.Debugger {
 
                     if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
                         int len = mapFrom.Length;
-                        if (!mappingInfo[0].EndsWith("\\")) {
+                        if (!mappingInfo[0].EndsWith("\\", StringComparison.Ordinal)) {
                             len++;
                         }
 

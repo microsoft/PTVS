@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
 
             return files
-                .Where(path => path.StartsWith(source))
+                .Where(path => path.StartsWith(source, StringComparison.OrdinalIgnoreCase))
                 .Select(path => path.Substring(source.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
                 .Distinct(StringComparer.OrdinalIgnoreCase);
         }

@@ -89,14 +89,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
             if (id < 0 || id > BuiltinTypeIdExtensions.LastTypeId) {
-                throw new KeyNotFoundException($"(BuiltinTypeId)({(int)id})");
+                throw new KeyNotFoundException("(BuiltinTypeId)({0})".FormatInvariant((int)id));
             }
 
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
                     var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
-                    res = bm?.GetAnyMember($"__{id}__") as IPythonType;
+                    res = bm?.GetAnyMember("__{0}__".FormatInvariant(id)) as IPythonType;
                     if (res == null) {
                         var name = id.GetTypeName(_factory.Configuration.Version);
                         if (string.IsNullOrEmpty(name)) {
@@ -300,9 +300,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            if (File.Exists(_factory.GetCacheFilePath($"python.{name}.pyi"))) {
-                return new AstCachedPythonModule(name, $"python.{name}");
-            } else if (File.Exists(_factory.GetCacheFilePath($"{name}.pyi"))) {
+            if (File.Exists(_factory.GetCacheFilePath("python.{0}.pyi".FormatInvariant(name)))) {
+                return new AstCachedPythonModule(name, "python.{0}".FormatInvariant(name));
+            } else if (File.Exists(_factory.GetCacheFilePath("{0}.pyi".FormatInvariant(name)))) {
                 return new AstCachedPythonModule(name, name);
             }
 
@@ -433,7 +433,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 res = usp.Keys.Union(ssp.Keys);
             }
 
-            return res.Where(m => m == name || m.EndsWith(dotName));
+            return res.Where(m => m == name || m.EndsWith(dotName, StringComparison.Ordinal));
         }
 
         public IEnumerable<string> GetModulesContainingName(string name) {

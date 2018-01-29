@@ -76,9 +76,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 if (funcName == "<module>") {
                     if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                         funcName = Strings.DebugFileModule.FormatUI(Path.GetFileNameWithoutExtension(_stackFrame.FileName));
-                    } else if (_stackFrame.FileName.EndsWith("<string>")) {
+                    } else if (_stackFrame.FileName.EndsWith("<string>", StringComparison.Ordinal)) {
                         funcName = Strings.DebugExecEvalFunctionName;
-                    } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
+                    } else if (_stackFrame.FileName.EndsWith("<stdin>", StringComparison.Ordinal)) {
                         funcName = Strings.DebugReplInputFunctionName;
                     } else {
                         funcName = Strings.DebugFileUnknownCode.FormatUI(_stackFrame.FileName);
@@ -119,9 +119,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_MODULE) != 0) {
                 if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                     frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
-                } else if (_stackFrame.FileName.EndsWith("<string>")) {
+                } else if (_stackFrame.FileName.EndsWith("<string>", StringComparison.Ordinal)) {
                     frameInfo.m_bstrModule = Strings.DebugExecEvalModuleName;
-                } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
+                } else if (_stackFrame.FileName.EndsWith("<stdin>", StringComparison.Ordinal)) {
                     frameInfo.m_bstrModule = Strings.DebugReplModuleName;
                 } else {
                     frameInfo.m_bstrModule = Strings.DebugUnknownModuleName;

@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
 
             private object ReadLongFromString() {
                 var i = ReadLineNoNewline();
-                if (i.EndsWith("L")) {
+                if (i.EndsWith("L", StringComparison.Ordinal)) {
                     i = i.Substring(0, i.Length - 1);
                 }
                 return BigInteger.Parse(i);

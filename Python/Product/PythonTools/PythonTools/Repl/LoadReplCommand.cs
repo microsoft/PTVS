@@ -62,11 +62,11 @@ namespace Microsoft.PythonTools.Repl {
                 var currentSubmission = new List<string>();
 
                 foreach (var line in lines) {
-                    if (line.StartsWith(_commentPrefix)) {
+                    if (line.StartsWith(_commentPrefix, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
 
-                    if (line.StartsWith(commandPrefix)) {
+                    if (line.StartsWith(commandPrefix, StringComparison.OrdinalIgnoreCase)) {
                         AddSubmission(submissionList, currentSubmission, lineBreak);
 
                         submissionList.Add(line);
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private static bool CommentPrefixPredicate(string input) {
-            return !input.StartsWith(_commentPrefix);
+            return !input.StartsWith(_commentPrefix, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AddSubmission(List<string> submissions, List<string> lines, string lineBreak) {

@@ -397,7 +397,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal int GetPart(Uri documentUri) {
             var f = documentUri.Fragment;
             int i;
-            if (string.IsNullOrEmpty(f) || !f.StartsWith("#") || !int.TryParse(f.Substring(1), out i)) {
+            if (string.IsNullOrEmpty(f) ||
+                !f.StartsWith("#", StringComparison.Ordinal) ||
+                !int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out i)) {
                 i = 0;
             }
             return i;

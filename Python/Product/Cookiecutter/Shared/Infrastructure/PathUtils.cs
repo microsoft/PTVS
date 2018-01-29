@@ -257,7 +257,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
+                Trace.WriteLine("Error finding path from {0} to {1}".FormatInvariant(fromUri, toUri));
                 Trace.WriteLine(ex);
                 relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
@@ -293,7 +293,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
+                Trace.WriteLine("Error finding path from {0} to {1}".FormatInvariant(fromUri, toUri));
                 Trace.WriteLine(ex);
                 relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
@@ -584,7 +584,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             if (File.Exists(newPath + extension)) {
                 string candidateNewPath;
                 do {
-                    candidateNewPath = string.Format("{0}{1}", newPath, ++index);
+                    candidateNewPath = "{0}{1}".FormatInvariant(newPath, ++index);
                 } while (File.Exists(candidateNewPath + extension));
                 newPath = candidateNewPath;
             }

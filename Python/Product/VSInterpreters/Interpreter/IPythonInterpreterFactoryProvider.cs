@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static bool CanBeDeleted(this IPythonInterpreterFactory factory) {
-            return factory.Configuration.Id.StartsWith(CondaEnvironmentFactoryProvider.EnvironmentCompanyName);
+            return factory.Configuration.Id.StartsWith(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, StringComparison.Ordinal);
         }
 
         public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {

@@ -2736,7 +2736,7 @@ namespace Microsoft.PythonTools.Project {
                 if (ErrorHandler.Succeeded(project.GetGuidProperty(id, (int)__VSHPROPID.VSHPROPID_TypeGuid, out itemType)) &&
                     itemType == VSConstants.GUID_ItemType_PhysicalFile &&
                     ErrorHandler.Succeeded(project.GetProperty(id, (int)__VSHPROPID.VSHPROPID_Name, out obj)) &&
-                    "ServiceDefinition.csdef".Equals(obj as string, StringComparison.InvariantCultureIgnoreCase) &&
+                    "ServiceDefinition.csdef".Equals(obj as string, StringComparison.OrdinalIgnoreCase) &&
                     ErrorHandler.Succeeded(project.GetCanonicalName(id, out mkDoc)) &&
                     !string.IsNullOrEmpty(mkDoc)
                 ) {
@@ -2822,6 +2822,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         private static void UpdateServiceDefinition(IVsTextLines lines, string roleType, string projectName) {
             if (lines == null) {
                 throw new ArgumentException("lines");
@@ -2833,8 +2834,10 @@ namespace Microsoft.PythonTools.Project {
             ErrorHandler.ThrowOnFailure(lines.GetLastLineIndex(out lastLine, out lastIndex));
             ErrorHandler.ThrowOnFailure(lines.GetLineText(0, 0, lastLine, lastIndex, out text));
 
-            var doc = new XmlDocument();
-            doc.LoadXml(text);
+            var doc = new XmlDocument { XmlResolver = null };
+            var settings = new XmlReaderSettings { XmlResolver = null };
+            using (var reader = XmlReader.Create(new StringReader(text), settings))
+                doc.Load(reader);
 
             UpdateServiceDefinition(doc, roleType, projectName);
 
@@ -2924,9 +2927,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         private static void UpdateServiceDefinition(string path, string roleType, string projectName) {
-            var doc = new XmlDocument();
-            doc.Load(path);
+            var doc = new XmlDocument { XmlResolver = null };
+            var settings = new XmlReaderSettings { XmlResolver = null };
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = XmlReader.Create(stream, settings)) {
+                doc.Load(reader);
+            }
 
             UpdateServiceDefinition(doc, roleType, projectName);
 
