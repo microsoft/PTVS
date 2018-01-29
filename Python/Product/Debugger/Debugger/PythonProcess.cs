@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            if (dir.EndsWith("\\", StringComparison.Ordinal)) {
+            if (dir.EndsWithOrdinal("\\")) {
                 dir = dir.Substring(0, dir.Length - 1);
             }
             _dirMapping = dirMapping;
@@ -941,9 +941,9 @@ namespace Microsoft.PythonTools.Debugger {
                     string mapFrom = mappingInfo[toDebuggee ? 0 : 1];
                     string mapTo = mappingInfo[toDebuggee ? 1 : 0];
 
-                    if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
+                    if (file.StartsWithOrdinal(mapFrom, ignoreCase: true)) {
                         int len = mapFrom.Length;
-                        if (!mappingInfo[0].EndsWith("\\", StringComparison.Ordinal)) {
+                        if (!mappingInfo[0].EndsWithOrdinal("\\")) {
                             len++;
                         }
 

@@ -138,11 +138,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal string FastRelativePath(string fullPath) {
-            if (!fullPath.StartsWith(Configuration.PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+            if (!fullPath.StartsWithOrdinal(Configuration.PrefixPath, ignoreCase: true)) {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWith("\\", StringComparison.Ordinal)) {
+            if (p.StartsWithOrdinal("\\")) {
                 return p.Substring(1);
             }
             return p;

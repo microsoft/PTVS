@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return lines.Select(s => {
-                if (s.StartsWith(tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
+                if (s.StartsWithOrdinal(tempWorkingDir, ignoreCase: true)) {
                     return null;
                 }
                 try {

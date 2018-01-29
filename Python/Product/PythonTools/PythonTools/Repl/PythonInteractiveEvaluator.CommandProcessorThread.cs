@@ -644,7 +644,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public Task<ExecutionResult> ExecuteText(string text) {
-                if (text.StartsWith("$", StringComparison.Ordinal)) {
+                if (text.StartsWithOrdinal("$")) {
                     _eval.WriteError(Strings.ReplUnknownCommand.FormatUI(text.Trim()));
                     return ExecutionResult.Failed;
                 }

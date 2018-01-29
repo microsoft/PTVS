@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void FilterToText(string filterText) {
-            bool hideAdvanced = _shouldHideAdvanced && !filterText.StartsWith("__", StringComparison.Ordinal);
+            bool hideAdvanced = _shouldHideAdvanced && !filterText.StartsWithOrdinal("__");
             bool anyVisible = false;
             foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
                 if (hideAdvanced && IsAdvanced(c)) {

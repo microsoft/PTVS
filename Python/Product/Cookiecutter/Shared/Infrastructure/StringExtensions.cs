@@ -109,5 +109,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             return str.Substring(0, length);
         }
+
+        public static bool StartsWithOrdinal(this string s, string prefix, bool ignoreCase = false) {
+            return s?.StartsWith(prefix, ignoreCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+
+        public static bool EndsWithOrdinal(this string s, string suffix, bool ignoreCase = false) {
+            return s?.StartsWith(suffix, ignoreCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) ?? false;
+        }
     }
 }

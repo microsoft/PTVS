@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     class ContextItem {
@@ -23,7 +24,7 @@ namespace Microsoft.CookiecutterTools.Model {
             Selector = selector;
             DefaultValue = defaultValue;
             Values = items ?? new string[0];
-            Visible = !name.StartsWith("_", StringComparison.Ordinal);
+            Visible = !name.StartsWithOrdinal("_");
         }
 
         public string Name { get; }

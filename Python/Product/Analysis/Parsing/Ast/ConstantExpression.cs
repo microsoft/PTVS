@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 string real = NegativeZeroAwareToString(n.Real);
                 string imag =  NegativeZeroAwareToString(n.Imaginary);
                 if (n.Real != 0) {
-                    if (!imag.StartsWith("-", StringComparison.Ordinal)) {
+                    if (!imag.StartsWithOrdinal("-")) {
                         imag = "+" + imag;
                     }
                     return "(" + real + imag + "j)";

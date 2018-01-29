@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.BuildTasks {
         protected override bool IsValidExecuteInValue(string value, out string message) {
             message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
             return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase)) ||
-                value.StartsWith(ExecuteInRepl, StringComparison.OrdinalIgnoreCase);
+                value.StartsWithOrdinal(ExecuteInRepl, ignoreCase: true);
         }
 
         /// <summary>

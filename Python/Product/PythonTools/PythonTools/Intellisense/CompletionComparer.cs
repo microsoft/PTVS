@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -53,16 +54,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (_sortUnderscoresLast) {
-                bool xUnder = xName.StartsWith("__", StringComparison.Ordinal) && xName.EndsWith("__", StringComparison.Ordinal);
-                bool yUnder = yName.StartsWith("__", StringComparison.Ordinal) && yName.EndsWith("__", StringComparison.Ordinal);
+                bool xUnder = xName.StartsWithOrdinal("__") && xName.EndsWithOrdinal("__");
+                bool yUnder = yName.StartsWithOrdinal("__") && yName.EndsWithOrdinal("__");
 
                 if (xUnder != yUnder) {
                     // The one that starts with an underscore comes later
                     return xUnder ? 1 : -1;
                 }
 
-                bool xSingleUnder = xName.StartsWith("_", StringComparison.Ordinal);
-                bool ySingleUnder = yName.StartsWith("_", StringComparison.Ordinal);
+                bool xSingleUnder = xName.StartsWithOrdinal("_");
+                bool ySingleUnder = yName.StartsWithOrdinal("_");
                 if (xSingleUnder != ySingleUnder) {
                     // The one that starts with an underscore comes later
                     return xSingleUnder ? 1 : -1;

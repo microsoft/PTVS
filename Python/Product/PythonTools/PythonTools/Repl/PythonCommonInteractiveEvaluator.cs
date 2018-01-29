@@ -307,7 +307,7 @@ namespace Microsoft.PythonTools.Repl {
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
-            if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n", StringComparison.Ordinal)) {
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
                 pr = ParseResult.Empty;
                 return true;
             }
@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Repl {
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
             parser.ParseInteractiveCode(out pr);
             if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                return text.EndsWith("\n", StringComparison.Ordinal);
+                return text.EndsWithOrdinal("\n");
             }
             if (pr == ParseResult.IncompleteToken) {
                 return false;

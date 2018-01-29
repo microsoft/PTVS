@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return false;
             }
             var mod = cls.DeclaringModule.Name;
-            return (mod == "unittest" || mod.StartsWith("unittest.", StringComparison.Ordinal)) && cls.Name == "TestCase";
+            return (mod == "unittest" || mod.StartsWithOrdinal("unittest.")) && cls.Name == "TestCase";
         }
         /// <summary>
         /// Get Test Case Members for a class.  If the class has 'test*' tests 
@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
                 var walker = new TestMethodWalker(ast, sourceFile, documentUri, classValue.Locations);
                 ast.Walk(walker);
-                tests = walker.Methods.Where(v => v.Key.StartsWith("test", StringComparison.Ordinal));
+                tests = walker.Methods.Where(v => v.Key.StartsWithOrdinal("test"));
                 runTest = walker.Methods.Where(v => v.Key.Equals("runTest"));
             }
 
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method))
                 .Select(v => new KeyValuePair<string, LocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
 
-            var analysisTests = methodFunctions.Where(v => v.Key.StartsWith("test", StringComparison.Ordinal));
+            var analysisTests = methodFunctions.Where(v => v.Key.StartsWithOrdinal("test"));
             var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
 
             tests = tests?.Concat(analysisTests) ?? analysisTests;
@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 .OfType<IPythonFunction>()
                 .ToArray();
 
-            var tests = methodFunctions.Where(v => v.Name.StartsWith("test", StringComparison.Ordinal));
+            var tests = methodFunctions.Where(v => v.Name.StartsWithOrdinal("test"));
             var runTest = methodFunctions.Where(v => v.Name.Equals("runTest"));
 
             if (tests.Any()) {

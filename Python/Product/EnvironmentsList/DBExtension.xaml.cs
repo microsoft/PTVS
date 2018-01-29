@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 package._moduleCount = 1;
 
                 var dotName = package._fullname + ".";
-                for (++i; i < modules.Count && modules[i].StartsWith(dotName, StringComparison.Ordinal); ++i) {
+                for (++i; i < modules.Count && modules[i].StartsWithOrdinal(dotName); ++i) {
                     package._isUpToDate &= knownModules == null ||
                         knownModules.Contains(modules[i]) == areKnownModulesUpToDate;
                     package._moduleCount += 1;

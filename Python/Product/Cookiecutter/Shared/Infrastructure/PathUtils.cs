@@ -149,7 +149,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
-            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWith(root, StringComparison.Ordinal)) {
+            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWithOrdinal(root)) {
                 // Quick return, but only where the paths are already normalized and
                 // have matching case.
                 return true;
@@ -637,7 +637,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 }
 
                 foreach (var d in dirs) {
-                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                    if (!fullPaths && !d.StartsWithOrdinal(root, ignoreCase: true)) {
                         continue;
                     }
                     if (recurse) {

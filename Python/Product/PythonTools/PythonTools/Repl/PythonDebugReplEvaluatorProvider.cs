@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 
@@ -34,7 +35,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IInteractiveEvaluator GetEvaluator(string replId) {
-            if (replId.StartsWith(_debugReplGuid, StringComparison.OrdinalIgnoreCase)) {
+            if (replId.StartsWithOrdinal(_debugReplGuid, ignoreCase: true)) {
                 return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;

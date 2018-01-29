@@ -433,7 +433,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 res = usp.Keys.Union(ssp.Keys);
             }
 
-            return res.Where(m => m == name || m.EndsWith(dotName, StringComparison.Ordinal));
+            return res.Where(m => m == name || m.EndsWithOrdinal(dotName));
         }
 
         public IEnumerable<string> GetModulesContainingName(string name) {

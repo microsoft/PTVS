@@ -1203,7 +1203,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
                 try {
                     AnalysisLog.Output = _logDiagnostic;
-                    AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
+                    AnalysisLog.AsCSV = _logDiagnostic.EndsWithOrdinal(".csv", ignoreCase: true);
                 } catch (Exception ex) {
                     TraceWarning("Failed to open \"{0}\" for logging{1}{2}", _logDiagnostic, Environment.NewLine, ex.ToString());
                 }

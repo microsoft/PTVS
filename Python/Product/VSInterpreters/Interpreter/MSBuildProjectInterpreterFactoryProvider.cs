@@ -185,7 +185,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var projContext = context as MSBuild.Project;
             if (projContext == null) {
                 var projectFile = context as string;
-                if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                if (projectFile != null && projectFile.EndsWithOrdinal(".pyproj", ignoreCase: true)) {
                     projContext = new MSBuild.Project(projectFile);
                 }
             }

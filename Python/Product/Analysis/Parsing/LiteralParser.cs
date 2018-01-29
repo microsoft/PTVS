@@ -535,7 +535,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 return ParseFloatNoCatch(text);
             } catch (OverflowException) {
-                return text.TrimStart().StartsWith("-", StringComparison.Ordinal) ? Double.NegativeInfinity : Double.PositiveInfinity;
+                return text.TrimStart().StartsWithOrdinal("-") ? Double.NegativeInfinity : Double.PositiveInfinity;
             }
         }
 
@@ -554,7 +554,7 @@ namespace Microsoft.PythonTools.Parsing {
                 default:
                     // pass NumberStyles to disallow ,'s in float strings.
                     double res = double.Parse(s.Replace("_", ""), NumberStyles.Float, CultureInfo.InvariantCulture);
-                    return (res == 0.0 && text.TrimStart().StartsWith("-", StringComparison.Ordinal)) ? NegativeZero : res;
+                    return (res == 0.0 && text.TrimStart().StartsWithOrdinal("-")) ? NegativeZero : res;
             }
         }
 

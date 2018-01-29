@@ -762,7 +762,7 @@ namespace Microsoft.PythonTools.Project {
         public bool ExecuteInRepl {
             get {
                 return !string.IsNullOrEmpty(ExecuteIn) &&
-                    ExecuteIn.StartsWith(CreatePythonCommandItem.ExecuteInRepl, StringComparison.OrdinalIgnoreCase);
+                    ExecuteIn.StartsWithOrdinal(CreatePythonCommandItem.ExecuteInRepl, ignoreCase: true);
             }
         }
 

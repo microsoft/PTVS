@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Parsing {
         #region LL(1) Parsing
 
         private static bool IsPrivateName(string name) {
-            return name.StartsWith("__", StringComparison.Ordinal) && !name.EndsWith("__", StringComparison.Ordinal);
+            return name.StartsWithOrdinal("__") && !name.EndsWithOrdinal("__");
         }
 
         private string FixName(string name) {

@@ -1421,7 +1421,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false, bool allowLeadingUnderscore = false) {
             if (_langVersion >= PythonLanguageVersion.V36 && tokenStr.Contains("_")) {
-                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWith("_", StringComparison.Ordinal)) || tokenStr.EndsWith("_", StringComparison.Ordinal) ||
+                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWithOrdinal("_")) || tokenStr.EndsWithOrdinal("_") ||
                     tokenStr.Contains("._") || tokenStr.Contains("_.")) {
                     ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
                     return true;
@@ -1432,7 +1432,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return true;
                 }
             }
-            if (_langVersion.Is3x() && tokenStr.EndsWith("l", StringComparison.OrdinalIgnoreCase)) {
+            if (_langVersion.Is3x() && tokenStr.EndsWithOrdinal("l", ignoreCase: true)) {
                 ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
                 return true;
             }
