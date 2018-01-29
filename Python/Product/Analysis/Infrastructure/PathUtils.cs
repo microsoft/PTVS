@@ -155,14 +155,14 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 

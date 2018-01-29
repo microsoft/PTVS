@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Commands {
             if (selection.StreamSelectionSpan.Length > 0) {
                 // Easy, just send the selection to the interactive window.
                 input = activeView.Selection.StreamSelectionSpan.GetText();
-                if (!input.EndsWith("\n") && !input.EndsWith("\r")) {
+                if (!input.EndsWithOrdinal("\n") && !input.EndsWithOrdinal("\r")) {
                     input += activeView.Options.GetNewLineCharacter();
                 }
                 focusRepl = true;

@@ -509,7 +509,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            bool submitLast = pasting.EndsWith("\n");
+            bool submitLast = pasting.EndsWithOrdinal("\n");
 
             if (inputPoint == null) {
                 // we didn't find a point to insert, insert at the beginning.
@@ -579,7 +579,7 @@ namespace Microsoft.PythonTools.Repl {
                     indent = line.Substring(0, line.TakeWhile(char.IsWhiteSpace).Count());
                 }
 
-                if (line.StartsWith(indent)) {
+                if (line.StartsWithOrdinal(indent)) {
                     yield return line.Substring(indent.Length);
                 } else {
                     yield return line.TrimStart();

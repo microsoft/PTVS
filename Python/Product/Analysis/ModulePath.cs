@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis {
             bool requireInitPy,
             bool includePackages
         ) {
-            Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
+            Debug.Assert(baseModule == "" || baseModule.EndsWithOrdinal("."));
 
             if (!Directory.Exists(path)) {
                 yield break;
