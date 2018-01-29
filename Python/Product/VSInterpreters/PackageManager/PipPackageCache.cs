@@ -483,7 +483,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 while ((spec = await file.ReadLineAsync()) != null) {
                     cancel.ThrowIfCancellationRequested();
                     try {
-                        int descriptionStart = spec.IndexOf(" #");
+                        int descriptionStart = spec.IndexOfOrdinal(" #");
                         if (descriptionStart > 0) {
                             var pv = PackageSpec.FromRequirement(spec.Remove(descriptionStart));
                             pv.Description = Uri.UnescapeDataString(spec.Substring(descriptionStart + 2));

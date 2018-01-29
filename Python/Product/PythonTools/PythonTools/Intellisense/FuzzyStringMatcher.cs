@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         static int SubstringMatch(string text, string pattern, bool ignoreCase) {
-            int position = text.IndexOf(pattern, StringComparison.Ordinal);
+            int position = text.IndexOfOrdinal(pattern);
             if (position >= 0) {
                 return pattern.Length * 2 + (position == 0 ? 1 : 0);
             }
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return pattern.Length * 2 + (position == 0 ? 1 : 0);
             }
             if (ignoreCase) {
-                position = text.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
+                position = text.IndexOfOrdinal(pattern, ignoreCase: true);
                 if (position >= 0) {
                     return pattern.Length + (position == 0 ? 1 : 0);
                 }

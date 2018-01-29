@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var line = Span.GetStartPoint(TextBuffer.CurrentSnapshot).GetContainingLine();
-            var startPos = line.Start.Position + line.GetText().IndexOf("def", StringComparison.Ordinal);
+            var startPos = line.Start.Position + line.GetText().IndexOfOrdinal("def");
 
             var analysis = GetAnalysisEntry();
             if (analysis == null) {
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var span = Span.GetSpan(TextBuffer.CurrentSnapshot);
-            int defIndent = span.Start.GetContainingLine().GetText().IndexOf("def", StringComparison.Ordinal);
+            int defIndent = span.Start.GetContainingLine().GetText().IndexOfOrdinal("def");
 
             string indentation;
             if (_options.ConvertTabsToSpaces) {

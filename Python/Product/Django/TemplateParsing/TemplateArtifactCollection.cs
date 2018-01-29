@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Html.Core.Artifacts;
 using Microsoft.Html.Core.Parser.Def;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Web.Core.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
@@ -98,7 +99,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // { and % or added { to the existing % so extend search range accordingly.
                 int fragmentStart = Math.Max(0, start - leftSeparator.Length + 1);
                 int fragmentEnd = Math.Min(newText.Length, start + newLength + leftSeparator.Length - 1);
-                return newText.IndexOf(leftSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0;
+                return newText.IndexOfOrdinal(leftSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0;
             }
 
             // Is change completely inside an existing item?
