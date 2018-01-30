@@ -222,7 +222,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 string.Format(CultureInfo.InvariantCulture, "Resource string '{0}' does not use all {1} arguments", value, args.Length)
             );
             Debug.WriteLineIf(
-                result.IndexOf(string.Format(CultureInfo.InvariantCulture, "{{{0}", args.Length)) >= 0,
+                result.IndexOf(string.Format(CultureInfo.InvariantCulture, "{{{0}", args.Length), StringComparison.InvariantCulture) >= 0,
                 string.Format(CultureInfo.InvariantCulture, "Resource string '{0}' requires more than {1} argument(s)", value, args.Length)
             );
 
