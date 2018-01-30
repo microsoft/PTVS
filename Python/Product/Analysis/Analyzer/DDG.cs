@@ -165,9 +165,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var left in node.Left) {
                 if (left is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null) {
                     var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
-                    var annoInst = annoType?.GetInstanceType();
-                    if (annoInst?.Any() == true) {
-                        _eval.AssignTo(node, annoExpr.Expression, annoInst);
+                    if (annoType?.Any() == true) {
+                        _eval.AssignTo(node, annoExpr.Expression, annoType);
                     }
                 }
 

@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             for (int i = 0; i < Ast.Parameters.Count; ++i) {
                 var p = Ast.Parameters[i];
                 if (p.Annotation != null) {
-                    var val = ddg._eval.EvaluateAnnotation(p.Annotation).GetInstanceType();
+                    var val = ddg._eval.EvaluateAnnotation(p.Annotation);
                     if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
                         param.AddTypes(this, val, false);
                     }
@@ -193,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ((FunctionScope)Scope).AddReturnTypes(
                     Ast.ReturnAnnotation,
                     ddg._unit,
-                    resType.GetInstanceType()
+                    resType
                 );
             }
         }
