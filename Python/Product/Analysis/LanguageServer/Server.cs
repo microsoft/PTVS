@@ -848,6 +848,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
 
                     if (doc is IAnalyzable analyzable) {
+                        if (_traceLogging) {
+                            LogMessage(MessageType.Log, $"Enqueing document {doc.DocumentUri} for analysis");
+                        }
                         _queue.Enqueue(analyzable, priority);
                     }
                 }
@@ -884,8 +887,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
+                if (_traceLogging) {
+                    LogMessage(MessageType.Log, $"Received new analysis for {entry.DocumentUri}");
+                }
                 var parse = entry.GetCurrentParse();
-                if (parse?.Cookie is VersionCookie vc) {
+                if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
                     }

@@ -70,6 +70,7 @@ namespace Microsoft.PythonTools.Editor {
             var bi = TryGetForBuffer(buffer);
             if (bi != null) {
                 bi._replace = true;
+                bi.TraceWithStack("MarkForReplacement");
             }
         }
 
@@ -96,6 +97,10 @@ namespace Microsoft.PythonTools.Editor {
 
         internal PythonLanguageVersion _defaultLanguageVersion;
 
+#if BUFFERINFO_TRACING
+        private readonly AnalysisLogWriter _traceLog;
+#endif
+
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
             Buffer = buffer;
@@ -120,24 +125,20 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             _locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
-        }
 
-        private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
-            if (destination != null) {
-                return destination;
-            }
-            var created = creator(this);
-            lock (_lock) {
-                if (destination == null) {
-                    destination = created;
-                } else {
-                    created = destination;
-                }
-            }
-            return created;
+#if BUFFERINFO_TRACING
+            _traceLog = new AnalysisLogWriter(
+                PathUtils.GetAvailableFilename(System.IO.Path.GetTempPath(), "PythonTools_Buffer_{0}_{1:yyyyMMddHHmmss}".FormatInvariant(PathUtils.GetFileOrDirectoryName(_filename.Value), DateTime.Now), ".log"),
+                false,
+                false,
+                cacheSize: 1
+            );
+#endif
         }
 
         private PythonTextBufferInfo ReplaceBufferInfo() {
+            TraceWithStack("ReplaceBufferInfo");
+
             var newInfo = new PythonTextBufferInfo(Services, Buffer);
             foreach (var sink in _eventSinks) {
                 newInfo._eventSinks[sink.Key] = sink.Value;
@@ -156,6 +157,10 @@ namespace Microsoft.PythonTools.Editor {
             Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(null);
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
+
+#if BUFFERINFO_TRACING
+            _traceLog?.Dispose();
+#endif
 
             return newInfo;
         }
@@ -213,19 +218,23 @@ namespace Microsoft.PythonTools.Editor {
         #region Events
 
         private void OnNewAnalysisEntry(AnalysisEntry entry) {
+            Trace("OnNewAnalysisEntry", entry?.Analyzer);
             ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
         }
 
         private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
+            Trace("ParseComplete");
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewParseTree, (AnalysisEntry)sender));
         }
 
         private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
+            Trace("AnalysisComplete");
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysis, (AnalysisEntry)sender));
         }
 
         private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
+            Trace("TextContentChanged");
             if (!_hasChangedOnBackground) {
                 UpdateTokenCache(e);
             }
@@ -236,10 +245,12 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e) {
+            Trace("TextContentChangedLowPriority");
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedLowPriority, e));
         }
 
         private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
+            Trace("ContentTypeChanged", e.BeforeContentType, e.AfterContentType);
             ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.ContentTypeChanged, e));
         }
@@ -254,6 +265,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e) {
+            Trace("EncodingChanged", e.OldEncoding, e.NewEncoding);
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.DocumentEncodingChanged, e));
         }
 
@@ -267,16 +279,20 @@ namespace Microsoft.PythonTools.Editor {
                     throw new InvalidOperationException("cannot replace existing sink");
                 }
             }
+            TraceWithStack("AddSink", key, sink.GetType().FullName);
         }
 
         public T GetOrCreateSink<T>(object key, Func<PythonTextBufferInfo, T> creator) where T : class, IPythonTextBufferInfoEventSink {
             IPythonTextBufferInfoEventSink sink;
             if (_eventSinks.TryGetValue(key, out sink)) {
+                Trace("GetOrCreateSink", typeof(T).FullName, "get", sink.GetType().FullName);
                 return sink as T;
             }
             sink = creator(this);
+            TraceWithStack("GetOrCreateSink", typeof(T).FullName, "create", sink.GetType().FullName);
             if (!_eventSinks.TryAdd(key, sink)) {
                 sink = _eventSinks[key];
+                Trace("GetOrCreateSink", typeof(T).FullName, "lost create race", sink.GetType().FullName);
             }
             return sink as T;
         }
@@ -286,7 +302,11 @@ namespace Microsoft.PythonTools.Editor {
             return _eventSinks.TryGetValue(key, out sink) ? sink : null;
         }
 
-        public bool RemoveSink(object key) => _eventSinks.TryRemove(key, out _);
+        public bool RemoveSink(object key) {
+            Trace("RemoveSink", key, _eventSinks.ContainsKey(key));
+
+            return _eventSinks.TryRemove(key, out _);
+        }
 
         private void InvokeSinks(PythonTextBufferInfoEventArgs e) {
             foreach (var sink in _eventSinks.Values) {
@@ -305,11 +325,13 @@ namespace Microsoft.PythonTools.Editor {
                 var entry = Volatile.Read(ref _analysisEntry);
                 if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
                     // Analyzer has closed, so clear it out from our info.
+                    TraceWithStack("AnalyzerExpired", entry.Analyzer);
                     var previous = TrySetAnalysisEntry(null, entry);
                     if (previous != entry) {
                         // The entry has already been updated, so return the new one
                         return previous;
                     }
+                    InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.AnalyzerExpired));
                     return null;
                 }
                 return entry;
@@ -324,8 +346,10 @@ namespace Microsoft.PythonTools.Editor {
         public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
             var entry = AnalysisEntry;
             if (entry != null) {
+                Trace("GetAnalysisEntryAsync", "completed synchronously");
                 return Task.FromResult(entry);
             }
+            TraceWithStack("GetAnalysisEntryAsync", "waiting");
             var tcs = Volatile.Read(ref _waitingForEntry);
             if (tcs != null) {
                 return tcs.Task;
@@ -350,6 +374,7 @@ namespace Microsoft.PythonTools.Editor {
             var previous = Interlocked.CompareExchange(ref _analysisEntry, entry, ifCurrent);
 
             if (previous != ifCurrent) {
+                TraceWithStack("FailedToSetAnalysisEntry", previous?.Analyzer, entry?.Analyzer, ifCurrent?.Analyzer);
                 return previous;
             }
 
@@ -365,6 +390,7 @@ namespace Microsoft.PythonTools.Editor {
                 Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(entry);
             }
 
+            TraceWithStack("TrySetAnalysisEntry", entry?.Analyzer, ifCurrent?.Analyzer);
             OnNewAnalysisEntry(entry);
 
             return entry;
@@ -372,6 +398,8 @@ namespace Microsoft.PythonTools.Editor {
 
         public void ClearAnalysisEntry() {
             var previous = Interlocked.Exchange(ref _analysisEntry, null);
+            TraceWithStack("ClearAnalysisEntry", previous?.Analyzer);
+
             if (previous != null) {
                 previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
                 previous.ParseComplete -= AnalysisEntry_ParseComplete;
@@ -406,6 +434,7 @@ namespace Microsoft.PythonTools.Editor {
         public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
             lock (_lock) {
                 var prevSent = _lastSentSnapshot;
+                Trace("AddSentSnapshot", prevSent?.Version?.VersionNumber, sent?.Version?.VersionNumber);
                 if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
                     return prevSent;
                 }
@@ -418,9 +447,11 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedParse(int version) {
             lock (_lock) {
+                Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version));
                 var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
                 foreach (var i in toRemove) {
                     Debug.WriteLine($"Skipped parse for version {i}");
+                    Trace("SkipParse", i);
                     _expectParse.Remove(i);
                 }
                 return _expectParse.Remove(version);
@@ -429,9 +460,12 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedAnalysis(int version) {
             lock (_lock) {
+                Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version));
+
                 var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
                 foreach (var i in toRemove) {
                     Debug.WriteLine($"Skipped analysis for version {i}");
+                    Trace("SkipAnalysis", i);
                     _expectAnalysis.Remove(i);
                 }
                 if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
@@ -681,6 +715,22 @@ namespace Microsoft.PythonTools.Editor {
             // Prevent later updates overwriting our tokenization
             _tokenCache.Update(e, GetTokenizerLazy());
         }
+        #endregion
+
+        #region Extreme Tracing
+
+        [Conditional("BUFFERINFO_TRACING")]
+        private void Trace(string eventName, params object[] args) {
+            _traceLog.Log(eventName, args);
+        }
+
+        [Conditional("BUFFERINFO_TRACING")]
+        private void TraceWithStack(string eventName, params object[] args) {
+            var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
+            _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
+            _traceLog.Flush();
+        }
+
         #endregion
     }
 }

@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Editor {
         DocumentEncodingChanged,
         NewTextBufferInfo,
         TextContentChangedOnBackgroundThread,
+        AnalyzerExpired,
     }
 
     class PythonTextBufferInfoEventArgs : EventArgs {
