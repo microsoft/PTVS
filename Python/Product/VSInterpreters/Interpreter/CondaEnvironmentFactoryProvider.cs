@@ -48,7 +48,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly CPythonInterpreterFactoryProvider _globalProvider;
         private readonly bool _watchFileSystem;
         private FileSystemWatcher _envsTxtWatcher;
-        private Timer _envsTxtWatcherTimer;
+        private FileSystemWatcher _condaFolderWatcher;
+        private Timer _envsWatcherTimer;
+        private string _environmentsTxtFolder;
         private string _environmentsTxtPath;
 
         [ImportingConstructor]
@@ -78,8 +80,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (_envsTxtWatcher != null) {
                         _envsTxtWatcher.Dispose();
                     }
-                    if (_envsTxtWatcherTimer != null) {
-                        _envsTxtWatcherTimer.Dispose();
+                    if (_condaFolderWatcher != null) {
+                        _condaFolderWatcher.Dispose();
+                    }
+                    if (_envsWatcherTimer != null) {
+                        _envsWatcherTimer.Dispose();
                     }
                 }
             }
@@ -96,28 +101,22 @@ namespace Microsoft.PythonTools.Interpreter {
                     _initialized = true;
                     doDiscover = true;
                     try {
-                        _environmentsTxtPath = Path.Combine(
+                        _environmentsTxtFolder = Path.Combine(
                             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                            ".conda",
+                            ".conda"
+                        );
+                        _environmentsTxtPath = Path.Combine(
+                            _environmentsTxtFolder,
                             "environments.txt"
                         );
                     } catch (ArgumentException) {
                     }
 
                     if (_watchFileSystem && !string.IsNullOrEmpty(_environmentsTxtPath)) {
-                        // Watch the file %HOMEPATH%/.conda/Environments.txt which
-                        // is updated by conda after a new environment is created.
-                        var watchedPath = Path.GetDirectoryName(_environmentsTxtPath);
-                        if (Directory.Exists(watchedPath)) {
-                            try {
-                                _envsTxtWatcher = new FileSystemWatcher(watchedPath, "*.txt");
-                                _envsTxtWatcher.Changed += _envsTxtWatcher_Changed;
-                                _envsTxtWatcher.Created += _envsTxtWatcher_Changed;
-                                _envsTxtWatcher.EnableRaisingEvents = true;
-                                _envsTxtWatcherTimer = new Timer(_envsTxtWatcherTimer_Elapsed);
-                            } catch (ArgumentException) {
-                            } catch (IOException) {
-                            }
+                        _envsWatcherTimer = new Timer(EnvironmentsWatcherTimer_Elapsed);
+
+                        if (!WatchForEnvironmentsTxtChanged()) {
+                            WatchForCondaFolderCreated();
                         }
                     }
                 }
@@ -128,10 +127,45 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void _envsTxtWatcherTimer_Elapsed(object state) {
+        private bool WatchForEnvironmentsTxtChanged() {
+            // Watch the file %HOMEPATH%/.conda/Environments.txt which
+            // is updated by conda after a new environment is created.
+            if (Directory.Exists(_environmentsTxtFolder)) {
+                try {
+                    _envsTxtWatcher = new FileSystemWatcher(_environmentsTxtFolder, "environments.txt");
+                    _envsTxtWatcher.Changed += EnvironmentsTxtWatcher_Changed;
+                    _envsTxtWatcher.Created += EnvironmentsTxtWatcher_Changed;
+                    _envsTxtWatcher.EnableRaisingEvents = true;
+                    return true;
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                }
+            }
+
+            return false;
+        }
+
+        private void WatchForCondaFolderCreated() {
+            // When .conda does not exist, we watch for its creation
+            // then watcher for environments.txt changes once it's created.
+            // The simpler alternative of using a recursive watcher on user
+            // folder could lead to poor performance.
+            var watchedPath = Path.GetDirectoryName(_environmentsTxtFolder);
+            if (Directory.Exists(watchedPath)) {
+                try {
+                    _condaFolderWatcher = new FileSystemWatcher(watchedPath, ".conda");
+                    _condaFolderWatcher.Created += CondaFolderWatcher_Created;
+                    _condaFolderWatcher.EnableRaisingEvents = true;
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                }
+            }
+        }
+
+        private void EnvironmentsWatcherTimer_Elapsed(object state) {
             try {
                 lock (_factories) {
-                    _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _envsWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
 
                 DiscoverInterpreterFactories();
@@ -139,13 +173,24 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void _envsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
-            if (PathUtils.IsSamePath(e.FullPath, _environmentsTxtPath)) {
-                lock (_factories) {
-                    try {
-                        _envsTxtWatcherTimer.Change(1000, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
-                    }
+        private void EnvironmentsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
+            lock (_factories) {
+                try {
+                    _envsWatcherTimer.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
+        }
+
+        private void CondaFolderWatcher_Created(object sender, FileSystemEventArgs e) {
+            lock (_factories) {
+                try {
+                    _envsWatcherTimer.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+
+                if (_envsTxtWatcher == null) {
+                    WatchForEnvironmentsTxtChanged();
                 }
             }
         }
