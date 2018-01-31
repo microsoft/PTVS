@@ -713,14 +713,18 @@ namespace Microsoft.PythonTools.Editor {
 
         [Conditional("BUFFERINFO_TRACING")]
         private void Trace(string eventName, params object[] args) {
+#if BUFFERINFO_TRACING
             _traceLog.Log(eventName, args);
+#endif
         }
 
         [Conditional("BUFFERINFO_TRACING")]
         private void TraceWithStack(string eventName, params object[] args) {
+#if BUFFERINFO_TRACING
             var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
             _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
             _traceLog.Flush();
+#endif
         }
 
         #endregion
