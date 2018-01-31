@@ -305,7 +305,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Creating virtual environment without pip at '{0}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' で pip なしで仮想環境を作成しています ]]></Val>
+            <Val><![CDATA['{0}' で pip なしで仮想環境を作成しています]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1678,7 +1678,7 @@
     <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
     <Item ItemId=";AssemblyVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.0.2017]]></Val>
+        <Val><![CDATA[15.0.0.0]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1708,7 +1708,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18018.1]]></Val>
+        <Val><![CDATA[15.6.18025.4]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1744,7 +1744,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18018.1]]></Val>
+        <Val><![CDATA[15.6.18025.4]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
