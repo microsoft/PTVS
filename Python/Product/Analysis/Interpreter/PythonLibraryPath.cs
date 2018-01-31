@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 try {
-                    paths = await GetUncachedDatabaseSearchPathsAsync(config.InterpreterPath);
+                    paths = await GetUncachedDatabaseSearchPathsAsync(config.InterpreterPath).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(cachePath)) {
                         WriteDatabaseSearchPaths(cachePath, paths);
                     }

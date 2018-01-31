@@ -115,6 +115,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private async Task<IReadOnlyDictionary<string, string>> GetUserSearchPathPackagesAsync() {
+            _log?.Log(TraceLevel.Verbose, "GetUserSearchPathPackagesAsync");
             var ussp = _userSearchPathPackages;
             if (ussp == null) {
                 IReadOnlyList<string> usp;
@@ -126,6 +127,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return ussp;
                 }
 
+                _log?.Log(TraceLevel.Verbose, "GetImportableModulesAsync");
                 ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp);
                 lock (_userSearchPathsLock) {
                     if (_userSearchPathPackages == null) {
@@ -135,6 +137,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
                 }
             }
+
+            _log?.Log(TraceLevel.Verbose, "GetUserSearchPathPackagesAsync", ussp.Keys.Cast<object>().ToArray());
             return ussp;
         }
 
@@ -162,38 +166,31 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IReadOnlyDictionary<string, string> packages,
             string name
         ) {
-            return FindModuleInSearchPath(
-                searchPaths?.Select(s => new PythonLibraryPath(s, false, null)),
-                packages,
-                name
-            );
-        }
-
-        private ModulePath? FindModuleInSearchPath(
-            IEnumerable<PythonLibraryPath> searchPaths,
-            IReadOnlyDictionary<string, string> packages,
-            string name
-        ) {
             if (searchPaths == null) {
                 return null;
             }
 
-            int i = name.IndexOf('.');
-            var firstBit = i < 0 ? name : name.Remove(i);
-            string searchPath;
+            try {
+                int i = name.IndexOf('.');
+                var firstBit = i < 0 ? name : name.Remove(i);
+                string searchPath;
 
-            ModulePath mp;
+                ModulePath mp;
 
-            if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
-                    return mp;
+                if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
+                    if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
+                        return mp;
+                    }
                 }
-            }
 
-            foreach (var sp in searchPaths.MaybeEnumerate()) {
-                if (ModulePath.FromBasePathAndName_NoThrow(sp.Path, name, out mp)) {
-                    return mp;
+                foreach (var sp in searchPaths.MaybeEnumerate()) {
+                    if (ModulePath.FromBasePathAndName_NoThrow(sp, name, out mp)) {
+                        return mp;
+                    }
                 }
+            } catch (Exception ex) {
+                _log?.Log(TraceLevel.Error, "Exception", ex.ToString());
+                _log?.Flush();
             }
 
             return null;
@@ -270,7 +267,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             // Do normal searches
             if (!string.IsNullOrEmpty(Factory.Configuration?.InterpreterPath)) {
-                mod = ImportFromSearchPathsAsync(name).WaitAndUnwrapExceptions() ?? ImportFromBuiltins(name);
+                var importTask = ImportFromSearchPathsAsync(name);
+                if (importTask.Wait(2000)) {
+                    mod = importTask.Result;
+                } else {
+                    _log?.Log(TraceLevel.Error, "ImportTimeout", name, "ImportFromSearchPaths");
+                    mod = null;
+                }
+                mod = mod ?? ImportFromBuiltins(name);
             }
             if (mod == null) {
                 mod = ImportFromCache(name);
@@ -325,9 +329,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private async Task<IPythonModule> ImportFromSearchPathsAsync(string name) {
+            try {
+                return await ImportFromSearchPathsAsyncWorker(name).ConfigureAwait(false);
+            } catch (Exception ex) {
+                _log?.Log(TraceLevel.Error, "ImportFromSearchPathsAsync", ex.ToString());
+                throw;
+            }
+        }
+        private async Task<IPythonModule> ImportFromSearchPathsAsyncWorker(string name) {
             var mmp = FindModuleInSearchPath(
                 _userSearchPaths,
-                await GetUserSearchPathPackagesAsync(),
+                await GetUserSearchPathPackagesAsync().ConfigureAwait(false),
                 name
             );
 
@@ -339,14 +351,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _userSearchPathImported.Add(name);
                 }
             } else {
-                mmp = FindModuleInSearchPath(
-                    await _factory.GetSearchPathsAsync(),
-                    await _factory.GetImportableModulesAsync(),
-                    name
-                );
+                _log?.Log(TraceLevel.Verbose, "FindModule", name, "system");
+                var sp = await _factory.GetSearchPathsAsync().ConfigureAwait(false);
+                _log?.Log(TraceLevel.Verbose, "FindModule", name, "system", string.Join(", ", sp));
+                var mods = await _factory.GetImportableModulesAsync().ConfigureAwait(false);
+                mmp = FindModuleInSearchPath(sp, mods, name);
             }
 
             if (!mmp.HasValue) {
+                _log?.Log(TraceLevel.Verbose, "ImportNotFound", name);
                 return null;
             }
 

@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Server_OnLogMessage(object sender, LS.LogMessageEventArgs e) {
             if (_log != null && Options.traceLevel.HasValue && e.type <= Options.traceLevel.Value) {
                 _log(e.message);
+                _connection?.SendEventAsync(new AP.AnalyzerWarningEvent { message = e.message }).DoNotWait();
             }
         }
 

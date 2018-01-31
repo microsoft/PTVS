@@ -685,6 +685,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             }
                             _stdErr.AppendLine(line);
+                            if (_stdErr.Length > 102400) {
+                                _stdErr.Remove(0, 12800);
+                            }
                             Debug.WriteLine("Analysis Std Err: " + line);
                         }
                     } catch (InvalidOperationException) {
@@ -953,7 +956,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         PythonTextBufferInfo.MarkForReplacement(b);
                         var bi = _services.GetBufferInfo(b);
                         var actualEntry = bi.TrySetAnalysisEntry(e, null);
-                        actualEntry?.GetOrCreateBufferParser(_services).AddBuffer(b);
+                        var bp = actualEntry?.GetOrCreateBufferParser(_services);
+                        if (bp != null) {
+                            bp.AddBuffer(b);
+                            await bp.EnsureCodeSyncedAsync(b);
+                        }
                     }
                 }
             }

@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return spp;
             }
 
-            var sp = await GetSearchPathsAsync();
+            var sp = await GetSearchPathsAsync().ConfigureAwait(false);
             if (sp == null) {
                 return null;
             }
@@ -334,6 +334,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Array.Empty<string>();
             }
 
+            Log(TraceLevel.Info, "GetCurrentSearchPaths", Configuration.InterpreterPath, _searchPathCachePath);
             try {
                 var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
                 return paths.MaybeEnumerate().Select(p => p.Path).ToArray();
