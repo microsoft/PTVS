@@ -36,17 +36,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public NewLineKind LineBreak { get; }
 
-        public int End {
-            get {
-                return Start + Length;
-            }
-        }
-
-        public int EndIncludingLineBreak {
-            get {
-                return End + LineBreak.GetSize();
-            }
-        }
+        public int End => Start + Length;
+        public int EndIncludingLineBreak => End + LineBreak.GetSize();
 
         public SourceLocation SourceStart => new SourceLocation(LineNo + 1, 1);
         public SourceLocation SourceEnd => new SourceLocation(LineNo + 1, Length + 1);

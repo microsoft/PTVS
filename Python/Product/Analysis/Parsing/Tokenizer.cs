@@ -2771,7 +2771,7 @@ namespace Microsoft.PythonTools.Parsing {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;
                 case NewLineKind.CarriageReturnLineFeed: return 2;
-                case NewLineKind.CarriageReturn: return 2;
+                case NewLineKind.CarriageReturn: return 1;
             }
             return 0;
         }

@@ -15,9 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
+using System.Text;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -26,124 +27,89 @@ namespace Microsoft.PythonTools.Intellisense {
     /// and doing so in a single edit.
     /// </summary>
     class LinePreservingCodeReplacer {
-        private readonly string _newLine, _oldCode, _newCode;
-        private readonly IReadOnlyList<LineInfo> _newLines, _oldLines;
-
+        private readonly string _newLine;
+        private readonly Line[] _newLines, _oldLines;
+        
         private LinePreservingCodeReplacer(int startLine, string oldCode, string newCode, string newLine) {
             _newLine = newLine;
-            _oldCode = oldCode;
-            _newCode = newCode;
-            _oldLines = LineInfo.SplitLines(oldCode, startLine - 1).ToArray();
-            _newLines = LineInfo.SplitLines(newCode, startLine - 1).ToArray();
-        }
-
-        private string GetOldText(int line) {
-            return _oldCode.Substring(_oldLines[line].Start, _oldLines[line].Length);
-        }
-
-        private string GetNewText(int line) {
-            return _newCode.Substring(_newLines[line].Start, _newLines[line].Length);
+            _oldLines = GetLines(oldCode, startLine);
+            _newLines = GetLines(newCode, startLine);
         }
 
         public static IReadOnlyList<DocumentChange> Replace(int startLine, string oldCode, string newCode, string newLine = "\r\n") {
             return new LinePreservingCodeReplacer(startLine, oldCode, newCode, newLine).ReplaceCode();
         }
 
+        private static Line[] GetLines(string source, int startLine) 
+            => LineInfo.SplitLines(source, startLine - 1).Select(l => new Line(l, source)).ToArray();
+
+        private static bool LcsEqualityComparer(Line column, Line row) 
+            => column.Info.Length == row.Info.Length && 
+               string.CompareOrdinal(column.Source, column.Info.Start, row.Source, row.Info.Start, column.Info.Length) == 0;
+
+
         public IReadOnlyList<DocumentChange> ReplaceCode() {
+            var lcs = LongestCommonSequence<Line>.Find(_oldLines, _newLines, LcsEqualityComparer);
             var edits = new List<DocumentChange>();
-            var oldLineMapping = new Dictionary<string, List<int>>();   // line to line #
-            for (int i = 0; i < _oldLines.Count; i++) {
-                List<int> lineInfo;
-                if (!oldLineMapping.TryGetValue(GetOldText(i), out lineInfo)) {
-                    oldLineMapping[GetOldText(i)] = lineInfo = new List<int>();
-                }
-                lineInfo.Add(i);
-            }
 
-            int curOldLine = 0;
-            for (int curNewLine = 0; curOldLine < _oldLines.Count && curNewLine < _newLines.Count; curOldLine++) {
-                if (GetOldText(curOldLine) == GetNewText(curNewLine)) {
-                    curNewLine++;
-                    continue;
-                }
-
-                bool replaced = false;
-                // replace starts on this line, figure out where it ends...
-                int startNewLine = curNewLine;
-                for (curNewLine += 1; curNewLine < _newLines.Count; curNewLine++) {
-                    List<int> lines;
-                    if (oldLineMapping.TryGetValue(GetNewText(curNewLine), out lines)) {
-                        foreach (var matchingLineNo in lines) {
-                            if (matchingLineNo > curOldLine) {
-                                // Replace the lines from curOldLine to matchingLineNo-1 with the text
-                                // from startNewLine - curNewLine - 1.
-                                ReplaceLines(edits, curOldLine, matchingLineNo, startNewLine, curNewLine);
-                                replaced = true;
-                                curOldLine = matchingLineNo - 1;
-                                break;
-                            }
-                        }
+            foreach (var diff in lcs) {
+                if (diff.NewLength == 0) {
+                    edits.Add(Delete(diff.OldStart, diff.OldEnd));
+                } else if (diff.OldLength == 0) {
+                    edits.Add(Insert(diff.OldStart, diff.NewStart, diff.NewEnd));
+                } else {
+                    var length = Math.Min(diff.NewLength, diff.OldLength);
+                    for (var i = 0; i < length; i++) {
+                        edits.Add(Replace(diff.OldStart + i, diff.NewStart + i));
                     }
 
-                    if (replaced) {
-                        break;
+                    if (diff.OldLength > length) {
+                        edits.Add(Delete(diff.OldStart + length, diff.OldEnd));
+                    } else if (diff.NewLength > length) {
+                        edits.Add(Insert(diff.OldStart + length, diff.NewStart + length, diff.NewEnd));
                     }
                 }
-
-                if (!replaced) {
-                    ReplaceLines(edits, curOldLine, _oldLines.Count, startNewLine, _newLines.Count);
-                    curOldLine = _oldLines.Count;
-                    break;
-                }
             }
 
-            if (curOldLine < _oldLines.Count) {
-                // remove the remaining new lines
-                edits.Add(
-                    DocumentChange.Delete(new SourceSpan(
-                        _oldLines[curOldLine].SourceStart,
-                        _oldLines[_oldLines.Count - 1].SourceEnd
-                    ))
-                );
-            }
-            return edits.ToArray();
+            return edits.AsReadOnly();
         }
 
-        private void ReplaceLines(List<DocumentChange> edits, int startOldLine, int endOldLine, int startNewLine, int endNewLine) {
-            int oldLineCount = endOldLine - startOldLine;
-            int newLineCount = endNewLine - startNewLine;
+        private DocumentChange Replace(int oldLineIndex, int newLineIndex) {
+            var oldLineInfo = _oldLines[oldLineIndex].Info;
+            var newLineInfo = _newLines[newLineIndex].Info;
+            var newSource = _newLines[newLineIndex].Source;
+            var text = newSource.Substring(newLineInfo.Start, newLineInfo.Length) + _newLine;
+            return DocumentChange.Replace(oldLineInfo.SourceStart, oldLineInfo.SourceEndIncludingLineBreak, text);
+        }
 
-            // replace one line at a time instead of all of the lines at once so that we preserve breakpoints
-            int excessNewLineStart = startNewLine - startOldLine;
-            for (int i = startOldLine; i < endOldLine && i < (endNewLine - startNewLine + startOldLine); i++) {
-                edits.Add(
-                    DocumentChange.Replace(
-                        _oldLines[i].SourceExtent,
-                        GetNewText(startNewLine + i - startOldLine)
-                    )
-                );
-                excessNewLineStart = startNewLine + i - startOldLine + 1;
-            }
+        private DocumentChange Insert(int oldStart, int newStart, int newEnd) {
+            var startIndex = _newLines[newStart].Info.Start;
+            var length = _newLines[newEnd].Info.EndIncludingLineBreak - startIndex;
+            var newSource = _newLines[newStart].Source;
+            var insertText = new StringBuilder(newSource, startIndex, length, length)
+                .Replace(NewLineKind.LineFeed.GetString(), _newLine)
+                .Replace(NewLineKind.CarriageReturn.GetString(), _newLine)
+                .Replace(NewLineKind.CarriageReturnLineFeed.GetString(), _newLine)
+                .ToString();
 
-            if (oldLineCount > newLineCount) {
-                // we end up w/ less lines, we need to delete some text
-                edits.Add(
-                    DocumentChange.Delete(new SourceSpan(
-                        _oldLines[endOldLine - (oldLineCount - newLineCount)].SourceStart,
-                        _oldLines[endOldLine - 1].SourceEndIncludingLineBreak
-                    ))
-                );
-            } else if (oldLineCount < newLineCount) {
-                // we end up w/ more lines, we need to insert some text
-                edits.Add(
-                    DocumentChange.Insert(
-                        string.Join(
-                            _newLine,
-                            _newLines.Skip(excessNewLineStart).Take(endNewLine - excessNewLineStart).Select(x => GetNewText(x.LineNo))
-                        ) + _newLine,
-                        _oldLines[endOldLine - 1].SourceEndIncludingLineBreak
-                    )
-                );
+            var insertLocation = _oldLines[oldStart].Info.SourceEndIncludingLineBreak;
+            return DocumentChange.Insert(insertText, insertLocation);
+        }
+
+        private DocumentChange Delete(int oldStart, int oldEnd) {
+            return DocumentChange.Delete(new SourceSpan(
+                _oldLines[oldStart].Info.SourceStart,
+                _oldLines[oldEnd].Info.SourceEndIncludingLineBreak
+            ));
+        }
+
+        private struct Line {
+            public LineInfo Info { get; }
+            public string Source { get; }
+
+            public Line(LineInfo lineInfo, string source) {
+                Info = lineInfo;
+                Source = source;
             }
         }
     }
