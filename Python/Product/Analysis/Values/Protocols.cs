@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected IAnalysisSet MakeMethod(string qualname, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet returnValue) {
-            var v = new ProtocolInfo(Self.DeclaringModule as ProjectEntry);
+            var v = new ProtocolInfo(Self.DeclaringModule, Self.State);
             v.AddProtocol(new CallableProtocol(v, qualname, arguments, returnValue, PythonMemberType.Method));
             return v;
         }
@@ -88,16 +88,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
         }
+
+        protected abstract bool Equals(Protocol other);
+
+        public override bool Equals(object obj) {
+            if (obj is Protocol other && obj.GetType() == other.GetType()) {
+                return Equals(other);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() => GetType().GetHashCode();
     }
 
     class NameProtocol : Protocol {
-        private readonly string _name;
+        private readonly string _name, _doc;
+        private readonly BuiltinTypeId _typeId;
 
-        public NameProtocol(ProtocolInfo self, string name) : base(self) {
+        public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Object) : base(self) {
             _name = name;
+            _doc = documentation;
+            _typeId = typeId;
+        }
+
+        public NameProtocol(ProtocolInfo self, IPythonType type) : base(self) {
+            _name = type.Name;
+            _doc = type.Documentation;
+            _typeId = type.TypeId;
         }
 
         public override string Name => _name;
+        public override string Documentation => _doc;
+        internal override BuiltinTypeId TypeId => _typeId;
+
+        protected override bool Equals(Protocol other) => Name == other.Name;
+        public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
     }
 
     class CallableProtocol : Protocol {
@@ -161,16 +186,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return kv;
             }
         }
+
+        protected override bool Equals(Protocol other) {
+            if (Name != other.Name) {
+                return false;
+            }
+            if (!Arguments.Zip(((CallableProtocol)other).Arguments, (x, y) => x.SetEquals(y)).All(b => b)) {
+                return false;
+            }
+            return true;
+        }
+        public override int GetHashCode() => Name.GetHashCode();
     }
 
     class IterableProtocol : Protocol {
-        private readonly IAnalysisSet _iterator;
-        private readonly IAnalysisSet _yielded;
+        protected readonly IAnalysisSet _iterator;
+        protected readonly IAnalysisSet _yielded;
 
         public IterableProtocol(ProtocolInfo self, IAnalysisSet yielded) : base(self) {
             _yielded = yielded;
 
-            var iterator = new ProtocolInfo(Self.DeclaringModule as ProjectEntry);
+            var iterator = new ProtocolInfo(Self.DeclaringModule, Self.State);
             iterator.AddProtocol(new IteratorProtocol(iterator, _yielded));
             _iterator = iterator;
         }
@@ -194,10 +230,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IterableProtocol)other)._yielded);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_yielded)
+        }.GetHashCode();
     }
 
     class IteratorProtocol : Protocol {
-        private readonly IAnalysisSet _yielded;
+        protected readonly IAnalysisSet _yielded;
 
         public IteratorProtocol(ProtocolInfo self, IAnalysisSet yielded) : base(self) {
             _yielded = yielded;
@@ -224,6 +266,259 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 foreach (var kv in _yielded.GetRichDescriptions()) {
                     yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            }
+        }
+
+        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IteratorProtocol)other)._yielded);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_yielded)
+        }.GetHashCode();
+    }
+
+    class GetItemProtocol : Protocol {
+        private readonly IAnalysisSet _keyType, _valueType;
+
+        public GetItemProtocol(ProtocolInfo self, IAnalysisSet keys, IAnalysisSet values) : base(self) {
+            _keyType = keys ?? self.AnalysisUnit.State.ClassInfos[BuiltinTypeId.Int].Instance;
+            _valueType = values;
+        }
+
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
+            members["__getitem__"] = MakeMethod("__getitem__", _valueType);
+        }
+
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
+            yield return new KeyValuePair<IAnalysisSet, IAnalysisSet>(_keyType, _valueType);
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            if (index.IsObjectOrUnknown() || index.Intersect(_keyType, UnionComparer.Instances[1]).Any()) {
+                return _valueType;
+            }
+            return base.GetIndex(node, unit, index);
+        }
+
+        public override string Name => "container";
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
+            if (_valueType.Any()) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
+                    foreach (var kv in _keyType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                }
+                foreach (var kv in _valueType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            }
+        }
+
+        protected override bool Equals(Protocol other) =>
+            ObjectComparer.Instance.Equals(_keyType, ((GetItemProtocol)other)._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, ((GetItemProtocol)other)._valueType);
+        public override int GetHashCode() => new {
+            x = ObjectComparer.Instance.GetHashCode(_keyType),
+            y = ObjectComparer.Instance.GetHashCode(_valueType)
+        }.GetHashCode();
+    }
+
+    class TupleProtocol : IterableProtocol {
+        private readonly IAnalysisSet[] _values;
+
+        public TupleProtocol(ProtocolInfo self, IEnumerable<IAnalysisSet> values) : base(self, AnalysisSet.UnionAll(values)) {
+            _values = values.ToArray();
+        }
+
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
+            members["__getitem__"] = MakeMethod("__getitem__", new[] { Self.AnalysisUnit.State.ClassInfos[BuiltinTypeId.Int].GetInstanceType() }, _yielded);
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            int i = -1;
+            try {
+                var constants = index.OfType<ConstantInfo>().Select(ci => ci.Value).OfType<int>().ToArray();
+                if (constants.Length == 1) {
+                    i = constants[0];
+                }
+            } catch (InvalidOperationException) {
+                i = -1;
+            }
+            if (i < 0) {
+                return _yielded;
+            } else if (i < _values.Length) {
+                return _values[i];
+            } else {
+                return AnalysisSet.Empty;
+            }
+        }
+
+        public override string Name => "tuple";
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
+            if (_values.Any()) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                bool needComma = false;
+                foreach (var v in _values) {
+                    if (needComma) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    }
+                    needComma = true;
+                    foreach (var kv in v.GetRichDescriptions()) {
+                        yield return kv;
+                    }
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            }
+        }
+
+        protected override bool Equals(Protocol other) => _values.Zip(((TupleProtocol)other)._values,
+            (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
+        public override int GetHashCode() => _values.Aggregate(GetType().GetHashCode(), (h, s) => h + 37 * ObjectComparer.Instance.GetHashCode(s));
+    }
+
+    class MappingProtocol : IterableProtocol {
+        private readonly IAnalysisSet _keyType, _valueType, _itemType;
+
+        public MappingProtocol(ProtocolInfo self, IAnalysisSet keys, IAnalysisSet values, IAnalysisSet items) : base(self, keys) {
+            _keyType = keys;
+            _valueType = values;
+            _itemType = items;
+        }
+
+        private IAnalysisSet MakeIterable(IAnalysisSet values) {
+            var pi = new ProtocolInfo(DeclaringModule, Self.State);
+            pi.AddProtocol(new IterableProtocol(pi, values));
+            return pi;
+        }
+
+        private IAnalysisSet MakeView(IPythonType type, IAnalysisSet values) {
+            var pi = new ProtocolInfo(DeclaringModule, Self.State);
+            pi.AddProtocol(new NameProtocol(pi, type));
+            pi.AddProtocol(new IterableProtocol(pi, values));
+            return pi;
+        }
+
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
+            var state = Self.State;
+            var itemsIter = MakeIterable(_itemType);
+
+            if (state.LanguageVersion.Is3x()) {
+                members["keys"] = MakeMethod("keys", MakeView(state.Types[BuiltinTypeId.DictKeys], _keyType));
+                members["values"] = MakeMethod("values", MakeView(state.Types[BuiltinTypeId.DictValues], _valueType));
+                members["items"] = MakeMethod("items", MakeView(state.Types[BuiltinTypeId.DictItems], _itemType));
+            } else {
+                members["viewkeys"] = MakeMethod("viewkeys", MakeView(state.Types[BuiltinTypeId.DictKeys], _keyType));
+                members["viewvalues"] = MakeMethod("viewvalues", MakeView(state.Types[BuiltinTypeId.DictValues], _valueType));
+                members["viewitems"] = MakeMethod("viewitems", MakeView(state.Types[BuiltinTypeId.DictItems], _itemType));
+                var keysIter = MakeIterable(_keyType);
+                members["keys"] = MakeMethod("keys", keysIter);
+                members["iterkeys"] = MakeMethod("iterkeys", keysIter);
+                var valuesIter = MakeIterable(_valueType);
+                members["values"] = MakeMethod("values", valuesIter);
+                members["itervalues"] = MakeMethod("itervalues", valuesIter);
+                members["items"] = MakeMethod("items", itemsIter);
+                members["iteritems"] = MakeMethod("iteritems", itemsIter);
+            }
+
+            members["clear"] = MakeMethod("clear", AnalysisSet.Empty);
+            members["get"] = MakeMethod("get", new[] { _keyType }, _valueType);
+            members["pop"] = MakeMethod("pop", new[] { _keyType }, _valueType);
+            members["popitem"] = MakeMethod("popitem", new[] { _keyType }, _itemType);
+            members["setdefault"] = MakeMethod("setdefault", new[] { _keyType, _valueType }, _valueType);
+            members["update"] = MakeMethod("update", new[] { AnalysisSet.UnionAll(new IAnalysisSet[] { this, itemsIter }) }, AnalysisSet.Empty);
+        }
+
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
+            yield return new KeyValuePair<IAnalysisSet, IAnalysisSet>(_keyType, _valueType);
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            return _valueType;
+        }
+
+        public override string Name => "dict";
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
+            if (_valueType.Any()) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
+                    foreach (var kv in _keyType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                }
+                foreach (var kv in _valueType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            }
+        }
+
+        protected override bool Equals(Protocol other) =>
+            ObjectComparer.Instance.Equals(_keyType, ((MappingProtocol)other)._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, ((MappingProtocol)other)._valueType);
+        public override int GetHashCode() => new {
+            Type = GetType(),
+            x = ObjectComparer.Instance.GetHashCode(_keyType),
+            y = ObjectComparer.Instance.GetHashCode(_valueType)
+        }.GetHashCode();
+    }
+
+    class GeneratorProtocol : IteratorProtocol {
+        private readonly IAnalysisSet _sent, _returned;
+
+        public GeneratorProtocol(ProtocolInfo self, IAnalysisSet yields, IAnalysisSet sends, IAnalysisSet returns) : base(self, yields) {
+            _sent = sends;
+            _returned = returns;
+        }
+
+        public IAnalysisSet Returns => _returned;
+
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
+            base.EnsureMembers(members);
+
+            members["send"] = MakeMethod("send", new[] { _sent }, _yielded);
+            members["throw"] = MakeMethod("throw", new[] { AnalysisSet.Empty }, AnalysisSet.Empty);
+        }
+
+        public override string Name => "generator";
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
+            if (_yielded.Any() || _sent.Any() || _returned.Any()) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                if (_yielded.Any()) {
+                    foreach (var kv in _yielded.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                } else {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
+                }
+
+                if (_sent.Any()) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                } else if (_returned.Any()) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
+                }
+
+                if (_returned.Any()) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
@@ -262,5 +557,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             _values.AddTypes(unit, value);
         }
+
+        protected override bool Equals(Protocol other) => Name == other.Name;
+        public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
     }
 }

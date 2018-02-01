@@ -138,15 +138,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (File.Exists(_searchPathCachePath)) {
-                for (int retries = 5; retries > 0; --retries) {
-                    try {
-                        File.Delete(_searchPathCachePath);
-                        break;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                    }
-                    Thread.Sleep(10);
-                }
+                PathUtils.DeleteFile(_searchPathCachePath);
             }
 
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);

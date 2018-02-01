@@ -292,7 +292,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
-            public int startIndex, endIndex;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
             public string newLine;
             public CodeFormattingOptions options;
 
@@ -301,10 +302,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
-
-            public int startLine, startColumn;
-            public int endLine, endColumn;
-            public int version = -1;
+            public int version;
         }
 
         public struct CodeSpan {

@@ -22,8 +22,9 @@ using System.Linq;
 using System.Xml.Serialization;
 
 namespace Microsoft.PythonTools.Profiling {
+    // XmlSerializer requires these types to be public
     [Serializable]
-    sealed class ProfilingTarget {
+    public sealed class ProfilingTarget {
         internal static XmlSerializer Serializer = new XmlSerializer(typeof(ProfilingTarget));
 
         [XmlElement("ProjectTarget")]
@@ -102,7 +103,7 @@ namespace Microsoft.PythonTools.Profiling {
     }
 
     [Serializable]
-    sealed class ProjectTarget {
+    public sealed class ProjectTarget {
         [XmlElement("TargetProject")]
         public Guid TargetProject {
             get;
@@ -133,7 +134,7 @@ namespace Microsoft.PythonTools.Profiling {
     }
 
     [Serializable]
-    sealed class StandaloneTarget {
+    public sealed class StandaloneTarget {
         [XmlElement(ElementName = "PythonInterpreter")]
         public PythonInterpreter PythonInterpreter {
             get;
@@ -192,7 +193,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    sealed class PythonInterpreter {
+    public sealed class PythonInterpreter {
         [XmlElement("Id")]
         public string Id {
             get;
@@ -216,7 +217,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    sealed class Reports {
+    public sealed class Reports {
         public Reports() { }
 
         public Reports(Profiling.Report[] reports) {
@@ -254,7 +255,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    sealed class Report {
+    public sealed class Report {
         public Report() { }
         public Report(string filename) {
             Filename = filename;

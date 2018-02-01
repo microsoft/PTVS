@@ -75,7 +75,11 @@ namespace Microsoft.PythonTools.Project {
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
         private readonly HashSet<string> _validFactories = new HashSet<string>();
-        public IPythonInterpreterFactory _active;
+
+        private IPythonInterpreterFactory _active;
+
+        private IReadOnlyList<IPackageManager> _activePackageManagers;
+        private readonly System.Threading.Timer _reanalyzeProjectNotification;
 
         private FileWatcher _projectFileWatcher;
         private readonly HashSet<AnalysisEntry> _pendingChanges, _pendingDeletes;
@@ -95,6 +99,8 @@ namespace Microsoft.PythonTools.Project {
             _pendingChanges = new HashSet<AnalysisEntry>();
             _pendingDeletes = new HashSet<AnalysisEntry>();
             _deferredChangeNotification = new System.Threading.Timer(ProjectFile_Notify);
+
+            _reanalyzeProjectNotification = new System.Threading.Timer(ReanalyzeProject_Notify);
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -213,8 +219,18 @@ namespace Microsoft.PythonTools.Project {
                 return _active ?? InterpreterOptions.DefaultInterpreter;
             }
             internal set {
+                Site.MustBeCalledFromUIThread();
+
                 Debug.Assert(this.FileName != null);
                 var oldActive = _active;
+
+                var oldPms = _activePackageManagers;
+                _activePackageManagers = null;
+
+                foreach (var pm in oldPms.MaybeEnumerate()) {
+                    pm.DisableNotifications();
+                    pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                }
 
                 lock (_validFactories) {
                     if (_validFactories.Count == 0) {
@@ -231,6 +247,12 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         _active = value;
                     }
+                }
+
+                _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
+                foreach (var pm in _activePackageManagers) {
+                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                    pm.EnableNotifications();
                 }
 
                 if (_active != oldActive) {
@@ -252,6 +274,13 @@ namespace Microsoft.PythonTools.Project {
                 if (_active != oldActive || oldActive == null) {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
+            }
+        }
+
+        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+            try {
+                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
             }
         }
 
@@ -1044,6 +1073,13 @@ namespace Microsoft.PythonTools.Project {
                     _analyzer = null;
                 }
 
+                _reanalyzeProjectNotification.Dispose();
+
+                foreach (var pm in _activePackageManagers.MaybeEnumerate()) {
+                    pm.DisableNotifications();
+                    pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                }
+
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                 InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
 
@@ -1321,6 +1357,14 @@ namespace Microsoft.PythonTools.Project {
             }).DoNotWait();
         }
 
+        private void ReanalyzeProject_Notify(object state) {
+            Site.GetUIThread().InvokeTask(async () => {
+                if (_analyzer != null) {
+                    await _analyzer.NotifyModulesChangedAsync().ConfigureAwait(false);
+                }
+            });
+        }
+
         private async Task ReanalyzeProject() {
 #if DEBUG
             var output = OutputWindowRedirector.GetGeneral(Site);
@@ -1464,7 +1508,10 @@ namespace Microsoft.PythonTools.Project {
             if (entry != null) {
                 lock (_pendingChanges) {
                     _pendingDeletes.Add(entry);
-                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                    try {
+                        _deferredChangeNotification.Change(500, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
+                    }
                 }
             }
         }
@@ -1474,7 +1521,10 @@ namespace Microsoft.PythonTools.Project {
             if (entry != null) {
                 lock (_pendingChanges) {
                     _pendingChanges.Add(entry);
-                    _deferredChangeNotification.Change(500, Timeout.Infinite);
+                    try {
+                        _deferredChangeNotification.Change(500, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
+                    }
                 }
             }
         }
@@ -1484,7 +1534,6 @@ namespace Microsoft.PythonTools.Project {
             Uri[] changed, deleted;
 
             lock (_pendingChanges) {
-                _deferredChangeNotification.Change(Timeout.Infinite, Timeout.Infinite);
                 if (analyzer == null) {
                     return;
                 }

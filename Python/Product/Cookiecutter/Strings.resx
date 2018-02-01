@@ -532,4 +532,7 @@ Please delete the installed template and try again.</value>
     <value>Category: {0}. Update is available</value>
     <comment>{0} is a category name</comment>
   </data>
+  <data name="UnableToElevate" xml:space="preserve">
+    <value>Visual Studio was unable to launch the elevated process.</value>
+  </data>
 </root>

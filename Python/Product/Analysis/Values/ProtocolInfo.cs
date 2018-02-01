@@ -35,12 +35,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private BuiltinTypeId? _typeId;
         private PythonMemberType? _memberType;
 
-        public ProtocolInfo(IPythonProjectEntry declaringModule) {
+        public ProtocolInfo(IPythonProjectEntry declaringModule, PythonAnalyzer state) {
             _protocols = new List<Protocol>();
             DeclaringModule = declaringModule;
             DeclaringVersion = declaringModule?.AnalysisVersion ?? -1;
             _references = new ReferenceDict();
+            State = state;
         }
+
+        internal PythonAnalyzer State { get; }
 
         public void AddProtocol(Protocol p) {
             _protocols.Add(p);
@@ -50,7 +53,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _memberType = null;
         }
 
+        public IEnumerable<T> GetProtocols<T>() {
+            return _protocols.OfType<T>();
+        }
+
         public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name));
+        public override string Documentation => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Documentation ?? string.Join(", ", _protocols.Select(p => p.Documentation).Where(d => !string.IsNullOrEmpty(d)));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);
         public override IPythonProjectEntry DeclaringModule { get; }
         public override int DeclaringVersion { get; }
@@ -62,16 +70,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal override BuiltinTypeId TypeId {
             get {
                 if (_typeId == null) {
-                    foreach (var p in _protocols) {
-                        if (p.TypeId == BuiltinTypeId.Unknown) {
-                            continue;
-                        }
+                    _typeId = _protocols.OfType<NameProtocol>().FirstOrDefault()?.TypeId;
+                    if (_typeId == null) {
+                        foreach (var p in _protocols) {
+                            if (p.TypeId == BuiltinTypeId.Unknown) {
+                                continue;
+                            }
 
-                        if (_typeId == null) {
-                            _typeId = p.TypeId;
-                        } else if (_typeId != p.TypeId) {
-                            _typeId = BuiltinTypeId.Unknown;
-                            break;
+                            if (_typeId == null) {
+                                _typeId = p.TypeId;
+                            } else if (_typeId != p.TypeId) {
+                                _typeId = BuiltinTypeId.Unknown;
+                                break;
+                            }
                         }
                     }
                     if (_typeId == null) {
@@ -234,26 +245,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return AnalysisSet.UnionAll(_protocols.Select(p => p.UnaryOperation(node, unit, operation)));
         }
 
+        public override bool Equals(object obj) {
+            if (obj is ProtocolInfo other) {
+                return !_protocols.Except(other._protocols).Any();
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return _protocols.Aggregate(GetType().GetHashCode(), (h, p) => h ^ p.GetHashCode());
+        }
+
         internal override bool UnionEquals(AnalysisValue av, int strength) {
-            return av.GetType() == GetType() && av.DeclaringModule == DeclaringModule;
+            if (strength < 2) {
+                return Equals(av);
+            }
+            if (av is ProtocolInfo pi) {
+                return Name == pi.Name;
+            }
+            return false;
         }
 
         internal override int UnionHashCode(int strength) {
-            return GetType().GetHashCode();
+            if (strength < 2) {
+                return GetHashCode();
+            }
+            return Name.GetHashCode();
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            if (av is ProtocolInfo other) {
-                var pi = new ProtocolInfo(DeclaringModule);
-                foreach (var p in _protocols.Concat(other._protocols).GroupBy(p => p.GetType())) {
-                    var newP = p.FirstOrDefault()?.Clone(pi);
-                    if (newP != null) {
-                        pi.AddProtocol(newP);
-                    }
-                }
-                return pi;
+            if (strength < 2) {
+                return this;
             }
-            return this;
+
+            var pi = new ProtocolInfo(DeclaringModule, State);
+            pi.AddProtocol(new NameProtocol(pi, Name));
+            return pi;
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {

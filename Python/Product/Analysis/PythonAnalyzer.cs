@@ -178,7 +178,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             try {
+                _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
+
                 await LoadKnownTypesAsync().ConfigureAwait(false);
 
                 _interpreter.Initialize(this);

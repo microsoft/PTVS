@@ -258,6 +258,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
             initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", true) ?? true;
 
+            if (_analysisOptions.analysisLimits == null) {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
+                    var traceLogging = key?.GetValue("TraceLogging", null);
+                    if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
+                        initialize.traceLogging = true;
+                        _analysisOptions.traceLevel = LS.MessageType.Log;
+                    }
+                }
+            }
+
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
                 if (initResponse?.error != null) {
@@ -291,12 +302,6 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                     }
                     _analysisOptions.commentTokens[keyValue.Key] = sev;
-                }
-            }
-
-            if (_analysisOptions.analysisLimits == null) {
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
                 }
             }
 
@@ -529,6 +534,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public async Task SetSearchPathsAsync(IEnumerable<string> absolutePaths) {
             await SendRequestAsync(new AP.SetSearchPathRequest { dir = absolutePaths.ToArray() }).ConfigureAwait(false);
+            await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
+        }
+
+        public async Task NotifyModulesChangedAsync() {
             await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
         }
 
@@ -2199,33 +2208,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             await entry.EnsureCodeSyncedAsync(bi.Buffer);
 
+            var lastSnapshot = bi.LastSentSnapshot;
+            var formatSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive).GetSpan(lastSnapshot).ToSourceSpan();
+
             var res = await SendRequestAsync(
-                new AP.FormatCodeRequest() {
+                new AP.FormatCodeRequest {
                     documentUri = entry.DocumentUri,
-                    startIndex = span.Start,
-                    endIndex = span.End,
+                    startLine = formatSpan.Start.Line,
+                    startColumn = formatSpan.Start.Column,
+                    endLine = formatSpan.End.Line,
+                    endColumn = formatSpan.End.Column,
                     options = options,
                     newLine = view.Options.GetNewLineCharacter()
                 }
             );
 
-            if (res != null && res.version != -1) {
-                SnapshotSpan selectionSpan = default(SnapshotSpan);
-                if (selectResult) {
-                    selectionSpan = bi.LocationTracker.Translate(
-                        new SourceSpan(
-                            new SourceLocation(res.startLine, res.startColumn),
-                            new SourceLocation(res.endLine, res.endColumn)
-                        ),
-                        res.version,
-                        span.Snapshot
-                    );
-                }
+            if (res != null && res.version >= 0) {
+                var selectionSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
 
                 ApplyChanges(res.changes, bi.Buffer, bi.LocationTracker, res.version);
 
                 if (selectResult && !view.IsClosed) {
-                    view.Selection.Select(selectionSpan, false);
+                    view.Selection.Select(selectionSpan.GetSpan(bi.CurrentSnapshot), false);
                 }
             }
         }
