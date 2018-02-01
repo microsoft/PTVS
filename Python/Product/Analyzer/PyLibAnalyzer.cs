@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             using (var e = args.GetEnumerator()) {
                 while (e.MoveNext()) {
-                    if (e.Current.StartsWith("/")) {
+                    if (e.Current.StartsWithOrdinal("/")) {
                         if (currentKey != null) {
                             yield return new KeyValuePair<string, string>(currentKey, null);
                         }
@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
             var options = ParseArguments(args)
-                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.InvariantCultureIgnoreCase);
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
 
             string value;
 
@@ -807,7 +807,7 @@ namespace Microsoft.PythonTools.Analysis {
             analyzeFileGroups.RemoveAll(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath));
             foreach (var package in GetPackageOrder()) {
                 var matching = analyzeFileGroups
-                    .Where(g => g[0].ModuleName.StartsWith(package + ".") || g[0].ModuleName == package)
+                    .Where(g => g[0].ModuleName.StartsWithOrdinal(package + ".") || g[0].ModuleName == package)
                     .ToList();
                 firstPackages.AddRange(matching);
                 analyzeFileGroups.RemoveAll(g => matching.Contains(g));
@@ -1203,7 +1203,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
                 try {
                     AnalysisLog.Output = _logDiagnostic;
-                    AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
+                    AnalysisLog.AsCSV = _logDiagnostic.EndsWithOrdinal(".csv", ignoreCase: true);
                 } catch (Exception ex) {
                     TraceWarning("Failed to open \"{0}\" for logging{1}{2}", _logDiagnostic, Environment.NewLine, ex.ToString());
                 }

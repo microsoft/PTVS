@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -400,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void Pop() {
             bool wasRemoved = _processing.Remove(this);
-            Debug.Assert(wasRemoved, string.Format("Popped {0} but it wasn't pushed", GetType().FullName));
+            Debug.Assert(wasRemoved, $"Popped {GetType().FullName} but it wasn't pushed");
         }
 
         #endregion

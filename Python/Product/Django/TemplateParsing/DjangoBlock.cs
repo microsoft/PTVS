@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     class DjangoBlock {
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// </summary>
         public static DjangoBlock Parse(string text, bool trim = false) {
             int start = 0;
-            if (text.StartsWith("{%")) {
+            if (text.StartsWithOrdinal("{%")) {
                 text = DjangoVariable.GetTrimmedFilterText(text, ref start);
                 if (text == null) {
                     return null;

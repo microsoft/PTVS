@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
             private bool SetNotFoundInterpreterFactory(string interpreterId, Version ver) {
                 var factory = Factory as NotFoundInterpreterFactory;
-                if (factory != null && string.Compare(factory.Configuration.Id, interpreterId) == 0 && factory.Configuration.Version == ver) {
+                if (factory != null && string.CompareOrdinal(factory.Configuration.Id, interpreterId) == 0 && factory.Configuration.Version == ver) {
                     // No updates.
                     return false;
                 } else {
@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                     }
 
                     // Compare the tag name and the project full path
-                    if (string.Compare(id[0], InterpreterFactoryProviderId) != 0) {
+                    if (string.CompareOrdinal(id[0], InterpreterFactoryProviderId) != 0) {
                         return false;
                     }
 

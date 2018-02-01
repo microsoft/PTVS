@@ -75,7 +75,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             if (allowUI) {
                 lock (_displayedMessages) {
                     if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                        _displayedMessages.Add("{0}:{1}".FormatInvariant(callerFile, callerLineNumber))) {
                         // First time we've seen this error, so let the user know
                         MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
                     }

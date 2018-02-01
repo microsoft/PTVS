@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -199,7 +200,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override string ToString() {
-            return string.Format("{0}{1}({2})->{3}",
+            return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 " def:",
                 string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
@@ -246,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override string ToString() {
-            return string.Format("{0}{1}({2})->{3}",
+            return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 "",
                 string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),

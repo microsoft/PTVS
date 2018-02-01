@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class AnalysisOnlyInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization {
@@ -32,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
-            : this(GetConfiguration(version, description ?? $"Analysis Interpreter {version}")) {
+            : this(GetConfiguration(version, description ?? "Analysis Interpreter {0}".FormatUI(version))) {
         }
 
 
@@ -42,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static InterpreterConfiguration GetConfiguration(Version version, string description) {
             return new InterpreterConfiguration(
-                $"AnalysisOnly|{version}|{description}",
+                "AnalysisOnly|{0}|{1}".FormatInvariant(version, description),
                 description,
                 arch: InterpreterArchitecture.Unknown,
                 version: version,

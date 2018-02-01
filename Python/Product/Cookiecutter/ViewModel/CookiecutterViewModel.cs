@@ -698,7 +698,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             var searchTermTemplate = new TemplateViewModel();
             searchTermTemplate.IsSearchTerm = true;
 
-            if (possibleUri.StartsWith("http")) {
+            if (possibleUri.StartsWithOrdinal("http")) {
                 searchTermTemplate.DisplayName = possibleUri;
                 searchTermTemplate.RemoteUrl = possibleUri;
                 searchTermTemplate.Category = Custom.DisplayName;

@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
 
@@ -1420,7 +1421,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false, bool allowLeadingUnderscore = false) {
             if (_langVersion >= PythonLanguageVersion.V36 && tokenStr.Contains("_")) {
-                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWith("_")) || tokenStr.EndsWith("_") ||
+                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWithOrdinal("_")) || tokenStr.EndsWithOrdinal("_") ||
                     tokenStr.Contains("._") || tokenStr.Contains("_.")) {
                     ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
                     return true;
@@ -1431,7 +1432,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return true;
                 }
             }
-            if (_langVersion.Is3x() && tokenStr.ToLowerInvariant().EndsWith("l")) {
+            if (_langVersion.Is3x() && tokenStr.EndsWithOrdinal("l", ignoreCase: true)) {
                 ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
                 return true;
             }
@@ -2605,8 +2606,7 @@ namespace Microsoft.PythonTools.Parsing {
                 StreamReader streamReader = _reader as StreamReader;
                 if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.SourceEncoding) {
                     _errors.Add(
-                        String.Format(
-                            "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}",
+                        "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}".FormatUI(
                             Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName),
                             bse.BadByte,
                             bse.Index + CurrentIndex
@@ -2619,7 +2619,10 @@ namespace Microsoft.PythonTools.Parsing {
                     );
                 } else {
                     _errors.Add(
-                        String.Format("Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse.BadByte, bse.Index + CurrentIndex),
+                        "Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details".FormatUI(
+                            bse.BadByte,
+                            bse.Index + CurrentIndex
+                        ),
                         null,
                         CurrentIndex + bse.Index,
                         CurrentIndex + bse.Index + 1,

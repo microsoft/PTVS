@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static bool CanBeDeleted(this IPythonInterpreterFactory factory) {
-            return factory.Configuration.Id.StartsWith(CondaEnvironmentFactoryProvider.EnvironmentCompanyName);
+            return factory.Configuration.Id.StartsWithOrdinal(CondaEnvironmentFactoryProvider.EnvironmentCompanyName);
         }
 
         public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {

@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
 
             foreach (var kv in _taskCommentMap.MaybeEnumerate()) {
-                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                if (text.IndexOfOrdinal(kv.Key, ignoreCase: true) >= 0) {
                     d.severity = kv.Value;
                     break;
                 }
