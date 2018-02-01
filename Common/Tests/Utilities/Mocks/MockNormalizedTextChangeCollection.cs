@@ -77,7 +77,7 @@ namespace TestUtilities.Mocks {
         }
 
         public void CopyTo(ITextChange[] array, int arrayIndex) {
-            throw new NotImplementedException();
+            _changes.CopyTo(array, arrayIndex);
         }
 
         public int Count {
