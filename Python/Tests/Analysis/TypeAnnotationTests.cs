@@ -214,14 +214,18 @@ call_iis_i_ret = call_iis_i()
 
 n : NamedTuple = ...
 n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
+n2 : ""NamedTuple('n2', [('x', int), ['y', str]])"" = ...
 ");
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
             analyzer.AssertDescription("n1", "n1(x, y)");
+            analyzer.AssertDescription("n2", "n2(x, y)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2.x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2.y", BuiltinTypeId.Str);
         }
 
         [TestMethod, Priority(0)]
