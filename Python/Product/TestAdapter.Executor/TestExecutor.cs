@@ -365,9 +365,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                         .Replace('/', '_')
                         .TrimEnd('=');
 
-                    _debugPort = GetFreePort();
+                    SocketUtils.GetRandomPortListener(IPAddress.Loopback, out _debugPort).Stop();
                 }
-
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 _socket.Listen(0);
@@ -859,13 +858,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             get {
                 return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
             }
-        }
-
-        private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
         }
     }
 }

@@ -666,7 +666,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new AP.FormatCodeResponse();
             }
 
-            var walker = new EnclosingNodeWalker(ast, request.startIndex, request.endIndex);
+            int startIndex = ast.LocationToIndex(new SourceLocation(request.startLine, request.startColumn));
+            int endIndex = ast.LocationToIndex(new SourceLocation(request.endLine, request.endColumn));
+
+            var walker = new EnclosingNodeWalker(ast, startIndex, endIndex);
             ast.Walk(walker);
 
             if (walker.Target == null || !walker.Target.IsValidSelection) {
@@ -680,7 +683,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             int start = ast.LocationToIndex(walker.Target.StartIncludingLeadingWhiteSpace);
             int end = ast.LocationToIndex(walker.Target.End);
-            if (request.startIndex > start) {
+            if (startIndex > start) {
                 // the user didn't have any comments selected, don't reformat them
                 body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
 
@@ -690,9 +693,11 @@ namespace Microsoft.PythonTools.Intellisense {
             int length = end - start;
             if (end < code.Length) {
                 if (code[end] == '\r') {
+                    end++;
                     length++;
-                    if (end + 1 < code.Length &&
-                        code[end + 1] == '\n') {
+                    if (end < code.Length &&
+                        code[end] == '\n') {
+                        end++;
                         length++;
                     }
                 } else if (code[end] == '\n') {
@@ -702,15 +707,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var selectedCode = code.Substring(start, length);
 
-            var startLoc = ast.IndexToLocation(start);
-            var endLoc = ast.IndexToLocation(end);
             return new AP.FormatCodeResponse() {
-                startLine = startLoc.Line,
-                startColumn = startLoc.Column,
-                endLine = endLoc.Line,
-                endColumn = endLoc.Column,
                 version = version,
                 changes = selectedCode.ReplaceByLines(
+                    walker.Target.StartIncludingLeadingWhiteSpace.Line,
                     body.ToCodeString(ast, request.options),
                     request.newLine
                 ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()

@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     // Apply the changes from this version to the line lengths
-                    foreach (var c in ver.Changes) {
+                    foreach (var c in ver.Changes.Reverse()) {
                         var oldLoc = NewLineLocation.IndexToLocation(initial, c.OldPosition);
                         int lineNo = oldLoc.Line - 1;
                         while (asLengths.Count <= lineNo) {

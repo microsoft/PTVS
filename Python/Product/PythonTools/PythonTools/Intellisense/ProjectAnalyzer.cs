@@ -536,6 +536,10 @@ namespace Microsoft.PythonTools.Intellisense {
             await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
         }
 
+        public async Task NotifyModulesChangedAsync() {
+            await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
+        }
+
         public async Task NotifyFileChangesAsync(IEnumerable<Uri> newFiles, IEnumerable<Uri> deletedFiles, IEnumerable<Uri> changedFiles) {
             await SendEventAsync(new AP.FileChangedEvent {
                 changes = newFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Created, documentUri = f })
@@ -2203,33 +2207,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             await entry.EnsureCodeSyncedAsync(bi.Buffer);
 
+            var lastSnapshot = bi.LastSentSnapshot;
+            var formatSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive).GetSpan(lastSnapshot).ToSourceSpan();
+
             var res = await SendRequestAsync(
-                new AP.FormatCodeRequest() {
+                new AP.FormatCodeRequest {
                     documentUri = entry.DocumentUri,
-                    startIndex = span.Start,
-                    endIndex = span.End,
+                    startLine = formatSpan.Start.Line,
+                    startColumn = formatSpan.Start.Column,
+                    endLine = formatSpan.End.Line,
+                    endColumn = formatSpan.End.Column,
                     options = options,
                     newLine = view.Options.GetNewLineCharacter()
                 }
             );
 
-            if (res != null && res.version != -1) {
-                SnapshotSpan selectionSpan = default(SnapshotSpan);
-                if (selectResult) {
-                    selectionSpan = bi.LocationTracker.Translate(
-                        new SourceSpan(
-                            new SourceLocation(res.startLine, res.startColumn),
-                            new SourceLocation(res.endLine, res.endColumn)
-                        ),
-                        res.version,
-                        span.Snapshot
-                    );
-                }
+            if (res != null && res.version >= 0) {
+                var selectionSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
 
                 ApplyChanges(res.changes, bi.Buffer, bi.LocationTracker, res.version);
 
                 if (selectResult && !view.IsClosed) {
-                    view.Selection.Select(selectionSpan, false);
+                    view.Selection.Select(selectionSpan.GetSpan(bi.CurrentSnapshot), false);
                 }
             }
         }

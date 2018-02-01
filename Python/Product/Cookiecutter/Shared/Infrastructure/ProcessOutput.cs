@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -35,7 +34,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
     /// If this class implements <see cref="IDisposable"/>, it will be disposed
     /// when the <see cref="ProcessOutput"/> object is disposed.
     /// </summary>
-    public abstract class Redirector {
+    abstract class Redirector {
         /// <summary>
         /// Called when a line is written to standard output.
         /// </summary>
@@ -64,7 +63,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         }
     }
 
-    public sealed class TeeRedirector : Redirector, IDisposable {
+    sealed class TeeRedirector : Redirector, IDisposable {
         private readonly Redirector[] _redirectors;
 
         public TeeRedirector(params Redirector[] redirectors) {
@@ -102,7 +101,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         }
     }
 
-    public sealed class ListRedirector : Redirector {
+    sealed class ListRedirector : Redirector {
         private readonly List<string> _output, _error;
 
         public ListRedirector(List<string> output, List<string> error = null) {
@@ -119,7 +118,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         }
     }
 
-    public sealed class StreamRedirector : Redirector {
+    sealed class StreamRedirector : Redirector {
         private readonly StreamWriter _output, _error;
         private readonly string _outputPrefix, _errorPrefix;
 
@@ -156,7 +155,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
     /// <summary>
     /// Represents a process and its captured output.
     /// </summary>
-    public sealed class ProcessOutput : IDisposable {
+    sealed class ProcessOutput : IDisposable {
         private readonly Process _process;
         private readonly string _arguments;
         private readonly List<string> _output, _error;
@@ -270,13 +269,6 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
-        private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
-        }
-
         /// <summary>
         /// Runs the file with the provided settings as a user with
         /// administrative permissions. The window is always hidden and output
@@ -304,12 +296,6 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             var psi = new ProcessStartInfo(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.RunElevated.exe", typeof(ProcessOutput).Assembly));
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
-            psi.UseShellExecute = true;
-            psi.Verb = elevate ? "runas" : null;
-
-            int port = GetFreePort();
-            var listener = new TcpListener(IPAddress.Loopback, port);
-            psi.Arguments = port.ToString();
 
             var utf8 = new UTF8Encoding(false);
             // Send args and env as base64 to avoid newline issues
@@ -330,10 +316,43 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 string.Join("|", env.Select(kv => kv.Key + "=" + Convert.ToBase64String(utf8.GetBytes(kv.Value)))) :
                 "";
 
-            listener.Start();
-            listener.AcceptTcpClientAsync().ContinueWith(t => {
+            TcpListener listener = null;
+            Task<TcpClient> clientTask = null;
+
+            try {
+                listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
+                psi.Arguments = port.ToString();
+                clientTask = listener.AcceptTcpClientAsync();
+            } catch (Exception ex) {
+                listener?.Stop();
+                throw new InvalidOperationException(Strings.UnableToElevate, ex);
+            }
+
+            var process = new Process();
+
+            clientTask.ContinueWith(t => {
                 listener.Stop();
-                var client = t.Result;
+                TcpClient client;
+                try {
+                    client = t.Result;
+                } catch (AggregateException ae) {
+                    try {
+                        process.Kill();
+                    } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
+                    }
+
+                    if (redirector != null) {
+                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae)) {
+                            using (var reader = new StringReader(ex.ToString())) {
+                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                    redirector.WriteErrorLine(line);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
                     writer.WriteLine(filename);
                     writer.WriteLine(args);
@@ -363,7 +382,6 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 }
             });
 
-            var process = new Process();
             process.StartInfo = psi;
 
             return new ProcessOutput(process, redirector);
@@ -457,6 +475,9 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             try {
                 _process.Start();
+            } catch (Win32Exception ex) {
+                _redirector.WriteErrorLine(ex.Message);
+                _process = null;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 foreach (var line in SplitLines(ex.ToString())) {
                     _redirector.WriteErrorLine(line);
