@@ -121,5 +121,9 @@ namespace Microsoft.PythonTools.Infrastructure {
         public static int IndexOfOrdinal(this string s, string value, int startIndex = 0, bool ignoreCase = false) {
             return s?.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
         }
+
+        public static int IndexOfOrdinal(this string s, string value, int startIndex, int count, bool ignoreCase = false) {
+            return s?.IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
+        }
     }
 }
