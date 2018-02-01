@@ -40,31 +40,41 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return type;
             }
 
-            // Final annotation should be not be a string literal
-            type.Split(out IReadOnlyList<ConstantInfo> constants, out type);
-            if (constants.Any(c => c.TypeId == BuiltinTypeId.NoneType)) {
-                type = type.Add(_unit.State.ClassInfos[BuiltinTypeId.NoneType]);
-            }
+            // Final annotation should be not be a constant value
+            var res = FinalizeNames(type);
             
             // Filter out any TypingTypeInfo items that have leaked through
-            if (type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
-                return rest.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
+            if (res.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out res)) {
+                res = res.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
             }
 
-            return type;
+            return res;
+        }
+
+        private IAnalysisSet FinalizeNames(IAnalysisSet types) {
+            var res = types;
+
+            if (res.Split(out IReadOnlyList<ConstantInfo> constants, out res)) {
+                res = res.UnionAll(
+                    constants.Select(c => {
+                        if (c.Value == null) {
+                            return _unit.State.ClassInfos[BuiltinTypeId.NoneType];
+                        }
+                        var n = c.GetConstantValueAsString();
+                        if (!string.IsNullOrEmpty(n)) {
+                            return _eval.LookupAnalysisSetByName(_node, n, addDependency: true).GetInstanceType();
+                        }
+                        return c;
+                    })
+                );
+            }
+
+            return res;
         }
 
         public override IAnalysisSet LookupName(string name) {
-            if (name == "None") {
-                return _unit.State._noneInst;
-            }
-
-            var res = _eval.LookupAnalysisSetByName(_node, name, addDependency: true).GetInstanceType();
-
-            if (res.Any()) {
-                return res;
-            }
-
+            // We look up names lazily, so we can use strings as literals
+            // where necessary even if they match a known type.
             return null;
         }
 
@@ -77,12 +87,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet MakeGeneric(IAnalysisSet baseType, IReadOnlyList<IAnalysisSet> args) {
-            if (baseType.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out var rest)) {
-                return rest.UnionAll(
+            var res = FinalizeNames(baseType);
+
+            if (res.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out res)) {
+                res = res.UnionAll(
                     typeInfo.Select(tti => tti.MakeGeneric(args))
                 );
             }
-            return baseType;
+            return res;
         }
 
         public override IAnalysisSet MakeUnion(IReadOnlyList<IAnalysisSet> types) {
