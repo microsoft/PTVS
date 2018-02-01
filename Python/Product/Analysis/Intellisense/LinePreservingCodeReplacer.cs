@@ -85,16 +85,21 @@ namespace Microsoft.PythonTools.Intellisense {
         private DocumentChange Insert(int oldStart, int newStart, int newEnd) {
             var newSource = _newLines[newStart].Source;
             var insertText = new StringBuilder();
-            for (var i = newStart; i <= newEnd; i++) {
+            for (var i = newStart; i < newEnd; i++) {
                 insertText
                     .Append(newSource, _newLines[i].Info.Start, _newLines[i].Info.Length)
                     .Append(_newLine);
             }
 
-            var insertLocation = oldStart < _oldLines.Length
-                ? _oldLines[oldStart].Info.SourceStart
-                : _oldLines[_oldLines.Length - 1].Info.SourceEndIncludingLineBreak;
-            return DocumentChange.Insert(insertText.ToString(), insertLocation);
+            insertText.Append(newSource, _newLines[newEnd].Info.Start, _newLines[newEnd].Info.Length);
+            if (oldStart < _oldLines.Length) {
+                insertText.Append(_newLine);
+                return DocumentChange.Insert(insertText.ToString(), _oldLines[oldStart].Info.SourceStart);
+            }
+
+            // If inserting after the last line, line break should be added before the inserted text
+            insertText.Insert(0, _newLine);
+            return DocumentChange.Insert(insertText.ToString(), _oldLines[_oldLines.Length - 1].Info.SourceEndIncludingLineBreak);
         }
 
         private DocumentChange Delete(int oldStart, int oldEnd) {
