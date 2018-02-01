@@ -643,14 +643,14 @@ namespace Microsoft.PythonTools.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\", StringComparison.Ordinal)) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 
@@ -701,7 +701,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             bool recurse = true,
             bool fullPaths = true
         ) {
-            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
 
