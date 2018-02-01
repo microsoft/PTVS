@@ -78,8 +78,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var oldLineInfo = _oldLines[oldLineIndex].Info;
             var newLineInfo = _newLines[newLineIndex].Info;
             var newSource = _newLines[newLineIndex].Source;
-            var text = newSource.Substring(newLineInfo.Start, newLineInfo.Length) + _newLine;
-            return DocumentChange.Replace(oldLineInfo.SourceStart, oldLineInfo.SourceEndIncludingLineBreak, text);
+            var text = newSource.Substring(newLineInfo.Start, newLineInfo.Length);
+            return DocumentChange.Replace(oldLineInfo.SourceStart, oldLineInfo.SourceEnd, text);
         }
 
         private DocumentChange Insert(int oldStart, int newStart, int newEnd) {
