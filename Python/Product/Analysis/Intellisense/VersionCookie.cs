@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -69,8 +70,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             BufferVersion result;
             var f = documentUri.Fragment;
-            if (!string.IsNullOrEmpty(f) && f.StartsWith("#") && int.TryParse(f.Substring(1), out int part)) {
-                Versions.TryGetValue(part, out result);
+            if (!string.IsNullOrEmpty(f) &&
+                f.StartsWithOrdinal("#") &&
+                int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out int i)) {
+                Versions.TryGetValue(i, out result);
             } else {
                 Versions.TryGetValue(0, out result);
             }
