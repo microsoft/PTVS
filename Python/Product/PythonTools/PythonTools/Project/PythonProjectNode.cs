@@ -1375,7 +1375,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task ReanalyzeProjectHelper(Redirector log) {
-            if (IsClosing || IsClosed) {
+            var projectHome = ProjectHome;
+
+            if (IsClosing || IsClosed || string.IsNullOrEmpty(projectHome)) {
                 // This deferred event is no longer important.
                 log?.WriteLine("Project has closed");
                 return;
@@ -1421,7 +1423,7 @@ namespace Microsoft.PythonTools.Project {
                     log?.WriteLine("Unhooked events");
                 }
                 var oldWatcher = _projectFileWatcher;
-                _projectFileWatcher = new FileWatcher(ProjectHome) {
+                _projectFileWatcher = new FileWatcher(projectHome) {
                     EnableRaisingEvents = true,
                     IncludeSubdirectories = true,
                     NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
