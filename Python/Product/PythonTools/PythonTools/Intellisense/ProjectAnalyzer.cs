@@ -877,7 +877,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
             var entry = await buffer.GetAnalysisEntryAsync(CancellationToken.None);
             if (entry == null) {
                 return new AP.UnresolvedImportsResponse();
@@ -885,8 +884,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return await EnsureSingleRequest(
                 typeof(AP.UnresolvedImportsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => {
                     return await SendRequestAsync(
                         new AP.UnresolvedImportsRequest() {
