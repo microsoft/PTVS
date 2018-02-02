@@ -409,7 +409,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleName, IAnalysisSet namedTupleArgs) {
+        private IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleName, IAnalysisSet namedTupleArgs) {
             var args = namedTupleArgs == null ? null : TypingTypeInfo.ToTypeList(namedTupleArgs);
 
             var res = new ProtocolInfo(unit.ProjectEntry, unit.State);
@@ -423,18 +423,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var a in args) {
                     // each arg is going to be either a union containing a string literal and type,
                     // or a list with string literal and type.
-                    var u = a;
+                    IAnalysisSet nameSet = a, valueSet = a;
                     if (a is TypingTypeInfo tti) {
-                        u = AnalysisSet.UnionAll(tti.ToTypeList());
+                        var list = tti.ToTypeList();
+                        if (list != null && list.Count >= 2) {
+                            nameSet = list[0];
+                            valueSet = AnalysisSet.UnionAll(list.Skip(1));
+                        }
                     }
 
-                    if (u.Split(out IReadOnlyList<ConstantInfo> names, out var rest)) {
-                        var name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault() ?? "unnamed";
-
-                        var p = new NamespaceProtocol(res, name);
-                        p.SetMember(node, unit, name, rest.GetInstanceType());
-                        res.AddProtocol(p);
+                    if (!nameSet.Split(out IReadOnlyList<ConstantInfo> names, out var rest)) {
+                        names = a.OfType<ConstantInfo>().ToArray();
                     }
+                    var name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "unnamed";
+
+                    var p = new NamespaceProtocol(res, name);
+                    p.SetMember(node, unit, name, ToInstance(valueSet));
+                    res.AddProtocol(p);
                 }
             }
 
@@ -480,12 +485,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private IAnalysisSet Finalize(IAnalysisSet set) {
-            if (set.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out var rest)) {
-                return rest.UnionAll(
+            if (set.Split(out IReadOnlyList<ConstantInfo> constants, out var rest)) {
+                var names = constants.Select(c => c.GetConstantValueAsString()).Where(n => !string.IsNullOrEmpty(n)).ToArray();
+                rest = rest.Union(constants.Where(c => string.IsNullOrEmpty(c.GetConstantValueAsString())));
+                rest = rest.UnionAll(
+                    names.Select(n => _eval.LookupAnalysisSetByName(_node, n, addDependency: true))
+                );
+            }
+            if (rest.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out rest)) {
+                rest = rest.UnionAll(
                     typeInfo.Select(t => t.Finalize(_eval, _node, _unit))
                 );
             }
-            return set;
+            return rest;
         }
 
         private VariableDef ToVariableDef(IAnalysisSet set) {

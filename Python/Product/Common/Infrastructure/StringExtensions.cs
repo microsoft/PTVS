@@ -115,11 +115,15 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         public static bool EndsWithOrdinal(this string s, string suffix, bool ignoreCase = false) {
-            return s?.StartsWith(suffix, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false;
+            return s?.EndsWith(suffix, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false;
         }
 
         public static int IndexOfOrdinal(this string s, string value, int startIndex = 0, bool ignoreCase = false) {
             return s?.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
+        }
+
+        public static int IndexOfOrdinal(this string s, string value, int startIndex, int count, bool ignoreCase = false) {
+            return s?.IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
         }
     }
 }
