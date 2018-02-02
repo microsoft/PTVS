@@ -2149,16 +2149,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames, AnalysisEntry entry) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
-
             if (entry == null) {
                 return Task.FromResult<AP.AnalysisClassificationsResponse>(null);
             }
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => await SendRequestAsync(
                     new AP.AnalysisClassificationsRequest() {
                         documentUri = entry.DocumentUri,
