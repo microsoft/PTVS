@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             packageName = fullName.Remove(lastDot);
-            return String.Compare(fullName, lastDot + 1, name, 0, name.Length) == 0;
+            return String.Compare(fullName, lastDot + 1, name, 0, name.Length, StringComparison.Ordinal) == 0;
         }
 
         /// <summary>
@@ -942,7 +942,7 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
             }
 
-            Debug.Fail($"unsupported constant type <{value.GetType().FullName}> value '{value}'");
+            Debug.Fail("unsupported constant type <{0}> value '{1}'".FormatInvariant(value.GetType().FullName, value));
             return Types[BuiltinTypeId.Object];
         }
 

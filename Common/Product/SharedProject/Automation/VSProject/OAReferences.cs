@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         public Reference Add(string bstrPath)
         {
             // ignore requests from the designer which are framework assemblies and start w/ a *.
-            if (string.IsNullOrEmpty(bstrPath) || bstrPath.StartsWith("*"))
+            if (string.IsNullOrEmpty(bstrPath) || bstrPath.StartsWith("*", StringComparison.Ordinal))
             {
                 return null;
             }

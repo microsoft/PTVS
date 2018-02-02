@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -174,12 +175,12 @@ namespace Microsoft.PythonTools.Parsing {
         private int _index;
 
         public override bool Fallback(char charUnknownHigh, char charUnknownLow, int index) {
-            throw new EncoderFallbackException(String.Format("'ascii' codec can't encode character '\\u{0:X}{1:04X}' in position {2}", (int)charUnknownHigh, (int)charUnknownLow, index));
+            throw new EncoderFallbackException("'ascii' codec can't encode character '\\u{0:X}{1:04X}' in position {2}".FormatUI((int)charUnknownHigh, (int)charUnknownLow, index));
         }
 
         public override bool Fallback(char charUnknown, int index) {
             if (charUnknown > 0xff) {
-                throw new EncoderFallbackException(String.Format("'ascii' codec can't encode character '\\u{0:X}' in position {1}", (int)charUnknown, index));
+                throw new EncoderFallbackException("'ascii' codec can't encode character '\\u{0:X}' in position {1}".FormatUI((int)charUnknown, index));
             }
 
             _buffer.Add(charUnknown);

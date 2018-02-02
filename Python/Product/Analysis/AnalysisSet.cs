@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -130,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return set.AsUnion((UnionComparer)comparer, out _);
             }
 
-            throw new InvalidOperationException(string.Format("cannot use {0} as a comparer", comparer));
+            throw new InvalidOperationException("cannot use {0} as a comparer".FormatInvariant(comparer));
         }
 
         /// <summary>
@@ -574,9 +575,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool Equals(AnalysisValue x, AnalysisValue y) {
 #if FULL_VALIDATION
             if (x != null && y != null) {
-                Validation.Assert(x.UnionEquals(y, Strength) == y.UnionEquals(x, Strength), string.Format("{0}\n{1}\n{2}", Strength, x, y));
+                Validation.Assert(x.UnionEquals(y, Strength) == y.UnionEquals(x, Strength), $"{Strength}\n{x}\n{y}");
                 if (x.UnionEquals(y, Strength)) {
-                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), string.Format("Strength:{0}\n{1} - {2}\n{3} - {4}", Strength, x, x.UnionHashCode(Strength), y, y.UnionHashCode(Strength)));
+                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), "Strength:{Strength}\n{x} - {x.UnionHashCode(Strength)}\n{y} - {y.UnionHashCode(Strength)}");
                 }
             }
 #endif
@@ -600,8 +601,8 @@ namespace Microsoft.PythonTools.Analysis {
 #if FULL_VALIDATION
             var z2 = y.UnionMergeTypes(x, Strength);
             if (!object.ReferenceEquals(z, z2)) {
-                Validation.Assert(z.UnionEquals(z2, Strength), string.Format("{0}\n{1} + {2} => {3}\n{2} + {1} => {4}", Strength, x, y, z, z2));
-                Validation.Assert(z2.UnionEquals(z, Strength), string.Format("{0}\n{1} + {2} => {3}\n{2} + {1} => {4}", Strength, y, x, z2, z));
+                Validation.Assert(z.UnionEquals(z2, Strength), $"{Strength}\n{x} + {y} => {z}\n{y} + {x} => {z2}");
+                Validation.Assert(z2.UnionEquals(z, Strength), $"{Strength}\n{y} + {x} => {z2}\n{x} + {y} => {z}");
             }
 #endif
             return z;
@@ -653,7 +654,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } else if (data.Length < 5) {
                     return "{" + string.Join(", ", data.AsEnumerable()) + "}";
                 } else {
-                    return string.Format("{{Size = {0}}}", data.Length);
+                    return "${{Size = {data.Length}}}";
                 }
             }
 

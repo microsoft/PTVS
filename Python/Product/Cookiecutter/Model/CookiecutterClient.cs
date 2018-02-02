@@ -162,7 +162,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 foreach (JProperty prop in context) {
                     // Properties that start with underscore are for internal use,
                     // and cookiecutter doesn't prompt for them.
-                    if (!prop.Name.StartsWith("_")) {
+                    if (!prop.Name.StartsWithOrdinal("_")) {
                         if (prop.Value.Type == JTokenType.String ||
                             prop.Value.Type == JTokenType.Integer ||
                             prop.Value.Type == JTokenType.Float) {
@@ -214,7 +214,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 foreach (JProperty prop in context) {
                     // Properties that start with underscore are for internal use,
                     // and cookiecutter doesn't prompt for them.
-                    if (!prop.Name.StartsWith("_")) {
+                    if (!prop.Name.StartsWithOrdinal("_")) {
                         if (prop.Value.Type == JTokenType.String ||
                             prop.Value.Type == JTokenType.Integer ||
                             prop.Value.Type == JTokenType.Float) {
@@ -392,7 +392,7 @@ namespace Microsoft.CookiecutterTools.Model {
                     args.Append(" ");
                 }
 
-                if (val.EndsWith(":")) {
+                if (val.EndsWithOrdinal(":")) {
                     args.Append(val);
                     // no space after a switch that takes a value
                     insertSpace = false;

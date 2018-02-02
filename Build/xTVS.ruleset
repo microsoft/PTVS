@@ -11,7 +11,7 @@
     <Rule Id="CA1033" Action="None" /> <!-- Explicit interface implementation on base classes -->
     <Rule Id="CA1060" Action="Warning" />
     <Rule Id="CA1061" Action="Warning" />
-    <Rule Id="CA1063" Action="Warning" />
+    <Rule Id="CA1063" Action="None" /> <!-- Implement IDisposable properly -->
     <Rule Id="CA1065" Action="None" /> <!-- Throw from property accessors -->
     <Rule Id="CA1301" Action="Warning" />
     <Rule Id="CA1400" Action="Warning" />
@@ -96,5 +96,117 @@
     <Rule Id="CA2226" Action="Warning" />
     <Rule Id="CA2227" Action="Warning" />
     <Rule Id="CA2239" Action="Warning" />
+
+    <Rule Id="CA1304" Action="Error" /> <!-- specify CultureInfo -->
+    <Rule Id="CA1305" Action="None" />  <!-- provide IFormatProvider -->
+    <Rule Id="CA1307" Action="Error" /> <!-- specify StringComparison -->
+    <Rule Id="CA1309" Action="Warning" /> <!-- use StringComparison.Ordinal -->
+
+    <Rule Id="CA900" Action="Error" />
+
+    <Rule Id="CA2001" Action="Error" />
+    <Rule Id="CA2103" Action="Error" />
+    <Rule Id="CA2107" Action="Error" />
+    <Rule Id="CA2109" Action="Error" />
+    <Rule Id="CA2110" Action="None" />
+    <Rule Id="CA2118" Action="Error" />
+    <Rule Id="CA2135" Action="Error" />
+    <Rule Id="CA2136" Action="Error" />
+    <Rule Id="CA2139" Action="Error" />
+    <Rule Id="CA2142" Action="Error" />
+    <Rule Id="CA2143" Action="Error" />
+    <Rule Id="CA2144" Action="Error" />
+    <Rule Id="CA2145" Action="Error" />
+    <Rule Id="CA2151" Action="Error" />
+    <Rule Id="CA2153" Action="Error" />
+    <Rule Id="CA5122" Action="Error" />
+    <Rule Id="CA5350" Action="Error" />
+    <Rule Id="CA5351" Action="Error" />
+    <Rule Id="CA5352" Action="Error" />
+    <Rule Id="CA5353" Action="Error" />
+    <Rule Id="CA5354" Action="Error" />
+    <Rule Id="CA5355" Action="Error" />
+    <Rule Id="CA5356" Action="Error" />
+    <Rule Id="CA5357" Action="Error" />
+    <Rule Id="CA3001" Action="Error" />
+    <Rule Id="CA3002" Action="None" />  <!-- XSS detection -->
+    <Rule Id="CA3003" Action="Error" />
+    <Rule Id="CA3004" Action="Error" />
+    <Rule Id="CA3005" Action="Error" />
+    <Rule Id="CA3006" Action="Error" />
+    <Rule Id="CA3007" Action="Error" />
+    <Rule Id="CA3008" Action="Error" />
+    <Rule Id="CA3009" Action="Error" />
+    <Rule Id="CA3010" Action="Error" />
+    <Rule Id="CA3011" Action="Error" />
+    <Rule Id="CA3012" Action="Error" />
+    <Rule Id="CA3101" Action="None" />
+    <Rule Id="CA3102" Action="Error" />
+    <Rule Id="CA3103" Action="Error" />
+    <Rule Id="CA3104" Action="Error" />
+    <Rule Id="CA3105" Action="Error" />
+    <Rule Id="CA3106" Action="Error" />
+    <Rule Id="CA3107" Action="Error" />
+    <Rule Id="CA3108" Action="Error" />
+    <Rule Id="CA3109" Action="Error" />
+    <Rule Id="CA3110" Action="Error" />
+    <Rule Id="CA3111" Action="Error" />
+    <Rule Id="CA3112" Action="Error" />
+    <Rule Id="CA3113" Action="Error" />
+    <Rule Id="CA3114" Action="Error" />
+    <Rule Id="CA3115" Action="Error" />
+    <Rule Id="CA3116" Action="Error" />
+    <Rule Id="CA3117" Action="Error" />
+    <Rule Id="CA3118" Action="Error" />
+    <Rule Id="CA3119" Action="Error" />
+    <Rule Id="CA3120" Action="Error" />
+    <Rule Id="CA3121" Action="Error" />
+    <Rule Id="CA3122" Action="Error" />
+    <Rule Id="CA3123" Action="Error" />
+    <Rule Id="CA3124" Action="Error" />
+    <Rule Id="CA3125" Action="Error" />
+    <Rule Id="CA3127" Action="Error" />
+    <Rule Id="CA3129" Action="Error" />
+    <Rule Id="CA3130" Action="Error" />
+    <Rule Id="CA3131" Action="Error" />
+    <Rule Id="CA3132" Action="Error" />
+    <Rule Id="CA3133" Action="Error" />
+    <Rule Id="CA3134" Action="Error" />
+    <Rule Id="CA3135" Action="Error" />
+    <Rule Id="CA3137" Action="Error" />
+    <Rule Id="CA3138" Action="Error" />
+    <Rule Id="CA3139" Action="Error" />
+    <Rule Id="CA3140" Action="Error" />
+    <Rule Id="CA3141" Action="Error" />
+    <Rule Id="CA3142" Action="Error" />
+    <Rule Id="CA3143" Action="Error" />
+    <Rule Id="CA3145" Action="Error" />
+    <Rule Id="CA3146" Action="Error" />
+    <Rule Id="CA3147" Action="Error" />
+    <Rule Id="CA3050" Action="Error" />
+    <Rule Id="CA3051" Action="None" />
+    <Rule Id="CA3052" Action="None" />
+    <Rule Id="CA3053" Action="Error" />
+    <Rule Id="CA3054" Action="Error" />
+    <Rule Id="CA3055" Action="Error" />
+    <Rule Id="CA3056" Action="Error" />
+    <Rule Id="CA3057" Action="Error" />
+    <Rule Id="CA3058" Action="Error" />
+    <Rule Id="CA3059" Action="Error" />
+    <Rule Id="CA3060" Action="Error" />
+    <Rule Id="CA3061" Action="Error" />
+    <Rule Id="CA3062" Action="Error" />
+    <Rule Id="CA3063" Action="Error" />
+    <Rule Id="CA3064" Action="Error" />
+    <Rule Id="CA3065" Action="Error" />
+    <Rule Id="CA3066" Action="Error" />
+    <Rule Id="CA3067" Action="Error" />
+    <Rule Id="CA3068" Action="Error" />
+    <Rule Id="CA3069" Action="Error" />
+    <Rule Id="CA3070" Action="Error" />
+    <Rule Id="CA3071" Action="Error" />
+    <Rule Id="CA3072" Action="Error" />
+    <Rule Id="CA3073" Action="Error" />
+    <Rule Id="CA3074" Action="Error" />
   </Rules>
 </RuleSet>

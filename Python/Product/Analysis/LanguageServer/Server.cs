@@ -397,7 +397,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal int GetPart(Uri documentUri) {
             var f = documentUri.Fragment;
             int i;
-            if (string.IsNullOrEmpty(f) || !f.StartsWith("#") || !int.TryParse(f.Substring(1), out i)) {
+            if (string.IsNullOrEmpty(f) ||
+                !f.StartsWithOrdinal("#") ||
+                !int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out i)) {
                 i = 0;
             }
             return i;
@@ -895,7 +897,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
                 if (m.Values.Any(v => v.DeclaringModule == entry)) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
                         yield return m;
                     }
                 }

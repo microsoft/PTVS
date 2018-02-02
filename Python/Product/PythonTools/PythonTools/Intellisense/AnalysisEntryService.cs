@@ -329,7 +329,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var withSlash = "\\" + filename;
                     foreach (var project in sln.EnumerateLoadedPythonProjects()) {
                         if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
-                            n.Url.EndsWith(withSlash, StringComparison.OrdinalIgnoreCase))) {
+                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
                             var analyzer = project.GetAnalyzer();
                             if (analyzer != null && seen.Add(analyzer)) {
                                 yield return analyzer;

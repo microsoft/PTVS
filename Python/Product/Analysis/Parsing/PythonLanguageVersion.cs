@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -60,7 +61,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (Enum.IsDefined(typeof(PythonLanguageVersion), value)) {
                 return (PythonLanguageVersion)value;
             }
-            throw new InvalidOperationException(String.Format("Unsupported Python version: {0}", version.ToString()));
+            throw new InvalidOperationException("Unsupported Python version: {0}".FormatInvariant(version));
         }
 
     }

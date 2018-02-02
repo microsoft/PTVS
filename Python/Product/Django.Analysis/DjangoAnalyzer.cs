@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -122,7 +123,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                                 }
                             }
 
-                            var dict = newTags.ToDictionary(x => x.Key, x => x.Value.ToString().ToLower());
+                            var dict = newTags.ToDictionary(x => x.Key, x => x.Value.ToString().ToLowerInvariant());
                             return serializer.Serialize(dict);
                         }
                     }
@@ -308,7 +309,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                 }
 
                 foreach (var modelInst in model) {
-                    string baseName = appName + "/" + modelInst.Name.ToLower();
+                    string baseName = appName + "/" + modelInst.Name.ToLowerInvariant();
                     foreach (var suffix in templateNameSuffix.DefaultIfEmpty(defaultTemplateNameSuffix)) {
                         AddViewTemplate(unit, model, querySet, contextObjName, baseName + suffix);
                     }
@@ -336,7 +337,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                 }
             } else if (model != null) {
                 foreach (var modelInst in model) {
-                    foreach (var name in contextObjName.DefaultIfEmpty(modelInst.Name.ToLower())) {
+                    foreach (var name in contextObjName.DefaultIfEmpty(modelInst.Name.ToLowerInvariant())) {
                         tags.UpdateVariable(name, unit, modelInst.GetInstanceType());
                     }
                 }

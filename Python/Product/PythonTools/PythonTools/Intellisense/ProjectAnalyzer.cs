@@ -1679,7 +1679,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             var eval = snapshot.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             if (eval != null) {
-                if (text.EndsWith("(")) {
+                if (text.EndsWithOrdinal("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
                 var liveSigs = eval.GetSignatureDocumentation(text);

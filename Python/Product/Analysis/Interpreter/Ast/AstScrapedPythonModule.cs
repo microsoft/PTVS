@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     ast = parser.ParseFile();
                 }
 
-                ParseErrors = sink.Errors.Select(e => $"{_filePath ?? "(builtins)"} ({e.Span}): {e.Message}").ToArray();
+                ParseErrors = sink.Errors.Select(e => "{0} ({1}): {2}".FormatUI(_filePath ?? "(builtins)", e.Span, e.Message)).ToArray();
                 if (ParseErrors.Any()) {
                     fact.Log(TraceLevel.Error, "Parse", _filePath ?? "(builtins)");
                     foreach (var e in ParseErrors) {

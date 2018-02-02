@@ -295,7 +295,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
                     }
 
                     if (res != 0) {
-                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
+                        Debug.Assert(filePathBuilder.ToString().StartsWithOrdinal("\\\\?\\"));
                         return filePathBuilder.ToString().Substring(4);
                     }
                 }

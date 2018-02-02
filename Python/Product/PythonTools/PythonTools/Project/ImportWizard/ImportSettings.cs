@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     // Also include *.pyw files if they were in the filter list
                     foreach (var pywFilters in filters
                         .Split(';')
-                        .Where(filter => filter.TrimEnd().EndsWith(".pyw", StringComparison.OrdinalIgnoreCase))
+                        .Where(filter => filter.TrimEnd().EndsWithOrdinal(".pyw", ignoreCase: true))
                     ) {
                         files = files.Concat(PathUtils.EnumerateFiles(sourcePath, pywFilters, recurse: false));
                     }
@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
 
             return files
-                .Where(path => path.StartsWith(source))
+                .Where(path => path.StartsWithOrdinal(source, ignoreCase: true))
                 .Select(path => path.Substring(source.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
                 .Distinct(StringComparer.OrdinalIgnoreCase);
         }

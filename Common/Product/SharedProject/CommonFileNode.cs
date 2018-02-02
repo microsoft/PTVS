@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
@@ -53,7 +52,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public bool IsFormSubType {
             get {
                 string result = this.ItemNode.GetMetadata(ProjectFileConstants.SubType);
-                if (!String.IsNullOrEmpty(result) && string.Compare(result, ProjectFileAttributeValue.Form, true, CultureInfo.InvariantCulture) == 0)
+                if (!String.IsNullOrEmpty(result) && string.Compare(result, ProjectFileAttributeValue.Form, StringComparison.OrdinalIgnoreCase) == 0)
                     return true;
                 else
                     return false;

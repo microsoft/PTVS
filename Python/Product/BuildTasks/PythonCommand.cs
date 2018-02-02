@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                 return _targetType;
             }
             set {
-                if (!_targetTypes.Contains(value, StringComparer.InvariantCultureIgnoreCase)) {
+                if (!_targetTypes.Contains(value, StringComparer.OrdinalIgnoreCase)) {
                     throw new ArgumentException("TargetType must be one of: " + string.Join(", ", _targetTypes.Select(s => '"' + s + '"')));
                 }
                 _targetType = value;
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         protected virtual bool IsValidExecuteInValue(string value, out string message) {
             message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"'));;
-            return _executeIns.Any(s => s.Equals(value, StringComparison.InvariantCultureIgnoreCase));
+            return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -181,8 +181,8 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         protected override bool IsValidExecuteInValue(string value, out string message) {
             message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
-            return _executeIns.Any(s => s.Equals(value, StringComparison.InvariantCultureIgnoreCase)) ||
-                value.StartsWith(ExecuteInRepl, StringComparison.InvariantCultureIgnoreCase);
+            return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase)) ||
+                value.StartsWithOrdinal(ExecuteInRepl, ignoreCase: true);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace Microsoft.PythonTools.BuildTasks {
         public ITaskItem[] Command { get; private set; }
 
         public override bool Execute() {
-            if (!ExecuteInOutput.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase) &&
+            if (!ExecuteInOutput.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase) &&
                 !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex))) {
                 Log.LogError("ErrorRegex and WarningRegex are only valid for ExecuteIn='output'");
                 return false;
@@ -262,7 +262,7 @@ namespace Microsoft.PythonTools.BuildTasks {
             var psi = new ProcessStartInfo();
             psi.UseShellExecute = false;
 
-            if (TargetTypeExecutable.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+            if (TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
                 psi.FileName = Target;
                 psi.Arguments = Arguments;
             } else {
@@ -273,11 +273,11 @@ namespace Microsoft.PythonTools.BuildTasks {
                 }
                 psi.FileName = resolver.InterpreterPath;
 
-                if (TargetTypeModule.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                if (TargetTypeModule.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
                     psi.Arguments = string.Format("-m {0} {1}", Target, Arguments);
-                } else if (TargetTypeScript.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                } else if (TargetTypeScript.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
                     psi.Arguments = string.Format("\"{0}\" {1}", Target, Arguments);
-                } else if (TargetTypeCode.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                } else if (TargetTypeCode.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
                     psi.Arguments = string.Format("-c \"{0}\"", Target);
                 }
 
@@ -297,10 +297,10 @@ namespace Microsoft.PythonTools.BuildTasks {
                 }
             }
 
-            if (ExecuteInNone.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase)) {
+            if (ExecuteInNone.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase)) {
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
-            } else if (ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase)) {
                 psi.Arguments = string.Format(
                     "/C \"\"{0}\" {1}\" & pause",
                     psi.FileName,

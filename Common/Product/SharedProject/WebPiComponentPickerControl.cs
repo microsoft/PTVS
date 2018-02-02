@@ -98,7 +98,12 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void GetFeeds(string feed) {
-            var doc = new XPathDocument(feed);
+            XPathDocument doc;
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            using (var reader = XmlReader.Create(feed, settings))
+                doc = new XPathDocument(reader);
+
             XmlNamespaceManager mngr = new XmlNamespaceManager(new NameTable());
             mngr.AddNamespace("x", "http://www.w3.org/2005/Atom");
 
@@ -198,7 +203,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     res = String.Compare(
                        itemX.SubItems[0].Text,
                        itemY.SubItems[0].Text,
-                       true
+                       StringComparison.CurrentCultureIgnoreCase
                    );
                 }
 

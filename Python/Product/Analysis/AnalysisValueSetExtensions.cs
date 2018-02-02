@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -270,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return -1;
                 }
 
-                return x.CompareTo(y);
+                return string.Compare(x, y, StringComparison.CurrentCultureIgnoreCase);
             }
         }
 

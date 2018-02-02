@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CustomRuntimes;
 using Microsoft.VisualStudio.Debugger.Evaluation;
@@ -95,10 +96,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         var name = (entry.Key as IPyBaseStringObject).ToStringOrNull();
                         if (name == "__file__") {
                             var fileName = (entry.Value.TryRead() as IPyBaseStringObject).ToStringOrNull();
-                            if (fileName != null && !fileName.EndsWith(".pyd")) {
+                            if (fileName != null && !fileName.EndsWithOrdinal(".pyd", ignoreCase: true)) {
                                 // Unlike co_filename, __file__ usually reflects the actual name of the file from which the module
                                 // was created, which will be .pyc rather than .py if it was available, so fix that up.
-                                if (fileName.EndsWith(".pyc")) {
+                                if (fileName.EndsWithOrdinal(".pyc", ignoreCase: true)) {
                                     fileName = fileName.Substring(0, fileName.Length - 1);
                                 }
 

@@ -21,6 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows;
+using System.Xml;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -144,6 +145,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <param name="pgrfCDW">Flags for CreateDocumentWindow</param>
         /// <returns></returns>
         [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         public int CreateEditorInstance(
                         uint grfCreateDoc,
                         string pszMkDocument,
@@ -178,9 +180,10 @@ namespace Microsoft.PythonTools.Profiling {
 
             ProfilingTarget target;
             try {
-                using (var fs = new FileStream(pszMkDocument, FileMode.Open)) {
-                    target = (ProfilingTarget)ProfilingTarget.Serializer.Deserialize(fs);
-                    fs.Close();
+                var settings = new XmlReaderSettings { XmlResolver = null };
+                using (var fs = new FileStream(pszMkDocument, FileMode.Open))
+                using (var reader = XmlReader.Create(fs, settings)) {
+                    target = (ProfilingTarget)ProfilingTarget.Serializer.Deserialize(reader);
                 }
             } catch (IOException e) {
                 MessageBox.Show(Strings.FailedToOpenPerformanceSessionFile.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);

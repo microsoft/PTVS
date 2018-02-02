@@ -68,7 +68,7 @@ namespace Microsoft.CookiecutterTools {
         /// initialization is the Initialize method.
         /// </summary>
         public CookiecutterPackage() {
-            Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
+            Trace.WriteLine("Entering constructor for: {0}".FormatInvariant(this));
             Instance = this;
         }
 
@@ -81,7 +81,7 @@ namespace Microsoft.CookiecutterTools {
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
         /// </summary>
         protected override void Initialize() {
-            Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+            Trace.WriteLine("Entering Initialize() of: {0}".FormatInvariant(this));
             base.Initialize();
 
             UIThread.EnsureService(this);
