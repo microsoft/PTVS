@@ -139,20 +139,20 @@ namespace Microsoft.PythonTools {
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
 
-            AP.AnalysisClassification[] spans;
-            int fromVersion;
-            lock (_spanCacheLock) {
-                spans = _spanCache;
-                fromVersion = _spanFromVersion;
-            }
-
-            if (span.Length <= 0 || snapshot.IsReplBufferWithCommand() || spans?.Length == 0) {
+            if (span.Length <= 0 || snapshot.IsReplBufferWithCommand()) {
                 return classifications;
             }
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
             if (bi == null) {
                 return classifications;
+            }
+
+            AP.AnalysisClassification[] spans;
+            int fromVersion;
+            lock (_spanCacheLock) {
+                spans = _spanCache;
+                fromVersion = _spanFromVersion;
             }
 
             if (spans == null) {
@@ -163,6 +163,9 @@ namespace Microsoft.PythonTools {
                     }
                 }
 
+                return classifications;
+            }
+            if (spans.Length == 0) {
                 return classifications;
             }
 
