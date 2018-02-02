@@ -87,6 +87,10 @@ namespace Microsoft.VisualStudioTools {
              *         and "SupportsExceptionDetailsRequest" flags, and ExceptionCategoryMapping information must be supplied.
              */
             engineKey.SetValue("Exceptions", 1);
+            engineKey.SetValue("ExceptionBreakpointCategory", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}");
+
+            var exceptionMapping = engineKey.CreateSubkey("ExceptionCategoryMappings");
+            exceptionMapping.SetValue("Python Exceptions", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}");
 
             /*
              * Set to "1" if the debug adapter supports the VS exception conditions experience(For skipping exceptions in specific modules).
