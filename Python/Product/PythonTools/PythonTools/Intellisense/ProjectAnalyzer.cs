@@ -2520,7 +2520,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
 
-            if (analysis != null) {
+            if (analysis?.Entry != null) {
                 var location = analysis.Location;
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
