@@ -168,8 +168,8 @@ namespace Microsoft.PythonTools {
 
             // find where in the spans we should start scanning from (they're sorted by
             // starting position in the old buffer)
-            var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
-            var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
+            var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot, fromVersion);
+            var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot, fromVersion);
             var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
