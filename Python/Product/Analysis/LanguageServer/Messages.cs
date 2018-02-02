@@ -136,6 +136,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct DidChangeTextDocumentParams {
         public VersionedTextDocumentIdentifier textDocument;
         public TextDocumentContentChangedEvent[] contentChanges;
+
+        // Defaults to true, but can be set to false to suppress analysis
+        public bool? _enqueueForAnalysis;
     }
 
     public struct WillSaveTextDocumentParams {

@@ -5093,8 +5093,8 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 // Neither decorator is callable, but at least analysis completed
-                state.AssertIsInstance(state.Modules["mod1"], "decorator_a");
-                state.AssertIsInstance(state.Modules["mod2"], "decorator_b");
+                state.AssertIsInstance(state.Modules["mod1"], "decorator_a", BuiltinTypeId.Function);
+                state.AssertIsInstance(state.Modules["mod2"], "decorator_b", BuiltinTypeId.Function);
             });
         }
 
@@ -5166,6 +5166,20 @@ class cls_d2(): pass
                 new VariableLocation(8, 2, VariableType.Reference),
                 new VariableLocation(13, 2, VariableType.Reference)
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public void UndefinedDecorator() {
+            var text = @"
+@does_not_exist
+class X: pass
+
+@does_not_exist
+def f(): pass
+";
+            var entry = ProcessText(text);
+            entry.AssertIsInstance("X", 0, BuiltinTypeId.Type);
+            entry.AssertIsInstance("f", 0, BuiltinTypeId.Function);
         }
 
 

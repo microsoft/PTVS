@@ -108,7 +108,7 @@ namespace AnalysisTests {
         }
 
         private static async Task<Uri> AddModule(Server s, string content, string moduleName = null, Uri uri = null, string language = null) {
-            uri = uri ?? new Uri($"python://./{moduleName ?? "test-module"}.py");
+            uri = uri ?? new Uri($"python://test/{moduleName ?? "test-module"}.py");
             await s.DidOpenTextDocument(new DidOpenTextDocumentParams {
                 textDocument = new TextDocumentItem {
                     uri = uri,
@@ -248,8 +248,8 @@ mc";
 
             // Completion after "mc " should normally be blank
             await AssertCompletion(s, mod,
-                new string [0],
-                new string [0],
+                new string[0],
+                new string[0],
                 position: new Position { line = testLine, character = testChar + 1 }
             );
 
@@ -270,7 +270,9 @@ mc";
                         start = new Position { line = testLine, character = testChar },
                         end = new Position { line = testLine, character = testChar }
                     }
-                } }
+                } },
+                // Suppress reanalysis to avoid a race
+                _enqueueForAnalysis = false
             });
 
             // Now with the "." event sent, we should see this as a dot completion
