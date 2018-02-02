@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
-            bi.RemoveSink(GetType());
+            bi?.RemoveSink(GetType());
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
 
