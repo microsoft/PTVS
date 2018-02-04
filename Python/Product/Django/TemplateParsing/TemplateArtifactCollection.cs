@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Html.Core.Artifacts;
 using Microsoft.Html.Core.Parser.Def;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Web.Core.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {

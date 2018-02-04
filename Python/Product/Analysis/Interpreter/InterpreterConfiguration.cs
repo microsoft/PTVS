@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
@@ -146,18 +147,18 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         private void SwitchToFullDescription() {
             bool hasVersion = _description.Contains(Version.ToString());
-            bool hasArch = _description.IndexOf(Architecture.ToString(), StringComparison.CurrentCultureIgnoreCase) >= 0 ||
-                _description.IndexOf(Architecture.ToString("x"), StringComparison.CurrentCultureIgnoreCase) >= 0;
+            bool hasArch = _description.IndexOf(Architecture.ToString(null, CultureInfo.CurrentCulture), StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                _description.IndexOf(Architecture.ToString("x", CultureInfo.CurrentCulture), StringComparison.CurrentCultureIgnoreCase) >= 0;
 
             if (hasVersion && hasArch) {
                 // Regular description is sufficient
                 _fullDescription = null;
             } else if (hasVersion) {
-                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Architecture);
+                _fullDescription = "{0} ({1})".FormatUI(_description, Architecture);
             } else if (hasArch) {
-                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Version);
+                _fullDescription = "{0} ({1})".FormatUI(_description, Version);
             } else {
-                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1}, {2})", _description, Version, Architecture);
+                _fullDescription = "{0} ({1}, {2})".FormatUI(_description, Version, Architecture);
             }
         }
 

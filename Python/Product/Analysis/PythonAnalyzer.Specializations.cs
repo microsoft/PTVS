@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.0</remarks>
         public void SpecializeFunction(string moduleName, string name, string returnType, bool mergeOriginalAnalysis = false) {
             if (returnType.LastIndexOf('.') == -1) {
-                throw new ArgumentException(String.Format("Expected module.typename for return type, got '{0}'", returnType));
+                throw new ArgumentException("Expected module.typename for return type, got '{0}'".FormatInvariant(returnType));
             }
 
             SpecializeFunction(moduleName, name, (n, u, a, k) => u.FindAnalysisValueByName(n, returnType), mergeOriginalAnalysis, true);

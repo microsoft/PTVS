@@ -325,7 +325,7 @@ import System
 
         private static void CollectFiles(string dir, List<string> files, ISet<string> excludeDirectories = null) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (file.EndsWithOrdinal(".py", ignoreCase: true)) {
                     files.Add(file);
                 }
             }

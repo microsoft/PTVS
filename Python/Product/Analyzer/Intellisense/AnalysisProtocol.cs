@@ -940,10 +940,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public string message;
             public const string Name = "analyzerWarning";
 
-            public AnalyzerWarningEvent(string message) {
-                this.message = message;
-            }
-
             public override string name => Name;
         }
 

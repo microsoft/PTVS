@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Server_OnLogMessage(object sender, LS.LogMessageEventArgs e) {
             if (_log != null && Options.traceLevel.HasValue && e.type <= Options.traceLevel.Value) {
                 _log(e.message);
+                _connection?.SendEventAsync(new AP.AnalyzerWarningEvent { message = e.message }).DoNotWait();
             }
         }
 
@@ -1768,9 +1769,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (match.Success) {
                 return match.Value;
-            } else if (result.Name.StartsWith("**")) {
+            } else if (result.Name.StartsWithOrdinal("**")) {
                 return "**kwargs";
-            } else if (result.Name.StartsWith("*")) {
+            } else if (result.Name.StartsWithOrdinal("*")) {
                 return "*args";
             } else {
                 return "arg" + index.ToString();

@@ -689,6 +689,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             }
                             _stdErr.AppendLine(line);
+                            if (_stdErr.Length > 102400) {
+                                _stdErr.Remove(0, 12800);
+                            }
                             Debug.WriteLine("Analysis Std Err: " + line);
                         }
                     } catch (InvalidOperationException) {
@@ -874,7 +877,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
             var entry = await buffer.GetAnalysisEntryAsync(CancellationToken.None);
             if (entry == null) {
                 return new AP.UnresolvedImportsResponse();
@@ -882,8 +884,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return await EnsureSingleRequest(
                 typeof(AP.UnresolvedImportsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => {
                     return await SendRequestAsync(
                         new AP.UnresolvedImportsRequest() {
@@ -958,7 +960,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         PythonTextBufferInfo.MarkForReplacement(b);
                         var bi = _services.GetBufferInfo(b);
                         var actualEntry = bi.TrySetAnalysisEntry(e, null);
-                        actualEntry?.GetOrCreateBufferParser(_services).AddBuffer(b);
+                        var bp = actualEntry?.GetOrCreateBufferParser(_services);
+                        if (bp != null) {
+                            bp.AddBuffer(b);
+                            await bp.EnsureCodeSyncedAsync(b);
+                        }
                     }
                 }
             }
@@ -1684,7 +1690,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             var eval = snapshot.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             if (eval != null) {
-                if (text.EndsWith("(")) {
+                if (text.EndsWithOrdinal("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
                 var liveSigs = eval.GetSignatureDocumentation(text);
@@ -2154,16 +2160,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames, AnalysisEntry entry) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
-
             if (entry == null) {
                 return Task.FromResult<AP.AnalysisClassificationsResponse>(null);
             }
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => await SendRequestAsync(
                     new AP.AnalysisClassificationsRequest() {
                         documentUri = entry.DocumentUri,

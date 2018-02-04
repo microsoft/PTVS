@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ConstantExpression : Expression {
@@ -93,9 +94,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     default:
                         ushort cp = (ushort)c;
                         if (cp > 0xFF) {
-                            res.AppendFormat("\\u{0:x04}", cp);
+                            res.AppendFormat(CultureInfo.InvariantCulture, "\\u{0:x04}", cp);
                         } else if (cp < 0x20 || (escape8bitStrings && cp >= 0x7F)) {
-                            res.AppendFormat("\\x{0:x02}", cp);
+                            res.AppendFormat(CultureInfo.InvariantCulture, "\\x{0:x02}", cp);
                         } else {
                             res.Append(c);
                         }
@@ -127,7 +128,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 string real = NegativeZeroAwareToString(n.Real);
                 string imag =  NegativeZeroAwareToString(n.Imaginary);
                 if (n.Real != 0) {
-                    if (!imag.StartsWith("-")) {
+                    if (!imag.StartsWithOrdinal("-")) {
                         imag = "+" + imag;
                     }
                     return "(" + real + imag + "j)";
@@ -136,7 +137,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             } else if (_value is BigInteger) {
                 if (!version.Is3x()) {
-                    return _value.ToString() + "L";
+                    return "{0}L".FormatInvariant(_value);
                 }
             } else if (_value is double) {
                 double n = (double)_value;

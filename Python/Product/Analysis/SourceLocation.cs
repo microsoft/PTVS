@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -70,7 +71,7 @@ namespace Microsoft.PythonTools {
         }
 
         private static Exception ErrorOutOfRange(object p0, object p1) {
-            return new ArgumentOutOfRangeException(string.Format("{0} must be greater than or equal to {1}", p0, p1));
+            return new ArgumentOutOfRangeException("{0} must be greater than or equal to {1}".FormatInvariant(p0, p1));
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters")]
@@ -257,7 +258,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal string ToDebugString() {
-            return String.Format(CultureInfo.CurrentCulture, "({0},{1},{2})", _index, _line, _column);
+            return "({0},{1},{2})".FormatInvariant(_index, _line, _column);
         }
 
         public bool Equals(SourceLocation other) {

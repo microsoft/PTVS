@@ -42,7 +42,7 @@ using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
 
-    internal sealed class IntellisenseController : IIntellisenseController, IOleCommandTarget {
+    internal sealed class IntellisenseController : IIntellisenseController, IOleCommandTarget, IPythonTextBufferInfoEventSink {
         private readonly PythonEditorServices _services;
         private readonly ITextView _textView;
         private readonly IntellisenseControllerProvider _provider;
@@ -154,9 +154,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private static object _intellisenseAnalysisEntry = new object();
 
         public async void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
+            var buffer = _services.GetBufferInfo(subjectBuffer);
             for (int retries = 5; retries > 0; --retries) {
                 try {
-                    await ConnectSubjectBufferAsync(subjectBuffer);
+                    await ConnectSubjectBufferAsync(buffer);
                     return;
                 } catch (InvalidOperationException) {
                     // Analysis entry changed, so we should retry
@@ -190,28 +191,28 @@ namespace Microsoft.PythonTools.Intellisense {
             return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
         }
 
-        private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
-            var bi = _services.GetBufferInfo(subjectBuffer);
+        private async Task ConnectSubjectBufferAsync(PythonTextBufferInfo buffer) {
+            buffer.AddSink(GetType(), this);
             // Cannot analyze buffers without a URI
-            if (bi.DocumentUri == null) {
+            if (buffer.DocumentUri == null) {
                 return;
             }
 
-            var entry = bi.AnalysisEntry;
+            var entry = buffer.AnalysisEntry;
 
             if (entry == null) {
                 for (int retries = 3; retries > 0 && entry == null; --retries) {
                     // Likely in the process of changing analyzer, so we'll delay slightly and retry.
                     await Task.Delay(100);
-                    entry = await AnalyzeBufferAsync(_textView, bi);
+                    entry = await AnalyzeBufferAsync(_textView, buffer);
                 }
 
                 if (entry == null) {
-                    Debug.Fail($"Failed to analyze {bi.DocumentUri}");
+                    Debug.Fail($"Failed to analyze {buffer.DocumentUri}");
                     return;
                 }
 
-                entry = bi.TrySetAnalysisEntry(entry, null);
+                entry = buffer.TrySetAnalysisEntry(entry, null);
 
                 if (entry == null) {
                     Debug.Fail("Analysis entry should never be null here");
@@ -223,15 +224,39 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // This may raise InvalidOperationException if we have raced with
             // an analyzer being closed. Our caller will retry in this case.
-            parser.AddBuffer(subjectBuffer);
+            parser.AddBuffer(buffer.Buffer);
 
-            await parser.EnsureCodeSyncedAsync(subjectBuffer);
+            await parser.EnsureCodeSyncedAsync(buffer.Buffer);
+
+            // AnalysisEntry will be cleared automatically if the analyzer closes
+            if (buffer.AnalysisEntry == null) {
+                throw new InvalidOperationException("Analyzer was closed");
+            }
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
+            bi.RemoveSink(GetType());
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
+
+        public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.AnalyzerExpired) {
+                // Analysis entry has been cleared. Allow a short pause before
+                // trying to create a new one.
+                await Task.Delay(500);
+                if (sender.AnalysisEntry == null) {
+                    for (int retries = 3; retries > 0; --retries) {
+                        try {
+                            await ConnectSubjectBufferAsync(sender);
+                            break;
+                        } catch (InvalidOperationException) {
+                        }
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Detaches the events

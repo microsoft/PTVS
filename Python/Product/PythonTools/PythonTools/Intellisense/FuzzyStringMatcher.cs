@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -88,9 +89,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         static int PrefixMatch(string text, string pattern, bool ignoreCase) {
-            if (text.StartsWith(pattern, StringComparison.InvariantCulture) || text.StartsWith(pattern, StringComparison.CurrentCulture)) {
+            if (text.StartsWithOrdinal(pattern) || text.StartsWith(pattern, StringComparison.CurrentCulture)) {
                 return pattern.Length * 2 + (text.Length == pattern.Length ? 1 : 0);
-            } else if (ignoreCase && (text.StartsWith(pattern, StringComparison.InvariantCultureIgnoreCase) || text.StartsWith(pattern, StringComparison.CurrentCultureIgnoreCase))) {
+            } else if (ignoreCase && (text.StartsWithOrdinal(pattern, ignoreCase: true) || text.StartsWith(pattern, StringComparison.CurrentCultureIgnoreCase))) {
                 return pattern.Length + (text.Length == pattern.Length ? 1 : 0);
             } else {
                 return 0;
@@ -98,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         static int SubstringMatch(string text, string pattern, bool ignoreCase) {
-            int position = text.IndexOf(pattern, StringComparison.InvariantCulture);
+            int position = text.IndexOfOrdinal(pattern);
             if (position >= 0) {
                 return pattern.Length * 2 + (position == 0 ? 1 : 0);
             }
@@ -107,7 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return pattern.Length * 2 + (position == 0 ? 1 : 0);
             }
             if (ignoreCase) {
-                position = text.IndexOf(pattern, StringComparison.InvariantCultureIgnoreCase);
+                position = text.IndexOfOrdinal(pattern, ignoreCase: true);
                 if (position >= 0) {
                     return pattern.Length + (position == 0 ? 1 : 0);
                 }
