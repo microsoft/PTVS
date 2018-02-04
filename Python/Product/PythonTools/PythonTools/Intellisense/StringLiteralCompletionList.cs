@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static string RestorePrefix(string path, string prefix, string prefixRepl) {
-            if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+            if (!path.StartsWithOrdinal(prefix, ignoreCase: true)) {
                 return path;
             }
             return prefixRepl + path.Substring(prefix.Length);
@@ -175,8 +175,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 var filter = PathUtils.GetFileOrDirectoryName(text);
                 if (!string.IsNullOrEmpty(filter)) {
                     Debug.WriteLine($"Filtering filenames with '{filter}'");
-                    dirNames.RemoveAll(d => !d.StartsWith(filter, StringComparison.OrdinalIgnoreCase));
-                    fileNames.RemoveAll(f => !f.StartsWith(filter, StringComparison.OrdinalIgnoreCase));
+                    dirNames.RemoveAll(d => !d.StartsWithOrdinal(filter, ignoreCase: true));
+                    fileNames.RemoveAll(f => !f.StartsWithOrdinal(filter, ignoreCase: true));
                 }
             }
             if (dirNames.Count + fileNames.Count > MaxItems) {

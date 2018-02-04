@@ -15,9 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
-using System.Reflection;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public abstract class InterpreterArchitecture : 
@@ -108,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return -1;
             }
 
-            return GetType().Name.CompareTo(other.GetType().Name);
+            return string.CompareOrdinal(GetType().Name, other.GetType().Name);
         }
 
         public static bool operator ==(InterpreterArchitecture x, InterpreterArchitecture y)

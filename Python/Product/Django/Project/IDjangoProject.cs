@@ -20,9 +20,12 @@ namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Enables getting a DjangoProject from an aggregated project node.
     /// </summary>
+    /// <remarks>
+    /// This must be public in order to successfully cast from IVsHierarchy.
+    /// </remarks>
     [ComVisible(true)]
     [Guid("3EF13AFC-56E2-4215-BA9A-65D80FB51F75")]
-    interface IDjangoProject {
+    public interface IDjangoProject {
         ProjectSmuggler GetDjangoProject();
     }
 }

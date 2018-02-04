@@ -151,11 +151,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal string FastRelativePath(string fullPath) {
-            if (!fullPath.StartsWith(Configuration.PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+            if (!fullPath.StartsWithOrdinal(Configuration.PrefixPath, ignoreCase: true)) {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWith("\\")) {
+            if (p.StartsWithOrdinal("\\")) {
                 return p.Substring(1);
             }
             return p;
@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return spp;
             }
 
-            var sp = await GetSearchPathsAsync();
+            var sp = await GetSearchPathsAsync().ConfigureAwait(false);
             if (sp == null) {
                 return null;
             }
@@ -347,6 +347,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Array.Empty<string>();
             }
 
+            Log(TraceLevel.Info, "GetCurrentSearchPaths", Configuration.InterpreterPath, _searchPathCachePath);
             try {
                 var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
                 return paths.MaybeEnumerate().Select(p => p.Path).ToArray();

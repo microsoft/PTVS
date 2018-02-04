@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private static string MakeFakeFilePath(string interpreterPath, string name) {
             if (string.IsNullOrEmpty(interpreterPath)) {
-                return $"python.{name}.exe";
+                return "python.{0}.exe".FormatInvariant(name);
             }
             var ext = Path.GetExtension(interpreterPath);
             return Path.ChangeExtension(interpreterPath, name) + ext;

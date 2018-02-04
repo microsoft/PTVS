@@ -275,6 +275,31 @@ namespace Microsoft.PythonTools.Intellisense {
             return NewLineLocation.IndexToLocation(lines, index);
         }
 
+        [Conditional("DEBUG")]
+        private void ValidateSnapshotLines(ITextSnapshot snapshot) {
+#if DEBUG
+            var expected = LinesToLineEnds(snapshot.Lines).ToArray();
+            var actual = GetLineLocations(snapshot.Version.VersionNumber);
+            if (expected.Length != actual.Length) {
+                Debug.Fail($"Expected {expected.Length} lines; got {actual.Length} lines");
+            }
+            var mismatches = expected.Zip(actual, (x, y) => {
+                if (x.CompareTo(y) == 0) {
+                    return null;
+                }
+                return $"Expected {x}; Actual {y}";
+            }).Where(n => !string.IsNullOrEmpty(n)).ToArray();
+            if (mismatches.Any()) {
+                Debug.Fail($"{mismatches[0]} and {mismatches.Length - 1} others");
+            }
+#endif
+        }
+
+        public SourceLocation Translate(SourceLocation loc, ITextSnapshot fromSnapshot, int toVersion) {
+            ValidateSnapshotLines(fromSnapshot);
+            return Translate(loc, fromSnapshot.Version.VersionNumber, toVersion);
+        }
+
         public SourceLocation Translate(SourceLocation loc, int fromVersion, int toVersion) {
             var fromVer = _snapshot.Version;
             while (fromVer.Next != null && fromVer.VersionNumber < fromVersion) {
@@ -300,6 +325,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SnapshotPoint Translate(SourceLocation loc, int fromVersion, ITextSnapshot toSnapshot) {
+            ValidateSnapshotLines(toSnapshot);
             return Translate(loc, fromVersion, toSnapshot.Version.VersionNumber).ToSnapshotPoint(toSnapshot);
         }
 
@@ -311,6 +337,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SnapshotSpan Translate(SourceSpan span, int fromVersion, ITextSnapshot toSnapshot) {
+            ValidateSnapshotLines(toSnapshot);
             return Translate(span, fromVersion, toSnapshot.Version.VersionNumber).ToSnapshotSpan(toSnapshot);
         }
     }

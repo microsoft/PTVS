@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -33,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public string Documentation { get; }
 
-        public string Description => Type == null ? "property of unknown type" : $"property of type {Type.Name}";
+        public string Description => Type == null ? "property of unknown type" : "property of type {0}".FormatUI(Type.Name);
 
         public PythonMemberType MemberType => PythonMemberType.Property;
         

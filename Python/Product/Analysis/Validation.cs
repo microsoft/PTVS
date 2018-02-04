@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
 #if FULL_VALIDATION || DEBUG
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static void Assert(bool expression, string message, params object[] args) {
             if (!expression) {
                 try {
-                    throw new ValidationException(string.Format(message, args));
+                    throw new ValidationException(message.FormatInvariant(args));
                 } catch (ValidationException ex) {
                     Console.Error.WriteLine(ex.ToString());
                 }

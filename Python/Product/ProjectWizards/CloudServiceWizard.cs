@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -101,7 +102,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     // install the required packages.
                     var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
                     var type = asm.GetType("Microsoft.VisualStudio.CloudService.Wizard.CloudServiceWizard");
-                    _wizard = type.InvokeMember(null, BindingFlags.CreateInstance, null, null, new object[0]) as IWizard;
+                    _wizard = type.InvokeMember(null, BindingFlags.CreateInstance, null, null, new object[0], CultureInfo.CurrentCulture) as IWizard;
                 }
             } catch (ArgumentException) {
             } catch (BadImageFormatException) {

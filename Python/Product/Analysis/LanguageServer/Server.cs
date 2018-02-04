@@ -537,7 +537,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal int GetPart(Uri documentUri) {
             var f = documentUri.Fragment;
             int i;
-            if (string.IsNullOrEmpty(f) || !f.StartsWith("#") || !int.TryParse(f.Substring(1), out i)) {
+            if (string.IsNullOrEmpty(f) ||
+                !f.StartsWithOrdinal("#") ||
+                !int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out i)) {
                 i = 0;
             }
             return i;
@@ -847,6 +849,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
 
                     if (doc is IAnalyzable analyzable) {
+                        TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
                         _queue.Enqueue(analyzable, priority);
                     }
                 }
@@ -874,9 +877,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } catch (BadSourceException) {
             } catch (OperationCanceledException ex) {
                 LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
-                if (_traceLogging) {
-                    LogMessage(MessageType.Log, ex.ToString());
-                }
+                TraceMessage(ex.ToString());
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
             }
@@ -884,9 +885,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
+                TraceMessage($"Received new analysis for {entry.DocumentUri}");
                 int version = 0;
                 var parse = entry.GetCurrentParse();
-                if (parse?.Cookie is VersionCookie vc) {
+                if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
                         if (kv.Value.Version > version) {
@@ -1066,7 +1068,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
                 if (m.Values.Any(v => v.DeclaringModule == entry)) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
                         yield return m;
                     }
                 }

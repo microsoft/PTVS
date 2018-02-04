@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
 
         private static Uri Resolve(Uri uri) {
             var hosts = new string[] { "go.microsoft.com", "aka.ms" };
-            if (!hosts.Any(h => uri.Host.StartsWith(h, StringComparison.InvariantCultureIgnoreCase))) {
+            if (!hosts.Any(h => uri.Host.StartsWithOrdinal(h, ignoreCase: true))) {
                 return uri;
             }
 

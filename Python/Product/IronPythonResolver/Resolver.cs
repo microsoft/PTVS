@@ -21,6 +21,7 @@ using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     internal class IronPythonResolver {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001")]
         public static Assembly domain_AssemblyResolve(object sender, ResolveEventArgs args) {
             var pythonInstallDir = GetPythonInstallDir();
             var asmName = new AssemblyName(args.Name);

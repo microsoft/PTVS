@@ -149,7 +149,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
-            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWith(root, StringComparison.Ordinal)) {
+            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWithOrdinal(root)) {
                 // Quick return, but only where the paths are already normalized and
                 // have matching case.
                 return true;
@@ -257,7 +257,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
+                Trace.WriteLine("Error finding path from {0} to {1}".FormatInvariant(fromUri, toUri));
                 Trace.WriteLine(ex);
                 relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
@@ -293,7 +293,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
+                Trace.WriteLine("Error finding path from {0} to {1}".FormatInvariant(fromUri, toUri));
                 Trace.WriteLine(ex);
                 relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
@@ -584,7 +584,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             if (File.Exists(newPath + extension)) {
                 string candidateNewPath;
                 do {
-                    candidateNewPath = string.Format("{0}{1}", newPath, ++index);
+                    candidateNewPath = "{0}{1}".FormatInvariant(newPath, ++index);
                 } while (File.Exists(candidateNewPath + extension));
                 newPath = candidateNewPath;
             }
@@ -615,14 +615,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 
@@ -637,7 +637,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 }
 
                 foreach (var d in dirs) {
-                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                    if (!fullPaths && !d.StartsWithOrdinal(root, ignoreCase: true)) {
                         continue;
                     }
                     if (recurse) {
@@ -673,7 +673,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool recurse = true,
             bool fullPaths = true
         ) {
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
 
@@ -774,7 +774,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     }
 
                     if (res != 0) {
-                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
+                        Debug.Assert(filePathBuilder.ToString().StartsWithOrdinal("\\\\?\\"));
                         return filePathBuilder.ToString().Substring(4);
                     }
                 }
