@@ -78,11 +78,11 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         private string _statusMessage, _statusHelp;
         private ImageMoniker _statusImage;
-        private Visibility _statusVisibility = Visibility.Collapsed;
+        private Visibility _statusVisibility = Visibility.Hidden;
         private Visibility _statusImageVisibility = Visibility.Collapsed;
         private Visibility _spinningStatusImageVisibility = Visibility.Collapsed;
-        private Visibility _statusProgressVisibility = Visibility.Collapsed;
-        private Visibility _statusUpdateProgressVisibility = Visibility.Collapsed;
+        private Visibility _statusProgressVisibility = Visibility.Hidden;
+        private Visibility _statusUpdateProgressVisibility = Visibility.Hidden;
 
         private TemplateViewModel _selectedTemplate;
         private CancellationTokenSource _templateRefreshCancelTokenSource;
@@ -273,9 +273,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _statusImageVisibility = image.HasValue && !progressVisible ? Visibility.Visible : Visibility.Collapsed;
             _spinningStatusImageVisibility = image.HasValue && progressVisible ? Visibility.Visible : Visibility.Collapsed;
             bool v = (visible ?? !string.IsNullOrEmpty(message));
-            _statusVisibility = v ? Visibility.Visible : Visibility.Collapsed;
-            _statusProgressVisibility = progressVisible ? Visibility.Visible : Visibility.Collapsed;
-            _statusUpdateProgressVisibility = updateProgressVisible ? Visibility.Visible : Visibility.Collapsed;
+            _statusVisibility = v ? Visibility.Visible : Visibility.Hidden;
+            _statusProgressVisibility = progressVisible ? Visibility.Visible : Visibility.Hidden;
+            _statusUpdateProgressVisibility = updateProgressVisible ? Visibility.Visible : Visibility.Hidden;
 
             if (!v) {
                 OnPropertyChange(nameof(StatusVisibility));
