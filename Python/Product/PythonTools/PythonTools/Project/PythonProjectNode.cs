@@ -1846,7 +1846,7 @@ namespace Microsoft.PythonTools.Project {
             // Install into the currently active environment
             TaskDialogButton install = null;
 
-            var pm = InterpreterOptions.GetPackageManagers(factory).FirstOrDefault();
+            var pm = InterpreterOptions.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (pm != null) {
                 var description = factory.Configuration.Description ?? Strings.CurrentInterpreterDescription;
                 install = new TaskDialogButton(
@@ -2223,7 +2223,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int InstallRequirements(Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
-            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
@@ -2297,7 +2297,7 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
-            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
