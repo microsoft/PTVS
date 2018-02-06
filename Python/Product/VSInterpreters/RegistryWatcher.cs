@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
@@ -485,24 +486,24 @@ namespace Microsoft.PythonTools {
 
         private static RegistryHive ParseRegistryKey(string key, out string subkey) {
             int firstPart = key.IndexOf('\\');
-            if (firstPart < 0 || !key.StartsWith("HKEY", StringComparison.InvariantCultureIgnoreCase)) {
+            if (firstPart < 0 || !key.StartsWithOrdinal("HKEY", ignoreCase: true)) {
                 throw new ArgumentException("Invalid registry key: " + key, "key");
             }
             var hive = key.Remove(firstPart);
             subkey = key.Substring(firstPart + 1);
-            if (hive.Equals("HKEY_CURRENT_USER", StringComparison.InvariantCultureIgnoreCase)) {
+            if (hive.Equals("HKEY_CURRENT_USER", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.CurrentUser;
-            } else if (hive.Equals("HKEY_LOCAL_MACHINE", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.LocalMachine;
-            } else if (hive.Equals("HKEY_CLASSES_ROOT", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_CLASSES_ROOT", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.ClassesRoot;
-            } else if (hive.Equals("HKEY_USERS", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_USERS", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.Users;
-            } else if (hive.Equals("HKEY_CURRENT_CONFIG", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_CURRENT_CONFIG", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.CurrentConfig;
-            } else if (hive.Equals("HKEY_PERFORMANCE_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_PERFORMANCE_DATA", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.PerformanceData;
-            } else if (hive.Equals("HKEY_DYN_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+            } else if (hive.Equals("HKEY_DYN_DATA", StringComparison.OrdinalIgnoreCase)) {
                 return RegistryHive.DynData;
             }
             throw new ArgumentException("Invalid registry key: " + key, "key");

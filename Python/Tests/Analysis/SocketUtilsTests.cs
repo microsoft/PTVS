@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,17 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
+using System.Net;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.PythonTools.Django.Project {
-    [ComVisible(true)]
-    [Guid("A666B929-44D0-4D68-A62A-7440A2E96D44")]
-    public sealed class ProjectSmuggler {
-        internal readonly DjangoProject Project;
-
-        internal ProjectSmuggler(DjangoProject project) {
-            Project = project;
+namespace AnalysisTests {
+    [TestClass]
+    public class SocketUtilsTests {
+        [TestMethod, Priority(0)]
+        public void GetRandomPortListener() {
+            var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
+            try {
+                Assert.IsNotNull(listener);
+                Assert.AreEqual(port, ((IPEndPoint)listener.LocalEndpoint).Port);
+                Assert.IsTrue(port >= 49152 && port < 65536);
+            } finally {
+                listener?.Stop();
+            }
         }
     }
 }

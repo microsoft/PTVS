@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             } else {
-                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                if (InstallPath.TryGetFile("DefaultDB\\v{0}\\python.pyi".FormatInvariant(Configuration.Version.Major), out string biPath)) {
                     CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
                     _skipWriteToCache = true;
                 }
@@ -125,15 +125,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (File.Exists(_searchPathCachePath)) {
-                for (int retries = 5; retries > 0; --retries) {
-                    try {
-                        File.Delete(_searchPathCachePath);
-                        break;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                    }
-                    Thread.Sleep(10);
-                }
+                PathUtils.DeleteFile(_searchPathCachePath);
             }
 
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
@@ -146,11 +138,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal string FastRelativePath(string fullPath) {
-            if (!fullPath.StartsWith(Configuration.PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+            if (!fullPath.StartsWithOrdinal(Configuration.PrefixPath, ignoreCase: true)) {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWith("\\")) {
+            if (p.StartsWithOrdinal("\\")) {
                 return p.Substring(1);
             }
             return p;
@@ -269,7 +261,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return spp;
             }
 
-            var sp = await GetSearchPathsAsync();
+            var sp = await GetSearchPathsAsync().ConfigureAwait(false);
             if (sp == null) {
                 return null;
             }
@@ -342,6 +334,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Array.Empty<string>();
             }
 
+            Log(TraceLevel.Info, "GetCurrentSearchPaths", Configuration.InterpreterPath, _searchPathCachePath);
             try {
                 var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
                 return paths.MaybeEnumerate().Select(p => p.Path).ToArray();

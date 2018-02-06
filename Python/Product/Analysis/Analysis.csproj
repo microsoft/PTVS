@@ -85,6 +85,7 @@
     <Compile Include="Intellisense\ImportRemover.cs" />
     <Compile Include="Intellisense\LineInfo.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Intellisense\LongestCommonSequence.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
     <Compile Include="Intellisense\ProximityExpressionWalker.cs" />

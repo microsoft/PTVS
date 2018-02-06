@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -198,13 +199,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override string ToString() {
-            return String.Format(
-                "<{3}: Name={0} ({1}), NodeType={2}>",
-                FullName,
-                GetHashCode(),
-                Ast != null ? Ast.GetType().Name : "<unknown>",
-                GetType().Name
-            );
+            return "{0}: Name={1} ({2}), NodeType={3}".FormatInvariant(
+                GetType().Name, FullName, GetHashCode(), Ast?.GetType().Name ?? "<unknown>");
         }
 
         /// <summary>

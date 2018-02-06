@@ -106,7 +106,7 @@
 
         <!-- Results -->
         <ccv:CookiecutterTreeView Grid.Row="2"
-                  Margin="4 4 0 8"
+                  Margin="4 4 0 4"
                   ItemsSource="{Binding Path=SearchResults}"
                   Focusable="True"
                   IsTabStop="True"
@@ -200,55 +200,60 @@
                 HorizontalAlignment="Left"
                 Content="{x:Static cct:Strings.SearchPage_NextButton}"/>
 
-            <StackPanel Margin="4 0"
-                        Orientation="Vertical"
+            <StackPanel Orientation="Vertical"
+                        Margin="4"
                         Visibility="{Binding StatusVisibility}">
-                <Separator Margin="0 4"/>
-
                 <StackPanel Orientation="Horizontal">
-                    <imaging:CrispImage Width="16" Height="16"
-                                        Moniker="{Binding StatusImage}"
-                                        AutomationProperties.HelpText="{Binding StatusMessage}"
-                                        Visibility="{Binding StatusImageVisibility}" />
-                    <imaging:CrispImage Width="16" Height="16"
-                                        Moniker="{Binding StatusImage}"
-                                        AutomationProperties.HelpText="{Binding StatusMessage}"
-                                        Visibility="{Binding SpinningStatusImageVisibility}"
-                                        RenderTransformOrigin="0.5, 0.5">
-                        <imaging:CrispImage.RenderTransform>
-                            <RotateTransform x:Name="Rotation" />
-                        </imaging:CrispImage.RenderTransform>
-                        <imaging:CrispImage.Triggers>
-                            <EventTrigger RoutedEvent="Image.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Rotation"
+                    <Grid>
+                        <!-- We only show one image at a time -->
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 4 0"
+                                            Moniker="{Binding StatusImage}"
+                                            AutomationProperties.HelpText="{Binding StatusMessage}"
+                                            Visibility="{Binding StatusImageVisibility}" />
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 4 0"
+                                            Moniker="{Binding StatusImage}"
+                                            AutomationProperties.HelpText="{Binding StatusMessage}"
+                                            Visibility="{Binding SpinningStatusImageVisibility}"
+                                            RenderTransformOrigin="0.5, 0.5">
+                            <imaging:CrispImage.RenderTransform>
+                                <RotateTransform x:Name="Rotation" />
+                            </imaging:CrispImage.RenderTransform>
+                            <imaging:CrispImage.Triggers>
+                                <EventTrigger RoutedEvent="Image.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Rotation"
                                                          Storyboard.TargetProperty="Angle"
                                                          By="360.0"
                                                          Duration="0:0:2.0"
                                                          RepeatBehavior="Forever" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </imaging:CrispImage.Triggers>
-                    </imaging:CrispImage>
-                    <TextBlock Margin="4 0 0 0"
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </imaging:CrispImage.Triggers>
+                        </imaging:CrispImage>
+                    </Grid>
+                    <TextBlock MinHeight="16"
+                               VerticalAlignment="Center"
                                Text="{Binding StatusMessage}"
                                TextWrapping="Wrap"
                                ToolTip="{Binding StatusHelp}" />
                 </StackPanel>
-                <ProgressBar Margin="4" IsIndeterminate="True"
-                             Visibility="{Binding StatusProgressVisibility}"/>
-                <ProgressBar Margin="4"
-                             Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"
-                             Visibility="{Binding StatusUpdateProgressVisibility}"/>
+                <Grid Margin="0 4">
+                    <!-- We only show one progress bar at a time, and we want them hidden, not collapsed -->
+                    <ProgressBar IsIndeterminate="True"
+                                 Visibility="{Binding StatusProgressVisibility}"/>
+                    <ProgressBar Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}"
+                                 Maximum="100"
+                                 Visibility="{Binding StatusUpdateProgressVisibility}"/>
+                </Grid>
             </StackPanel>
-
-            <Separator Margin="4"/>
         </StackPanel>
 
         <!-- Description -->
-        <Grid Grid.Row="4" Height="100">
+        <Grid Grid.Row="4" Height="100" Margin="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"/>
                 <ColumnDefinition Width="*"/>

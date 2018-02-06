@@ -57,6 +57,7 @@
     <Compile Include="Infrastructure\NativeMethods.COM.cs" />
     <Compile Include="Infrastructure\ProcessOutput.cs" />
     <Compile Include="Infrastructure\PythonToolsInstallPath.cs" />
+    <Compile Include="Infrastructure\SocketUtils.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\StringListReader.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />

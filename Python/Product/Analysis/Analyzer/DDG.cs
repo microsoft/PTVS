@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -165,9 +166,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var left in node.Left) {
                 if (left is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null) {
                     var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
-                    var annoInst = annoType?.GetInstanceType();
-                    if (annoInst?.Any() == true) {
-                        _eval.AssignTo(node, annoExpr.Expression, annoInst);
+                    if (annoType?.Any() == true) {
+                        _eval.AssignTo(node, annoExpr.Expression, annoType);
                     }
                 }
 
@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         userMod.Imported(_unit);
 
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
-                            if (!varName.StartsWith("_")) {
+                            if (!varName.StartsWithOrdinal("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }

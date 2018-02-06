@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static int CompareVariables(PythonVariable left, PythonVariable right) {
-            return String.Compare(left.Name, right.Name);
+            return string.CompareOrdinal(left.Name, right.Name);
         }
 
         public ExtractMethodResult GetExtractionResult() {

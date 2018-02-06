@@ -155,14 +155,14 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 
@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 }
 
                 foreach (var d in dirs) {
-                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                    if (!fullPaths && !d.StartsWithOrdinal(root, ignoreCase: true)) {
                         continue;
                     }
                     if (recurse) {

@@ -47,7 +47,7 @@ namespace Microsoft.CookiecutterTools.Model {
             // Prefer a CPython installation if there is one because
             // some Anaconda installs have trouble creating a venv.
             var cpython = all
-                .Where(x => x.Vendor.IndexOf("Python Software Foundation", StringComparison.OrdinalIgnoreCase) == 0);
+                .Where(x => x.Vendor.IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0);
             var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
 
             return best != null ? new CookiecutterPythonInterpreter(

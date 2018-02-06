@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (endQuote == null) {
                     if (string.IsNullOrEmpty(bit)) {
                         yield return string.Empty;
-                    } else if (bit.StartsWith("\"") || bit.StartsWith("'")) {
+                    } else if (bit.StartsWithOrdinal("\"") || bit.StartsWithOrdinal("'")) {
                         endQuote = bit.Remove(1);
                         element.Append(bit.Substring(1));
                         added = true;
@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Debugger {
                     }
                 }
 
-                if (endQuote != null && bit.EndsWith(endQuote)) {
+                if (endQuote != null && bit.EndsWithOrdinal(endQuote)) {
                     if (!added) {
                         element.Append(',');
                         element.Append(bit);

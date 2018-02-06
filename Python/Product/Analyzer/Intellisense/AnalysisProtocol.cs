@@ -290,7 +290,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
-            public int startIndex, endIndex;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
             public string newLine;
             public CodeFormattingOptions options;
 
@@ -299,10 +300,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
-
-            public int startLine, startColumn;
-            public int endLine, endColumn;
-            public int version = -1;
+            public int version;
         }
 
         public struct CodeSpan {
@@ -941,10 +939,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal class AnalyzerWarningEvent : Event {
             public string message;
             public const string Name = "analyzerWarning";
-
-            public AnalyzerWarningEvent(string message) {
-                this.message = message;
-            }
 
             public override string name => Name;
         }

@@ -40,8 +40,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="CookiecutterDictionary.xaml" />
                 <ResourceDictionary>
-                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrHidden">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrHidden">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
                     <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
@@ -251,22 +251,24 @@
                         Content="{x:Static cct:Strings.OptionsPage_Cancel}"/>
             </StackPanel>
 
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Vertical"
-                        Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <TextBlock Text="{x:Static cct:Strings.OptionsPage_CreatingFiles}"/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.OptionsPage_CreatingFilesError}"/>
-            </StackPanel>
-
+            <Grid Margin="4">
+                <StackPanel Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrHidden}}">
+                    <TextBlock Text="{x:Static cct:Strings.OptionsPage_CreatingFiles}"/>
+                    <ProgressBar Margin="4" IsIndeterminate="True"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrHidden}}">
+                    <imaging:CrispImage
+                        Width="16"
+                        Height="16"
+                        Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                    <TextBlock Margin="4 0 0 0"
+                               MinHeight="16"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Text="{x:Static cct:Strings.OptionsPage_CreatingFilesError}"/>
+                </StackPanel>
+            </Grid>
         </StackPanel>
     </Grid>
 </Page>

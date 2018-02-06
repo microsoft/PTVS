@@ -91,20 +91,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 var uiShell = (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
 
                 string projName = replacementsDictionary["$projectname$"];
-                string solnName;
-                replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
-                string directory;
-                if (String.IsNullOrWhiteSpace(solnName)) {
-                    // Create directory is unchecked, destinationdirectory is the
-                    // directory name the user entered plus the project name, we want
-                    // to remove the project name.
-                    directory = Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]);
-                } else {
-                    // Create directory is checked, the destinationdirectory is the
-                    // directory the user entered plus the project name plus the
-                    // solution name - we want to remove both extra folders
-                    directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
-                }
+                string directory = Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]);
 
                 var wizardData = replacementsDictionary["$wizarddata$"];
                 var templateUri = Resolve(new Uri(wizardData));
@@ -156,7 +143,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
 
         private static Uri Resolve(Uri uri) {
             var hosts = new string[] { "go.microsoft.com", "aka.ms" };
-            if (!hosts.Any(h => uri.Host.StartsWith(h, StringComparison.InvariantCultureIgnoreCase))) {
+            if (!hosts.Any(h => uri.Host.StartsWithOrdinal(h, ignoreCase: true))) {
                 return uri;
             }
 

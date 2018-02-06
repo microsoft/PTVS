@@ -49,14 +49,14 @@ namespace TestUtilities {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWith("\\", StringComparison.Ordinal)) {
                     path += "\\";
                 }
 
@@ -107,7 +107,7 @@ namespace TestUtilities {
             bool recurse = true,
             bool fullPaths = true
         ) {
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
                 root += "\\";
             }
 
@@ -118,7 +118,7 @@ namespace TestUtilities {
 
             foreach (var dir in dirs) {
                 var fullDir = Path.IsPathRooted(dir) ? dir : (root + dir);
-                var dirPrefix = Path.IsPathRooted(dir) ? "" : (dir.EndsWith("\\") ? dir : (dir + "\\"));
+                var dirPrefix = Path.IsPathRooted(dir) ? "" : (dir.EndsWith("\\", StringComparison.Ordinal) ? dir : (dir + "\\"));
 
                 IEnumerable<string> files = null;
                 try {

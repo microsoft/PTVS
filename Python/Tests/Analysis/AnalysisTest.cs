@@ -1275,9 +1275,10 @@ def f():
     yield 1
     yield 2
     yield 3
+    return 3.14
 
 def g():
-    yield from f()
+    x = yield from f()
 
 a = g()
 a2 = iter(a)
@@ -1292,6 +1293,7 @@ for c in g():
             entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
             entry.AssertIsInstance("b", BuiltinTypeId.Int);
             entry.AssertIsInstance("c", BuiltinTypeId.Int);
+            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
 
             text = @"
 def f(x):

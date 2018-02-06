@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 
 /*
@@ -464,21 +465,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         case VariableKind.Local:
                             assignedGlobal = true;
                             ReportSyntaxWarning(
-                                String.Format(
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    "name '{0}' is assigned to before global declaration",
-                                    n
-                                ),
+                                "name '{0}' is assigned to before global declaration".FormatUI(n),
                                 node
                             );
                             break;
                         
                         case VariableKind.Parameter:
                             ReportSyntaxError(
-                                String.Format(
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    "Name '{0}' is a function parameter and declared global",
-                                    n),
+                                "Name '{0}' is a function parameter and declared global".FormatUI(n),
                                 node);
                             break;
                     }
@@ -487,11 +481,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 // Check for the name being referenced previously. If it has been, issue warning.
                 if (_currentScope.IsReferenced(n) && !assignedGlobal) {
                     ReportSyntaxWarning(
-                        String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "name '{0}' is used prior to global declaration",
-                        n),
-                    node);
+                        "name '{0}' is used prior to global declaration".FormatUI(n),
+                        node);
                 }
 
 
@@ -523,25 +514,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     // conflict?
                     switch (conflict.Kind) {
                         case VariableKind.Global:
-                            ReportSyntaxError(String.Format("name '{0}' is nonlocal and global", n), node);
+                            ReportSyntaxError("name '{0}' is nonlocal and global".FormatUI(n), node);
                             break;
                         case VariableKind.Local:
                             assignedLocal = true;
                             ReportSyntaxWarning(
-                                String.Format(
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    "name '{0}' is assigned to before nonlocal declaration",
-                                    n
-                                ),
+                                "name '{0}' is assigned to before nonlocal declaration".FormatUI(n),
                                 node
                             );
                             break;
                         case VariableKind.Parameter:
                             ReportSyntaxError(
-                                String.Format(
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    "name '{0}' is a parameter and nonlocal",
-                                    n),
+                                "name '{0}' is a parameter and nonlocal".FormatUI(n),
                                 node);
                             break;
                     }
@@ -550,11 +534,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 // Check for the name being referenced previously. If it has been, issue warning.
                 if (_currentScope.IsReferenced(n) && !assignedLocal) {
                     ReportSyntaxWarning(
-                        String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "name '{0}' is used prior to nonlocal declaration",
-                        n),
-                    node);
+                        "name '{0}' is used prior to nonlocal declaration".FormatUI(n),
+                        node);
                 }
 
 

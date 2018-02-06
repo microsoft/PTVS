@@ -742,7 +742,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
 
                     if (res != 0) {
-                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
+                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\", StringComparison.Ordinal));
                         return filePathBuilder.ToString().Substring(4);
                     }
                 }

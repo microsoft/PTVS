@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-            if (_packageManagerProviders == null || !_packageManagerProviders.Any()) {
+            if (_packageManagerProviders == null || !_packageManagerProviders.Any() || factory == null) {
                 return Enumerable.Empty<IPackageManager>();
             }
 
