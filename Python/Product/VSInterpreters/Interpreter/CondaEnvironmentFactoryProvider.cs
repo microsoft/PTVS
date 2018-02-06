@@ -115,8 +115,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (_watchFileSystem && !string.IsNullOrEmpty(_environmentsTxtPath)) {
                         _envsWatcherTimer = new Timer(EnvironmentsWatcherTimer_Elapsed);
 
-                        if (!WatchForEnvironmentsTxtChanged()) {
-                            WatchForCondaFolderCreated();
+                        if (!WatchForEnvironmentsTxtChanges()) {
+                            WatchForCondaFolderCreation();
                         }
                     }
                 }
@@ -127,9 +127,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private bool WatchForEnvironmentsTxtChanged() {
+        private bool WatchForEnvironmentsTxtChanges() {
             // Watch the file %HOMEPATH%/.conda/Environments.txt which
-            // is updated by conda after a new environment is created.
+            // is updated by conda after a new environment is created/deleted.
             if (Directory.Exists(_environmentsTxtFolder)) {
                 try {
                     _envsTxtWatcher = new FileSystemWatcher(_environmentsTxtFolder, "environments.txt");
@@ -145,11 +145,12 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
-        private void WatchForCondaFolderCreated() {
+        private void WatchForCondaFolderCreation() {
             // When .conda does not exist, we watch for its creation
-            // then watcher for environments.txt changes once it's created.
+            // then watch for environments.txt changes once it's created.
             // The simpler alternative of using a recursive watcher on user
-            // folder could lead to poor performance.
+            // folder could lead to poor performance if there are lots of
+            // files under the user folder.
             var watchedPath = Path.GetDirectoryName(_environmentsTxtFolder);
             if (Directory.Exists(watchedPath)) {
                 try {
@@ -190,7 +191,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (_envsTxtWatcher == null) {
-                    WatchForEnvironmentsTxtChanged();
+                    WatchForEnvironmentsTxtChanges();
                 }
             }
         }
@@ -268,53 +269,20 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private static readonly bool FindUsingCondaInfo = true;
-        private static readonly bool FindUsingEnvironmentsTxt = false; // Not necessary for conda 4.4+
-
         private List<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var found = new List<PythonInterpreterInformation>();
             var watchFolders = new HashSet<string>();
 
-            if (FindUsingCondaInfo) {
-                // Find environments that were created with "conda create -n <name>"
-                var condaInfoResult = ExecuteCondaInfo(condaPath);
-                if (condaInfoResult != null) {
-                    foreach (var folder in condaInfoResult.EnvironmentFolders) {
-                        if (!Directory.Exists(folder)) {
-                            continue;
-                        }
-
-                        PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                        if (env != null) {
-                            found.Add(env);
-                        }
+            var condaInfoResult = ExecuteCondaInfo(condaPath);
+            if (condaInfoResult != null) {
+                foreach (var folder in condaInfoResult.EnvironmentFolders) {
+                    if (!Directory.Exists(folder)) {
+                        continue;
                     }
-                }
-            }
 
-            if (FindUsingEnvironmentsTxt) {
-                // Find environments that were created with "conda create -p <folder>"
-                // Note that this may have a bunch of entries that no longer exist
-                // as well as duplicates that were returned by conda info.
-                if (File.Exists(_environmentsTxtPath)) {
-                    try {
-                        var folders = File.ReadAllLines(_environmentsTxtPath);
-                        foreach (var folder in folders) {
-                            if (!Directory.Exists(folder)) {
-                                continue;
-                            }
-
-                            if (found.FirstOrDefault(pii => PathUtils.IsSameDirectory(pii.Configuration.PrefixPath, folder)) != null) {
-                                continue;
-                            }
-
-                            PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                            if (env != null) {
-                                found.Add(env);
-                            }
-                        }
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
+                    PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
+                    if (env != null) {
+                        found.Add(env);
                     }
                 }
             }
