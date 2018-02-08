@@ -111,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            if (operation == PythonOperator.Negate && _value != null) {
+                if (_value is int i) {
+                    return ProjectState.GetConstant(-i);
+                } else if (_value is float f) {
+                    return ProjectState.GetConstant(-f);
+                } else if (_value is double d) {
+                    return ProjectState.GetConstant(-d);
+                }
+            }
+
             return _builtinInfo.UnaryOperation(node, unit, operation);
         }
 

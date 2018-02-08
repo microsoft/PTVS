@@ -152,12 +152,16 @@ dctv_s_i_item_1, dctv_s_i_item_2 = next(iter(dctv_s_i_items))
             analyzer.AssertIsInstance("lst_i_0", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct", BuiltinTypeId.Dict);
             analyzer.AssertIsInstance("dct_s_i", BuiltinTypeId.Dict);
+            analyzer.AssertDescription("dct_s_i", "dict[str, int]");
             analyzer.AssertIsInstance("dct_s_i_a", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct_s_i_keys", BuiltinTypeId.DictKeys);
+            analyzer.AssertDescription("dct_s_i_keys", "dict_keys[str]");
             analyzer.AssertIsInstance("dct_s_i_key", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dct_s_i_values", BuiltinTypeId.DictValues);
+            analyzer.AssertDescription("dct_s_i_values", "dict_values[int]");
             analyzer.AssertIsInstance("dct_s_i_value", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct_s_i_items", BuiltinTypeId.DictItems);
+            analyzer.AssertDescription("dct_s_i_items", "dict_items[tuple[str, int]]");
             analyzer.AssertIsInstance("dct_s_i_item_1", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dct_s_i_item_2", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dctv_s_i_keys", BuiltinTypeId.DictKeys);
@@ -215,17 +219,50 @@ call_iis_i_ret = call_iis_i()
 n : NamedTuple = ...
 n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
 n2 : ""NamedTuple('n2', [('x', int), ['y', str]])"" = ...
+
+n1_x = n1.x
+n1_y = n1.y
+n2_x = n2.x
+n2_y = n2.y
+
+n1_0 = n1[0]
+n1_1 = n1[1]
+n2_0 = n2[0]
+n2_1 = n2[1]
+
+n1_m2 = n1[-2]
+n1_m1 = n1[-1]
+n2_m2 = n2[-2]
+n2_m1 = n2[-1]
+
+i = 0
+i = 1
+n1_i = n1[i]
+n2_i = n2[i]
 ");
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
-            analyzer.AssertDescription("n1", "n1(x, y)");
-            analyzer.AssertDescription("n2", "n2(x, y)");
+            analyzer.AssertDescription("n1", "n1(x : int, y : str)");
+            analyzer.AssertDescription("n2", "n2(x : int, y : str)");
 
-            analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);
-            analyzer.AssertIsInstance("n2.x", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n2.y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_y", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_0", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_0", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_1", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_m2", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_m1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_m2", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_m1", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
         }
 
         [TestMethod, Priority(0)]
@@ -251,7 +288,7 @@ n1 : MyNamedTuple = ...
             analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("sl", BuiltinTypeId.List);
             analyzer.AssertIsInstance("sl_0", BuiltinTypeId.Str);
-            analyzer.AssertDescription("n1", "MyNamedTuple(x)");
+            analyzer.AssertDescription("n1", "MyNamedTuple(x : int)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
         }

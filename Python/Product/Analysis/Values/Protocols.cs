@@ -105,22 +105,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class NameProtocol : Protocol {
         private readonly string _name, _doc;
         private readonly BuiltinTypeId _typeId;
+        private List<KeyValuePair<string, string>> _richDescription;
 
         public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Object) : base(self) {
             _name = name;
             _doc = documentation;
             _typeId = typeId;
+            _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
         }
 
         public NameProtocol(ProtocolInfo self, IPythonType type) : base(self) {
             _name = type.Name;
             _doc = type.Documentation;
             _typeId = type.TypeId;
+            _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
+        }
+
+        public void ExtendDescription(KeyValuePair<string, string> part) {
+            _richDescription.Add(part);
+        }
+
+        public void ExtendDescription(IEnumerable<KeyValuePair<string, string>> parts) {
+            _richDescription.AddRange(parts);
         }
 
         public override string Name => _name;
         public override string Documentation => _doc;
         internal override BuiltinTypeId TypeId => _typeId;
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() => _richDescription;
 
         protected override bool Equals(Protocol other) => Name == other.Name;
         public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
@@ -168,7 +180,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads => _overloads.Value;
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
             int argNumber = 1;
             foreach (var a in Arguments) {
@@ -222,7 +233,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "iterable";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_yielded.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 foreach (var kv in _yielded.GetRichDescriptions()) {
@@ -262,7 +272,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "iterator";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_yielded.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 foreach (var kv in _yielded.GetRichDescriptions()) {
@@ -305,7 +314,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "container";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_valueType.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
@@ -338,32 +346,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
-            members["__getitem__"] = MakeMethod("__getitem__", new[] { Self.AnalysisUnit.State.ClassInfos[BuiltinTypeId.Int].GetInstanceType() }, _yielded);
+            var intType = Self.State.ClassInfos[BuiltinTypeId.Int].GetInstanceType();
+            members["__getitem__"] = MakeMethod("__getitem__", new[] { intType }, _yielded);
+        }
+
+        private IAnalysisSet GetItem(int index) {
+            if (index < 0) {
+                index += _values.Length;
+            }
+            if (index >= 0 && index < _values.Length) {
+                return _values[index];
+            }
+            return AnalysisSet.Empty;
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            int i = -1;
-            try {
-                var constants = index.OfType<ConstantInfo>().Select(ci => ci.Value).OfType<int>().ToArray();
-                if (constants.Length == 1) {
-                    i = constants[0];
-                }
-            } catch (InvalidOperationException) {
-                i = -1;
+            var constants = index.OfType<ConstantInfo>().Select(ci => ci.Value).OfType<int>().ToArray();
+            if (constants.Length == 0) {
+                return AnalysisSet.UnionAll(_values);
             }
-            if (i < 0) {
-                return _yielded;
-            } else if (i < _values.Length) {
-                return _values[i];
-            } else {
-                return AnalysisSet.Empty;
-            }
+
+            return AnalysisSet.UnionAll(constants.Select(GetItem));
         }
 
         public override string Name => "tuple";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_values.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 bool needComma = false;
@@ -402,8 +410,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private IAnalysisSet MakeView(IPythonType type, IAnalysisSet values) {
             var pi = new ProtocolInfo(DeclaringModule, Self.State);
-            pi.AddProtocol(new NameProtocol(pi, type));
-            pi.AddProtocol(new IterableProtocol(pi, values));
+            var np = new NameProtocol(pi, type);
+            var ip = new IterableProtocol(pi, values);
+            np.ExtendDescription(ip.GetRichDescription());
+            pi.AddProtocol(np);
+            pi.AddProtocol(ip);
             return pi;
         }
 
@@ -448,7 +459,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "dict";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_valueType.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
@@ -494,7 +504,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "generator";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
             if (_yielded.Any() || _sent.Any() || _returned.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 if (_yielded.Any()) {
@@ -557,6 +566,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             _values.AddTypes(unit, value);
+        }
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
+            foreach (var kv in _values.Types.GetRichDescriptions(prefix: " : ", unionPrefix: "{", unionSuffix: "}")) {
+                yield return kv;
+            }
         }
 
         protected override bool Equals(Protocol other) => Name == other.Name;
