@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             DeclaringModule = declaringModule;
             DeclaringVersion = declaringModule?.AnalysisVersion ?? -1;
             _references = new ReferenceDict();
-            State = state;
+            State = state ?? throw new ArgumentNullException(nameof(state));
         }
 
         internal PythonAnalyzer State { get; }
@@ -284,33 +285,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            var name = _protocols.OfType<NameProtocol>().FirstOrDefault();
+            var names = _protocols.OfType<NameProtocol>().ToArray();
+            Debug.Assert(names.Length <= 1, "Multiple names are not supported");
+            var name = names.FirstOrDefault();
             if (name != null) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, name.Name);
+                return name.GetRichDescription();
             }
-            if (_protocols.Any()) {
-                bool firstLoop = true;
-                foreach (var p in _protocols.Where(pr => !(pr is NameProtocol))) {
-                    if (firstLoop) {
-                        firstLoop = false;
-                        if (name != null) {
-                            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
-                        }
-                    } else {
-                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                    }
-                    foreach (var d in p.GetRichDescription()) {
-                        yield return d;
-                    }
-                }
-                if (!firstLoop && name != null) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
-                }
 
-            } else {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "<unknown>");
+            var res = new List<KeyValuePair<string, string>>();
+            var namespaces = _protocols.OfType<NamespaceProtocol>().ToArray();
+            var other = _protocols.Except(names).Except(namespaces).ToArray();
+
+            var fallbackName = other.Select(p => p.Name).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "<unknown>";
+            if (!string.IsNullOrEmpty(fallbackName)) {
+                res.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, fallbackName));
             }
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "");
+
+            if (namespaces.Any()) {
+                bool addComma = false;
+                res.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "("));
+                foreach (var p in namespaces) {
+                    if (addComma) {
+                        res.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                    }
+                    addComma = true;
+                    res.AddRange(p.GetRichDescription());
+                }
+                res.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")"));
+            }
+
+            foreach (var p in other) {
+                res.AddRange(p.GetRichDescription().ToArray());
+            }
+
+            res.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, ""));
+
+            return res;
         }
     }
 }
