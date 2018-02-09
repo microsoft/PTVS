@@ -48,18 +48,31 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly CPythonInterpreterFactoryProvider _globalProvider;
         private readonly bool _watchFileSystem;
         private FileSystemWatcher _envsTxtWatcher;
-        private Timer _envsTxtWatcherTimer;
+        private FileSystemWatcher _condaFolderWatcher;
+        private Timer _envsWatcherTimer;
+        private string _userProfileFolder;
+        private string _environmentsTxtFolder;
         private string _environmentsTxtPath;
+
+        internal event EventHandler DiscoveryStarted;
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
             [Import] CPythonInterpreterFactoryProvider globalProvider,
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null,
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
-        ) {
+        ) : this(globalProvider, site, isMockVs == null) {
+        }
+
+        public CondaEnvironmentFactoryProvider(
+            CPythonInterpreterFactoryProvider globalProvider, 
+            IServiceProvider site,
+            bool watchFileSystem,
+            string userProfileFolder = null) {
             _site = site;
-            _watchFileSystem = isMockVs == null;
+            _watchFileSystem = watchFileSystem;
             _globalProvider = globalProvider;
+            _userProfileFolder = userProfileFolder;
         }
 
         public void Dispose() {
@@ -78,8 +91,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (_envsTxtWatcher != null) {
                         _envsTxtWatcher.Dispose();
                     }
-                    if (_envsTxtWatcherTimer != null) {
-                        _envsTxtWatcherTimer.Dispose();
+                    if (_condaFolderWatcher != null) {
+                        _condaFolderWatcher.Dispose();
+                    }
+                    if (_envsWatcherTimer != null) {
+                        _envsWatcherTimer.Dispose();
                     }
                 }
             }
@@ -96,28 +112,25 @@ namespace Microsoft.PythonTools.Interpreter {
                     _initialized = true;
                     doDiscover = true;
                     try {
+                        if (_userProfileFolder == null) {
+                            _userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                        }
+                        _environmentsTxtFolder = Path.Combine(
+                            _userProfileFolder,
+                            ".conda"
+                        );
                         _environmentsTxtPath = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                            ".conda",
+                            _environmentsTxtFolder,
                             "environments.txt"
                         );
                     } catch (ArgumentException) {
                     }
 
                     if (_watchFileSystem && !string.IsNullOrEmpty(_environmentsTxtPath)) {
-                        // Watch the file %HOMEPATH%/.conda/Environments.txt which
-                        // is updated by conda after a new environment is created.
-                        var watchedPath = Path.GetDirectoryName(_environmentsTxtPath);
-                        if (Directory.Exists(watchedPath)) {
-                            try {
-                                _envsTxtWatcher = new FileSystemWatcher(watchedPath, "*.txt");
-                                _envsTxtWatcher.Changed += _envsTxtWatcher_Changed;
-                                _envsTxtWatcher.Created += _envsTxtWatcher_Changed;
-                                _envsTxtWatcher.EnableRaisingEvents = true;
-                                _envsTxtWatcherTimer = new Timer(_envsTxtWatcherTimer_Elapsed);
-                            } catch (ArgumentException) {
-                            } catch (IOException) {
-                            }
+                        _envsWatcherTimer = new Timer(EnvironmentsWatcherTimer_Elapsed);
+
+                        if (!WatchForEnvironmentsTxtChanges()) {
+                            WatchForCondaFolderCreation();
                         }
                     }
                 }
@@ -128,10 +141,46 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void _envsTxtWatcherTimer_Elapsed(object state) {
+        private bool WatchForEnvironmentsTxtChanges() {
+            // Watch the file %HOMEPATH%/.conda/Environments.txt which
+            // is updated by conda after a new environment is created/deleted.
+            if (Directory.Exists(_environmentsTxtFolder)) {
+                try {
+                    _envsTxtWatcher = new FileSystemWatcher(_environmentsTxtFolder, "environments.txt");
+                    _envsTxtWatcher.Changed += EnvironmentsTxtWatcher_Changed;
+                    _envsTxtWatcher.Created += EnvironmentsTxtWatcher_Changed;
+                    _envsTxtWatcher.EnableRaisingEvents = true;
+                    return true;
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                }
+            }
+
+            return false;
+        }
+
+        private void WatchForCondaFolderCreation() {
+            // When .conda does not exist, we watch for its creation
+            // then watch for environments.txt changes once it's created.
+            // The simpler alternative of using a recursive watcher on user
+            // folder could lead to poor performance if there are lots of
+            // files under the user folder.
+            var watchedPath = Path.GetDirectoryName(_environmentsTxtFolder);
+            if (Directory.Exists(watchedPath)) {
+                try {
+                    _condaFolderWatcher = new FileSystemWatcher(watchedPath, ".conda");
+                    _condaFolderWatcher.Created += CondaFolderWatcher_Created;
+                    _condaFolderWatcher.EnableRaisingEvents = true;
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                }
+            }
+        }
+
+        private void EnvironmentsWatcherTimer_Elapsed(object state) {
             try {
                 lock (_factories) {
-                    _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _envsWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
 
                 DiscoverInterpreterFactories();
@@ -139,13 +188,24 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void _envsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
-            if (PathUtils.IsSamePath(e.FullPath, _environmentsTxtPath)) {
-                lock (_factories) {
-                    try {
-                        _envsTxtWatcherTimer.Change(1000, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
-                    }
+        private void EnvironmentsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
+            lock (_factories) {
+                try {
+                    _envsWatcherTimer.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
+        }
+
+        private void CondaFolderWatcher_Created(object sender, FileSystemEventArgs e) {
+            lock (_factories) {
+                try {
+                    _envsWatcherTimer.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+
+                if (_envsTxtWatcher == null) {
+                    WatchForEnvironmentsTxtChanges();
                 }
             }
         }
@@ -154,6 +214,8 @@ namespace Microsoft.PythonTools.Interpreter {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
+
+            DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
             bool anyChanged = false;
@@ -223,53 +285,20 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private static readonly bool FindUsingCondaInfo = true;
-        private static readonly bool FindUsingEnvironmentsTxt = false; // Not necessary for conda 4.4+
-
         private List<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var found = new List<PythonInterpreterInformation>();
             var watchFolders = new HashSet<string>();
 
-            if (FindUsingCondaInfo) {
-                // Find environments that were created with "conda create -n <name>"
-                var condaInfoResult = ExecuteCondaInfo(condaPath);
-                if (condaInfoResult != null) {
-                    foreach (var folder in condaInfoResult.EnvironmentFolders) {
-                        if (!Directory.Exists(folder)) {
-                            continue;
-                        }
-
-                        PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                        if (env != null) {
-                            found.Add(env);
-                        }
+            var condaInfoResult = ExecuteCondaInfo(condaPath);
+            if (condaInfoResult != null) {
+                foreach (var folder in condaInfoResult.EnvironmentFolders) {
+                    if (!Directory.Exists(folder)) {
+                        continue;
                     }
-                }
-            }
 
-            if (FindUsingEnvironmentsTxt) {
-                // Find environments that were created with "conda create -p <folder>"
-                // Note that this may have a bunch of entries that no longer exist
-                // as well as duplicates that were returned by conda info.
-                if (File.Exists(_environmentsTxtPath)) {
-                    try {
-                        var folders = File.ReadAllLines(_environmentsTxtPath);
-                        foreach (var folder in folders) {
-                            if (!Directory.Exists(folder)) {
-                                continue;
-                            }
-
-                            if (found.FirstOrDefault(pii => PathUtils.IsSameDirectory(pii.Configuration.PrefixPath, folder)) != null) {
-                                continue;
-                            }
-
-                            PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                            if (env != null) {
-                                found.Add(env);
-                            }
-                        }
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
+                    PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
+                    if (env != null) {
+                        found.Add(env);
                     }
                 }
             }
