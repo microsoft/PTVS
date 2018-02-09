@@ -826,7 +826,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public SourceSpan Span { get; private set; }
         public string Message { get; set; }
-        public string SourceFile { get; set; }
+        public string SourceFile { get; }
         public VSTASKCATEGORY Category { get; set; }
         public VSTASKPRIORITY Priority { get; set; }
         public bool CanDelete { get; set; }

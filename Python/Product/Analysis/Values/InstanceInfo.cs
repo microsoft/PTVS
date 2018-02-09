@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -123,14 +124,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (callRes.Any()) {
                         res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
                     } else {
-                        var message = string.IsNullOrEmpty(ClassInfo?.ShortDescription) ?
-                            "object may not be callable" :
-                            $"'{ClassInfo.ShortDescription}' may not be callable";
                         unit.State.AddDiagnostic(
                             (node as CallExpression)?.Target ?? node,
                             unit,
-                            message,
-                            LanguageServer.DiagnosticSeverity.Warning, "not-callable"
+                            ErrorMessages.NotCallable(ClassInfo?.ShortDescription),
+                            DiagnosticSeverity.Warning,
+                            ErrorMessages.NotCallableCode
                         );
                     }
                 } finally {

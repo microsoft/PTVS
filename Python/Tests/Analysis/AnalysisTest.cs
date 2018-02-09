@@ -6824,17 +6824,17 @@ b, c, d         # but they are undefined here
 ";
             var entry = ProcessTextV3(code);
             entry.AssertDiagnostics(
-                "used-before-assignment:unknown variable 'b':(1,5) - (1,6)",
-                "used-before-assignment:unknown variable 'c':(1,9) - (1,10)",
-                "used-before-assignment:unknown variable 'b':(2,9) - (2,10)",
-                "used-before-assignment:unknown variable 'd':(3,1) - (3,2)",
-                "used-before-assignment:unknown variable 'e':(5,13) - (5,14)",
-                "used-before-assignment:unknown variable 'f':(6,13) - (6,14)",
-                "used-before-assignment:unknown variable 'g':(7,13) - (7,14)",
-                "used-before-assignment:unknown variable 'd':(10,11) - (10,12)",
-                "used-before-assignment:unknown variable 'b':(11,1) - (11,2)",
-                "used-before-assignment:unknown variable 'c':(11,4) - (11,5)",
-                "used-before-assignment:unknown variable 'd':(11,7) - (11,8)"
+                "used-before-assignment:unknown variable 'b':(1, 5) - (1, 6)",
+                "used-before-assignment:unknown variable 'c':(1, 9) - (1, 10)",
+                "used-before-assignment:unknown variable 'b':(2, 9) - (2, 10)",
+                "used-before-assignment:unknown variable 'd':(3, 1) - (3, 2)",
+                "used-before-assignment:unknown variable 'e':(5, 13) - (5, 14)",
+                "used-before-assignment:unknown variable 'f':(6, 13) - (6, 14)",
+                "used-before-assignment:unknown variable 'g':(7, 13) - (7, 14)",
+                "used-before-assignment:unknown variable 'd':(10, 11) - (10, 12)",
+                "used-before-assignment:unknown variable 'b':(11, 1) - (11, 2)",
+                "used-before-assignment:unknown variable 'c':(11, 4) - (11, 5)",
+                "used-before-assignment:unknown variable 'd':(11, 7) - (11, 8)"
             );
 
             code = @"
@@ -6866,7 +6866,7 @@ y = mcc()
             entry.AssertIsInstance("x");
             entry.AssertIsInstance("y", BuiltinTypeId.Int);
             entry.AssertDiagnostics(
-                "not-callable:'MyClass' may not be callable:(10,5) - (10,7)"
+                "not-callable:'MyClass' may not be callable:(10, 5) - (10, 7)"
             );
         }
 
