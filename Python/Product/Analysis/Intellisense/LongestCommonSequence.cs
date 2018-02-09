@@ -245,6 +245,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool Equals(LcsDiff other) 
             => OldStart == other.OldStart && NewStart == other.NewStart && OldEnd == other.OldEnd && NewEnd == other.NewEnd;
 
+        public static bool operator ==(LcsDiff x, LcsDiff y) => x.Equals(y);
+        public static bool operator !=(LcsDiff x, LcsDiff y) => !x.Equals(y);
+
         public override int GetHashCode() {
             unchecked {
                 var hashCode = OldStart;
