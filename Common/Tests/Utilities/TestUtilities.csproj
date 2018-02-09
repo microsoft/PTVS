@@ -88,6 +88,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AssertListener.cs" />
+    <Compile Include="Ben.Demystifier\ILReader.cs" />
+    <Compile Include="Ben.Demystifier\StringBuilderExtensions.cs" />
+    <Compile Include="Ben.Demystifier\TypeNameHelper.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="IAddExistingItem.cs" />
     <Compile Include="IAddNewItem.cs" />
@@ -102,9 +105,11 @@
     <Compile Include="Mocks\MockTextViewModel.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
     <Compile Include="Mocks\TextVersionWorkaround.cs" />
+    <Compile Include="MSTestEnvironment.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
+    <Compile Include="TaskObserver.cs" />
     <Compile Include="VCCompiler.cs" />
     <Compile Include="VisualStudioPath.cs" />
     <Compile Include="WebDownloadUtility.cs" />
@@ -179,6 +184,16 @@
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />
     <Compile Include="WpfProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Python\Product\Analysis\Analysis.csproj">
+      <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Python\Product\Common\Common.csproj">
+      <Project>{B3DB0521-D9E3-4F48-9E2E-E5ECAE886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />

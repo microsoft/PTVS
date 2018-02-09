@@ -64,11 +64,13 @@
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
+    <Compile Include="Infrastructure\ITestEnvironment.cs" />
     <Compile Include="Infrastructure\PathEqualityComparer.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\ProcessHelper.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\UriEqualityComparer.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
