@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis {
                 AnalysisVersion++;
 
                 foreach (var aggregate in _aggregates) {
-                    aggregate.BumpVersion();
+                    aggregate?.BumpVersion();
                 }
 
                 Parse(enqueueOnly, cancel);
@@ -299,11 +299,13 @@ namespace Microsoft.PythonTools.Analysis {
         public void RemovedFromProject() {
             lock (this) {
                 AnalysisVersion = -1;
-            }
-            foreach (var aggregatedInto in _aggregates) {
-                if (aggregatedInto.AnalysisVersion != -1) {
-                    ProjectState.ClearAggregate(aggregatedInto);
-                    aggregatedInto.RemovedFromProject();
+
+                var state = ProjectState;
+                foreach (var aggregatedInto in _aggregates) {
+                    if (aggregatedInto != null && aggregatedInto.AnalysisVersion != -1) {
+                        state?.ClearAggregate(aggregatedInto);
+                        aggregatedInto.RemovedFromProject();
+                    }
                 }
             }
         }
@@ -314,7 +316,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void AggregatedInto(IVersioned into) {
             if (into is AggregateProjectEntry agg) {
-                _aggregates.Add(agg);
+                lock (this) {
+                    _aggregates.Add(agg);
+                }
             }
         }
 
