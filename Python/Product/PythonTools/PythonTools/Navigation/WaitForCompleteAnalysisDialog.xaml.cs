@@ -46,21 +46,27 @@ namespace Microsoft.PythonTools.Navigation {
 
         private bool UpdateItemsRemaining(int itemsLeft) {
             if (itemsLeft == 0) {
-                Dispatcher.Invoke((Action)(() => {
-                    this.DialogResult = true;
-                    this.Close();
-                }));
+                try {
+                    Dispatcher.Invoke((Action)(() => {
+                        this.DialogResult = true;
+                        this.Close();
+                    }));
+                } catch (OperationCanceledException) {
+                    // Should only occur if the dialog is closed already, so nothing left to do
+                }
                 return false;
             }
             
             bool? dialogResult = null;
-            Dispatcher.Invoke((Action)(() => {
-                dialogResult = DialogResult;
-                if (dialogResult == null) {
-                    _progress.Maximum = itemsLeft;
-                }
-            }));
-            
+            try {
+                Dispatcher.Invoke((Action)(() => {
+                    dialogResult = DialogResult;
+                    if (dialogResult == null) {
+                        _progress.Maximum = itemsLeft;
+                    }
+                }));
+            } catch (OperationCanceledException) {
+            }
 
             return dialogResult == null;
         }
