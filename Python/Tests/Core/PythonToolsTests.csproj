@@ -107,6 +107,7 @@
     <Compile Include="CodeCellTests.cs" />
     <Compile Include="CoverageTests.cs" />
     <Compile Include="CondaEnvironmentManagerTests.cs" />
+    <Compile Include="CondaInterpreterFactoryTests.cs" />
     <Compile Include="InvalidEncodingSquiggleProviderTests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />

@@ -169,6 +169,72 @@ class Oar(object):
             await CodeFormattingTest(input, new Span(0, input.Length), expected, null, options, false);
         }
 
+        [TestMethod, Priority(0)]
+        public async Task FormatDocument2() {
+            var input = @"import sys
+import abc
+
+#ABC
+
+foo()
+foo()
+
+x = 34;
+
+y = x;z = y
+goo(y)
+x = 34;
+
+y = x;z = y";
+            var expected = @"import sys
+import abc
+
+#ABC
+foo()
+foo()
+
+x = 34
+
+y = x
+z = y
+goo(y)
+x = 34
+
+y = x
+z = y";
+            var options = new CodeFormattingOptions {
+                BreakMultipleStatementsPerLine = true,
+                NewLineFormat = NewLineKind.CarriageReturnLineFeed.GetString(),
+                RemoveTrailingSemicolons = true,
+                ReplaceMultipleImportsWithMultipleStatements = true,
+                SpaceAroundAnnotationArrow = true,
+                SpaceAroundDefaultValueEquals = false,
+                SpaceBeforeCallParen = false,
+                SpaceBeforeClassDeclarationParen = false,
+                SpaceBeforeFunctionDeclarationParen = false,
+                SpaceBeforeIndexBracket = false,
+                SpaceWithinCallParens = false,
+                SpaceWithinClassDeclarationParens = false,
+                SpaceWithinEmptyBaseClassList = false,
+                SpaceWithinEmptyCallArgumentList = false,
+                SpaceWithinEmptyParameterList = false,
+                SpaceWithinEmptyTupleExpression = false,
+                SpaceWithinFunctionDeclarationParens = false,
+                SpaceWithinIndexBrackets = false,
+                SpacesAroundAssignmentOperator = true,
+                SpacesAroundBinaryOperators = true,
+                SpacesWithinEmptyListExpression = false,
+                SpacesWithinListExpression = false,
+                SpacesWithinParenthesisExpression = false,
+                SpacesWithinParenthesisedTupleExpression = false,
+                UseVerbatimImage = true,
+                WrapComments = true,
+                WrappingWidth = 80
+            };
+
+            await CodeFormattingTest(input, new Span(0, input.Length), expected, null, options, false);
+        }
+
         private static async Task CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();

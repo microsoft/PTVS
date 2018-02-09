@@ -35,18 +35,20 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     static class RichDescriptionExtensions {
-        public static IEnumerable<KeyValuePair<string, string>> GetRichDescriptions(this IAnalysisSet set, string prefix = null, bool useLongDescription = false, string unionPrefix = null, string unionSuffix = null) {
+        public static IEnumerable<KeyValuePair<string, string>> GetRichDescriptions(this IAnalysisSet set, string prefix = null, bool useLongDescription = false, string unionPrefix = null, string unionSuffix = null, bool alwaysUsePrefixSuffix = false, string defaultIfEmpty = null) {
             var items = new List<KeyValuePair<string, string>>();
+            int itemCount = 0;
             foreach (var d in (useLongDescription ? set.GetDescriptions() : set.GetShortDescriptions())) {
                 items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, d));
                 items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                itemCount += 1;
             }
 
-            if (items.Count == 2) {
-                items.RemoveAt(1);
+            if (itemCount == 1) {
+                items.RemoveAt(items.Count - 1);
             }
 
-            if (items.Count > 2) {
+            if (alwaysUsePrefixSuffix || itemCount >= 2) {
                 if (!string.IsNullOrEmpty(unionPrefix)) {
                     items.Insert(0, new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, unionPrefix));
                 }
@@ -55,8 +57,12 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            if (items.Count > 0 && !string.IsNullOrEmpty(prefix)) {
+            if (itemCount > 0 && !string.IsNullOrEmpty(prefix)) {
                 items.Insert(0, new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, prefix));
+            }
+
+            if (items.Count == 0 && !string.IsNullOrEmpty(defaultIfEmpty)) {
+                items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, defaultIfEmpty));
             }
 
             return items;

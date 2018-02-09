@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var interpreterOpts = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            var pm = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault();
+            var pm = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (pm == null) {
                 WriteError(
                     Strings.PackageManagementNotSupported_Package.FormatUI(PathUtils.GetFileOrDirectoryName(txt))

@@ -219,10 +219,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private IAnalysisSet MakeTuple(params IAnalysisSet[] types) {
-            var pi = new ProtocolInfo(Entry, State);
-            pi.AddProtocol(new NameProtocol(pi, Types[BuiltinTypeId.Tuple]));
-            pi.AddProtocol(new TupleProtocol(pi, types));
-            return pi;
+            var p = new ProtocolInfo(Entry, State);
+            var np = new NameProtocol(p, Types[BuiltinTypeId.Tuple]);
+            var tp = new TupleProtocol(p, types);
+            np.ExtendDescription(tp.GetRichDescription());
+            p.AddProtocol(np);
+            p.AddProtocol(tp);
+            return p;
         }
 
         private bool GetSequenceTypes(string name, IReadOnlyList<IAnalysisSet> args, out IPythonType realType, out IAnalysisSet keyTypes, out IAnalysisSet valueTypes) {
@@ -302,6 +305,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return null;
             }
 
+            NameProtocol np;
             IPythonType realType;
             IAnalysisSet keyTypes, valueTypes;
 
@@ -310,8 +314,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return AnalysisSet.UnionAll(args.Select(a => Finalize(a)));
                 case "Optional":
                     return Finalize(args[0]).Add(NoneType);
-                case "List":
+
                 case "Tuple":
+                    if (!args.SelectMany(a => a).Any(a => a.TypeId == BuiltinTypeId.Ellipsis)) {
+                        return MakeTuple(args.ToArray());
+                    }
+                    goto case "List";
+
+                case "List":
                 case "Container":
                 case "MutableSequence":
                 case "Sequence":
@@ -324,11 +334,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (GetSequenceTypes(name, args, out realType, out keyTypes, out valueTypes)) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
-                        if (realType == null) {
-                            p.AddProtocol(new NameProtocol(p, name));
-                        } else {
-                            p.AddProtocol(new NameProtocol(p, realType));
-                        }
+                        np = realType == null ? new NameProtocol(p, name) : new NameProtocol(p, realType);
+                        np.ExtendDescription(valueTypes.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]", alwaysUsePrefixSuffix: true));
+                        p.AddProtocol(np);
                         p.AddProtocol(new IterableProtocol(p, valueTypes));
                         if (keyTypes != null) {
                             p.AddProtocol(new GetItemProtocol(p, keyTypes, valueTypes));
@@ -344,11 +352,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (GetSequenceTypes(name, args, out realType, out keyTypes, out valueTypes)) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
-                        if (realType == null) {
-                            p.AddProtocol(new NameProtocol(p, name));
-                        } else {
-                            p.AddProtocol(new NameProtocol(p, realType));
-                        }
+                        np = realType == null ? new NameProtocol(p, name) : new NameProtocol(p, realType);
+                        np.ExtendDescription(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
+                        np.ExtendDescription(keyTypes.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]", defaultIfEmpty: "Any"));
+                        np.ExtendDescription(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                        np.ExtendDescription(valueTypes.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]", defaultIfEmpty: "Any"));
+                        np.ExtendDescription(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]"));
+                        p.AddProtocol(np);
                         p.AddProtocol(new MappingProtocol(p, keyTypes, valueTypes, MakeTuple(keyTypes, valueTypes)));
                         return p;
                     }
@@ -358,14 +368,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (args.Count > 0) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
-                        var callArgs = GetTypeList(args[0]);
-                        p.AddProtocol(new NameProtocol(p, Types[BuiltinTypeId.Function]));
-                        p.AddProtocol(new CallableProtocol(
+                        np = new NameProtocol(p, Types[BuiltinTypeId.Function]);
+                        var call = new CallableProtocol(
                             p,
                             null,
-                            callArgs,
+                            GetTypeList(args[0]),
                             ToInstance(args.ElementAtOrDefault(1) ?? AnalysisSet.Empty)
-                        ));
+                        );
+                        np.ExtendDescription(call.GetRichDescription());
+                        p.AddProtocol(np);
+                        p.AddProtocol(call);
                         return p;
                     }
                     break;
@@ -414,12 +426,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var res = new ProtocolInfo(unit.ProjectEntry, unit.State);
 
-            if (namedTupleName != null) {
-                var np = new NameProtocol(res, namedTupleName.GetConstantValueAsString().FirstOrDefault() ?? "tuple");
-                res.AddProtocol(np);
-            }
+            string name;
+            var description = new List<KeyValuePair<string, string>>();
 
             if (args != null && args.Any()) {
+                var tupleItem = new List<IAnalysisSet>();
                 foreach (var a in args) {
                     // each arg is going to be either a union containing a string literal and type,
                     // or a list with string literal and type.
@@ -435,13 +446,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (!nameSet.Split(out IReadOnlyList<ConstantInfo> names, out var rest)) {
                         names = a.OfType<ConstantInfo>().ToArray();
                     }
-                    var name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "unnamed";
+                    name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "unnamed";
 
                     var p = new NamespaceProtocol(res, name);
-                    p.SetMember(node, unit, name, ToInstance(valueSet));
+                    var value = ToInstance(valueSet);
+                    p.SetMember(node, unit, name, value);
+                    tupleItem.Add(value);
                     res.AddProtocol(p);
+
+                    if (description.Any()) {
+                        description.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                    }
+                    description.AddRange(p.GetRichDescription());
                 }
+
+                res.AddProtocol(new TupleProtocol(res, tupleItem));
             }
+
+            name = namedTupleName?.GetConstantValueAsString().FirstOrDefault() ?? "tuple";
+            var np = new NameProtocol(res, name);
+            if (description.Any()) {
+                np.ExtendDescription(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "("));
+                np.ExtendDescription(description);
+                np.ExtendDescription(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")"));
+            }
+            res.AddProtocol(np);
 
             return res;
         }
