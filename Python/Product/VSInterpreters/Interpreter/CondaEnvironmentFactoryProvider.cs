@@ -50,18 +50,29 @@ namespace Microsoft.PythonTools.Interpreter {
         private FileSystemWatcher _envsTxtWatcher;
         private FileSystemWatcher _condaFolderWatcher;
         private Timer _envsWatcherTimer;
+        private string _userProfileFolder;
         private string _environmentsTxtFolder;
         private string _environmentsTxtPath;
+
+        internal event EventHandler DiscoveryStarted;
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
             [Import] CPythonInterpreterFactoryProvider globalProvider,
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null,
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
-        ) {
+        ) : this(globalProvider, site, isMockVs == null) {
+        }
+
+        public CondaEnvironmentFactoryProvider(
+            CPythonInterpreterFactoryProvider globalProvider, 
+            IServiceProvider site,
+            bool watchFileSystem,
+            string userProfileFolder = null) {
             _site = site;
-            _watchFileSystem = isMockVs == null;
+            _watchFileSystem = watchFileSystem;
             _globalProvider = globalProvider;
+            _userProfileFolder = userProfileFolder;
         }
 
         public void Dispose() {
@@ -101,8 +112,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     _initialized = true;
                     doDiscover = true;
                     try {
+                        if (_userProfileFolder == null) {
+                            _userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                        }
                         _environmentsTxtFolder = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                            _userProfileFolder,
                             ".conda"
                         );
                         _environmentsTxtPath = Path.Combine(
@@ -200,6 +214,8 @@ namespace Microsoft.PythonTools.Interpreter {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
+
+            DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
             bool anyChanged = false;
