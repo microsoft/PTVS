@@ -14,7 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class ModuleScope : InterpreterScope {
@@ -25,6 +27,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private ModuleScope(ModuleScope scope)
             : base(scope.AnalysisValue, scope, true) {
+        }
+
+        internal void SetModuleVariable(string name, IAnalysisSet value) {
+            CreateVariable(null, null, name, addRef: false).AddTypes(Module.ProjectEntry, value);
         }
 
         public ModuleInfo Module { get { return AnalysisValue as ModuleInfo; } }

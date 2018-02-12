@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -135,10 +137,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
-            if (createIn != null && !res.Any()) {
-                var refs = createIn.CreateVariable(node, _unit, name, addRef);
+            if (!_unit.ForEval && !res.Any()) {
+                ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
+                var refs = createIn?.CreateVariable(node, _unit, name, addRef);
                 if (addDependency) {
-                    refs.AddDependency(_unit);
+                    refs?.AddDependency(_unit);
                 }
             }
             return res;

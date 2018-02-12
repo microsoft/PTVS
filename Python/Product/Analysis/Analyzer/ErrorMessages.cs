@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
-    struct MonitoredBufferResult {
-        public readonly BufferParser BufferParser;
-        public readonly AnalysisEntry AnalysisEntry;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
-        public MonitoredBufferResult(BufferParser bufferParser, AnalysisEntry projectEntry) {
-            BufferParser = bufferParser;
-            AnalysisEntry = projectEntry;
-        }
+namespace Microsoft.PythonTools.Analysis.Analyzer {
+    static class ErrorMessages {
+        public static string NotCallableCode { get; } = "not-callable";
+        public static string NotCallable(string target) => string.IsNullOrEmpty(target) ?
+            "object may not be callable" :
+            "'{0}' may not be callable".FormatUI(target);
+
+        public static string UsedBeforeAssignmentCode { get; } = "used-before-assignment";
+        public static string UsedBeforeAssignment(string name) => "unknown variable '{0}'".FormatUI(name);
     }
 }

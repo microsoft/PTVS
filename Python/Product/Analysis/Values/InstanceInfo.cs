@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -122,6 +123,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var callRes = GetTypeMember(node, unit, "__call__");
                     if (callRes.Any()) {
                         res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
+                    } else {
+                        unit.State.AddDiagnostic(
+                            (node as CallExpression)?.Target ?? node,
+                            unit,
+                            ErrorMessages.NotCallable(ClassInfo?.ShortDescription),
+                            DiagnosticSeverity.Warning,
+                            ErrorMessages.NotCallableCode
+                        );
                     }
                 } finally {
                     Pop();

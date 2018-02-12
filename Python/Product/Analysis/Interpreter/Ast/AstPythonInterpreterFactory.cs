@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed, _loggedBadDbPath;
-        private readonly bool _skipCache, _skipWriteToCache;
+        private readonly bool _skipCache, _useDefaultDatabase;
 
         private AnalysisLogWriter _log;
         // Available for tests to override
@@ -49,9 +49,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         const int LogRotationSize = 4096;
 #endif
 
-        public AstPythonInterpreterFactory(
+        public AstPythonInterpreterFactory(InterpreterConfiguration config, InterpreterFactoryCreationOptions options)
+            : this(config, options, string.IsNullOrEmpty(options?.DatabasePath)) { }
+
+        private AstPythonInterpreterFactory(
             InterpreterConfiguration config,
-            InterpreterFactoryCreationOptions options
+            InterpreterFactoryCreationOptions options,
+            bool useDefaultDatabase
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
             CreationOptions = options ?? new InterpreterFactoryCreationOptions();
@@ -62,17 +66,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             _databasePath = CreationOptions.DatabasePath;
-            if (!string.IsNullOrEmpty(_databasePath)) {
+            _useDefaultDatabase = useDefaultDatabase;
+            if (_useDefaultDatabase) {
+                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
+                } else {
+                    _skipCache = true;
+                }
+            } else {
                 _searchPathCachePath = Path.Combine(_databasePath, "database.path");
 
                 _log = new AnalysisLogWriter(Path.Combine(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
-            } else {
-                if (InstallPath.TryGetFile("DefaultDB\\v{0}\\python.pyi".FormatInvariant(Configuration.Version.Major), out string biPath)) {
-                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
-                    _skipWriteToCache = true;
-                }
             }
             _skipCache = !CreationOptions.UseExistingCache;
         }
@@ -104,11 +110,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             typeName = GetType().FullName;
             properties = CreationOptions.ToDictionary();
             Configuration.WriteToDictionary(properties);
+            if (_useDefaultDatabase) {
+                properties["UseDefaultDatabase"] = true;
+            }
             return true;
         }
 
         internal AstPythonInterpreterFactory(Dictionary<string, object> properties) :
-            this(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
+            this(
+                InterpreterConfiguration.FromDictionary(properties),
+                InterpreterFactoryCreationOptions.FromDictionary(properties),
+                properties.ContainsKey("UseDefaultDatabase")
+            ) { }
 
         public InterpreterConfiguration Configuration { get; }
 
@@ -198,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var file = PathUtils.OpenWithRetry(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            if (file == null || _skipWriteToCache) {
+            if (file == null || _useDefaultDatabase) {
                 return file;
             }
 
@@ -226,7 +239,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal void WriteCachedModule(string filePath, Stream code) {
-            if (_skipWriteToCache) {
+            if (_useDefaultDatabase) {
                 return;
             }
 

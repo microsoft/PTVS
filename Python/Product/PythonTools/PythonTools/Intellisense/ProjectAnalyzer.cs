@@ -256,6 +256,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
+            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", true) ?? true;
+
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
@@ -266,7 +268,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
             }
-
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
@@ -1624,7 +1625,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _services.Site,
                         e,
                         ge.Key,
-                        VSTASKCATEGORY.CAT_BUILDCOMPILE,
+                        VSTASKCATEGORY.CAT_CODESENSE,
                         true
                     ))).ToList();
 
