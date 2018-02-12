@@ -123,18 +123,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             }
                             expr = nextExpr;
                             var decorated = AnalysisSet.Empty;
+                            bool anyResults = false;
                             foreach (var ns in decorator) {
                                 var fd = ns as FunctionInfo;
                                 if (fd != null && Scope.EnumerateTowardsGlobal.Any(s => s.AnalysisValue == fd)) {
                                     continue;
                                 }
                                 decorated = decorated.Union(ns.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames));
+                                anyResults = true;
                             }
 
                             // If processing decorators, update the current
                             // function type. Otherwise, we are acting as if
                             // each decorator returns the function unmodified.
-                            if (ddg.ProjectState.Limits.ProcessCustomDecorators && !decorated.IsObjectOrUnknown()) {
+                            if (ddg.ProjectState.Limits.ProcessCustomDecorators && anyResults) {
                                 types = decorated;
                             }
                         }

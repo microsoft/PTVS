@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 TraceMessage($"Applied changes to {uri}");
-                EnqueueItem(doc);
+                EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
             }
 
         }
@@ -822,7 +822,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal) {
+        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             try {
                 VersionCookie vc;
                 using (_pendingAnalysisEnqueue.Incremented()) {
@@ -848,7 +848,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         ParseComplete(doc.DocumentUri, 0);
                     }
 
-                    if (doc is IAnalyzable analyzable) {
+                    if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
                         TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
                         _queue.Enqueue(analyzable, priority);
                     }
