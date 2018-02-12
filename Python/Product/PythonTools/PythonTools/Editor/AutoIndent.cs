@@ -288,25 +288,24 @@ namespace Microsoft.PythonTools.Editor {
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
 
-            ITextBuffer targetBuffer = line.Snapshot.TextBuffer;
-            if (!targetBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var match = textView.MapDownToPythonBuffer(line.Start);
+            var lineStart = line.Start;
+            if (!line.Snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                var match = textView.MapDownToPythonBuffer(lineStart);
                 if (match == null) {
                     return 0;
                 }
-                targetBuffer = match.Value.Snapshot.TextBuffer;
+                lineStart = match.Value;
             }
 
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, buffer);
             if (desiredIndentation < 0) {
-                Debug.Fail($"Unexpected negative indent {desiredIndentation}");
                 desiredIndentation = 0;
             }
 
             // Map indentation back to the view's text buffer.
-            if (line.Snapshot.TextBuffer != textView.TextBuffer) {
+            if (textView.TextBuffer != lineStart.Snapshot.TextBuffer) {
                 var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
-                    line.Start,
+                    lineStart,
                     PointTrackingMode.Positive,
                     PositionAffinity.Successor,
                     textView.TextSnapshot
