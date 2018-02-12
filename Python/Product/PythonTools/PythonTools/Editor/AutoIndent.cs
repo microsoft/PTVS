@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
@@ -287,13 +288,13 @@ namespace Microsoft.PythonTools.Editor {
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
 
-            ITextBuffer targetBuffer = line.Snapshot.TextBuffer;
-            if (!targetBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var match = textView.MapDownToPythonBuffer(line.Start);
+            var lineStart = line.Start;
+            if (!line.Snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                var match = textView.MapDownToPythonBuffer(lineStart);
                 if (match == null) {
                     return 0;
                 }
-                targetBuffer = match.Value.Snapshot.TextBuffer;
+                lineStart = match.Value;
             }
 
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, buffer);
@@ -302,9 +303,9 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // Map indentation back to the view's text buffer.
-            if (textView.TextBuffer != targetBuffer) {
+            if (textView.TextBuffer != lineStart.Snapshot.TextBuffer) {
                 var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
-                    baseline.Start,
+                    lineStart,
                     PointTrackingMode.Positive,
                     PositionAffinity.Successor,
                     textView.TextSnapshot
@@ -343,6 +344,10 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
 
+            if (desiredIndentation < 0) {
+                Debug.Fail($"Unexpected negative indent {desiredIndentation}");
+                desiredIndentation = 0;
+            }
             return desiredIndentation;
         }
     }
