@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
@@ -299,14 +298,13 @@ namespace Microsoft.PythonTools.Editor {
 
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, buffer);
             if (desiredIndentation < 0) {
-                Debug.Fail($"Unexpected negative indent {desiredIndentation}");
                 desiredIndentation = 0;
             }
 
             // Map indentation back to the view's text buffer.
-            if (line.Snapshot.TextBuffer != targetBuffer) {
+            if (textView.TextBuffer != targetBuffer) {
                 var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
-                    line.Start,
+                    baseline.Start,
                     PointTrackingMode.Positive,
                     PositionAffinity.Successor,
                     textView.TextSnapshot
@@ -345,10 +343,6 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
 
-            if (desiredIndentation < 0) {
-                Debug.Fail($"Unexpected negative indent {desiredIndentation}");
-                desiredIndentation = 0;
-            }
             return desiredIndentation;
         }
     }
