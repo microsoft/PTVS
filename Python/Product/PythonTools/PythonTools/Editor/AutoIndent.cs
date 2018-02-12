@@ -304,7 +304,7 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // Map indentation back to the view's text buffer.
-            if (line.Snapshot.TextBuffer != targetBuffer) {
+            if (line.Snapshot.TextBuffer != textView.TextBuffer) {
                 var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
                     line.Start,
                     PointTrackingMode.Positive,
