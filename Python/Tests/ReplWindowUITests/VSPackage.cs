@@ -17,6 +17,7 @@
 using System;
 using Microsoft.VisualStudio.Shell;
 using TestRunnerInterop;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -25,9 +26,10 @@ namespace PythonToolsUITests {
     public sealed class VSPackage : Package {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.ReplWindowUITests";
 
-        private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() =>
-            new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly)
-        );
+        private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() => {
+            MSTestEnvironment.Initialize();
+            return new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly);
+        });
 
         protected override object GetAutomationObject(string name) {
             if (name == AutomationObject) {

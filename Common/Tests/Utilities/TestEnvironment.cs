@@ -17,21 +17,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Common = Microsoft.PythonTools.Infrastructure;
-using Analysis = Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace TestUtilities {
-    public sealed class MSTestEnvironment : Common.ITestEnvironment, Analysis.ITestEnvironment {
-        private static MSTestEnvironment _instance;
+    public class TestEnvironment {
+        protected static TestEnvironment Instance { get; set; }
 
-        public static void Initialize() {
-            _instance = new MSTestEnvironment();
-            Analysis.TestEnvironment.Current = _instance;
-            Common.TestEnvironment.Current = _instance;
-        }
-
-        public static void TestInitialize(int secondsTimeout = 30) => _instance.BeforeTestRun(secondsTimeout);
-        public static void TestCleanup() => _instance.AfterTestRun();
+        public static void TestInitialize(int secondsTimeout = 30) => Instance?.BeforeTestRun(secondsTimeout);
+        public static void TestCleanup() => Instance?.AfterTestRun();
 
         private readonly AsyncLocal<TaskObserver> _taskObserver = new AsyncLocal<TaskObserver>();
 

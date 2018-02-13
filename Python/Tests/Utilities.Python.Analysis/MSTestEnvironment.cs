@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,13 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities.Python;
+using Common = Microsoft.PythonTools.Infrastructure;
+using Analysis = Microsoft.PythonTools.Analysis.Infrastructure;
 
-namespace PythonToolsTests {
-    [TestClass]
-    public sealed class AssemblySetup {
-        [AssemblyInitialize]
-        public static void Initialize(TestContext testContext) => MSTestEnvironment.Initialize();
+namespace TestUtilities.Python {
+    public sealed class MSTestEnvironment : TestEnvironment, Common.ITestEnvironment, Analysis.ITestEnvironment {
+        public static void Initialize() {
+            var isntance = new MSTestEnvironment();
+            Instance = isntance;
+            Analysis.TestEnvironment.Current = isntance;
+            Common.TestEnvironment.Current = isntance;
+        }
     }
 }

@@ -16,13 +16,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using TestRunnerInterop;
+using TestUtilities.Ben.Demystifier;
 using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
@@ -73,8 +76,7 @@ namespace TestUtilities.UI {
         }
 
         private IVsHostedPythonToolsTestResult InvokeTest(Type type, MethodInfo method, object[] arguments) {
-            object instance;
-            if (!_activeInstances.TryGetValue(type, out instance)) {
+            if (!_activeInstances.TryGetValue(type, out var instance)) {
                 instance = Activator.CreateInstance(type);
                 _activeInstances[type] = instance;
             }
@@ -102,7 +104,7 @@ namespace TestUtilities.UI {
                         IsSuccess = false,
                         ExceptionType = ex.GetType().FullName,
                         ExceptionMessage = "Failed to load a dependent VS package." + Environment.NewLine + ex.Message,
-                        ExceptionTraceback = ex.StackTrace
+                        ExceptionTraceback = new StringBuilder().AppendException(ex).ToString()
                     };
                 }
 
@@ -111,7 +113,7 @@ namespace TestUtilities.UI {
                         args.Add(sp);
                     } else if (a.ParameterType.IsAssignableFrom(typeof(EnvDTE.DTE))) {
                         args.Add(dte);
-                    } else if (inputArgs.Count > 0 && a.ParameterType.IsAssignableFrom(inputArgs[0].GetType())) {
+                    } else if (inputArgs.Count > 0 && a.ParameterType.IsInstanceOfType(inputArgs[0])) {
                         args.Add(inputArgs[0]);
                         inputArgs.RemoveAt(0);
                     } else {
@@ -119,11 +121,13 @@ namespace TestUtilities.UI {
                     }
                 }
             } catch (Exception ex) {
+                ex = ExtractRealException(ex);
+
                 return new HostedPythonToolsTestResult {
                     IsSuccess = false,
                     ExceptionType = ex.GetType().FullName,
                     ExceptionMessage = "Failed to invoke test method with correct arguments." + Environment.NewLine + ex.Message,
-                    ExceptionTraceback = ex.StackTrace
+                    ExceptionTraceback = new StringBuilder().AppendException(ex).ToString()
                 };
             }
 
@@ -147,21 +151,34 @@ namespace TestUtilities.UI {
                     }
                 }
             } catch (Exception ex) {
-                if (ex is TargetInvocationException || ex is AggregateException) {
-                    ex = ex.InnerException;
-                }
+                ex = ExtractRealException(ex);
 
                 return new HostedPythonToolsTestResult {
                     IsSuccess = false,
                     ExceptionType = ex.GetType().FullName,
                     ExceptionMessage = ex.Message,
-                    ExceptionTraceback = ex.StackTrace
+                    ExceptionTraceback = new StringBuilder().AppendException(ex).ToString()
                 };
             }
 
             return new HostedPythonToolsTestResult {
                 IsSuccess = true
             };
+        }
+
+        private static Exception ExtractRealException(Exception ex) {
+            while (true) {
+                switch (ex) {
+                    case TargetInvocationException _ when ex.InnerException != null:
+                        ex = ex.InnerException;
+                        continue;
+                    case AggregateException aggregateException when aggregateException.InnerExceptions.Count > 0:
+                        ex = aggregateException.InnerExceptions[0];
+                        continue;
+                    default:
+                        return ex;
+                }
+            }
         }
 
         private static object ConstructParameter(Type target, object serviceProvider, object dte, List<object> inputArgs) {
@@ -183,7 +200,7 @@ namespace TestUtilities.UI {
                 }
                 if (inputArgs.Count > 0) {
                     var firstArg = inputArgs[0];
-                    if (args[0].ParameterType.IsAssignableFrom(firstArg.GetType())) {
+                    if (args[0].ParameterType.IsInstanceOfType(firstArg)) {
                         inputArgs.RemoveAt(0);
                         return target.InvokeMember(null, BindingFlags.CreateInstance, null, null, new[] { firstArg });
                     }

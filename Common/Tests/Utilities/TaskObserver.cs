@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities.Ben.Demystifier;
 
@@ -171,14 +170,13 @@ namespace TestUtilities {
             foreach (var frame in stackTrace) {
                 var frameMethod = frame.GetMethod();
                 if (skip) {
-                    if (frameMethod.Name == nameof(Microsoft.PythonTools.Infrastructure.TaskExtensions.DoNotWait) && 
-                        frameMethod.DeclaringType?.Name == nameof(Microsoft.PythonTools.Infrastructure.TaskExtensions)) {
+                    if (frameMethod.Name == "DoNotWait" && frameMethod.DeclaringType?.Name == "TaskExtensions") {
                         skip = false;
                     }
                     continue;
                 }
 
-                if (frameMethod.DeclaringType?.Namespace.StartsWithOrdinal("Microsoft.VisualStudio.TestPlatform.MSTestFramework") ?? false) {
+                if (frameMethod.DeclaringType?.Namespace?.StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestFramework", StringComparison.Ordinal) ?? false) {
                     continue;
                 }
 

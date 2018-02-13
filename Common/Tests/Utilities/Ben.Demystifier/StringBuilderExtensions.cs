@@ -32,7 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestUtilities.Ben.Demystifier {
-    internal static class StringBuilderExtensions {
+    public static class StringBuilderExtensions {
         public static StringBuilder AppendException(this StringBuilder stringBuilder, Exception exception) {
             stringBuilder.Append(exception.Message);
 
