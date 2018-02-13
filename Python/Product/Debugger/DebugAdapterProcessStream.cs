@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 
@@ -53,7 +54,14 @@ namespace Microsoft.PythonTools.Debugger {
 
         public override void SetLength(long value) => _networkStream.SetLength(value);
 
-        public override void Write(byte[] buffer, int offset, int count) => _networkStream.Write(buffer, offset, count);
+        public override void Write(byte[] buffer, int offset, int count) {
+            try {
+                _networkStream.Write(buffer, offset, count);
+            } catch (IOException ex) when ((ex.InnerException as SocketException)?.SocketErrorCode == SocketError.ConnectionReset) {
+                // This is a case where the debuggee has exited, but the adapter host attempts to write to it.
+                Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugAdapterProcessStream));
+            }
+        }
 
         protected override void Dispose(bool disposing) {
             _networkStream.Dispose();
