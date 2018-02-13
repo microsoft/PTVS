@@ -33,7 +33,7 @@
       <Name>PresentationCore</Name>
       <Private>False</Private>
     </Reference>
-    <Reference Include="PresentationFramework, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+    <Reference Include="PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <Name>PresentationFramework</Name>
       <Private>False</Private>
     </Reference>
