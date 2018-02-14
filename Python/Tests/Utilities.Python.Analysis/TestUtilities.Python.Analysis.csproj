@@ -55,6 +55,7 @@
     <Compile Include="MockPythonInterpreterFactory.cs" />
     <Compile Include="MockPythonInterpreterFactoryProvider.cs" />
     <Compile Include="MockPythonProjectEntry.cs" />
+    <Compile Include="MSTestEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonAnalysis.cs" />
     <Compile Include="PythonPaths.cs" />

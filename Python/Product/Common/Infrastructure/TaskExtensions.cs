@@ -26,9 +26,13 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// Suppresses warnings about unawaited tasks and ensures that unhandled
         /// errors will cause the process to terminate.
         /// </summary>
-        public static async void DoNotWait(this Task task) {
-            await task;
+        public static void DoNotWait(this Task task) {
+            if (TestEnvironment.Current == null || !TestEnvironment.Current.TryAddTaskToWait(task)) {
+                DoNotWaitImpl(task);
+            }
         }
+
+        private static async void DoNotWaitImpl(Task task) => await task;
 
         /// <summary>
         /// Waits for a task to complete. If an exception occurs, the exception

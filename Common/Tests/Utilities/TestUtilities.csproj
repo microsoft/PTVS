@@ -88,6 +88,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AssertListener.cs" />
+    <Compile Include="Ben.Demystifier\ILReader.cs" />
+    <Compile Include="Ben.Demystifier\StringBuilderExtensions.cs" />
+    <Compile Include="Ben.Demystifier\TypeNameHelper.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="IAddExistingItem.cs" />
     <Compile Include="IAddNewItem.cs" />
@@ -105,6 +108,8 @@
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
+    <Compile Include="TaskObserver.cs" />
+    <Compile Include="TestEnvironment.cs" />
     <Compile Include="VCCompiler.cs" />
     <Compile Include="VisualStudioPath.cs" />
     <Compile Include="WebDownloadUtility.cs" />
