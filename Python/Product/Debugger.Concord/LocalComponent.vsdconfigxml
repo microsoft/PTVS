@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Python Tools for Visual Studio
+Copyright(c) Microsoft Corporation
+All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the License); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing
+permissions and limitations under the License.
+-->
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
+
+  <DefineGuid Name="guidPythonDebugRemoteCompId" Value="BCFD7074-A4D3-42A9-B1B6-C975304C882A"/>
+  <DefineGuid Name="guidPythonDebugLocalCompId" Value="E42AC982-8F0B-45DE-8F22-EC045687F2EC"/>
+  <DefineGuid Name="guidPythonEngineId" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
+  <DefineGuid Name="guidPythonLanguageId" Value="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF"/>
+  <DefineGuid Name="guidPythonRuntimeId" Value="0B253BA3-E62E-4428-A583-36E33EA26E54"/>
+  <DefineGuid Name="guidPythonSymbolProviderId" Value="4C802B60-6E39-4CE0-8FE8-F77F83458399"/>
+  <DefineGuid Name="guidPythonExceptionCategory" Value="49AA3BE8-B743-49C1-B5F7-5BA85F9D6F96"/>
+  <DefineGuid Name="guidPythonNativeVisualizerId" Value="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+  <DefineGuid Name="guidPythonIntrinsicFunctionsSourceId" Value="27BEB234-72EC-4249-89F3-4298266AE282"/>
+
+  <ManagedComponent
+    ComponentId="guidPythonDebugLocalCompId"
+    ComponentLevel="1999000"
+    AssemblyName="Microsoft.PythonTools.Debugger.Concord">
+
+    <Class Name="Microsoft.PythonTools.Debugger.Concord.LocalComponent">
+      <Implements>
+
+        <InterfaceGroup>
+          <Filter>
+            <SourceId RequiredValue="guidPythonDebugLocalCompId"/>
+          </Filter>
+          <Interface Name="IDkmCustomMessageForwardReceiver"/>
+          <Interface Name="IDkmCustomMessageCallbackReceiver"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="DkmRuntimeId.Native"/>
+          </Filter>
+          <Interface Name="IDkmModuleSymbolsLoadedNotification"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup CallOnlyWhenLoaded="true">
+          <NoFilter/>
+          <Interface Name="IDkmCallStackFilter"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="guidPythonRuntimeId"/>
+          </Filter>
+          <Interface Name="IDkmRuntimeInstanceLoadNotification"/>
+          <Interface Name="IDkmLanguageFrameDecoder"/>
+          <Interface Name="IDkmLanguageExpressionEvaluator"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <VisualizerId RequiredValue="guidPythonNativeVisualizerId"/>
+          </Filter>
+          <Interface Name="IDkmCustomVisualizer"/>
+        </InterfaceGroup>
+
+        <xsl:if test="/Properties/@VSTarget != '12.0'">
+          <InterfaceGroup>
+            <Filter>
+              <LanguageId RequiredValue="guidPythonLanguageId"/>
+              <SourceId RequiredValue="guidPythonIntrinsicFunctionsSourceId"/>
+            </Filter>
+            <Interface Name="IDkmIntrinsicFunctionEvaluator140"/>
+          </InterfaceGroup>
+        </xsl:if>
+
+        <InterfaceGroup>
+          <Filter>
+            <SymbolProviderId RequiredValue="guidPythonSymbolProviderId"/>
+          </Filter>
+          <Interface Name="IDkmSymbolCompilerIdQuery" />
+          <Interface Name="IDkmSymbolDocumentCollectionQuery"/>
+          <Interface Name="IDkmSymbolDocumentSpanQuery"/>
+          <Interface Name="IDkmSymbolQuery"/>
+        </InterfaceGroup>
+
+      </Implements>
+    </Class>
+  </ManagedComponent>
+</Configuration>

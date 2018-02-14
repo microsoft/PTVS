@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Shell;
 
 
 namespace Microsoft.PythonTools.Commands {
-    using DebuggerOptions = Microsoft.PythonTools.DkmDebugger.DebuggerOptions;
+    using DebuggerOptions = Microsoft.PythonTools.Debugger.Concord.DebuggerOptions;
 
     internal class ShowPythonViewCommand : DkmDebuggerCommand {
         public ShowPythonViewCommand(IServiceProvider serviceProvider)

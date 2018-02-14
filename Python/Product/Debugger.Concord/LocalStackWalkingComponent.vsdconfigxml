@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Python Tools for Visual Studio
+Copyright(c) Microsoft Corporation
+All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the License); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing
+permissions and limitations under the License.
+-->
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
+
+  <DefineGuid Name="guidPythonDebugLocalStackWalkingCompId" Value="538659BC-990B-4F53-B3C8-834D54397E15"/>
+  <DefineGuid Name="guidPythonEngineId" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
+  <DefineGuid Name="guidPythonRuntimeId" Value="0B253BA3-E62E-4428-A583-36E33EA26E54"/>
+
+  <ManagedComponent
+    ComponentId="guidPythonDebugLocalStackWalkingCompId"
+    ComponentLevel="9996006"
+    AssemblyName="Microsoft.PythonTools.Debugger.Concord">
+
+    <Class Name="Microsoft.PythonTools.Debugger.Concord.LocalStackWalkingComponent">
+      <Implements>
+
+        <InterfaceGroup>
+          <Filter>
+            <SourceId RequiredValue="guidPythonDebugLocalStackWalkingCompId"/>
+          </Filter>
+          <Interface Name="IDkmCustomMessageCallbackReceiver"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="DkmRuntimeId.Native"/>
+          </Filter>
+          <Interface Name="IDkmModuleInstanceLoadNotification"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="guidPythonRuntimeId"/>
+          </Filter>
+          <Interface Name="IDkmRuntimeInstanceLoadNotification"/>
+        </InterfaceGroup>
+
+      </Implements>
+    </Class>
+  </ManagedComponent>
+</Configuration>
