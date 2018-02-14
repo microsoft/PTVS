@@ -20,10 +20,10 @@ using Analysis = Microsoft.PythonTools.Analysis.Infrastructure;
 namespace TestUtilities.Python {
     public sealed class MSTestEnvironment : TestEnvironment, Common.ITestEnvironment, Analysis.ITestEnvironment {
         public static void Initialize() {
-            var isntance = new MSTestEnvironment();
-            Instance = isntance;
-            Analysis.TestEnvironment.Current = isntance;
-            Common.TestEnvironment.Current = isntance;
+            var instance = new MSTestEnvironment();
+            Instance = instance;
+            Analysis.TestEnvironment.Current = instance;
+            Common.TestEnvironment.Current = instance;
         }
     }
 }
