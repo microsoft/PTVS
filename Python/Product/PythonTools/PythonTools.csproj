@@ -61,7 +61,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Debugger.Concord\Debugger.Concord.csproj">
       <Project>{515F701E-336D-4D58-AF4B-E976BC33C957}</Project>
-      <Name>Microsoft.PythonTools.Debugger</Name>
+      <Name>Microsoft.PythonTools.Debugger.Concord</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
