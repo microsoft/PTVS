@@ -20,6 +20,7 @@
     <ProjectFile Include="Attacher\Attacher.csproj"/>
     <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
     <ProjectFile Include="Debugger\Debugger.csproj"/>
+    <ProjectFile Include="Debugger.Concord\Debugger.Concord.csproj"/>
     
     <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
