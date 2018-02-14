@@ -104,6 +104,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return false;
         }
 
+        public override bool Walk(Parameter node) {
+            if (!string.IsNullOrEmpty(node.Name)) {
+                // ensure we have a variable here so we don't get unresolved errors
+                _scope.AddLocatedVariable(node.Name, node, _curUnit, node.Kind);
+            }
+            return base.Walk(node);
+        }
+
         public override void PostWalk(FunctionDefinition node) {
             if (node.Body != null && node.Name != null) {
                 Debug.Assert(_scope.EnumerateTowardsGlobal.Contains(_curUnit.Scope.OuterScope));
