@@ -6810,7 +6810,11 @@ x = ClsB.x");
 
         [TestMethod, Priority(0)]
         public void UndefinedVariableDiagnostic() {
-            var code = @"a = b + c
+            PythonAnalysis entry;
+            string code;
+
+
+            code = @"a = b + c
 class D(b): pass
 d()
 D()
@@ -6822,7 +6826,7 @@ def func(b, c):
     b, c, d     # b, c are defined here
 b, c, d         # but they are undefined here
 ";
-            var entry = ProcessTextV3(code);
+            entry = ProcessTextV3(code);
             entry.AssertDiagnostics(
                 "used-before-assignment:unknown variable 'b':(1, 5) - (1, 6)",
                 "used-before-assignment:unknown variable 'c':(1, 9) - (1, 10)",
@@ -6837,12 +6841,23 @@ b, c, d         # but they are undefined here
                 "used-before-assignment:unknown variable 'd':(11, 7) - (11, 8)"
             );
 
+            // Ensure all of these cases correctly generate no warning
             code = @"
 for x in []:
     (_ for _ in x)
     [_ for _ in x]
     {_ for _ in x}
     {_ : _ for _ in x}
+
+import sys
+from sys import not_a_real_name_but_no_warning_anyway
+
+def f(v = sys.version, u = not_a_real_name_but_no_warning_anyway):
+    pass
+
+with f() as v2:
+    pass
+
 ";
             entry = ProcessTextV3(code);
             entry.AssertDiagnostics();

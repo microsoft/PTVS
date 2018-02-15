@@ -375,7 +375,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(AssignmentStatement node) {
             UpdateChildRanges(node);
             foreach (var nameExpr in node.Left.OfType<NameExpression>()) {
-                _scope.AddVariable(nameExpr.Name, CreateVariableInDeclaredScope(nameExpr));
+                var v = CreateVariableInDeclaredScope(nameExpr);
+                _scope.AddVariable(nameExpr.Name, v);
+                v.AddAssignment(nameExpr, _curUnit);
             }
             return base.Walk(node);
         }
@@ -441,7 +443,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (nameNode.Name == "*") {
                         _scope.ContainsImportStar = true;
                     } else {
-                        CreateVariableInDeclaredScope(nameNode);
+                        var v = CreateVariableInDeclaredScope(nameNode);
+                        v.AddAssignment(nameNode, _curUnit);
                     }
                 }
             }
@@ -486,7 +489,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 if (name != null) {
-                    CreateVariableInDeclaredScope(name);
+                    var v = CreateVariableInDeclaredScope(name);
+                    v.AddAssignment(node, _curUnit);
                 }
             }
 
@@ -524,7 +528,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var item in node.Items) {
                 var assignTo = item.Variable as NameExpression;
                 if (assignTo != null) {
-                    _scope.AddVariable(assignTo.Name, CreateVariableInDeclaredScope(assignTo));
+                    var v = CreateVariableInDeclaredScope(assignTo);
+                    _scope.AddVariable(assignTo.Name, v);
+                    v.AddAssignment(assignTo, _curUnit);
                 }
             }
             return base.Walk(node);
