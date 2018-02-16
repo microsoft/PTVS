@@ -22,6 +22,7 @@
         Microsoft.PythonTools.BuildTasks.dll;
         Microsoft.PythonTools.Common.dll;
         Microsoft.PythonTools.Debugger.dll;
+        Microsoft.PythonTools.Debugger.Concord.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
         Microsoft.PythonTools.Ipc.Json.dll;
