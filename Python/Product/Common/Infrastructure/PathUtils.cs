@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
-            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWith(root, StringComparison.Ordinal)) {
+            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWithOrdinal(root)) {
                 // Quick return, but only where the paths are already normalized and
                 // have matching case.
                 return true;
@@ -643,14 +643,14 @@ namespace Microsoft.PythonTools.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\")) {
+                if (!path.EndsWithOrdinal("\\")) {
                     path += "\\";
                 }
 
@@ -665,7 +665,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
 
                 foreach (var d in dirs) {
-                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                    if (!fullPaths && !d.StartsWithOrdinal(root, ignoreCase: true)) {
                         continue;
                     }
                     if (recurse) {
@@ -701,7 +701,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             bool recurse = true,
             bool fullPaths = true
         ) {
-            if (!root.EndsWith("\\")) {
+            if (!root.EndsWithOrdinal("\\")) {
                 root += "\\";
             }
 

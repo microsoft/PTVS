@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -110,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            if (operation == PythonOperator.Negate && _value != null) {
+                if (_value is int i) {
+                    return ProjectState.GetConstant(-i);
+                } else if (_value is float f) {
+                    return ProjectState.GetConstant(-f);
+                } else if (_value is double d) {
+                    return ProjectState.GetConstant(-d);
+                }
+            }
+
             return _builtinInfo.UnaryOperation(node, unit, operation);
         }
 
@@ -185,7 +196,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var valueStr = (_value == null || _value is IPythonConstant) ? "" : (" '" + _value.ToString() + "'");
             valueStr = valueStr.Replace("\r", "\\r").Replace("\n", "\\n");
             for (char c = '\0'; c < ' '; ++c) {
-                valueStr = valueStr.Replace(c.ToString(), string.Format("\\x{0:X2}", (int)c));
+                valueStr = valueStr.Replace(c.ToString(), "\\x{0:X2}".FormatInvariant((int)c));
             }
             return "<" + Description + valueStr + ">"; // " at " + hex(id(self))
         }

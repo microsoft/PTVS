@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -197,42 +198,27 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private void Verify(PythonNameBinder binder) {
             if (ContainsImportStar && IsClosure) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "import * is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
             if (ContainsImportStar && Parent is FunctionDefinition) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "import * is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
             if (ContainsImportStar && ContainsNestedFreeVariables) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it contains a nested function with free variables",
-                        Name),
+                    "import * is not allowed in function '{0}' because it contains a nested function with free variables".FormatUI(Name),
                     this);
             }
             if (ContainsUnqualifiedExec && ContainsNestedFreeVariables) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "unqualified exec is not allowed in function '{0}' because it contains a nested function with free variables",
-                        Name),
+                    "unqualified exec is not allowed in function '{0}' because it contains a nested function with free variables".FormatUI(Name),
                     this);
             }
             if (ContainsUnqualifiedExec && IsClosure) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "unqualified exec is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "unqualified exec is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
         }

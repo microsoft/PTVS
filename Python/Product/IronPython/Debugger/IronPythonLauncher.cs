@@ -88,7 +88,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                 if (debug) {
                     if (string.IsNullOrEmpty(config.InterpreterArguments)) {
                         config.InterpreterArguments = "-X:Debug";
-                    } else if (config.InterpreterArguments.IndexOf("-X:Debug", StringComparison.InvariantCultureIgnoreCase) < 0) {
+                    } else if (config.InterpreterArguments.IndexOf("-X:Debug", StringComparison.OrdinalIgnoreCase) < 0) {
                         config.InterpreterArguments = "-X:Debug " + config.InterpreterArguments;
                     }
 

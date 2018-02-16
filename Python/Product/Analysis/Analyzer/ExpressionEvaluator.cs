@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -98,14 +100,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             Evaluate(annotation);
 
             return new TypeAnnotation(_unit.State.LanguageVersion, annotation)
-                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
-                AnalysisSet.Empty;
+                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ?? AnalysisSet.Empty;
         }
 
         /// <summary>
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
-        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
+        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true, bool addDependency = false) {
             InterpreterScope createIn = null;
 
             if (_mergeScopes) {
@@ -122,6 +123,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             if (addRef) {
                                 scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
+                            if (addDependency) {
+                                refs.AddDependency(_unit);
+                            }
                             return refs.Types;
                         } else if (addRef && createIn == null && scope.ContainsImportStar) {
                             // create the variable so that we can appropriately
@@ -133,8 +137,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
-            if (createIn != null && !res.Any()) {
-                createIn.CreateVariable(node, _unit, name, addRef);
+            if (!_unit.ForEval && !res.Any()) {
+                ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
+                var refs = createIn?.CreateVariable(node, _unit, name, addRef);
+                if (addDependency) {
+                    refs?.AddDependency(_unit);
+                }
             }
             return res;
         }
@@ -409,8 +417,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 gen.AddYieldFrom(node, ee._unit, res);
 
-                gen.Returns.AddDependency(ee._unit);
-                return gen.Returns.Types;
+                var returned = AnalysisSet.Empty;
+                if (res.Split(out IReadOnlyList<GeneratorInfo> generators, out var rest)) {
+                    foreach (var g in generators) {
+                        g.Returns.AddDependency(ee._unit);
+                        returned = returned.Union(g.Returns.Types);
+                    }
+                }
+                if (rest.Split(out IReadOnlyList<ProtocolInfo> protocols, out rest)) {
+                    foreach (var g in protocols.SelectMany(pi => pi.GetProtocols<GeneratorProtocol>())) {
+                        returned = returned.Union(g.Returns);
+                    }
+                }
+                return returned;
             }
 
             return AnalysisSet.Empty;

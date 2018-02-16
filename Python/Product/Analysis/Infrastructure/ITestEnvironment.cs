@@ -14,14 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
-    struct MonitoredBufferResult {
-        public readonly BufferParser BufferParser;
-        public readonly AnalysisEntry AnalysisEntry;
+using System.Threading.Tasks;
 
-        public MonitoredBufferResult(BufferParser bufferParser, AnalysisEntry projectEntry) {
-            BufferParser = bufferParser;
-            AnalysisEntry = projectEntry;
-        }
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
+    public interface ITestEnvironment {
+        bool TryAddTaskToWait(Task task);
     }
 }

@@ -85,60 +85,33 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshot Apply() {
-            StringBuilder text = new StringBuilder(_snapshot.GetText());
-            var deletes = new NormalizedSnapshotSpanCollection(
-                _snapshot,
-                _edits.OfType<DeletionEdit>()
-                .Select(edit => new Span(edit.Position, edit.Length))
-            );
+            var text = new StringBuilder(_snapshot.GetText());
+            var changes = new List<MockTextChange>();
 
-            // apply the deletes
-            for (int i = deletes.Count - 1; i >= 0; i--) {
-                text.Remove(deletes[i].Start, deletes[i].Length);
-            }
-
-            // now apply the inserts
-            int curDelete = 0, adjust = 0;
-            int deletesBorrowed = 0;
-            foreach (var insert in _edits.OfType<InsertionEdit>()) {
-                while (curDelete < deletes.Count && deletes[curDelete].Start < insert.Position) {
-                    if (deletes[curDelete].Start + deletes[curDelete].Length < insert.Position) {
-                        adjust -= deletes[curDelete].Length - deletesBorrowed;
-                        deletesBorrowed = 0;
-                        curDelete++;
-                    } else {
-                        int deletesUsed = insert.Position - deletes[curDelete].Start;
-                        adjust -= deletesUsed;
-                        deletesBorrowed  += deletesUsed;
-                        break;
-                    }
-                }
-
-                text.Insert(insert.Position + adjust, insert.Text);
-                adjust += insert.Text.Length;
-            }
-
-            List<MockTextChange> changes = new List<MockTextChange>();
-            foreach(var curEdit in _edits.OrderBy(e => e.Position)) {
-                InsertionEdit insert = curEdit as InsertionEdit;
-                if (insert != null) {
-                    changes.Add(
-                        new MockTextChange(
-                            new SnapshotSpan(_snapshot, insert.Position, 0),
-                            insert.Position,
-                            insert.Text
-                        )
+            // Apply changes
+            var adjust = 0;
+            foreach (var edit in _edits.OrderBy(e => e.Position).ThenByDescending(e => e, EditTypeComparer.Instance)) {
+                MockTextChange change;
+                if (edit is InsertionEdit insert) {
+                    text.Insert(insert.Position + adjust, insert.Text);
+                    change = new MockTextChange(
+                        new SnapshotSpan(_snapshot, insert.Position, 0),
+                        insert.Position + adjust,
+                        insert.Text
                     );
+                    adjust += insert.Text.Length;
                 } else {
-                    DeletionEdit delete = (DeletionEdit)curEdit;
-                    changes.Add(
-                        new MockTextChange(
-                            new SnapshotSpan(_snapshot, delete.Position, delete.Length),
-                            delete.Position,
-                            ""
-                        )
+                    var delete = (DeletionEdit)edit;
+                    text.Remove(delete.Position + adjust, delete.Length);
+                    change = new MockTextChange(
+                        new SnapshotSpan(_snapshot, delete.Position, delete.Length),
+                        delete.Position + adjust,
+                        string.Empty
                     );
+                    adjust -= delete.Length;
                 }
+
+                changes.Add(change);
             }
 
             var previous = _snapshot;
@@ -170,6 +143,14 @@ namespace TestUtilities.Mocks {
             if (!_applied) {
                 Cancel();
             }
+        }
+
+        private sealed class EditTypeComparer : IComparer<Edit> {
+            public static IComparer<Edit> Instance = new EditTypeComparer();
+
+            private EditTypeComparer() { }
+
+            public int Compare(Edit x, Edit y) => (x is InsertionEdit).CompareTo(y is InsertionEdit);
         }
 
         class Edit {

@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (output.ExitCode == 0) {
                     // Version is currently being printed to stderr, and nothing in stdout
                     foreach (var line in output.StandardErrorLines.Union(output.StandardOutputLines)) {
-                        if (!string.IsNullOrEmpty(line) && line.StartsWith("conda ")) {
+                        if (!string.IsNullOrEmpty(line) && line.StartsWithOrdinal("conda ")) {
                             var version = line.Substring("conda ".Length);
                             if (PackageVersion.TryParse(version, out PackageVersion ver)) {
                                 return ver;

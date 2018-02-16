@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -35,13 +36,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             DiscoverTests(sources, logger, discoverySink, settings);
         }
 
+        private static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
+        }
+
+
         static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
             var sourcesSet = new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase);
 
             var executorUri = new Uri(PythonConstants.TestExecutorUriString);
             // Test list is sent to us via our run settings which we use to smuggle the
             // data we have in our analysis process.
-            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            var doc = Read(settings.SettingsXml);
             foreach (var t in TestReader.ReadTests(doc, sourcesSet, m => {
                 logger?.SendMessage(TestMessageLevel.Warning, m);
             })) {

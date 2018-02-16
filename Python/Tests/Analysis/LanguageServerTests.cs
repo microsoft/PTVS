@@ -53,11 +53,16 @@ namespace AnalysisTests {
 
         protected virtual PythonVersion Default => DefaultV3;
 
-        public Task<Server> CreateServer(string rootPath, PythonVersion version = null) {
-            return CreateServer(string.IsNullOrEmpty(rootPath) ? null : new Uri(rootPath), version ?? Default);
+        public Task<Server> CreateServer() {
+            return CreateServer((Uri)null, Default);
         }
 
-        public async Task<Server> CreateServer(Uri rootUri, PythonVersion version) {
+        public Task<Server> CreateServer(string rootPath, PythonVersion version = null, Dictionary<Uri, PublishDiagnosticsEventArgs> diagnosticEvents = null) {
+            return CreateServer(string.IsNullOrEmpty(rootPath) ? null : new Uri(rootPath), version ?? Default, diagnosticEvents);
+        }
+
+        public async Task<Server> CreateServer(Uri rootUri, PythonVersion version = null, Dictionary<Uri, PublishDiagnosticsEventArgs> diagnosticEvents = null) {
+            version = version ?? Default;
             version.AssertInstalled();
             var s = new Server();
             s.OnLogMessage += Server_OnLogMessage;
@@ -79,10 +84,16 @@ namespace AnalysisTests {
                 capabilities = new ClientCapabilities {
                     python = new PythonClientCapabilities {
                         analysisUpdates = true,
+                        liveLinting = true,
                         traceLogging = true
                     }
                 }
             });
+
+            if (diagnosticEvents != null) {
+                s.OnPublishDiagnostics += (sender, e) => { lock (diagnosticEvents) diagnosticEvents[e.uri] = e; };
+            }
+
             if (rootUri != null) {
                 await s.WaitForDirectoryScanAsync().ConfigureAwait(false);
                 await s.WaitForCompleteAnalysisAsync().ConfigureAwait(false);
@@ -108,7 +119,7 @@ namespace AnalysisTests {
         }
 
         private static async Task<Uri> AddModule(Server s, string content, string moduleName = null, Uri uri = null, string language = null) {
-            uri = uri ?? new Uri($"python://./{moduleName ?? "test-module"}.py");
+            uri = uri ?? new Uri($"python://test/{moduleName ?? "test-module"}.py");
             await s.DidOpenTextDocument(new DidOpenTextDocumentParams {
                 textDocument = new TextDocumentItem {
                     uri = uri,
@@ -141,7 +152,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public async Task ApplyChanges() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
 
             var m = await AddModule(s, "", "mod");
             Assert.AreEqual(Tuple.Create("x", 1), await ApplyChange(s, m, DocumentChange.Insert("x", new SourceLocation(1, 1))));
@@ -234,7 +245,7 @@ namespace AnalysisTests {
             // To do this, we have to support using a newer tree than the
             // current analysis, so that we can quickly parse the new text
             // with the dot but not block on reanalysis.
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var code = @"
 class MyClass:
     def f(self): pass
@@ -270,7 +281,9 @@ mc";
                         start = new Position { line = testLine, character = testChar },
                         end = new Position { line = testLine, character = testChar }
                     }
-                } }
+                } },
+                // Suppress reanalysis to avoid a race
+                _enqueueForAnalysis = false
             });
 
             // Now with the "." event sent, we should see this as a dot completion
@@ -283,7 +296,7 @@ mc";
 
         [TestMethod, Priority(0)]
         public async Task CompletionAfterLoad() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var mod1 = await AddModule(s, "import mod2\n\nmod2.", "mod1");
 
             await AssertCompletion(s, mod1,
@@ -311,7 +324,7 @@ mc";
 
         [TestMethod, Priority(0)]
         public async Task SignatureHelp() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var mod = await AddModule(s, @"f()
 def f(): pass
 def f(a): pass
@@ -349,7 +362,7 @@ def f(a = 2, b): pass
 
         [TestMethod, Priority(0)]
         public async Task FindReferences() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
             var mod1 = await AddModule(s, @"
 def f(a):
     a.real
@@ -459,7 +472,7 @@ mod1.f(a=D)", "mod2");
 
         [TestMethod, Priority(0)]
         public async Task MultiPartDocument() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
 
             var mod = await AddModule(s, "x = 1", "mod");
             var modP2 = new Uri(mod, "#2");
@@ -486,7 +499,7 @@ mod1.f(a=D)", "mod2");
 
         [TestMethod, Priority(0)]
         public async Task UpdateDocumentBuffer() {
-            var s = await CreateServer(null);
+            var s = await CreateServer();
 
             var mod = await AddModule(s, "");
 
@@ -495,54 +508,28 @@ mod1.f(a=D)", "mod2");
             Assert.AreEqual(Tuple.Create("test", 1), await ApplyChange(s, mod, DocumentChange.Insert("test", SourceLocation.MinValue)));
         }
 
-        private static async Task<PublishDiagnosticsEventArgs> WaitForDiagnostics(Server s, int minimumVersion, Func<Task> action, CancellationToken cancellationToken) {
-            var tcs = new TaskCompletionSource<PublishDiagnosticsEventArgs>();
-
-            if (cancellationToken.CanBeCanceled) {
-                cancellationToken.Register(() => tcs.TrySetCanceled());
-            }
-
-            EventHandler<PublishDiagnosticsEventArgs> handler = null;
-            handler = (sender, pdea) => {
-                if (pdea._version >= minimumVersion) {
-                    tcs.TrySetResult(pdea);
-                    s.OnPublishDiagnostics -= handler;
-                }
-            };
-            s.OnPublishDiagnostics += handler;
-
-            await action().ConfigureAwait(false);
-            return await tcs.Task.ConfigureAwait(false);
-        }
-
         [TestMethod, Priority(0)]
         public async Task ParseErrorDiagnostics() {
-            var s = await CreateServer(null);
-
-            var e = await WaitForDiagnostics(
-                s,
-                0,
-                () => AddModule(s, "def f(/)\n    error text here\n"),
-                CancellationTokens.After5s
-            );
+            var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+            var s = await CreateServer((string)null, null, diags);
+            var u = await AddModule(s, "def f(/)\n    error text\n");
+            await s.WaitForCompleteAnalysisAsync();
 
             AssertUtil.ContainsExactly(
-                e.diagnostics.Select(d => $"{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}"),
-                "unexpected token '/';Python;0;6;7",
-                "invalid parameter;Python;0;6;7",
-                "unexpected token '<newline>';Python;0;8;4",
-                "unexpected indent;Python;1;4;9",
-                "unexpected token 'text';Python;1;10;14",
-                "unexpected token '<dedent>';Python;1;19;0"
+                GetDiagnostics(diags, u),
+                "Error;unexpected token '/';Python;0;6;7",
+                "Error;invalid parameter;Python;0;6;7",
+                "Error;unexpected token '<newline>';Python;0;8;4",
+                "Error;unexpected indent;Python;1;4;9",
+                "Error;unexpected token 'text';Python;1;10;14",
+                "Error;unexpected token '<dedent>';Python;1;14;0"
             );
         }
 
         [TestMethod, Priority(0)]
         public async Task ParseIndentationDiagnostics() {
-            var s = await CreateServer(null);
-
-            var evts = new List<PublishDiagnosticsEventArgs>();
-            s.OnPublishDiagnostics += (sender, pdea) => evts.Add(pdea);
+            var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+            var s = await CreateServer((string)null, null, diags);
 
             foreach (var tc in new[] {
                 DiagnosticSeverity.Error,
@@ -556,22 +543,17 @@ mod1.f(a=D)", "mod2");
                 Trace.TraceInformation("Testing {0}", tc);
 
                 var mod = await AddModule(s, "");
-                var e = await WaitForDiagnostics(
-                    s,
-                    2,
-                    async () => await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
-                        contentChanges = new[] {
+                await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+                    contentChanges = new[] {
                             new TextDocumentContentChangedEvent {
                                 text = "def f():\r\n        pass\r\n\tpass"
                             }
                         },
-                        textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 2 }
-                    }),
-                    CancellationTokens.After5s
-                );
+                    textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 2 }
+                });
+                await s.WaitForCompleteAnalysisAsync();
 
-                Assert.AreEqual(mod, e.uri);
-                var messages = e.diagnostics.Select(d => $"{d.severity};{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}").ToArray();
+                var messages = GetDiagnostics(diags, mod).ToArray();
                 if (tc == DiagnosticSeverity.Unspecified) {
                     AssertUtil.ContainsExactly(messages);
                 } else {
@@ -580,6 +562,28 @@ mod1.f(a=D)", "mod2");
 
                 await s.UnloadFileAsync(mod);
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ParseAndAnalysisDiagnostics() {
+            var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+            var s = await CreateServer((Uri)null, null, diags);
+
+            var u = await AddModule(s, "y\nx x");
+            await s.WaitForCompleteAnalysisAsync();
+
+            AssertUtil.ContainsExactly(
+                GetDiagnostics(diags, u),
+                "Warning;unknown variable 'y';Python;0;0;1",
+                "Warning;unknown variable 'x';Python;1;0;1",
+                "Error;unexpected token 'x';Python;1;2;3"
+            );
+        }
+
+        private static IEnumerable<string> GetDiagnostics(Dictionary<Uri, PublishDiagnosticsEventArgs> events, Uri uri) {
+            return events[uri].diagnostics
+                .OrderBy(d => (SourceLocation)d.range.start)
+                .Select(d => $"{d.severity};{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}");
         }
 
         public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {

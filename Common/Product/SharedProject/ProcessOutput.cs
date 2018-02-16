@@ -349,7 +349,7 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 return arg;
             }
 
-            if (arg.StartsWith("\"") && arg.EndsWith("\"")) {
+            if (arg.StartsWith("\"", StringComparison.Ordinal) && arg.EndsWith("\"", StringComparison.Ordinal)) {
                 bool inQuote = false;
                 int consecutiveBackslashes = 0;
                 foreach (var c in arg) {
@@ -371,7 +371,7 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             }
 
             var newArg = arg.Replace("\"", "\\\"");
-            if (newArg.EndsWith("\\")) {
+            if (newArg.EndsWith("\\", StringComparison.Ordinal)) {
                 newArg += "\\";
             }
             return "\"" + newArg + "\"";

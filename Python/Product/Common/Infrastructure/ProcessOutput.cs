@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -270,15 +269,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
-        private static readonly Random FreePortRandom = new Random();
-
-        private static int GetFreePort() {
-            return Enumerable.Range(FreePortRandom.Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
-        }
-
         /// <summary>
         /// Runs the file with the provided settings as a user with
         /// administrative permissions. The window is always hidden and output
@@ -329,31 +319,13 @@ namespace Microsoft.PythonTools.Infrastructure {
             TcpListener listener = null;
             Task<TcpClient> clientTask = null;
 
-            for (int retries = 10; retries >= 0; --retries) {
-                int port = GetFreePort();
-                listener = new TcpListener(IPAddress.Loopback, port);
+            try {
+                listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
                 psi.Arguments = port.ToString();
-                try {
-                    listener.Start();
-                } catch (SocketException) {
-                    if (retries == 0) {
-                        throw;
-                    }
-                    continue;
-                }
-                try {
-                    clientTask = listener.AcceptTcpClientAsync();
-                } catch (SocketException) {
-                    listener.Stop();
-                    if (retries == 0) {
-                        throw;
-                    }
-                    clientTask = null;
-                }
-            }
-
-            if (clientTask == null) {
-                throw new InvalidOperationException(Strings.UnableToElevate);
+                clientTask = listener.AcceptTcpClientAsync();
+            } catch (Exception ex) {
+                listener?.Stop();
+                throw new InvalidOperationException(Strings.UnableToElevate, ex);
             }
 
             var process = new Process();
@@ -395,9 +367,9 @@ namespace Microsoft.PythonTools.Infrastructure {
                     Task.Run(() => {
                         try {
                             for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                                if (line.StartsWith("OUT:")) {
+                                if (line.StartsWithOrdinal("OUT:")) {
                                     redirector.WriteLine(line.Substring(4));
-                                } else if (line.StartsWith("ERR:")) {
+                                } else if (line.StartsWithOrdinal("ERR:")) {
                                     redirector.WriteErrorLine(line.Substring(4));
                                 } else {
                                     redirector.WriteLine(line);
@@ -446,7 +418,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 return arg;
             }
 
-            if (arg.StartsWith("\"") && arg.EndsWith("\"")) {
+            if (arg.StartsWithOrdinal("\"") && arg.EndsWithOrdinal("\"")) {
                 bool inQuote = false;
                 int consecutiveBackslashes = 0;
                 foreach (var c in arg) {
@@ -468,7 +440,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             var newArg = arg.Replace("\"", "\\\"");
-            if (newArg.EndsWith("\\")) {
+            if (newArg.EndsWithOrdinal("\\")) {
                 newArg += "\\";
             }
             return "\"" + newArg + "\"";

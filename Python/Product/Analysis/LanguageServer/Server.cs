@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
-        private readonly ConcurrentDictionary<Uri, Dictionary<int, int>> _lastReportedDiagnostics;
+        private readonly ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>> _lastReportedDiagnostics;
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
-            _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, int>>();
+            _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>>();
         }
 
         public void Dispose() {
@@ -100,6 +100,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             SetSearchPaths(@params.initializationOptions.searchPaths);
 
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
+            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
             if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
@@ -204,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 TraceMessage($"Applied changes to {uri}");
-                EnqueueItem(doc);
+                EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
             }
 
         }
@@ -536,7 +537,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal int GetPart(Uri documentUri) {
             var f = documentUri.Fragment;
             int i;
-            if (string.IsNullOrEmpty(f) || !f.StartsWith("#") || !int.TryParse(f.Substring(1), out i)) {
+            if (string.IsNullOrEmpty(f) ||
+                !f.StartsWithOrdinal("#") ||
+                !int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out i)) {
                 i = 0;
             }
             return i;
@@ -819,7 +822,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal) {
+        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             try {
                 VersionCookie vc;
                 using (_pendingAnalysisEnqueue.Incremented()) {
@@ -845,7 +848,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         ParseComplete(doc.DocumentUri, 0);
                     }
 
-                    if (doc is IAnalyzable analyzable) {
+                    if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
+                        TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
                         _queue.Enqueue(analyzable, priority);
                     }
                 }
@@ -854,12 +858,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 await Task.Yield();
 
                 if (vc != null) {
-                    var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, int>());
+                    var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, BufferVersion>());
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            int part = GetPart(kv.Key), lastVersion;
-                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion < kv.Value.Version) {
-                                reported[part] = kv.Value.Version;
+                            int part = GetPart(kv.Key);
+                            BufferVersion lastVersion;
+                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion.Version < kv.Value.Version) {
+                                reported[part] = kv.Value;
                                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                                     uri = kv.Key,
                                     diagnostics = kv.Value.Diagnostics,
@@ -872,9 +877,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } catch (BadSourceException) {
             } catch (OperationCanceledException ex) {
                 LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
-                if (_traceLogging) {
-                    LogMessage(MessageType.Log, ex.ToString());
-                }
+                TraceMessage(ex.ToString());
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
             }
@@ -882,14 +885,38 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
+                TraceMessage($"Received new analysis for {entry.DocumentUri}");
+                int version = 0;
                 var parse = entry.GetCurrentParse();
-                if (parse?.Cookie is VersionCookie vc) {
+                if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
+                        if (kv.Value.Version > version) {
+                            version = kv.Value.Version;
+                        }
                     }
                 } else {
                     AnalysisComplete(entry.DocumentUri, 0);
                 }
+
+                var diags = _analyzer.GetDiagnostics(entry);
+                if (!diags.Any()) {
+                    return;
+                }
+
+                if (entry is IDocument doc && _lastReportedDiagnostics.TryGetValue(doc.DocumentUri, out var reported)) {
+                    lock (reported) {
+                        if (reported.TryGetValue(0, out var lastVersion)) {
+                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+                        }
+                    }
+                }
+
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                    diagnostics = diags,
+                    uri = entry.DocumentUri,
+                    _version = version
+                });
             }
         }
 
@@ -1041,7 +1068,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
                 if (m.Values.Any(v => v.DeclaringModule == entry)) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
                         yield return m;
                     }
                 }

@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Project {
                 ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
             }
 
-            if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
+            if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage) {
                 TryDelete(Url + "c");
                 TryDelete(Url + "o");
             }
@@ -218,7 +218,7 @@ namespace Microsoft.PythonTools.Project {
         internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
             var res = base.RenameFileNode(oldFileName, newFileName);
 
-            if (newFileName.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
+            if (newFileName.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true)) {
                 TryRename(oldFileName + "c", newFileName + "c");
                 TryRename(oldFileName + "o", newFileName + "o");
             }

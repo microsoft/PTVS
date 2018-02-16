@@ -17,6 +17,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.PythonTools.Parsing.Ast;
 
 /*
@@ -128,15 +129,17 @@ namespace Microsoft.PythonTools.Intellisense {
         [Conditional("DEBUG")]
         public void Dump(BitArray bits) {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendFormat("FlowChecker ({0})", _scope is FunctionDefinition ? ((FunctionDefinition)_scope).Name :
-                                                 _scope is ClassDefinition ? ((ClassDefinition)_scope).Name : "");
+            sb.AppendFormat(CultureInfo.InvariantCulture,
+                "FlowChecker ({0})",
+                _scope is FunctionDefinition ? ((FunctionDefinition)_scope).Name :
+                    _scope is ClassDefinition ? ((ClassDefinition)_scope).Name : "");
             sb.Append('{');
             bool comma = false;
             foreach (var binding in _variables) {
                 if (comma) sb.Append(", ");
                 else comma = true;
                 int index = 2 * _variableIndices[binding.Value];
-                sb.AppendFormat("{0}:{1}{2}",
+                sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}{2}",
                     binding.Key,
                     bits.Get(index) ? "*" : "-",
                     bits.Get(index + 1) ? "-" : "*");

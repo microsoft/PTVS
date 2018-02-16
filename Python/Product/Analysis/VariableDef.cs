@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -186,8 +187,8 @@ namespace Microsoft.PythonTools.Analysis {
                     typeCounts[str] = count + 1;
                     total += 1;
                 }
-                var typeCountList = typeCounts.OrderByDescending(kv => kv.Value).Select(kv => string.Format("{0}x {1}", kv.Value, kv.Key)).ToList();
-                Debug.Write(string.Format("{0} exceeded type limit.\nStack trace:\n{1}\nContents:\n    Count = {2}\n    {3}\n",
+                var typeCountList = typeCounts.OrderByDescending(kv => kv.Value).Select(kv => "{0}x {1}".FormatInvariant(kv.Value, kv.Key)).ToList();
+                Debug.Write("{0} exceeded type limit.\nStack trace:\n{1}\nContents:\n    Count = {2}\n    {3}\n".FormatInvariant(
                     GetType().Name,
                     new StackTrace(true),
                     total,
@@ -195,55 +196,6 @@ namespace Microsoft.PythonTools.Analysis {
                 AnalysisLog.ExceedsTypeLimit(GetType().Name, total, string.Join(", ", typeCountList));
             }
         }
-
-#if VARDEF_STATS
-        internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
-
-        ~VariableDef() {
-            if (_dependencies.Count == 0) {
-                IncStat("NoDeps");
-            } else {
-                IncStat(String.Format("TypeCount_{0:D3}", Types.Count));
-                IncStat(String.Format("DepCount_{0:D3}", _dependencies.Count));
-                IncStat(
-                    String.Format(
-                        "TypeXDepCount_{0:D3},{1:D3}", 
-                        Types.Count, 
-                        _dependencies.Count
-                    )
-                );
-                IncStat(String.Format("References_{0:D3}", References.Count()));
-                IncStat(String.Format("Assignments_{0:D3}", Definitions.Count()));
-                foreach (var dep in _dependencies.Values) {
-                    IncStat(String.Format("DepUnits_{0:D3}", dep.DependentUnits == null ? 0 : dep.DependentUnits.Count));
-                }
-            }
-        }
-
-        private static void IncStat(string stat) {
-            if (_variableDefStats.ContainsKey(stat)) {
-                _variableDefStats[stat] += 1;
-            } else {
-                _variableDefStats[stat] = 1;
-            }
-        }
-
-        internal static void DumpStats() {
-            for (int i = 0; i < 3; i++) {
-                GC.Collect(2, GCCollectionMode.Forced);
-                GC.WaitForPendingFinalizers();
-            }
-
-            List<string> values = new List<string>();
-            foreach (var keyValue in VariableDef._variableDefStats) {
-                values.Add(String.Format("{0}: {1}", keyValue.Key, keyValue.Value));
-            }
-            values.Sort();
-            foreach (var value in values) {
-                Console.WriteLine(value);
-            }
-        }
-#endif
 
         protected int EstimateTypeCount(IAnalysisSet extraTypes = null) {
             // Use a fast estimate of the number of types we have, since this
@@ -503,8 +455,23 @@ namespace Microsoft.PythonTools.Analysis {
 
 #if VARDEF_STATS
         ~VariableDef() {
-            IncStat(String.Format("References_{0:D3}", References.Count()));
-            IncStat(String.Format("Assignments_{0:D3}", Definitions.Count()));
+            if (_dependencies.Count == 0) {
+                IncStat("NoDeps");
+            } else {
+                IncStat("TypeCount_{0:D3}".FormatInvariant(Types.Count));
+                IncStat("DepCount_{0:D3}".FormatInvariant(_dependencies.Count));
+                IncStat(
+                    "TypeXDepCount_{0:D3},{1:D3}".FormatInvariant(
+                        Types.Count,
+                        _dependencies.Count
+                    )
+                );
+                IncStat("References_{0:D3}".FormatInvariant(References.Count()));
+                IncStat("Assignments_{0:D3}".FormatInvariant(Definitions.Count()));
+                foreach (var dep in _dependencies.Values) {
+                    IncStat("DepUnits_{0:D3}".FormatInvariant(dep.DependentUnits.MaybeEnumerate().Count()));
+                }
+            }
         }
 #endif
 
@@ -614,6 +581,33 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+#if VARDEF_STATS
+        internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
+
+        private static void IncStat(string stat) {
+            if (_variableDefStats.ContainsKey(stat)) {
+                _variableDefStats[stat] += 1;
+            } else {
+                _variableDefStats[stat] = 1;
+            }
+        }
+
+        internal static void DumpStats() {
+            for (int i = 0; i < 3; i++) {
+                System.GC.Collect(2, System.GCCollectionMode.Forced);
+                System.GC.WaitForPendingFinalizers();
+            }
+
+            List<string> values = new List<string>();
+            foreach (var keyValue in _variableDefStats) {
+                values.Add("{0}: {1}".FormatInvariant(keyValue.Key, keyValue.Value));
+            }
+            values.Sort();
+            foreach (var value in values) {
+                System.Console.WriteLine(value);
+            }
+        }
+#endif
     }
 
 

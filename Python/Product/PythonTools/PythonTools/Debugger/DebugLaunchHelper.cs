@@ -280,7 +280,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static string UnquotePath(string p) {
-            if (string.IsNullOrEmpty(p) || !p.StartsWith("\"") || !p.EndsWith("\"")) {
+            if (string.IsNullOrEmpty(p) || !p.StartsWithOrdinal("\"") || !p.EndsWithOrdinal("\"")) {
                 return p;
             }
             return p.Substring(1, p.Length - 2);

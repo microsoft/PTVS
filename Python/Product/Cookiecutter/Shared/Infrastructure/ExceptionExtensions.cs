@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.CookiecutterTools;
@@ -46,6 +47,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
 
             return string.Format(
+                CultureInfo.CurrentCulture,
                 Strings.UnhandledException,
                 ex,
                 callerFile ?? String.Empty,

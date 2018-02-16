@@ -256,6 +256,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
+            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", true) ?? true;
+
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
@@ -266,7 +268,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
             }
-
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
@@ -536,6 +537,10 @@ namespace Microsoft.PythonTools.Intellisense {
             await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
         }
 
+        public async Task NotifyModulesChangedAsync() {
+            await SendEventAsync(new AP.ModulesChangedEvent()).ConfigureAwait(false);
+        }
+
         public async Task NotifyFileChangesAsync(IEnumerable<Uri> newFiles, IEnumerable<Uri> deletedFiles, IEnumerable<Uri> changedFiles) {
             await SendEventAsync(new AP.FileChangedEvent {
                 changes = newFiles.Select(f => new AP.FileEvent { kind = LS.FileChangeType.Created, documentUri = f })
@@ -685,6 +690,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             }
                             _stdErr.AppendLine(line);
+                            if (_stdErr.Length > 102400) {
+                                _stdErr.Remove(0, 12800);
+                            }
                             Debug.WriteLine("Analysis Std Err: " + line);
                         }
                     } catch (InvalidOperationException) {
@@ -870,7 +878,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
             var entry = await buffer.GetAnalysisEntryAsync(CancellationToken.None);
             if (entry == null) {
                 return new AP.UnresolvedImportsResponse();
@@ -878,8 +885,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return await EnsureSingleRequest(
                 typeof(AP.UnresolvedImportsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => {
                     return await SendRequestAsync(
                         new AP.UnresolvedImportsRequest() {
@@ -954,7 +961,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         PythonTextBufferInfo.MarkForReplacement(b);
                         var bi = _services.GetBufferInfo(b);
                         var actualEntry = bi.TrySetAnalysisEntry(e, null);
-                        actualEntry?.GetOrCreateBufferParser(_services).AddBuffer(b);
+                        var bp = actualEntry?.GetOrCreateBufferParser(_services);
+                        if (bp != null) {
+                            bp.AddBuffer(b);
+                            await bp.EnsureCodeSyncedAsync(b);
+                        }
                     }
                 }
             }
@@ -1614,7 +1625,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _services.Site,
                         e,
                         ge.Key,
-                        VSTASKCATEGORY.CAT_BUILDCOMPILE,
+                        VSTASKCATEGORY.CAT_CODESENSE,
                         true
                     ))).ToList();
 
@@ -1680,7 +1691,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             var eval = snapshot.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             if (eval != null) {
-                if (text.EndsWith("(")) {
+                if (text.EndsWithOrdinal("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
                 var liveSigs = eval.GetSignatureDocumentation(text);
@@ -2150,16 +2161,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames, AnalysisEntry entry) {
-            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
-
             if (entry == null) {
                 return Task.FromResult<AP.AnalysisClassificationsResponse>(null);
             }
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
-                lastVersion,
-                n => n == lastVersion,
+                entry,
+                n => n == entry,
                 async () => await SendRequestAsync(
                     new AP.AnalysisClassificationsRequest() {
                         documentUri = entry.DocumentUri,
@@ -2203,33 +2212,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             await entry.EnsureCodeSyncedAsync(bi.Buffer);
 
+            var lastSnapshot = bi.LastSentSnapshot;
+            var formatSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive).GetSpan(lastSnapshot).ToSourceSpan();
+
             var res = await SendRequestAsync(
-                new AP.FormatCodeRequest() {
+                new AP.FormatCodeRequest {
                     documentUri = entry.DocumentUri,
-                    startIndex = span.Start,
-                    endIndex = span.End,
+                    startLine = formatSpan.Start.Line,
+                    startColumn = formatSpan.Start.Column,
+                    endLine = formatSpan.End.Line,
+                    endColumn = formatSpan.End.Column,
                     options = options,
                     newLine = view.Options.GetNewLineCharacter()
                 }
             );
 
-            if (res != null && res.version != -1) {
-                SnapshotSpan selectionSpan = default(SnapshotSpan);
-                if (selectResult) {
-                    selectionSpan = bi.LocationTracker.Translate(
-                        new SourceSpan(
-                            new SourceLocation(res.startLine, res.startColumn),
-                            new SourceLocation(res.endLine, res.endColumn)
-                        ),
-                        res.version,
-                        span.Snapshot
-                    );
-                }
+            if (res != null && res.version >= 0) {
+                var selectionSpan = span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
 
                 ApplyChanges(res.changes, bi.Buffer, bi.LocationTracker, res.version);
 
                 if (selectResult && !view.IsClosed) {
-                    view.Selection.Select(selectionSpan, false);
+                    view.Selection.Select(selectionSpan.GetSpan(bi.CurrentSnapshot), false);
                 }
             }
         }
@@ -2529,7 +2533,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
 
-            if (analysis != null) {
+            if (analysis?.Entry != null) {
                 var location = analysis.Location;
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,

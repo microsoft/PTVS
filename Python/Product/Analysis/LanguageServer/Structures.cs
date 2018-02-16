@@ -407,6 +407,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// Disables automatic analysis of all files under the root URI.
         /// </summary>
         public bool? manualFileLoad;
+
+        /// <summary>
+        /// Enables rich diagnostics from code analysis.
+        /// </summary>
+        public bool? liveLinting;
     }
 
     public struct ClientCapabilities {

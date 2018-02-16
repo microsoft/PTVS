@@ -473,7 +473,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns>S_OK if the method succeeds, otherwise an error code</returns>
         public virtual int QueryDebugLaunch(uint flags, out int fCanLaunch) {
             string assembly = this.project.GetAssemblyName(this.ConfigName);
-            fCanLaunch = (assembly != null && assembly.ToUpperInvariant().EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) ? 1 : 0;
+            fCanLaunch = (assembly != null && assembly.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) ? 1 : 0;
             if (fCanLaunch == 0) {
                 string property = GetConfigurationProperty("StartProgram", true);
                 fCanLaunch = (property != null && property.Length > 0) ? 1 : 0;

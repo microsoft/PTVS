@@ -144,9 +144,9 @@ namespace Microsoft.PythonTools.Project {
         private static string PerformSubstitutions(IPythonProject project, string label) {
             return Regex.Replace(label, @"\{(?<key>\w+)\}", m => {
                 var key = m.Groups["key"].Value;
-                if ("projectname".Equals(key, StringComparison.InvariantCultureIgnoreCase)) {
+                if ("projectname".Equals(key, StringComparison.OrdinalIgnoreCase)) {
                     return Path.ChangeExtension(project.ProjectFile, null);
-                } else if ("projectfile".Equals(key, StringComparison.InvariantCultureIgnoreCase)) {
+                } else if ("projectfile".Equals(key, StringComparison.OrdinalIgnoreCase)) {
                     return project.ProjectFile;
                 }
 
@@ -589,7 +589,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task<bool> RunInRepl(IPythonProject project, CommandStartInfo startInfo) {
             var executeIn = string.IsNullOrEmpty(startInfo.ExecuteIn) ? CreatePythonCommandItem.ExecuteInRepl : startInfo.ExecuteIn;
-            bool resetRepl = executeIn.StartsWith("R", StringComparison.InvariantCulture);
+            bool resetRepl = executeIn.StartsWithOrdinal("R");
 
             var replTitle = executeIn.Substring(4).TrimStart(' ', ':');
             if (string.IsNullOrEmpty(replTitle)) {
@@ -762,61 +762,61 @@ namespace Microsoft.PythonTools.Project {
         public bool ExecuteInRepl {
             get {
                 return !string.IsNullOrEmpty(ExecuteIn) &&
-                    ExecuteIn.StartsWith(CreatePythonCommandItem.ExecuteInRepl, StringComparison.InvariantCultureIgnoreCase);
+                    ExecuteIn.StartsWithOrdinal(CreatePythonCommandItem.ExecuteInRepl, ignoreCase: true);
             }
         }
 
         public bool ExecuteInOutput {
             get {
-                return CreatePythonCommandItem.ExecuteInOutput.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase);
+                return CreatePythonCommandItem.ExecuteInOutput.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool ExecuteInConsole {
             get {
-                return PythonCommandTask.ExecuteInConsole.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.ExecuteInConsole.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool ExecuteInConsoleAndPause {
             get {
-                return PythonCommandTask.ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool ExecuteHidden {
             get {
-                return PythonCommandTask.ExecuteInNone.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.ExecuteInNone.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool IsScript {
             get {
-                return PythonCommandTask.TargetTypeScript.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.TargetTypeScript.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool IsModule {
             get {
-                return PythonCommandTask.TargetTypeModule.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.TargetTypeModule.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool IsCode {
             get {
-                return PythonCommandTask.TargetTypeCode.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.TargetTypeCode.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool IsExecuable {
             get {
-                return PythonCommandTask.TargetTypeExecutable.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public bool IsPip {
             get {
-                return PythonCommandTask.TargetTypePip.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase);
+                return PythonCommandTask.TargetTypePip.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 

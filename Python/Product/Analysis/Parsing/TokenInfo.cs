@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
 
@@ -55,7 +56,7 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
 
         public override string ToString() {
-            return String.Format("TokenInfo: {0}, {1}, {2}", _span, _category, _trigger);
+            return "TokenInfo: {0}, {1}, {2}".FormatInvariant(_span, _category, _trigger);
         }
     }
 }

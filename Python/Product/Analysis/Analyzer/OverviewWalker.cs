@@ -410,6 +410,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(ForStatement node) {
             UpdateChildRanges(node);
+
+            if (node.Left is NameExpression ne) {
+                var v = _scope.CreateVariable(ne, _curUnit, ne.Name, false);
+                v.AddAssignment(ne, _curUnit);
+            }
             return base.Walk(node);
         }
 

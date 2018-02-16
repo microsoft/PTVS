@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal static Uri MakeDocumentUri(string filePath) {
             Uri u;
             if (!Path.IsPathRooted(filePath)) {
-                u = new Uri($"file:///LOCAL-PATH/{filePath.Replace('\\', '/')}");
+                u = new Uri("file:///LOCAL-PATH/{0}".FormatInvariant(filePath.Replace('\\', '/')));
             } else {
                 u = new Uri(filePath);
             }
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis {
                 AnalysisVersion++;
 
                 foreach (var aggregate in _aggregates) {
-                    aggregate.BumpVersion();
+                    aggregate?.BumpVersion();
                 }
 
                 Parse(enqueueOnly, cancel);
@@ -223,6 +223,8 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
+            MyScope.EnsureModuleVariables(_unit.State);
+
             foreach (var value in MyScope.Scope.AllVariables) {
                 value.Value.EnqueueDependents();
             }
@@ -231,6 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
+            _unit.State.ClearDiagnostics(this);
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit, tree);
@@ -247,7 +250,7 @@ namespace Microsoft.PythonTools.Analysis {
                     from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
-                    where fileName.StartsWith(pathPrefix)
+                    where fileName.StartsWithOrdinal(pathPrefix, ignoreCase: true)
                     let moduleName = pair.Value.Name
                     // Is the full name of the candidate child package qualified with the name of our package?
                     let lastDot = moduleName.LastIndexOf('.')
@@ -299,11 +302,13 @@ namespace Microsoft.PythonTools.Analysis {
         public void RemovedFromProject() {
             lock (this) {
                 AnalysisVersion = -1;
-            }
-            foreach (var aggregatedInto in _aggregates) {
-                if (aggregatedInto.AnalysisVersion != -1) {
-                    ProjectState.ClearAggregate(aggregatedInto);
-                    aggregatedInto.RemovedFromProject();
+
+                var state = ProjectState;
+                foreach (var aggregatedInto in _aggregates) {
+                    if (aggregatedInto != null && aggregatedInto.AnalysisVersion != -1) {
+                        state?.ClearAggregate(aggregatedInto);
+                        aggregatedInto.RemovedFromProject();
+                    }
                 }
             }
         }
@@ -314,7 +319,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void AggregatedInto(IVersioned into) {
             if (into is AggregateProjectEntry agg) {
-                _aggregates.Add(agg);
+                lock (this) {
+                    _aggregates.Add(agg);
+                }
             }
         }
 

@@ -540,6 +540,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
+            // TODO: Include relevant type info on the parameter...
             result.UnionWith(lookup
                 // Exclude constant values first time through
                 .Where(av => av.MemberType != PythonMemberType.Constant)
@@ -1165,7 +1166,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
-            if (privatePrefix != null && name.StartsWith(privatePrefix) && !name.EndsWith("__")) {
+            if (privatePrefix != null && name.StartsWithOrdinal(privatePrefix) && !name.EndsWithOrdinal("__")) {
                 // private prefix inside of the class, filter out the prefix.
                 return name.Substring(privatePrefix.Length - 2);
             } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {

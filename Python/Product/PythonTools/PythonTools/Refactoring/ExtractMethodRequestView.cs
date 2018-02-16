@@ -379,7 +379,7 @@ namespace Microsoft.PythonTools.Refactoring {
             /// Compares two ClosureVariable instances by name.
             /// </summary>
             public int CompareTo(ClosureVariable other) {
-                return Name.CompareTo((other == null) ? string.Empty : other.Name);
+                return string.CompareOrdinal(Name, other?.Name ?? "");
             }
         }
     }

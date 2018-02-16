@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -154,14 +155,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 message,
                 span,
                 VSTASKPRIORITY.TP_NORMAL,
-                VSTASKCATEGORY.CAT_BUILDCOMPILE,
+                VSTASKCATEGORY.CAT_CODESENSE,
                 true,
                 _spanTranslator,
                 _fromVersion
             );
         }
 
-        internal TaskProviderItem FromDiagnostic(IServiceProvider site, Diagnostic diagnostic, DiagnosticSeverity severity, VSTASKCATEGORY category, bool squiggle) {
+        internal TaskProviderItem FromDiagnostic(
+            IServiceProvider site,
+            Diagnostic diagnostic,
+            DiagnosticSeverity severity,
+            VSTASKCATEGORY category,
+            bool squiggle
+        ) {
             var priority = VSTASKPRIORITY.TP_LOW;
             switch (severity) {
                 case DiagnosticSeverity.Error:
@@ -796,7 +803,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    class ErrorTaskItem : IVsTaskItem {
+    class ErrorTaskItem : IVsTaskItem, IVsErrorItem {
         private readonly IServiceProvider _serviceProvider;
 
         public ErrorTaskItem(
@@ -819,11 +826,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public SourceSpan Span { get; private set; }
         public string Message { get; set; }
-        public string SourceFile { get; set; }
+        public string SourceFile { get; }
         public VSTASKCATEGORY Category { get; set; }
         public VSTASKPRIORITY Priority { get; set; }
         public bool CanDelete { get; set; }
         public bool IsChecked { get; set; }
+        public ProjectNode ProjectHierarchy { get; set; }
+        private bool _projectHierarchyIsNull;
 
         public bool MessageIsReadOnly { get; set; }
         public bool IsCheckedIsReadOnly { get; set; }
@@ -839,7 +848,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.Column(out int piCol) {
+        public int Column(out int piCol) {
             if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the column number calculated
                 piCol = 0;
@@ -849,22 +858,22 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.Document(out string pbstrMkDocument) {
+        public int Document(out string pbstrMkDocument) {
             pbstrMkDocument = SourceFile;
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.HasHelp(out int pfHasHelp) {
+        public int HasHelp(out int pfHasHelp) {
             pfHasHelp = 0;
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.ImageListIndex(out int pIndex) {
+        public int ImageListIndex(out int pIndex) {
             pIndex = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsTaskItem.IsReadOnly(VSTASKFIELD field, out int pfReadOnly) {
+        public int IsReadOnly(VSTASKFIELD field, out int pfReadOnly) {
             switch (field) {
                 case VSTASKFIELD.FLD_CHECKED:
                     pfReadOnly = IsCheckedIsReadOnly ? 1 : 0;
@@ -890,7 +899,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.Line(out int piLine) {
+        public int Line(out int piLine) {
             if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the line number calculated
                 piLine = 0;
@@ -900,7 +909,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.NavigateTo() {
+        public int NavigateTo() {
             try {
                 PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
                 return VSConstants.S_OK;
@@ -928,39 +937,39 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        int IVsTaskItem.NavigateToHelp() {
+        public int NavigateToHelp() {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsTaskItem.OnDeleteTask() {
+        public int OnDeleteTask() {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsTaskItem.OnFilterTask(int fVisible) {
+        public int OnFilterTask(int fVisible) {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsTaskItem.SubcategoryIndex(out int pIndex) {
+        public int SubcategoryIndex(out int pIndex) {
             pIndex = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsTaskItem.get_Checked(out int pfChecked) {
+        public int get_Checked(out int pfChecked) {
             pfChecked = IsChecked ? 1 : 0;
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.get_Priority(VSTASKPRIORITY[] ptpPriority) {
+        public int get_Priority(VSTASKPRIORITY[] ptpPriority) {
             ptpPriority[0] = Priority;
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.get_Text(out string pbstrName) {
+        public int get_Text(out string pbstrName) {
             pbstrName = Message;
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.put_Checked(int fChecked) {
+        public int put_Checked(int fChecked) {
             if (IsCheckedIsReadOnly) {
                 return VSConstants.E_NOTIMPL;
             }
@@ -968,7 +977,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.put_Priority(VSTASKPRIORITY tpPriority) {
+        public int put_Priority(VSTASKPRIORITY tpPriority) {
             if (PriorityIsReadOnly) {
                 return VSConstants.E_NOTIMPL;
             }
@@ -976,12 +985,48 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        int IVsTaskItem.put_Text(string bstrName) {
+        public int put_Text(string bstrName) {
             if (MessageIsReadOnly) {
                 return VSConstants.E_NOTIMPL;
             }
             Message = bstrName;
             return VSConstants.S_OK;
+        }
+
+        public int BrowseObject(out object ppObj) {
+            ppObj = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int get_CustomColumnText(ref Guid guidView, uint iCustomColumnIndex, out string pbstrText) {
+            pbstrText = $"{guidView};{iCustomColumnIndex}";
+            return VSConstants.S_OK;
+        }
+
+        public int put_CustomColumnText(ref Guid guidView, uint iCustomColumnIndex, string bstrText) {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int IsCustomColumnReadOnly(ref Guid guidView, uint iCustomColumnIndex, out int pfReadOnly) {
+            pfReadOnly = 1;
+            return VSConstants.S_OK;
+        }
+
+        public int GetHierarchy(out IVsHierarchy ppProject) {
+            if (_projectHierarchyIsNull || ProjectHierarchy != null) {
+                ppProject = ProjectHierarchy;
+            } else if (!string.IsNullOrEmpty(SourceFile)) {
+                ppProject = ProjectHierarchy = _serviceProvider.GetProjectFromFile(SourceFile);
+                _projectHierarchyIsNull = ProjectHierarchy == null;
+            } else {
+                ppProject = null;
+            }
+            return ppProject != null ? VSConstants.S_OK : VSConstants.E_NOTIMPL;
+        }
+
+        public int GetCategory(out uint pCategory) {
+            pCategory = 0;
+            return VSConstants.E_NOTIMPL;
         }
     }
 
