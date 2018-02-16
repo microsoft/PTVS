@@ -140,18 +140,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return false;
         }
 
-        private VariableDef CreateVariableInDeclaredScope(NameExpression name) {
+        private VariableDef CreateVariableInDeclaredScope(NameExpression name, bool isLocated = false) {
             var reference = name.GetVariableReference(_tree);
+
+            InterpreterScope declScope = null;
 
             if (reference != null && reference.Variable != null) {
                 var declNode = reference.Variable.Scope;
-                var declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
-                if (declScope != null) {
-                    return declScope.CreateVariable(name, _curUnit, name.Name, false);
-                }
+                declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
             }
 
-            return _scope.CreateVariable(name, _curUnit, name.Name, false);
+            if (isLocated) {
+                return (declScope ?? _scope).CreateLocatedVariable(name, _curUnit, name.Name, false);
+            }
+
+            return (declScope ?? _scope).CreateVariable(name, _curUnit, name.Name, false);
         }
 
         internal FunctionInfo AddFunction(FunctionDefinition node, AnalysisUnit outerUnit) {
@@ -443,8 +446,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (nameNode.Name == "*") {
                         _scope.ContainsImportStar = true;
                     } else {
-                        var v = CreateVariableInDeclaredScope(nameNode);
-                        v.AddAssignment(nameNode, _curUnit);
+                        var v = CreateVariableInDeclaredScope(nameNode, isLocated: true);
+                        v.AddReference(nameNode, _curUnit);
                     }
                 }
             }
@@ -489,8 +492,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 if (name != null) {
-                    var v = CreateVariableInDeclaredScope(name);
-                    v.AddAssignment(node, _curUnit);
+                    CreateVariableInDeclaredScope(name, isLocated: true);
                 }
             }
 

@@ -2700,6 +2700,8 @@ def f(abc):
                 new VariableLocation(16, 14, VariableType.Reference),
 
                 new VariableLocation(18, 12, VariableType.Reference),
+                new VariableLocation(19, 21, VariableType.Reference),
+                new VariableLocation(20, 28, VariableType.Reference),
 
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
@@ -2843,11 +2845,11 @@ k = 2
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("a", text.IndexOf("a["),
-                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(2, 7, VariableType.Definition),
                 new VariableLocation(3, 9, VariableType.Reference)
             );
             entry.AssertReferences("k", text.IndexOf("k["),
-                new VariableLocation(2, 13, VariableType.Definition),
+                new VariableLocation(2, 11, VariableType.Definition),
                 new VariableLocation(4, 9, VariableType.Reference)
             );
             entry.AssertReferences("a", text.IndexOf("#out"),
@@ -2954,7 +2956,9 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 7, VariableType.Value),         // possible value
                                                                         //new VariableLocation(1, 7, VariableType.Value),
                                                                         // appears twice for two modules, but cannot test that
+                new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
+                new VariableLocation(2, 25, VariableType.Reference),    // as
                 new VariableLocation(4, 1, VariableType.Reference)      // call
             );
         }
