@@ -48,6 +48,7 @@ namespace TestUtilities.UI.Python {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
+        private PythonTestExplorer _testExplorer;
         public readonly PythonToolsService PythonToolsService;
 
         public PythonVisualStudioApp(IServiceProvider site)
@@ -201,6 +202,41 @@ namespace TestUtilities.UI.Python {
                     _perfToolBar = new PythonPerfToolBar(element);
                 }
                 return _perfToolBar;
+            }
+        }
+
+        /// <summary>
+        /// Opens and activates the test explorer window.
+        /// </summary>
+        public PythonTestExplorer OpenTestExplorer() {
+            Dte.ExecuteCommand("TestExplorer.ShowTestExplorer");
+            return TestExplorer;
+        }
+
+        public PythonTestExplorer TestExplorer {
+            get {
+                if (_testExplorer == null) {
+                    AutomationElement element = null;
+                    for (int i = 0; i < 10 && element == null; i++) {
+                        element = Element.FindFirst(TreeScope.Descendants,
+                            new AndCondition(
+                                new PropertyCondition(
+                                    AutomationElement.ClassNameProperty,
+                                    "ViewPresenter"
+                                ),
+                                new PropertyCondition(
+                                    AutomationElement.NameProperty,
+                                    "Test Explorer"
+                                )
+                            )
+                        );
+                        if (element == null) {
+                            System.Threading.Thread.Sleep(500);
+                        }
+                    }
+                    _testExplorer = new PythonTestExplorer(this, element);
+                }
+                return _testExplorer;
             }
         }
 
