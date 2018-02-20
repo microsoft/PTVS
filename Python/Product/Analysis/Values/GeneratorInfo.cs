@@ -106,6 +106,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Yields.Types;
         }
 
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            Returns.AddDependency(unit);
+
+            return Returns.Types;
+        }
+
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
             base.AddReference(node, analysisUnit);
         }

@@ -78,7 +78,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var funcType = ProcessFunctionDecorators(ddg);
 
             var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
-            v.AddAssignment(new EncodedLocation(this, Ast), ProjectEntry);
 
             // Set the scope to within the function
             ddg.Scope = Scope;
@@ -222,6 +221,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             base(inner.Function, inner._declUnit, inner._declUnit.Scope, inner.ProjectEntry) {
             _inner = inner;
             ((FunctionScope)_inner.Scope).AddLinkedScope((FunctionScope)Scope);
+
+            var node = inner.Function.FunctionDefinition;
+            node.Body.Walk(new OverviewWalker(inner.ProjectEntry, this, inner.Tree));
         }
 
         internal override void EnsureParameters() {

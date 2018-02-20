@@ -312,6 +312,10 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 
+        public virtual IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
+        }
+
         internal virtual bool IsOfType(IAnalysisSet klass) {
             return false;
         }

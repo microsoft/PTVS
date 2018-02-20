@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return AnalysisSet.Empty;
                 }
             }
-            return set.Union(value.Resolve(unit));
+            return set.Union(value.Resolve(unit, ResolutionContext.Complete));
         }
 
         internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
@@ -448,17 +448,18 @@ namespace Microsoft.PythonTools.Analysis {
                 scope = FindScope(location);
             }
 
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+
             if (!lookup.Any()) {
-                var unit = GetNearestEnclosingAnalysisUnit(scope);
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
-                    lookup = eval.EvaluateNoMemberRecursion(expr).Resolve(unit);
+                    lookup = eval.EvaluateNoMemberRecursion(expr);
                 } else {
-                    lookup = eval.Evaluate(expr).Resolve(unit);
+                    lookup = eval.Evaluate(expr);
                 }
             }
 
-            return GetMemberResults(lookup, scope, options);
+            return GetMemberResults(lookup.Resolve(unit, ResolutionContext.Complete), scope, options);
         }
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {

@@ -50,9 +50,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry);
 
-            if (node.ContainsNestedFreeVariables) {
-                _closureDefinition = new ClosureSetDefinition(node.Variables);
-                _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
+            if (node.Parameters.Any()) {
+                if (node.ContainsNestedFreeVariables) {
+                    var paramNames = node.Parameters.Select(p => p.Name).ToArray();
+                    _closureDefinition = new ClosureSetDefinition(
+                        node.Variables.Values.Where(v => v.AccessedInNestedScope).Select(v => Array.IndexOf(paramNames, v.Name))
+                    );
+                    _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
+                } else if (node.IsGenerator) {
+                    _closureDefinition = new ClosureSetDefinition(Enumerable.Range(0, node.Parameters.Count));
+                    _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
+                }
             }
         }
 
@@ -79,33 +87,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _analysisUnit.AddNamedParameterReferences(unit, keywordArgNames);
             }
 
-            var res = DoCall(node, unit, _analysisUnit, callArgs);
+            var calledUnit = _analysisUnit;
 
             if (_closureDefinition != null) {
-                FunctionAnalysisUnit calledUnit;
-                var key = _closureDefinition.Get(node, unit);
+                var key = _closureDefinition.Get(callArgs);
                 lock (_callsWithClosure) {
                     if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
-                        calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
+                        if (!unit.ForEval) {
+                            calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
+                            calledUnit.Enqueue();
+                        } else {
+                            calledUnit = _analysisUnit;
+                        }
                     }
-                    // Always replace the key
-                    _callsWithClosure[key] = calledUnit;
-                }
 
-                res = res.Union(DoCall(node, unit, calledUnit, callArgs));
+                    if (!unit.ForEval) {
+                        // Always replace the key
+                        _callsWithClosure[key] = calledUnit;
+                    }
+                }
             }
 
+            var res = DoCall(node, unit, calledUnit, callArgs);
+            if (calledUnit != _analysisUnit) {
+                _analysisUnit.UpdateParameters(callArgs);
+            }
 
             var context = new ResolutionContext {
                 Caller = this,
                 CallArgs = callArgs
             };
 
-            if (res.Split(out IReadOnlyList<LazyValueInfo> pi, out res)) {
-                res = res.Union(pi.SelectMany(p => {
-                    var r = p.Resolve(unit, context);
+            if (res.Split(out IReadOnlyList<LazyValueInfo> lvi, out res)) {
+                res = res.Union(lvi.SelectMany(lv => {
+                    var r = lv.Resolve(unit, context);
                     if (!r.Any() && unit.ForEval) {
-                        return p.Resolve(unit);
+                        return lv.Resolve(unit);
                     }
                     return r;
                 }));
@@ -437,8 +454,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                     var vars = FunctionDefinition.Parameters.Select(p => {
                         VariableDef param;
-                        if (unit.Scope.TryGetVariable(p.Name, out param)) {
+                        if (unit != AnalysisUnit && unit.Scope.TryGetVariable(p.Name, out param)) {
                             return param.Types;
+                        } else if (_analysisUnit._scope is FunctionScope fs) {
+                            return fs.GetParameter(p.Name)?.Types;
                         }
                         return null;
                     }).ToArray();

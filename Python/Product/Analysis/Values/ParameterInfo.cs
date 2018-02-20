@@ -42,28 +42,4 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string ToString() => $"<arg {Name} in {_function.Name}>";
     }
-
-    class ClosureInfo : LazyValueInfo {
-        private readonly PythonVariable _variable;
-
-        public ClosureInfo(Node node, PythonVariable variable) : base(node) {
-            _variable = variable;
-        }
-
-        public override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context.Closure != null) {
-                return context.Closure.TryGetValue(_variable.Name, out var res) ? res : AnalysisSet.Empty;
-            }
-            return this;
-        }
-
-        public override bool Equals(object obj) {
-            if (obj is ClosureInfo ci) {
-                return ci._variable.Name == _variable.Name;
-            }
-            return base.Equals(obj);
-        }
-
-        public override int GetHashCode() => _variable.Name.GetHashCode();
-    }
 }

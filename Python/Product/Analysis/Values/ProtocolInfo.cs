@@ -222,6 +222,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return AnalysisSet.UnionAll(_protocols.Select(p => p.GetMember(node, unit, name)));
         }
 
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetReturnForYieldFrom(node, unit)));
+        }
+
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             return AnalysisSet.UnionAll(_protocols.Select(p => p.GetTypeMember(node, unit, name)));
         }

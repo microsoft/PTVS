@@ -39,7 +39,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             Automatic = 0,
             GetIndex,
             GetIterator,
-            GetEnumeratorTypes
+            GetEnumeratorTypes,
+            Await,
+            GetYieldFromReturn
         }
 
         protected LazyValueInfo(Node node) {
@@ -85,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private IAnalysisSet Resolve(AnalysisUnit unit) {
-            Resolve(unit, new ResolutionContext()).Split(out IReadOnlyList<LazyValueInfo> _, out var result);
+            Resolve(unit, ResolutionContext.Complete).Split(out IReadOnlyList<LazyValueInfo> _, out var result);
             return result;
         }
 
@@ -107,12 +109,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 switch (_lazyOp) {
                     case LazyOperation.Automatic:
                         break;
+                    case LazyOperation.Await:
+                        return left.Value.Await(_node, unit);
                     case LazyOperation.GetEnumeratorTypes:
                         return left.Value.GetEnumeratorTypes(_node, unit);
                     case LazyOperation.GetIndex:
                         return left.Value.GetIndex(_node, unit, right.Value);
                     case LazyOperation.GetIterator:
                         return left.Value.GetIterator(_node, unit);
+                    case LazyOperation.GetYieldFromReturn:
+                        return left.Value.GetReturnForYieldFrom(_node, unit);
                     default:
                         Debug.Fail($"Unhandled op {_lazyOp}");
                         return AnalysisSet.Empty;
@@ -150,11 +156,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         // Lazy operations
 
+        public override IAnalysisSet Await(Node node, AnalysisUnit unit) {
+            return new LazyValueInfo(node, this, null, LazyOperation.Await);
+        }
+
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Eager call, but lazy result
+            foreach (var ns in Resolve(unit)) {
+                ns.GetMember(node, unit, name);
+            }
             return new LazyValueInfo(node, this, name);
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            // Eager call, but lazy result
+            foreach (var ns in Resolve(unit)) {
+                ns.Call(node, unit, args, keywordArgNames);
+            }
             return new LazyValueInfo(node, this, args, keywordArgNames);
         }
 
@@ -180,6 +198,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return new LazyValueInfo(node, this, null, LazyOperation.GetEnumeratorTypes);
+        }
+
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return new LazyValueInfo(node, this, null, LazyOperation.GetYieldFromReturn);
         }
 
         // Eager operations
@@ -219,6 +241,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             Debug.Fail("Invalid operation on unresolved LazyValueInfo");
             return base.GetAllMembers(moduleContext, options);
+        }
+
+        // Equality
+
+        public override bool Equals(object obj) {
+            if (!(obj is LazyValueInfo other)) {
+                return false;
+            }
+            if (!_node.Equals(other._node)) {
+                return false;
+            }
+            return _lazyOp == other._lazyOp &&
+                (_left == null) == (other._left == null) &&
+                (_right == null) == (other._right == null) &&
+                (_value == null) == (other._value == null);
+        }
+
+        public override int GetHashCode() {
+            return GetType().GetHashCode() ^ _node.GetHashCode();
         }
     }
 

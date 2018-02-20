@@ -4960,6 +4960,16 @@ class MyClass(object):
 ";
 
             PermutedTest("mod", new[] { text1, text2 }, state => {
+                // Ensure we ended up with a function
+                state.AssertIsInstance(state.Modules["mod1"], "f", 0, BuiltinTypeId.Function);
+
+                // Ensure we passed a function in to the decorator (def dec(func))
+                state.AssertIsInstance(state.Modules["mod2"], "func", text2.IndexOf("return self.filter_function("), BuiltinTypeId.Function);
+
+                // Ensure we saw the function passed *through* the decorator
+                state.AssertIsInstance(state.Modules["mod2"], "func", text2.IndexOf("return self.filter("), BuiltinTypeId.Function);
+
+                // Ensure we saw the function passed *back into* the original decorator constructor
                 state.AssertIsInstance(
                     state.Modules["mod2"], "filter_func", text2.IndexOf("# @register.filter()"),
                     BuiltinTypeId.Function,
@@ -5102,8 +5112,8 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 // Neither decorator is callable, but at least analysis completed
-                state.AssertIsInstance(state.Modules["mod1"], "decorator_a");
-                state.AssertIsInstance(state.Modules["mod2"], "decorator_b");
+                state.AssertIsInstance(state.Modules["mod1"], "decorator_a", BuiltinTypeId.Function);
+                state.AssertIsInstance(state.Modules["mod2"], "decorator_b", BuiltinTypeId.Function);
             });
         }
 
@@ -5770,7 +5780,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "def test-module.f() -> str");
-            entry.AssertDescription("fob.f", "def test-module.fob.f(self)\r\ndeclared in fob");
+            entry.AssertDescription("fob.f", "def test-module.fob.f(self : fob)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
@@ -5782,13 +5792,13 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("docstr_func", "def test-module.docstr_func() -> int\r\nuseful documentation");
 
             entry.AssertDescription("with_params", "def test-module.with_params(a, b, c)");
-            entry.AssertDescription("with_params_default", "def test-module.with_params_default(a, b, c = 100)");
-            entry.AssertDescription("with_params_default_2", "def test-module.with_params_default_2(a, b, c = [])");
-            entry.AssertDescription("with_params_default_3", "def test-module.with_params_default_3(a, b, c = ())");
-            entry.AssertDescription("with_params_default_4", "def test-module.with_params_default_4(a, b, c = {})");
-            entry.AssertDescription("with_params_default_2a", "def test-module.with_params_default_2a(a, b, c = [...])");
-            entry.AssertDescription("with_params_default_3a", "def test-module.with_params_default_3a(a, b, c = (...))");
-            entry.AssertDescription("with_params_default_4a", "def test-module.with_params_default_4a(a, b, c = {...})");
+            entry.AssertDescription("with_params_default", "def test-module.with_params_default(a, b, c : int = 100)");
+            entry.AssertDescription("with_params_default_2", "def test-module.with_params_default_2(a, b, c : list = [])");
+            entry.AssertDescription("with_params_default_3", "def test-module.with_params_default_3(a, b, c : tuple = ())");
+            entry.AssertDescription("with_params_default_4", "def test-module.with_params_default_4(a, b, c : dict = {})");
+            entry.AssertDescription("with_params_default_2a", "def test-module.with_params_default_2a(a, b, c : list = [...])");
+            entry.AssertDescription("with_params_default_3a", "def test-module.with_params_default_3a(a, b, c : tuple = (...))");
+            entry.AssertDescription("with_params_default_4a", "def test-module.with_params_default_4a(a, b, c : dict = {...})");
             entry.AssertDescription("with_params_default_starargs", "def test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
@@ -6387,6 +6397,7 @@ keywords_from_fob_2 = fob_2.keywords
                 "args_from_fob_1"
             }) {
                 var result = entry.GetValue<SequenceInfo>(name);
+                Console.WriteLine("{0} = {1}", name, result);
                 AssertTupleContains(result, BuiltinTypeId.Int, BuiltinTypeId.Float, entry.BuiltinTypeId_Str, BuiltinTypeId.List);
             }
 
@@ -6541,7 +6552,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

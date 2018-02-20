@@ -94,7 +94,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void EnsureParameters(FunctionAnalysisUnit unit, bool usePlaceholders) {
             var astParams = Function.FunctionDefinition.Parameters;
             for (int i = 0; i < astParams.Count; ++i) {
-                var name = astParams[i].Name;
+                var p = astParams[i];
+                var name = p?.Name;
                 if (string.IsNullOrEmpty(name)) {
                     continue;
                 }
@@ -103,29 +104,31 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 if (astParams[i].Kind == ParameterKind.List) {
                     if (_seqParameters == null) {
-                        _seqParameters = new ListParameterVariableDef(unit, node, name);
-                        AddParameter(unit, name, node, usePlaceholders ? null : _seqParameters);
+                        _seqParameters = new ListParameterVariableDef(unit, p, name);
+                        AddParameter(unit, name, p, usePlaceholders ? null : _seqParameters);
                     }
                 } else if (astParams[i].Kind == ParameterKind.Dictionary) {
                     if (_dictParameters == null) {
-                        _dictParameters = new DictParameterVariableDef(unit, node, name);
-                        AddParameter(unit, name, node, usePlaceholders ? null : _dictParameters);
+                        _dictParameters = new DictParameterVariableDef(unit, p, name);
+                        AddParameter(unit, name, p, usePlaceholders ? null : _dictParameters);
                     }
                 } else if (!_parameters.ContainsKey(name)) {
-                    var p = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, node);
-                    AddParameter(unit, name, node, usePlaceholders ? null : p);
+                    var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, p);
+                    AddParameter(unit, name, p, usePlaceholders ? null : v);
                 }
             }
         }
 
-        private VariableDef AddParameter(AnalysisUnit unit, string name, Node node, VariableDef variableDef) {
+        private VariableDef AddParameter(AnalysisUnit unit, string name, Parameter node, VariableDef variableDef) {
             if (variableDef != null) {
                 return AddVariable(name, variableDef);
             }
 
-            var p = CreateVariable(node, unit, name);
-            p.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
-            return p;
+            if (!TryGetVariable(name, out var v)) {
+                v = CreateLocatedVariable(node, unit, name, addRef: false);
+            }
+            v.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
+            return v;
         }
 
         internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {

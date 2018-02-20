@@ -260,15 +260,40 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        /// <summary>
+        /// Gets the returned value for a yield from.
+        /// </summary>
+        public static IAnalysisSet GetReturnForYieldFrom(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetReturnForYieldFrom(node, unit));
+            }
+
+            return res;
+        }
+
         public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, null);
 
         internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context) {
-            var res = AnalysisSet.Empty;
-            foreach (var ns in self) {
-                if (ns is LazyValueInfo l) {
-                    res = res.Union(l.Resolve(unit, context ?? ResolutionContext.Empty));
-                } else {
-                    res = res.Add(ns);
+            if (!self.Split<LazyValueInfo>(out var lvis, out var res)) {
+                return res;
+            }
+
+            var queue = new Queue<LazyValueInfo>(lvis);
+            var seen = new HashSet<LazyValueInfo>(lvis);
+
+            while (queue.Count > 0) {
+                var lvi = queue.Dequeue();
+                var r = lvi.Resolve(unit, context ?? ResolutionContext.Empty);
+
+                foreach (var ns in r) {
+                    if (ns is LazyValueInfo l) {
+                        if (seen.Add(l)) {
+                            queue.Enqueue(l);
+                        }
+                    } else {
+                        res = res.Add(ns);
+                    }
                 }
             }
 

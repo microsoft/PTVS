@@ -503,6 +503,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IAnalysisSet Sent { get; }
         public IAnalysisSet Returned { get; }
 
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return Returned;
+        }
+
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_yielded.Any() || Sent.Any() || Returned.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");

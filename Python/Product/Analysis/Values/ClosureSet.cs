@@ -8,17 +8,16 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     sealed class ClosureSetDefinition {
-        private readonly IReadOnlyList<string> _keys;
+        private readonly IReadOnlyList<int> _keys;
 
-        public ClosureSetDefinition(IEnumerable<KeyValuePair<string, PythonVariable>> variables) {
-            _keys = variables.Where(kv => kv.Value.AccessedInNestedScope).Select(kv => kv.Key).OrderBy(k => k).ToArray();
+        public ClosureSetDefinition(IEnumerable<int> argumentIndices) {
+            _keys = argumentIndices.Where(i => i >= 0).ToArray();
         }
 
-        public ClosureSet Get(Node node, AnalysisUnit unit) {
-            var eval = new ExpressionEvaluator(unit);
+        public ClosureSet Get(ArgumentSet callArgs) {
             return new ClosureSet(
                 this,
-                _keys.Select(k => eval.LookupAnalysisSetByName(node, k, addRef: false)).ToArray(),
+                _keys.Select(i => i < callArgs.Args.Length ? callArgs.Args[i] : null).ToArray(),
                 ObjectComparer.Instance
             );
         }
