@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             var json = JObject.Parse(launchJson);
             var exe = json["exe"].Value<string>();
-            var args = json["args"].Value<string>();
+            var scriptAndScriptArgs = json["args"].Value<string>();
             var cwd = json["cwd"].Value<string>();
             ParseOptions(json["options"].Value<string>());
 
@@ -90,10 +90,10 @@ namespace Microsoft.PythonTools.Debugger {
                 $"{_listenerPort}",
                 $"{_processGuid}",
                 $"{_debugOptions}",
-                "-g",
-                args
+                "-g"
             };
-            var arguments = string.Join(" ", argsList.Where(a => !string.IsNullOrWhiteSpace(a)).Select(ProcessOutput.QuoteSingleArgument));
+            var launcherArgs = string.Join(" ", argsList.Where(a => !string.IsNullOrWhiteSpace(a)).Select(ProcessOutput.QuoteSingleArgument));
+            var arguments = $"{launcherArgs} {scriptAndScriptArgs}";
 
             ProcessStartInfo psi = new ProcessStartInfo {
                 FileName = exe,
