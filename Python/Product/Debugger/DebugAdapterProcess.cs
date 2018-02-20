@@ -22,10 +22,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -40,6 +43,7 @@ namespace Microsoft.PythonTools.Debugger {
         private Process _process;
         private readonly Guid _processGuid;
         private PythonDebugOptions _debugOptions;
+        private string _webBrowserUrl;
         private string _interpreterOptions;
         private int _listenerPort = -1;
         private Stream _stream;
@@ -124,6 +128,9 @@ namespace Microsoft.PythonTools.Debugger {
                     var socket = connection.Result;
                     if (socket != null) {
                         _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
+                        if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
+                            OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
+                        }
                     }
                 } else {
                     Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
@@ -135,6 +142,35 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream == null) {
                 _process.Kill();
             }
+        }
+
+        private void LaunchBrowserDebugger() {
+            var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
+
+            VsDebugTargetInfo2 info = new VsDebugTargetInfo2();
+            var infoSize = Marshal.SizeOf(info);
+            info.cbSize = (uint)infoSize;
+            info.bstrExe = _webBrowserUrl;
+            info.dlo = (uint)_DEBUG_LAUNCH_OPERATION3.DLO_LaunchBrowser;
+            info.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser | (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug;
+            IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
+            Marshal.StructureToPtr(info, infoPtr, false);
+
+            try {
+                vsDebugger.LaunchDebugTargets2(1, infoPtr);
+            } finally {
+                if (infoPtr != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(infoPtr);
+                }
+            }
+        }
+
+        private bool ProcessExited() {
+            var process = _process;
+            if (process != null) {
+                return process.HasExited;
+            }
+            return true;
         }
 
         private void OnExited(object sender, EventArgs e) {
@@ -260,6 +296,9 @@ namespace Microsoft.PythonTools.Debugger {
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.DjangoDebugging;
                             }
+                            break;
+                        case AD7Engine.WebBrowserUrl:
+                            _webBrowserUrl = HttpUtility.UrlDecode(setting[1]);
                             break;
                     }
                 }
