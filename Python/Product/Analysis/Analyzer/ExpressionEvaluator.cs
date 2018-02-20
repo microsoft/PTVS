@@ -426,7 +426,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
                 if (rest.Split(out IReadOnlyList<ProtocolInfo> protocols, out rest)) {
                     foreach (var g in protocols.SelectMany(pi => pi.GetProtocols<GeneratorProtocol>())) {
-                        returned = returned.Union(g.Returns);
+                        returned = returned.Union(g.Returned);
                     }
                 }
                 return returned;
@@ -512,15 +512,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
                 if (!string.IsNullOrEmpty(l.Name)) {
-                    foreach (var obj in Evaluate(l.Target)) {
-                        obj.SetMember(l, _unit, l.Name, values);
+                    foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
+                        obj.SetMember(l, _unit, l.Name, values.Resolve(_unit, ResolutionContext.Complete));
                     }
                 }
             } else if (left is IndexExpression) {
                 var l = (IndexExpression)left;
                 var indexObj = Evaluate(l.Index);
-                foreach (var obj in Evaluate(l.Target)) {
-                    obj.SetIndex(assignStmt, _unit, indexObj, values);
+                foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
+                    obj.SetIndex(assignStmt, _unit, indexObj, values.Resolve(_unit, ResolutionContext.Complete));
                 }
             } else if (left is SequenceExpression) {
                 // list/tuple

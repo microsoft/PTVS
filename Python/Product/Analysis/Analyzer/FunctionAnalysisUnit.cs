@@ -185,21 +185,23 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             if (Ast.ReturnAnnotation != null) {
                 var ann = ddg._eval.EvaluateAnnotation(Ast.ReturnAnnotation);
-                var resType = AnalysisSet.Empty;
-                if (Ast.IsGenerator && ann.Split<GeneratorInfo>(out var gens, out resType)) {
-                    var gen = ((FunctionScope)Scope).Generator;
-                    foreach (var g in gens) {
-                        g.Yields.CopyTo(gen.Yields);
-                        g.Sends.CopyTo(gen.Sends);
-                        g.Returns.CopyTo(gen.Returns);
+                var resType = ann;
+                if (Ast.IsGenerator) {
+                    if (ann.Split<ProtocolInfo>(out var gens, out resType)) {
+                        var gen = ((FunctionScope)Scope).Generator;
+                        foreach (var g in gens.SelectMany(p => p.GetProtocols<GeneratorProtocol>())) {
+                            gen.Yields.AddTypes(ProjectEntry, g.Yielded);
+                            gen.Sends.AddTypes(ProjectEntry, g.Sent);
+                            gen.Returns.AddTypes(ProjectEntry, g.Returned);
+                        }
                     }
+                } else {
+                    ((FunctionScope)Scope).AddReturnTypes(
+                        Ast.ReturnAnnotation,
+                        ddg._unit,
+                        resType
+                    );
                 }
-
-                ((FunctionScope)Scope).AddReturnTypes(
-                    Ast.ReturnAnnotation,
-                    ddg._unit,
-                    resType
-                );
             }
         }
 
@@ -229,13 +231,5 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);
         }
-
-        public override string ToString() {
-            return "{0}{1}({2})->{3}".FormatInvariant(
-                base.ToString(),
-                "",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
-                ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
-            );
     }
 }

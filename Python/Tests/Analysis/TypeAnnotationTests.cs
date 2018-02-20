@@ -339,5 +339,25 @@ g_i = next(g_g)
             analyzer.AssertIsInstance("g_i", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("x", code.IndexOf("x ="), BuiltinTypeId.Int);
         }
+
+        [TestMethod, Priority(0)]
+        public void FunctionAnnotation() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+            var code = @"
+def f(a : int, b : float) -> str: pass
+
+x = f()
+";
+            analyzer.AddModule("test-module", code);
+            analyzer.WaitForAnalysis();
+
+            var sigs = analyzer.GetSignatures("f").Single();
+            Assert.AreEqual("a : int, b : float", string.Join(", ", sigs.Parameters.Select(p => $"{p.Name} : {p.Type}")));
+            analyzer.AssertIsInstance("x", BuiltinTypeId.Str);
+        }
     }
 }

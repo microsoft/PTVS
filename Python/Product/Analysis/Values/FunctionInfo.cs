@@ -428,8 +428,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var units = new HashSet<AnalysisUnit>();
                 units.Add(AnalysisUnit);
-                if (_allCalls != null) {
-                    units.UnionWith(_allCalls.Values);
+                if (_callsWithClosure != null) {
+                    units.UnionWith(_callsWithClosure.Values);
                 }
 
                 foreach (var unit in units) {
@@ -517,7 +517,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         vars = vars.AsStrongerUnion();
                     }
                 }
-                foreach (var unit in (_allCalls?.Values).MaybeEnumerate()) {
+                foreach (var unit in (_callsWithClosure?.Values).MaybeEnumerate()) {
                     if (unit.Scope.TryGetVariable(curParam.Name, out vd)) {
                         vars = vars.Union(vd.TypesNoCopy);
                         if (vars.Count > limit) {

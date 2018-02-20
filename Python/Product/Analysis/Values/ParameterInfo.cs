@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override int DeclaringVersion => _function.DeclaringVersion;
 
         public override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context.Caller == null) {
+            if (!context.AnyCaller && context.Caller == null) {
                 return this;
             }
             if (_function == context.Caller) {

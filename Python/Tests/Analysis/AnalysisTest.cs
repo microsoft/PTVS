@@ -5184,6 +5184,7 @@ class X:
 a = X(2)
 ";
             var entry = ProcessText(text);
+            entry.AssertIsInstance("a.value", 0, BuiltinTypeId.Int);
             entry.AssertIsInstance("value", text.IndexOf("self."), BuiltinTypeId.Int);
         }
 

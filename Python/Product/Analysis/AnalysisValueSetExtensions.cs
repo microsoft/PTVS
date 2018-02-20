@@ -260,11 +260,13 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) {
+        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, null);
+
+        internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context) {
             var res = AnalysisSet.Empty;
             foreach (var ns in self) {
                 if (ns is LazyValueInfo l) {
-                    res = res.Union(l.Resolve(unit, ResolutionContext.Empty));
+                    res = res.Union(l.Resolve(unit, context ?? ResolutionContext.Empty));
                 } else {
                     res = res.Add(ns);
                 }

@@ -245,8 +245,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
     sealed class ResolutionContext {
         public static readonly ResolutionContext Empty = new ResolutionContext();
+        public static readonly ResolutionContext Complete = new ResolutionContext { AnyCaller = true };
 
         public FunctionInfo Caller { get; set; }
+        public bool AnyCaller { get; set; }
         public ArgumentSet CallArgs { get; set; }
         public IReadOnlyDictionary<string, IAnalysisSet> Closure { get; set; }
     }

@@ -485,26 +485,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     class GeneratorProtocol : IteratorProtocol {
-        private readonly IAnalysisSet _sent, _returned;
-
         public GeneratorProtocol(ProtocolInfo self, IAnalysisSet yields, IAnalysisSet sends, IAnalysisSet returns) : base(self, yields) {
-            _sent = sends;
-            _returned = returns;
+            Sent = sends;
+            Returned = returns;
         }
-
-        public IAnalysisSet Returns => _returned;
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             base.EnsureMembers(members);
 
-            members["send"] = MakeMethod("send", new[] { _sent }, _yielded);
+            members["send"] = MakeMethod("send", new[] { Sent }, _yielded);
             members["throw"] = MakeMethod("throw", new[] { AnalysisSet.Empty }, AnalysisSet.Empty);
         }
 
         public override string Name => "generator";
 
+        public IAnalysisSet Yielded => _yielded;
+        public IAnalysisSet Sent { get; }
+        public IAnalysisSet Returned { get; }
+
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            if (_yielded.Any() || _sent.Any() || _returned.Any()) {
+            if (_yielded.Any() || Sent.Any() || Returned.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 if (_yielded.Any()) {
                     foreach (var kv in _yielded.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
@@ -514,19 +514,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
                 }
 
-                if (_sent.Any()) {
+                if (Sent.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    foreach (var kv in Sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
                         yield return kv;
                     }
-                } else if (_returned.Any()) {
+                } else if (Returned.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
                 }
 
-                if (_returned.Any()) {
+                if (Returned.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    foreach (var kv in Sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
                         yield return kv;
                     }
                 }
