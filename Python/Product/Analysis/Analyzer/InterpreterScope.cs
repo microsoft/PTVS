@@ -238,6 +238,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return res;
         }
 
+        public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, node));
+            if (addRef) {
+                res.AddReference(node, unit);
+            }
+            return res;
+        }
+
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new EphemeralVariableDef());
             if (addRef) {

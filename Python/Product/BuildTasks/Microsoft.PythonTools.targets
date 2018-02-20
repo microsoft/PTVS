@@ -145,7 +145,7 @@ permissions and limitations under the License.
   <PropertyGroup>
     <PythonCommands>$(PythonCommands);PythonRunPyLintCommand</PythonCommands>
     <PyLintWarningRegex>
-      <![CDATA[^(?<filename>.+?)\((?<line>\d+),(?<column>\d+)\): warning (?<msg_id>.+?): (?<message>.+?)$]]>
+      <![CDATA[^(?<filename>.+?)\((?<line>\d+),(?<column>\d+)\): warning (?<code>.+?): (?<message>.+?)$]]>
     </PyLintWarningRegex>
   </PropertyGroup>
 

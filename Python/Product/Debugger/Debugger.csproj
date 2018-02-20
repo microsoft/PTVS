@@ -45,7 +45,6 @@
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -76,14 +75,9 @@
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System.XML" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.Dia.Interop.$(VSTarget), Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>DkmDebugger\Microsoft.Dia.Interop.$(VSTarget).dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -173,76 +167,8 @@
     <Compile Include="Debugger\Transports\TcpTransport.cs" />
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
-    <Compile Include="DkmDebugger\ComPtr.cs" />
-    <Compile Include="DkmDebugger\ExceptionManager.cs" />
-    <Compile Include="DkmDebugger\ComponentBase.cs" />
-    <Compile Include="DkmDebugger\CppExpressionEvaluator.cs" />
-    <Compile Include="DkmDebugger\DebuggerOptions.cs" />
-    <Compile Include="DkmDebugger\NativeMethods.cs" />
-    <Compile Include="DkmDebugger\Proxies\ArrayProxy.cs" />
-    <Compile Include="DkmDebugger\Proxies\CliStructProxy.cs" />
-    <Compile Include="DkmDebugger\Proxies\CStringProxy.cs" />
-    <Compile Include="DkmDebugger\Proxies\PrimitiveProxies.cs" />
-    <Compile Include="DkmDebugger\Proxies\PointerProxy.cs" />
-    <Compile Include="DkmDebugger\Proxies\DataProxy.cs" />
-    <Compile Include="DkmDebugger\ExpressionEvaluator.cs" />
-    <Compile Include="DkmDebugger\LocalStackWalkingComponent.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject27.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject36.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject33.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyEllipsisObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyComplexObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyBaseExceptionObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyIntObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\IPyBaseString.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyByteArrayObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyBytesObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyFloatObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyBoolObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PySetObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyCellObject.cs" />
-    <Compile Include="DkmDebugger\PythonRuntimeInfo.cs" />
-    <Compile Include="DkmDebugger\ValueStore.cs" />
-    <Compile Include="DkmDebugger\ModuleManager.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyMethodDef.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyCFunctionObject.cs" />
-    <Compile Include="DkmDebugger\CallStackFilter.cs" />
-    <Compile Include="DkmDebugger\PyObjectAllocator.cs" />
-    <Compile Include="DkmDebugger\PyObjectNativeVisualizer.cs" />
-    <Compile Include="DkmDebugger\TraceManagerLocalHelper.cs" />
-    <Compile Include="DkmDebugger\TraceManager.cs" />
-    <Compile Include="DkmDebugger\LocalComponent.cs" />
-    <Compile Include="DkmDebugger\DiaExtensions.cs" />
-    <Compile Include="DkmDebugger\DkmExtensions.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyMemberDef.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyThreadState.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyModuleObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyInterpreterState.cs" />
-    <Compile Include="DkmDebugger\Proxies\StructProxy.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyCodeObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyFrameObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyListObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyLongObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyTupleObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyTypeObject.cs" />
-    <Compile Include="DkmDebugger\Proxies\Structs\PyUnicodeObject.cs" />
-    <Compile Include="DkmDebugger\RemoteComponent.cs" />
-    <Compile Include="DkmDebugger\SourceLocation.cs" />
-    <Compile Include="DkmDebugger\ReprBuilder.cs" />
     <Compile Include="VsPackageMessage.cs" />
-    <None Include="DkmDebugger\LocalStackWalkingComponent.vsdconfigxml">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="DkmDebugger\LocalComponent.vsdconfigxml">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
-      <SubType>Designer</SubType>
-    </None>
-    <Content Include="DkmDebugger\PythonDkm.natvis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
@@ -262,57 +188,6 @@
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Ipc.Json</Name>
     </ProjectReference>
-    <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelper.vcxproj" />
-    <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelperX86.vcxproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="DkmDebugger\Microsoft.Dia.Interop.dll" />
-    <Content Include="DkmDebugger\Microsoft.Dia.Interop.14.0.dll" />
-  </ItemGroup>
-  <!-- .vsdconfigxml -> .vsdconfig -->
-  <ItemGroup>
-    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Visualizers\" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <ItemGroup>
-    <VsdConfigXmlTransformed Include="@(VsdConfigXml->'$(IntermediateOutputPath)\%(Filename)%(Extension)')" />
-  </ItemGroup>
-  <PropertyGroup>
-    <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
-    <NatvisOutput>$(IntermediateOutputPath)\PythonDkm.natvis</NatvisOutput>
-  </PropertyGroup>
-  <Target Name="CopyNatvis" Inputs="DkmDebugger\*.natvis" Outputs="$(NatvisOutput)" AfterTargets="CoreCompile">
-    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)" />
-  </Target>
-  <Target Name="TransformVsdConfigXml" Inputs="%(VsdConfigXml.Identity)" Outputs="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)" AfterTargets="CoreCompile">
-    <Message Text="Transforming @(VsdConfigXml)" />
-    <XslTransformation XslInputPath="@(VsdConfigXml)" XmlContent="&lt;Properties VSTarget='$(VSTarget)' /&gt;" OutputPaths="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)" Parameters="VsdConfigXmlTransformParameters" />
-  </Target>
-  <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXmlTransformed)" Outputs="$(VsdConfigOutput)" AfterTargets="TransformVsdConfigXml">
-    <PropertyGroup>
-      <_Arguments>@(VsdConfigXmlTransformed, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
-    </PropertyGroup>
-    <Exec Command="&quot;$(VsSDKToolsPath)\vsdconfigtool.exe&quot; $(_Arguments)" />
-  </Target>
-  <Target Name="IncludeVsdConfigAndNatvis" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
-    <ItemGroup>
-      <Content Include="$(VsdConfigOutput)">
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <VSIXSubPath>.</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <Link>$([System.IO.Path]::GetFileName($(VsdConfigOutput)))</Link>
-      </Content>
-      <Content Include="$(NatvisOutput)">
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <VSIXSubPath>Visualizers</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <Link>Visualizers\$([System.IO.Path]::GetFileName($(NatvisOutput)))</Link>
-      </Content>
-    </ItemGroup>
-    <Message Text="VsdConfigOutput: $(VsdConfigOutput)" Importance="high" />
-    <Message Text="NatvisOutput: $(NatvisOutput)" Importance="high" />
-  </Target>
 </Project>

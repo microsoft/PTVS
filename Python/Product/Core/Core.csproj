@@ -101,6 +101,10 @@
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Debugger.Concord\Debugger.Concord.csproj">
+      <Project>{515F701E-336D-4D58-AF4B-E976BC33C957}</Project>
+      <Name>Microsoft.PythonTools.Debugger.Concord</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>

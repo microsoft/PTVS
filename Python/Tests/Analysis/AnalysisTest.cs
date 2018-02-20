@@ -2701,6 +2701,8 @@ def f(abc):
                 new VariableLocation(16, 14, VariableType.Reference),
 
                 new VariableLocation(18, 12, VariableType.Reference),
+                new VariableLocation(19, 21, VariableType.Reference),
+                new VariableLocation(20, 28, VariableType.Reference),
 
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
@@ -2844,11 +2846,11 @@ k = 2
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("a", text.IndexOf("a["),
-                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(2, 7, VariableType.Definition),
                 new VariableLocation(3, 9, VariableType.Reference)
             );
             entry.AssertReferences("k", text.IndexOf("k["),
-                new VariableLocation(2, 13, VariableType.Definition),
+                new VariableLocation(2, 11, VariableType.Definition),
                 new VariableLocation(4, 9, VariableType.Reference)
             );
             entry.AssertReferences("a", text.IndexOf("#out"),
@@ -2955,7 +2957,9 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 7, VariableType.Value),         // possible value
                                                                         //new VariableLocation(1, 7, VariableType.Value),
                                                                         // appears twice for two modules, but cannot test that
+                new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
+                new VariableLocation(2, 25, VariableType.Reference),    // as
                 new VariableLocation(4, 1, VariableType.Reference)      // call
             );
         }
@@ -6812,7 +6816,11 @@ x = ClsB.x");
 
         [TestMethod, Priority(0)]
         public void UndefinedVariableDiagnostic() {
-            var code = @"a = b + c
+            PythonAnalysis entry;
+            string code;
+
+
+            code = @"a = b + c
 class D(b): pass
 d()
 D()
@@ -6824,7 +6832,7 @@ def func(b, c):
     b, c, d     # b, c are defined here
 b, c, d         # but they are undefined here
 ";
-            var entry = ProcessTextV3(code);
+            entry = ProcessTextV3(code);
             entry.AssertDiagnostics(
                 "used-before-assignment:unknown variable 'b':(1, 5) - (1, 6)",
                 "used-before-assignment:unknown variable 'c':(1, 9) - (1, 10)",
@@ -6839,12 +6847,23 @@ b, c, d         # but they are undefined here
                 "used-before-assignment:unknown variable 'd':(11, 7) - (11, 8)"
             );
 
+            // Ensure all of these cases correctly generate no warning
             code = @"
 for x in []:
     (_ for _ in x)
     [_ for _ in x]
     {_ for _ in x}
     {_ : _ for _ in x}
+
+import sys
+from sys import not_a_real_name_but_no_warning_anyway
+
+def f(v = sys.version, u = not_a_real_name_but_no_warning_anyway):
+    pass
+
+with f() as v2:
+    pass
+
 ";
             entry = ProcessTextV3(code);
             entry.AssertDiagnostics();
