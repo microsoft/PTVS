@@ -62,15 +62,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public IList<Parameter> Parameters {
-            get { return _parameters; }
-        }
+        public Parameter[] Parameters => _parameters;
 
-        internal override int ArgCount {
-            get {
-                return _parameters.Length;
-            }
-        }
+        internal override int ArgCount => _parameters.Length;
 
         public Expression ReturnAnnotation {
             get { return _returnAnnotation; }
@@ -271,18 +265,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
-            if (Decorators != null) {
-                Decorators.AppendCodeString(res, ast, format);
-            }
+            Decorators?.AppendCodeString(res, ast, format);
+
             format.ReflowComment(res, this.GetPreceedingWhiteSpaceDefaultNull(ast));
+
             if (IsCoroutine) {
                 res.Append("async");
                 res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));
             }
+
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
-            if (!String.IsNullOrEmpty(name)) {
+            if (!string.IsNullOrEmpty(name)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(name);
                 if (!this.IsIncompleteNode(ast)) {
@@ -295,7 +289,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     );
 
                     res.Append('(');
-                    if (Parameters.Count != 0) {
+                    if (Parameters.Length != 0) {
                         var commaWhiteSpace = this.GetListWhiteSpace(ast);
                         ParamsToString(res,
                             ast,
@@ -314,7 +308,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
                     format.Append(
                         res,
-                        Parameters.Count != 0 ? 
+                        Parameters.Length != 0 ? 
                             format.SpaceWithinFunctionDeclarationParens :
                             format.SpaceWithinEmptyParameterList,
                         " ",
@@ -344,15 +338,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                                 null
                         );
                     }
-                    if (Body != null) {
-                        Body.AppendCodeString(res, ast, format);
-                    }
+
+                    Body?.AppendCodeString(res, ast, format);
                 }
             }
         }
 
         internal void ParamsToString(StringBuilder res, PythonAst ast, string[] commaWhiteSpace, CodeFormattingOptions format, string initialLeadingWhiteSpace = null) {
-            for (int i = 0; i < Parameters.Count; i++) {
+            for (int i = 0; i < Parameters.Length; i++) {
                 if (i > 0) {
                     if (commaWhiteSpace != null) {
                         res.Append(commaWhiteSpace[i - 1]);
@@ -363,7 +356,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 initialLeadingWhiteSpace = null;
             }
 
-            if (commaWhiteSpace != null && commaWhiteSpace.Length == Parameters.Count && Parameters.Count != 0) {
+            if (commaWhiteSpace != null && commaWhiteSpace.Length == Parameters.Length && Parameters.Length != 0) {
                 // trailing comma
                 res.Append(commaWhiteSpace[commaWhiteSpace.Length - 1]);
                 res.Append(",");

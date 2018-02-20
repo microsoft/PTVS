@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     if (!isStaticMethod) {
-                        if (fromScope.Parameters.Count > 0) {
+                        if (fromScope.Parameters.Length > 0) {
                             selfParam = fromScope.Parameters[0].NameExpression;
                             parameters.Add(new Parameter(selfParam, ParameterKind.Normal));
                         }
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (isStaticMethod) {
                     newCall.Append(_targetScope.Name);
                     newCall.Append('.');
-                } else if (fromScope != null && fromScope.Parameters.Count > 0) {
+                } else if (fromScope != null && fromScope.Parameters.Length > 0) {
                     newCall.Append(fromScope.Parameters[0].Name);
                     newCall.Append('.');
                 }

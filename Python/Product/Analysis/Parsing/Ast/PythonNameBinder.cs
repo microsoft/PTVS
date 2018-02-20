@@ -409,35 +409,25 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             // process the default arg values and annotations in the outer
             // context
             foreach (Parameter p in node.Parameters) {
-                if (p.DefaultValue != null) {
-                    p.DefaultValue.Walk(this);
-                }
-                if (p.Annotation != null) {
-                    p.Annotation.Walk(this);
-                }
+                p.DefaultValue?.Walk(this);
+                p.Annotation?.Walk(this);
             }
             // process the decorators in the outer context
             if (node.Decorators != null) {
-                foreach (Expression dec in node.Decorators.Decorators) {
-                    if (dec != null) {
-                        dec.Walk(this);
-                    }
+                foreach (var dec in node.Decorators.Decorators) {
+                    dec?.Walk(this);
                 }
             }
             // process the return annotation in the outer context
-            if (node.ReturnAnnotation != null) {
-                node.ReturnAnnotation.Walk(this);
-            }
+            node.ReturnAnnotation?.Walk(this);
 
             PushScope(node);
 
-            foreach (Parameter p in node.Parameters) {
+            foreach (var p in node.Parameters) {
                 p.Walk(_parameter);
             }
 
-            if (node.Body != null) {
-                node.Body.Walk(this);
-            }
+            node.Body?.Walk(this);
             return false;
         }
 

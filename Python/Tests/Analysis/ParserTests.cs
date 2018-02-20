@@ -3411,7 +3411,7 @@ namespace AnalysisTests {
                     Assert.AreEqual(name, funcDef.Name);
                 }
 
-                Assert.AreEqual(args?.Length ?? 0, funcDef.Parameters.Count);
+                Assert.AreEqual(args?.Length ?? 0, funcDef.Parameters.Length);
                 for (int i = 0; i < (args?.Length ?? 0); i++) {
                     args[i](funcDef.Parameters[i]);
                 }
@@ -3441,7 +3441,7 @@ namespace AnalysisTests {
 
         private static void CheckDecorators(Action<Expression>[] decorators, DecoratorStatement foundDecorators) {
             if (decorators != null) {
-                Assert.AreEqual(decorators.Length, foundDecorators.Decorators.Count);
+                Assert.AreEqual(decorators.Length, foundDecorators.Decorators.Length);
                 for (int i = 0; i < decorators.Length; i++) {
                     decorators[i](foundDecorators.Decorators[i]);
                 }
@@ -3460,12 +3460,12 @@ namespace AnalysisTests {
                 }
 
                 if (bases != null) {
-                    Assert.AreEqual(bases.Length, classDef.Bases.Count);
+                    Assert.AreEqual(bases.Length, classDef.Bases.Length);
                     for (int i = 0; i < bases.Length; i++) {
                         bases[i](classDef.Bases[i]);
                     }
                 } else {
-                    Assert.AreEqual(0, classDef.Bases.Count);
+                    Assert.AreEqual(0, classDef.Bases.Length);
                 }
 
                 body(classDef.Body);

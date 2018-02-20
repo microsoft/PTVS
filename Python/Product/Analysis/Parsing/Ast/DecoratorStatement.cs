@@ -27,9 +27,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _decorators = decorators;
         }
 
-        public IList<Expression> Decorators {
-            get { return _decorators; }
-        }
+        public Expression[] Decorators => _decorators;
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
@@ -45,7 +43,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
             if (Decorators != null) {
-                for (int i = 0, curWhiteSpace = 0; i < Decorators.Count; i++) {
+                for (int i = 0, curWhiteSpace = 0; i < Decorators.Length; i++) {
                     if (decorateWhiteSpace != null) {
                         format.ReflowComment(res, decorateWhiteSpace[curWhiteSpace++]);
                     }

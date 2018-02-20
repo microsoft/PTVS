@@ -28,13 +28,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _else = else_;
         }
 
-        public IList<IfStatementTest> Tests {
-            get { return _tests; }
-        }
-
-        public Statement ElseStatement {
-            get { return _else; }
-        }
+        public IfStatementTest[] Tests => _tests;
+        public Statement ElseStatement => _else;
 
         public int ElseIndex {
             get {
@@ -52,9 +47,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         test.Walk(walker);
                     }
                 }
-                if (_else != null) {
-                    _else.Walk(walker);
-                }
+
+                _else?.Walk(walker);
             }
             walker.PostWalk(this);
         }

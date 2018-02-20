@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal IEnumerable<KeyValuePair<string, string>> GetParameterString() {
-            for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
+            for (var i = 0; i < FunctionDefinition.Parameters.Length; i++) {
                 if (i != 0) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                 }
@@ -623,7 +623,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         // Returns False if no more parameters can be updated for this unit.
         private bool UpdateSingleDefaultParameter(AnalysisUnit unit, InterpreterScope scope, int index, IParameterInfo info) {
-            if (index >= FunctionDefinition.Parameters.Count) {
+            if (index >= FunctionDefinition.Parameters.Length) {
                 return false;
             }
             VariableDef param;
@@ -666,7 +666,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal IAnalysisSet[] GetParameterTypes(int unionStrength = 0) {
-            var result = new IAnalysisSet[FunctionDefinition.Parameters.Count];
+            var result = new IAnalysisSet[FunctionDefinition.Parameters.Length];
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
             if (_allCalls != null) {
@@ -674,13 +674,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             for (int i = 0; i < result.Length; ++i) {
-                result[i] = (unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH)
+                result[i] = unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH
                     ? AnalysisSet.CreateUnion(UnionComparer.Instances[unionStrength])
                     : AnalysisSet.Empty;
 
-                VariableDef param;
                 foreach (var unit in units) {
-                    if (unit != null && unit.Scope != null && unit.Scope.TryGetVariable(FunctionDefinition.Parameters[i].Name, out param)) {
+                    if (unit != null && unit.Scope != null && unit.Scope.TryGetVariable(FunctionDefinition.Parameters[i].Name, out var param)) {
                         result[i] = result[i].Union(param.TypesNoCopy);
                     }
                 }

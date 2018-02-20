@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this).AddTypes(this, types);
             }
 
-            if (!Function.IsStatic && Ast.Parameters.Count > 0) {
+            if (!Function.IsStatic && Ast.Parameters.Length > 0) {
                 VariableDef param;
                 IAnalysisSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal void AnalyzeDefaultParameters(DDG ddg) {
             VariableDef param;
-            for (int i = 0; i < Ast.Parameters.Count; ++i) {
+            for (int i = 0; i < Ast.Parameters.Length; ++i) {
                 var p = Ast.Parameters[i];
                 if (p.Annotation != null) {
                     var val = ddg._eval.EvaluateAnnotation(p.Annotation);

@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             foreach (var methodCandidate in suite.Statements) {
                                 FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
                                 if (funcDef != null) {
-                                    if (request.paramCount != null && request.paramCount != funcDef.Parameters.Count) {
+                                    if (request.paramCount != null && request.paramCount != funcDef.Parameters.Length) {
                                         continue;
                                     }
 
@@ -1103,14 +1103,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static AP.Navigation GetNavigation(PythonAst ast, Statement stmt) {
             string type, name;
-            FunctionDefinition funcDef = stmt as FunctionDefinition;
-            if (funcDef != null) {
+            if (stmt is FunctionDefinition funcDef) {
                 name = funcDef.Name;
                 type = "function";
-                if (funcDef.Decorators != null && funcDef.Decorators.Decorators.Count == 1) {
+                if (funcDef.Decorators != null && funcDef.Decorators.Decorators.Length == 1) {
                     foreach (var decorator in funcDef.Decorators.Decorators) {
-                        NameExpression nameExpr = decorator as NameExpression;
-                        if (nameExpr != null) {
+                        if (decorator is NameExpression nameExpr) {
                             if (nameExpr.Name == "property") {
                                 type = "property";
                                 break;

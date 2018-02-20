@@ -138,7 +138,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "class ");
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
             
-            if (ClassDefinition.Bases.Count > 0) {
+            if (ClassDefinition.Bases.Length > 0) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
                 bool comma = false;
                 foreach (var baseClass in ClassDefinition.Bases) {

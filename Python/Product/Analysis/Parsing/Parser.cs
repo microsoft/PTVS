@@ -213,12 +213,8 @@ namespace Microsoft.PythonTools.Parsing {
             if (_verbatim) {
                 AddExtraVerbatimText(ast, _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage);
             }
-            foreach (var keyValue in _attributes) {
-                foreach (var nodeAttr in keyValue.Value) {
-                    ast.SetAttribute(keyValue.Key, nodeAttr.Key, nodeAttr.Value);
-                }
-            }
 
+            ast.SetAttributes(_attributes);
             PythonNameBinder.BindAst(_langVersion, ast, _errors, _bindReferences);
 
             return ast;
