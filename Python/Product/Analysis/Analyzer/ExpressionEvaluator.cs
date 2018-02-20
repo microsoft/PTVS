@@ -108,6 +108,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true, bool addDependency = false) {
             InterpreterScope createIn = null;
+            VariableDef refs = null;
 
             if (_mergeScopes) {
                 var scope = Scope.EnumerateTowardsGlobal
@@ -118,15 +119,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else {
                 foreach (var scope in Scope.EnumerateTowardsGlobal) {
                     if (scope == Scope || scope.VisibleToChildren) {
-                        var refs = scope.GetVariable(node, _unit, name, addRef);
+                        refs = scope.GetVariable(node, _unit, name, addRef);
                         if (refs != null) {
                             if (addRef) {
                                 scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
-                            if (addDependency) {
-                                refs.AddDependency(_unit);
-                            }
-                            return refs.Types;
+                            break;
                         } else if (addRef && createIn == null && scope.ContainsImportStar) {
                             // create the variable so that we can appropriately
                             // add any dependent reads to it.
@@ -136,14 +134,40 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
-            if (!_unit.ForEval && !res.Any()) {
-                ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
-                var refs = createIn?.CreateVariable(node, _unit, name, addRef);
-                if (addDependency) {
-                    refs?.AddDependency(_unit);
-                }
+            if (_unit.ForEval) {
+                return refs?.Types ?? ProjectState.BuiltinModule.GetMember(node, _unit, name);
             }
+
+            bool warn = false;
+            var res = refs?.Types;
+            if (res == null) {
+                // No variable found, so look in builtins
+                res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
+                if (!res.Any()) {
+                    // No builtin found, so ...
+                    if (createIn != null) {
+                        // ... create a variable in the best known scope
+                        refs = createIn.CreateVariable(node, _unit, name, addRef);
+                        res = refs.Types;
+                    } else {
+                        // ... warn the user
+                        warn = true;
+                    }
+                }
+            } else if (!res.Any()) {
+                // Variable has no values, so if we also don't know about any
+                // definitions then warn.
+                warn = !refs.Definitions.Any() && !(refs is LocatedVariableDef);
+            }
+
+            if (addDependency && refs != null) {
+                refs.AddDependency(_unit);
+            }
+
+            if (warn) {
+                ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
+            }
+
             return res;
         }
 
