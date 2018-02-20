@@ -174,11 +174,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal IEnumerable<KeyValuePair<string, string>> GetParameterString() {
-            for (var i = 0; i < FunctionDefinition.Parameters.Length; i++) {
+            for (var i = 0; i < FunctionDefinition.ParametersInternal.Length; i++) {
                 if (i != 0) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                 }
-                var p = FunctionDefinition.Parameters[i];
+                var p = FunctionDefinition.ParametersInternal[i];
 
                 var name = MakeParameterName(p);
                 var annotation = GetAnnotation(ProjectState, p, DeclaringModule.Tree);
@@ -447,9 +447,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 foreach (var unit in units) {
-                    var names = FunctionDefinition.Parameters.Select(MakeParameterName).ToArray();
+                    var names = FunctionDefinition.ParametersInternal.Select(MakeParameterName).ToArray();
 
-                    var vars = FunctionDefinition.Parameters.Select(p => {
+                    var vars = FunctionDefinition.ParametersInternal.Select(p => {
                         VariableDef param;
                         if (unit.Scope.TryGetVariable(p.Name, out param)) {
                             return param.Types;
@@ -457,7 +457,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return null;
                     }).ToArray();
 
-                    var defaults = FunctionDefinition.Parameters.Select(p => GetDefaultValue(unit.State, p, DeclaringModule.Tree)).ToArray();
+                    var defaults = FunctionDefinition.ParametersInternal.Select(p => GetDefaultValue(unit.State, p, DeclaringModule.Tree)).ToArray();
 
                     bool needNewSet = true;
                     foreach (var set in parameterSets) {
@@ -623,11 +623,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         // Returns False if no more parameters can be updated for this unit.
         private bool UpdateSingleDefaultParameter(AnalysisUnit unit, InterpreterScope scope, int index, IParameterInfo info) {
-            if (index >= FunctionDefinition.Parameters.Length) {
+            if (index >= FunctionDefinition.ParametersInternal.Length) {
                 return false;
             }
             VariableDef param;
-            var name = FunctionDefinition.Parameters[index].Name;
+            var name = FunctionDefinition.ParametersInternal[index].Name;
             if (scope.TryGetVariable(name, out param)) {
                 var av = ProjectState.GetAnalysisSetFromObjects(info.ParameterTypes);
 
@@ -666,7 +666,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal IAnalysisSet[] GetParameterTypes(int unionStrength = 0) {
-            var result = new IAnalysisSet[FunctionDefinition.Parameters.Length];
+            var result = new IAnalysisSet[FunctionDefinition.ParametersInternal.Length];
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
             if (_allCalls != null) {
@@ -679,7 +679,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     : AnalysisSet.Empty;
 
                 foreach (var unit in units) {
-                    if (unit != null && unit.Scope != null && unit.Scope.TryGetVariable(FunctionDefinition.Parameters[i].Name, out var param)) {
+                    if (unit != null && unit.Scope != null && unit.Scope.TryGetVariable(FunctionDefinition.ParametersInternal[i].Name, out var param)) {
                         result[i] = result[i].Union(param.TypesNoCopy);
                     }
                 }

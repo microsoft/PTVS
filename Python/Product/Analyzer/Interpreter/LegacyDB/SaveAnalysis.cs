@@ -754,9 +754,9 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         }
 
         private object[] GenerateArgInfo(FunctionInfo fi, IAnalysisSet[] parameters) {
-            var res = new object[Math.Min(fi.FunctionDefinition.Parameters.Length, parameters.Length)];
+            var res = new object[Math.Min(fi.FunctionDefinition.ParametersInternal.Length, parameters.Length)];
             for (int i = 0; i < res.Length; i++) {
-                res[i] = GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i]);
+                res[i] = GenerateParameter(fi.FunctionDefinition.ParametersInternal[i], parameters[i]);
             }
             return res;
         }

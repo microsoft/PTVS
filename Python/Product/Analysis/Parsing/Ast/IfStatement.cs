@@ -28,8 +28,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _else = else_;
         }
 
-        public IfStatementTest[] Tests => _tests;
+        public IList<IfStatementTest> Tests => _tests;
         public Statement ElseStatement => _else;
+        internal IfStatementTest[] TestsInternal => _tests;
 
         public int ElseIndex {
             get {

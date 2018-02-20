@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public void SetAttributes(Dictionary<Node, Dictionary<object, object>> attributes) {
+        internal void SetAttributes(Dictionary<Node, Dictionary<object, object>> attributes) {
             foreach (var nodeAttributes in attributes) {
                 var node = nodeAttributes.Key;
                 if (!_attributes.TryGetValue(node, out var existingNodeAttributes)) {

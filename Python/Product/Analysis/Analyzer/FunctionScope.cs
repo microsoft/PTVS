@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal void EnsureParameters(FunctionAnalysisUnit unit) {
-            var astParams = Function.FunctionDefinition.Parameters;
+            var astParams = Function.FunctionDefinition.ParametersInternal;
             for (int i = 0; i < astParams.Length; ++i) {
                 if (!TryGetVariable(astParams[i].Name, out var param)) {
                     var n = (Node)astParams[i].NameExpression ?? astParams[i];
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
             EnsureParameters(unit);
 
-            var astParams = Function.FunctionDefinition.Parameters;
+            var astParams = Function.FunctionDefinition.ParametersInternal;
             var added = false;
             var entry = unit.DependencyProject;
             var state = unit.State;

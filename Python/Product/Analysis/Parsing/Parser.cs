@@ -3910,7 +3910,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (fes != null) {
                 fes.Body = nested;
             } else if ((ifs = current as IfStatement) != null) {
-                ifs.Tests[0].Body = nested;
+                ifs.TestsInternal[0].Body = nested;
             }
             return nested;
         }

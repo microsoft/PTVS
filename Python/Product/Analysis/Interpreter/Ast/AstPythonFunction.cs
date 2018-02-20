@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _doc = declType?.Documentation;
             }
 
-            foreach (var dec in (def.Decorators?.Decorators).MaybeEnumerate().OfType<NameExpression>()) {
+            foreach (var dec in (def.Decorators?.DecoratorsInternal).MaybeEnumerate().OfType<NameExpression>()) {
                 if (dec.Name == "classmethod") {
                     IsClassMethod = true;
                 } else if (dec.Name == "staticmethod") {
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal static IEnumerable<IParameterInfo> MakeParameters(PythonAst ast, FunctionDefinition def) {
-            foreach (var p in def.Parameters) {
+            foreach (var p in def.ParametersInternal) {
                 yield return new AstPythonParameterInfo(ast, p);
             }
         }

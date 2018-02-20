@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            var dec = (node.Decorators?.Decorators).MaybeEnumerate().ToArray();
+            var dec = (node.Decorators?.DecoratorsInternal).MaybeEnumerate();
             if (dec.OfType<NameExpression>().Any(n => n.Name == "property")) {
                 AddProperty(node);
                 return false;
@@ -334,7 +334,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (t.Bases == null) {
-                var bases = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
+                var bases = node.BasesInternal.Where(a => string.IsNullOrEmpty(a.Name))
                     .Select(a => _scope.GetValueFromExpression(a.Expression))
                     .OfType<IPythonType>()
                     .ToArray();

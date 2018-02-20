@@ -62,7 +62,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public Parameter[] Parameters => _parameters;
+        public IList<Parameter> Parameters => _parameters;
+        internal Parameter[] ParametersInternal => _parameters;
 
         internal override int ArgCount => _parameters.Length;
 
@@ -289,7 +290,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     );
 
                     res.Append('(');
-                    if (Parameters.Length != 0) {
+                    if (ParametersInternal.Length != 0) {
                         var commaWhiteSpace = this.GetListWhiteSpace(ast);
                         ParamsToString(res,
                             ast,
@@ -308,7 +309,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
                     format.Append(
                         res,
-                        Parameters.Length != 0 ? 
+                        ParametersInternal.Length != 0 ? 
                             format.SpaceWithinFunctionDeclarationParens :
                             format.SpaceWithinEmptyParameterList,
                         " ",
@@ -345,18 +346,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal void ParamsToString(StringBuilder res, PythonAst ast, string[] commaWhiteSpace, CodeFormattingOptions format, string initialLeadingWhiteSpace = null) {
-            for (int i = 0; i < Parameters.Length; i++) {
+            for (int i = 0; i < ParametersInternal.Length; i++) {
                 if (i > 0) {
                     if (commaWhiteSpace != null) {
                         res.Append(commaWhiteSpace[i - 1]);
                     }
                     res.Append(',');
                 }
-                Parameters[i].AppendCodeString(res, ast, format, initialLeadingWhiteSpace);
+                ParametersInternal[i].AppendCodeString(res, ast, format, initialLeadingWhiteSpace);
                 initialLeadingWhiteSpace = null;
             }
 
-            if (commaWhiteSpace != null && commaWhiteSpace.Length == Parameters.Length && Parameters.Length != 0) {
+            if (commaWhiteSpace != null && commaWhiteSpace.Length == ParametersInternal.Length && ParametersInternal.Length != 0) {
                 // trailing comma
                 res.Append(commaWhiteSpace[commaWhiteSpace.Length - 1]);
                 res.Append(",");
