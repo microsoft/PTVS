@@ -18,7 +18,9 @@ using System;
 
 namespace Microsoft.PythonTools.Interpreter {
     class PythonInterpreterInformation {
+#if !NO_FACTORIES
         private IPythonInterpreterFactory _factory;
+#endif
 
         public readonly InterpreterConfiguration Configuration;
         public readonly string Vendor;
@@ -37,6 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
             SupportUrl = supportUrl;
         }
 
+#if !NO_FACTORIES
         public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator) {
             if (_factory == null) {
                 lock (this) {
@@ -47,5 +50,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             return _factory;
         }
+#endif
     }
 }

@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectFile Include="Microsoft.CookiecutterTools.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.BuildCore.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Core.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Core.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
