@@ -55,8 +55,8 @@ namespace Microsoft.PythonTools.Parsing {
         private const int MaxIndent = 80;
         internal const int DefaultBufferCapacity = 1024;
 
-        private Dictionary<object, NameToken> _names;
-        private static object _currentName = new object();
+        private readonly Dictionary<object, NameToken> _names;
+        private static object _nameFromBuffer = new object();
 
         // precalcuated strings for space indentation strings so we usually don't allocate.
         private static readonly string[] SpaceIndentation, TabIndentation;
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Parsing {
             _state = new State(options);
             _printFunction = false;
             _unicodeLiterals = false;
-            _names = new Dictionary<object, NameToken>(128, new TokenEqualityComparer(this));
+            _names = new Dictionary<object, NameToken>(new TokenEqualityComparer(this));
             _langVersion = version;
             _options = options;
         }
@@ -808,6 +808,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (ch < 0) {
                 return false;
             }
+
             return IsIdentifierChar((char)ch);
         }
 
@@ -844,8 +845,15 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static bool IsIdentifierChar(char ch) {
-            if (IsIdentifierStartChar(ch)) {
-                return true;
+            // Latin1 case
+            if (ch <= byte.MaxValue) {
+                return ch <= 'z'
+                    ? ch <= 'Z'
+                      ? ch >= 'A' || ch >= '0' && ch <= '9'
+                      : ch >= 'a' || ch == '_'
+                    : ch >= 'À'
+                      ? ch != '×' && ch != '÷'
+                      : ch == 'ª' || ch == 'µ' || ch == 'º';
             }
 
             switch (ch) {
@@ -863,6 +871,10 @@ namespace Microsoft.PythonTools.Parsing {
                 case '\x1371':
                 case '\x19DA':
                     return true;
+            }
+
+            if (IsIdentifierStartChar(ch)) {
+                return true;
             }
 
             switch (char.GetUnicodeCategory(ch)) {
@@ -1675,8 +1687,11 @@ namespace Microsoft.PythonTools.Parsing {
             BufferBack();
 
             MarkTokenEnd();
-            NameToken token;
-            if (!_names.TryGetValue(_currentName, out token)) {
+
+            // _names uses Tokenizer.TokenEqualityComparer to find matching key.
+            // When string is compared to _nameFromBuffer, this equality comparer uses _buffer for GetHashCode and Equals
+            // to avoid allocation of a new string instance
+            if (!_names.TryGetValue(_nameFromBuffer, out var token)) {
                 string name = GetTokenString();
                 token = _names[name] = new NameToken(name);
             }
@@ -1835,13 +1850,13 @@ namespace Microsoft.PythonTools.Parsing {
             #region IEqualityComparer<object> Members
 
             bool IEqualityComparer<object>.Equals(object x, object y) {
-                if (x == _currentName) {
-                    if (y == _currentName) {
+                if (x == _nameFromBuffer) {
+                    if (y == _nameFromBuffer) {
                         return true;
                     }
 
                     return Equals((string)y);
-                } else if (y == _currentName) {
+                } else if (y == _nameFromBuffer) {
                     return Equals((string)x);
                 } else {
                     return (string)x == (string)y;
@@ -1850,7 +1865,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             public int GetHashCode(object obj) {
                 int result = 5381;
-                if (obj == _currentName) {
+                if (obj == _nameFromBuffer) {
                     char[] buffer = _tokenizer._buffer;
                     int start = _tokenizer._start, end = _tokenizer._tokenEnd;
                     for (int i = start; i < end; i++) {
@@ -2434,18 +2449,20 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private int Peek() {
-            if (_position >= _end) {
+            var position = _position;
+            if (position >= _end) {
                 RefillBuffer();
+                position = _position;
 
                 // eof:
-                if (_position >= _end) {
+                if (position >= _end) {
                     return EOF;
                 }
             }
 
-            Debug.Assert(_position < _end);
+            Debug.Assert(position < _end);
 
-            return _buffer[_position];
+            return _buffer[position];
         }
 
         private int ReadLine() {
