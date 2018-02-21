@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
                 if (fromScope != null) {
                     if (fromScope.Decorators != null) {
-                        foreach (var decorator in fromScope.Decorators.Decorators) {
+                        foreach (var decorator in fromScope.Decorators.DecoratorsInternal) {
                             NameExpression name = decorator as NameExpression;
                             if (name != null) {
                                 if (name.Name == "staticmethod") {
@@ -76,8 +76,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     if (!isStaticMethod) {
-                        if (fromScope.Parameters.Count > 0) {
-                            selfParam = fromScope.Parameters[0].NameExpression;
+                        if (fromScope.ParametersInternal.Length > 0) {
+                            selfParam = fromScope.ParametersInternal[0].NameExpression;
                             parameters.Add(new Parameter(selfParam, ParameterKind.Normal));
                         }
                     }
@@ -242,8 +242,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (isStaticMethod) {
                     newCall.Append(_targetScope.Name);
                     newCall.Append('.');
-                } else if (fromScope != null && fromScope.Parameters.Count > 0) {
-                    newCall.Append(fromScope.Parameters[0].Name);
+                } else if (fromScope != null && fromScope.ParametersInternal.Length > 0) {
+                    newCall.Append(fromScope.ParametersInternal[0].Name);
                     newCall.Append('.');
                 }
             }

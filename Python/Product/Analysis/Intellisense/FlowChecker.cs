@@ -296,7 +296,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 // analyze the class definition itself (it is visited while analyzing parent scope):
                 Define(node.Name);
-                foreach (var e in node.Bases) {
+                foreach (var e in node.BasesInternal) {
                     e.Expression.Walk(this);
                 }
                 return false;
@@ -365,14 +365,14 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(FunctionDefinition node) {
             if (node == _scope) {
                 // the function body is being analyzed, go deep:
-                foreach (Parameter p in node.Parameters) {
+                foreach (Parameter p in node.ParametersInternal) {
                     p.Walk(_fdef);
                 }
                 return true;
             } else {
                 // analyze the function definition itself (it is visited while analyzing parent scope):
                 Define(node.Name);
-                foreach (Parameter p in node.Parameters) {
+                foreach (Parameter p in node.ParametersInternal) {
                     if (p.DefaultValue != null) {
                         p.DefaultValue.Walk(this);
                     }
@@ -388,7 +388,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _bits = new BitArray(_bits.Length);
 
-            foreach (IfStatementTest ist in node.Tests) {
+            foreach (IfStatementTest ist in node.TestsInternal) {
                 // Set the initial branch value to bits
                 _bits.SetAll(false);
                 _bits.Or(save);

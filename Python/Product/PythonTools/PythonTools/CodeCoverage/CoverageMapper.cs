@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.CodeCoverage {
         #region Flow Control Statements
 
         public override bool Walk(IfStatement node) {
-            foreach (var test in node.Tests) {
+            foreach (var test in node.TestsInternal) {
                 UpdateLineInfo(test.Test);
                 AddBlock();
 

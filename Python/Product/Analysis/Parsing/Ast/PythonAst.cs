@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
             if (body == null) {
-                throw new ArgumentNullException("body");
+                throw new ArgumentNullException(nameof(body));
             }
             _langVersion = langVersion;
             _body = body;
@@ -94,18 +94,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal bool TryGetAttribute(Node node, object key, out object value) {
-            Dictionary<object, object> nodeAttrs;
-            if (_attributes.TryGetValue(node, out nodeAttrs)) {
+            if (_attributes.TryGetValue(node, out var nodeAttrs)) {
                 return nodeAttrs.TryGetValue(key, out value);
-            } else {
-                value = null;
             }
+            value = null;
             return false;
         }
 
         internal void SetAttribute(Node node, object key, object value) {
-            Dictionary<object, object> nodeAttrs;
-            if (!_attributes.TryGetValue(node, out nodeAttrs)) {
+            if (!_attributes.TryGetValue(node, out var nodeAttrs)) {
                 nodeAttrs = _attributes[node] = new Dictionary<object, object>();
             }
             nodeAttrs[key] = value;
@@ -117,9 +114,25 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <param name="from"></param>
         /// <param name="to"></param>
         public void CopyAttributes(Node from, Node to) {
-            Dictionary<object, object> nodeAttrs;
-            if (_attributes.TryGetValue(from, out nodeAttrs)) {
-                _attributes[to] = new Dictionary<object, object>(nodeAttrs);
+            if (_attributes.TryGetValue(from, out var fromAttrs)) {
+                var toAttrs = new Dictionary<object, object>(fromAttrs.Count);
+                foreach (var nodeAttr in fromAttrs) {
+                    toAttrs[nodeAttr.Key] = nodeAttr.Value;
+                }
+                _attributes[to] = toAttrs;
+            }
+        }
+
+        internal void SetAttributes(Dictionary<Node, Dictionary<object, object>> attributes) {
+            foreach (var nodeAttributes in attributes) {
+                var node = nodeAttributes.Key;
+                if (!_attributes.TryGetValue(node, out var existingNodeAttributes)) {
+                    existingNodeAttributes = _attributes[node] = new Dictionary<object, object>(nodeAttributes.Value.Count);
+                }
+
+                foreach (var nodeAttr in nodeAttributes.Value) {
+                    existingNodeAttributes[nodeAttr.Key] = nodeAttr.Value;
+                }
             }
         }
 
