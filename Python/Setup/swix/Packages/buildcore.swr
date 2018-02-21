@@ -1,8 +1,3 @@
-use vs
-
-package name=Microsoft.PythonTools.BuildCore.Vsix
-  version=$(Version)
-  vs.package.type=component
 
 folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools"
   file source=Microsoft.PythonTools.BuildTasks.Core.dll
