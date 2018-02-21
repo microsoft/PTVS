@@ -13,6 +13,9 @@
     <ProjectFile Include="VSInterpreters\VSInterpreters.csproj"/>
     <ProjectFile Include="Analyzer\Analyzer.csproj"/>
 
+    <ProjectFile Include="BuildTasks\BuildTasks.csproj"/>
+    <ProjectFile Include="BuildTasks\BuildTasks.Core.csproj"/>
+
     <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
 
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
