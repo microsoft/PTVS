@@ -496,9 +496,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(FunctionDefinition node) {
                 CommitByDefault = true;
-                if (node.Parameters != null) {
+                if (node.ParametersInternal != null) {
                     CanComplete = false;
-                    foreach (var p in node.Parameters) {
+                    foreach (var p in node.ParametersInternal) {
                         p.Walk(this);
                     }
                 }

@@ -417,7 +417,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (classScope != null && funcScope != null) {
                         classes = classScope.Class.SelfSet;
                         // Get first arg of function.
-                        if (funcScope.Function.FunctionDefinition.Parameters.Count > 0) {
+                        if (funcScope.Function.FunctionDefinition.ParametersInternal.Length > 0) {
                             instances = classScope.Class.Instance.SelfSet;
                         }
                     }

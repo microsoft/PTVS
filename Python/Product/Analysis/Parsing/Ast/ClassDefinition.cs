@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public class ClassDefinition : ScopeStatement {
         private int _headerIndex;
         private readonly NameExpression/*!*/ _name;
-        private Statement _body;
+        private readonly Statement _body;
         private readonly Arg[] _bases;
         private DecoratorStatement _decorators;
 
@@ -51,21 +51,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _name; }
         }
 
-        public IList<Arg> Bases {
-            get { return _bases; }
-        }
+        public IList<Arg> Bases => _bases;
+        internal Arg[] BasesInternal => _bases;
 
-        public override Statement Body {
-            get { return _body; }
-        }
+        public override Statement Body => _body;
 
         public DecoratorStatement Decorators {
-            get {
-                return _decorators;
-            }
-            internal set {
-                _decorators = value;
-            }
+            get => _decorators;
+            internal set => _decorators = value;
         }
 
         /// <summary>
@@ -205,7 +198,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append('(');
             }
 
-            if (Bases.Count != 0) {
+            if (BasesInternal.Length != 0) {
                 ListExpression.AppendItems(
                     res,
                     ast,
@@ -213,14 +206,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     "",
                     "",
                     this,
-                    this.Bases.Count,
+                    BasesInternal.Length,
                     (i, sb) => {
                         if(format.SpaceWithinClassDeclarationParens != null && i == 0) {
                             // need to remove any leading whitespace which was preserved for
                             // the 1st param, and then force the correct whitespace.
-                            Bases[i].AppendCodeString(sb, ast, format, format.SpaceWithinClassDeclarationParens.Value ? " " : "");
+                            BasesInternal[i].AppendCodeString(sb, ast, format, format.SpaceWithinClassDeclarationParens.Value ? " " : "");
                         } else {
-                            Bases[i].AppendCodeString(sb, ast, format);
+                            BasesInternal[i].AppendCodeString(sb, ast, format);
                         }
                     }
                 );
@@ -231,7 +224,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             
             if (!this.IsAltForm(ast) && !this.IsMissingCloseGrouping(ast)) {
-                if (Bases.Count != 0 || 
+                if (BasesInternal.Length != 0 || 
                     format.SpaceWithinEmptyBaseClassList == null ||
                     !String.IsNullOrWhiteSpace(this.GetFourthWhiteSpace(ast))) {
                     format.Append(

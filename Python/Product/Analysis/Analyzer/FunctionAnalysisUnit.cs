@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (Ast.Decorators != null) {
                 Expression expr = Ast.NameExpression;
 
-                foreach (var d in Ast.Decorators.Decorators) {
+                foreach (var d in Ast.Decorators.DecoratorsInternal) {
                     if (d != null) {
                         var decorator = ddg._eval.Evaluate(d);
 
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            if (!Function.IsStatic && Ast.Parameters.Count > 0) {
+            if (!Function.IsStatic && Ast.ParametersInternal.Length > 0) {
                 VariableDef param;
                 IAnalysisSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }
 
-                if (Scope.TryGetVariable(Ast.Parameters[0].Name, out param)) {
+                if (Scope.TryGetVariable(Ast.ParametersInternal[0].Name, out param)) {
                     param.AddTypes(this, firstParam, false);
                 }
             }
@@ -165,8 +165,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal void AnalyzeDefaultParameters(DDG ddg) {
             VariableDef param;
-            for (int i = 0; i < Ast.Parameters.Count; ++i) {
-                var p = Ast.Parameters[i];
+            for (int i = 0; i < Ast.ParametersInternal.Length; ++i) {
+                var p = Ast.ParametersInternal[i];
                 if (p.Annotation != null) {
                     var val = ddg._eval.EvaluateAnnotation(p.Annotation);
                     if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 " def:",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
+                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
         }

@@ -1010,8 +1010,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            return function.Parameters != null &&
-                function.Parameters.Any(p => {
+            return function.ParametersInternal != null &&
+                function.ParametersInternal.Any(p => {
                     var paramName = p.GetVerbatimImage(tree) ?? p.Name;
                     return index >= p.StartIndex && index <= p.StartIndex + paramName.Length;
                 });

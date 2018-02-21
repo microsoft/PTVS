@@ -92,8 +92,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal void EnsureParameters(FunctionAnalysisUnit unit, bool usePlaceholders) {
-            var astParams = Function.FunctionDefinition.Parameters;
-            for (int i = 0; i < astParams.Count; ++i) {
+            var astParams = Function.FunctionDefinition.ParametersInternal;
+            for (int i = 0; i < astParams.Length; ++i) {
                 var p = astParams[i];
                 var name = p?.Name;
                 if (string.IsNullOrEmpty(name)) {
@@ -149,13 +149,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         ) {
             EnsureParameters(unit, usePlaceholders);
 
-            var astParams = Function.FunctionDefinition.Parameters;
-            bool added = false;
+            var astParams = Function.FunctionDefinition.ParametersInternal;
+            var added = false;
             var entry = unit.DependencyProject;
             var state = unit.State;
             var limits = state.Limits;
 
-            for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
+            for (int i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
                 var name = astParams[i].Name;
                 VariableDef param;
                 if (name == _seqParameters?.Name) {
@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             if (scopeWithDefaultParameters != null) {
-                for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
+                for (int i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
                     VariableDef defParam, param;
                     if (TryGetVariable(astParams[i].Name, out param) &&
                         !param.HasTypes &&

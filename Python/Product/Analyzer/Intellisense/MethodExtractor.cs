@@ -334,9 +334,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(IfStatement node) {
                 bool allReturn = true;
-                for (int i = 0; i < node.Tests.Count; i++) {
+                for (int i = 0; i < node.TestsInternal.Length; i++) {
                     _raises = Returns = false;
-                    node.Tests[i].Body.Walk(this);
+                    node.TestsInternal[i].Body.Walk(this);
 
                     allReturn &= Returns || _raises;
                 }

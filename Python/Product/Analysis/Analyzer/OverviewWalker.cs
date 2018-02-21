@@ -444,8 +444,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(IfStatement node) {
             UpdateChildRanges(node);
-            if (node.Tests != null) {
-                foreach (var test in node.Tests) {
+            if (node.TestsInternal != null) {
+                foreach (var test in node.TestsInternal) {
                     var isInstanceNames = GetIsInstanceNamesAndExpressions(test.Test);
                     if (isInstanceNames != null) {
                         if (test.Test != null) {

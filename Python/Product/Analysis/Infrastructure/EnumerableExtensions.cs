@@ -14,11 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     static class EnumerableExtensions {
+        public static T[] MaybeEnumerate<T>(this T[] source) {
+            return source ?? Array.Empty<T>();
+        }
+
         public static IEnumerable<T> MaybeEnumerate<T>(this IEnumerable<T> source) {
             return source ?? Enumerable.Empty<T>();
         }
