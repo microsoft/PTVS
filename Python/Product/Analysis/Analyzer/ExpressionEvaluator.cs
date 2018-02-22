@@ -154,10 +154,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         warn = true;
                     }
                 }
-            } else if (!res.Any()) {
+            } else if (!res.Any() && !refs.IsAssigned) {
                 // Variable has no values, so if we also don't know about any
                 // definitions then warn.
-                warn = !refs.Definitions.Any() && !(refs is LocatedVariableDef);
+                warn = true;
             }
 
             if (addDependency && refs != null) {
@@ -166,6 +166,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             if (warn) {
                 ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
+            } else {
+                ProjectState.ClearDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignmentCode);
             }
 
             return res;

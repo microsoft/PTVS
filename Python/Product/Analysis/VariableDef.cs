@@ -581,6 +581,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        internal virtual bool IsAssigned => _dependencies.Any(d => d.Value._assignments.Count != 0);
+
 #if VARDEF_STATS
         internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
 
@@ -669,6 +671,8 @@ namespace Microsoft.PythonTools.Analysis {
                 _location = value;
             }
         }
+
+        internal override bool IsAssigned => true;
     }
 
 }
