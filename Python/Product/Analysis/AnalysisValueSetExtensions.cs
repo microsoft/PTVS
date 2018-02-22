@@ -272,32 +272,33 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, null);
+        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, null, out _);
 
-        internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context) {
-            if (!self.Split<LazyValueInfo>(out var lvis, out var res)) {
-                return res;
-            }
+        internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context, out bool changed) {
+            // The vast majority of the time, no values are resolved
+            // So we want to quickly validate and get out without allocating
+            // or changing anything.
 
-            var queue = new Queue<LazyValueInfo>(lvis);
-            var seen = new HashSet<LazyValueInfo>(lvis);
-
-            while (queue.Count > 0) {
-                var lvi = queue.Dequeue();
-                var r = lvi.Resolve(unit, context ?? ResolutionContext.Empty);
-
-                foreach (var ns in r) {
-                    if (ns is LazyValueInfo l) {
-                        if (seen.Add(l)) {
-                            queue.Enqueue(l);
-                        }
-                    } else {
-                        res = res.Add(ns);
+            List<AnalysisValue> removed = null;
+            IAnalysisSet added = null;
+            foreach (var ns in self) {
+                var r = ns.Resolve(unit, context);
+                if (!ReferenceEquals(r, ns)) {
+                    if (removed == null) {
+                        removed = new List<AnalysisValue>(self.Count);
                     }
+                    removed.Add(ns);
+                    added = added?.Union(r) ?? r;
                 }
             }
 
-            return res;
+            if (removed == null) {
+                changed = false;
+                return self;
+            }
+
+            self.Split(removed.Contains, out _, out var unchanged);
+            return unchanged.Union(added, out changed);
         }
 
         class DotsLastStringComparer : IComparer<string> {

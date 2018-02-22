@@ -103,5 +103,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             UnionType = null;
         }
+
+        internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            var res = base.Resolve(unit, context);
+            if (res is ProtocolInfo pi) {
+                pi.AddProtocol(new GetItemProtocol(pi, unit.State.ClassInfos[BuiltinTypeId.Int].Instance, pi.GetEnumeratorTypes(_node, unit)));
+            }
+            return res;
+        }
     }
 }

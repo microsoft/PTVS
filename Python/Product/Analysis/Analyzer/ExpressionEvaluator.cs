@@ -525,14 +525,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var l = (MemberExpression)left;
                 if (!string.IsNullOrEmpty(l.Name)) {
                     foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
-                        obj.SetMember(l, _unit, l.Name, values.Resolve(_unit, ResolutionContext.Complete));
+                        obj.SetMember(l, _unit, l.Name, values.Resolve(_unit));
                     }
                 }
             } else if (left is IndexExpression) {
                 var l = (IndexExpression)left;
                 var indexObj = Evaluate(l.Index);
                 foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
-                    obj.SetIndex(assignStmt, _unit, indexObj, values.Resolve(_unit, ResolutionContext.Complete));
+                    obj.SetIndex(assignStmt, _unit, indexObj, values.Resolve(_unit));
                 }
             } else if (left is SequenceExpression) {
                 // list/tuple

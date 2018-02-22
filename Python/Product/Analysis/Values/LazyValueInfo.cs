@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -86,12 +87,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _argNames = argNames;
         }
 
-        private IAnalysisSet Resolve(AnalysisUnit unit) {
-            Resolve(unit, ResolutionContext.Complete).Split(out IReadOnlyList<LazyValueInfo> _, out var result);
+        public override IAnalysisSet Resolve(AnalysisUnit unit) {
+            // Note that we call into the other Resolve() from here, but always pass a non-null context.
+            IAnalysisSet result;
+            if (_value is ParameterInfo pi) {
+                pi.Resolve(unit).Split(out IReadOnlyList<LazyValueInfo> _, out result);
+            } else {
+                Resolve(unit, ResolutionContext.Empty).Split(out IReadOnlyList<LazyValueInfo> _, out result);
+            }
             return result;
         }
 
-        public virtual IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+        internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            if (context == null) {
+                return Resolve(unit);
+            }
+
             if (!Push()) {
                 return AnalysisSet.Empty;
             }
@@ -103,8 +114,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return _value;
                 }
 
-                var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context));
-                var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context));
+                var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context), LazyThreadSafetyMode.None);
+                var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context), LazyThreadSafetyMode.None);
 
                 switch (_lazyOp) {
                     case LazyOperation.Automatic:
@@ -276,21 +287,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _indexTypes;
         }
 
-        public override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+        internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
             if (_fallback().Split(out IReadOnlyList<LazyValueInfo> lvis, out IAnalysisSet rest)) {
                 return rest.UnionAll(lvis.Select(lvi => lvi.Resolve(unit, context)));
             }
             return rest;
         }
-    }
-
-    sealed class ResolutionContext {
-        public static readonly ResolutionContext Empty = new ResolutionContext();
-        public static readonly ResolutionContext Complete = new ResolutionContext { AnyCaller = true };
-
-        public FunctionInfo Caller { get; set; }
-        public bool AnyCaller { get; set; }
-        public ArgumentSet CallArgs { get; set; }
-        public IReadOnlyDictionary<string, IAnalysisSet> Closure { get; set; }
     }
 }

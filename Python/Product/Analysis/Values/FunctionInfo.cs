@@ -87,17 +87,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _analysisUnit.AddNamedParameterReferences(unit, keywordArgNames);
             }
 
-            var calledUnit = _analysisUnit;
+            var res = DoCall(node, unit, _analysisUnit, callArgs);
 
             if (_closureDefinition != null) {
+                FunctionAnalysisUnit calledUnit;
                 var key = _closureDefinition.Get(callArgs);
                 lock (_callsWithClosure) {
                     if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
                         if (!unit.ForEval) {
                             calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
                             calledUnit.Enqueue();
-                        } else {
-                            calledUnit = _analysisUnit;
                         }
                     }
 
@@ -106,29 +105,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         _callsWithClosure[key] = calledUnit;
                     }
                 }
-            }
-
-            var res = DoCall(node, unit, calledUnit, callArgs);
-            if (calledUnit != _analysisUnit) {
-                _analysisUnit.UpdateParameters(callArgs);
+                res = DoCall(node, unit, calledUnit, callArgs);
             }
 
             var context = new ResolutionContext {
                 Caller = this,
-                CallArgs = callArgs
+                CallArgs = callArgs,
+                CallSite = node
             };
 
-            if (res.Split(out IReadOnlyList<LazyValueInfo> lvi, out res)) {
-                res = res.Union(lvi.SelectMany(lv => {
-                    var r = lv.Resolve(unit, context);
-                    if (!r.Any() && unit.ForEval) {
-                        return lv.Resolve(unit);
-                    }
-                    return r;
-                }));
-            }
-
-            return res;
+            return res.Resolve(unit, context, out _);
         }
 
         private IAnalysisSet DoCall(Node node, AnalysisUnit callingUnit, FunctionAnalysisUnit calledUnit, ArgumentSet callArgs) {

@@ -177,6 +177,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 );
             }
         }
+
+        protected override IAnalysisSet CreateWithNewTypes(Node node, VariableDef[] types) {
+            return new SequenceInfo(types, ClassInfo, node, _declaringModule);
+        }
     }
 
     internal class StarArgsSequenceInfo : SequenceInfo {

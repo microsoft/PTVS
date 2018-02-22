@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return AnalysisSet.Empty;
                 }
             }
-            return set.Union(value.Resolve(unit, ResolutionContext.Complete));
+            return set.Union(value.Resolve(unit));
         }
 
         internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
@@ -459,7 +459,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return GetMemberResults(lookup.Resolve(unit, ResolutionContext.Complete), scope, options);
+            return GetMemberResults(lookup.Resolve(unit), scope, options);
         }
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {

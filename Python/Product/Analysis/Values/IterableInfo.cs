@@ -123,41 +123,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// inside of the iterable.
     /// </summary>
     internal class IterableValue : BaseIterableValue {
-        private VariableDef[] _indexTypes;     // types for known indices
         internal readonly Node _node;
 
         public IterableValue(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
             : base(seqType) {
-            _indexTypes = indexTypes;
+            IndexTypes = indexTypes;
             _node = node;
         }
 
-        public VariableDef[] IndexTypes {
-            get { return _indexTypes; }
-            set { _indexTypes = value; }
-        }
+        public VariableDef[] IndexTypes { get; protected set; }
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            if (_indexTypes.Length == 0) {
-                _indexTypes = new[] { new VariableDef() };
-                _indexTypes[0].AddDependency(unit);
+            if (IndexTypes.Length == 0) {
+                IndexTypes = new[] { new VariableDef() };
+                IndexTypes[0].AddDependency(unit);
                 return AnalysisSet.Empty;
             } else {
-                _indexTypes[0].AddDependency(unit);
+                IndexTypes[0].AddDependency(unit);
             }
 
             return base.GetEnumeratorTypes(node, unit);
         }
 
         internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {
-            if (_indexTypes.Length < types.Length) {
-                _indexTypes = _indexTypes.Concat(VariableDef.Generator).Take(types.Length).ToArray();
+            if (IndexTypes.Length < types.Length) {
+                IndexTypes = IndexTypes.Concat(VariableDef.Generator).Take(types.Length).ToArray();
             }
 
             bool added = false;
             for (int i = 0; i < types.Length; i++) {
-                added |= _indexTypes[i].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, types[i]);
-                added |= _indexTypes[i].AddTypes(unit, types[i], true, DeclaringModule);
+                added |= IndexTypes[i].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, types[i]);
+                added |= IndexTypes[i].AddTypes(unit, types[i], true, DeclaringModule);
             }
 
             if (added) {
@@ -180,7 +176,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 IAnalysisSet unionType = AnalysisSet.EmptyUnion;
                 if (Push()) {
                     try {
-                        foreach (var set in _indexTypes) {
+                        foreach (var set in IndexTypes) {
                             unionType = unionType.Union(set.TypesNoCopy);
                         }
                     } finally {
@@ -201,6 +197,51 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             return base.UnionEquals(ns, strength);
+        }
+
+        protected VariableDef[] ResolveIndexTypes(AnalysisUnit unit, ResolutionContext context) {
+            var resolvedTypes = new IAnalysisSet[IndexTypes.Length];
+            bool anyChange = false;
+            for (int i = 0; i < IndexTypes.Length; ++i) {
+                resolvedTypes[i] = IndexTypes[i].TypesNoCopy.Resolve(unit, context, out bool changed);
+                anyChange |= changed;
+            }
+
+            if (!anyChange) {
+                return null;
+            }
+
+            var newTypes = new VariableDef[resolvedTypes.Length];
+            for (int i = 0; i < newTypes.Length; ++i) {
+                VariableDef v;
+                newTypes[i] = v = new VariableDef();
+                v.AddTypes(DeclaringModule, resolvedTypes[i]);
+            }
+            return newTypes;
+        }
+
+        protected virtual IAnalysisSet CreateWithNewTypes(Node node, VariableDef[] types) {
+            return new IterableValue(types, ClassInfo, node);
+        }
+
+        internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            if (context == null || context.CallSite == null) {
+                return Resolve(unit);
+            }
+
+            if (Push()) {
+                try {
+                    var types = ResolveIndexTypes(unit, context);
+                    if (types == null) {
+                        return this;
+                    }
+
+                    return unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => CreateWithNewTypes(n, types));
+                } finally {
+                    Pop();
+                }
+            }
+            return this;
         }
     }
 }

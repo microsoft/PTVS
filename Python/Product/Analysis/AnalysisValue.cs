@@ -326,32 +326,59 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        #endregion
-
-        #region Union Equality
+        /// <summary>
+        /// If required, returns the resolved version of this value. If there is nothing
+        /// to resolve, returns <c>this</c>.
+        /// </summary>
+        /// <remarks>
+        /// This should not call <see cref="Resolve(AnalysisUnit, ResolutionContext)"/>
+        /// passing <c>null</c> for context, as the default implementation of that case
+        /// calls this method.
+        /// </remarks>
+        public virtual IAnalysisSet Resolve(AnalysisUnit unit) {
+            return this;
+        }
 
         /// <summary>
-        /// Returns an analysis value representative of both this and another
-        /// analysis value. This should only be called when
-        /// <see cref="UnionEquals"/> returns true for the two values.
+        /// If required, returns the resolved version of this value given a specific context.
         /// </summary>
-        /// <param name="av">The value to merge with.</param>
-        /// <param name="strength">A value matching that passed to
-        /// <see cref="UnionEquals"/>.</param>
-        /// <returns>A merged analysis value.</returns>
         /// <remarks>
-        /// <para>Calling this function when <see cref="UnionEquals"/> returns
-        /// false for the same parameters is undefined.</para>
-        /// 
-        /// <para>Where there is no analysis value representative of those
-        /// provided, it is preferable to return this rather than
-        /// <paramref name="av"/>.</para>
-        /// 
-        /// <para>
-        /// <paramref name="strength"/> is used as a key in this function and must
-        /// match the value used in <see cref="UnionEquals"/>.
-        /// </para>
+        /// If context is <c>null</c>, this should return the same value as calling
+        /// <see cref="Resolve(AnalysisUnit)"/>, and may do this by deferring to that implementation.
         /// </remarks>
+        internal virtual IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            if (context == null) {
+                return Resolve(unit);
+            }
+            return this;
+        }
+
+        #endregion
+
+            #region Union Equality
+
+            /// <summary>
+            /// Returns an analysis value representative of both this and another
+            /// analysis value. This should only be called when
+            /// <see cref="UnionEquals"/> returns true for the two values.
+            /// </summary>
+            /// <param name="av">The value to merge with.</param>
+            /// <param name="strength">A value matching that passed to
+            /// <see cref="UnionEquals"/>.</param>
+            /// <returns>A merged analysis value.</returns>
+            /// <remarks>
+            /// <para>Calling this function when <see cref="UnionEquals"/> returns
+            /// false for the same parameters is undefined.</para>
+            /// 
+            /// <para>Where there is no analysis value representative of those
+            /// provided, it is preferable to return this rather than
+            /// <paramref name="av"/>.</para>
+            /// 
+            /// <para>
+            /// <paramref name="strength"/> is used as a key in this function and must
+            /// match the value used in <see cref="UnionEquals"/>.
+            /// </para>
+            /// </remarks>
         internal virtual AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
             return this;
         }
