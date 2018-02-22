@@ -845,15 +845,11 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static bool IsIdentifierChar(char ch) {
-            // Latin1 case
-            if (ch <= byte.MaxValue) {
-                return ch <= 'z'
-                    ? ch <= 'Z'
-                      ? ch >= 'A' || ch >= '0' && ch <= '9'
-                      : ch >= 'a' || ch == '_'
-                    : ch >= 'À'
-                      ? ch != '×' && ch != '÷'
-                      : ch == 'ª' || ch == 'µ' || ch == 'º';
+            // ASCII case
+            if (ch <= 7F) {
+                return ch <= 'Z'
+                    ? ch >= 'A' || ch >= '0' && ch <= '9'
+                    : ch >= 'a' && ch <= 'z' || ch == '_';
             }
 
             switch (ch) {
