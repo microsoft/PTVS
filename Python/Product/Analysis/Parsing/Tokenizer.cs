@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
@@ -815,10 +816,21 @@ namespace Microsoft.PythonTools.Parsing {
         public static bool IsIdentifierStartChar(char ch) {
             // Identifiers determined according to PEP 3131
 
-            switch (ch) {
+            // ASCII case
+            if (ch <= 'z') {
                 // Underscore is explicitly allowed to start an identifier
-                case '_':
-                    return true;
+                return ch <= 'Z' ? ch >= 'A' : ch >= 'a' || ch == '_';
+            }
+
+            if (ch < 0xAA) {
+                return false;
+            }
+
+            return IsIdentifierStartCharNonAscii(ch);
+        }
+
+        private static bool IsIdentifierStartCharNonAscii(char ch) {
+            switch (ch) {
                 // Characters with the Other_ID_Start property
                 case '\x1885':
                 case '\x1886':
@@ -846,10 +858,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static bool IsIdentifierChar(char ch) {
             // ASCII case
-            if (ch <= 7F) {
+            if (ch <= 'z') {
                 return ch <= 'Z'
                     ? ch >= 'A' || ch >= '0' && ch <= '9'
-                    : ch >= 'a' && ch <= 'z' || ch == '_';
+                    : ch >= 'a' || ch == '_';
+            }
+
+            if (ch < 0xAA) {
+                return false;
             }
 
             switch (ch) {
@@ -869,7 +885,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return true;
             }
 
-            if (IsIdentifierStartChar(ch)) {
+            if (IsIdentifierStartCharNonAscii(ch)) {
                 return true;
             }
 
