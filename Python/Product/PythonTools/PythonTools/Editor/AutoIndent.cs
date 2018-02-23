@@ -287,13 +287,13 @@ namespace Microsoft.PythonTools.Editor {
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
 
-            ITextBuffer targetBuffer = line.Snapshot.TextBuffer;
-            if (!targetBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var match = textView.MapDownToPythonBuffer(line.Start);
+            var lineStart = line.Start;
+            if (!lineStart.Snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                var match = textView.MapDownToPythonBuffer(lineStart);
                 if (match == null) {
                     return 0;
                 }
-                targetBuffer = match.Value.Snapshot.TextBuffer;
+                lineStart = match.Value;
             }
 
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, buffer);
@@ -301,34 +301,22 @@ namespace Microsoft.PythonTools.Editor {
                 desiredIndentation = 0;
             }
 
-            // Map indentation back to the view's text buffer.
-            if (textView.TextBuffer != targetBuffer) {
-                var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
-                    baseline.Start,
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    textView.TextSnapshot
-                );
-                if (viewLineStart.HasValue) {
-                    desiredIndentation += viewLineStart.Value - viewLineStart.Value.GetContainingLine().Start;
-                }
-            }
-
-            var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();
+            var caretPos = textView.MapDownToBuffer(textView.Caret.Position.BufferPosition, lineStart.Snapshot.TextBuffer);
+            var caretLine = caretPos?.GetContainingLine();
             // VS will get the white space when the user is moving the cursor or when the user is doing an edit which
             // introduces a new line.  When the user is moving the cursor the caret line differs from the line
             // we're querying.  When editing the lines are the same and so we want to account for the white space of
             // non-blank lines.  An alternate strategy here would be to watch for the edit and fix things up after
             // the fact which is what would happen pre-Dev10 when the language would not get queried for non-blank lines
             // (and is therefore what C# and other languages are doing).
-            if (caretLine.LineNumber == line.LineNumber) {
+            if (caretLine != null && caretLine.LineNumber == line.LineNumber) {
                 var lineText = caretLine.GetText();
                 int indentationUpdate = 0;
-                for (int i = textView.Caret.Position.BufferPosition.Position - caretLine.Start; i < lineText.Length; i++) {
+                for (int i = caretPos.Value.Position - caretLine.Start; i < lineText.Length; i++) {
                     if (lineText[i] == ' ') {
                         indentationUpdate++;
                     } else if (lineText[i] == '\t') {
-                        indentationUpdate += textView.Options.GetIndentSize();
+                        indentationUpdate += textView.Options.GetTabSize();
                     } else {
                         if (indentationUpdate > desiredIndentation) {
                             // we would dedent this line (e.g. there's a return on the previous line) but the user is
@@ -340,6 +328,19 @@ namespace Microsoft.PythonTools.Editor {
                         }
                         break;
                     }
+                }
+            }
+
+            // Map indentation back to the view's text buffer.
+            if (textView.TextBuffer != lineStart.Snapshot.TextBuffer) {
+                var viewLineStart = textView.BufferGraph.MapUpToSnapshot(
+                    lineStart,
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    textView.TextSnapshot
+                );
+                if (viewLineStart.HasValue) {
+                    desiredIndentation += viewLineStart.Value - viewLineStart.Value.GetContainingLine().Start;
                 }
             }
 

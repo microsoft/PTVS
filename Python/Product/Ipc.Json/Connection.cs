@@ -399,6 +399,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 );
             } catch (OperationCanceledException) {
                 throw;
+            } catch (ObjectDisposedException) {
+                throw;
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();

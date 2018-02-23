@@ -103,15 +103,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (constIndex.Value < 0) {
                     constIndex += IndexTypes.Length;
                 }
-                if (constIndex.Value >= 0 && constIndex.Value < IndexTypes.Length) {
+                if (0 <= constIndex.Value && constIndex.Value < IndexTypes.Length) {
                     // TODO: Warn if outside known index and no appends?
                     IndexTypes[constIndex.Value].AddDependency(unit);
                     return IndexTypes[constIndex.Value].Types;
                 }
             }
 
-            SliceInfo sliceInfo = GetSliceIndex(index);
-            if (sliceInfo != null) {
+            if (index.Split(out IReadOnlyList<SliceInfo> sliceInfo, out _)) {
                 return this.SelfSet;
             }
 
@@ -123,15 +122,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             EnsureUnionType();
             return UnionType;
-        }
-
-        private SliceInfo GetSliceIndex(IAnalysisSet index) {
-            foreach (var type in index) {
-                if (type is SliceInfo) {
-                    return type as SliceInfo;
-                }
-            }
-            return null;
         }
 
         internal static int? GetConstantIndex(IAnalysisSet index) {
