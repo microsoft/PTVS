@@ -762,6 +762,20 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        public void ClearDiagnostic(Node node, AnalysisUnit unit, object code = null) {
+            if (!EnableDiagnostics) {
+                return;
+            }
+
+            lock (_diagnostics) {
+                if (_diagnostics.TryGetValue(unit.ProjectEntry, out var diags) && diags.TryGetValue(node, out var d)) {
+                    if (code == null || d.code == code) {
+                        diags.Remove(node);
+                    }
+                }
+            }
+        }
+
         public void ClearDiagnostics(IProjectEntry entry) {
             lock (_diagnostics) {
                 _diagnostics.Remove(entry);

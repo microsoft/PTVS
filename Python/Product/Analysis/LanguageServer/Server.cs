@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -54,12 +55,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Server() {
             _queue = new AnalysisQueue();
+            _queue.UnhandledException += Analysis_UnhandledException;
             _pendingAnalysisEnqueue = new VolatileCounter();
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
             _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>>();
+        }
+
+        private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            Debug.Fail(e.ExceptionObject.ToString());
+            LogMessage(MessageType.Error, e.ExceptionObject.ToString());
         }
 
         public void Dispose() {
