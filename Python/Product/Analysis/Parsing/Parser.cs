@@ -2036,8 +2036,10 @@ namespace Microsoft.PythonTools.Parsing {
                         NextToken();
                         var ne = new NameExpression(name.RealName);
                         ne.SetLoc(GetStart(), GetEnd());
-                        AddVerbatimName(name, ne);
-                        AddPreceedingWhiteSpace(ne);
+                        if (_verbatim) {
+                            AddVerbatimName(name, ne);
+                            AddPreceedingWhiteSpace(ne);
+                        }
                         p = new Parameter(ne, kind);
                     } else if (kind == ParameterKind.List) {
                         // bare lists are allowed
@@ -2048,7 +2050,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     p.SetLoc(start < 0 ? GetStart() : start, GetEnd());
 
-                    if (preStarWhitespace != null) {
+                    if (_verbatim && preStarWhitespace != null) {
                         AddPreceedingWhiteSpace(p, preStarWhitespace);
                     }
 
