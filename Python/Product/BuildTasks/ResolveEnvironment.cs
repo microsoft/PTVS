@@ -142,6 +142,7 @@ namespace Microsoft.PythonTools.BuildTasks {
 #if BUILDTASKS_CORE
                 ProjectItem item = null;
                 InterpreterConfiguration config = null;
+
                 if (string.IsNullOrEmpty(id)) {
                     id = project.GetItems(MSBuildConstants.InterpreterReferenceItem).Select(pi => pi.GetMetadataValue(MSBuildConstants.IdKey)).LastOrDefault(i => !string.IsNullOrEmpty(i));
                 }
@@ -180,8 +181,10 @@ namespace Microsoft.PythonTools.BuildTasks {
                     } else {
                         MajorVersion = MinorVersion = "0";
                     }
+                    return true;
                 } else if (config != null) {
                     UpdateResultFromConfiguration(config, projectHome);
+                    return true;
                 }
 #else
                 // MsBuildProjectContextProvider isn't available in-proc, instead we rely upon the
