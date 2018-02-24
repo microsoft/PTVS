@@ -108,52 +108,61 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             try {
-                if (_value is ParameterInfo pi) {
-                    return pi.Resolve(unit, context);
-                } else if (_value != null) {
-                    return _value;
+                var res = ResolveOnce(unit, context);
+                bool changed = true;
+                while (changed) {
+                    res = res.Resolve(unit, context, out changed);
                 }
-
-                var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context), LazyThreadSafetyMode.None);
-                var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context), LazyThreadSafetyMode.None);
-
-                switch (_lazyOp) {
-                    case LazyOperation.Automatic:
-                        break;
-                    case LazyOperation.Await:
-                        return left.Value.Await(_node, unit);
-                    case LazyOperation.GetEnumeratorTypes:
-                        return left.Value.GetEnumeratorTypes(_node, unit);
-                    case LazyOperation.GetIndex:
-                        return left.Value.GetIndex(_node, unit, right.Value);
-                    case LazyOperation.GetIterator:
-                        return left.Value.GetIterator(_node, unit);
-                    case LazyOperation.GetYieldFromReturn:
-                        return left.Value.GetReturnForYieldFrom(_node, unit);
-                    default:
-                        Debug.Fail($"Unhandled op {_lazyOp}");
-                        return AnalysisSet.Empty;
-                }
-
-                if (_memberName != null) {
-                    return left.Value.GetMember(_node, unit, _memberName);
-                }
-
-                if (_args != null) {
-                    return left.Value.Call(_node, unit, ResolveArgs(_args, unit, context).ToArray(), _argNames);
-                }
-
-                if (_op.HasValue) {
-                    if (_left == null) {
-                        return right.Value.UnaryOperation(_node, unit, _op.Value);
-                    }
-                    return left.Value.BinaryOperation(_node, unit, _op.Value, right.Value);
-                }
-
-                return AnalysisSet.Empty;
+                return res;
             } finally {
                 Pop();
             }
+        }
+
+        private IAnalysisSet ResolveOnce(AnalysisUnit unit, ResolutionContext context) {
+            if (_value is ParameterInfo pi) {
+                return pi.Resolve(unit, context);
+            } else if (_value != null) {
+                return _value;
+            }
+
+            var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context), LazyThreadSafetyMode.None);
+            var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context), LazyThreadSafetyMode.None);
+
+            switch (_lazyOp) {
+                case LazyOperation.Automatic:
+                    break;
+                case LazyOperation.Await:
+                    return left.Value.Await(_node, unit);
+                case LazyOperation.GetEnumeratorTypes:
+                    return left.Value.GetEnumeratorTypes(_node, unit);
+                case LazyOperation.GetIndex:
+                    return left.Value.GetIndex(_node, unit, right.Value);
+                case LazyOperation.GetIterator:
+                    return left.Value.GetIterator(_node, unit);
+                case LazyOperation.GetYieldFromReturn:
+                    return left.Value.GetReturnForYieldFrom(_node, unit);
+                default:
+                    Debug.Fail($"Unhandled op {_lazyOp}");
+                    return AnalysisSet.Empty;
+            }
+
+            if (_memberName != null) {
+                return left.Value.GetMember(_node, unit, _memberName);
+            }
+
+            if (_args != null) {
+                return left.Value.Call(_node, unit, ResolveArgs(_args, unit, context).ToArray(), _argNames);
+            }
+
+            if (_op.HasValue) {
+                if (_left == null) {
+                    return right.Value.UnaryOperation(_node, unit, _op.Value);
+                }
+                return left.Value.BinaryOperation(_node, unit, _op.Value, right.Value);
+            }
+
+            return AnalysisSet.Empty;
         }
 
         private static IEnumerable<IAnalysisSet> ResolveArgs(IAnalysisSet[] args, AnalysisUnit unit, ResolutionContext context) {

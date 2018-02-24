@@ -4152,7 +4152,7 @@ val = next(it)
             var text = @"
 class x(object):
     def __init__(self, val):
-        self.abc = []
+        self.abc = [val]
     
 x(42)
 x('abc')
@@ -5009,7 +5009,6 @@ z = a_float()
 w = a_string()
 ";
             var entry = ProcessTextV2(text);
-            var index = text.Length;
             entry.AssertIsInstance("x", BuiltinTypeId.Tuple);
             entry.AssertIsInstance("y", BuiltinTypeId.List);
             entry.AssertIsInstance("z", BuiltinTypeId.Float);
@@ -5035,8 +5034,7 @@ items2 = as_list(lambda: (1, 2, 3))
 x = items(0)
 ";
             entry = ProcessTextV2(text);
-            index = text.IndexOf("x = ");
-            entry.AssertIsInstance("items", entry.GetTypeIds("items2", index).ToArray());
+            entry.AssertIsInstance("items", entry.GetTypeIds("items2").ToArray());
             entry.AssertIsInstance("x", BuiltinTypeId.List, BuiltinTypeId.Set, BuiltinTypeId.Str);
         }
 
@@ -5084,6 +5082,7 @@ retGivenBool2 = returnsGivenWithDecorator2(True)";
             var entry = ProcessText(text);
 
             foreach (var suffix in new[] { "", "1", "2" }) {
+                Console.WriteLine($"Checking retGiven*{suffix}");
                 entry.AssertIsInstance("retGivenInt" + suffix, BuiltinTypeId.Int);
                 entry.AssertIsInstance("retGivenString" + suffix, BuiltinTypeId.Str);
                 entry.AssertIsInstance("retGivenBool" + suffix, BuiltinTypeId.Bool);
