@@ -47,7 +47,9 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
+#if DESKTOP
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
+#endif
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
         private Action<int> _reportQueueSize;
@@ -258,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             entry.RemovedFromProject();
         }
-
+#if DESKTOP
         /// <summary>
         /// Adds a XAML file to be analyzed.  
         /// 
@@ -271,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return entry;
         }
-
+#endif
         /// <summary>
         /// Returns a sequence of project entries that import the specified
         /// module. The sequence will be empty if the module is unknown.
@@ -782,9 +784,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Internal Implementation
+#region Internal Implementation
 
         internal IKnownPythonTypes Types {
             get;
@@ -1015,9 +1017,9 @@ namespace Microsoft.PythonTools.Analysis {
             return (BuiltinClassInfo)GetAnalysisValueFromObjects(res);
         }
 
-        #endregion
+#endregion
 
-        #region IGroupableAnalysisProject Members
+#region IGroupableAnalysisProject Members
 
         public void AnalyzeQueuedEntries(CancellationToken cancel) {
             if (cancel.IsCancellationRequested) {
@@ -1036,7 +1038,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Specifies a callback to invoke to provide feedback on the number of
@@ -1074,7 +1076,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public event EventHandler SearchPathsChanged;
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
             Dispose(true);
@@ -1098,7 +1100,7 @@ namespace Microsoft.PythonTools.Analysis {
             Dispose(false);
         }
 
-        #endregion
+#endregion
 
         internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
             Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
