@@ -19,6 +19,7 @@ using System;
 using System.ComponentModel.Composition.Hosting;
 #endif
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -157,9 +158,16 @@ namespace Microsoft.PythonTools.BuildTasks {
                         )?.Configuration;
                     }
                 } else {
-                    item = project.GetItems(MSBuildConstants.InterpreterItem).FirstOrDefault(pi => id.Equals(pi.GetMetadataValue(MSBuildConstants.IdKey), StringComparison.OrdinalIgnoreCase));
+                    // Special case MSBuild environments
+                    var m = Regex.Match(id, @"MSBuild\|(?<id>.+?)\|(?<moniker>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                    if (m.Success && m.Groups["id"].Success) {
+                        var subId = m.Groups["id"].Value;
+                        item = project.GetItems(MSBuildConstants.InterpreterItem)
+                            .FirstOrDefault(pi => subId.Equals(pi.GetMetadataValue(MSBuildConstants.IdKey), StringComparison.OrdinalIgnoreCase));
+                    }
                     if (item == null) {
-                        config = PythonRegistrySearch.PerformDefaultSearch().FirstOrDefault(pi => id.Equals(pi.Configuration.Id, StringComparison.OrdinalIgnoreCase))?.Configuration;
+                        config = PythonRegistrySearch.PerformDefaultSearch()
+                            .FirstOrDefault(pi => id.Equals(pi.Configuration.Id, StringComparison.OrdinalIgnoreCase))?.Configuration;
                     }
                 }
                 if (item != null) {
