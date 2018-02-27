@@ -1,18 +1,446 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project>
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
-  </PropertyGroup>
-  <Import Project="..\NetStandard.settings" />
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="..\ProjectBefore.settings" />
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform>AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.PythonTools.Analysis</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
+    <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <ItemGroup>
+    <Compile Include="AggregateProjectEntry.cs" />
+    <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="AnalysisLogWriter.cs" />
+    <Compile Include="Analyzer\ErrorMessages.cs" />
+    <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
+    <Compile Include="DocumentBuffer.cs" />
+    <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="Infrastructure\EnumerableExtensions.cs" />
+    <Compile Include="Infrastructure\ExceptionExtensions.cs" />
+    <Compile Include="Infrastructure\InstallPath.cs" />
+    <Compile Include="Infrastructure\ITestEnvironment.cs" />
+    <Compile Include="Infrastructure\PathEqualityComparer.cs" />
+    <Compile Include="Infrastructure\PathUtils.cs" />
+    <Compile Include="Infrastructure\ProcessHelper.cs" />
+    <Compile Include="Infrastructure\StringExtensions.cs" />
+    <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Infrastructure\TestEnvironment.cs" />
+    <Compile Include="Infrastructure\UriEqualityComparer.cs" />
+    <Compile Include="Intellisense\AnalysisPriority.cs" />
+    <Compile Include="Intellisense\AnalysisQueue.cs" />
+    <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
+    <Compile Include="Intellisense\AssignmentWalker.cs" />
+    <Compile Include="DocumentChange.cs" />
+    <Compile Include="Intellisense\ClassifierWalker.cs" />
+    <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
+    <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
+    <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
+    <Compile Include="Intellisense\ExtractMethodResult.cs" />
+    <Compile Include="Intellisense\FlowChecker.cs" />
+    <Compile Include="Intellisense\ImportedModuleNameWalker.cs" />
+    <Compile Include="Intellisense\ImportRemover.cs" />
+    <Compile Include="Intellisense\LineInfo.cs" />
+    <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Intellisense\LongestCommonSequence.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
+    <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
+    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
+    <Compile Include="Intellisense\SelectionTarget.cs" />
+    <Compile Include="Intellisense\TaggedSpan.cs" />
+    <Compile Include="Intellisense\VersionCookie.cs" />
+    <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
+    <Compile Include="LanguageServer\CallbackEventArgs.cs" />
+    <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
+    <Compile Include="LanguageServer\Enums.cs" />
+    <Compile Include="LanguageServer\Messages.cs" />
+    <Compile Include="LanguageServer\ParseQueue.cs" />
+    <Compile Include="LanguageServer\Server.cs" />
+    <Compile Include="LanguageServer\ServerBase.cs" />
+    <Compile Include="LanguageServer\Structures.cs" />
+    <Compile Include="LanguageServer\VolatileCounter.cs" />
+    <Compile Include="SmallSetWithExpiry.cs" />
+    <Compile Include="ICanExpire.cs" />
+    <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
+    <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
+    <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModuleMember.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBoundMethod.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonMultipleMembers.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonStringLiteral.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonSequence.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonType.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonFunctionOverload.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstTypeAnnotationConverter.cs" />
+    <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
+    <Compile Include="Interpreter\ICustomInterpreterSerialization.cs" />
+    <Compile Include="Interpreter\ILazyMember.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
+    <Compile Include="Interpreter\NoInterpretersException.cs" />
+    <Compile Include="Interpreter\SentinelModule.cs" />
+    <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
+    <Compile Include="Interpreter\InterpreterArchitecture.cs" />
+    <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
+    <Compile Include="Interpreter\PackageSpec.cs" />
+    <Compile Include="Interpreter\PackageVersion.cs" />
+    <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
+    <Compile Include="Parsing\Ast\ExpressionWithAnnotation.cs" />
+    <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
+    <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisHashSet.cs" />
+    <Compile Include="AnalysisLimits.cs" />
+    <Compile Include="AnalysisLog.cs" />
+    <Compile Include="AnalysisValue.cs" />
+    <Compile Include="AnalysisVariable.cs" />
+    <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
+    <Compile Include="Analyzer\ComprehensionScope.cs" />
+    <Compile Include="Analyzer\DependentKeyValue.cs" />
+    <Compile Include="Analyzer\IsInstanceScope.cs" />
+    <Compile Include="Analyzer\StatementScope.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="IAggregateableProjectEntry.cs" />
+    <Compile Include="Projects\IAnalysisExtension.cs" />
+    <Compile Include="Interpreter\IInterpreterLog.cs" />
+    <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InMemoryProject.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
+    <Compile Include="Interpreter\InterpreterUIMode.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
+    <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\LaunchConfiguration.cs" />
+    <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
+    <Compile Include="Interpreter\PythonLibraryPath.cs" />
+    <Compile Include="LockedEnumerable.cs" />
+    <Compile Include="ModulePath.cs" />
+    <Compile Include="Parsing\Ast\AwaitExpression.cs" />
+    <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingOptions.cs" />
+    <Compile Include="IdDispenser.cs" />
+    <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
+    <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
+    <Compile Include="Interpreter\ProjectReference.cs" />
+    <Compile Include="Interpreter\ProjectReferenceKind.cs" />
+    <Compile Include="ModuleTable.cs" />
+    <Compile Include="AnalysisSet.cs" />
+    <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
+    <Compile Include="ProjectEntryExtensions.cs" />
+    <Compile Include="Projects\AnalysisCompleteEventArgs.cs" />
+    <Compile Include="Projects\IPythonProjectProvider.cs" />
+    <Compile Include="Projects\ProjectAnalyzer.cs" />
+    <Compile Include="Projects\PythonProject.cs" />
+    <Compile Include="PythonAnalyzer.Specializations.cs" />
+    <Compile Include="PythonKeywords.cs" />
+    <Compile Include="QualifiedFunctionNameWalker.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ReadOnlyWrapper.cs" />
+    <Compile Include="ExportedMemberInfo.cs" />
+    <Compile Include="EmptyBuiltinModule.cs" />
+    <Compile Include="GetMemberOptions.cs" />
+    <Compile Include="ILocationResolver.cs" />
+    <Compile Include="Interpreter\ILocatedMember.cs" />
+    <Compile Include="Interpreter\IBuiltinPythonModule.cs" />
+    <Compile Include="Parsing\AsciiString.cs" />
+    <Compile Include="Parsing\Ast\DecoratorStatement.cs" />
+    <Compile Include="Parsing\Ast\ErrorStatement.cs" />
+    <Compile Include="Parsing\Ast\ErrorParameter.cs" />
+    <Compile Include="Parsing\Ast\NodeAttributes.cs" />
+    <Compile Include="Parsing\ParserOptions.cs" />
+    <Compile Include="Parsing\PartiallyReadStream.cs" />
+    <Compile Include="Parsing\PythonAsciiEncoding.cs" />
+    <Compile Include="Parsing\TokenizerOptions.cs" />
+    <Compile Include="SetOfOne.cs" />
+    <Compile Include="Deque.cs" />
+    <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
+    <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
+    <Compile Include="HashSetExtensions.cs" />
+    <Compile Include="IAnalysisCookie.cs" />
+    <Compile Include="IAnalysisVariable.cs" />
+    <Compile Include="Analyzer\ClassScope.cs" />
+    <Compile Include="Analyzer\DDG.cs" />
+    <Compile Include="Analyzer\ExpressionEvaluator.cs" />
+    <Compile Include="Analyzer\FunctionScope.cs" />
+    <Compile Include="Analyzer\InterpreterScope.cs" />
+    <Compile Include="Analyzer\ModuleScope.cs" />
+    <Compile Include="Analyzer\OverviewWalker.cs" />
+    <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\CoroutineInfo.cs" />
+    <Compile Include="Values\DictBuiltinClassInfo.cs" />
+    <Compile Include="Values\PartialFunctionInfo.cs" />
+    <Compile Include="Values\ProtocolInfo.cs" />
+    <Compile Include="Values\Protocols.cs" />
+    <Compile Include="Values\SpecializedInstanceInfo.cs" />
+    <Compile Include="Values\SyntheticDefinitionInfo.cs" />
+    <Compile Include="Values\SysModuleInfo.cs" />
+    <Compile Include="Values\TypingModuleInfo.cs" />
+    <Compile Include="Values\TypingTypeInfo.cs" />
+    <Compile Include="VariableDef.cs" />
+    <Compile Include="Interpreter\IAdvancedPythonType.cs" />
+    <Compile Include="Interpreter\IPythonFunction.cs" />
+    <Compile Include="Interpreter\IPythonFunctionOverload.cs" />
+    <Compile Include="Interpreter\IPythonMethodDescriptor.cs" />
+    <Compile Include="Interpreter\IBuiltinProperty.cs" />
+    <Compile Include="Interpreter\IMember.cs" />
+    <Compile Include="Interpreter\IMemberContainer.cs" />
+    <Compile Include="Interpreter\IModuleContext.cs" />
+    <Compile Include="Interpreter\InterpreterConfiguration.cs" />
+    <Compile Include="Interpreter\IParameterInfo.cs" />
+    <Compile Include="Interpreter\IPythonConstant.cs" />
+    <Compile Include="Interpreter\IPythonEvent.cs" />
+    <Compile Include="Interpreter\IPythonInterpreter.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\IPythonModule.cs" />
+    <Compile Include="Interpreter\IPythonType.cs" />
+    <Compile Include="Interpreter\PythonMemberType.cs" />
+    <Compile Include="IOverloadResult.cs" />
+    <Compile Include="KnownTypes.cs" />
+    <Compile Include="LocationInfo.cs" />
+    <Compile Include="MemberResult.cs" />
+    <Compile Include="ModuleAnalysis.cs" />
+    <Compile Include="ModuleReference.cs" />
+    <Compile Include="OverloadResult.cs" />
+    <Compile Include="ParameterResult.cs" />
+    <Compile Include="Parsing\Ast\Arg.cs" />
+    <Compile Include="Parsing\Ast\AssertStatement.cs" />
+    <Compile Include="Parsing\Ast\AssignmentStatement.cs" />
+    <Compile Include="Parsing\Ast\AugmentedAssignStatement.cs" />
+    <Compile Include="Parsing\Ast\BackQuoteExpression.cs" />
+    <Compile Include="Parsing\Ast\BinaryExpression.cs" />
+    <Compile Include="Parsing\Ast\BreakStatement.cs" />
+    <Compile Include="Parsing\Ast\CallExpression.cs" />
+    <Compile Include="Parsing\Ast\ClassDefinition.cs" />
+    <Compile Include="Parsing\Ast\Comprehension.cs" />
+    <Compile Include="Parsing\Ast\ComprehensionFor.cs" />
+    <Compile Include="Parsing\Ast\ComprehensionIf.cs" />
+    <Compile Include="Parsing\Ast\ConditionalExpression.cs" />
+    <Compile Include="Parsing\Ast\ConstantExpression.cs" />
+    <Compile Include="Parsing\Ast\ContinueStatement.cs" />
+    <Compile Include="Parsing\Ast\DelStatement.cs" />
+    <Compile Include="Parsing\Ast\DictionaryExpression.cs" />
+    <Compile Include="Parsing\Ast\DottedName.cs" />
+    <Compile Include="Parsing\Ast\EmptyStatement.cs" />
+    <Compile Include="Parsing\Ast\ErrorExpression.cs" />
+    <Compile Include="Parsing\Ast\ExecStatement.cs" />
+    <Compile Include="Parsing\Ast\Expression.cs" />
+    <Compile Include="Parsing\Ast\ExpressionStatement.cs" />
+    <Compile Include="Parsing\Ast\ForStatement.cs" />
+    <Compile Include="Parsing\Ast\FromImportStatement.cs" />
+    <Compile Include="Parsing\Ast\FunctionDefinition.cs" />
+    <Compile Include="Parsing\Ast\GeneratorExpression.cs" />
+    <Compile Include="Parsing\Ast\GlobalStatement.cs" />
+    <Compile Include="Parsing\Ast\IfStatement.cs" />
+    <Compile Include="Parsing\Ast\IfStatementTest.cs" />
+    <Compile Include="Parsing\Ast\ImportStatement.cs" />
+    <Compile Include="Parsing\Ast\IndexExpression.cs" />
+    <Compile Include="Parsing\Ast\LambdaExpression.cs" />
+    <Compile Include="Parsing\Ast\ListExpression.cs" />
+    <Compile Include="Parsing\Ast\MemberExpression.cs" />
+    <Compile Include="Parsing\Ast\ModuleName.cs" />
+    <Compile Include="Parsing\Ast\NameExpression.cs" />
+    <Compile Include="Parsing\Ast\Node.cs" />
+    <Compile Include="Parsing\Ast\NonlocalStatement.cs" />
+    <Compile Include="Parsing\Ast\OrExpression.cs" />
+    <Compile Include="Parsing\Ast\Parameter.cs" />
+    <Compile Include="Parsing\Ast\ParameterKind.cs" />
+    <Compile Include="Parsing\Ast\ParenthesisExpression.cs" />
+    <Compile Include="Parsing\Ast\PrintStatement.cs" />
+    <Compile Include="Parsing\Ast\PythonAst.cs" />
+    <Compile Include="Parsing\Ast\PythonNameBinder.cs" />
+    <Compile Include="Parsing\Ast\PythonOperator.cs" />
+    <Compile Include="Parsing\Ast\PythonReference.cs" />
+    <Compile Include="Parsing\Ast\PythonVariable.cs" />
+    <Compile Include="Parsing\Ast\PythonWalker.Generated.cs" />
+    <Compile Include="Parsing\Ast\RaiseStatement.cs" />
+    <Compile Include="Parsing\Ast\RelativeModuleName.cs" />
+    <Compile Include="Parsing\Ast\ReturnStatement.cs" />
+    <Compile Include="Parsing\Ast\ScopeStatement.cs" />
+    <Compile Include="Parsing\Ast\SequenceExpression.cs" />
+    <Compile Include="Parsing\Ast\SetExpression.cs" />
+    <Compile Include="Parsing\Ast\SliceExpression.cs" />
+    <Compile Include="Parsing\Ast\StarredExpression.cs" />
+    <Compile Include="Parsing\Ast\Statement.cs" />
+    <Compile Include="Parsing\Ast\SublistParameter.cs" />
+    <Compile Include="Parsing\Ast\SuiteStatement.cs" />
+    <Compile Include="Parsing\Ast\TryStatement.cs" />
+    <Compile Include="Parsing\Ast\TupleExpression.cs" />
+    <Compile Include="Parsing\Ast\UnaryExpression.cs" />
+    <Compile Include="Parsing\Ast\VariableKind.cs" />
+    <Compile Include="Parsing\Ast\WhileStatement.cs" />
+    <Compile Include="Parsing\Ast\WithStatement.cs" />
+    <Compile Include="Parsing\Ast\YieldExpression.cs" />
+    <Compile Include="Parsing\CollectingErrorSink.cs" />
+    <Compile Include="Parsing\ErrorCodes.cs" />
+    <Compile Include="Parsing\ErrorResult.cs" />
+    <Compile Include="Parsing\ErrorSink.cs" />
+    <Compile Include="Parsing\FutureOptions.cs" />
+    <Compile Include="Parsing\IndexSpan.cs" />
+    <Compile Include="Parsing\LiteralParser.cs" />
+    <Compile Include="Parsing\Parser.cs" />
+    <Compile Include="Parsing\PythonLanguageVersion.cs" />
+    <Compile Include="Parsing\ParseResult.cs" />
+    <Compile Include="SetOfTwo.cs" />
+    <Compile Include="SetOfOneEnumerator.cs" />
+    <Compile Include="Parsing\Severity.cs" />
+    <Compile Include="Parsing\SourceCodeKind.cs" />
+    <Compile Include="SourceSpan.cs" />
+    <Compile Include="Parsing\Token.cs" />
+    <Compile Include="Parsing\TokenCategory.cs" />
+    <Compile Include="Parsing\TokenInfo.cs" />
+    <Compile Include="Parsing\Tokenizer.cs" />
+    <Compile Include="Parsing\TokenKind.Generated.cs" />
+    <Compile Include="Parsing\TokenTriggers.cs" />
+    <Compile Include="ProjectEntry.cs" />
+    <Compile Include="PythonAnalyzer.cs" />
+    <Compile Include="EncodedLocation.cs" />
+    <Compile Include="AnalysisUnit.cs" />
+    <Compile Include="SourceLocation.cs" />
+    <Compile Include="Validation.cs" />
+    <Compile Include="Values\ArgumentSet.cs" />
+    <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
+    <Compile Include="Values\BuiltinClassInfo.cs" />
+    <Compile Include="Values\BuiltinEventInfo.cs" />
+    <Compile Include="Values\BuiltinFunctionInfo.cs" />
+    <Compile Include="Values\BuiltinInstanceInfo.cs" />
+    <Compile Include="Values\BuiltinMethodInfo.cs" />
+    <Compile Include="Values\BuiltinModule.cs" />
+    <Compile Include="Values\BuiltinNamespace.cs" />
+    <Compile Include="Values\CallChain.cs" />
+    <Compile Include="Values\MergeStrengths.cs" />
+    <Compile Include="Values\ObjectBuiltinClassInfo.cs" />
+    <Compile Include="Values\BuiltinPropertyInfo.cs" />
+    <Compile Include="Values\ClassInfo.cs" />
+    <Compile Include="Values\ConstantInfo.cs" />
+    <Compile Include="Values\SequenceBuiltinInstanceInfo.cs" />
+    <Compile Include="Values\IteratorInfo.cs" />
+    <Compile Include="Values\IterableInfo.cs" />
+    <Compile Include="Analyzer\DependencyInfo.cs" />
+    <Compile Include="Values\DictionaryInfo.cs" />
+    <Compile Include="Values\EnumInstanceInfo.cs" />
+    <Compile Include="Values\FunctionInfo.cs" />
+    <Compile Include="Values\GeneratorInfo.cs" />
+    <Compile Include="Values\IModule.cs" />
+    <Compile Include="Values\InstanceInfo.cs" />
+    <Compile Include="Analyzer\IReferenceable.cs" />
+    <Compile Include="Values\ListBuiltinClassInfo.cs" />
+    <Compile Include="Values\ListInfo.cs" />
+    <Compile Include="Values\MemberReferences.cs" />
+    <Compile Include="Values\BoundMethodInfo.cs" />
+    <Compile Include="Values\ModuleInfo.cs" />
+    <Compile Include="Values\MultipleMemberInfo.cs" />
+    <Compile Include="AnalysisValueSetExtensions.cs" />
+    <Compile Include="Values\NumericInstanceInfo.cs" />
+    <Compile Include="Values\RangeInfo.cs" />
+    <Compile Include="Values\ReflectedNamespace.cs" />
+    <Compile Include="Values\SequenceBuiltinClassInfo.cs" />
+    <Compile Include="Values\SequenceInfo.cs" />
+    <Compile Include="Values\SetInfo.cs" />
+    <Compile Include="Values\SliceInfo.cs" />
+    <Compile Include="Values\SpecializedCallable.cs" />
+    <Compile Include="Values\SpecializedNamespace.cs" />
+    <Compile Include="Values\SuperInfo.cs" />
+    <Compile Include="Values\TupleBuiltinClassInfo.cs" />
+    <Compile Include="Values\Utils.cs" />
+    <Compile Include="Parsing\Ellipsis.cs" />
+    <Compile Include="Parsing\Ast\AndExpression.cs" />
+    <Compile Include="Interpreter\BuiltinTypeId.cs" />
+    <Compile Include="VariablesResult.cs" />
+    <Compile Include="VariableType.cs" />
+    <Compile Include="XamlAnalysis.cs" />
+    <Compile Include="XamlProjectEntry.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="get_search_paths.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="regenerate.py" />
+    <Content Include="scrape_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
   <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <Python3DB Include="$(IntermediateOutputPath)DefaultDB\v3\*.pyi" />
