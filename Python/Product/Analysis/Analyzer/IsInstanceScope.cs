@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             var instTypes = types.GetInstanceType();
-            //PropagateIsInstanceTypes(node, unit, instTypes, res);
+            res.AddTypes(unit, instTypes);
 
             foreach (var scope in OuterScope.EnumerateTowardsGlobal) {
                 scope.TryPropagateVariable(node, unit, name, instTypes, res, addRef);
@@ -126,30 +126,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
             return res;
-        }
-
-        private void PropagateIsInstanceTypes(Node node, AnalysisUnit unit, IAnalysisSet typeSet, VariableDef variable) {
-            foreach (var typeObj in typeSet) {
-                ClassInfo classInfo;
-                BuiltinClassInfo builtinClassInfo;
-                SequenceInfo seqInfo;
-
-                if ((classInfo = typeObj as ClassInfo) != null) {
-                    variable.AddTypes(unit, classInfo.Instance);
-                } else if ((builtinClassInfo = typeObj as BuiltinClassInfo) != null) {
-                    variable.AddTypes(unit, builtinClassInfo.Instance);
-                } else if ((seqInfo = typeObj as SequenceInfo) != null) {
-                    if (seqInfo.Push()) {
-                        try {
-                            foreach (var indexVar in seqInfo.IndexTypes) {
-                                PropagateIsInstanceTypes(node, unit, indexVar.Types, variable);
-                            }
-                        } finally {
-                            seqInfo.Pop();
-                        }
-                    }
-                }
-            }
         }
 
         public override IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {

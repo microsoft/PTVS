@@ -271,8 +271,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 if (scope.Node == Node) {
-                    if (scope._parameters.TryGetValue(name, out res) ||
-                        scope.TryGetVariable(name, out res)) {
+                    if (scope._parameters.TryGetValue(name, out res)) {
+                        yield return res;
+                    }
+                    if (scope.TryGetVariable(name, out res)) {
                         yield return res;
                     }
                 }

@@ -564,26 +564,28 @@ a.fn(13, 14)
 x1, y1, _1 = a.top
 a.original()
 ";
+            for (int retries = 100; retries > 0; --retries) {
+                var entry = ProcessTextV2(code);
 
-            var entry = ProcessTextV2(code);
+                var expectedIntType1 = new[] { BuiltinTypeId.Int };
+                var expectedIntType2 = new[] { BuiltinTypeId.Int };
+                var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
+                var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
+                if (this is StdLibAnalysisTest) {
+                    expectedIntType1 = new BuiltinTypeId[0];
+                    expectedIntType2 = new BuiltinTypeId[0];
+                    expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
+                }
 
-            var expectedIntType1 = new[] { BuiltinTypeId.Int };
-            var expectedIntType2 = new[] { BuiltinTypeId.Int };
-            var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
-            var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
-            if (this is StdLibAnalysisTest) {
-                expectedIntType1 = new BuiltinTypeId[0];
-                expectedIntType2 = new BuiltinTypeId[0];
-                expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
+                entry.AssertIsInstance("x1", expectedIntType1);
+                entry.AssertIsInstance("y1", expectedIntType1);
+                entry.AssertIsInstance("_1", expectedTupleType1);
+                entry.AssertIsInstance("item", code.IndexOf("x, y, _"), expectedTupleType1);
+                entry.AssertIsInstance("x", code.IndexOf("x, y, _"), expectedIntType2);
+                entry.AssertIsInstance("y", code.IndexOf("x, y, _"), expectedIntType2);
+                entry.AssertIsInstance("_", code.IndexOf("x, y, _"), expectedTupleType2);
+                entry.AssertIsInstance("self.top", code.IndexOf("x, y, _"), expectedTupleType2);
             }
-
-            entry.AssertIsInstance("x1", expectedIntType1);
-            entry.AssertIsInstance("y1", expectedIntType1);
-            entry.AssertIsInstance("_1", expectedTupleType1);
-            entry.AssertIsInstance("x", code.IndexOf("x, y, _"), expectedIntType2);
-            entry.AssertIsInstance("y", code.IndexOf("x, y, _"), expectedIntType2);
-            entry.AssertIsInstance("_", code.IndexOf("x, y, _"), expectedTupleType2);
-            entry.AssertIsInstance("self.top", code.IndexOf("x, y, _"), expectedTupleType2);
         }
 
         [TestMethod, Priority(0)]
