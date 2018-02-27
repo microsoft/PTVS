@@ -14,15 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class ResolutionContext {
+        private ArgumentSet? _callArgs;
+
         public static readonly ResolutionContext Empty = new ResolutionContext();
+        public static readonly ResolutionContext Complete = new ResolutionContext { ResolveParametersFully = true };
 
         public FunctionInfo Caller { get; set; }
-        public ArgumentSet CallArgs { get; set; }
+        public ArgumentSet CallArgs {
+            get => _callArgs ?? LazyCallArgs?.Value ?? default(ArgumentSet);
+            set => _callArgs = value;
+        }
+        public Lazy<ArgumentSet> LazyCallArgs { get; set; }
         public Node CallSite { get; set; }
+        public bool ResolveParametersFully { get; set; }
     }
 }

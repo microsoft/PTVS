@@ -163,6 +163,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var func = new FunctionInfo(node, outerUnit, prevScope);
                 var unit = func.AnalysisUnit;
                 scope = unit.Scope;
+                (unit as FunctionAnalysisUnit)?.EnsureParameters();
 
                 prevScope.Children.Add(scope);
                 prevScope.AddNodeScope(node, scope);

@@ -272,7 +272,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, null, out _);
+        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, ResolutionContext.Complete, out _);
 
         internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context, out bool changed) {
             // The vast majority of the time, no values are resolved

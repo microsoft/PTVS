@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
                         if (!unit.ForEval) {
                             calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
+                            calledUnit.EnsureParameters();
                             calledUnit.Enqueue();
                         }
                     }
@@ -121,6 +122,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             calledUnit.UpdateParameters(callArgs);
             calledUnit.ReturnValue.AddDependency(callingUnit);
             return calledUnit.ReturnValue.Types;
+        }
+
+        internal void AddParameterReference(Node node, AnalysisUnit unit, string name) {
+            var vd = (_analysisUnit.Scope as FunctionScope)?.GetParameter(name);
+            vd?.AddReference(node, unit);
         }
 
         public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name) {
@@ -556,10 +562,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             varRef.AddTypes(unit, value, true, DeclaringModule);
 
             if (name == "__doc__") {
-                _doc = string.Join(Environment.NewLine, varRef.TypesNoCopy.OfType<ConstantInfo>()
+                var newDoc = varRef.TypesNoCopy.OfType<ConstantInfo>()
                     .Select(ci => (ci.Value as string) ?? (ci.Value as AsciiString)?.String)
                     .Where(s => !string.IsNullOrEmpty(s) && (_doc == null || !_doc.Contains(s)))
-                );
+                    .ToList();
+                if (newDoc.Any()) {
+                    if (!string.IsNullOrEmpty(_doc)) {
+                        newDoc.Insert(0, _doc);
+                    }
+                    _doc = string.Join(Environment.NewLine, newDoc);
+                }
             }
         }
 

@@ -266,6 +266,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return _variables.TryGetValue(name, out value) && _variables.Remove(name);
         }
 
+        internal virtual bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
+            if (!TryGetVariable(name, out var vd) || vd == ifNot) {
+                return false;
+            }
+            if (addRef) {
+                vd.AddReference(node, unit);
+            }
+            return vd.AddTypes(unit, values);
+        }
+
         internal virtual void ClearVariables() {
             _variables.Clear();
         }

@@ -30,20 +30,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IPythonProjectEntry DeclaringModule => _function.DeclaringModule;
         public override int DeclaringVersion => _function.DeclaringVersion;
 
-        public override IAnalysisSet Resolve(AnalysisUnit unit) {
-            if (Push()) {
-                try {
-                    return _function.ResolveParameter(unit, Name);
-                } finally {
-                    Pop();
-                }
-            }
-            return this;
-        }
-
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context == null) {
-                return Resolve(unit);
+            if (context.ResolveParametersFully) {
+                if (Push()) {
+                    try {
+                        return _function.ResolveParameter(unit, Name);
+                    } finally {
+                        Pop();
+                    }
+                }
+                return AnalysisSet.Empty;
             }
 
             if (_function == context.Caller && Push()) {
@@ -54,6 +50,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             return this;
+        }
+
+        internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
+            _function.AddParameterReference(node, analysisUnit, Name);
         }
 
         public override string ToString() => $"<arg {Name} in {_function.Name}>";

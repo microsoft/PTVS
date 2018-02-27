@@ -42,7 +42,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             GetIterator,
             GetEnumeratorTypes,
             Await,
-            GetYieldFromReturn
+            GetYieldFromReturn,
+            GetInstance
         }
 
         protected LazyValueInfo(Node node) {
@@ -87,22 +88,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _argNames = argNames;
         }
 
-        public override IAnalysisSet Resolve(AnalysisUnit unit) {
-            // Note that we call into the other Resolve() from here, but always pass a non-null context.
-            IAnalysisSet result;
-            if (_value is ParameterInfo pi) {
-                pi.Resolve(unit).Split(out IReadOnlyList<LazyValueInfo> _, out result);
-            } else {
-                Resolve(unit, ResolutionContext.Empty).Split(out IReadOnlyList<LazyValueInfo> _, out result);
-            }
-            return result;
+        internal static IAnalysisSet GetInstance(Node node, LazyValueInfo value) {
+            return new LazyValueInfo(node, value, null, LazyOperation.GetInstance);
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context == null) {
-                return Resolve(unit);
-            }
-
             if (!Push()) {
                 return AnalysisSet.Empty;
             }
@@ -142,6 +132,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return left.Value.GetIterator(_node, unit);
                 case LazyOperation.GetYieldFromReturn:
                     return left.Value.GetReturnForYieldFrom(_node, unit);
+                case LazyOperation.GetInstance:
+                    return left.Value.GetInstanceType();
                 default:
                     Debug.Fail($"Unhandled op {_lazyOp}");
                     return AnalysisSet.Empty;

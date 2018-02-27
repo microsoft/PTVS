@@ -225,8 +225,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context == null || context.CallSite == null) {
-                return Resolve(unit);
+            if (context.CallSite == null) {
+                return this;
             }
 
             if (Push()) {

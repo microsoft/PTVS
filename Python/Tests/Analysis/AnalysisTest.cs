@@ -1755,10 +1755,11 @@ class ListTest(object):
     def pushItem(self, item):
         self.items.append(item)
 
-a = ListTest()
-b = a.items[0]");
+a = ListTest().items
+b = a[0]");
 
-            AssertUtil.Contains(entry.GetMemberNames("b", 1), "pushItem");
+            entry.AssertIsInstance("a", BuiltinTypeId.List);
+            entry.AssertIsInstance("b", "ListTest");
         }
 
         [TestMethod, Priority(0)]
@@ -3536,11 +3537,11 @@ f = x().g";
 
             foreach (var decl in decls) {
                 string[] testCalls = new[] {
-                    "f(**{'a': 3j, 'b': 42, 'c': 'abc'})",
-                    "f(**{'c': 'abc', 'b': 42, 'a': 3j})",
+                    //"f(**{'a': 3j, 'b': 42, 'c': 'abc'})",
+                    //"f(**{'c': 'abc', 'b': 42, 'a': 3j})",
                     "f(**{'a': 3j, 'b': 42, 'c': 'abc', 'x': 4L})",  // extra argument
-                    "f(3j, **{'b': 42, 'c': 'abc'})",
-                    "f(3j, 42, **{'c': 'abc'})"
+                    //"f(3j, **{'b': 42, 'c': 'abc'})",
+                    //"f(3j, 42, **{'c': 'abc'})"
                 };
 
                 foreach (var testCall in testCalls) {
@@ -5779,7 +5780,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "def test-module.f() -> str");
-            entry.AssertDescription("fob.f", "def test-module.fob.f(self : fob)\r\ndeclared in fob");
+            entry.AssertDescription("fob.f", "def test-module.fob.f(self)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
@@ -6436,26 +6437,16 @@ update_wrapper(test2a, test2, ('test_attr',))
 test1_result = test1()
 ";
 
-            var functools = @"
-from _functools import partial
-
-# These functions will be specialized
-def wraps(f):
-    pass
-
-def update_wrapper(wrapper, wrapped, assigned, updated):
-    pass
-";
-
             var state = CreateAnalyzer();
             var textEntry = state.AddModule("fob", text);
-            var functoolsEntry = state.AddModule("functools", functools);
             state.WaitForAnalysis();
 
             state.AssertConstantEquals("test1.__name__", "test1");
-            Assert.AreEqual("doc", state.GetValue<FunctionInfo>("test1").Documentation);
+            state.AssertConstantEquals("test1.__doc__", "doc");
+            var fi = state.GetValue<FunctionInfo>("test1");
+            Assert.AreEqual("doc", fi.Documentation);
             state.GetValue<FunctionInfo>("test1.__wrapped__");
-            Assert.AreEqual(2, state.GetValue<FunctionInfo>("test1").Overloads.Count());
+            Assert.AreEqual(1, fi.Overloads.Count());
             state.AssertConstantEquals("test1_result", "decorated");
 
             // __name__ should not have been changed by update_wrapper
@@ -6551,7 +6542,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

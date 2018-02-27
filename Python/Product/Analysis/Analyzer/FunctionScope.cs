@@ -119,6 +119,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        internal void EnsureParameterZero(FunctionAnalysisUnit unit) {
+            var p = Function.FunctionDefinition.ParametersInternal.FirstOrDefault();
+            if (!string.IsNullOrEmpty(p?.Name) &&
+                p.Kind == ParameterKind.Normal &&
+                !unit.Function.IsStatic &&
+                unit.Scope.OuterScope is ClassScope cls &&
+                _parameters.TryGetValue(p.Name, out var v)
+            ) {
+                v.AddTypes(unit, unit.Function.IsClassMethod ?
+                    cls.Class.SelfSet :
+                    cls.Class.Instance.SelfSet,
+                    enqueue: false);
+            }
+        }
+
         private VariableDef AddParameter(AnalysisUnit unit, string name, Parameter node, VariableDef variableDef) {
             if (variableDef != null) {
                 return AddVariable(name, variableDef);
@@ -134,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {
             foreach (var name in names) {
                 VariableDef param;
-                if (name != null && TryGetVariable(name.Name, out param)) {
+                if (name != null && _parameters.TryGetValue(name.Name, out param)) {
                     param.AddReference(name, caller);
                 }
             }
@@ -203,14 +218,41 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
 
-        public FunctionInfo Function {
-            get {
-                return (FunctionInfo)AnalysisValue;
+        public FunctionInfo Function => (FunctionInfo)AnalysisValue;
+
+        public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
+            values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
+            if (nonLazy.Any()) {
+                var vd = GetParameter(name);
+                if (vd != null) {
+                    AssignVariableWorker(Node, unit, nonLazy, vd);
+                }
             }
+            return base.AssignVariable(name, location, unit, values);
+        }
+
+        internal override bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
+            values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
+            if (nonLazy.Any()) {
+                var vd = GetParameter(name);
+                if (vd != null) {
+                    vd.AddTypes(unit, nonLazy);
+                }
+            }
+            return base.TryPropagateVariable(node, unit, name, values, ifNot, addRef);
         }
 
         public override IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
-            return AllVariables;
+            var param = _parameters;
+            foreach (var kv in param) {
+                yield return kv;
+            }
+
+            foreach (var kv in AllVariables) {
+                if (!param.ContainsKey(kv.Key)) {
+                    yield return kv;
+                }
+            }
         }
 
         public override IEnumerable<VariableDef> GetMergedVariables(string name) {
@@ -228,8 +270,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     continue;
                 }
 
-                if (scope.Node == Node && scope.TryGetVariable(name, out res)) {
-                    yield return res;
+                if (scope.Node == Node) {
+                    if (scope._parameters.TryGetValue(name, out res) ||
+                        scope.TryGetVariable(name, out res)) {
+                        yield return res;
+                    }
                 }
 
                 foreach (var keyValue in scope.AllNodeScopes.Where(kv => nodes.Contains(kv.Key))) {

@@ -46,13 +46,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             AnalysisLog.NewUnit(this);
         }
 
-        internal FunctionAnalysisUnit(FunctionInfo function, AnalysisUnit declUnit) : base(function.FunctionDefinition, null)  {
-            _declUnit = declUnit;
-            Function = function;
-        }
-
         internal virtual void EnsureParameters() {
             ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: true);
+        }
+
+        internal virtual void EnsureParameterZero() {
+            ((FunctionScope)Scope).EnsureParameterZero(this);
         }
 
         internal virtual bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
@@ -68,14 +67,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            EnsureParameters();
-
             // Resolve default parameters and decorators in the outer scope but
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;
             AnalyzeDefaultParameters(ddg);
 
             var funcType = ProcessFunctionDecorators(ddg);
+            EnsureParameterZero();
 
             var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
 
@@ -145,32 +143,22 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            if (!Function.IsStatic && Ast.ParametersInternal.Length > 0) {
-                VariableDef param;
-                IAnalysisSet firstParam;
-                var clsScope = ddg.Scope as ClassScope;
-                if (clsScope == null) {
-                    firstParam = Function.IsClassMethod ? State.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
-                } else {
-                    firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
-                }
-
-                if (Scope.TryGetVariable(Ast.ParametersInternal[0].Name, out param)) {
-                    param.AddTypes(this, firstParam, false);
-                }
-            }
-
             return types;
         }
 
         internal void AnalyzeDefaultParameters(DDG ddg) {
             VariableDef param;
+            var scope = (FunctionScope)Scope;
             for (int i = 0; i < Ast.ParametersInternal.Length; ++i) {
                 var p = Ast.ParametersInternal[i];
                 if (p.Annotation != null) {
                     var val = ddg._eval.EvaluateAnnotation(p.Annotation);
                     if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
                         param.AddTypes(this, val, false);
+                        var vd = scope.GetParameter(p.Name);
+                        if (vd != null && vd != param) {
+                            vd.AddTypes(this, val, false);
+                        }
                     }
                 }
 
@@ -179,6 +167,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     var val = ddg._eval.Evaluate(p.DefaultValue);
                     if (val != null) {
                         param.AddTypes(this, val, false);
+                        var vd = scope.GetParameter(p.Name);
+                        if (vd != null && vd != param) {
+                            vd.AddTypes(this, val, false);
+                        }
                     }
                 }
             }

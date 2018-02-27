@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (!(newFunc is BuiltinFunctionInfo) && !(newFunc is SpecializedCallable)) {
                     anyCustom = true;
                 }
-                newResult = newResult.Union(newFunc.Call(node, unit, newArgs, keywordArgNames));
+                newResult = newResult.Union(newFunc.Call(node, unit, newArgs, keywordArgNames).Resolve(unit));
             }
 
             if (anyCustom) {

@@ -330,26 +330,15 @@ namespace Microsoft.PythonTools.Analysis {
         /// If required, returns the resolved version of this value. If there is nothing
         /// to resolve, returns <c>this</c>.
         /// </summary>
-        /// <remarks>
-        /// This should not call <see cref="Resolve(AnalysisUnit, ResolutionContext)"/>
-        /// passing <c>null</c> for context, as the default implementation of that case
-        /// calls this method.
-        /// </remarks>
-        public virtual IAnalysisSet Resolve(AnalysisUnit unit) {
-            return this;
+        public IAnalysisSet Resolve(AnalysisUnit unit) {
+            return Resolve(unit, ResolutionContext.Complete);
         }
 
         /// <summary>
         /// If required, returns the resolved version of this value given a specific context.
         /// </summary>
         /// <remarks>
-        /// If context is <c>null</c>, this should return the same value as calling
-        /// <see cref="Resolve(AnalysisUnit)"/>, and may do this by deferring to that implementation.
-        /// </remarks>
         internal virtual IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context == null) {
-                return Resolve(unit);
-            }
             return this;
         }
 
