@@ -1,0 +1,27 @@
+﻿<Project>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.VsCode</AssemblyName>
+  </PropertyGroup>
+  <Import Project="..\NetStandard.settings" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <ItemGroup>
+    <Compile Remove="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+    <PackageReference Include="CXuesong.JsonRpc.Standard" Version="0.3.1" />
+    <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.3.1" />
+    <PackageReference Include="CXuesong.LanguageServer.VsCode" Version="0.1.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Analysis\AnalysisNetStandard.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Core\Extensions\" />
+    <Folder Include="Server\" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="..\NetStandard.targets" />
+</Project>
