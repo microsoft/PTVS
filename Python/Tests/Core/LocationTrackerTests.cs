@@ -14,15 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities.Mocks;
 using Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -154,6 +156,39 @@ namespace PythonToolsTests {
             Assert.IsFalse(t.CanTranslateFrom(1), "Should not be able to translate from old version 1");
             Assert.IsTrue(t.CanTranslateFrom(5));
             Assert.IsFalse(t.CanTranslateFrom(6));
+        }
+
+        [TestMethod, Priority(0)]
+        public void BufferSync_Issue3570() {
+            // https://github.com/Microsoft/PTVS/issues/3570
+
+            var buffer = new MockTextBuffer("line");
+            var bi = PythonTextBufferInfo.ForBuffer(null, buffer);
+
+            bi.AddSentSnapshot(buffer.CurrentSnapshot);
+
+            Assert.AreEqual(new SourceLocation(1, 5), bi.LocationTracker.GetSourceLocation(4, 0));
+
+            using (var e = buffer.CreateEdit()) {
+                e.Insert(e.Snapshot.Length, "\r\n");
+                e.Apply();
+            }
+
+            using (var e = buffer.CreateEdit()) {
+                e.Insert(e.Snapshot.Length, "    c");
+                e.Apply();
+            }
+
+            using (var e = buffer.CreateEdit()) {
+                e.Insert(e.Snapshot.Length, "o");
+                e.Apply();
+            }
+
+            var updates = BufferParser.GetUpdatesForSnapshot(bi, buffer.CurrentSnapshot).ToArray();
+            var changeInfo = string.Join(", ", updates
+                .Select(u => string.Join(", ", u.changes.Select(c => $"({c.startLine},{c.startColumn},'{c.newText}')")))
+                .Select(u => $"[{u}]"));
+            Assert.AreEqual("[(1,5,'\r\n')], [(2,1,'    c')], [(2,6,'o')]", changeInfo);
         }
 
         void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true) {

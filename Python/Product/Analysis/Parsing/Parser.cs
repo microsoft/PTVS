@@ -213,12 +213,8 @@ namespace Microsoft.PythonTools.Parsing {
             if (_verbatim) {
                 AddExtraVerbatimText(ast, _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage);
             }
-            foreach (var keyValue in _attributes) {
-                foreach (var nodeAttr in keyValue.Value) {
-                    ast.SetAttribute(keyValue.Key, nodeAttr.Key, nodeAttr.Value);
-                }
-            }
 
+            ast.SetAttributes(_attributes);
             PythonNameBinder.BindAst(_langVersion, ast, _errors, _bindReferences);
 
             return ast;
@@ -293,7 +289,7 @@ namespace Microsoft.PythonTools.Parsing {
                 errorCode |= ErrorCodes.IncompleteStatement;
             }
 
-            string msg = String.Format(System.Globalization.CultureInfo.InvariantCulture, GetErrorMessage(t, errorCode), t.Image);
+            string msg = GetErrorMessage(t, errorCode);
 
             ReportSyntaxError(start, end, msg, errorCode);
         }
@@ -303,7 +299,7 @@ namespace Microsoft.PythonTools.Parsing {
             if ((errorCode & ~ErrorCodes.IncompleteMask) == ErrorCodes.IndentationError) {
                 msg = "expected an indented block";
             } else if (t.Kind != TokenKind.EndOfFile) {
-                msg = "unexpected token '{0}'";
+                msg = "unexpected token '{0}'".FormatUI(t.Image);
             } else {
                 msg = "unexpected EOF while parsing";
             }
@@ -337,7 +333,7 @@ namespace Microsoft.PythonTools.Parsing {
         #region LL(1) Parsing
 
         private static bool IsPrivateName(string name) {
-            return name.StartsWith("__") && !name.EndsWith("__");
+            return name.StartsWithOrdinal("__") && !name.EndsWithOrdinal("__");
         }
 
         private string FixName(string name) {
@@ -2040,8 +2036,10 @@ namespace Microsoft.PythonTools.Parsing {
                         NextToken();
                         var ne = new NameExpression(name.RealName);
                         ne.SetLoc(GetStart(), GetEnd());
-                        AddVerbatimName(name, ne);
-                        AddPreceedingWhiteSpace(ne);
+                        if (_verbatim) {
+                            AddVerbatimName(name, ne);
+                            AddPreceedingWhiteSpace(ne);
+                        }
                         p = new Parameter(ne, kind);
                     } else if (kind == ParameterKind.List) {
                         // bare lists are allowed
@@ -2052,7 +2050,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     p.SetLoc(start < 0 ? GetStart() : start, GetEnd());
 
-                    if (preStarWhitespace != null) {
+                    if (_verbatim && preStarWhitespace != null) {
                         AddPreceedingWhiteSpace(p, preStarWhitespace);
                     }
 
@@ -2120,7 +2118,7 @@ namespace Microsoft.PythonTools.Parsing {
                         continue;
                     }
                 } else if (!seenNames.Add(p.Name)) {
-                    ReportSyntaxError(p.StartIndex, p.EndIndex, $"duplicate argument '{p.Name}' in function definition");
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, "duplicate argument '{0}' in function definition".FormatUI(p.Name));
                 }
 
                 if (p.Kind == ParameterKind.List) {
@@ -2190,7 +2188,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (string.IsNullOrEmpty(ne.Name)) {
                         ReportSyntaxError(e.StartIndex, e.EndIndex, "invalid sublist parameter");
                     } else if (!seenNames.Add(ne.Name)) {
-                        ReportSyntaxError(e.StartIndex, e.EndIndex, $"duplicate argument '{ne.Name}' in function definition");
+                        ReportSyntaxError(e.StartIndex, e.EndIndex, "duplicate argument '{0}' in function definition".FormatUI(ne.Name));
                     }
                 } else {
                     ReportSyntaxError(e.StartIndex, e.EndIndex, "invalid sublist parameter");
@@ -3914,7 +3912,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (fes != null) {
                 fes.Body = nested;
             } else if ((ifs = current as IfStatement) != null) {
-                ifs.Tests[0].Body = nested;
+                ifs.TestsInternal[0].Body = nested;
             }
             return nested;
         }
@@ -4889,12 +4887,12 @@ namespace Microsoft.PythonTools.Parsing {
                 _parser = parser;
             }
 
-            public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
+            public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
                 if (_parser._errorCode == 0 && (severity == Severity.Error || severity == Severity.FatalError)) {
                     _parser._errorCode = errorCode;
                 }
 
-                _parser.ErrorSink.Add(message, lineLocations, startIndex, endIndex, errorCode, severity);
+                _parser.ErrorSink.Add(message, span, errorCode, severity);
             }
         }
 
@@ -5002,7 +5000,8 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if ((gotEncoding == null || gotEncoding == true) && isUtf8 && encodingName != "utf-8") {
                     // we have both a BOM & an encoding type, throw an error
-                    errors.Add("file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.",
+                    errors.Add(
+                        "file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.",
                         GetEncodingLineNumbers(readBytes),
                         encodingIndex,
                         encodingIndex + encodingName.Length,
@@ -5016,7 +5015,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (gotEncoding == null) {
                         // get line number information for the bytes we've read...
                         errors.Add(
-                            String.Format("encoding problem: unknown encoding (line {0})", lineNo),
+                            "encoding problem: unknown encoding (line {0})".FormatUI(lineNo),
                             GetEncodingLineNumbers(readBytes),
                             encodingIndex,
                             encodingIndex + encodingName.Length,
@@ -5134,7 +5133,7 @@ namespace Microsoft.PythonTools.Parsing {
                     // else we'll store as lower case w/ _                
                     switch (normalizedName) {
                         case "us_ascii":
-                            d["cp" + encs[i].CodePage.ToString()] = d[normalizedName] = d["us"] = d["ascii"] = d["646"] = d["us_ascii"] =
+                            d["cp{0}".FormatInvariant(encs[i].CodePage)] = d[normalizedName] = d["us"] = d["ascii"] = d["646"] = d["us_ascii"] =
                                 d["ansi_x3.4_1968"] = d["ansi_x3_4_1968"] = d["ansi_x3.4_1986"] = d["cp367"] = d["csascii"] = d["ibm367"] =
                                 d["iso646_us"] = d["iso_646.irv_1991"] = d["iso_ir_6"]
                                 = new AsciiEncodingInfoWrapper();
@@ -5222,9 +5221,9 @@ namespace Microsoft.PythonTools.Parsing {
                     // publish under normalized name (all lower cases, -s replaced with _s)
                     d[normalizedName] = encs[i];
                     // publish under Windows code page as well...                
-                    d["windows-" + encs[i].GetEncoding().WindowsCodePage.ToString()] = encs[i];
+                    d["windows-{0}".FormatInvariant(encs[i].GetEncoding().WindowsCodePage)] = encs[i];
                     // publish under code page number as well...
-                    d["cp" + encs[i].CodePage.ToString()] = d[encs[i].CodePage.ToString()] = encs[i];
+                    d["cp{0}".FormatInvariant(encs[i].CodePage)] = d["{0}".FormatInvariant(encs[i].CodePage)] = encs[i];
                 }
 
 #if DEBUG

@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -233,7 +234,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns true if the set contains no or only the object type
         /// </summary>
-        internal static bool IsObjectOrUnknown(this IAnalysisSet res) {
+        public static bool IsObjectOrUnknown(this IAnalysisSet res) {
             return res.Count == 0 || (res.Count == 1 && res.First().TypeId == BuiltinTypeId.Object);
         }
 
@@ -270,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return -1;
                 }
 
-                return x.CompareTo(y);
+                return string.Compare(x, y, StringComparison.CurrentCultureIgnoreCase);
             }
         }
 

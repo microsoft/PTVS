@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -26,7 +25,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+    sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly IPythonInterpreter _interpreter;
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
@@ -73,7 +72,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             PythonAst ast;
             var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
-                StubFile = fileName?.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase) ?? false,
+                StubFile = fileName.EndsWithOrdinal(".pyi", ignoreCase: true),
                 Verbatim = true
             });
             ast = parser.ParseFile();
@@ -101,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Documentation = ast.Documentation;
             FilePath = filePath;
             DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
-            Locations = new[] { new LocationInfo(filePath, 1, 1) };
+            Locations = new[] { new LocationInfo(filePath, DocumentUri, 1, 1) };
             _interpreter = interpreter;
 
             _properties = new Dictionary<object, object>();
@@ -113,7 +112,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _foundChildModules = true;
             }
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, DocumentUri, _members, true, true);
             ast.Walk(walker);
             walker.Complete();
         }

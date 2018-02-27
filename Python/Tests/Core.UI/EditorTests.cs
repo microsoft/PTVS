@@ -14,6 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
+extern alias pythontools;
+extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,10 +26,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
-using Microsoft.PythonTools;
+using analysis::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -37,7 +41,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.UI;
+using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
@@ -235,8 +239,11 @@ namespace PythonToolsUITests {
                 doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
                 ((UIElement)doc.TextView).Focus();
             }));
-
-            Keyboard.Type("f(");
+            doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
+            
+            Keyboard.Type("f");
+            System.Threading.Thread.Sleep(500);
+            Keyboard.Type("(");
 
             using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
                 var session = sh.Session;
@@ -277,6 +284,7 @@ namespace PythonToolsUITests {
                 doc.TextView.Caret.MoveTo(point);
                 ((UIElement)doc.TextView).Focus();
             }));
+            doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
 
             app.ExecuteCommand("Edit.ParameterInfo");
 
@@ -586,6 +594,8 @@ pass");
 
             var doc = app.GetDocument(item.Document.FullName);
             doc.InvokeTask(() => doc.WaitForAnalysisAtCaretAsync());
+            // A little extra time for things to load, because VS...
+            System.Threading.Thread.Sleep(500);
 
             Keyboard.Type(typedText);
 

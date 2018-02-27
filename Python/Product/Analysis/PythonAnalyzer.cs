@@ -30,6 +30,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
         private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
+        private readonly Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>> _diagnostics = new Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>>();
 
         /// <summary>
         /// Creates a new analyzer that is ready for use.
@@ -176,13 +178,16 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             try {
+                _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
+
                 await LoadKnownTypesAsync().ConfigureAwait(false);
 
                 _interpreter.Initialize(this);
 
                 foreach (var mod in _modulesByFilename.Values) {
                     mod.Clear();
+                    mod.EnsureModuleVariables(this);
                 }
             } finally {
                 _reloadLock.Release();
@@ -259,10 +264,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This method is thread safe.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="cookie"></param>
-        /// <returns></returns>
-        public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
+        internal IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
             var entry = new XamlProjectEntry(filePath);
 
             _xamlByFilename[filePath] = entry;
@@ -526,7 +528,7 @@ namespace Microsoft.PythonTools.Analysis {
                         null,
                         string.IsNullOrEmpty(value.MaybeSourceFile) ?
                             Enumerable.Empty<LocationInfo>() :
-                            new[] { new LocationInfo(value.MaybeSourceFile, 0, 0) }
+                            new[] { new LocationInfo(value.MaybeSourceFile, null, 0, 0) }
                     );
                 }
             }
@@ -626,7 +628,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             packageName = fullName.Remove(lastDot);
-            return String.Compare(fullName, lastDot + 1, name, 0, name.Length) == 0;
+            return String.Compare(fullName, lastDot + 1, name, 0, name.Length, StringComparison.Ordinal) == 0;
         }
 
         /// <summary>
@@ -715,29 +717,69 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        [Obsolete("Use ModulePath.FromFullPath() instead")]
-        public static string PathToModuleName(string path) {
-            return ModulePath.FromFullPath(path).ModuleName;
-        }
-
-        /// <summary>
-        /// Converts a given absolute path name to a fully qualified Python module name by walking the directory tree.
-        /// </summary>
-        /// <param name="path">Path to convert.</param>
-        /// <param name="fileExists">A function that is used to verify the existence of files (in particular, __init__.py)
-        /// in the tree. Its signature and semantics should match that of <see cref="File.Exists"/>.</param>
-        /// <returns>A fully qualified module name.</returns>
-        [Obsolete("Use ModulePath.FromFullPath() instead")]
-        public static string PathToModuleName(string path, Func<string, bool> fileExists) {
-            return ModulePath.FromFullPath(
-                path,
-                isPackage: dirName => fileExists(Path.Combine(dirName, "__init__.py"))
-            ).ModuleName;
-        }
-
         public AnalysisLimits Limits {
             get { return _limits; }
             set { _limits = value; }
+        }
+
+        public bool EnableDiagnostics { get; set; }
+
+        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, object code = null, string source = null) {
+            if (!EnableDiagnostics) {
+                return;
+            }
+
+            lock (_diagnostics) {
+                if (!_diagnostics.TryGetValue(unit.ProjectEntry, out var diags)) {
+                    _diagnostics[unit.ProjectEntry] = diags = new Dictionary<Node, LanguageServer.Diagnostic>();
+                }
+                diags[node] = new LanguageServer.Diagnostic {
+                    message = message,
+                    range = node.GetSpan(unit.ProjectEntry.Tree),
+                    severity = severity,
+                    code = code,
+                    source = source ?? "Python"
+                };
+            }
+        }
+
+        public IReadOnlyList<LanguageServer.Diagnostic> GetDiagnostics(IProjectEntry entry) {
+            lock (_diagnostics) {
+                if (_diagnostics.TryGetValue(entry, out var diags)) {
+                    return diags.OrderBy(kv => kv.Key.StartIndex).Select(kv => kv.Value).ToArray();
+                }
+            }
+            return Array.Empty<LanguageServer.Diagnostic>();
+        }
+
+        public IReadOnlyDictionary<IProjectEntry, IReadOnlyList<LanguageServer.Diagnostic>> GetAllDiagnostics() {
+            var res = new Dictionary<IProjectEntry, IReadOnlyList<LanguageServer.Diagnostic>>();
+            lock (_diagnostics) {
+                foreach (var kv in _diagnostics) {
+                    res[kv.Key] = kv.Value.OrderBy(d => d.Key.StartIndex).Select(d => d.Value).ToArray();
+                }
+            }
+            return res;
+        }
+
+        public void ClearDiagnostic(Node node, AnalysisUnit unit, object code = null) {
+            if (!EnableDiagnostics) {
+                return;
+            }
+
+            lock (_diagnostics) {
+                if (_diagnostics.TryGetValue(unit.ProjectEntry, out var diags) && diags.TryGetValue(node, out var d)) {
+                    if (code == null || d.code == code) {
+                        diags.Remove(node);
+                    }
+                }
+            }
+        }
+
+        public void ClearDiagnostics(IProjectEntry entry) {
+            lock (_diagnostics) {
+                _diagnostics.Remove(entry);
+            }
         }
 
         #endregion
@@ -963,7 +1005,7 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
             }
 
-            Debug.Fail($"unsupported constant type <{value.GetType().FullName}> value '{value}'");
+            Debug.Fail("unsupported constant type <{0}> value '{1}'".FormatInvariant(value.GetType().FullName, value));
             return Types[BuiltinTypeId.Object];
         }
 

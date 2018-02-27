@@ -128,18 +128,18 @@ dct : Union[Mapping, MappingView, MutableMapping] = ...
 dct_s_i : Mapping[str, int] = ...
 dct_s_i_a = dct_s_i['a']
 dct_s_i_keys = dct_s_i.keys()
-dct_s_i_key = next(dct_s_i_keys)
+dct_s_i_key = next(iter(dct_s_i_keys))
 dct_s_i_values = dct_s_i.values()
-dct_s_i_value = next(dct_s_i_values)
+dct_s_i_value = next(iter(dct_s_i_values))
 dct_s_i_items = dct_s_i.items()
-dct_s_i_item_1, dct_s_i_item_2 = next(dct_s_i_items)
+dct_s_i_item_1, dct_s_i_item_2 = next(iter(dct_s_i_items))
 
 dctv_s_i_keys : KeysView[str] = ...
-dctv_s_i_key = next(dctv_s_i_keys)
+dctv_s_i_key = next(iter(dctv_s_i_keys))
 dctv_s_i_values : ValuesView[int] = ...
-dctv_s_i_value = next(dctv_s_i_values)
+dctv_s_i_value = next(iter(dctv_s_i_values))
 dctv_s_i_items : ItemsView[str, int] = ...
-dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
+dctv_s_i_item_1, dctv_s_i_item_2 = next(iter(dctv_s_i_items))
 ");
             analyzer.WaitForAnalysis();
 
@@ -152,12 +152,16 @@ dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
             analyzer.AssertIsInstance("lst_i_0", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct", BuiltinTypeId.Dict);
             analyzer.AssertIsInstance("dct_s_i", BuiltinTypeId.Dict);
+            analyzer.AssertDescription("dct_s_i", "dict[str, int]");
             analyzer.AssertIsInstance("dct_s_i_a", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct_s_i_keys", BuiltinTypeId.DictKeys);
+            analyzer.AssertDescription("dct_s_i_keys", "dict_keys[str]");
             analyzer.AssertIsInstance("dct_s_i_key", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dct_s_i_values", BuiltinTypeId.DictValues);
+            analyzer.AssertDescription("dct_s_i_values", "dict_values[int]");
             analyzer.AssertIsInstance("dct_s_i_value", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct_s_i_items", BuiltinTypeId.DictItems);
+            analyzer.AssertDescription("dct_s_i_items", "dict_items[tuple[str, int]]");
             analyzer.AssertIsInstance("dct_s_i_item_1", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dct_s_i_item_2", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dctv_s_i_keys", BuiltinTypeId.DictKeys);
@@ -214,14 +218,51 @@ call_iis_i_ret = call_iis_i()
 
 n : NamedTuple = ...
 n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
+n2 : ""NamedTuple('n2', [('x', int), ['y', str]])"" = ...
+
+n1_x = n1.x
+n1_y = n1.y
+n2_x = n2.x
+n2_y = n2.y
+
+n1_0 = n1[0]
+n1_1 = n1[1]
+n2_0 = n2[0]
+n2_1 = n2[1]
+
+n1_m2 = n1[-2]
+n1_m1 = n1[-1]
+n2_m2 = n2[-2]
+n2_m1 = n2[-1]
+
+i = 0
+i = 1
+n1_i = n1[i]
+n2_i = n2[i]
 ");
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
-            analyzer.AssertDescription("n1", "n1(x, y)");
+            analyzer.AssertDescription("n1", "n1(x : int, y : str)");
+            analyzer.AssertDescription("n2", "n2(x : int, y : str)");
 
-            analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_y", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_0", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_0", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_1", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_m2", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1_m1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_m2", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n2_m1", BuiltinTypeId.Str);
+
+            analyzer.AssertIsInstance("n1_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
         }
 
         [TestMethod, Priority(0)]
@@ -247,9 +288,56 @@ n1 : MyNamedTuple = ...
             analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("sl", BuiltinTypeId.List);
             analyzer.AssertIsInstance("sl_0", BuiltinTypeId.Str);
-            analyzer.AssertDescription("n1", "MyNamedTuple(x)");
+            analyzer.AssertDescription("n1", "MyNamedTuple(x : int)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleNestedIndex() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+MyList = List[List[str]]
+
+l_l_s : MyList = ...
+l_s = l_l_s[0]
+s = l_s[0]
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("l_l_s", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("l_s", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("s", BuiltinTypeId.Str);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleGenerator() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+            var code = @"from typing import *
+
+gen : Generator[str, None, int] = ...
+
+def g():
+    x = yield from gen
+
+g_g = g()
+g_i = next(g_g)
+";
+            analyzer.AddModule("test-module", code);
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("g_g", BuiltinTypeId.Generator);
+            analyzer.AssertIsInstance("g_i", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("x", code.IndexOf("x ="), BuiltinTypeId.Int);
         }
     }
 }

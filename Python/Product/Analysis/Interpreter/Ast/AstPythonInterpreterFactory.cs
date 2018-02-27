@@ -28,14 +28,14 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
         private readonly string _databasePath, _searchPathCachePath;
         private readonly object _searchPathsLock = new object();
         private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed, _loggedBadDbPath;
-        private readonly bool _skipCache, _skipWriteToCache;
+        private readonly bool _skipCache, _useDefaultDatabase;
 
         private AnalysisLogWriter _log;
         // Available for tests to override
@@ -49,9 +49,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         const int LogRotationSize = 4096;
 #endif
 
-        public AstPythonInterpreterFactory(
+        public AstPythonInterpreterFactory(InterpreterConfiguration config, InterpreterFactoryCreationOptions options)
+            : this(config, options, string.IsNullOrEmpty(options?.DatabasePath)) { }
+
+        private AstPythonInterpreterFactory(
             InterpreterConfiguration config,
-            InterpreterFactoryCreationOptions options
+            InterpreterFactoryCreationOptions options,
+            bool useDefaultDatabase
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
             CreationOptions = options ?? new InterpreterFactoryCreationOptions();
@@ -62,17 +66,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             _databasePath = CreationOptions.DatabasePath;
-            if (!string.IsNullOrEmpty(_databasePath)) {
+            _useDefaultDatabase = useDefaultDatabase;
+            if (_useDefaultDatabase) {
+                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
+                } else {
+                    _skipCache = true;
+                }
+            } else {
                 _searchPathCachePath = Path.Combine(_databasePath, "database.path");
 
                 _log = new AnalysisLogWriter(Path.Combine(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
-            } else {
-                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
-                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
-                    _skipWriteToCache = true;
-                }
             }
             _skipCache = !CreationOptions.UseExistingCache;
         }
@@ -104,11 +110,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             typeName = GetType().FullName;
             properties = CreationOptions.ToDictionary();
             Configuration.WriteToDictionary(properties);
+            if (_useDefaultDatabase) {
+                properties["UseDefaultDatabase"] = true;
+            }
             return true;
         }
 
         internal AstPythonInterpreterFactory(Dictionary<string, object> properties) :
-            this(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
+            this(
+                InterpreterConfiguration.FromDictionary(properties),
+                InterpreterFactoryCreationOptions.FromDictionary(properties),
+                properties.ContainsKey("UseDefaultDatabase")
+            ) { }
 
         public InterpreterConfiguration Configuration { get; }
 
@@ -125,15 +138,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (File.Exists(_searchPathCachePath)) {
-                for (int retries = 5; retries > 0; --retries) {
-                    try {
-                        File.Delete(_searchPathCachePath);
-                        break;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                    }
-                    Thread.Sleep(10);
-                }
+                PathUtils.DeleteFile(_searchPathCachePath);
             }
 
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
@@ -146,11 +151,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal string FastRelativePath(string fullPath) {
-            if (!fullPath.StartsWith(Configuration.PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+            if (!fullPath.StartsWithOrdinal(Configuration.PrefixPath, ignoreCase: true)) {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWith("\\")) {
+            if (p.StartsWithOrdinal("\\")) {
                 return p.Substring(1);
             }
             return p;
@@ -206,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var file = PathUtils.OpenWithRetry(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            if (file == null || _skipWriteToCache) {
+            if (file == null || _useDefaultDatabase) {
                 return file;
             }
 
@@ -234,7 +239,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal void WriteCachedModule(string filePath, Stream code) {
-            if (_skipWriteToCache) {
+            if (_useDefaultDatabase) {
                 return;
             }
 
@@ -269,7 +274,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return spp;
             }
 
-            var sp = await GetSearchPathsAsync();
+            var sp = await GetSearchPathsAsync().ConfigureAwait(false);
             if (sp == null) {
                 return null;
             }
@@ -342,6 +347,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Array.Empty<string>();
             }
 
+            Log(TraceLevel.Info, "GetCurrentSearchPaths", Configuration.InterpreterPath, _searchPathCachePath);
             try {
                 var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
                 return paths.MaybeEnumerate().Select(p => p.Path).ToArray();
@@ -384,7 +390,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mp;
         }
 
-        public static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
+        internal static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
             try {
                 var apif = factory as AstPythonInterpreterFactory;
                 if (apif != null) {

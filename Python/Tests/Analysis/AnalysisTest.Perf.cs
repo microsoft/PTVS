@@ -265,7 +265,10 @@ import System
                 var ast = nodes[i];
 
                 if (ast != null) {
-                    modules[i].UpdateTree(ast, null);
+                    using (var p = modules[i].BeginParse()) {
+                        p.Tree = ast;
+                        p.Complete();
+                    }
                 }
             }
 
@@ -322,7 +325,7 @@ import System
 
         private static void CollectFiles(string dir, List<string> files, ISet<string> excludeDirectories = null) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (file.EndsWithOrdinal(".py", ignoreCase: true)) {
                     files.Add(file);
                 }
             }

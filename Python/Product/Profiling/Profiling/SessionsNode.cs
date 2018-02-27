@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal SessionNode AddTarget(ProfilingTarget target, string filename, bool save) {
-            Debug.Assert(filename.EndsWith(".pyperf"));
+            Debug.Assert(filename.EndsWithOrdinal(".pyperf", ignoreCase: true));
 
             // ensure a unique name
             string newBaseName = Path.GetFileNameWithoutExtension(filename);

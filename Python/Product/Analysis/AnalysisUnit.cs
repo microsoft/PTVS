@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns the project entry which this analysis unit analyzes.
         /// </summary>
-        public IPythonProjectEntry Project {
+        public IPythonProjectEntry Entry {
             get {
                 return ProjectEntry;
             }
@@ -115,7 +116,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return DeclaringModule.ProjectEntry; }
         }
 
-        public PythonAnalyzer ProjectState {
+        public PythonAnalyzer State {
             get { return DeclaringModule.ProjectEntry.ProjectState; }
         }
 
@@ -125,8 +126,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal void Enqueue() {
             if (!ForEval && !IsInQueue) {
-                ProjectState.Queue.Append(this);
-                AnalysisLog.Enqueue(ProjectState.Queue, this);
+                State.Queue.Append(this);
+                AnalysisLog.Enqueue(State.Queue, this);
                 this.IsInQueue = true;
             }
         }
@@ -198,13 +199,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override string ToString() {
-            return String.Format(
-                "<{3}: Name={0} ({1}), NodeType={2}>",
-                FullName,
-                GetHashCode(),
-                Ast != null ? Ast.GetType().Name : "<unknown>",
-                GetType().Name
-            );
+            return "{0}: Name={1} ({2}), NodeType={3}".FormatInvariant(
+                GetType().Name, FullName, GetHashCode(), Ast?.GetType().Name ?? "<unknown>");
         }
 
         /// <summary>
@@ -343,7 +339,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return ProjectState.BuiltinModule.GetMember(node, this, name);
+            return State.BuiltinModule.GetMember(node, this, name);
         }
 
         public LocationInfo ResolveLocation(object location) {
@@ -356,7 +352,7 @@ namespace Microsoft.PythonTools.Analysis {
                 span = node.GetSpan(Tree);
             }
 
-            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
+            return new LocationInfo(ProjectEntry.FilePath, Entry.DocumentUri, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }
 
         internal virtual ILocationResolver AlternateResolver => null;
@@ -391,15 +387,15 @@ namespace Microsoft.PythonTools.Analysis {
             var classInfo = ((ClassScope)scope).Class;
             var bases = new List<IAnalysisSet>();
 
-            if (Ast.Bases.Count == 0) {
+            if (Ast.BasesInternal.Length == 0) {
                 if (ddg.ProjectState.LanguageVersion.Is3x()) {
                     // 3.x all classes inherit from object by default
                     bases.Add(ddg.ProjectState.ClassInfos[BuiltinTypeId.Object]);
                 }
             } else {
                 // Process base classes
-                for (int i = 0; i < Ast.Bases.Count; i++) {
-                    var baseClassArg = Ast.Bases[i];
+                for (int i = 0; i < Ast.BasesInternal.Length; i++) {
+                    var baseClassArg = Ast.BasesInternal[i];
 
                     if (baseClassArg.Name == null) {
                         bases.Add(EvaluateBaseClass(ddg, classInfo, i, baseClassArg.Expression));
@@ -476,7 +472,7 @@ namespace Microsoft.PythonTools.Analysis {
             : base(node, parent,
                 new ComprehensionScope(
                     new GeneratorInfo(
-                        outerUnit.ProjectState,
+                        outerUnit.State,
                         outerUnit.ProjectEntry
                     ),
                     node,
@@ -498,7 +494,7 @@ namespace Microsoft.PythonTools.Analysis {
     class SetComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public SetComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-            new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node, outerUnit.ProjectEntry), node, outerScope),
+            new ComprehensionScope(new SetInfo(outerUnit.State, node, outerUnit.ProjectEntry), node, outerScope),
             outerUnit) { }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
@@ -534,7 +530,7 @@ namespace Microsoft.PythonTools.Analysis {
             new ComprehensionScope(
                 new ListInfo(
                     VariableDef.EmptyArray,
-                    outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    outerUnit.State.ClassInfos[BuiltinTypeId.List],
                     node,
                     outerUnit.ProjectEntry
                 ), node, outerScope),

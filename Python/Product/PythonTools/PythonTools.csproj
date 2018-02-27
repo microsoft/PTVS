@@ -59,6 +59,11 @@
       <Name>Microsoft.PythonTools.Debugger</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
+    <ProjectReference Include="..\Debugger.Concord\Debugger.Concord.csproj">
+      <Project>{515F701E-336D-4D58-AF4B-E976BC33C957}</Project>
+      <Name>Microsoft.PythonTools.Debugger.Concord</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>
@@ -253,6 +258,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ProvideFeatureFlagAttribute.cs" />
     <Compile Include="ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
@@ -268,15 +274,15 @@
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttrributes.cs" />
     <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
+    <Compile Include="PythonTools\Editor\IVsFeatureFlags.cs" />
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
     <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Editor\TokenizerExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisEntryService.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAtPoint.cs" />
@@ -580,7 +586,6 @@
     </Compile>
     <Compile Include="PythonTools\Editor\AutoIndent.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
-    <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />

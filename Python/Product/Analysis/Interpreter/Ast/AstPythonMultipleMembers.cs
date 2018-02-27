@@ -70,10 +70,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public void AddMember(IMember member) {
             if (member == this) {
                 return;
-            } else if (member is IPythonMultipleMembers mm) {
+            }
+
+            if (member is IPythonMultipleMembers mm) {
                 AddMembers(mm.Members);
                 return;
             }
+
             var old = _members;
             if (!old.Contains(member)) {
                 _members = old.Concat(Enumerable.Repeat(member, 1)).ToArray();

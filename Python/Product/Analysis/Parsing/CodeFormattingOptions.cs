@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         public string NewLineFormat { get; set; }
 
-        internal static CodeFormattingOptions Traditional = new CodeFormattingOptions {
+        public static CodeFormattingOptions Traditional { get; } = new CodeFormattingOptions {
             SpaceAfterComma = true,
             SpaceAfterDot = false,
             SpaceAroundAnnotationArrow = true,
@@ -62,7 +63,7 @@ namespace Microsoft.PythonTools.Parsing {
             SpacesWithinParenthesisExpression = false,
             SpaceWithinCallParens = false,
             SpaceWithinClassDeclarationParens = false,
-            SpaceWithinEmptyBaseClassList =false,
+            SpaceWithinEmptyBaseClassList = false,
             SpaceWithinEmptyCallArgumentList = false,
             SpaceWithinEmptyParameterList = false,
             SpaceWithinEmptyTupleExpression = false,
@@ -369,7 +370,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int lineCount = lines.Length;
-            if (text.EndsWith("\r") || text.EndsWith("\n")) {
+            if (text.EndsWithOrdinal("\r") || text.EndsWithOrdinal("\n")) {
                 // split will give us an extra entry, but there's not really an extra line
                 lineCount = lines.Length - 1;
             }

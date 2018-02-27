@@ -1,4 +1,4 @@
-﻿// Visual Studio Shared Project
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -20,32 +20,20 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-#if NTVS_FEATURE_INTERACTIVEWINDOW
-using Microsoft.NodejsTools.Repl;
-#elif DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities.Mocks;
 
 namespace TestUtilities.Python {
-#if !NTVS_FEATURE_INTERACTIVEWINDOW && DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-    using IReplWindow = IInteractiveWindow;
-#endif
-
-    public class MockReplWindow : IReplWindow {
+    public class MockReplWindow : IInteractiveWindow {
         private readonly StringBuilder _output = new StringBuilder();
         private readonly StringBuilder _error = new StringBuilder();
-        private readonly IReplEvaluator _eval;
+        private readonly IInteractiveEvaluator _eval;
         private readonly MockTextView _view;
         private readonly string _contentType;
 
-#if DEV14_OR_LATER
         private PropertyCollection _properties;
 
         public event EventHandler<SubmissionBufferAddedEventArgs> SubmissionBufferAdded {
@@ -54,9 +42,8 @@ namespace TestUtilities.Python {
             remove {
             }
         }
-#endif
 
-        public MockReplWindow(IReplEvaluator eval, string contentType = "Python") {
+        public MockReplWindow(IInteractiveEvaluator eval, string contentType = "Python") {
             _eval = eval;
             _contentType = contentType;
             _view = new MockTextView(new MockTextBuffer(String.Empty, contentType, filename: "text"));
@@ -84,7 +71,7 @@ namespace TestUtilities.Python {
             }
         }
 
-        #region IReplWindow Members
+        #region IInteractiveWindow Members
 
         public IWpfTextView TextView {
             get { return _view; }
@@ -94,7 +81,7 @@ namespace TestUtilities.Python {
             get { return _view.TextBuffer; }
         }
 
-        public IReplEvaluator Evaluator {
+        public IInteractiveEvaluator Evaluator {
             get { return _eval; }
         }
 
@@ -102,7 +89,6 @@ namespace TestUtilities.Python {
             get { return "Mock Repl Window"; }
         }
 
-#if DEV14_OR_LATER
         public ITextBuffer OutputBuffer {
             get {
                 return _view.TextBuffer;
@@ -153,7 +139,6 @@ namespace TestUtilities.Python {
                 return _properties;
             }
         }
-#endif
 
         public void ClearScreen() {
             _output.Clear();
@@ -176,21 +161,9 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-#if !DEV14_OR_LATER
-        public void Submit(IEnumerable<string> inputs) {
-            throw new NotImplementedException();
-        }
-#endif
-
         public System.Threading.Tasks.Task<ExecutionResult> Reset() {
             return _eval.Reset();
         }
-
-#if !DEV14_OR_LATER
-        public void AbortCommand() {
-            _eval.AbortCommand();
-        }
-#endif
 
         public Task<ExecutionResult> ExecuteCommand(string command) {
             var tcs = new TaskCompletionSource<ExecutionResult>();
@@ -262,26 +235,10 @@ namespace TestUtilities.Python {
             _error.Append(value);
         }
 
-#if DEV14_OR_LATER
         public TextReader ReadStandardInput() {
             throw new NotImplementedException();
         }
-#else
-        public string ReadStandardInput() {
-            throw new NotImplementedException();
-        }
-#endif
 
-#if !DEV14_OR_LATER || NTVS_FEATURE_INTERACTIVEWINDOW
-        public void SetOptionValue(ReplOptions option, object value) {
-        }
-
-        public object GetOptionValue(ReplOptions option) {
-            return null;
-        }
-#endif
-
-#if DEV14_OR_LATER
         public Task<ExecutionResult> InitializeAsync() {
             throw new NotImplementedException();
         }
@@ -290,19 +247,19 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-        Span IReplWindow.WriteLine(string text) {
+        Span IInteractiveWindow.WriteLine(string text) {
             var start = _output.Length;
             _output.AppendLine(text);
             return new Span(start, _output.Length - start);
         }
 
-        Span IReplWindow.WriteError(string text) {
+        Span IInteractiveWindow.WriteError(string text) {
             var start = _error.Length;
             _error.Append(text);
             return new Span(start, _error.Length - start);
         }
 
-        Span IReplWindow.WriteErrorLine(string text) {
+        Span IInteractiveWindow.WriteErrorLine(string text) {
             var start = _error.Length;
             _error.AppendLine(text);
             return new Span(start, _error.Length - start);
@@ -333,7 +290,6 @@ namespace TestUtilities.Python {
         public void Dispose() {
             throw new NotImplementedException();
         }
-#endif
 
         public event Action ReadyForInput {
             add { }
@@ -344,23 +300,17 @@ namespace TestUtilities.Python {
     }
 
     public static class ReplEvalExtensions {
-#if DEV14_OR_LATER
-        public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
+        public static Task<ExecutionResult> _Initialize(this IInteractiveEvaluator self, IInteractiveWindow window) {
             self.CurrentWindow = window;
             return self.InitializeAsync();
         }
 
-        public static Task<ExecutionResult> ExecuteText(this IReplEvaluator self, string text) {
+        public static Task<ExecutionResult> ExecuteText(this IInteractiveEvaluator self, string text) {
             return self.ExecuteCodeAsync(text);
         }
 
-        public static Task<ExecutionResult> Reset(this IReplEvaluator self) {
+        public static Task<ExecutionResult> Reset(this IInteractiveEvaluator self) {
             return self.ResetAsync();
         }
-#else
-        public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
-            return self.Initialize(window);
-        }
-#endif
     }
 }

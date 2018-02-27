@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -22,19 +23,17 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Represents information about an analyzed expression.  This is returned from 
     /// AnalyzeExpression which is defined as an extension method in <see cref="Microsoft.PythonTools.Intellisense.PythonAnalysisExtensions"/>
     /// </summary>
-    public sealed class ExpressionAnalysis {
+    sealed class ExpressionAnalysis {
         private readonly string _expr;
         private readonly ITrackingSpan _span;
         private readonly AnalysisVariable[] _variables;
         private readonly string _privatePrefix;
-        private readonly string _memberName;
 
-        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix, string memberName) {
+        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix) {
             _span = span;
             _expr = text;
             _variables = variables;
             _privatePrefix = privatePrefix;
-            _memberName = memberName;
         }
 
         /// <summary>
@@ -62,11 +61,5 @@ namespace Microsoft.PythonTools.Intellisense {
         /// when inside of a class where names could be mangled.
         /// </summary>
         public string PrivatePrefix => _privatePrefix;
-
-        /// <summary>
-        /// If the expression is a member name (e.g. hello.world, or hello.good.world)
-        /// this gets the name of the member such as "hello".
-        /// </summary>
-        public string MemberName => _memberName;
     }
 }

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -107,7 +108,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public PythonAnalyzer ProjectState {
-            get { return _unit.ProjectState; }
+            get { return _unit.State; }
         }
 
         public override bool Walk(PythonAst node) {
@@ -165,9 +166,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var left in node.Left) {
                 if (left is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null) {
                     var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
-                    var annoInst = annoType?.GetInstanceType();
-                    if (annoInst?.Any() == true) {
-                        _eval.AssignTo(node, annoExpr.Expression, annoInst);
+                    if (annoType?.Any() == true) {
+                        _eval.AssignTo(node, annoExpr.Expression, annoType);
                     }
                 }
 
@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(ClassDefinition node) {
             // Evaluate decorators for references
             // TODO: Should apply decorators when assigning the class
-            foreach (var d in (node.Decorators?.Decorators).MaybeEnumerate()) {
+            foreach (var d in (node.Decorators?.DecoratorsInternal).MaybeEnumerate()) {
                 _eval.Evaluate(d);
             }
 
@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         userMod.Imported(_unit);
 
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
-                            if (!varName.StartsWith("_")) {
+                            if (!varName.StartsWithOrdinal("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
@@ -379,7 +379,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(IfStatement node) {
-            foreach (var test in node.Tests) {
+            foreach (var test in node.TestsInternal) {
                 _eval.Evaluate(test.Test);
 
                 var prevScope = Scope;

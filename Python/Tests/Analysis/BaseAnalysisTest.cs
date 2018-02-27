@@ -65,6 +65,7 @@ namespace AnalysisTests {
         public PythonAnalysis CreateAnalyzer(IPythonInterpreterFactory factory = null, bool allowParseErrors = false) {
             var analysis = CreateAnalyzerInternal(factory ?? DefaultFactoryV2);
             analysis.AssertOnParseErrors = !allowParseErrors;
+            analysis.Analyzer.EnableDiagnostics = true;
             analysis.ModuleContext = DefaultContext;
             analysis.SetLimits(GetLimits());
 
@@ -78,14 +79,14 @@ namespace AnalysisTests {
 
         public PythonAnalysis ProcessTextV2(string text, bool allowParseErrors = false) {
             var analysis = CreateAnalyzer(DefaultFactoryV2, allowParseErrors);
-            var t = analysis.AddModule("test-module", text).WaitForCurrentTree();
+            analysis.AddModule("test-module", text).WaitForCurrentParse();
             analysis.WaitForAnalysis();
             return analysis;
         }
 
         public PythonAnalysis ProcessTextV3(string text, bool allowParseErrors = false) {
             var analysis = CreateAnalyzer(DefaultFactoryV3, allowParseErrors);
-            analysis.AddModule("test-module", text).WaitForCurrentTree();
+            analysis.AddModule("test-module", text).WaitForCurrentParse();
             analysis.WaitForAnalysis();
             return analysis;
         }
@@ -101,7 +102,7 @@ namespace AnalysisTests {
             }
 
             var analysis = CreateAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()), allowParseErrors);
-            analysis.AddModule("test-module", text).WaitForCurrentTree();
+            analysis.AddModule("test-module", text).WaitForCurrentParse();
             analysis.WaitForAnalysis();
             return analysis;
         }

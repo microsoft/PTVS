@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
@@ -40,6 +41,9 @@ namespace Microsoft.PythonTools {
             this._start = start;
             this._end = end;
         }
+
+        public SourceSpan(int startLine, int startColumn, int endLine, int endColumn)
+            : this(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn)) { }
 
         private static void ValidateLocations(SourceLocation start, SourceLocation end) {
             if (start.IsValid && end.IsValid) {
@@ -122,7 +126,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal string ToDebugString() {
-            return String.Format(CultureInfo.CurrentCulture, "{0}-{1}", _start.ToDebugString(), _end.ToDebugString());
+            return "{0}-{1}".FormatInvariant(_start.ToDebugString(), _end.ToDebugString());
         }
     }
 }

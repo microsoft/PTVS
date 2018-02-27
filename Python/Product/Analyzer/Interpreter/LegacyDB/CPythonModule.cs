@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 EnsureLoaded();
 
                 Debug.Assert(_loadState == LoadState.Loaded);
-                yield return new LocationInfo(FilePath, 1, 1);
+                yield return new LocationInfo(FilePath, DocumentUri, 1, 1);
             }
         }
 

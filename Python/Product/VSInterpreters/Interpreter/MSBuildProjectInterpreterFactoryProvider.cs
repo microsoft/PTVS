@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [InterpreterFactoryId(MSBuildProviderName)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    public sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+    sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly IServiceProvider _site;
         private readonly Dictionary<string, ProjectInfo> _projects = new Dictionary<string, ProjectInfo>();
         private readonly Lazy<IInterpreterLog>[] _loggers;
@@ -185,7 +185,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var projContext = context as MSBuild.Project;
             if (projContext == null) {
                 var projectFile = context as string;
-                if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                if (projectFile != null && projectFile.EndsWithOrdinal(".pyproj", ignoreCase: true)) {
                     projContext = new MSBuild.Project(projectFile);
                 }
             }
@@ -435,16 +435,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 factories[info.Config.Id] = existing;
             } else {
                 factories[info.Config.Id] = info;
-            }
-        }
-
-        private static ProcessorArchitecture ParseArchitecture(string value) {
-            if (string.IsNullOrEmpty(value)) {
-                return ProcessorArchitecture.None;
-            } else if (value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
-                return ProcessorArchitecture.Amd64;
-            } else {
-                return ProcessorArchitecture.X86;
             }
         }
 

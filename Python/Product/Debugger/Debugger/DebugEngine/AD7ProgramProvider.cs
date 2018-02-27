@@ -16,7 +16,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 

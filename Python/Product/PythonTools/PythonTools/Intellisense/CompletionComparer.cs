@@ -17,13 +17,14 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Compares various types of completions.
     /// </summary>
-    public class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
+    class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the end of the list.
@@ -53,16 +54,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (_sortUnderscoresLast) {
-                bool xUnder = xName.StartsWith("__") && xName.EndsWith("__");
-                bool yUnder = yName.StartsWith("__") && yName.EndsWith("__");
+                bool xUnder = xName.StartsWithOrdinal("__") && xName.EndsWithOrdinal("__");
+                bool yUnder = yName.StartsWithOrdinal("__") && yName.EndsWithOrdinal("__");
 
                 if (xUnder != yUnder) {
                     // The one that starts with an underscore comes later
                     return xUnder ? 1 : -1;
                 }
 
-                bool xSingleUnder = xName.StartsWith("_");
-                bool ySingleUnder = yName.StartsWith("_");
+                bool xSingleUnder = xName.StartsWithOrdinal("_");
+                bool ySingleUnder = yName.StartsWithOrdinal("_");
                 if (xSingleUnder != ySingleUnder) {
                     // The one that starts with an underscore comes later
                     return xSingleUnder ? 1 : -1;

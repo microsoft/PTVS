@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -125,12 +125,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
-                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, analysis, classValue)) {
+                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, entry.DocumentUri, analysis, classValue)) {
                     var name = $"{classValue.Name}.{member.Key}";
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
-                        .GetVariablesByIndex(name, 0)
+                        .GetVariables(name, SourceLocation.MinValue)
                         .FirstOrDefault(v => v.Type == VariableType.Definition);
 
                     var location = definition?.Location ?? member.Value;
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return false;
             }
             var mod = cls.DeclaringModule.Name;
-            return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
+            return (mod == "unittest" || mod.StartsWithOrdinal("unittest.")) && cls.Name == "TestCase";
         }
         /// <summary>
         /// Get Test Case Members for a class.  If the class has 'test*' tests 
@@ -185,15 +185,16 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static IEnumerable<KeyValuePair<string, LocationInfo>> GetTestCaseMembers(
             PythonAst ast,
             string sourceFile,
+            Uri documentUri,
             ModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
 
             IEnumerable<KeyValuePair<string, LocationInfo>> tests = null, runTest = null;
             if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
-                var walker = new TestMethodWalker(ast, sourceFile, classValue.Locations);
+                var walker = new TestMethodWalker(ast, sourceFile, documentUri, classValue.Locations);
                 ast.Walk(walker);
-                tests = walker.Methods.Where(v => v.Key.StartsWith("test"));
+                tests = walker.Methods.Where(v => v.Key.StartsWithOrdinal("test"));
                 runTest = walker.Methods.Where(v => v.Key.Equals("runTest"));
             }
 
@@ -201,7 +202,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method))
                 .Select(v => new KeyValuePair<string, LocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
 
-            var analysisTests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var analysisTests = methodFunctions.Where(v => v.Key.StartsWithOrdinal("test"));
             var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
 
             tests = tests?.Concat(analysisTests) ?? analysisTests;
@@ -215,8 +216,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
-            return analysis.GetAllAvailableMembersByIndex(0, GetMemberOptions.ExcludeBuiltins)
-                .SelectMany(m => analysis.GetValuesByIndex(m.Name, 0))
+            return analysis.GetAllAvailableMembers(SourceLocation.MinValue, GetMemberOptions.ExcludeBuiltins)
+                .SelectMany(m => analysis.GetValues(m.Name, SourceLocation.MinValue))
                 .Where(v => v.MemberType == PythonMemberType.Class)
                 .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
         }
@@ -227,7 +228,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (cls != null) {
                     foreach (var baseCls in cls.Mro.MaybeEnumerate()) {
                         if (baseCls.Name == "TestCase" ||
-                            baseCls.Name.StartsWith("unittest.") && baseCls.Name.EndsWith(".TestCase")) {
+                            baseCls.Name.StartsWithOrdinal("unittest.") && baseCls.Name.EndsWithOrdinal(".TestCase")) {
                             yield return cls;
                         }
                     }
@@ -240,7 +241,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 .OfType<IPythonFunction>()
                 .ToArray();
 
-            var tests = methodFunctions.Where(v => v.Name.StartsWith("test"));
+            var tests = methodFunctions.Where(v => v.Name.StartsWithOrdinal("test"));
             var runTest = methodFunctions.Where(v => v.Name.Equals("runTest"));
 
             if (tests.Any()) {

@@ -32,7 +32,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    public static class DebugLaunchHelper {
+    static class DebugLaunchHelper {
         private static readonly Regex SubstitutionPattern = new Regex(@"\%([\w_]+)\%");
 
         private static IEnumerable<string> GetGlobalDebuggerOptions(
@@ -269,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
     }
 
-    public sealed class DebugTargetInfo : IDisposable {
+    sealed class DebugTargetInfo : IDisposable {
         private readonly IServiceProvider _provider;
         public VsDebugTargetInfo Info;
 
@@ -280,7 +280,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static string UnquotePath(string p) {
-            if (string.IsNullOrEmpty(p) || !p.StartsWith("\"") || !p.EndsWith("\"")) {
+            if (string.IsNullOrEmpty(p) || !p.StartsWithOrdinal("\"") || !p.EndsWithOrdinal("\"")) {
                 return p;
             }
             return p.Substring(1, p.Length - 2);

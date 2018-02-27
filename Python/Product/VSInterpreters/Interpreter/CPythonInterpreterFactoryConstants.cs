@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// This class used by Microsoft.PythonTools.dll to register the
     /// interpreters.
     /// </summary>
-    public static class CPythonInterpreterFactoryConstants {
+    static class CPythonInterpreterFactoryConstants {
         public const string ConsoleExecutable = "python.exe";
         public const string WindowsExecutable = "pythonw.exe";
         public const string LibrarySubPath = "lib";

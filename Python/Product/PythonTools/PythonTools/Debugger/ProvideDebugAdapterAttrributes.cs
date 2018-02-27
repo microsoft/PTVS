@@ -67,6 +67,14 @@ namespace Microsoft.VisualStudioTools {
             engineKey.SetValue("AdapterLauncher", _adapterLauncherCLSID);
 
             /*
+             * Modules request on attach behavior(optional)
+             * If a debug adapter supports the "modules" request, the Debug Adapter Host will issue a request to get
+             * the list of modules on attach.  Some debug adapters automatically send a set of "module" events on
+             * attach and don't need the "modules" request, so it can be disabled by setting this property to "1".
+             */
+            engineKey.SetValue("SuppressModulesRequestOnAttach", 1);
+
+            /*
              * Set to "1" if the debug adapter will use the VS "Exception Setting" tool window.  The debug adapter's must
              * support one of the following:
              *     -Exception Breakpoints
@@ -79,6 +87,10 @@ namespace Microsoft.VisualStudioTools {
              *         and "SupportsExceptionDetailsRequest" flags, and ExceptionCategoryMapping information must be supplied.
              */
             engineKey.SetValue("Exceptions", 1);
+            engineKey.SetValue("ExceptionBreakpointCategory", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}");
+
+            var exceptionMapping = engineKey.CreateSubkey("ExceptionCategoryMappings");
+            exceptionMapping.SetValue("Python Exceptions", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}");
 
             /*
              * Set to "1" if the debug adapter supports the VS exception conditions experience(For skipping exceptions in specific modules).

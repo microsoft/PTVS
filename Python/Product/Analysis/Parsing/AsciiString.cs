@@ -14,31 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Parsing {
     public sealed class AsciiString {
-        private readonly byte[] _bytes;
-        private string _str;
-
         public AsciiString(byte[] bytes, string str) {
-            _bytes = bytes;
-            _str = str;
+            Bytes = bytes;
+            String = str;
         }
 
-        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays",
-            Justification = "breaking change")]
-        public byte[] Bytes {
-            get {
-                return _bytes;
-            }
-        }
+        public IReadOnlyList<byte> Bytes { get; }
 
-        public string String {
-            get {
-                return _str;
-            }
-        }
+        public string String { get; }
 
         public override string ToString() {
             return String;
@@ -47,13 +34,13 @@ namespace Microsoft.PythonTools.Parsing {
         public override bool Equals(object obj) {
             AsciiString other = obj as AsciiString;
             if (other != null) {
-                return _str == other._str;
+                return String == other.String;
             }
             return false;
         }
 
         public override int GetHashCode() {
-            return _str.GetHashCode();
+            return String.GetHashCode();
         }
     }
 }

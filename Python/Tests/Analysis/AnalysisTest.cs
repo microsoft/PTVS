@@ -26,8 +26,8 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -37,6 +37,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CancellationTokens = Microsoft.PythonTools.Infrastructure.CancellationTokens;
 
 namespace AnalysisTests {
     [TestClass]
@@ -1275,9 +1276,10 @@ def f():
     yield 1
     yield 2
     yield 3
+    return 3.14
 
 def g():
-    yield from f()
+    x = yield from f()
 
 a = g()
 a2 = iter(a)
@@ -1292,6 +1294,7 @@ for c in g():
             entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
             entry.AssertIsInstance("b", BuiltinTypeId.Int);
             entry.AssertIsInstance("c", BuiltinTypeId.Int);
+            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
 
             text = @"
 def f(x):
@@ -2697,6 +2700,8 @@ def f(abc):
                 new VariableLocation(16, 14, VariableType.Reference),
 
                 new VariableLocation(18, 12, VariableType.Reference),
+                new VariableLocation(19, 21, VariableType.Reference),
+                new VariableLocation(20, 28, VariableType.Reference),
 
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
@@ -2840,11 +2845,11 @@ k = 2
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("a", text.IndexOf("a["),
-                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(2, 7, VariableType.Definition),
                 new VariableLocation(3, 9, VariableType.Reference)
             );
             entry.AssertReferences("k", text.IndexOf("k["),
-                new VariableLocation(2, 13, VariableType.Definition),
+                new VariableLocation(2, 11, VariableType.Definition),
                 new VariableLocation(4, 9, VariableType.Reference)
             );
             entry.AssertReferences("a", text.IndexOf("#out"),
@@ -2951,7 +2956,9 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 7, VariableType.Value),         // possible value
                                                                         //new VariableLocation(1, 7, VariableType.Value),
                                                                         // appears twice for two modules, but cannot test that
+                new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
+                new VariableLocation(2, 25, VariableType.Reference),    // as
                 new VariableLocation(4, 1, VariableType.Reference)      // call
             );
         }
@@ -3572,10 +3579,10 @@ class C(object):
 ";
             var entry = ProcessTextV2(text);
 
-            var fifty = entry.GetNamesNoBuiltins(text.IndexOf("abc.fob"));
+            var fifty = entry.GetNamesNoBuiltins(text.IndexOf("abc.fob"), includeDunder: false);
             AssertUtil.ContainsExactly(fifty, "C", "D", "a", "abc", "self", "x");
 
-            var three = entry.GetNamesNoBuiltins(text.IndexOf("def oar") + 1);
+            var three = entry.GetNamesNoBuiltins(text.IndexOf("def oar") + 1, includeDunder: false);
             AssertUtil.ContainsExactly(three, "C", "D", "oar");
 
             entry.AssertHasAttr("abc", text.IndexOf("abc.fob"), "baz", "fob");
@@ -3683,7 +3690,7 @@ a = x()
 x.abc()
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(), "a", "x");
+            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(includeDunder: false), "a", "x");
             entry.AssertHasAttr("x", "abc");
             entry.AssertHasAttr("x", entry.ObjectMembers);
         }
@@ -4033,7 +4040,7 @@ for i in range(5):
 import sys
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(), "sys");
+            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(includeDunder: false), "sys");
             entry.AssertHasAttr("sys", "winver");
         }
 
@@ -4044,7 +4051,7 @@ def f():
     import sys
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(text.IndexOf("sys")), "sys", "f");
+            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(text.IndexOf("sys"), includeDunder: false), "sys", "f");
             entry.AssertHasAttr("sys", text.IndexOf("sys"), "winver");
         }
 
@@ -4055,7 +4062,7 @@ class C:
     import sys
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(text.IndexOf("sys")), "sys", "C");
+            AssertUtil.ContainsExactly(entry.GetNamesNoBuiltins(text.IndexOf("sys"), includeDunder: false), "sys", "C");
             entry.AssertHasAttr("sys", text.IndexOf("sys"), "winver");
         }
 
@@ -4300,7 +4307,10 @@ x = 42
 ";
 
             PermutedTest("mod", new[] { text1, text2 }, state => {
-                state.AssertHasAttrExact(state.Modules["mod1"], "mod2", 0, "x");
+                AssertUtil.ContainsExactly(
+                    state.GetMemberNames(state.Modules["mod1"], "mod2", 0).Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__")),
+                    "x"
+                );
             });
         }
 
@@ -4712,7 +4722,10 @@ min(a, D())
                     var ast = nodes[i];
 
                     if (ast != null) {
-                        modules[i].UpdateTree(ast, null);
+                        using (var p = modules[i].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
                 }
 
@@ -4740,7 +4753,10 @@ min(a, D())
                     using (var reader = new FileStreamReader(modules[index].FilePath)) {
                         var ast = Parser.CreateParser(reader, projectState.LanguageVersion).ParseFile();
 
-                        modules[index].UpdateTree(ast, null);
+                        using (var p = modules[index].BeginParse()) {
+                            p.Tree = ast;
+                            p.Complete();
+                        }
                     }
 
                     modules[index].Analyze(CancellationToken.None, true);
@@ -6760,6 +6776,26 @@ def h(x): return g(x)";
         }
 
         [TestMethod, Priority(0)]
+        public void DefaultModuleAttributes() {
+            var entry3 = ProcessTextV3("x = 1");
+            AssertUtil.ContainsExactly(entry3.GetNamesNoBuiltins(), "__builtins__", "__file__", "__name__", "__package__", "__cached__", "__spec__", "x");
+            var package = entry3.AddModule("package", "", Path.Combine(TestData.GetTempPath("package"), "__init__.py"));
+            AssertUtil.ContainsExactly(entry3.GetNamesNoBuiltins(package), "__path__", "__builtins__", "__file__", "__name__", "__package__", "__cached__", "__spec__");
+
+            entry3.AssertIsInstance("__file__", BuiltinTypeId.Unicode);
+            entry3.AssertIsInstance("__name__", BuiltinTypeId.Unicode);
+            entry3.AssertIsInstance("__package__", BuiltinTypeId.Unicode);
+            entry3.AssertIsInstance(package, "__path__", BuiltinTypeId.List);
+
+            var entry2 = ProcessTextV2("x = 1");
+            AssertUtil.ContainsExactly(entry2.GetNamesNoBuiltins(), "__builtins__", "__file__", "__name__", "__package__", "x");
+
+            entry2.AssertIsInstance("__file__", BuiltinTypeId.Bytes);
+            entry2.AssertIsInstance("__name__", BuiltinTypeId.Bytes);
+            entry2.AssertIsInstance("__package__", BuiltinTypeId.Bytes);
+        }
+
+        [TestMethod, Priority(0)]
         public void CrossModuleBaseClasses() {
             var analyzer = CreateAnalyzer();
             var entryA = analyzer.AddModule("A", @"class ClsA(object): pass");
@@ -6774,6 +6810,83 @@ x = ClsB.x");
             entryA.Analyze(CancellationToken.None, true);
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void UndefinedVariableDiagnostic() {
+            PythonAnalysis entry;
+            string code;
+
+
+            code = @"a = b + c
+class D(b): pass
+d()
+D()
+(e for e in e if e)
+{f for f in f if f}
+[g for g in g if g]
+
+def func(b, c):
+    b, c, d     # b, c are defined here
+b, c, d         # but they are undefined here
+";
+            entry = ProcessTextV3(code);
+            entry.AssertDiagnostics(
+                "used-before-assignment:unknown variable 'b':(1, 5) - (1, 6)",
+                "used-before-assignment:unknown variable 'c':(1, 9) - (1, 10)",
+                "used-before-assignment:unknown variable 'b':(2, 9) - (2, 10)",
+                "used-before-assignment:unknown variable 'd':(3, 1) - (3, 2)",
+                "used-before-assignment:unknown variable 'e':(5, 13) - (5, 14)",
+                "used-before-assignment:unknown variable 'f':(6, 13) - (6, 14)",
+                "used-before-assignment:unknown variable 'g':(7, 13) - (7, 14)",
+                "used-before-assignment:unknown variable 'd':(10, 11) - (10, 12)",
+                "used-before-assignment:unknown variable 'b':(11, 1) - (11, 2)",
+                "used-before-assignment:unknown variable 'c':(11, 4) - (11, 5)",
+                "used-before-assignment:unknown variable 'd':(11, 7) - (11, 8)"
+            );
+
+            // Ensure all of these cases correctly generate no warning
+            code = @"
+for x in []:
+    (_ for _ in x)
+    [_ for _ in x]
+    {_ for _ in x}
+    {_ : _ for _ in x}
+
+import sys
+from sys import not_a_real_name_but_no_warning_anyway
+
+def f(v = sys.version, u = not_a_real_name_but_no_warning_anyway):
+    pass
+
+with f() as v2:
+    pass
+
+";
+            entry = ProcessTextV3(code);
+            entry.AssertDiagnostics();
+        }
+
+        [TestMethod, Priority(0)]
+        public void UncallableObjectDiagnostic() {
+            var code = @"class MyClass:
+    pass
+
+class MyCallableClass:
+    def __call__(self): return 123
+
+mc = MyClass()
+mcc = MyCallableClass()
+
+x = mc()
+y = mcc()
+";
+            var entry = ProcessTextV3(code);
+            entry.AssertIsInstance("x");
+            entry.AssertIsInstance("y", BuiltinTypeId.Int);
+            entry.AssertDiagnostics(
+                "not-callable:'MyClass' may not be callable:(10, 5) - (10, 7)"
+            );
         }
 
         #endregion
@@ -6912,6 +7025,5 @@ x = ClsB.x");
         public static IEnumerable<MemberResult> GetMemberByIndex(this ModuleAnalysis entry, string variable, string memberName, int index) {
             return entry.GetMembersByIndex(variable, index).Where(m => m.Name == memberName);
         }
-
     }
 }

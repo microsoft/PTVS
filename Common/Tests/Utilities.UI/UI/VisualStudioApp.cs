@@ -235,6 +235,23 @@ namespace TestUtilities.UI {
             }
         }
 
+        public void WaitForCommandAvailable(string commandName, TimeSpan timeout) {
+            WaitForCommandAvailable(Dte.Commands.Item(commandName), timeout);
+        }
+
+        public void WaitForCommandAvailable(Command cmd, TimeSpan timeout) {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            while (stopWatch.Elapsed < timeout) {
+                if (cmd.IsAvailable) {
+                    return;
+                }
+                System.Threading.Thread.Sleep(250);
+            }
+
+            Assert.Fail($"Command {cmd.Name} failed to become available in specified timeout");
+        }
+
         /// <summary>
         /// Opens and activates the Navigate To window.
         /// </summary>

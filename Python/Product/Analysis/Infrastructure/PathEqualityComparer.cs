@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 return allowFullMatch;
             }
 
-            return x.StartsWith(prefix + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+            return x.StartsWithOrdinal(prefix + Path.DirectorySeparatorChar);
         }
 
         public bool Equals(string x, string y) {

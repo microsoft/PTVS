@@ -42,7 +42,7 @@ using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
 
-    internal sealed class IntellisenseController : IIntellisenseController, IOleCommandTarget {
+    internal sealed class IntellisenseController : IIntellisenseController, IOleCommandTarget, IPythonTextBufferInfoEventSink {
         private readonly PythonEditorServices _services;
         private readonly ITextView _textView;
         private readonly IntellisenseControllerProvider _provider;
@@ -153,10 +153,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static object _intellisenseAnalysisEntry = new object();
 
-        public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            ConnectSubjectBufferAsync(subjectBuffer)
-                .HandleAllExceptions(_services.Site, GetType())
-                .DoNotWait();
+        public async void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
+            var buffer = _services.GetBufferInfo(subjectBuffer);
+            for (int retries = 5; retries > 0; --retries) {
+                try {
+                    await ConnectSubjectBufferAsync(buffer);
+                    return;
+                } catch (InvalidOperationException) {
+                    // Analysis entry changed, so we should retry
+                }
+            }
+            Debug.Fail("Failed to connect subject buffer after multiple retries");
         }
 
         private static async Task<AnalysisEntry> AnalyzeBufferAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
@@ -184,23 +191,28 @@ namespace Microsoft.PythonTools.Intellisense {
             return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
         }
 
-        private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
-            var bi = _services.GetBufferInfo(subjectBuffer);
-            var entry = bi.AnalysisEntry;
+        private async Task ConnectSubjectBufferAsync(PythonTextBufferInfo buffer) {
+            buffer.AddSink(GetType(), this);
+            // Cannot analyze buffers without a URI
+            if (buffer.DocumentUri == null) {
+                return;
+            }
+
+            var entry = buffer.AnalysisEntry;
 
             if (entry == null) {
                 for (int retries = 3; retries > 0 && entry == null; --retries) {
                     // Likely in the process of changing analyzer, so we'll delay slightly and retry.
                     await Task.Delay(100);
-                    entry = await AnalyzeBufferAsync(_textView, bi);
+                    entry = await AnalyzeBufferAsync(_textView, buffer);
                 }
 
                 if (entry == null) {
-                    Debug.Fail($"Failed to analyze {bi.DocumentUri}");
+                    Debug.Fail($"Failed to analyze {buffer.DocumentUri}");
                     return;
                 }
 
-                entry = bi.TrySetAnalysisEntry(entry, null);
+                entry = buffer.TrySetAnalysisEntry(entry, null);
 
                 if (entry == null) {
                     Debug.Fail("Analysis entry should never be null here");
@@ -209,22 +221,42 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var parser = entry.GetOrCreateBufferParser(_services);
-            try {
-                parser.AddBuffer(subjectBuffer);
-            } catch (InvalidOperationException ex) {
-                // Should not fail here due to missing analysis entry
-                // But if we do, it probably means someone else owns
-                // the buffer now and we should quietly let them.
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                return;
+
+            // This may raise InvalidOperationException if we have raced with
+            // an analyzer being closed. Our caller will retry in this case.
+            parser.AddBuffer(buffer.Buffer);
+
+            await parser.EnsureCodeSyncedAsync(buffer.Buffer);
+
+            // AnalysisEntry will be cleared automatically if the analyzer closes
+            if (buffer.AnalysisEntry == null) {
+                throw new InvalidOperationException("Analyzer was closed");
             }
-            await parser.EnsureCodeSyncedAsync(subjectBuffer);
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
+            bi?.RemoveSink(GetType());
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
+
+        public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.AnalyzerExpired) {
+                // Analysis entry has been cleared. Allow a short pause before
+                // trying to create a new one.
+                await Task.Delay(500);
+                if (sender.AnalysisEntry == null) {
+                    for (int retries = 3; retries > 0; --retries) {
+                        try {
+                            await ConnectSubjectBufferAsync(sender);
+                            break;
+                        } catch (InvalidOperationException) {
+                        }
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Detaches the events
@@ -464,9 +496,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(FunctionDefinition node) {
                 CommitByDefault = true;
-                if (node.Parameters != null) {
+                if (node.ParametersInternal != null) {
                     CanComplete = false;
-                    foreach (var p in node.Parameters) {
+                    foreach (var p in node.ParametersInternal) {
                         p.Walk(this);
                     }
                 }

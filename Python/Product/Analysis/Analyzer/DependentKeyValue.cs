@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public bool AddTypes(AnalysisUnit unit, IEnumerable<AnalysisValue> keyTypes, IEnumerable<AnalysisValue> valueTypes, bool enqueue = true) {
-            return AddTypes(unit.ProjectEntry, unit.ProjectState, keyTypes, valueTypes, enqueue);
+            return AddTypes(unit.ProjectEntry, unit.State, keyTypes, valueTypes, enqueue);
         }
 
         public bool AddTypes(IProjectEntry projectEntry, PythonAnalyzer projectState, IEnumerable<AnalysisValue> keyTypes, IEnumerable<AnalysisValue> valueTypes, bool enqueue = true) {

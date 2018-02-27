@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -76,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                            (lhsType == BuiltinTypeId.Int || lhsType == BuiltinTypeId.Long)) {
                     if (rhsType == BuiltinTypeId.Str || rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Unicode ||
                         rhsType == BuiltinTypeId.Tuple || rhsType == BuiltinTypeId.List) {
-                        res = res.Union(unit.ProjectState.ClassInfos[rhsType].Instance);
+                        res = res.Union(unit.State.ClassInfos[rhsType].Instance);
                         continue;
                     }
                 }
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 // These specializations change rhsType before type promotion
                 // rules are applied.
                 if ((operation == PythonOperator.TrueDivide || 
-                    (operation == PythonOperator.Divide && unit.ProjectState.LanguageVersion.Is3x())) &&
+                    (operation == PythonOperator.Divide && unit.State.LanguageVersion.Is3x())) &&
                     (lhsType == BuiltinTypeId.Int || lhsType == BuiltinTypeId.Long) &&
                     (rhsType == BuiltinTypeId.Int || rhsType == BuiltinTypeId.Long)) {
                     rhsType = BuiltinTypeId.Float;
@@ -96,13 +97,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // Non-numeric types require the reverse operation
                     res = res.Union(ns.ReverseBinaryOperation(node, unit, operation, lhs));
                 } else if (lhsType == BuiltinTypeId.Complex || rhsType == BuiltinTypeId.Complex) {
-                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Complex].Instance);
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Complex].Instance);
                 } else if (lhsType == BuiltinTypeId.Float || rhsType == BuiltinTypeId.Float) {
-                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Float].Instance);
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Float].Instance);
                 } else if (lhsType == BuiltinTypeId.Long || rhsType == BuiltinTypeId.Long) {
-                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Long].Instance);
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Long].Instance);
                 } else {
-                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Int].Instance);
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Int].Instance);
                 }
             }
 
@@ -110,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            if (operation == PythonOperator.Negate && _value != null) {
+                if (_value is int i) {
+                    return ProjectState.GetConstant(-i);
+                } else if (_value is float f) {
+                    return ProjectState.GetConstant(-f);
+                } else if (_value is double d) {
+                    return ProjectState.GetConstant(-d);
+                }
+            }
+
             return _builtinInfo.UnaryOperation(node, unit, operation);
         }
 
@@ -185,7 +196,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var valueStr = (_value == null || _value is IPythonConstant) ? "" : (" '" + _value.ToString() + "'");
             valueStr = valueStr.Replace("\r", "\\r").Replace("\n", "\\n");
             for (char c = '\0'; c < ' '; ++c) {
-                valueStr = valueStr.Replace(c.ToString(), string.Format("\\x{0:X2}", (int)c));
+                valueStr = valueStr.Replace(c.ToString(), "\\x{0:X2}".FormatInvariant((int)c));
             }
             return "<" + Description + valueStr + ">"; // " at " + hex(id(self))
         }

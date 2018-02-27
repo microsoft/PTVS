@@ -58,18 +58,20 @@
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisLogWriter.cs" />
+    <Compile Include="Analyzer\ErrorMessages.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
-    <Compile Include="CompletionOptions.cs" />
     <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
+    <Compile Include="Infrastructure\ITestEnvironment.cs" />
     <Compile Include="Infrastructure\PathEqualityComparer.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\ProcessHelper.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\UriEqualityComparer.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
@@ -86,6 +88,7 @@
     <Compile Include="Intellisense\ImportRemover.cs" />
     <Compile Include="Intellisense\LineInfo.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Intellisense\LongestCommonSequence.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
     <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
@@ -134,7 +137,6 @@
     <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
     <Compile Include="Interpreter\NoInterpretersException.cs" />
     <Compile Include="Interpreter\SentinelModule.cs" />
-    <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
@@ -150,7 +152,6 @@
     <Compile Include="AnalysisValue.cs" />
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
-    <Compile Include="Analyzer\AnalyzerStatusUpdater.cs" />
     <Compile Include="Analyzer\ComprehensionScope.cs" />
     <Compile Include="Analyzer\DependentKeyValue.cs" />
     <Compile Include="Analyzer\IsInstanceScope.cs" />
@@ -170,7 +171,6 @@
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
-    <Compile Include="Interpreter\IProjectContextProvider.cs" />
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\Ast\AwaitExpression.cs" />

@@ -17,6 +17,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.PythonTools.Parsing.Ast;
 
 /*
@@ -128,15 +129,17 @@ namespace Microsoft.PythonTools.Intellisense {
         [Conditional("DEBUG")]
         public void Dump(BitArray bits) {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendFormat("FlowChecker ({0})", _scope is FunctionDefinition ? ((FunctionDefinition)_scope).Name :
-                                                 _scope is ClassDefinition ? ((ClassDefinition)_scope).Name : "");
+            sb.AppendFormat(CultureInfo.InvariantCulture,
+                "FlowChecker ({0})",
+                _scope is FunctionDefinition ? ((FunctionDefinition)_scope).Name :
+                    _scope is ClassDefinition ? ((ClassDefinition)_scope).Name : "");
             sb.Append('{');
             bool comma = false;
             foreach (var binding in _variables) {
                 if (comma) sb.Append(", ");
                 else comma = true;
                 int index = 2 * _variableIndices[binding.Value];
-                sb.AppendFormat("{0}:{1}{2}",
+                sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}{2}",
                     binding.Key,
                     bits.Get(index) ? "*" : "-",
                     bits.Get(index + 1) ? "-" : "*");
@@ -293,7 +296,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 // analyze the class definition itself (it is visited while analyzing parent scope):
                 Define(node.Name);
-                foreach (var e in node.Bases) {
+                foreach (var e in node.BasesInternal) {
                     e.Expression.Walk(this);
                 }
                 return false;
@@ -362,14 +365,14 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(FunctionDefinition node) {
             if (node == _scope) {
                 // the function body is being analyzed, go deep:
-                foreach (Parameter p in node.Parameters) {
+                foreach (Parameter p in node.ParametersInternal) {
                     p.Walk(_fdef);
                 }
                 return true;
             } else {
                 // analyze the function definition itself (it is visited while analyzing parent scope):
                 Define(node.Name);
-                foreach (Parameter p in node.Parameters) {
+                foreach (Parameter p in node.ParametersInternal) {
                     if (p.DefaultValue != null) {
                         p.DefaultValue.Walk(this);
                     }
@@ -385,7 +388,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _bits = new BitArray(_bits.Length);
 
-            foreach (IfStatementTest ist in node.Tests) {
+            foreach (IfStatementTest ist in node.TestsInternal) {
                 // Set the initial branch value to bits
                 _bits.SetAll(false);
                 _bits.Or(save);

@@ -19,16 +19,15 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger {
     [Guid(Guids.CustomDebuggerEventHandlerId)]
-    public class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
+    class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
         private readonly IServiceProvider _serviceProvider;
         
         public CustomDebuggerEventHandler(IServiceProvider serviceProvider) {

@@ -23,7 +23,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     [Export(typeof(IPythonLauncherProvider))]
-    class IronPythonLauncherProvider : IPythonLauncherProvider2 {
+    class IronPythonLauncherProvider : IPythonLauncherProvider {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 

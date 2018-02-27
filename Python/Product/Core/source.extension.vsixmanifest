@@ -31,9 +31,9 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Common;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Common;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger.Concord;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger.Concord;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Ipc.Json;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Ipc.Json;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.EnvironmentsList;_GetAssemblyName|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.ImportWizard;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.ProjectWizards;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.ProjectWizards;AssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSCommon;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSCommon;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|" />

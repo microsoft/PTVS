@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         protected static bool AssignVariableWorker(Node location, AnalysisUnit unit, IAnalysisSet values, VariableDef vars) {
             vars.AddAssignment(location, unit);
-            vars.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.AssignedTypes, values);
+            vars.MakeUnionStrongerIfMoreThan(unit.State.Limits.AssignedTypes, values);
             return vars.AddTypes(unit, values);
         }
 
@@ -242,6 +242,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public virtual VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             var res = GetVariable(node, unit, name, false) ?? AddVariable(name);
+            if (addRef) {
+                res.AddReference(node, unit);
+            }
+            return res;
+        }
+
+        public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, node));
             if (addRef) {
                 res.AddReference(node, unit);
             }

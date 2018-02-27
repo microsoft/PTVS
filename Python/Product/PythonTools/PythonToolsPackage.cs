@@ -174,6 +174,7 @@ namespace Microsoft.PythonTools {
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
+    [ProvideFeatureFlag("Python.Analyzer.LiveLinting", true)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
@@ -236,7 +237,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
-            VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
+            if (File.Exists(filename)) {
+                VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
+            }
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {
@@ -382,13 +385,6 @@ namespace Microsoft.PythonTools {
 
         public override Type GetLibraryManagerType() {
             return typeof(IPythonLibraryManager);
-        }
-
-
-        private new IComponentModel ComponentModel {
-            get {
-                return (IComponentModel)GetService(typeof(SComponentModel));
-            }
         }
 
         internal override LibraryManager CreateLibraryManager(CommonPackage package) {

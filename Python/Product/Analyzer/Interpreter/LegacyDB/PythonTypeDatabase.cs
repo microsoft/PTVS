@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// Provides access to an on-disk store of cached intellisense information.
     /// </summary>
-    public sealed class PythonTypeDatabase : ITypeDatabaseReader {
+    sealed class PythonTypeDatabase : ITypeDatabaseReader {
         private readonly PythonInterpreterFactoryWithDatabase _factory;
         private readonly SharedDatabaseState _sharedState;
 

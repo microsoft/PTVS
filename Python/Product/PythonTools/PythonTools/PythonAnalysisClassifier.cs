@@ -139,20 +139,20 @@ namespace Microsoft.PythonTools {
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
 
-            AP.AnalysisClassification[] spans;
-            int fromVersion;
-            lock (_spanCacheLock) {
-                spans = _spanCache;
-                fromVersion = _spanFromVersion;
-            }
-
-            if (span.Length <= 0 || snapshot.IsReplBufferWithCommand() || spans?.Length == 0) {
+            if (span.Length <= 0 || snapshot.IsReplBufferWithCommand()) {
                 return classifications;
             }
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
             if (bi == null) {
                 return classifications;
+            }
+
+            AP.AnalysisClassification[] spans;
+            int fromVersion;
+            lock (_spanCacheLock) {
+                spans = _spanCache;
+                fromVersion = _spanFromVersion;
             }
 
             if (spans == null) {
@@ -165,11 +165,14 @@ namespace Microsoft.PythonTools {
 
                 return classifications;
             }
+            if (spans.Length == 0) {
+                return classifications;
+            }
 
             // find where in the spans we should start scanning from (they're sorted by
             // starting position in the old buffer)
-            var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
-            var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
+            var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot, fromVersion);
+            var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot, fromVersion);
             var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
@@ -220,6 +223,11 @@ namespace Microsoft.PythonTools {
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
                 return OnNewAnalysisAsync(sender, e.AnalysisEntry);
+            } else if (e.Event == PythonTextBufferInfoEvents.NewTextBufferInfo) {
+                var entry = sender.AnalysisEntry;
+                if (entry != null) {
+                    return OnNewAnalysisAsync(sender, entry);
+                }
             }
             return Task.CompletedTask;
         }

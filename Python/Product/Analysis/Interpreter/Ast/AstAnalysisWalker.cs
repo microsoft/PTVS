@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonAst ast,
             IPythonModule module,
             string filePath,
+            Uri documentUri,
             Dictionary<string, IMember> members,
             bool includeLocationInfo,
             bool warnAboutUndefinedValues,
@@ -52,6 +53,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 ast ?? throw new ArgumentNullException(nameof(ast)),
                 _module,
                 filePath,
+                documentUri,
                 includeLocationInfo,
                 log: warnAboutUndefinedValues ? _log : null
             );
@@ -64,7 +66,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private IPythonInterpreter _interpreter => _scope.Interpreter;
         private PythonAst _ast => _scope.Ast;
-        private string _filePath => _scope.FilePath;
         public NameLookupContext Scope => _scope;
         private IPythonType _unknownType => _scope._unknownType;
 
@@ -102,7 +103,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var start = node.NameExpression?.GetStart(_ast) ?? node.GetStart(_ast);
             var end = node.GetEnd(_ast);
-            return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
+            return new LocationInfo(_scope.FilePath, _scope.DocumentUri, start.Line, start.Column, end.Line, end.Column);
         }
 
         internal LocationInfo GetLoc(Node node) => _scope.GetLoc(node);
@@ -156,7 +157,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         _scope.SetInScope(n.Name, new AstNestedPythonModule(
                             _interpreter,
                             n.Name,
-                            PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
+                            PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _scope.FilePath, n.Name, true).ToArray()
                         ));
                     }
                 }
@@ -191,7 +192,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var mod = new AstNestedPythonModule(
                 _interpreter,
                 modName,
-                PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
+                PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _scope.FilePath, modName, true).ToArray()
             );
 
             foreach (var name in GetImportNames(node.Names, node.AsNames)) {
@@ -232,7 +233,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            var dec = (node.Decorators?.Decorators).MaybeEnumerate().ToArray();
+            var dec = (node.Decorators?.DecoratorsInternal).MaybeEnumerate();
             if (dec.OfType<NameExpression>().Any(n => n.Name == "property")) {
                 AddProperty(node);
                 return false;
@@ -333,7 +334,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (t.Bases == null) {
-                var bases = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
+                var bases = node.BasesInternal.Where(a => string.IsNullOrEmpty(a.Name))
                     .Select(a => _scope.GetValueFromExpression(a.Expression))
                     .OfType<IPythonType>()
                     .ToArray();

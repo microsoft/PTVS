@@ -26,22 +26,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsOptional { get; private set; }
         public IEnumerable<IAnalysisVariable> Variables { get; private set; }
 
-        public ParameterResult(string name)
-            : this(name, String.Empty, "object") {
-        }
-        public ParameterResult(string name, string doc)
-            : this(name, doc, "object") {
-        }
-        public ParameterResult(string name, string doc, string type)
-            : this(name, doc, type, false) {
-        }
-        public ParameterResult(string name, string doc, string type, bool isOptional)
-            : this(name, doc, type, isOptional, null) {
-        }
-        public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable) :
-            this(name, doc, type, isOptional, variable, null) {
-        }
-        public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable, string defaultValue) {
+        internal ParameterResult(string name, string doc = "", string type = "object", bool isOptional = false, IEnumerable<IAnalysisVariable> variable = null, string defaultValue = "") {
             Name = name;
             Documentation = doc;
             Type = type;

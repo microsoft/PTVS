@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// A completion set using these as items needs to provide a filter that
     /// checks the Visible property.
     /// </summary>
-    public class DynamicallyVisibleCompletion : Completion {
+    class DynamicallyVisibleCompletion : Completion {
         private Func<string> _lazyDescriptionSource;
         private Func<ImageSource> _lazyIconSource;
         private bool _visible, _previouslyVisible;
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Represents a set of completions filtered and selected using a
     /// <see cref="FuzzyStringMatcher"/>.
     /// </summary>
-    public class FuzzyCompletionSet : CompletionSet {
+    class FuzzyCompletionSet : CompletionSet {
         private readonly BulkObservableCollection<Completion> _completions;
         private readonly FilteredObservableCollection<Completion> _filteredCompletions;
         private readonly FuzzyStringMatcher _comparer;
@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void FilterToText(string filterText) {
-            bool hideAdvanced = _shouldHideAdvanced && !filterText.StartsWith("__");
+            bool hideAdvanced = _shouldHideAdvanced && !filterText.StartsWithOrdinal("__");
             bool anyVisible = false;
             foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
                 if (hideAdvanced && IsAdvanced(c)) {

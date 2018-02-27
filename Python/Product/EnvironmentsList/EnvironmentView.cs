@@ -346,7 +346,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    public sealed class EnvironmentViewTemplateSelector : DataTemplateSelector {
+    sealed class EnvironmentViewTemplateSelector : DataTemplateSelector {
         public DataTemplate Environment { get; set; }
 
         public DataTemplate CondaEnvironment { get; set; }
@@ -381,7 +381,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    public sealed class EnvironmentViewItemContainerSelector : StyleSelector {
+    sealed class EnvironmentViewItemContainerSelector : StyleSelector {
         public Style Environment { get; set; }
         public Style OnlineHelp { get; set; }
 

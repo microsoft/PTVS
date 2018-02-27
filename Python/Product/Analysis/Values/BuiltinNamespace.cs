@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (_type == null) {
-                return unit.ProjectState.ClassInfos[BuiltinTypeId.NoneType].Instance;
+                return unit.State.ClassInfos[BuiltinTypeId.NoneType].Instance;
             }
 
             var member = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);
@@ -67,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (TryGetMember(name, out value)) {
                     return value;
                 }
-                throw new KeyNotFoundException(String.Format("Key {0} not found", name));
+                throw new KeyNotFoundException("Key {0} not found".FormatInvariant(name));
             }
             set {
                 if (_specializedValues == null) {

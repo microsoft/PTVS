@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -61,15 +62,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public IList<Parameter> Parameters {
-            get { return _parameters; }
-        }
+        public IList<Parameter> Parameters => _parameters;
+        internal Parameter[] ParametersInternal => _parameters;
 
-        internal override int ArgCount {
-            get {
-                return _parameters.Length;
-            }
-        }
+        internal override int ArgCount => _parameters.Length;
 
         public Expression ReturnAnnotation {
             get { return _returnAnnotation; }
@@ -197,42 +193,27 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private void Verify(PythonNameBinder binder) {
             if (ContainsImportStar && IsClosure) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "import * is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
             if (ContainsImportStar && Parent is FunctionDefinition) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "import * is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
             if (ContainsImportStar && ContainsNestedFreeVariables) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "import * is not allowed in function '{0}' because it contains a nested function with free variables",
-                        Name),
+                    "import * is not allowed in function '{0}' because it contains a nested function with free variables".FormatUI(Name),
                     this);
             }
             if (ContainsUnqualifiedExec && ContainsNestedFreeVariables) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "unqualified exec is not allowed in function '{0}' because it contains a nested function with free variables",
-                        Name),
+                    "unqualified exec is not allowed in function '{0}' because it contains a nested function with free variables".FormatUI(Name),
                     this);
             }
             if (ContainsUnqualifiedExec && IsClosure) {
                 binder.ReportSyntaxError(
-                    String.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "unqualified exec is not allowed in function '{0}' because it is a nested function",
-                        Name),
+                    "unqualified exec is not allowed in function '{0}' because it is a nested function".FormatUI(Name),
                     this);
             }
         }
@@ -285,18 +266,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
-            if (Decorators != null) {
-                Decorators.AppendCodeString(res, ast, format);
-            }
+            Decorators?.AppendCodeString(res, ast, format);
+
             format.ReflowComment(res, this.GetPreceedingWhiteSpaceDefaultNull(ast));
+
             if (IsCoroutine) {
                 res.Append("async");
                 res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));
             }
+
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
-            if (!String.IsNullOrEmpty(name)) {
+            if (!string.IsNullOrEmpty(name)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(name);
                 if (!this.IsIncompleteNode(ast)) {
@@ -309,7 +290,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     );
 
                     res.Append('(');
-                    if (Parameters.Count != 0) {
+                    if (ParametersInternal.Length != 0) {
                         var commaWhiteSpace = this.GetListWhiteSpace(ast);
                         ParamsToString(res,
                             ast,
@@ -328,7 +309,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
                     format.Append(
                         res,
-                        Parameters.Count != 0 ? 
+                        ParametersInternal.Length != 0 ? 
                             format.SpaceWithinFunctionDeclarationParens :
                             format.SpaceWithinEmptyParameterList,
                         " ",
@@ -358,26 +339,25 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                                 null
                         );
                     }
-                    if (Body != null) {
-                        Body.AppendCodeString(res, ast, format);
-                    }
+
+                    Body?.AppendCodeString(res, ast, format);
                 }
             }
         }
 
         internal void ParamsToString(StringBuilder res, PythonAst ast, string[] commaWhiteSpace, CodeFormattingOptions format, string initialLeadingWhiteSpace = null) {
-            for (int i = 0; i < Parameters.Count; i++) {
+            for (int i = 0; i < ParametersInternal.Length; i++) {
                 if (i > 0) {
                     if (commaWhiteSpace != null) {
                         res.Append(commaWhiteSpace[i - 1]);
                     }
                     res.Append(',');
                 }
-                Parameters[i].AppendCodeString(res, ast, format, initialLeadingWhiteSpace);
+                ParametersInternal[i].AppendCodeString(res, ast, format, initialLeadingWhiteSpace);
                 initialLeadingWhiteSpace = null;
             }
 
-            if (commaWhiteSpace != null && commaWhiteSpace.Length == Parameters.Count && Parameters.Count != 0) {
+            if (commaWhiteSpace != null && commaWhiteSpace.Length == ParametersInternal.Length && ParametersInternal.Length != 0) {
                 // trailing comma
                 res.Append(commaWhiteSpace[commaWhiteSpace.Length - 1]);
                 res.Append(",");

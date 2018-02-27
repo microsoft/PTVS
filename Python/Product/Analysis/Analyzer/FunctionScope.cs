@@ -54,16 +54,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else if (Generator != null) {
                 Generator.AddReturn(node, unit, types, enqueue);
             } else {
-                ReturnValue.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.ReturnTypes, types);
+                ReturnValue.MakeUnionStrongerIfMoreThan(unit.State.Limits.ReturnTypes, types);
                 ReturnValue.AddTypes(unit, types, enqueue);
             }
         }
 
         internal void EnsureParameters(FunctionAnalysisUnit unit) {
-            var astParams = Function.FunctionDefinition.Parameters;
-            for (int i = 0; i < astParams.Count; ++i) {
-                VariableDef param;
-                if (!TryGetVariable(astParams[i].Name, out param)) {
+            var astParams = Function.FunctionDefinition.ParametersInternal;
+            for (int i = 0; i < astParams.Length; ++i) {
+                if (!TryGetVariable(astParams[i].Name, out var param)) {
                     var n = (Node)astParams[i].NameExpression ?? astParams[i];
                     if (astParams[i].Kind == ParameterKind.List) {
                         param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, n);
@@ -89,15 +88,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
             EnsureParameters(unit);
 
-            var astParams = Function.FunctionDefinition.Parameters;
-            bool added = false;
+            var astParams = Function.FunctionDefinition.ParametersInternal;
+            var added = false;
             var entry = unit.DependencyProject;
-            var state = unit.ProjectState;
+            var state = unit.State;
             var limits = state.Limits;
 
-            for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
-                VariableDef param;
-                if (!TryGetVariable(astParams[i].Name, out param)) {
+            for (var i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
+                if (!TryGetVariable(astParams[i].Name, out var param)) {
                     Debug.Assert(false, "Parameter " + astParams[i].Name + " has no variable in this scope");
                     param = AddVariable(astParams[i].Name);
                 }
@@ -114,7 +112,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             if (scopeWithDefaultParameters != null) {
-                for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
+                for (int i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
                     VariableDef defParam, param;
                     if (TryGetVariable(astParams[i].Name, out param) &&
                         !param.HasTypes &&

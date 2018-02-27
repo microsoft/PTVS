@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -97,16 +99,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // don't care about the result.
             Evaluate(annotation);
 
-            return new TypeAnnotation(_unit.ProjectState.LanguageVersion, annotation)
-                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
-                AnalysisSet.Empty;
+            return new TypeAnnotation(_unit.State.LanguageVersion, annotation)
+                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ?? AnalysisSet.Empty;
         }
 
         /// <summary>
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
-        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
+        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true, bool addDependency = false) {
             InterpreterScope createIn = null;
+            VariableDef refs = null;
 
             if (_mergeScopes) {
                 var scope = Scope.EnumerateTowardsGlobal
@@ -117,12 +119,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else {
                 foreach (var scope in Scope.EnumerateTowardsGlobal) {
                     if (scope == Scope || scope.VisibleToChildren) {
-                        var refs = scope.GetVariable(node, _unit, name, addRef);
+                        refs = scope.GetVariable(node, _unit, name, addRef);
                         if (refs != null) {
                             if (addRef) {
                                 scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
-                            return refs.Types;
+                            break;
                         } else if (addRef && createIn == null && scope.ContainsImportStar) {
                             // create the variable so that we can appropriately
                             // add any dependent reads to it.
@@ -132,10 +134,42 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
-            if (createIn != null && !res.Any()) {
-                createIn.CreateVariable(node, _unit, name, addRef);
+            if (_unit.ForEval) {
+                return refs?.Types ?? ProjectState.BuiltinModule.GetMember(node, _unit, name);
             }
+
+            bool warn = false;
+            var res = refs?.Types;
+            if (res == null) {
+                // No variable found, so look in builtins
+                res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
+                if (!res.Any()) {
+                    // No builtin found, so ...
+                    if (createIn != null) {
+                        // ... create a variable in the best known scope
+                        refs = createIn.CreateVariable(node, _unit, name, addRef);
+                        res = refs.Types;
+                    } else {
+                        // ... warn the user
+                        warn = true;
+                    }
+                }
+            } else if (!res.Any() && !refs.IsAssigned) {
+                // Variable has no values, so if we also don't know about any
+                // definitions then warn.
+                warn = true;
+            }
+
+            if (addDependency && refs != null) {
+                refs.AddDependency(_unit);
+            }
+
+            if (warn) {
+                ProjectState.AddDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignment(name), DiagnosticSeverity.Warning, ErrorMessages.UsedBeforeAssignmentCode);
+            } else {
+                ProjectState.ClearDiagnostic(node, _unit, ErrorMessages.UsedBeforeAssignmentCode);
+            }
+
             return res;
         }
 
@@ -148,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private PythonAnalyzer ProjectState {
-            get { return _unit.ProjectState; }
+            get { return _unit.State; }
         }
 
         /// <summary>
@@ -409,15 +443,26 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 gen.AddYieldFrom(node, ee._unit, res);
 
-                gen.Returns.AddDependency(ee._unit);
-                return gen.Returns.Types;
+                var returned = AnalysisSet.Empty;
+                if (res.Split(out IReadOnlyList<GeneratorInfo> generators, out var rest)) {
+                    foreach (var g in generators) {
+                        g.Returns.AddDependency(ee._unit);
+                        returned = returned.Union(g.Returns.Types);
+                    }
+                }
+                if (rest.Split(out IReadOnlyList<ProtocolInfo> protocols, out rest)) {
+                    foreach (var g in protocols.SelectMany(pi => pi.GetProtocols<GeneratorProtocol>())) {
+                        returned = returned.Union(g.Returns);
+                    }
+                }
+                return returned;
             }
 
             return AnalysisSet.Empty;
         }
 
         private static IAnalysisSet EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
-            if (ee._unit.ProjectState.LanguageVersion.Is2x()) {
+            if (ee._unit.State.LanguageVersion.Is2x()) {
                 // list comprehension is in enclosing scope in 2.x
                 ListComprehension listComp = (ListComprehension)node;
 
@@ -428,7 +473,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     NodeValueKind.ListComprehension,
                     (x) => new ListInfo(
                         VariableDef.EmptyArray,
-                        ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        ee._unit.State.ClassInfos[BuiltinTypeId.List],
                         node,
                         ee._unit.ProjectEntry
                     ).SelfSet);
@@ -553,7 +598,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 if (node is ListExpression) {
                     return new ListInfo(
                         VariableDef.EmptyArray,
-                        _unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        _unit.State.ClassInfos[BuiltinTypeId.List],
                         node,
                         _unit.ProjectEntry
                     ).SelfSet;
@@ -561,7 +606,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     Debug.Assert(node is TupleExpression);
                     return new SequenceInfo(
                         VariableDef.EmptyArray,
-                        _unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                        _unit.State.ClassInfos[BuiltinTypeId.Tuple],
                         node,
                         _unit.ProjectEntry
                     ).SelfSet;

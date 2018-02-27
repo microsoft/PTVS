@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public readonly HashSet<string> Parameters;
             public readonly HashSet<string> Functions;
             public readonly HashSet<string> Types;
+            public readonly HashSet<string> TypeHints;
             public readonly HashSet<string> Modules;
             public readonly List<Tuple<string, Span>> Names;
             public readonly StackData Previous;
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Parameters = new HashSet<string>();
                 Functions = new HashSet<string>();
                 Types = new HashSet<string>();
+                TypeHints = new HashSet<string>();
                 Modules = new HashSet<string>();
                 Names = new List<Tuple<string, Span>>();
             }
@@ -67,6 +69,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Parameter = "parameter";
             public const string RegexLiteral = "regexliteral";
             public const string DocString = "docstring";
+            public const string TypeHint = "class";
         }
 
         public ClassifierWalker(PythonAst ast, ModuleAnalysis analysis) {
@@ -99,7 +102,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void AddParameter(Parameter node) {
             Debug.Assert(_head != null);
             _head.Parameters.Add(node.Name);
-            _head.Names.Add(Tuple.Create(node.Name, new Span(node.StartIndex, node.Name.Length)));
+            _head.Names.Add(Tuple.Create(node.Name, new Span(node.NameSpan.Start, node.NameSpan.Length)));
         }
 
         private void AddParameter(Node node) {
@@ -164,6 +167,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     return Classifications.Function;
                 } else if (sd.Types.Contains(name)) {
                     return Classifications.Class;
+                } else if (sd.TypeHints.Contains(name)) {
+                    return Classifications.TypeHint;
                 } else if (sd.Modules.Contains(name)) {
                     return Classifications.Module;
                 }
@@ -171,14 +176,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (_analysis != null) {
                 var memberType = PythonMemberType.Unknown;
+                bool isTypeHint = false;
                 lock (_analysis) {
-                    memberType = _analysis
-                        .GetValuesByIndex(name, node.Item2.Start)
-                        .Select(v => v.MemberType)
+                    var values = _analysis.GetValuesByIndex(name, node.Item2.Start).ToArray();
+                    isTypeHint = values.Any(v => v is TypingTypeInfo || v.DeclaringModule?.ModuleName == "typing");
+                    memberType = values.Select(v => v.MemberType)
                         .DefaultIfEmpty(PythonMemberType.Unknown)
                         .Aggregate((a, b) => a == b ? a : PythonMemberType.Unknown);
                 }
 
+                if (isTypeHint) {
+                    return Classifications.TypeHint;
+                }
                 if (memberType == PythonMemberType.Module) {
                     return Classifications.Module;
                 } else if (memberType == PythonMemberType.Class) {
@@ -316,6 +325,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(FromImportStatement node) {
             Debug.Assert(_head != null);
+
             if (node.Root != null) {
                 foreach (var name in node.Root.Names) {
                     if (name != null && !string.IsNullOrEmpty(name.Name)) {

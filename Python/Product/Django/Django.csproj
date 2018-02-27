@@ -274,12 +274,8 @@
   <Choose>
     <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
       <ItemGroup>
-        <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <HintPath>$(SolutionDir)\References\Dev15.0\Microsoft.Web.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Web.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Web.Editor.dll</HintPath>
-        </Reference>
+        <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.Web.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
         <Reference Include="Microsoft.Html.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Html.Core.dll</HintPath>
         </Reference>

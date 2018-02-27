@@ -239,9 +239,15 @@ namespace Microsoft.PythonTools.Intellisense {
             // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                analyzer = evaluator.Analyzer;
-                filename = evaluator.DocumentUri.IsFile ? evaluator.DocumentUri.LocalPath : null;
-                return analyzer != null;
+                var uri = evaluator.DocumentUri;
+                if (uri?.IsFile ?? false) {
+                    analyzer = evaluator.Analyzer;
+                    filename = uri.LocalPath;
+                    return analyzer != null;
+                }
+                analyzer = null;
+                filename = null;
+                return false;
             }
 
             // If we find an associated project, use its analyzer
@@ -323,7 +329,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var withSlash = "\\" + filename;
                     foreach (var project in sln.EnumerateLoadedPythonProjects()) {
                         if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
-                            n.Url.EndsWith(withSlash, StringComparison.OrdinalIgnoreCase))) {
+                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
                             var analyzer = project.GetAnalyzer();
                             if (analyzer != null && seen.Add(analyzer)) {
                                 yield return analyzer;

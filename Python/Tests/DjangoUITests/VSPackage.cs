@@ -17,6 +17,7 @@
 using System;
 using Microsoft.VisualStudio.Shell;
 using TestRunnerInterop;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -25,13 +26,14 @@ namespace PythonToolsUITests {
     public sealed class VSPackage : Package {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.DjangoUITests";
 
-        private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() =>
-            new HostedPythonToolsTestRunner(
+        private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() => {
+            MSTestEnvironment.Initialize();
+            return new HostedPythonToolsTestRunner(
                 typeof(VSPackage).Assembly,
                 new Guid("a8637c34-aa55-46e2-973c-9c3e09afc17b"), // Django
-                new Guid("8b24f93b-b3c8-33b8-8425-3af897ab50a4")  // DebuggerUITests
-            )
-        );
+                new Guid("8b24f93b-b3c8-33b8-8425-3af897ab50a4") // DebuggerUITests
+            );
+        });
 
         protected override object GetAutomationObject(string name) {
             if (name == AutomationObject) {

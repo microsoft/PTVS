@@ -186,13 +186,6 @@ namespace Microsoft.VisualStudioTools {
             return null;
         }
 
-        [Obsolete("ComponentModel should be retrieved from an IServiceProvider")]
-        public static IComponentModel ComponentModel {
-            get {
-                return (IComponentModel)GetGlobalService(typeof(SComponentModel));
-            }
-        }
-
         internal static CommonProjectNode GetStartupProject(System.IServiceProvider serviceProvider) {
             var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
             IVsHierarchy hierarchy;

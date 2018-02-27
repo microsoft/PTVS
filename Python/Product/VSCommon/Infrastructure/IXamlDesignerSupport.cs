@@ -23,13 +23,13 @@ namespace Microsoft.PythonTools.Infrastructure {
     /// <summary>
     /// Provides access to the DesignerContext and WpfEventBindingProvider.
     /// </summary>
-    public interface IXamlDesignerSupport {
+    interface IXamlDesignerSupport {
         Guid DesignerContextTypeGuid { get; }
         object CreateDesignerContext();
         void InitializeEventBindingProvider(object designerContext, IXamlDesignerCallback callback);
     }
 
-    public interface IXamlDesignerCallback {
+    interface IXamlDesignerCallback {
         ITextView TextView {
             get;
         }
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         MethodInformation GetMethodInfo(string className, string methodName);
     }
 
-    public sealed class InsertionPoint {
+    sealed class InsertionPoint {
         public readonly int Location, Indentation;
         public InsertionPoint(int location, int indentation) {
             Location = location;
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
     }
 
-    public sealed class MethodInformation {
+    sealed class MethodInformation {
         public readonly bool IsFound;
         public readonly int Start, End;
 

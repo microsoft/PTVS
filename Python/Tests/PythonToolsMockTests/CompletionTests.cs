@@ -14,29 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Hosting;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Intellisense;
+using analysis::Microsoft.PythonTools.Interpreter;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
 using TestUtilities.Mocks;
-using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -1212,18 +1207,6 @@ async def g():
             sigs = GetSignatureAnalysis(view, location);
             Assert.AreEqual(expectedExpression, sigs.Text, view.Text);
             Assert.AreEqual(paramIndex, sigs.ParameterIndex, view.Text);
-        }
-
-        private static List<Completion> GetCompletionList(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var view = new PythonEditor(code, version, vs)) {
-                return view.GetCompletionList(index);
-            }
-        }
-
-        private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, IPythonInterpreterFactory factory) {
-            using (var view = new PythonEditor(code, vs: vs, factory: factory)) {
-                return view.GetCompletions(index);
-            }
         }
 
         private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {

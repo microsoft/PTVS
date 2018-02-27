@@ -26,7 +26,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
     [Export(typeof(IPythonLauncherProvider))]
-    class PythonWebLauncherProvider : IPythonLauncherProvider2 {
+    class PythonWebLauncherProvider : IPythonLauncherProvider {
         private readonly IServiceProvider _serviceProvider;
 
         private static readonly Regex SubstitutionPattern = new Regex(@"\{([\w_]+)\}");
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Project.Web {
             // TODO: Add generic breakpoint extension point
             // to avoid having to pass this property for Django and any future
             // extensions.
-            if (projectGuids.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase) >= 0) {
+            if (projectGuids.IndexOfOrdinal("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", ignoreCase: true) >= 0) {
                 debugConfig.LaunchOptions["DjangoDebug"] = "true";
                 defaultConfig.LaunchOptions["DjangoDebug"] = "true";
             }

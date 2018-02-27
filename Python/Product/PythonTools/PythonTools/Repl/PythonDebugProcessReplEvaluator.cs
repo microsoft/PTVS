@@ -153,9 +153,6 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public override Uri DocumentUri => string.IsNullOrEmpty(_currentFrameFilename) ? null : new Uri(_currentFrameFilename);
-        public override Uri NextDocumentUri() => DocumentUri;
-
         internal async Task<KeyValuePair<string, string>[]> RefreshAvailableScopes() {
             var modules = await _process.GetModuleNamesAndPaths();
 

@@ -166,6 +166,7 @@
     <Compile Include="Model\ILocalTemplateSource.cs" />
     <Compile Include="Model\TemplateContext.cs" />
     <Compile Include="Model\DteCommand.cs" />
+    <Compile Include="Shared\Infrastructure\SocketUtils.cs" />
     <Compile Include="ViewModel\PostCreateAction.cs" />
     <Compile Include="View\LiveTextBlock.cs" />
     <Compile Include="ViewModel\TreeItemViewModel.cs" />

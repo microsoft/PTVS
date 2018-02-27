@@ -24,7 +24,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing {
 
@@ -54,8 +56,8 @@ namespace Microsoft.PythonTools.Parsing {
         private const int MaxIndent = 80;
         internal const int DefaultBufferCapacity = 1024;
 
-        private Dictionary<object, NameToken> _names;
-        private static object _currentName = new object();
+        private readonly Dictionary<object, NameToken> _names;
+        private static object _nameFromBuffer = new object();
 
         // precalcuated strings for space indentation strings so we usually don't allocate.
         private static readonly string[] SpaceIndentation, TabIndentation;
@@ -70,7 +72,7 @@ namespace Microsoft.PythonTools.Parsing {
             _state = new State(options);
             _printFunction = false;
             _unicodeLiterals = false;
-            _names = new Dictionary<object, NameToken>(128, new TokenEqualityComparer(this));
+            _names = new Dictionary<object, NameToken>(new TokenEqualityComparer(this));
             _langVersion = version;
             _options = options;
         }
@@ -807,16 +809,28 @@ namespace Microsoft.PythonTools.Parsing {
             if (ch < 0) {
                 return false;
             }
+
             return IsIdentifierChar((char)ch);
         }
 
         public static bool IsIdentifierStartChar(char ch) {
             // Identifiers determined according to PEP 3131
 
-            switch (ch) {
+            // ASCII case
+            if (ch <= 'z') {
                 // Underscore is explicitly allowed to start an identifier
-                case '_':
-                    return true;
+                return ch <= 'Z' ? ch >= 'A' : ch >= 'a' || ch == '_';
+            }
+
+            if (ch < 0xAA) {
+                return false;
+            }
+
+            return IsIdentifierStartCharNonAscii(ch);
+        }
+
+        private static bool IsIdentifierStartCharNonAscii(char ch) {
+            switch (ch) {
                 // Characters with the Other_ID_Start property
                 case '\x1885':
                 case '\x1886':
@@ -843,8 +857,15 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static bool IsIdentifierChar(char ch) {
-            if (IsIdentifierStartChar(ch)) {
-                return true;
+            // ASCII case
+            if (ch <= 'z') {
+                return ch <= 'Z'
+                    ? ch >= 'A' || ch >= '0' && ch <= '9'
+                    : ch >= 'a' || ch == '_';
+            }
+
+            if (ch < 0xAA) {
+                return false;
             }
 
             switch (ch) {
@@ -862,6 +883,10 @@ namespace Microsoft.PythonTools.Parsing {
                 case '\x1371':
                 case '\x19DA':
                     return true;
+            }
+
+            if (IsIdentifierStartCharNonAscii(ch)) {
+                return true;
             }
 
             switch (char.GetUnicodeCategory(ch)) {
@@ -1420,7 +1445,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false, bool allowLeadingUnderscore = false) {
             if (_langVersion >= PythonLanguageVersion.V36 && tokenStr.Contains("_")) {
-                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWith("_")) || tokenStr.EndsWith("_") ||
+                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWithOrdinal("_")) || tokenStr.EndsWithOrdinal("_") ||
                     tokenStr.Contains("._") || tokenStr.Contains("_.")) {
                     ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
                     return true;
@@ -1431,7 +1456,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return true;
                 }
             }
-            if (_langVersion.Is3x() && tokenStr.ToLowerInvariant().EndsWith("l")) {
+            if (_langVersion.Is3x() && tokenStr.EndsWithOrdinal("l", ignoreCase: true)) {
                 ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
                 return true;
             }
@@ -1674,8 +1699,11 @@ namespace Microsoft.PythonTools.Parsing {
             BufferBack();
 
             MarkTokenEnd();
-            NameToken token;
-            if (!_names.TryGetValue(_currentName, out token)) {
+
+            // _names uses Tokenizer.TokenEqualityComparer to find matching key.
+            // When string is compared to _nameFromBuffer, this equality comparer uses _buffer for GetHashCode and Equals
+            // to avoid allocation of a new string instance
+            if (!_names.TryGetValue(_nameFromBuffer, out var token)) {
                 string name = GetTokenString();
                 token = _names[name] = new NameToken(name);
             }
@@ -1834,13 +1862,13 @@ namespace Microsoft.PythonTools.Parsing {
             #region IEqualityComparer<object> Members
 
             bool IEqualityComparer<object>.Equals(object x, object y) {
-                if (x == _currentName) {
-                    if (y == _currentName) {
+                if (x == _nameFromBuffer) {
+                    if (y == _nameFromBuffer) {
                         return true;
                     }
 
                     return Equals((string)y);
-                } else if (y == _currentName) {
+                } else if (y == _nameFromBuffer) {
                     return Equals((string)x);
                 } else {
                     return (string)x == (string)y;
@@ -1849,7 +1877,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             public int GetHashCode(object obj) {
                 int result = 5381;
-                if (obj == _currentName) {
+                if (obj == _nameFromBuffer) {
                     char[] buffer = _tokenizer._buffer;
                     int start = _tokenizer._start, end = _tokenizer._tokenEnd;
                     for (int i = start; i < end; i++) {
@@ -2203,7 +2231,7 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 
-        public NewLineLocation[] GetLineLocations() {
+        internal NewLineLocation[] GetLineLocations() {
             return _newLineLocations.ToArray();
         }
 
@@ -2433,18 +2461,20 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private int Peek() {
-            if (_position >= _end) {
+            var position = _position;
+            if (position >= _end) {
                 RefillBuffer();
+                position = _position;
 
                 // eof:
-                if (_position >= _end) {
+                if (position >= _end) {
                     return EOF;
                 }
             }
 
-            Debug.Assert(_position < _end);
+            Debug.Assert(position < _end);
 
-            return _buffer[_position];
+            return _buffer[position];
         }
 
         private int ReadLine() {
@@ -2605,8 +2635,7 @@ namespace Microsoft.PythonTools.Parsing {
                 StreamReader streamReader = _reader as StreamReader;
                 if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.SourceEncoding) {
                     _errors.Add(
-                        String.Format(
-                            "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}",
+                        "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}".FormatUI(
                             Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName),
                             bse.BadByte,
                             bse.Index + CurrentIndex
@@ -2619,7 +2648,10 @@ namespace Microsoft.PythonTools.Parsing {
                     );
                 } else {
                     _errors.Add(
-                        String.Format("Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse.BadByte, bse.Index + CurrentIndex),
+                        "Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details".FormatUI(
+                            bse.BadByte,
+                            bse.Index + CurrentIndex
+                        ),
                         null,
                         CurrentIndex + bse.Index,
                         CurrentIndex + bse.Index + 1,
@@ -2655,7 +2687,7 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
     }
 
-    public enum NewLineKind {
+    enum NewLineKind {
         None,
         LineFeed,
         CarriageReturn,
@@ -2663,7 +2695,7 @@ namespace Microsoft.PythonTools.Parsing {
     }
 
     [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
-    public struct NewLineLocation : IComparable<NewLineLocation> {
+    struct NewLineLocation : IComparable<NewLineLocation> {
         private readonly int _endIndex;
         private readonly NewLineKind _kind;
 
@@ -2702,6 +2734,13 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
+            while (match >= 0 && index == lineLocations[match].EndIndex && lineLocations[match].Kind == NewLineKind.None) {
+                match -= 1;
+            }
+            if (match < 0) {
+                return new SourceLocation(index, 1, checked(index + 1));
+            }
+
             int line = match + 2;
             int col = index - lineLocations[match].EndIndex + 1;
             return new SourceLocation(index, line, col);
@@ -2711,22 +2750,26 @@ namespace Microsoft.PythonTools.Parsing {
             if (lineLocations == null) {
                 return 0;
             }
+            int index = 0;
             if (lineLocations.Length == 0) {
                 // We have a single line, so the column is the index
-                return location.Column - 1;
+                index = location.Column - 1;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
             int line = location.Line - 1;
+
             if (line > lineLocations.Length) {
-                return lineLocations[lineLocations.Length - 1].EndIndex;
+                index = lineLocations[lineLocations.Length - 1].EndIndex;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
 
-            int index = 0;
             if (line > 0) {
                 index = lineLocations[line - 1].EndIndex;
             }
 
             if (line < lineLocations.Length && location.Column > (lineLocations[line].EndIndex - index)) {
-                return lineLocations[line].EndIndex;
+                index = lineLocations[line].EndIndex;
+                return endIndex >= 0 ? Math.Min(index, endIndex) : index;
             }
 
             if (endIndex < 0) {
@@ -2755,12 +2798,12 @@ namespace Microsoft.PythonTools.Parsing {
         public override string ToString() => $"<NewLineLocation({_endIndex}, NewLineKind.{_kind})>";
     }
 
-    public static class NewLineKindExtensions {
+    static class NewLineKindExtensions {
         public static int GetSize(this NewLineKind kind) {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;
                 case NewLineKind.CarriageReturnLineFeed: return 2;
-                case NewLineKind.CarriageReturn: return 2;
+                case NewLineKind.CarriageReturn: return 1;
             }
             return 0;
         }

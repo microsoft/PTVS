@@ -26,14 +26,16 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestMethodWalker : PythonWalker {
         private readonly PythonAst _tree;
         private readonly string _filename;
+        private readonly Uri _documentUri;
         private readonly IReadOnlyList<LocationInfo> _spans;
         private bool _inClass;
 
         public readonly List<KeyValuePair<string, LocationInfo>> Methods = new List<KeyValuePair<string, LocationInfo>>();
 
-        public TestMethodWalker(PythonAst tree, string filename, IEnumerable<LocationInfo> spans) {
+        public TestMethodWalker(PythonAst tree, string filename, Uri documentUri, IEnumerable<LocationInfo> spans) {
             _tree = tree;
             _filename = filename;
+            _documentUri = documentUri;
             _spans = spans.ToArray();
         }
 
@@ -61,6 +63,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var e = node.GetEnd(_tree);
             return new LocationInfo(
                 _filename,
+                _documentUri,
                 s.Line, s.Column,
                 e.Line, e.Column
             );

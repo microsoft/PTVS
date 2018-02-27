@@ -24,7 +24,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
-using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -1468,7 +1467,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// 
         /// New in 1.5.
         /// </summary>
-        public static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
+        internal static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
             if (frame < 0) {
                 return null;
             }

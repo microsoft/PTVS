@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -51,6 +52,32 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 yield return new KeyValuePair<Uri, BufferVersion>(u, kv.Value);
             }
+        }
+
+        /// <summary>
+        /// Returns the version of the default part (part #0).
+        /// </summary>
+        public int? DefaultVersion => Versions.TryGetValue(0, out var bv) ? bv.Version : (int?)null;
+
+        /// <summary>
+        /// Gets the version data for part identified by the specified URI.
+        /// Returns null if not found.
+        /// </summary>
+        public BufferVersion GetVersion(Uri documentUri) {
+            if (documentUri == null) {
+                return null;
+            }
+
+            BufferVersion result;
+            var f = documentUri.Fragment;
+            if (!string.IsNullOrEmpty(f) &&
+                f.StartsWithOrdinal("#") &&
+                int.TryParse(f.Substring(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out int i)) {
+                Versions.TryGetValue(i, out result);
+            } else {
+                Versions.TryGetValue(0, out result);
+            }
+            return result;
         }
     }
 

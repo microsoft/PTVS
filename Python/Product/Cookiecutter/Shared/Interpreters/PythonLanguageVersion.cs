@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Interpreters {
     /// <summary>
@@ -83,7 +84,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                     }
                     break;
             }
-            throw new InvalidOperationException(String.Format("Unsupported Python version: {0}", version.ToString()));
+            throw new InvalidOperationException("Unsupported Python version: {0}".FormatInvariant(version));
         }
 
     }

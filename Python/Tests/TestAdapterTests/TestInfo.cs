@@ -18,6 +18,7 @@ extern alias pt;
 extern alias ta;
 using System;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using ta::Microsoft.VisualStudioTools;
@@ -61,7 +62,7 @@ namespace TestAdapterTests {
             ti.SourceCodeLineNumber = sourceCodeLineNumber;
             ti.Outcome = outcome;
             ti.ClassFilePath = classFilePath ?? sourceCodeFilePath;
-            ti.RelativeClassFilePath = CommonUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
+            ti.RelativeClassFilePath = PathUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
             ti.MinDuration = minDuration ?? TimeSpan.Zero;
             ti.ContainedErrorMessage = containedErrorMessage;
             return ti;

@@ -23,6 +23,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -3286,7 +3287,7 @@ namespace AnalysisTests {
                 Assert.AreEqual(typeof(IfStatement), stmt.GetType());
                 var ifStmt = (IfStatement)stmt;
 
-                tests(ifStmt.Tests);
+                tests(ifStmt.TestsInternal);
 
                 if (_else != null) {
                     _else(ifStmt.ElseStatement);
@@ -3410,9 +3411,9 @@ namespace AnalysisTests {
                     Assert.AreEqual(name, funcDef.Name);
                 }
 
-                Assert.AreEqual(args?.Length ?? 0, funcDef.Parameters.Count);
+                Assert.AreEqual(args?.Length ?? 0, funcDef.ParametersInternal.Length);
                 for (int i = 0; i < (args?.Length ?? 0); i++) {
-                    args[i](funcDef.Parameters[i]);
+                    args[i](funcDef.ParametersInternal[i]);
                 }
 
                 body(funcDef.Body);
@@ -3440,9 +3441,9 @@ namespace AnalysisTests {
 
         private static void CheckDecorators(Action<Expression>[] decorators, DecoratorStatement foundDecorators) {
             if (decorators != null) {
-                Assert.AreEqual(decorators.Length, foundDecorators.Decorators.Count);
+                Assert.AreEqual(decorators.Length, foundDecorators.DecoratorsInternal.Length);
                 for (int i = 0; i < decorators.Length; i++) {
-                    decorators[i](foundDecorators.Decorators[i]);
+                    decorators[i](foundDecorators.DecoratorsInternal[i]);
                 }
             } else {
                 Assert.AreEqual(null, foundDecorators);
@@ -3459,12 +3460,12 @@ namespace AnalysisTests {
                 }
 
                 if (bases != null) {
-                    Assert.AreEqual(bases.Length, classDef.Bases.Count);
+                    Assert.AreEqual(bases.Length, classDef.BasesInternal.Length);
                     for (int i = 0; i < bases.Length; i++) {
-                        bases[i](classDef.Bases[i]);
+                        bases[i](classDef.BasesInternal[i]);
                     }
                 } else {
-                    Assert.AreEqual(0, classDef.Bases.Count);
+                    Assert.AreEqual(0, classDef.BasesInternal.Length);
                 }
 
                 body(classDef.Body);
@@ -3879,7 +3880,7 @@ namespace AnalysisTests {
                 if (value is byte[]) {
                     Assert.AreEqual(typeof(AsciiString), ((ConstantExpression)expr).Value.GetType());
                     byte[] b1 = (byte[])value;
-                    byte[] b2 = ((AsciiString)((ConstantExpression)expr).Value).Bytes;
+                    byte[] b2 = ((AsciiString)((ConstantExpression)expr).Value).Bytes.ToArray();
                     Assert.AreEqual(b1.Length, b2.Length);
 
                     for (int i = 0; i < b1.Length; i++) {
@@ -4112,7 +4113,7 @@ namespace AnalysisTests {
 
         private static void CollectFiles(string dir, List<string> files, IEnumerable<string> exceptions = null) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (file.EndsWithOrdinal(".py", ignoreCase: true)) {
                     files.Add(file);
                 }
             }

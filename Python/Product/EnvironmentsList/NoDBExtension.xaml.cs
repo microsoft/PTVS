@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    public sealed class NoDBExtensionProvider : IEnvironmentViewExtension {
+    sealed class NoDBExtensionProvider : IEnvironmentViewExtension {
         private FrameworkElement _wpfObject;
 
         public NoDBExtensionProvider() {

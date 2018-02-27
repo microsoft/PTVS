@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// stored on disk as .py files, and using <see cref="PythonTypeDatabase"/>
     /// for the completion database.
     /// </summary>
-    public class PythonInterpreterFactoryWithDatabase :
+    class PythonInterpreterFactoryWithDatabase :
         IPythonInterpreterFactoryWithDatabase,
         IPythonInterpreterFactoryWithLog,
         IDisposable
@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
 
             return new HashSet<string>(
                 PathUtils.EnumerateFiles(databasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
-                StringComparer.InvariantCultureIgnoreCase
+                StringComparer.OrdinalIgnoreCase
             );
         }
 
@@ -493,7 +493,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 // No cached search paths means our database is out of date.
                 return existingDatabase
                     .Except(RequiredBuiltinModules)
-                    .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                    .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
                     .ToArray();
             }
             
@@ -502,7 +502,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 .Select(mp => mp.ModuleName)
                 .Concat(RequiredBuiltinModules)
                 .Where(m => !existingDatabase.Contains(m))
-                .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
                 .ToArray();
         }
 

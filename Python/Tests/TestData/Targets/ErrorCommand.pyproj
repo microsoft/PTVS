@@ -52,8 +52,8 @@ print('>>>(5): error ERR0003: This is an error with an invalid path.')
     <CreatePythonCommandItem Target="$(ProduceErrorsCommand)"
                              TargetType="code"
                              ExecuteIn="output"
-                             ErrorRegex="^(?&lt;filename&gt;.+?)\((?&lt;line&gt;\d+)(,(?&lt;column&gt;\d+))?\): error (?&lt;msg_id&gt;.+?): (?&lt;message&gt;.+?)$"
-                             WarningRegex="^(?&lt;filename&gt;.+?)\((?&lt;line&gt;\d+)(,(?&lt;column&gt;\d+))?\): warning (?&lt;msg_id&gt;.+?): (?&lt;message&gt;.+?)$">
+                             ErrorRegex="^(?&lt;filename&gt;.+?)\((?&lt;line&gt;\d+)(,(?&lt;column&gt;\d+))?\): error (?&lt;code&gt;.+?): (?&lt;message&gt;.+?)$"
+                             WarningRegex="^(?&lt;filename&gt;.+?)\((?&lt;line&gt;\d+)(,(?&lt;column&gt;\d+))?\): warning (?&lt;code&gt;.+?): (?&lt;message&gt;.+?)$">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>

@@ -20,13 +20,13 @@
     <ProjectFile Include="Attacher\Attacher.csproj"/>
     <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
     <ProjectFile Include="Debugger\Debugger.csproj"/>
+    <ProjectFile Include="Debugger.Concord\Debugger.Concord.csproj"/>
     
     <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
     <ProjectFile Include="TestAdapter\TestAdapter.csproj"/>
     <ProjectFile Include="TestAdapter.Analysis\TestAdapter.Analysis.csproj"/>
 
-    <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
 
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>

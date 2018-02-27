@@ -17,9 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public struct PackageVersion : IComparable<PackageVersion>, IEquatable<PackageVersion> {
@@ -136,7 +138,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (Release == null) {
                         sb.Append("0");
                     } else {
-                        sb.Append(string.Join(".", Release.Select(i => i.ToString())));
+                        sb.Append(string.Join(".", Release.Select(i => i.ToString(CultureInfo.InvariantCulture))));
                     }
                     if (PreReleaseName != PackageVersionPreReleaseName.None) {
                         switch (PreReleaseName) {
@@ -283,18 +285,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 var p2 = lv2[i];
 
                 int i1, i2;
-                if (int.TryParse(p1, out i1)) {
-                    if (int.TryParse(p2, out i2)) {
+                if (int.TryParse(p1, NumberStyles.Integer, CultureInfo.InvariantCulture, out i1)) {
+                    if (int.TryParse(p2, NumberStyles.Integer, CultureInfo.InvariantCulture, out i2)) {
                         c = i1.CompareTo(i2);
                     } else {
                         // we have a number and other doesn't, so we sort later
                         return 1;
                     }
-                } else if (int.TryParse(p2, out i2)) {
+                } else if (int.TryParse(p2, NumberStyles.Integer, CultureInfo.InvariantCulture, out i2)) {
                     // other has a number and we don't, so we sort earlier
                     return -1;
                 } else {
-                    c = p1.CompareTo(p2);
+                    c = string.Compare(p1, p2, StringComparison.OrdinalIgnoreCase);
                 }
 
                 if (c != 0) {
@@ -356,9 +358,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var v in m.Groups["release"].Value.Split('.')) {
                 int i;
                 if (!int.TryParse(v, out i)) {
-                    error = new FormatException(
-                        string.Format("'{0}' is not a valid version", m.Groups["release"].Value)
-                    );
+                    error = new FormatException("'{0}' is not a valid version".FormatUI(m.Groups["release"].Value));
                     return false;
                 }
                 release.Add(i);
@@ -366,7 +366,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (m.Groups["epoch"].Success) {
                 if (!int.TryParse(m.Groups["epoch"].Value, out epoch)) {
-                    error = new FormatException(string.Format("'{0}' is not a number", m.Groups["epoch"].Value));
+                    error = new FormatException("'{0}' is not a number".FormatUI(m.Groups["epoch"].Value));
                     return false;
                 }
             }
@@ -389,28 +389,28 @@ namespace Microsoft.PythonTools.Interpreter {
                         preName = PackageVersionPreReleaseName.RC;
                         break;
                     default:
-                        error = new FormatException(string.Format("'{0}' is not a valid prerelease name", preName));
+                        error = new FormatException("'{0}' is not a valid prerelease name".FormatUI(preName));
                         return false;
                 }
             }
 
             if (m.Groups["pre"].Success) {
                 if (!int.TryParse(m.Groups["pre"].Value, out pre)) {
-                    error = new FormatException(string.Format("'{0}' is not a number", m.Groups["pre"].Value));
+                    error = new FormatException("'{0}' is not a number".FormatUI(m.Groups["pre"].Value));
                     return false;
                 }
             }
 
             if (m.Groups["dev"].Success) {
                 if (!int.TryParse(m.Groups["dev"].Value, out dev)) {
-                    error = new FormatException(string.Format("'{0}' is not a number", m.Groups["dev"].Value));
+                    error = new FormatException("'{0}' is not a number".FormatUI(m.Groups["dev"].Value));
                     return false;
                 }
             }
 
             if (m.Groups["post"].Success) {
                 if (!int.TryParse(m.Groups["post"].Value, out post)) {
-                    error = new FormatException(string.Format("'{0}' is not a number", m.Groups["post"].Value));
+                    error = new FormatException("'{0}' is not a number".FormatUI(m.Groups["post"].Value));
                     return false;
                 }
             }

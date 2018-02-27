@@ -173,25 +173,31 @@ namespace Microsoft.PythonTools.Intellisense {
                     ver = ver.Next;
                 }
 
+#if DEBUG
+                var appliedVersions = new List<ITextVersion>();
+#endif
                 List<NewLineLocation> asLengths = null;
                 while (ver.Changes != null && ver.VersionNumber < version) {
+#if DEBUG
+                    appliedVersions.Add(ver);
+#endif
                     if (asLengths == null) {
                         asLengths = LineEndsToLineLengths(initial).ToList();
                     }
 
                     // Apply the changes from this version to the line lengths
-                    foreach (var c in ver.Changes) {
+                    foreach (var c in ver.Changes.Reverse()) {
                         var oldLoc = NewLineLocation.IndexToLocation(initial, c.OldPosition);
                         int lineNo = oldLoc.Line - 1;
                         while (asLengths.Count <= lineNo) {
                             asLengths.Add(new NewLineLocation(0, NewLineKind.None));
                         }
-                        var line = asLengths[lineNo];
                         
                         if (c.OldLength > 0) {
+                            var line = asLengths[lineNo];
                             // Deletion may span lines, so combine them until we can delete
                             int cutAtCol = oldLoc.Column - 1;
-                            for (int toRemove = c.OldLength; toRemove > 0 && lineNo < asLengths.Count; lineNo += 1) {
+                            for (int toRemove = c.OldLength; lineNo < asLengths.Count; lineNo += 1) {
                                 line = asLengths[lineNo];
                                 int lineLen = line.EndIndex - cutAtCol;
                                 cutAtCol = 0;
@@ -205,10 +211,14 @@ namespace Microsoft.PythonTools.Intellisense {
                                 } else {
                                     asLengths[lineNo] = new NewLineLocation(line.EndIndex - lineLen, NewLineKind.None);
                                     toRemove -= lineLen;
+                                    if (toRemove <= 0) {
+                                        break;
+                                    }
                                 }
                             }
                         }
                         if (!string.IsNullOrEmpty(c.NewText)) {
+                            var line = asLengths[lineNo];
                             NewLineLocation addedLine = new NewLineLocation(0, NewLineKind.None);
                             int lastLineEnd = 0, cutAtCol = oldLoc.Column - 1;
                             if (cutAtCol > line.EndIndex - line.Kind.GetSize() && lineNo + 1 < asLengths.Count) {
@@ -240,6 +250,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     initial = LineLengthsToLineEnds(asLengths).ToArray();
                     _lineCache[ver.VersionNumber + 1] = initial;
 
+#if DEBUG
+                    if (System.Diagnostics.Debugger.IsAttached && initial.Length > 0 && ver.Next != null && initial.Last().EndIndex != ver.Next.Length) {
+                        // Line calculations were wrong
+                        // Asserts do not work properly here, so we just break if the debugger is attached
+                        System.Diagnostics.Debugger.Break();
+                    }
+#endif
+
                     ver = ver.Next;
                 }
 
@@ -255,6 +273,31 @@ namespace Microsoft.PythonTools.Intellisense {
         public SourceLocation GetSourceLocation(int index, int atVersion) {
             var lines = GetLineLocations(atVersion);
             return NewLineLocation.IndexToLocation(lines, index);
+        }
+
+        [Conditional("DEBUG")]
+        private void ValidateSnapshotLines(ITextSnapshot snapshot) {
+#if DEBUG
+            var expected = LinesToLineEnds(snapshot.Lines).ToArray();
+            var actual = GetLineLocations(snapshot.Version.VersionNumber);
+            if (expected.Length != actual.Length) {
+                Debug.Fail($"Expected {expected.Length} lines; got {actual.Length} lines");
+            }
+            var mismatches = expected.Zip(actual, (x, y) => {
+                if (x.CompareTo(y) == 0) {
+                    return null;
+                }
+                return $"Expected {x}; Actual {y}";
+            }).Where(n => !string.IsNullOrEmpty(n)).ToArray();
+            if (mismatches.Any()) {
+                Debug.Fail($"{mismatches[0]} and {mismatches.Length - 1} others");
+            }
+#endif
+        }
+
+        public SourceLocation Translate(SourceLocation loc, ITextSnapshot fromSnapshot, int toVersion) {
+            ValidateSnapshotLines(fromSnapshot);
+            return Translate(loc, fromSnapshot.Version.VersionNumber, toVersion);
         }
 
         public SourceLocation Translate(SourceLocation loc, int fromVersion, int toVersion) {
@@ -282,6 +325,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SnapshotPoint Translate(SourceLocation loc, int fromVersion, ITextSnapshot toSnapshot) {
+            ValidateSnapshotLines(toSnapshot);
             return Translate(loc, fromVersion, toSnapshot.Version.VersionNumber).ToSnapshotPoint(toSnapshot);
         }
 
@@ -293,6 +337,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SnapshotSpan Translate(SourceSpan span, int fromVersion, ITextSnapshot toSnapshot) {
+            ValidateSnapshotLines(toSnapshot);
             return Translate(span, fromVersion, toSnapshot.Version.VersionNumber).ToSnapshotSpan(toSnapshot);
         }
     }

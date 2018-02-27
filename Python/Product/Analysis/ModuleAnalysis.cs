@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
         /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated.</param>
-        public IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
+        internal IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
             return GetValues(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -102,24 +102,26 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
-            if (locatedDef != null &&
-                locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
-                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
+            var parse = locatedDef?.Entry?.GetCurrentParse();
+            if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
+                var tree = parse.Tree;
+                var version = (parse.Cookie as Intellisense.VersionCookie)?.DefaultVersion;
+                var identifierStart = locatedDef.Node.GetStart(tree);
+                var identifierEnd = locatedDef.Node.GetEnd(tree);
 
                 // For classes and functions, find the ClassDefinition or
                 // FunctionDefinition to get the full span of the definition.
                 var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
-                locatedDef.Entry.Tree.Walk(walker);
+                tree.Walk(walker);
 
                 SourceLocation definitionStart;
                 SourceLocation definitionEnd;
                 if (walker.Definition != null) {
-                    definitionStart = walker.Definition.GetStart(locatedDef.Entry.Tree);
-                    definitionEnd = walker.Definition.GetEnd(locatedDef.Entry.Tree);
+                    definitionStart = walker.Definition.GetStart(tree);
+                    definitionEnd = walker.Definition.GetEnd(tree);
                 } else {
                     definitionStart = identifierStart;
-                    definitionEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+                    definitionEnd = locatedDef.Node.GetEnd(tree);
                 }
 
                 yield return new AnalysisVariable(
@@ -127,17 +129,22 @@ namespace Microsoft.PythonTools.Analysis {
                     // Location of the identifier only
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         identifierStart.Line,
-                        identifierStart.Column
+                        identifierStart.Column,
+                        identifierEnd.Line,
+                        identifierEnd.Column
                     ),
                     // Location of the full definition
                     new LocationInfo(
                         locatedDef.Entry.FilePath,
+                        locatedDef.Entry.DocumentUri,
                         definitionStart.Line,
                         definitionStart.Column,
                         definitionEnd.Line,
                         definitionEnd.Column
-                    )
+                    ),
+                    version
                 );
             }
 
@@ -200,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the expression should
         /// be evaluated.
         /// </param>
-        public VariablesResult GetVariablesByIndex(string exprText, int index) {
+        internal IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
             return GetVariables(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -217,27 +224,33 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="location">
         /// The location in the file where the expression should be evaluated.
         /// </param>
-        /// <remarks>New in 2.2</remarks>
-        public VariablesResult GetVariables(string exprText, SourceLocation location) {
+        public IEnumerable<IAnalysisVariable> GetVariables(string exprText, SourceLocation location) {
             var scope = FindScope(location);
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
-            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             if (expr == null) {
-                return new VariablesResult(variables, ast);
+                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), ast);
             }
 
+            return GetVariables(expr, location, exprText);
+        }
+
+        internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null) {
+            var scope = FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var tree = unit.Tree;
+
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
 
             var finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { Calls = true });
             var callNode = finder.GetExpression(location) as CallExpression;
             if (callNode != null) {
                 finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { NamedArgumentNames = true });
                 var argNode = finder.GetExpression(location) as NameExpression;
-                if (argNode != null && argNode.Name == exprText) {
+                if (argNode != null && (string.IsNullOrEmpty(originalText) || argNode.Name == originalText)) {
                     var objects = eval.Evaluate(callNode.Target);
 
                     return new VariablesResult(objects
@@ -245,8 +258,8 @@ namespace Microsoft.PythonTools.Analysis {
                         .Select(v => (v as BoundMethodInfo)?.Function ?? v as FunctionInfo)
                         .Select(f => f?.AnalysisUnit?.Scope)
                         .Where(s => s != null)
-                        .SelectMany(s => GetVariablesInScope(argNode, s)
-                        .Distinct()), ast);
+                        .SelectMany(s => GetVariablesInScope(argNode, s).Distinct()),
+                        unit.Tree);
                 }
             }
 
@@ -255,7 +268,7 @@ namespace Microsoft.PythonTools.Analysis {
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
-                    variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
+                    variables = _unit.State.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
                 } else {
                     variables = GetVariablesInScope(name, defScope).Distinct();
@@ -263,16 +276,12 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (expr is MemberExpression member && !string.IsNullOrEmpty(member.Name)) {
                 var objects = eval.Evaluate(member.Target);
 
-                foreach (var v in objects) {
-                    var container = v as IReferenceableContainer;
-                    if (container != null) {
-                        variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
-                        break;
-                    }
+                foreach (var v in objects.OfType<IReferenceableContainer>()) {
+                    variables = variables.Union(v.GetDefinitions(member.Name).SelectMany(ToVariables));
                 }
             }
 
-            return new VariablesResult(variables, ast);
+            return new VariablesResult(variables, unit.Tree);
         }
 
         private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
@@ -311,51 +320,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Gets the list of modules known by the current analysis.
-        /// </summary>
-        /// <param name="topLevelOnly">Only return top-level modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
-
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                res.Add(new MemberResult(child.Key, PythonMemberType.Module));
-            }
-
-            return res.ToArray();
-        }
-
-        /// <summary>
-        /// Gets the list of modules and members matching the provided names.
-        /// </summary>
-        /// <param name="names">The dotted name parts to match</param>
-        /// <param name="includeMembers">Include module members that match as
-        /// well as just modules.</param>
-        [Obsolete]
-        public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
-            var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
-            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
-
-            foreach (var child in children) {
-                var mod = (ModuleInfo)child.Value;
-
-                if (string.IsNullOrEmpty(mod.Name)) {
-                    // Module does not have an importable name
-                    continue;
-                }
-
-                var childName = mod.Name.Split('.');
-                if (childName.Length >= 2 && childName[0] == GlobalScope.Name && childName[1] == names[0]) {
-                    res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
-                }
-            }
-
-            return res.ToArray();
         }
 
         private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, SourceLocation location) {
@@ -397,7 +361,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the expression should
         /// be evaluated.
         /// </param>
-        public IEnumerable<MemberResult> GetMembersByIndex(
+        internal IEnumerable<MemberResult> GetMembersByIndex(
             string exprText,
             int index,
             GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
@@ -490,7 +454,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
             ModuleReference modRef;
-            var modules = unit.ProjectState.Modules;
+            var modules = unit.State.Modules;
 
             if (modules.TryImport(moduleName, out modRef)) {
                 return modRef.AnalysisModule ?? AnalysisSet.Empty;
@@ -527,7 +491,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="exprText">The expression to get signatures for.</param>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
+        internal IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             return GetSignatures(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -539,7 +503,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<IOverloadResult> GetSignatures(string exprText, SourceLocation location) {
             try {
-                var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion);
+                var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion);
                 var expr = GetExpression(parser.ParseTopExpression().Body);
                 if (expr is ListExpression ||
                     expr is TupleExpression ||
@@ -590,7 +554,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// specified location.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
+        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
             return GetDefinitionTree(_unit.Tree.IndexToLocation(index));
         }
 
@@ -617,7 +581,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// directly on the current class.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        public IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
+        internal IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
             return GetOverrideable(_unit.Tree.IndexToLocation(index));
         }
 
@@ -701,7 +665,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the available members
         /// should be looked up.
         /// </param>
-        public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(
+        internal IEnumerable<MemberResult> GetAllAvailableMembersByIndex(
             int index,
             GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
         ) {
@@ -968,7 +932,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// evaluated.
         /// </param>
         /// <remarks>New in 1.1</remarks>
-        public PythonAst GetAstFromTextByIndex(string exprText, int index) {
+        internal PythonAst GetAstFromTextByIndex(string exprText, int index) {
             return GetAstFromText(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -1000,7 +964,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
-            var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
+            var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
             return parser.ParseTopExpression();
         }
 
@@ -1036,8 +1000,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            return function.Parameters != null &&
-                function.Parameters.Any(p => {
+            return function.ParametersInternal != null &&
+                function.ParametersInternal.Any(p => {
                     var paramName = p.GetVerbatimImage(tree) ?? p.Name;
                     return index >= p.StartIndex && index <= p.StartIndex + paramName.Length;
                 });
@@ -1193,13 +1157,17 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
-            if (privatePrefix != null && name.StartsWith(privatePrefix) && !name.EndsWith("__")) {
+            if (privatePrefix != null && name.StartsWithOrdinal(privatePrefix) && !name.EndsWithOrdinal("__")) {
                 // private prefix inside of the class, filter out the prefix.
                 return name.Substring(privatePrefix.Length - 2);
             } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {
                 return name;
             }
             return null;
+        }
+
+        internal string GetPrivatePrefix(SourceLocation sourceLocation) {
+            return GetPrivatePrefix(FindScope(sourceLocation));
         }
 
         private static string GetPrivatePrefixClassName(InterpreterScope scope) {

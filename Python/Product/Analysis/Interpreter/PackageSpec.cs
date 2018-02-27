@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (!string.IsNullOrEmpty(_fullSpec)) {
                     return _fullSpec;
                 }
-                return $"{Name}{Constraint}";
+                return Name + Constraint;
             }
         }
         public string Name { get; set; }
@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (ExactVersion.IsEmpty) {
                     return "";
                 }
-                return $"=={ExactVersion}";
+                return "==" + ExactVersion;
             }
             set { _constraint = value; }
         }

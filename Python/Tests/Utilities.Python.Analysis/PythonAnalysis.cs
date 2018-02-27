@@ -144,15 +144,16 @@ namespace TestUtilities.Python {
         public void UpdateModule(IPythonProjectEntry entry, string code) {
             CollectingErrorSink errors = null;
             if (code != null) {
-                PythonAst ast;
                 errors = new CollectingErrorSink();
-                var p = Parser.CreateParser(
+                var parser = Parser.CreateParser(
                     new StringReader(code),
                     _analyzer.LanguageVersion,
                     new ParserOptions { BindReferences = true, ErrorSink = errors }
                 );
-                ast = p.ParseFile();
-                entry.UpdateTree(ast, null);
+                using (var p = entry.BeginParse()) {
+                    p.Tree = parser.ParseFile();
+                    p.Complete();
+                }
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
                         var errorMsg = MakeMessage(errors);
@@ -321,12 +322,16 @@ namespace TestUtilities.Python {
             return module.Analysis.GetAllAvailableMembers(SourceLocation.MinValue).Select(m => m.Name);
         }
 
-        public IEnumerable<string> GetNamesNoBuiltins(int index = 0) {
-            return GetNamesNoBuiltins(_entries[DefaultModule], index);
+        public IEnumerable<string> GetNamesNoBuiltins(int index = 0, bool includeDunder = true) {
+            return GetNamesNoBuiltins(_entries[DefaultModule], index, includeDunder);
         }
 
-        public IEnumerable<string> GetNamesNoBuiltins(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetVariablesNoBuiltinsByIndex(index);
+        public IEnumerable<string> GetNamesNoBuiltins(IPythonProjectEntry module, int index = 0, bool includeDunder = true) {
+            var res = module.Analysis.GetVariablesNoBuiltinsByIndex(index);
+            if (includeDunder) {
+                return res;
+            }
+            return res.Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__"));
         }
 
         public AnalysisValue[] GetValues(string variable, int index = 0) {
@@ -371,6 +376,16 @@ namespace TestUtilities.Python {
 
         public IOverloadResult[] GetOverrideable(IPythonProjectEntry module, int index = 0) {
             return module.Analysis.GetOverrideableByIndex(index).ToArray();
+        }
+
+        public string[] GetDiagnostics() {
+            return GetDiagnostics(_entries[DefaultModule]);
+        }
+
+        public string[] GetDiagnostics(IPythonProjectEntry module) {
+            return Analyzer.GetDiagnostics(module)
+                .Select(d => $"{d.code}:{d.message}:{(SourceSpan)d.range}")
+                .ToArray();
         }
 
         #endregion
@@ -634,6 +649,18 @@ namespace TestUtilities.Python {
                 string.Join(", " + Environment.NewLine, expectedNotFound.Select(v => v.ToString())),
                 string.Join(", " + Environment.NewLine, foundNotExpected.Select(v => v.ToString()))
             );
+        }
+
+        public void AssertDiagnostics(params string[] diagnostics) {
+            AssertDiagnostics(_entries[DefaultModule], diagnostics);
+        }
+
+        public void AssertDiagnostics(IPythonProjectEntry module, params string[] diagnostics) {
+            var diags = GetDiagnostics(module);
+            foreach (var d in diags) {
+                Console.WriteLine($"\"{d.Replace("\\", "\\\\")}\",");
+            }
+            AssertUtil.AreEqual(diags, diagnostics);
         }
 
         #endregion

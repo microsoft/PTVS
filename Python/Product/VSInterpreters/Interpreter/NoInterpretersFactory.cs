@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class NoInterpretersFactory : IPythonInterpreterFactory {
+    sealed class NoInterpretersFactory : IPythonInterpreterFactory {
 
         public NoInterpretersFactory() {
             Configuration = new InterpreterConfiguration(

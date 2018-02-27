@@ -32,16 +32,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _taskCommentMap = taskCommentMap?.ToArray();
         }
 
-        public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
+        public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
             var d = new Diagnostic {
                 code = errorCode,
                 message = message,
                 source = _source,
                 severity = GetSeverity(severity),
-                range = new Range {
-                    start = NewLineLocation.IndexToLocation(lineLocations, startIndex),
-                    end = NewLineLocation.IndexToLocation(lineLocations, endIndex)
-                }
+                range = span
             };
 
             _onDiagnostic(d);
@@ -56,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
 
             foreach (var kv in _taskCommentMap.MaybeEnumerate()) {
-                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                if (text.IndexOfOrdinal(kv.Key, ignoreCase: true) >= 0) {
                     d.severity = kv.Value;
                     break;
                 }

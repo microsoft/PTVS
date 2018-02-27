@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -103,16 +104,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var types = Function.SelfSet;
                 Expression expr = Ast.NameExpression;
 
-                foreach (var d in Ast.Decorators.Decorators) {
+                foreach (var d in Ast.Decorators.DecoratorsInternal) {
                     if (d != null) {
                         var decorator = ddg._eval.Evaluate(d);
 
-                        if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.Property])) {
+                        if (decorator.Contains(State.ClassInfos[BuiltinTypeId.Property])) {
                             Function.IsProperty = true;
-                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.StaticMethod])) {
+                        } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.StaticMethod])) {
                             // TODO: Warn if IsClassMethod is set
                             Function.IsStatic = true;
-                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.ClassMethod])) {
+                        } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.ClassMethod])) {
                             // TODO: Warn if IsStatic is set
                             Function.IsClassMethod = true;
                         } else {
@@ -122,18 +123,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             }
                             expr = nextExpr;
                             var decorated = AnalysisSet.Empty;
+                            bool anyResults = false;
                             foreach (var ns in decorator) {
                                 var fd = ns as FunctionInfo;
                                 if (fd != null && Scope.EnumerateTowardsGlobal.Any(s => s.AnalysisValue == fd)) {
                                     continue;
                                 }
                                 decorated = decorated.Union(ns.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames));
+                                anyResults = true;
                             }
 
                             // If processing decorators, update the current
                             // function type. Otherwise, we are acting as if
                             // each decorator returns the function unmodified.
-                            if (ddg.ProjectState.Limits.ProcessCustomDecorators) {
+                            if (ddg.ProjectState.Limits.ProcessCustomDecorators && anyResults) {
                                 types = decorated;
                             }
                         }
@@ -143,17 +146,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this).AddTypes(this, types);
             }
 
-            if (!Function.IsStatic && Ast.Parameters.Count > 0) {
+            if (!Function.IsStatic && Ast.ParametersInternal.Length > 0) {
                 VariableDef param;
                 IAnalysisSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
                 if (clsScope == null) {
-                    firstParam = Function.IsClassMethod ? ProjectState.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
+                    firstParam = Function.IsClassMethod ? State.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
                 } else {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }
 
-                if (Scope.TryGetVariable(Ast.Parameters[0].Name, out param)) {
+                if (Scope.TryGetVariable(Ast.ParametersInternal[0].Name, out param)) {
                     param.AddTypes(this, firstParam, false);
                 }
             }
@@ -161,10 +164,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal void AnalyzeDefaultParameters(DDG ddg) {
             VariableDef param;
-            for (int i = 0; i < Ast.Parameters.Count; ++i) {
-                var p = Ast.Parameters[i];
+            for (int i = 0; i < Ast.ParametersInternal.Length; ++i) {
+                var p = Ast.ParametersInternal[i];
                 if (p.Annotation != null) {
-                    var val = ddg._eval.EvaluateAnnotation(p.Annotation).GetInstanceType();
+                    var val = ddg._eval.EvaluateAnnotation(p.Annotation);
                     if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
                         param.AddTypes(this, val, false);
                     }
@@ -193,16 +196,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ((FunctionScope)Scope).AddReturnTypes(
                     Ast.ReturnAnnotation,
                     ddg._unit,
-                    resType.GetInstanceType()
+                    resType
                 );
             }
         }
 
         public override string ToString() {
-            return string.Format("{0}{1}({2})->{3}",
+            return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 " def:",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
+                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
         }
@@ -246,10 +249,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override string ToString() {
-            return string.Format("{0}{1}({2})->{3}",
+            return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 "",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
+                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
         }

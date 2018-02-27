@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
             } else if (position >= _argStart && position < _argStart + _tagType.Length) {
                 // filter based upon entered text
                 string filter = _tagType.Substring(0, position - _argStart);
-                return GetTagList().Where(tag => tag.DisplayText.StartsWith(filter));
+                return GetTagList().Where(tag => tag.DisplayText.StartsWith(filter, StringComparison.CurrentCultureIgnoreCase));
             }
             return new CompletionInfo[0];
         }
