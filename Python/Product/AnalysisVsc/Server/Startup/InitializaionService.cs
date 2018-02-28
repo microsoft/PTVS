@@ -6,10 +6,10 @@ using System;
 using JsonRpc.Standard;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts;
-using Microsoft.R.LanguageServer.Commands;
+using Microsoft.PythonTools.VsCode.Commands;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.R.LanguageServer.Server {
+namespace Microsoft.PythonTools.VsCode.Server {
     public sealed class InitializaionService : LanguageServiceBase {
         private const string TriggerCharacters = "`:$@_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

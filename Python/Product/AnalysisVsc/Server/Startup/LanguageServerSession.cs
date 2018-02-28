@@ -6,9 +6,9 @@ using System.Threading;
 using JsonRpc.Standard.Client;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts.Client;
-using Microsoft.Common.Core.Diagnostics;
+using Microsoft.DsTools.Core.Diagnostics;
 
-namespace Microsoft.R.LanguageServer.Server {
+namespace Microsoft.PythonTools.VsCode.Server {
     public class LanguageServerSession {
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 

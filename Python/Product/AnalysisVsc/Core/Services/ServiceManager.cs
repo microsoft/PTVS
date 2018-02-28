@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.DsTools.Core.Diagnostics;
-using Microsoft.DsTools.Core.Disposables;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Microsoft.DsTools.Core.Diagnostics;
+using Microsoft.DsTools.Core.Disposables;
 using static System.FormattableString;
 
 namespace Microsoft.DsTools.Core.Services {

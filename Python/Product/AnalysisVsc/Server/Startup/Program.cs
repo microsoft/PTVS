@@ -5,15 +5,18 @@
 // #define WAIT_FOR_DEBUGGER
 
 using System.Linq;
-using Microsoft.Common.Core;
-using Microsoft.R.LanguageServer.Services;
+using Microsoft.DsTools.Core;
+using Microsoft.DsTools.Core.Services;
 
-namespace Microsoft.R.LanguageServer.Server {
+namespace Microsoft.PythonTools.VsCode.Server {
     internal static class Program {
+        public static IServiceContainer Services { get; private set; }
+
         public static void Main(string[] args) {
             var debugMode = CheckDebugMode(args);
-            using (CoreShell.Create()) {
-                var connection = new VsCodeConnection(CoreShell.Current.ServiceManager);
+            using (var sm = new ServiceManager()) {
+                Services = sm;
+                var connection = new VsCodeConnection(sm);
                 connection.Connect(debugMode);
             }
         }

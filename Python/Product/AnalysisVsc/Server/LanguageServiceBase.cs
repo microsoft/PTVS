@@ -3,11 +3,13 @@
 
 using JsonRpc.Standard.Server;
 using LanguageServer.VsCode.Contracts.Client;
+using Microsoft.DsTools.Core.Services;
 
 namespace Microsoft.PythonTools.VsCode.Server {
     public abstract class LanguageServiceBase : JsonRpcService {
         protected LanguageServerSession LanguageServerSession => RequestContext.Features.Get<LanguageServerSession>();
 
         protected ClientProxy Client => LanguageServerSession.Client;
+        protected IServiceContainer Services => Program.Services;
     }
 }

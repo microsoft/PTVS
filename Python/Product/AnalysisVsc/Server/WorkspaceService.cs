@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts;
+using Microsoft.PythonTools.VsCode.Commands;
+using Microsoft.PythonTools.VsCode.Server.Settings;
 using Microsoft.PythonTools.VsCode.Settings;
-using Microsoft.R.LanguageServer.Server.Settings;
 
 namespace Microsoft.PythonTools.VsCode.Server {
     [JsonRpcScope(MethodPrefix = "workspace/")]
@@ -19,7 +20,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
         /// <param name="settings"></param>
         [JsonRpcMethod(IsNotification = true)]
         public void DidChangeConfiguration(SettingsRoot settings)
-            => Services.GetService<ISettingsManager>().UpdateSettings(settings.R);
+            => Services.GetService<ISettingsManager>().UpdateSettings(settings.Python);
 
         [JsonRpcMethod(IsNotification = true)]
         public void DidChangeWatchedFiles(ICollection<FileEvent> changes) { }

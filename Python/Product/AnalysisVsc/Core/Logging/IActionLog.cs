@@ -7,12 +7,10 @@ namespace Microsoft.DsTools.Core.Logging {
     /// an application output window or telemetry.
     /// </summary>
     public interface IActionLog {
-        void Write(LogVerbosity verbosity, MessageCategory category, string message);
-        void WriteFormat(LogVerbosity verbosity, MessageCategory category, string format, params object[] arguments);
-        void WriteLine(LogVerbosity verbosity, MessageCategory category, string message);
+        void Write(MessageCategory category, string message);
+        void WriteFormat(MessageCategory category, string format, params object[] arguments);
+        void WriteLine(MessageCategory category, string message);
         void Flush();
-
-        LogVerbosity LogVerbosity { get; }
         string Folder { get; }
     }
 }

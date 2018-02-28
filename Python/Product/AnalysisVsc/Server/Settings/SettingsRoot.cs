@@ -14,6 +14,6 @@ namespace Microsoft.PythonTools.VsCode.Settings {
         /// Name of the settings member must match
         /// name of the configuration section in project.json
         /// </remarks>
-        public LanguageServerSettings R { get; set; }
+        public LanguageServerSettings Python { get; set; }
     }
 }

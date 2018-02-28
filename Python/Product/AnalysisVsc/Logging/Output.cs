@@ -19,11 +19,11 @@ namespace Microsoft.PythonTools.VsCode.Logging {
         }
         public void Write(string text) {
             _window.LogMessage(MessageType.Info, text);
-            _log.WriteLine(LogVerbosity.Normal, MessageCategory.General, text);
+            _log.WriteLine(MessageCategory.General, text);
         }
         public void WriteError(string text) {
             _window.LogMessage(MessageType.Error, text);
-            _log.WriteLine(LogVerbosity.Minimal, MessageCategory.Error, text);
+            _log.WriteLine(MessageCategory.Error, text);
         }
     }
 }

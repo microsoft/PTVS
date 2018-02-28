@@ -11,8 +11,12 @@ using JsonRpc.Standard.Contracts;
 using JsonRpc.Standard.Server;
 using JsonRpc.Streams;
 using LanguageServer.VsCode;
-using Microsoft.Common.Core.Services;
-using Microsoft.R.LanguageServer.Server.Settings;
+using Microsoft.DsTools.Core.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
+using Microsoft.PythonTools.VsCode.Client;
+using Microsoft.PythonTools.VsCode.Commands;
+using Microsoft.PythonTools.VsCode.Server.Settings;
 
 namespace Microsoft.PythonTools.VsCode.Server {
     /// <summary>
@@ -56,7 +60,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
                 }
 
                 var session = new LanguageServerSession(client, contractResolver);
-                _serviceManager.AddService(new SettingsManager(_serviceManager));
+                _serviceManager.AddService(new SettingsManager());
                 _serviceManager.AddService(new VsCodeClient(session.Client, _serviceManager));
                 _serviceManager.AddService(new Controller(_serviceManager));
 
@@ -70,8 +74,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
                 var cts = new CancellationTokenSource();
                 // If we want server to stop, just stop the "source"
                 using (serverHandler.Attach(reader, writer))
-                using (clientHandler.Attach(reader, writer))
-                using (new RConnection(_serviceManager, cts.Token)) {
+                using (clientHandler.Attach(reader, writer)) {
                     // Wait for the "stop" request.
                     session.CancellationToken.WaitHandle.WaitOne();
                     cts.Cancel();
@@ -114,7 +117,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
             StreamWriter logWriter = null;
             if (debugMode) {
                 var tempPath = Path.GetTempPath();
-                var fileName = "VSCode_R_JsonRPC-" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".log";
+                var fileName = "VSCode_Python_JsonRPC-" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".log";
                 logWriter = File.CreateText(Path.Combine(tempPath, fileName));
                 logWriter.AutoFlush = true;
             }

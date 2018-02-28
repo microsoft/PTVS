@@ -8,17 +8,13 @@ using static System.FormattableString;
 
 namespace Microsoft.DsTools.Core.Logging {
     public static class LogExtensions {
-        public static IDisposable Measure(this IActionLog log, LogVerbosity verbosity, string message) {
-            if (log.LogVerbosity < verbosity) {
-                return Disposable.Empty;
-            }
-
-            log.Write(verbosity, MessageCategory.General, Invariant($"{message} started"));
+        public static IDisposable Measure(this IActionLog log, string message) {
+            log.Write(MessageCategory.General, Invariant($"{message} started"));
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             return Disposable.Create(() => {
                 stopwatch.Stop();
-                log.Write(verbosity, MessageCategory.General, Invariant($"{message} completed in {stopwatch.ElapsedMilliseconds} ms."));
+                log.Write(MessageCategory.General, Invariant($"{message} completed in {stopwatch.ElapsedMilliseconds} ms."));
             });
         }
     }

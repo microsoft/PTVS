@@ -10,73 +10,40 @@ namespace Microsoft.DsTools.Core.Logging {
     /// Application event logger
     /// </summary>
     public sealed class Logger : IActionLog, IDisposable {
-        private readonly Lazy<IActionLogWriter[]> _logs;
         private readonly string _name;
+        private readonly Lazy<IActionLogWriter> _log;
         private readonly IActionLogWriter _writer;
 
         public string Folder { get; }
 
-        public void Dispose() {
-            if (_logs != null) {
-                foreach (var log in _logs.Value) {
-                    (log as IDisposable)?.Dispose();
-                }
-            }
-        }
+        public void Dispose() => (_log as IDisposable)?.Dispose();
 
         public Logger(IActionLogWriter defaultWriter) {
             _writer = defaultWriter;
-            _logs = Lazy.Create(CreateLogs);
+            _log = Lazy.Create(CreateLog);
         }
 
         public Logger(string name, string folder, IServiceContainer services) {
             _name = name;
-            _logs = Lazy.Create(CreateLogs);
+            _log = Lazy.Create(CreateLog);
             Folder = folder;
         }
 
-        private IActionLogWriter[] CreateLogs() {
-            var logs = new IActionLogWriter[Enum.GetValues(typeof(LogVerbosity)).Length];
-            logs[(int)LogVerbosity.None] = NullLogWriter.Instance;
-
-            IActionLogWriter mainWriter = NullLogWriter.Instance;
-            if (_permissions.CurrentVerbosity >= LogVerbosity.Minimal) {
-                mainWriter = _writer ?? FileLogWriter.InFolder(Folder, _name);
-            }
-
-            // Unfortunately, creation of event sources in OS logs requires local admin rights.
-            // http://www.christiano.ch/wordpress/2009/12/02/iis7-web-application-writing-to-event-log-generates-security-exception/
-            // So we can't use OS event logs as in Dev15 there is no MSI which could elevate..
-            // _maxLogLevel >= LogLevel.Minimal ? (_writer ?? new ApplicationLogWriter(_name)) : NullLogWriter.Instance;
-            logs[(int)LogVerbosity.Minimal] = mainWriter;
-            logs[(int)LogVerbosity.Normal] = _permissions.CurrentVerbosity >= LogVerbosity.Normal ? mainWriter : NullLogWriter.Instance;
-
-            if (_permissions.CurrentVerbosity == LogVerbosity.Traffic) {
-                logs[(int)LogVerbosity.Traffic] = _writer ?? FileLogWriter.InFolder(Folder, _name + ".traffic");
-            } else {
-                logs[(int)LogVerbosity.Traffic] = NullLogWriter.Instance;
-            }
-
-            return logs;
+        private IActionLogWriter CreateLog() {
+            return _writer ?? FileLogWriter.InFolder(Folder, _name);
         }
 
         #region IActionLog
-        public void Write(LogVerbosity verbosity, MessageCategory category, string message) => _logs.Value[(int)verbosity].Write(category, message);
+        public void Write(MessageCategory category, string message) => _log.Value.Write(category, message);
 
-        public void WriteFormat(LogVerbosity verbosity, MessageCategory category, string format, params object[] arguments) {
+        public void WriteFormat(MessageCategory category, string format, params object[] arguments) {
             string message = string.Format(CultureInfo.InvariantCulture, format, arguments);
-            _logs.Value[(int)verbosity].Write(category, message);
+            _log.Value.Write(category, message);
         }
 
-        public void WriteLine(LogVerbosity verbosity, MessageCategory category, string message) => _logs.Value[(int)verbosity].Write(category, message + Environment.NewLine);
+        public void WriteLine(MessageCategory category, string message) => _log.Value.Write(category, message + Environment.NewLine);
 
-        public void Flush() {
-            foreach (var l in _logs.Value) {
-                l?.Flush();
-            }
-        }
-
-        public LogVerbosity LogVerbosity => _permissions.CurrentVerbosity;
+        public void Flush() => _log.Value.Flush();
         #endregion
     }
 }

@@ -14,13 +14,14 @@
     <PackageReference Include="CXuesong.JsonRpc.Standard" Version="0.3.1" />
     <PackageReference Include="CXuesong.JsonRpc.Streams" Version="0.3.1" />
     <PackageReference Include="CXuesong.LanguageServer.VsCode" Version="0.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\AnalysisNetStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Core\Extensions\" />
-    <Folder Include="Server\" />
+    <Folder Include="Editor\" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\NetStandard.targets" />

@@ -4,7 +4,7 @@
 using LanguageServer.VsCode.Contracts.Client;
 using Microsoft.DsTools.Core.Logging;
 using Microsoft.DsTools.Core.Services;
-
+using Microsoft.PythonTools.VsCode.Logging;
 
 namespace Microsoft.PythonTools.VsCode.Client {
     /// <summary>
