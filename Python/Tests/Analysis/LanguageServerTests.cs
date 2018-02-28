@@ -309,8 +309,8 @@ mc";
 
             await AssertCompletion(s, mod1,
                 position: new Position { line = 2, character = 5 },
-                contains: new string[0],
-                excludes: new[] { "value" }
+                contains: new[] { "value" },
+                excludes: new string[0]
             );
 
             await s.UnloadFileAsync(mod2);
