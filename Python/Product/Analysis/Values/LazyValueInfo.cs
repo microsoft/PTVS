@@ -159,10 +159,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private static IEnumerable<IAnalysisSet> ResolveArgs(IAnalysisSet[] args, AnalysisUnit unit, ResolutionContext context) {
             foreach (var a in args.MaybeEnumerate()) {
-                if (a.Split(out IReadOnlyList<LazyValueInfo> lvis, out var rest)) {
-                    yield return rest.UnionAll(lvis.Select(v => v.Resolve(unit, context)));
-                }
-                yield return a;
+                yield return a.Resolve(unit, context, out _);
             }
         }
 
