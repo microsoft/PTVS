@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -508,6 +509,87 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }).Concat(extras).ToArray();
         }
 
+        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
+            var uri = @params.textDocument.uri;
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            TraceMessage($"Hover in {uri} at {@params.position}");
+
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                TraceMessage($"No analysis found for {uri}");
+                return default(Hover);
+            }
+
+            int? version = null;
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
+                        }
+                    }
+                }
+            }
+
+            int index = tree.LocationToIndex(@params.position);
+            var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+            tree.Walk(w);
+            ModuleReference modRef;
+            if (!string.IsNullOrEmpty(w.ImportedName) &&
+                _analyzer.Modules.TryImport(w.ImportedName, out modRef)) {
+
+                // Return module information
+                return new Hover { contents = "{0} : module".FormatUI(w.ImportedName) };
+            }
+
+            Expression expr;
+            SourceSpan exprSpan;
+            Analyzer.InterpreterScope scope = null;
+
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                TraceMessage($"Getting hover for {@params._expr}");
+                expr = analysis.GetExpressionForText(@params._expr, @params.position, out scope, out var exprTree);
+                // This span will not be valid within the document, but it will at least
+                // have the correct length. If we have passed "_expr" then we are likely
+                // planning to ignore the returned span anyway.
+                exprSpan = expr.GetSpan(exprTree);
+            } else {
+                var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
+                expr = finder.GetExpression(@params.position) as Expression;
+                exprSpan = expr.GetSpan(tree);
+            }
+            if (expr == null) {
+                LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
+                return default(Hover);
+            }
+
+            TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+            var values = analysis.GetValues(expr, @params.position, scope).ToList();
+
+            string originalExpr;
+            if (expr is ConstantExpression || expr is ErrorExpression) {
+                originalExpr = null;
+            } else {
+                originalExpr = @params._expr?.Trim();
+                if (string.IsNullOrEmpty(originalExpr)) {
+                    originalExpr = expr.ToCodeString(tree, CodeFormattingOptions.Traditional);
+                }
+            }
+
+            var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
+
+            return new Hover {
+                contents = MakeHoverText(values, originalExpr),
+                range = exprSpan,
+                _version = version,
+                _typeNames = names
+            };
+        }
+
         public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
@@ -636,6 +718,116 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
             }
+        }
+
+        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression) {
+            string firstLongDescription = null;
+            bool multiline = false;
+            var result = new StringBuilder();
+            var descriptions = new HashSet<string>();
+
+            foreach (var v in values) {
+                if (string.IsNullOrEmpty(firstLongDescription)) {
+                    firstLongDescription = v.Description;
+                }
+
+                var description = LimitLines(v.ShortDescription ?? "");
+                if (string.IsNullOrEmpty(description)) {
+                    continue;
+                }
+
+                if (descriptions.Add(description)) {
+                    if (descriptions.Count > 1) {
+                        if (result.Length == 0) {
+                            // Nop
+                        } else if (result[result.Length - 1] != '\n') {
+                            result.Append(", ");
+                        } else {
+                            multiline = true;
+                        }
+                    }
+                    result.Append(description);
+                }
+            }
+
+            if (descriptions.Count == 1 && !string.IsNullOrEmpty(firstLongDescription)) {
+                result.Clear();
+                result.Append(firstLongDescription);
+            }
+
+            if (!string.IsNullOrEmpty(originalExpression)) {
+                if (originalExpression.Length > 4096) {
+                    originalExpression = originalExpression.Substring(0, 4093) + "...";
+                }
+                if (multiline) {
+                    result.Insert(0, originalExpression + ": " + Environment.NewLine);
+                } else if (result.Length > 0) {
+                    result.Insert(0, originalExpression + ": ");
+                } else {
+                    result.Append(originalExpression);
+                    result.Append(": ");
+                    result.Append("<unknown type>");
+                }
+            }
+
+            return result.ToString();
+        }
+
+        internal static string LimitLines(
+            string str,
+            int maxLines = 30,
+            int charsPerLine = 200,
+            bool ellipsisAtEnd = true,
+            bool stopAtFirstBlankLine = false
+        ) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            int lineCount = 0;
+            var prettyPrinted = new StringBuilder();
+            bool wasEmpty = true;
+
+            using (var reader = new StringReader(str)) {
+                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
+                    if (string.IsNullOrWhiteSpace(line)) {
+                        if (wasEmpty) {
+                            continue;
+                        }
+                        wasEmpty = true;
+                        if (stopAtFirstBlankLine) {
+                            lineCount = maxLines;
+                            break;
+                        }
+                        lineCount += 1;
+                        prettyPrinted.AppendLine();
+                    } else {
+                        wasEmpty = false;
+                        lineCount += (line.Length / charsPerLine) + 1;
+                        prettyPrinted.AppendLine(line);
+                    }
+                }
+            }
+            if (ellipsisAtEnd && lineCount >= maxLines) {
+                prettyPrinted.AppendLine("...");
+            }
+            return prettyPrinted.ToString().Trim();
+        }
+
+        private static string GetFullTypeName(AnalysisValue value) {
+            if (value is IHasQualifiedName qualName) {
+                return qualName.FullyQualifiedName;
+            }
+
+            if (value is Values.InstanceInfo ii) {
+                return GetFullTypeName(ii.ClassInfo);
+            }
+
+            if (value is Values.BuiltinInstanceInfo bii) {
+                return GetFullTypeName(bii.ClassInfo);
+            }
+
+            return value?.Name;
         }
 
         #endregion

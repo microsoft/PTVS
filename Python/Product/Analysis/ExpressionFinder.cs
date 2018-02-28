@@ -27,8 +27,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public ExpressionFinder(string expression, PythonLanguageVersion version, GetExpressionOptions options) {
-            var parserOpts = new ParserOptions { Verbatim = true };
-            var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts);
+            var parser = Parser.CreateParser(new StringReader(expression), version, ParserOptions.Default);
             Ast = parser.ParseTopExpression();
             Ast.Body.SetLoc(0, expression.Length);
             Options = options.Clone();

@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class FunctionInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription {
+    internal class FunctionInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private Dictionary<AnalysisValue, IAnalysisSet> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
         private readonly FunctionDefinition _functionDefinition;
@@ -261,35 +261,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            if (FunctionDefinition.IsLambda) {
-                bool needsLambda = true;
-                foreach (var kv in GetParameterString()) {
-                    if (needsLambda) {
-                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda ");
-                        needsLambda = false;
-                    }
-                    yield return kv;
-                }
-                if (needsLambda) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda:");
-                } else {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ":");
-                }
-
+            if (FunctionDefinition.LambdaExpression != null) {
                 yield return new KeyValuePair<string, string>(
-                    WellKnownRichDescriptionKinds.Misc, 
-                    (
-                        (FunctionDefinition.Body as ReturnStatement)?.Expression ??
-                        (Node)(FunctionDefinition.Body as ExpressionStatement)?.Expression ??
-                        FunctionDefinition.Body
-                    ).ToCodeString(DeclaringModule.Tree)
+                    WellKnownRichDescriptionKinds.Misc,
+                    FunctionDefinition.LambdaExpression.ToCodeString(DeclaringModule.Tree, CodeFormattingOptions.Traditional).Trim()
                 );
             } else {
                 if (FunctionDefinition.IsCoroutine) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "async ");
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "def ");
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, GetFullName());
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullyQualifiedName);
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
                 foreach (var kv in GetParameterString()) {
                     yield return kv;
@@ -320,17 +302,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private string GetFullName() {
-            var name = FunctionDefinition.Name;
-            for (var stmt = FunctionDefinition.Parent; stmt != null; stmt = stmt.Parent) {
-                if (stmt.IsGlobal) {
-                    return DeclaringModule.ModuleName + "." + name;
+        public string FullyQualifiedName {
+            get {
+                var name = FunctionDefinition.Name;
+                for (var stmt = FunctionDefinition.Parent; stmt != null; stmt = stmt.Parent) {
+                    if (stmt.IsGlobal) {
+                        return DeclaringModule.ModuleName + "." + name;
+                    }
+                    if (!string.IsNullOrEmpty(stmt.Name)) {
+                        name = stmt.Name + "." + name;
+                    }
                 }
-                if (!string.IsNullOrEmpty(stmt.Name)) {
-                    name = stmt.Name + "." + name;
-                }
+                return name;
             }
-            return name;
+        }
+
+        public KeyValuePair<string, string> FullyQualifiedNamePair {
+            get {
+                var name = FunctionDefinition.Name;
+                for (var stmt = FunctionDefinition.Parent; stmt != null; stmt = stmt.Parent) {
+                    if (stmt.IsGlobal) {
+                        return new KeyValuePair<string, string>(DeclaringModule.ModuleName, name);
+                    }
+                    if (stmt is ClassDefinition) {
+                        name = stmt.Name + "." + name;
+                    } else {
+                        break;
+                    }
+                }
+                throw new NotSupportedException();
+            }
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {

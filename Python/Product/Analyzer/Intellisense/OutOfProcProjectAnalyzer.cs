@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = await GetModules(request); break;
                 case AP.SignaturesRequest.Command: response = await GetSignatures((AP.SignaturesRequest)request); break;
-                case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
+                case AP.QuickInfoRequest.Command: response = await GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = await AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
                 case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
@@ -1265,135 +1265,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private Response GetQuickInfo(AP.QuickInfoRequest request) {
-            var entry = GetPythonEntry(request.documentUri);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-            string text = null;
-            var loc = new SourceLocation(request.line, request.column);
-
-            if (entry.Tree != null) {
-                var w = new ImportedModuleNameWalker(
-                    entry.ModuleName,
-                    entry.Tree.LocationToIndex(loc)
-                );
-                entry.Tree.Walk(w);
-                if (!string.IsNullOrEmpty(w.ImportedName)) {
-                    return new AP.QuickInfoResponse {
-                        text = w.ImportedName + ": module"
-                    };
-                }
+        private async Task<Response> GetQuickInfo(AP.QuickInfoRequest request) {
+            LS.Hover hover;
+            using (new DebugTimer("QuickInfo")) {
+                hover = await _server.Hover(new LS.TextDocumentPositionParams {
+                    textDocument = request.documentUri,
+                    position = new SourceLocation(request.line, request.column),
+                    _expr = request.expr,
+                });
             }
 
-            if (entry.Analysis != null) {
-                bool first = true;
-                var result = new StringBuilder();
-                int count = 0;
-                var descriptions = new HashSet<string>();
-                bool multiline = false;
-                bool includeExpression = true;
-
-                var exprAst = ModuleAnalysis.GetExpression(entry.Analysis.GetAstFromText(request.expr, loc)?.Body);
-                if (exprAst is ConstantExpression || exprAst is ErrorExpression) {
-                    includeExpression = false;
-                }
-
-                var values = entry.Analysis.GetValues(request.expr, loc);
-                var listVars = new List<AnalysisValue>(values);
-                
-                foreach (var v in listVars) {
-                    string description = null;
-                    if (listVars.Count == 1) {
-                        if (!String.IsNullOrWhiteSpace(v.Description)) {
-                            description = v.Description;
-                        }
-                    } else {
-                        if (!String.IsNullOrWhiteSpace(v.ShortDescription)) {
-                            description = v.ShortDescription;
-                        }
-                    }
-
-                    description = LimitLines(description);
-
-                    if (description != null && descriptions.Add(description)) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            if (result.Length == 0 || result[result.Length - 1] != '\n') {
-                                result.Append(", ");
-                            } else {
-                                multiline = true;
-                            }
-                        }
-                        result.Append(description);
-                        count++;
-                    }
-                }
-
-                if (includeExpression) {
-                    string expr = request.expr;
-                    if (expr.Length > 4096) {
-                        expr = expr.Substring(0, 4093) + "...";
-                    }
-                    if (multiline) {
-                        result.Insert(0, expr + ": " + Environment.NewLine);
-                    } else if (result.Length > 0) {
-                        result.Insert(0, expr + ": ");
-                    } else {
-                        result.Append(expr);
-                        result.Append(": ");
-                        result.Append("<unknown type>");
-                    }
-                }
-
-                text = result.ToString();
-            }
-
-            return new AP.QuickInfoResponse() {
-                text = text
+            return new AP.QuickInfoResponse {
+                text = hover.contents.value
             };
-        }
-
-        internal static string LimitLines(
-            string str,
-            int maxLines = 30,
-            int charsPerLine = 200,
-            bool ellipsisAtEnd = true,
-            bool stopAtFirstBlankLine = false
-        ) {
-            if (string.IsNullOrEmpty(str)) {
-                return str;
-            }
-
-            int lineCount = 0;
-            var prettyPrinted = new StringBuilder();
-            bool wasEmpty = true;
-
-            using (var reader = new StringReader(str)) {
-                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
-                    if (string.IsNullOrWhiteSpace(line)) {
-                        if (wasEmpty) {
-                            continue;
-                        }
-                        wasEmpty = true;
-                        if (stopAtFirstBlankLine) {
-                            lineCount = maxLines;
-                            break;
-                        }
-                        lineCount += 1;
-                        prettyPrinted.AppendLine();
-                    } else {
-                        wasEmpty = false;
-                        lineCount += (line.Length / charsPerLine) + 1;
-                        prettyPrinted.AppendLine(line);
-                    }
-                }
-            }
-            if (ellipsisAtEnd && lineCount >= maxLines) {
-                prettyPrinted.AppendLine("...");
-            }
-            return prettyPrinted.ToString().Trim();
         }
 
         private async Task<Response> GetSignatures(AP.SignaturesRequest request) {

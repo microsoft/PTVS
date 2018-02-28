@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer, IHasRichDescription {
+    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private BuiltinInstanceInfo _inst;
         private string _doc;
         private readonly MemberReferences _referencedMembers = new MemberReferences();
@@ -80,6 +80,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public string ShortInstanceDescription => InstanceDescription;
+
+        public string FullyQualifiedName {
+            get {
+                if (_type != null) {
+                    if (_type.IsBuiltin) {
+                        return _type.Name;
+                    }
+                    return _type.DeclaringModule.Name + "." + _type.Name;
+                }
+                return null;
+            }
+        }
+
+        public KeyValuePair<string, string> FullyQualifiedNamePair {
+            get {
+                if (_type != null) {
+                    return new KeyValuePair<string, string>(_type.DeclaringModule.Name, _type.Name);
+                }
+                throw new NotSupportedException();
+            }
+        }
 
         public override IEnumerable<IAnalysisSet> Mro {
             get {
