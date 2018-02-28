@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Import Project="..\ProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{46DBB052-6ADB-44CC-882A-96930EE4A400}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.PythonTools.BuildTasks</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.BuildTasks.Core</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <DefineConstants>BUILDTASKS_CORE;NO_FACTORIES;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.Build.Utilities.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Analysis\Infrastructure\PathEqualityComparer.cs">
+      <Link>Infrastructure\PathEqualityComparer.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Infrastructure\PathUtils.cs">
+      <Link>Infrastructure\PathUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Infrastructure\StringExtensions.cs">
+      <Link>Infrastructure\StringExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Interpreter\InterpreterArchitecture.cs">
+      <Link>Interpreter\InterpreterArchitecture.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Interpreter\InterpreterConfiguration.cs">
+      <Link>Interpreter\InterpreterConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Interpreter\InterpreterUIMode.cs">
+      <Link>Interpreter\InterpreterUIMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\ModulePath.cs">
+      <Link>ModulePath.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Parsing\PythonLanguageVersion.cs">
+      <Link>PythonLanguageVersion.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\CPythonInterpreterFactoryConstants.cs">
+      <Link>Interpreter\CPythonInterpreterFactoryConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\MSBuildConstants.cs">
+      <Link>Interpreter\MSBuildConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\PythonInterpreterInformation.cs">
+      <Link>Interpreter\PythonInterpreterInformation.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\PythonRegistrySearch.cs">
+      <Link>Interpreter\PythonRegistrySearch.cs</Link>
+    </Compile>
+    <Compile Include="ConvertPathToModuleName.cs" />
+    <Compile Include="PythonCommand.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResolveEnvironment.cs" />
+    <Compile Include="TaskFactory.cs" />
+    <Compile Include="ValidateRegexPattern.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Microsoft.PythonTools.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="TestTargets\README.txt" />
+    <Content Include="Microsoft.PythonTools.Web.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="ptvs_virtualenv_proxy.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\WFastCGI\wfastcgi.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <Link>wfastcgi.py</Link>
+    </Content>
+    <Content Include="Microsoft.PythonTools.Worker.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
+    </ProjectReference>
+    <ProjectReference2 Include="..\WebRole\WebRole.csproj" />
+  </ItemGroup>
+  <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -78,6 +78,7 @@ if (-not $uninstall) {
     pushd $tmp
 
     copy -Recurse -Force "$source\*.vsix" .
+    del *.PythonTools.BuildCore.Vsix.*
 
     gci "*.vsix" | %{
         $d = mkdir "Content_$($_.Name)" -Force

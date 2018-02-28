@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.Debugger {
         public override int Read(byte[] buffer, int offset, int count) {
             try {
                 return _networkStream.Read(buffer, offset, count);
-            } catch (IOException ex) when ((ex.InnerException as SocketException)?.SocketErrorCode == SocketError.ConnectionReset) {
+            } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to read remaining messages.
                 // Returning 0 here will tell the debugger that the stream is empty.
             }
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Debugger {
         public override void Write(byte[] buffer, int offset, int count) {
             try {
                 _networkStream.Write(buffer, offset, count);
-            } catch (IOException ex) when ((ex.InnerException as SocketException)?.SocketErrorCode == SocketError.ConnectionReset) {
+            } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to write to it.
                 Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugAdapterProcessStream));
             }
@@ -66,6 +67,10 @@ namespace Microsoft.PythonTools.Debugger {
         protected override void Dispose(bool disposing) {
             _networkStream.Dispose();
             base.Dispose(disposing);
+        }
+
+        private static bool IsExpectedError(SocketException ex) {
+            return ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
         }
     }
 }
