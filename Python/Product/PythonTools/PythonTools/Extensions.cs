@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools {
         }
 
         public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {
-            var node = (self.GetProject().GetCommonProject() as PythonProjectNode);
+            var node = (self.GetProject()?.GetCommonProject() as PythonProjectNode);
             if (node != null) {
                 return node.GetInterpreterFactory();
             }
@@ -229,7 +229,7 @@ namespace Microsoft.PythonTools {
 
 
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
-            return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
+            return ((IVsHierarchy)project).GetProject()?.GetCommonProject() as PythonProjectNode;
         }
 
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {

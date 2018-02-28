@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public override void RegisterHierarchy(IVsHierarchy hierarchy) {
-            var project = hierarchy.GetProject().GetPythonProject();
+            var project = hierarchy.GetProject()?.GetPythonProject();
             if (project != null) {
                 lock (_handlers) {
                     if (!_handlers.ContainsKey(project)) {
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public override void UnregisterHierarchy(IVsHierarchy hierarchy) {
-            var project = hierarchy.GetProject().GetPythonProject();
+            var project = hierarchy.GetProject()?.GetPythonProject();
             if (project != null) {
                 lock (_handlers) {
                     AnalysisCompleteHandler handler;
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Navigation {
             }
 
             var project = task.ModuleID.Hierarchy
-                    .GetProject()
+                    .GetProject()?
                     .GetPythonProject();
             if (project == null) {
                 return;

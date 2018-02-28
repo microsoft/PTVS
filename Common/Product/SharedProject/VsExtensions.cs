@@ -27,14 +27,13 @@ namespace Microsoft.VisualStudioTools {
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
             object project;
 
-            int hr = hierarchy.GetProperty(
+            if (ErrorHandler.Failed(hierarchy.GetProperty(
                 VSConstants.VSITEMID_ROOT,
                 (int)__VSHPROPID.VSHPROPID_ExtObject,
                 out project
-            );
-
-            Debug.Assert(ErrorHandler.Succeeded(hr), string.Format("unexpected HR={0:X08}", hr));
-            ErrorHandler.ThrowOnFailure(hr);
+            ))) {
+                return null;
+            }
 
             return (project as EnvDTE.Project);
         }

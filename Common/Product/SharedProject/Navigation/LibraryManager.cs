@@ -102,8 +102,12 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 return;
             }
 
+            var commonProject = hierarchy.GetProject()?.GetCommonProject();
+            if (commonProject == null) {
+                return;
+            }
+
             RegisterLibrary();
-            var commonProject = hierarchy.GetProject().GetCommonProject();
             HierarchyListener listener = new HierarchyListener(hierarchy, this);
             var node = _hierarchies[hierarchy] = new HierarchyInfo(
                 listener,
@@ -191,7 +195,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// </summary>
         protected void FileParsed(LibraryTask task) {
             try {
-                var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
+                var project = task.ModuleID.Hierarchy.GetProject()?.GetCommonProject();
+                if (project == null) {
+                    return;
+                }
 
                 HierarchyNode fileNode = fileNode = project.NodeFromItemId(task.ModuleID.ItemID);
                 HierarchyInfo parent;
