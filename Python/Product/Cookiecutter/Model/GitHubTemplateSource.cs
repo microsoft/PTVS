@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitHubTemplateSource : ITemplateSource {
@@ -63,6 +64,8 @@ namespace Microsoft.CookiecutterTools.Model {
 
                 return new TemplateEnumerationResult(templates, result.Links.Next);
             } catch (WebException ex) {
+                throw new TemplateEnumerationException(Strings.GitHubSearchError, ex);
+            } catch (JsonException ex) {
                 throw new TemplateEnumerationException(Strings.GitHubSearchError, ex);
             }
         }
