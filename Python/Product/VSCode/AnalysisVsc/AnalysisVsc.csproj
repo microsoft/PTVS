@@ -4,7 +4,7 @@
     <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.VsCode</AssemblyName>
   </PropertyGroup>
-  <Import Project="..\NetStandard.settings" />
+  <Import Project="..\..\NetStandard.settings" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
     <Compile Remove="AssemblyInfo.cs" />
@@ -18,11 +18,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\AnalysisNetStandard.csproj" />
+    <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Editor\" />
+    <Folder Include="obj\Debug\" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="..\NetStandard.targets" />
+  <Import Project="..\..\NetStandard.targets" />
 </Project>
