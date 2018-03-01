@@ -11,7 +11,7 @@ namespace Microsoft.PythonTools.VsCode.Services {
         private static CoreShell _instance;
 
         public static CoreShell Current => _instance;
-        public IServiceManager ServiceManager { get; } = new ServiceContainer();
+        public IServiceManager ServiceManager { get; } = new ServiceManager();
         public IServiceContainer Services => ServiceManager;
 
         public static IDisposable Create() {

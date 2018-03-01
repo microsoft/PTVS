@@ -16,8 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ResponseError {
         public int code;
         public string message;
@@ -29,6 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public T data;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Position {
         /// <summary>
         /// Line position in a document (zero-based).
@@ -51,6 +54,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override string ToString() => ((SourceLocation)this).ToString();
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Range {
         public Position start, end;
 
@@ -60,11 +64,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override string ToString() => ((SourceSpan)this).ToString();
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Location {
         public Uri uri;
         public Range range;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Diagnostic {
         /// <summary>
         /// The range at which the message applies.
@@ -102,6 +108,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         Hint = 4
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Command {
         /// <summary>
         /// Title of the command, like `save`.
@@ -119,6 +126,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object[] arguments;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextEdit {
         /// <summary>
         /// The range of the text document to be manipulated. To insert
@@ -140,22 +148,26 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentEdit {
         public VersionedTextDocumentIdentifier textDocument;
         public TextEdit[] edits;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct WorkspaceEdit {
         public Dictionary<Uri, TextEdit[]> changes;
         public TextDocumentEdit[] documentChanges;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentIdentifier {
         public Uri uri;
 
         public static implicit operator TextDocumentIdentifier(Uri uri) => new TextDocumentIdentifier { uri = uri };
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentItem {
         public Uri uri;
         public string languageId;
@@ -163,11 +175,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string text;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct VersionedTextDocumentIdentifier {
         public Uri uri;
         public int? version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentFilter {
         /// <summary>
         /// A language id, like `typescript`.
@@ -185,6 +199,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string pattern;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct MarkupContent {
         public MarkupKind kind;
         public string value;
@@ -194,7 +209,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// <summary>
     /// Required layout for the initializationOptions member of initializeParams
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public struct PythonInitializationOptions {
+        [JsonObject(MemberSerialization.OptOut)]
         public struct Interpreter {
             /// <summary>
             /// The serialized info required to restore an interpreter factory
@@ -209,25 +226,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             /// </summary>
             public string version;
         }
+        [JsonProperty]
         public Interpreter interpreter;
-
+        [JsonProperty]
         public string[] searchPaths;
     }
 
 
+    [JsonObject(MemberSerialization.OptIn)]
     public struct WorkspaceClientCapabilities {
+        [JsonProperty]
         public bool applyEdit;
+
         public struct WorkspaceEditCapabilities { public bool documentChanges; }
+        [JsonProperty]
         public WorkspaceEditCapabilities? documentChanges;
 
         public struct DidConfigurationChangeCapabilities { public bool dynamicRegistration; }
+        [JsonProperty]
         public DidConfigurationChangeCapabilities? didConfigurationChange;
+
         public struct DidChangeWatchedFilesCapabilities { public bool dynamicRegistration; }
+        [JsonProperty]
         public DidChangeWatchedFilesCapabilities? didChangeWatchedFiles;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct SymbolCapabilities {
             public bool dynamicRegistration;
 
+            [JsonObject(MemberSerialization.OptOut)]
             public struct SymbolKindCapabilities {
                 /// <summary>
                 /// The symbol kind values the client supports. When this
@@ -241,15 +268,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// </summary>
                 public SymbolKind[] valueSet;
             }
+            [JsonProperty]
             public SymbolKindCapabilities? symbolKind;
         }
+
+        [JsonProperty]
         public SymbolCapabilities? symbol;
 
         public struct ExecuteCommandCapabilities { public bool dynamicRegistration; }
+        [JsonProperty]
         public ExecuteCommandCapabilities? executeCommand;
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public struct TextDocumentClientCapabilities {
+        [JsonObject(MemberSerialization.OptOut)]
         public struct SynchronizationCapabilities {
             public bool dynamicRegistration;
             public bool willSave;
@@ -261,11 +294,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public bool willSaveWaitUntil;
             public bool didSave;
         }
+        [JsonProperty]
         public SynchronizationCapabilities? synchronization;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct CompletionCapabilities {
             public bool dynamicRegistration;
 
+            [JsonObject(MemberSerialization.OptOut)]
             public struct CompletionItemCapabilities {
                 /// <summary>
                 /// Client supports snippets as insert text.
@@ -283,6 +319,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             public CompletionItemCapabilities? completionItem;
 
+            [JsonObject(MemberSerialization.OptOut)]
             public struct CompletionItemKindCapabilities {
                 /// <summary>
                 /// The completion item kind values the client supports. When this
@@ -306,6 +343,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public CompletionCapabilities? completion;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct HoverCapabilities {
             public bool dynamicRegistration;
             /// <summary>
@@ -316,6 +354,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public HoverCapabilities? hover;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct SignatureHelpCapabilities {
             public bool dynamicRegistration;
 
@@ -330,12 +369,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public SignatureHelpCapabilities? signatureHelp;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct ReferencesCapabilities { public bool dynamicRegistration; }
         public ReferencesCapabilities? references;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct DocumentHighlightCapabilities { public bool dynamicRegistration; }
         public DocumentHighlightCapabilities? documentHighlight;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct DocumentSymbolCapabilities {
             public bool dynamicRegistration;
             public struct SymbolKindCapabilities {
@@ -355,27 +397,34 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public DocumentSymbolCapabilities? documentSymbol;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct FormattingCapabilities { public bool dynamicRegistration; }
         public FormattingCapabilities? formatting;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct RangeFormattingCapabilities { public bool dynamicRegistration; }
         public RangeFormattingCapabilities? rangeFormatting;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct OnTypeFormattingCapabilities { public bool dynamicRegistration; }
         public OnTypeFormattingCapabilities? onTypeFormatting;
 
         public struct DefinitionCapabilities { public bool dynamicRegistration; }
         public DefinitionCapabilities? definition;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct CodeActionCapabilities { public bool dynamicRegistration; }
         public CodeActionCapabilities? codeAction;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct CodeLensCapabilities { public bool dynamicRegistration; }
         public CodeLensCapabilities? codeLens;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct DocumentLinkCapabilities { public bool dynamicRegistration; }
         public DocumentLinkCapabilities? documentLink;
 
+        [JsonObject(MemberSerialization.OptOut)]
         public struct RenameCapabilities { public bool dynamicRegistration; }
         public RenameCapabilities? rename;
     }
@@ -384,6 +433,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// This struct is for Python-specific extensions. It is included with
     /// client capabilities following the specification for extra settings.
     /// </summary>
+    [JsonObject(MemberSerialization.OptOut)]
     public struct PythonClientCapabilities {
         /// <summary>
         /// Client expects analysis progress updates, including notifications
@@ -414,6 +464,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool? liveLinting;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ClientCapabilities {
         public WorkspaceClientCapabilities? workspace;
         public TextDocumentClientCapabilities? textDocument;
@@ -422,6 +473,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CompletionOptions {
         /// <summary>
         /// The server provides support to resolve additional
@@ -434,6 +486,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string[] triggerCharacters;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct SignatureHelpOptions {
         /// <summary>
         /// The characters that trigger signature help
@@ -442,27 +495,33 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string[] triggerCharacters;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CodeLensOptions {
         public bool resolveProvider;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentOnTypeFormattingOptions {
         public string firstTriggerCharacter;
         public string[] moreTriggerCharacter;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentLinkOptions {
         public bool resolveProvider;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ExecuteCommandOptions {
         public string[] commands;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct SaveOptions {
         public bool includeText;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentSyncOptions {
         /// <summary>
         /// Open and close notifications are sent to the server.
@@ -474,6 +533,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SaveOptions? save;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ServerCapabilities {
         public TextDocumentSyncOptions? textDocumentSync;
         public bool hoverProvider;
@@ -495,45 +555,55 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object experimental;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct MessageActionItem {
         public string title;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Registration {
         public string id;
         public string method;
         public IRegistrationOptions registerOptions;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public interface IRegistrationOptions { }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentRegistrationOptions : IRegistrationOptions {
         public DocumentFilter? documentSelector;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Unregistration {
         public string id;
         public string method;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct FileEvent {
         public Uri uri;
         public FileChangeType type;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DidChangeWatchedFilesRegistrationOptions : IRegistrationOptions {
         public FileSystemWatcher[] watchers;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct FileSystemWatcher {
         public string globPattern;
         public WatchKind? type;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ExecuteCommandRegistrationOptions : IRegistrationOptions {
         public string[] commands;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentContentChangedEvent {
         public Range? range;
         public int? rangeLength;
@@ -545,11 +615,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public TextDocumentSyncKind syncKind;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct TextDocumentSaveRegistrationOptions : IRegistrationOptions {
         public DocumentFilter? documentSelector;
         public bool includeText;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CompletionList {
         /// <summary>
         /// This list is not complete. Further typing should result in recomputing
@@ -559,6 +631,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public CompletionItem[] items;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CompletionItem {
         public string label;
         public CompletionItemKind kind;
@@ -579,18 +652,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     // Not in LSP spec
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CompletionItemValue {
         public string description;
         public string documentation;
         public Reference[] references;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CompletionRegistrationOptions : IRegistrationOptions {
         public DocumentFilter? documentSelector;
         public string[] triggerCharacters;
         public bool resolveProvider;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct Hover {
         public MarkupContent contents;
         public Range? range;
@@ -601,18 +677,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct SignatureHelp {
         public SignatureInformation[] signatures;
         public int activeSignature;
         public int activeParameter;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct SignatureInformation {
         public string label;
         public MarkupContent? documentation;
         public ParameterInformation[] parameters;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct ParameterInformation {
         public string label;
         public MarkupContent? documentation;
@@ -645,6 +724,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Range? _definitionRange;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentHighlight {
         public Range range;
         public DocumentHighlightKind kind;
@@ -655,6 +735,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct SymbolInformation {
         public string name;
         public SymbolKind kind;
@@ -674,6 +755,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string _kind;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct CodeLens {
         public Range range;
         public Command? command;
@@ -685,6 +767,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentLink {
         public Range range;
         public Uri target;
@@ -695,22 +778,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentLinkRegistrationOptions : IRegistrationOptions {
         public DocumentFilter? documentSelector;
         public bool resolveProvider;
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct FormattingOptions {
         public int tabSize;
         public bool insertSpaces;
 
     }
 
+    [JsonObject(MemberSerialization.OptOut)]
     public struct DocumentOnTypeFormattingRegistrationOptions : IRegistrationOptions {
         public DocumentFilter? documentSelector;
         public string firstTriggerCharacter;
         public string[] moreTriggerCharacters;
     }
-
 }
 

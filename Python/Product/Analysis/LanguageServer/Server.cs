@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
@@ -43,6 +44,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
+        private readonly CancellationTokenSource _sessionTokenSource;
 
         internal Task _loadingFromDirectory;
 
@@ -53,7 +55,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // If null, all files must be added manually
         private Uri _rootDir;
 
-        public Server() {
+        public Server(CancellationTokenSource sessionTokenSource = null) {
+            _sessionTokenSource = sessionTokenSource;
             _queue = new AnalysisQueue();
             _queue.UnhandledException += Analysis_UnhandledException;
             _pendingAnalysisEnqueue = new VolatileCounter();
@@ -71,6 +74,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void Dispose() {
             _queue.Dispose();
+            _sessionTokenSource?.Cancel();
         }
 
         private void TraceMessage(IFormattable message) {
@@ -125,9 +129,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override Task Shutdown() {
             Interlocked.Exchange(ref _analyzer, null)?.Dispose();
             _projectFiles.Clear();
+            _sessionTokenSource?.Cancel();
             return Task.CompletedTask;
         }
 
+        [JsonRpcMethod("workspace/didOpenTextDocument")]
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
 
@@ -153,6 +159,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        [JsonRpcMethod("workspace/didChangeTextDocument")]
         public override async Task DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             var changes = @params.contentChanges;
             if (changes == null) {
@@ -217,6 +224,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         }
 
+        [JsonRpcMethod("workspace/didChangeWatchedFiles")]
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
@@ -244,6 +252,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        [JsonRpcMethod("workspace/didCloseTextDocument")]
         public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
             var doc = GetEntry(@params.textDocument.uri) as IDocument;
             if (doc != null) {
@@ -256,6 +265,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.CompletedTask;
         }
 
+        [JsonRpcMethod("workspace/didChangeConfiguration")]
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
