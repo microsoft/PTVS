@@ -22,11 +22,16 @@ namespace Microsoft.DsTools.Core.Services.Shell {
         Task<MessageActionItem?> ShowMessage(string message, MessageActionItem[] actions, MessageType messageType);
 
         /// <summary>
-        /// Writes message to the host application outut log
+        /// Writes message to the host application output log
         /// </summary>
         /// <param name="message"></param>
         /// <param name="messageType"></param>
-        /// <returns></returns>
         Task LogMessage(string message, MessageType messageType);
+
+        /// <summary>
+        /// Writes message to the host application status bar
+        /// </summary>
+        /// <param name="message"></param>
+        Task SetStatusBarMessage(string message);
     }
 }

@@ -36,5 +36,8 @@ namespace Microsoft.PythonTools.VsCode.Services {
             };
             return _rpc.InvokeAsync<MessageActionItem?>("window/logMessage", parameters);
         }
+
+        public Task SetStatusBarMessage(string message) 
+            => _rpc.InvokeAsync<MessageActionItem?>("window/setStatusBarMessage", message);
     }
 }

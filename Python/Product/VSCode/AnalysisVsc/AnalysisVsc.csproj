@@ -1,26 +1,28 @@
 ﻿<Project>
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
-    <AssemblyName>Microsoft.PythonTools.VsCode</AssemblyName>
-  </PropertyGroup>
-  <Import Project="..\..\NetStandard.settings" />
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-  <ItemGroup>
-    <Compile Remove="AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
-    <PackageReference Include="StreamJsonRpc" Version="1.3.23" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="obj\Debug\" />
-  </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="..\..\NetStandard.targets" />
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.0</TargetFramework>
+        <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
+        <AssemblyName>Microsoft.PythonTools.VsCode</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\..\NetStandard.settings" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="AssemblyInfo.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+        <PackageReference Include="StreamJsonRpc" Version="1.3.23" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="obj\Debug\" />
+    </ItemGroup>
+    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+    <Import Project="..\..\NetStandard.targets" />
 </Project>
