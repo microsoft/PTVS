@@ -167,13 +167,17 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(MemberExpression node) {
                 if (base.Walk(node)) {
-                    if (_options.MemberName && Location >= node.NameHeader && _endLocation <= node.EndIndex) {
-                        var nameNode = new NameExpression(node.Name);
-                        nameNode.SetLoc(node.NameHeader, node.EndIndex);
-                        Expression = nameNode;
-                        return false;
+                    if (Location >= node.NameHeader && _endLocation <= node.EndIndex) {
+                        if (_options.MemberName) {
+                            var nameNode = new NameExpression(node.Name);
+                            nameNode.SetLoc(node.NameHeader, node.EndIndex);
+                            Expression = nameNode;
+                            return false;
+                        } else if (_options.Members) {
+                            Expression = node;
+                        }
                     }
-                    return Save(node, true, _options.Members);
+                    return true;
                 }
                 return false;
             }

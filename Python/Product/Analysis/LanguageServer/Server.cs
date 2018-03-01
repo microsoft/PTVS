@@ -80,12 +80,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void TraceMessage(string message) {
-            if (_traceLogging) {
-                LogMessage(MessageType.Log, message);
-            }
-        }
-
         #region Client message handling
 
         public async override Task<InitializeResult> Initialize(InitializeParams @params) {
@@ -323,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     members = analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
-                    TraceMessage("Completing all names");
+                    TraceMessage($"Completing all names");
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
@@ -613,8 +607,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return _projectFiles.GetOrAdd(documentUri, entry);
         }
 
-        internal IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
-
         internal IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
             IProjectEntry entry = null;
             if ((documentUri == null || !_projectFiles.TryGetValue(documentUri, out entry)) && throwIfMissing) {
@@ -834,6 +826,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Non-LSP public API
 
+        public IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
+
         public Task<IProjectEntry> LoadFileAsync(Uri documentUri) {
             return AddFileAsync(documentUri, null);
         }
@@ -867,13 +861,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public async Task WaitForCompleteAnalysisAsync() {
             // Wait for all current parsing to complete
-            TraceMessage("Waiting for parsing to complete");
+            TraceMessage($"Waiting for parsing to complete");
             await _parseQueue.WaitForAllAsync();
-            TraceMessage("Parsing complete. Waiting for analysis entries to enqueue");
+            TraceMessage($"Parsing complete. Waiting for analysis entries to enqueue");
             await _pendingAnalysisEnqueue.WaitForZeroAsync();
-            TraceMessage("Enqueue complete. Waiting for analysis to complete");
+            TraceMessage($"Enqueue complete. Waiting for analysis to complete");
             await _queue.WaitForCompleteAsync();
-            TraceMessage("Analysis complete.");
+            TraceMessage($"Analysis complete.");
         }
 
         public int EstimateRemainingWork() {
@@ -1076,7 +1070,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } catch (BadSourceException) {
             } catch (OperationCanceledException ex) {
                 LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
-                TraceMessage(ex.ToString());
+                TraceMessage($"{ex}");
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
             }
