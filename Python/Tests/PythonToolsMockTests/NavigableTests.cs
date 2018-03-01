@@ -265,7 +265,7 @@ res = my_var * 10
                         }
                     }
                 } else {
-                    Assert.AreEqual(0, actualLocations.Length);
+                    Assert.AreEqual(0, actualLocations.Length, "incorrect number of locations");
                 }
             }
         }
