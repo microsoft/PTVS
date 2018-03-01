@@ -292,7 +292,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     .AsParallel()
                     .Where(folder => Directory.Exists(folder))
                     .Select(folder => CreateEnvironmentInfo(folder))
-                    .Where(env => env != null);
+                    .Where(env => env != null)
+                    .ToList();
             }
 
             return Enumerable.Empty<PythonInterpreterInformation>();
