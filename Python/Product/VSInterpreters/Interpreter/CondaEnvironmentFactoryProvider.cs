@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            List<PythonInterpreterInformation> found = null;
+            IReadOnlyList<PythonInterpreterInformation> found = null;
 
             try {
                 // Try to find an existing root conda installation
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
                 var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
                 if (mainCondaExePath != null) {
-                    found = FindCondaEnvironments(mainCondaExePath).ToList();
+                    found = FindCondaEnvironments(mainCondaExePath);
                 }
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
@@ -285,7 +285,7 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private IEnumerable<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
+        private IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var condaInfoResult = ExecuteCondaInfo(condaPath);
             if (condaInfoResult != null) {
                 return condaInfoResult.EnvironmentFolders
@@ -296,7 +296,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     .ToList();
             }
 
-            return Enumerable.Empty<PythonInterpreterInformation>();
+            return Enumerable.Empty<PythonInterpreterInformation>().ToList();
         }
 
         private static PythonInterpreterInformation CreateEnvironmentInfo(string prefixPath) {
