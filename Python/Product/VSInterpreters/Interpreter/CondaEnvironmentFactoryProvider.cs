@@ -285,25 +285,17 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private List<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
-            var found = new List<PythonInterpreterInformation>();
-            var watchFolders = new HashSet<string>();
-
+        private IEnumerable<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var condaInfoResult = ExecuteCondaInfo(condaPath);
             if (condaInfoResult != null) {
-                foreach (var folder in condaInfoResult.EnvironmentFolders) {
-                    if (!Directory.Exists(folder)) {
-                        continue;
-                    }
-
-                    PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                    if (env != null) {
-                        found.Add(env);
-                    }
-                }
+                return condaInfoResult.EnvironmentFolders
+                    .AsParallel()
+                    .Where(folder => Directory.Exists(folder))
+                    .Select(folder => CreateEnvironmentInfo(folder))
+                    .Where(env => env != null);
             }
 
-            return found;
+            return Enumerable.Empty<PythonInterpreterInformation>();
         }
 
         private static PythonInterpreterInformation CreateEnvironmentInfo(string prefixPath) {
