@@ -3,25 +3,26 @@
 // Based on https://github.com/CXuesong/LanguageServer.NET
 
 using System;
+using System.Threading.Tasks;
 using JsonRpc.Standard;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts;
 using Microsoft.PythonTools.VsCode.Commands;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode.Startup {
     public sealed class InitializaionService : LanguageServiceBase {
         private const string TriggerCharacters = "`:$@_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         [JsonRpcMethod(AllowExtensionData = true)]
-        public InitializeResult Initialize(
-            int processId,
-            ClientCapabilities capabilities,
-            JToken initializationOptions = null,
-            Uri rootUri = null,
-            string trace = null) {
+        public Task<InitializeResult> Initialize(
+            int processId, ClientCapabilities capabilities,
+            JToken initializationOptions = null, Uri rootUri = null, string trace = null) {
 
-            return new InitializeResult(new ServerCapabilities {
+            var initParams = new Analysis.LanguageServer.InitializeParams();
+            initParams.capabilities = new Analysis.LanguageServer.ClientCapabilities();
+            initParams.capabilities.
+            var caps = new ServerCapabilities {
                 HoverProvider = true,
                 SignatureHelpProvider = new SignatureHelpOptions("(,)"),
                 CompletionProvider = new CompletionOptions(true, TriggerCharacters),
@@ -40,7 +41,8 @@ namespace Microsoft.PythonTools.VsCode.Server {
                 ExecuteCommandProvider = new ExecuteCommandOptions {
                     Commands = Controller.Commands
                 }
-            });
+            };
+            return LanguageServerSession.AnalysisServer.Initialize(initParams);
         }
 
         [JsonRpcMethod(IsNotification = true)]
@@ -50,7 +52,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
         public void Shutdown() { }
 
         [JsonRpcMethod(IsNotification = true)]
-        public void Exit() => LanguageServerSession.StopServer();
+        public void Exit() => LanguageServerSession.Stop();
 
         [JsonRpcMethod("$/cancelRequest", IsNotification = true)]
         public void CancelRequest(MessageId id) { }

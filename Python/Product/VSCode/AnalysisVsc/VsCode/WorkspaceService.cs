@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts;
 using Microsoft.PythonTools.VsCode.Commands;
-using Microsoft.PythonTools.VsCode.Server.Settings;
 using Microsoft.PythonTools.VsCode.Settings;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode {
     [JsonRpcScope(MethodPrefix = "workspace/")]
     public sealed class WorkspaceService : LanguageServiceBase {
         /// <summary>

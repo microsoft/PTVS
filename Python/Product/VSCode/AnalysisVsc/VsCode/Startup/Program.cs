@@ -6,17 +6,14 @@
 
 using System.Linq;
 using Microsoft.DsTools.Core;
-using Microsoft.DsTools.Core.Services;
+using Microsoft.PythonTools.VsCode.Services;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode.Startup {
     internal static class Program {
-        public static IServiceContainer Services { get; private set; }
-
         public static void Main(string[] args) {
             var debugMode = CheckDebugMode(args);
-            using (var sm = new ServiceManager()) {
-                Services = sm;
-                var connection = new VsCodeConnection(sm);
+            using (CoreShell.Create()) {
+                var connection = new VsCodeConnection(CoreShell.Current.ServiceManager);
                 connection.Connect(debugMode);
             }
         }

@@ -3,7 +3,7 @@
 
 using JsonRpc.Standard.Contracts;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode {
     [JsonRpcScope(MethodPrefix = "information/")]
     public sealed class InformationService : LanguageServiceBase {
         [JsonRpcMethod]

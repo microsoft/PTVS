@@ -5,7 +5,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode.Startup {
     internal static class Utility {
         public static readonly JsonSerializer CamelCaseJsonSerializer = new JsonSerializer {
             ContractResolver = new CamelCasePropertyNamesContractResolver()

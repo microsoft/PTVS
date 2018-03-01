@@ -16,9 +16,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
 using Microsoft.PythonTools.VsCode.Client;
 using Microsoft.PythonTools.VsCode.Commands;
-using Microsoft.PythonTools.VsCode.Server.Settings;
+using Microsoft.PythonTools.VsCode.Session;
+using Microsoft.PythonTools.VsCode.Settings;
+using Microsoft.PythonTools.VsCode.Startup;
 
-namespace Microsoft.PythonTools.VsCode.Server {
+namespace Microsoft.PythonTools.VsCode {
     /// <summary>
     /// Represents connection to VsCode.
     /// Listens on stdin/stdout for the language protocol JSON RPC
@@ -60,6 +62,7 @@ namespace Microsoft.PythonTools.VsCode.Server {
                 }
 
                 var session = new LanguageServerSession(client, contractResolver);
+                _serviceManager.AddService(session);
                 _serviceManager.AddService(new SettingsManager());
                 _serviceManager.AddService(new VsCodeClient(session.Client, _serviceManager));
                 _serviceManager.AddService(new Controller(_serviceManager));

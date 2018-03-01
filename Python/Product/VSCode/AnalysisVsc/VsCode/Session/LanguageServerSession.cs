@@ -7,9 +7,10 @@ using JsonRpc.Standard.Client;
 using JsonRpc.Standard.Contracts;
 using LanguageServer.VsCode.Contracts.Client;
 using Microsoft.DsTools.Core.Diagnostics;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 
-namespace Microsoft.PythonTools.VsCode.Server {
-    public class LanguageServerSession {
+namespace Microsoft.PythonTools.VsCode.Session {
+    public class LanguageServerSession: ILanguageServerSession {
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
         public LanguageServerSession(JsonRpcClient rpcClient, IJsonRpcContractResolver contractResolver) {
@@ -18,11 +19,17 @@ namespace Microsoft.PythonTools.VsCode.Server {
             RpcClient = rpcClient;
             var builder = new JsonRpcProxyBuilder { ContractResolver = contractResolver };
             Client = new ClientProxy(builder, rpcClient);
+            AnalysisServer = new Server();
          }
 
         public CancellationToken CancellationToken => cts.Token;
         public JsonRpcClient RpcClient { get; }
         public ClientProxy Client { get; }
-        public void StopServer() => cts.Cancel();
+        public Server AnalysisServer{ get; }
+
+        public void Stop() {
+            cts.Cancel();
+            AnalysisServer?.Dispose();
+        }
     }
 }
