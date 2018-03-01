@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            List<PythonInterpreterInformation> found = null;
+            IReadOnlyList<PythonInterpreterInformation> found = null;
 
             try {
                 // Try to find an existing root conda installation
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
                 var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
                 if (mainCondaExePath != null) {
-                    found = FindCondaEnvironments(mainCondaExePath).ToList();
+                    found = FindCondaEnvironments(mainCondaExePath);
                 }
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
@@ -285,25 +285,18 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private List<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
-            var found = new List<PythonInterpreterInformation>();
-            var watchFolders = new HashSet<string>();
-
+        private IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var condaInfoResult = ExecuteCondaInfo(condaPath);
             if (condaInfoResult != null) {
-                foreach (var folder in condaInfoResult.EnvironmentFolders) {
-                    if (!Directory.Exists(folder)) {
-                        continue;
-                    }
-
-                    PythonInterpreterInformation env = CreateEnvironmentInfo(folder);
-                    if (env != null) {
-                        found.Add(env);
-                    }
-                }
+                return condaInfoResult.EnvironmentFolders
+                    .AsParallel()
+                    .Where(folder => Directory.Exists(folder))
+                    .Select(folder => CreateEnvironmentInfo(folder))
+                    .Where(env => env != null)
+                    .ToList();
             }
 
-            return found;
+            return Enumerable.Empty<PythonInterpreterInformation>().ToList();
         }
 
         private static PythonInterpreterInformation CreateEnvironmentInfo(string prefixPath) {

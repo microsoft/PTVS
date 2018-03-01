@@ -44,23 +44,40 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal static string GetLatestCondaExecutablePath(IEnumerable<IPythonInterpreterFactory> factories) {
             var condaPaths = factories
-                .Select(factory => CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false))
-                .Where(path => !string.IsNullOrEmpty(path))
-                .OrderByDescending(path => GetCondaVersion(path));
-
-            return condaPaths.FirstOrDefault();
+                .Select(factory => new {
+                    PrefixPath = factory.Configuration.PrefixPath,
+                    ExePath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false)
+                })
+                .Where(obj => !string.IsNullOrEmpty(obj.ExePath))
+                .OrderByDescending(obj => GetCondaVersion(obj.PrefixPath, obj.ExePath));
+            return condaPaths.FirstOrDefault()?.ExePath;
         }
 
-        private static PackageVersion GetCondaVersion(string exePath) {
-            using (var output = ProcessOutput.RunHiddenAndCapture(exePath, "-V")) {
-                output.Wait();
-                if (output.ExitCode == 0) {
-                    // Version is currently being printed to stderr, and nothing in stdout
-                    foreach (var line in output.StandardErrorLines.Union(output.StandardOutputLines)) {
-                        if (!string.IsNullOrEmpty(line) && line.StartsWithOrdinal("conda ")) {
-                            var version = line.Substring("conda ".Length);
-                            if (PackageVersion.TryParse(version, out PackageVersion ver)) {
-                                return ver;
+        private static PackageVersion GetCondaVersion(string prefixPath, string exePath) {
+            // Reading from .version is faster than running conda -V
+            var versionFilePath = Path.Combine(prefixPath, "Lib", "site-packages", "conda", ".version");
+            if (File.Exists(versionFilePath)) {
+                try {
+                    var version = File.ReadAllText(versionFilePath).Trim();
+                    if (PackageVersion.TryParse(version, out PackageVersion ver)) {
+                        return ver;
+                    }
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+
+            if (File.Exists(exePath)) {
+                using (var output = ProcessOutput.RunHiddenAndCapture(exePath, "-V")) {
+                    output.Wait();
+                    if (output.ExitCode == 0) {
+                        // Version is currently being printed to stderr, and nothing in stdout
+                        foreach (var line in output.StandardErrorLines.Union(output.StandardOutputLines)) {
+                            if (!string.IsNullOrEmpty(line) && line.StartsWithOrdinal("conda ")) {
+                                var version = line.Substring("conda ".Length);
+                                if (PackageVersion.TryParse(version, out PackageVersion ver)) {
+                                    return ver;
+                                }
                             }
                         }
                     }
