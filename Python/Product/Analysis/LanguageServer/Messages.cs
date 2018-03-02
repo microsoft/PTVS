@@ -16,11 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
+    [Serializable]
     public struct InitializeParams {
         public int? processId;
         public string rootPath;
@@ -49,10 +49,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
     }
 
+    [Serializable]
     public struct InitializeResult {
         public ServerCapabilities? capabilities;
     }
 
+    [Serializable]
     public struct InitializedParams { }
 
     public sealed class ShowMessageEventArgs : EventArgs {
@@ -60,6 +62,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string message { get; set; }
     }
 
+    [Serializable]
     public struct ShowMessageRequestParams {
         public MessageType type;
         public string message;
@@ -75,6 +78,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object value { get; set; }
     }
 
+    [Serializable]
     public struct RegistrationParams {
         public Registration[] registrations;
     }
@@ -84,6 +88,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal RegisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
 
+    [Serializable]
     public struct UnregistrationParams {
         public Unregistration[] unregistrations;
     }
@@ -93,23 +98,28 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal UnregisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
 
+    [Serializable]
     public struct DidChangeConfigurationParams {
         public object settings;
     }
 
+    [Serializable]
     public struct DidChangeWatchedFilesParams {
         public FileEvent[] changes;
     }
 
-    public struct WorkplaceSymbolParams {
+    [Serializable]
+    public struct WorkspaceSymbolParams {
         public string query;
     }
 
+    [Serializable]
     public struct ExecuteCommandParams {
         public string command;
         public object[] arguments;
     }
 
+    [Serializable]
     public struct ApplyWorkspaceEditParams {
         /// <summary>
         /// An optional label of the workspace edit.This label is
@@ -120,6 +130,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public WorkspaceEdit edit;
     }
 
+    [Serializable]
     public struct ApplyWorkspaceEditResponse {
         public bool applied;
     }
@@ -129,10 +140,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal ApplyWorkspaceEditEventArgs(TaskCompletionSource<ApplyWorkspaceEditResponse?> task) : base(task) { }
     }
 
+    [Serializable]
     public struct DidOpenTextDocumentParams {
         public TextDocumentItem textDocument;
     }
 
+    [Serializable]
     public struct DidChangeTextDocumentParams {
         public VersionedTextDocumentIdentifier textDocument;
         public TextDocumentContentChangedEvent[] contentChanges;
@@ -141,16 +154,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool? _enqueueForAnalysis;
     }
 
+    [Serializable]
     public struct WillSaveTextDocumentParams {
         public TextDocumentIdentifier textDocument;
         public TextDocumentSaveReason reason;
     }
 
+    [Serializable]
     public struct DidSaveTextDocumentParams {
         public TextDocumentIdentifier textDocument;
         public string content;
     }
 
+    [Serializable]
     public struct DidCloseTextDocumentParams {
         public TextDocumentIdentifier textDocument;
     }
@@ -165,6 +181,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version { get; set; }
     }
 
+    [Serializable]
     public struct TextDocumentPositionParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -181,6 +198,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string _expr;
     }
 
+    [Serializable]
     public struct CompletionParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -198,6 +216,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string _expr;
     }
 
+    [Serializable]
     public struct CompletionContext {
         public CompletionTriggerKind triggerKind;
         public string triggerCharacter;
@@ -210,6 +229,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public CompletionItemKind? _filterKind;
     }
 
+    [Serializable]
     public struct ReferencesParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -235,10 +255,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool _includeDefinitionRanges;
     }
 
+    [Serializable]
     public struct DocumentSymbolParams {
         public TextDocumentIdentifier textDocument;
     }
 
+    [Serializable]
     public struct CodeActionParams {
         public TextDocumentIdentifier textDocument;
         public Range range;
@@ -251,6 +273,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
     public struct CodeActionContext {
         public Diagnostic[] diagnostics;
 
@@ -261,15 +284,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
     public struct DocumentLinkParams {
         public TextDocumentIdentifier textDocument;
     }
 
+    [Serializable]
     public struct DocumentFormattingParams {
         public TextDocumentIdentifier textDocument;
         public FormattingOptions options;
     }
 
+    [Serializable]
     public struct DocumentRangeFormattingParams {
         public TextDocumentIdentifier textDocument;
         public Range range;
@@ -282,6 +308,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
     public struct DocumentOnTypeFormattingParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -295,6 +322,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
     public struct RenameParams {
         public TextDocumentIdentifier textDocument;
         public Position position;

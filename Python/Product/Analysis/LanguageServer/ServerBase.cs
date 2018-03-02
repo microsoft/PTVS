@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) { }
 
-        public virtual async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
+        public virtual async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             return null;
         }
 

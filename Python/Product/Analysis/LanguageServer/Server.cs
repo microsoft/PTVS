@@ -112,7 +112,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     completionProvider = new CompletionOptions { resolveProvider = true },
-                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental }
+                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
+                    hoverProvider = true
                 }
             };
         }
@@ -584,7 +585,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
         }
 
-        public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
+        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 

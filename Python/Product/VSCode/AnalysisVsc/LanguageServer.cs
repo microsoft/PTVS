@@ -92,6 +92,10 @@ namespace Microsoft.PythonTools.VsCode {
             return _server.Initialize(p);
         }
 
+        [JsonRpcMethod("initialized")]
+        public Task Initialized(JToken token) 
+            => _server.Initialized(token.ToObject<InitializedParams>());
+
         [JsonRpcMethod("shutdown")]
         public Task Shutdown() => _server.Shutdown();
 
