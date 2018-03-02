@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         private static bool CheckDebugMode(string[] args) {
-            var debugMode = args.Any(a => a.EqualsOrdinal("--debug"));
+            var debugMode = args.Any(a => a == "--debug");
             //if (debugMode) {
 #if WAIT_FOR_DEBUGGER
             while (!System.Diagnostics.Debugger.IsAttached) {
