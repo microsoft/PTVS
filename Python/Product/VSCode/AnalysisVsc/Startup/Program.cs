@@ -14,24 +14,29 @@ using Microsoft.PythonTools.VsCode.Commands;
 using Microsoft.PythonTools.VsCode.Services;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode.Startup {
-    internal static class Program {
-        public static void Main(string[] args) {
+namespace Microsoft.PythonTools.VsCode.Startup
+{
+    internal static class Program
+    {
+        public static void Main(string[] args)
+        {
             var debugMode = CheckDebugMode(args);
-            using (CoreShell.Create()) {
+            using (CoreShell.Create())
+            {
                 var services = CoreShell.Current.ServiceManager;
                 var cts = new CancellationTokenSource();
 
                 using (var cin = Console.OpenStandardInput())
-                using (var bcin = new BufferedStream(cin))
                 using (var cout = Console.OpenStandardOutput())
 
                 using (var server = new Server(cts))
-                using (JsonRpc.Attach(cin, server))
-                using (var vsc = JsonRpc.Attach(cout)) {
+                using (JsonRpc.Attach(cout, cin, server))
+                using (var vsc = JsonRpc.Attach(cout, cin))
+                {
                     services.AddService(new UIService(vsc));
                     services.AddService(new TelemetryService(vsc));
-                    using (var eventHandler = new ServerNotificationsHandler(server, services)) {
+                    using (var eventHandler = new ServerNotificationsHandler(server, services))
+                    {
                         // Wait for the "shutdown" request.
                         cts.Token.WaitHandle.WaitOne();
                     }
@@ -39,7 +44,8 @@ namespace Microsoft.PythonTools.VsCode.Startup {
             }
         }
 
-        private static bool CheckDebugMode(string[] args) {
+        private static bool CheckDebugMode(string[] args)
+        {
             var debugMode = args.Any(a => a.EqualsOrdinal("--debug"));
             //if (debugMode) {
 #if WAIT_FOR_DEBUGGER
