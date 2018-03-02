@@ -69,10 +69,10 @@ namespace AnalysisTests {
             ParseErrors("MixedWhitespace1.py", PythonLanguageVersion.V27, Severity.Error);
 
             // mixed in the same block, tabs first
-            ParseErrors("MixedWhitespace2.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 293, 13, 32, 302, 14, 9));
+            ParseErrors("MixedWhitespace2.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 294, 14, 1, 302, 14, 9));
 
             // mixed in same block, spaces first
-            ParseErrors("MixedWhitespace3.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 285, 13, 24, 287, 14, 2));
+            ParseErrors("MixedWhitespace3.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 286, 14, 1, 287, 14, 2));
 
             // mixed on same line, spaces first
             ParseErrors("MixedWhitespace4.py", PythonLanguageVersion.V27, Severity.Error);
@@ -81,7 +81,7 @@ namespace AnalysisTests {
             ParseErrors("MixedWhitespace5.py", PythonLanguageVersion.V27, Severity.Error);
 
             // mixed on a comment line - should not crash
-            ParseErrors("MixedWhitespace6.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 126, 8, 17, 128, 9, 2));
+            ParseErrors("MixedWhitespace6.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 127, 9, 1, 128, 9, 2));
         }
 
         [TestMethod, Priority(0)]
@@ -2978,7 +2978,7 @@ namespace AnalysisTests {
         }
 
         private static Action<int, int?> ParseCall(string code) {
-            var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V36);
+            var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V36, new ParserOptions { Verbatim = true });
             var tree = parser.ParseTopExpression();
             if (Statement.GetExpression(tree.Body) is CallExpression ce) {
                 return (index, expected) => {

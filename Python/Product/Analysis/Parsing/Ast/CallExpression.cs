@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
 
-            if (listWhiteSpace.Length == Args.Count) {
+            if (listWhiteSpace == null || listWhiteSpace.Length == Args.Count) {
                 // Trailing comma, so we are not in any argument
                 argIndex = -1;
                 return true;

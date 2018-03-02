@@ -249,10 +249,12 @@ namespace Microsoft.PythonTools.Analysis {
             Contract.EndContractBlock();
 
             ModuleInfo removed;
-            _modulesByFilename.TryRemove(entry.FilePath, out removed);
+            if (!string.IsNullOrEmpty(entry.FilePath)) {
+                _modulesByFilename.TryRemove(entry.FilePath, out removed);
+            }
 
             var pyEntry = entry as IPythonProjectEntry;
-            if (pyEntry != null) {
+            if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
                 ModuleReference modRef;
                 Modules.TryRemove(pyEntry.ModuleName, out modRef);
             }

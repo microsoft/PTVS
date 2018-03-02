@@ -3296,7 +3296,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
 
             entry = ProcessText(@"
 class C(object):
@@ -3307,7 +3307,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
         }
 
         [TestMethod, Priority(0)]
@@ -5768,8 +5768,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "def test-module.f() -> str");
-            entry.AssertDescription("fob.f", "def test-module.fob.f(self)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of fob objects ");
+            entry.AssertDescription("fob.f", "def test-module.fob.f(self : fob)\r\ndeclared in fob");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "def test-module.g()");    // return info could be better
@@ -5780,17 +5780,17 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("docstr_func", "def test-module.docstr_func() -> int\r\nuseful documentation");
 
             entry.AssertDescription("with_params", "def test-module.with_params(a, b, c)");
-            entry.AssertDescription("with_params_default", "def test-module.with_params_default(a, b, c = 100)");
-            entry.AssertDescription("with_params_default_2", "def test-module.with_params_default_2(a, b, c = [])");
-            entry.AssertDescription("with_params_default_3", "def test-module.with_params_default_3(a, b, c = ())");
-            entry.AssertDescription("with_params_default_4", "def test-module.with_params_default_4(a, b, c = {})");
-            entry.AssertDescription("with_params_default_2a", "def test-module.with_params_default_2a(a, b, c = [...])");
-            entry.AssertDescription("with_params_default_3a", "def test-module.with_params_default_3a(a, b, c = (...))");
-            entry.AssertDescription("with_params_default_4a", "def test-module.with_params_default_4a(a, b, c = {...})");
-            entry.AssertDescription("with_params_default_starargs", "def test-module.with_params_default_starargs(*args, **kwargs)");
+            entry.AssertDescription("with_params_default", "def test-module.with_params_default(a, b, c : int = 100)");
+            entry.AssertDescription("with_params_default_2", "def test-module.with_params_default_2(a, b, c : list = [])");
+            entry.AssertDescription("with_params_default_3", "def test-module.with_params_default_3(a, b, c : tuple = ())");
+            entry.AssertDescription("with_params_default_4", "def test-module.with_params_default_4(a, b, c : dict = {})");
+            entry.AssertDescription("with_params_default_2a", "def test-module.with_params_default_2a(a, b, c : list = [...])");
+            entry.AssertDescription("with_params_default_3a", "def test-module.with_params_default_3a(a, b, c : tuple = (...))");
+            entry.AssertDescription("with_params_default_4a", "def test-module.with_params_default_4a(a, b, c : dict = {...})");
+            entry.AssertDescription("with_params_default_starargs", "def test-module.with_params_default_starargs(*args : tuple, **kwargs : dict)");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...
+            entry.AssertDescription("return_func_class().return_func", @"method return_func of test-module.return_func_class objects  -> method return_func of test-module.return_func_class objects ...
 some help");
         }
 
@@ -6443,7 +6443,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             state.AssertConstantEquals("test1.__name__", "test1");
             Assert.AreEqual("doc", state.GetValue<FunctionInfo>("test1").Documentation);
             state.GetValue<FunctionInfo>("test1.__wrapped__");
-            Assert.AreEqual(2, state.GetValue<FunctionInfo>("test1").Overloads.Count());
+            Assert.AreEqual(3, state.GetValue<FunctionInfo>("test1").Overloads.Count());
             state.AssertConstantEquals("test1_result", "decorated");
 
             // __name__ should not have been changed by update_wrapper
@@ -6539,7 +6539,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

@@ -1306,7 +1306,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.Location;
+                var location = analysis.SourceSpan.End;
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
@@ -2627,7 +2627,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bi.AnalysisEntry,
                 span.GetText(),
                 span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
-                sourceSpan.Value.Start
+                sourceSpan.Value
             );
         }
 

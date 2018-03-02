@@ -62,6 +62,7 @@
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="IHasQualifiedName.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
