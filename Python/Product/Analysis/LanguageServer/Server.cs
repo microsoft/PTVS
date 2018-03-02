@@ -525,8 +525,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(array);
         }
 
-        [JsonRpcMethod("textDocument/symbol")]
-        public override Task<SymbolInformation[]> WorkplaceSymbols(WorkspaceSymbolParams @params) {
+        [JsonRpcMethod("workspace/symbol")]
+        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 

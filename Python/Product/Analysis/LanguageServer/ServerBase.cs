@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
 
         [JsonRpcMethod("workspace/symbol")]
-        public virtual Task<SymbolInformation[]> WorkplaceSymbols(WorkspaceSymbolParams @params)
+        public virtual Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params)
              => Task.FromResult(new SymbolInformation[0]);
 
         public virtual Task<object> ExecuteCommand(ExecuteCommandParams @params) => Task.FromResult((object)null);
