@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class ClassInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription {
+    internal class ClassInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private AnalysisUnit _analysisUnit;
         private readonly List<IAnalysisSet> _bases;
         internal Mro _mro;
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "class ");
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullyQualifiedName);
             
             if (ClassDefinition.BasesInternal.Length > 0) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
@@ -163,20 +163,38 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private string FullName {
+        public string FullyQualifiedName {
             get {
                 var name = ClassDefinition.Name;
                 for (var stmt = ClassDefinition.Parent; stmt != null; stmt = stmt.Parent) {
                     if (stmt.IsGlobal) {
-                        name = DeclaringModule.ModuleName + "." + name;
-                        break;
-                    } else if (!string.IsNullOrEmpty(stmt.Name)) {
+                        return DeclaringModule.ModuleName + "." + name;
+                    }
+                    if (!string.IsNullOrEmpty(stmt.Name)) {
                         name = stmt.Name + "." + name;
                     }
                 }
                 return name;
             }
         }
+
+        public KeyValuePair<string, string> FullyQualifiedNamePair {
+            get {
+                var name = ClassDefinition.Name;
+                for (var stmt = ClassDefinition.Parent; stmt != null; stmt = stmt.Parent) {
+                    if (stmt.IsGlobal) {
+                        return new KeyValuePair<string, string>(DeclaringModule.ModuleName, name);
+                    }
+                    if (stmt is ClassDefinition) {
+                        name = stmt.Name + "." + name;
+                    } else {
+                        break;
+                    }
+                }
+                throw new NotSupportedException();
+            }
+        }
+
 
         public override string ShortDescription {
             get {

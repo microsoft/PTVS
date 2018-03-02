@@ -59,6 +59,13 @@ namespace Microsoft.PythonTools.Analysis {
             return GetValues(exprText, _unit.Tree.IndexToLocation(index));
         }
 
+        internal Expression GetExpressionForText(string exprText, SourceLocation location, out InterpreterScope scope, out PythonAst exprTree) {
+            scope = FindScope(location);
+            var privatePrefix = GetPrivatePrefixClassName(scope);
+            exprTree = GetAstFromText(exprText, privatePrefix);
+            return Statement.GetExpression(exprTree.Body);
+        }
+
         /// <summary>
         /// Evaluates the given expression in at the provided line number and returns the values
         /// that the expression can evaluate to.
@@ -67,10 +74,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="location">The location in the file where the expression should be evaluated.</param>
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<AnalysisValue> GetValues(string exprText, SourceLocation location) {
-            var scope = FindScope(location);
-            var privatePrefix = GetPrivatePrefixClassName(scope);
-            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
+            var expr = GetExpressionForText(exprText, location, out var scope, out _);
+            if (expr == null) {
+                return Enumerable.Empty<AnalysisValue>();
+            }
 
+            return GetValues(expr, location, scope);
+        }
+
+        internal IEnumerable<AnalysisValue> GetValues(Expression expr, SourceLocation location, InterpreterScope scope = null) {
+            scope = scope ?? FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
@@ -225,20 +238,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// The location in the file where the expression should be evaluated.
         /// </param>
         public IEnumerable<IAnalysisVariable> GetVariables(string exprText, SourceLocation location) {
-            var scope = FindScope(location);
-            string privatePrefix = GetPrivatePrefixClassName(scope);
-            var ast = GetAstFromText(exprText, privatePrefix);
-            var expr = Statement.GetExpression(ast.Body);
+            var expr = GetExpressionForText(exprText, location, out var scope, out var exprTree);
 
             if (expr == null) {
-                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), ast);
+                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), exprTree);
             }
 
-            return GetVariables(expr, location, exprText);
+            return GetVariables(expr, location, exprText, scope);
         }
 
-        internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null) {
-            var scope = FindScope(location);
+        internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null, InterpreterScope scope = null) {
+            scope = scope ?? FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var tree = unit.Tree;
 
@@ -387,16 +397,15 @@ namespace Microsoft.PythonTools.Analysis {
             SourceLocation location,
             GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
         ) {
-            if (exprText.Length == 0) {
+            if (string.IsNullOrEmpty(exprText)) {
                 return GetAllAvailableMembers(location, options);
             }
 
-            var scope = FindScope(location);
-            var privatePrefix = GetPrivatePrefixClassName(scope);
+            var expr = GetExpressionForText(exprText, location, out var scope, out var ast);
+            if (expr == null) {
+                return Enumerable.Empty<MemberResult>();
+            }
 
-            var ast = GetAstFromText(exprText, privatePrefix).Body;
-
-            var expr = Statement.GetExpression(ast);
             return GetMembers(expr, location, options, scope);
         }
 
@@ -435,9 +444,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            if (scope == null) {
-                scope = FindScope(location);
-            }
+            scope = scope ?? FindScope(location);
 
             if (!lookup.Any()) {
                 var unit = GetNearestEnclosingAnalysisUnit(scope);
@@ -503,23 +510,23 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<IOverloadResult> GetSignatures(string exprText, SourceLocation location) {
             try {
-                var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion);
-                var expr = GetExpression(parser.ParseTopExpression().Body);
-                if (expr is ListExpression ||
-                    expr is TupleExpression ||
-                    expr is DictionaryExpression) {
-                    return Enumerable.Empty<IOverloadResult>();
-                }
-
-                return GetSignatures(expr, location);
+                var expr = GetExpressionForText(exprText, location, out var scope, out _);
+                return GetSignatures(expr, location, scope);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToString());
                 return GetSignaturesError;
             }
         }
 
-        internal IEnumerable<IOverloadResult> GetSignatures(Expression expr, SourceLocation location) {
-            var scope = FindScope(location);
+        internal IEnumerable<IOverloadResult> GetSignatures(Expression expr, SourceLocation location, InterpreterScope scope = null) {
+            if (expr == null ||
+                expr is ListExpression ||
+                expr is TupleExpression ||
+                expr is DictionaryExpression) {
+                return Enumerable.Empty<IOverloadResult>();
+            }
+
+            scope = scope ?? FindScope(location);
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
@@ -964,7 +971,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
-            var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
+            var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions { PrivatePrefix = privatePrefix });
             return parser.ParseTopExpression();
         }
 

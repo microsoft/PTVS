@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Parsing {
         public static CodeFormattingOptions Traditional { get; } = new CodeFormattingOptions {
             SpaceAfterComma = true,
             SpaceAfterDot = false,
+            SpaceAfterLambdaColon = true,
             SpaceAroundAnnotationArrow = true,
             SpaceAroundDefaultValueEquals = true,
             SpaceBeforeCallParen = false,
@@ -55,6 +56,7 @@ namespace Microsoft.PythonTools.Parsing {
             SpaceBeforeFunctionDeclarationParen = false,
             SpaceBeforeIndexBracket = false,
             SpaceBeforeDot = false,
+            SpaceBeforeLambdaColon = false,
             SpacesAroundAssignmentOperator = true,
             SpacesAroundBinaryOperators = true,
             SpacesWithinEmptyListExpression = false,
@@ -233,6 +235,9 @@ namespace Microsoft.PythonTools.Parsing {
 
         public bool? SpaceBeforeDot { get; set; }
         public bool? SpaceAfterDot { get; set; }
+
+        public bool? SpaceBeforeLambdaColon { get; set; }
+        public bool? SpaceAfterLambdaColon { get; set; }
 
         #endregion
 

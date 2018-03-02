@@ -14,21 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
-    sealed class VariablesResult : IEnumerable<IAnalysisVariable> {
-        private readonly IEnumerable<IAnalysisVariable> _vars;
+    interface IHasQualifiedName {
+        /// <summary>
+        /// Gets the fully qualified, dot-separated name of the value.
+        /// This is typically used for displaying to users.
+        /// </summary>
+        string FullyQualifiedName { get; }
 
-        internal VariablesResult(IEnumerable<IAnalysisVariable> variables, PythonAst expr) {
-            _vars = variables;
-            Ast = expr;
-        }
-
-        public IEnumerator<IAnalysisVariable> GetEnumerator() => _vars.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _vars.GetEnumerator();
-        public PythonAst Ast { get; }
+        /// <summary>
+        /// Gets the import and lookup names of the value. The first part
+        /// should be importable, and the second is a name that can be
+        /// resolved with getattr().
+        /// These are often seen separated with a colon.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        /// The value cannot be resolved (for example, a nested function).
+        /// </exception>
+        KeyValuePair<string, string> FullyQualifiedNamePair { get; }
     }
 }

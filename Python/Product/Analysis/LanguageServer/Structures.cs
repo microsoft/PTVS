@@ -203,6 +203,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct MarkupContent {
         public MarkupKind kind;
         public string value;
+
+        public static implicit operator MarkupContent(string text) => new MarkupContent { kind = MarkupKind.PlainText, value = text };
     }
 
 
@@ -675,6 +677,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that range applies to.
         /// </summary>
         public int? _version;
+        /// <summary>
+        /// List of fully qualified type names for the expression
+        /// </summary>
+        public string[] _typeNames;
     }
 
     [JsonObject(MemberSerialization.OptOut)]

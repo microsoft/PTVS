@@ -157,6 +157,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (_dumping.CurrentCount == 0) {
+                if (synchronous) {
+                    _dumping.Wait();
+                    _dumping.Release();
+                }
                 return;
             }
 

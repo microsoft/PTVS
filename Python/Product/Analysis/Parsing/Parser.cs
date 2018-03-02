@@ -2260,6 +2260,7 @@ namespace Microsoft.PythonTools.Parsing {
             func.EndIndex = GetEnd();
 
             LambdaExpression ret = new LambdaExpression(func);
+            func.LambdaExpression = ret;
             func.SetLoc(func.IndexSpan);
             ret.SetLoc(func.IndexSpan);
             if (_verbatim) {
