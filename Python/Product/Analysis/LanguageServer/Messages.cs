@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct WorkplaceSymbolParams {
+    public struct WorkspaceSymbolParams {
         public string query;
     }
 
