@@ -190,7 +190,7 @@ namespace Microsoft.VisualStudioTools {
             var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
             IVsHierarchy hierarchy;
             if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out hierarchy)) && hierarchy != null) {
-                return hierarchy.GetProject().GetCommonProject();
+                return hierarchy.GetProject()?.GetCommonProject();
             }
             return null;
         }

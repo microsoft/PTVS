@@ -461,7 +461,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // TODO: This has got to be wrong, it doesn't work w/ other project types.
             IVsHierarchy hierarchy = VsShellUtilities.GetHierarchy(this.ProjectMgr.Site, projectGuid);
 
-            IReferenceContainerProvider provider = hierarchy.GetProject().GetCommonProject() as IReferenceContainerProvider;
+            IReferenceContainerProvider provider = hierarchy.GetProject()?.GetCommonProject() as IReferenceContainerProvider;
             if (provider != null) {
                 IReferenceContainer referenceContainer = provider.GetReferenceContainer();
 

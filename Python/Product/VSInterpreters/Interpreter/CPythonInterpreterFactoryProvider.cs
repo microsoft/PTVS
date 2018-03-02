@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IServiceProvider _site;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
-        internal const string FactoryProviderName = "Global";
+        internal const string FactoryProviderName = CPythonInterpreterFactoryConstants.FactoryProviderName;
         private readonly bool _watchRegistry;
         private readonly HashSet<object> _registryTags;
         private int _ignoreNotifications;

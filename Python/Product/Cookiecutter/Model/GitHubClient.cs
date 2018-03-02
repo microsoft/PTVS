@@ -22,7 +22,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitHubClient : IGitHubClient {
-        // throws WebExceptions (for example, with 403 forbidden)
+        // throws WebException (for example, with 403 forbidden) and JsonException
         public async Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl) {
             if (requestUrl == null) {
                 throw new ArgumentNullException(nameof(requestUrl));

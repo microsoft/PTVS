@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public const string WindowsExecutable = "pythonw.exe";
         public const string LibrarySubPath = "lib";
         public const string PathEnvironmentVariableName = "PYTHONPATH";
+        internal const string FactoryProviderName = "Global";
 
         private static readonly Regex IdParser = new Regex(
             "^(?<provider>.+?)\\|(?<company>.+?)\\|(?<tag>.+?)$",
@@ -39,19 +40,14 @@ namespace Microsoft.PythonTools.Interpreter {
         );
 
         public static string GetInterpreterId(string company, string tag) {
-            return String.Join(
-                "|", 
-                CPythonInterpreterFactoryProvider.FactoryProviderName,
-                company,
-                tag
-            );
+            return String.Join("|", FactoryProviderName, company, tag);
         }
 
         public static bool TryParseInterpreterId(string id, out string company, out string tag) {
             tag = company = null;
             try {
                 var m = IdParser.Match(id);
-                if (m.Success && m.Groups["provider"].Value == CPythonInterpreterFactoryProvider.FactoryProviderName) {
+                if (m.Success && m.Groups["provider"].Value == FactoryProviderName) {
                     tag = m.Groups["tag"].Value;
                     company = m.Groups["company"].Value;
                     return true;
