@@ -228,7 +228,7 @@ class JupyterClientBackend(ReplBackend):
             traceback.print_exc()
             try:
                 raw_input()
-            except NameError():
+            except NameError:
                 input()
             raise
 
@@ -369,7 +369,7 @@ class JupyterClientBackend(ReplBackend):
             traceback.print_exc()
             try:
                 raw_input()
-            except NameError():
+            except NameError:
                 input()
             self.exit_process()
 
@@ -407,7 +407,7 @@ class JupyterClientBackend(ReplBackend):
             traceback.print_exc()
             try:
                 raw_input()
-            except NameError():
+            except NameError:
                 input()
             self.exit_process()
 
