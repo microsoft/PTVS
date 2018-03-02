@@ -220,16 +220,10 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            IReadOnlyList<PythonInterpreterInformation> found = null;
+            var found = new List<PythonInterpreterInformation>();
 
             try {
-                // Try to find an existing root conda installation
-                // If the future we may decide to install a private installation of conda/miniconda
-                var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
-                var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
-                if (mainCondaExePath != null) {
-                    found = FindCondaEnvironments(mainCondaExePath);
-                }
+                FindCondaEnvironments(found);
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
                 return;
@@ -239,7 +233,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             // Then update our cached state with the lock held.
             lock (_factories) {
-                foreach (var info in found.MaybeEnumerate()) {
+                foreach (var info in found) {
                     PythonInterpreterInformation existingInfo;
                     if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
                         info.Configuration != existingInfo.Configuration) {
@@ -285,7 +279,17 @@ namespace Microsoft.PythonTools.Interpreter {
             public string[] EnvironmentRootFolders = null;
         }
 
-        private IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
+        private void FindCondaEnvironments(List<PythonInterpreterInformation> envs) {
+            // Try to find an existing root conda installation
+            // If the future we may decide to install a private installation of conda/miniconda
+            var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
+            var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
+            if (mainCondaExePath != null) {
+                envs.AddRange(FindCondaEnvironments(mainCondaExePath));
+            }
+        }
+
+        private static IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var condaInfoResult = ExecuteCondaInfo(condaPath);
             if (condaInfoResult != null) {
                 return condaInfoResult.EnvironmentFolders
