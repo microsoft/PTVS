@@ -16,11 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    [Serializable]
     public struct InitializeParams {
         public int? processId;
         public string rootPath;
@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
     }
 
-    [Serializable]
     public struct InitializeResult {
         public ServerCapabilities? capabilities;
     }
@@ -67,11 +66,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public MessageActionItem[] actions;
     }
 
-    public struct LogMessageParams {
-        public MessageType type;
-        public string message;
-    }
-
     public sealed class LogMessageEventArgs : EventArgs {
         public MessageType type { get; set; }
         public string message { get; set; }
@@ -81,7 +75,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object value { get; set; }
     }
 
-    [Serializable]
     public struct RegistrationParams {
         public Registration[] registrations;
     }
@@ -91,7 +84,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal RegisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
 
-    [Serializable]
     public struct UnregistrationParams {
         public Unregistration[] unregistrations;
     }
@@ -101,28 +93,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal UnregisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
 
-    [Serializable]
     public struct DidChangeConfigurationParams {
         public object settings;
     }
 
-    [Serializable]
     public struct DidChangeWatchedFilesParams {
         public FileEvent[] changes;
     }
 
-    [Serializable]
-    public struct WorkspaceSymbolParams {
+    public struct WorkplaceSymbolParams {
         public string query;
     }
 
-    [Serializable]
     public struct ExecuteCommandParams {
         public string command;
         public object[] arguments;
     }
 
-    [Serializable]
     public struct ApplyWorkspaceEditParams {
         /// <summary>
         /// An optional label of the workspace edit.This label is
@@ -133,7 +120,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public WorkspaceEdit edit;
     }
 
-    [Serializable]
     public struct ApplyWorkspaceEditResponse {
         public bool applied;
     }
@@ -143,12 +129,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal ApplyWorkspaceEditEventArgs(TaskCompletionSource<ApplyWorkspaceEditResponse?> task) : base(task) { }
     }
 
-    [Serializable]
     public struct DidOpenTextDocumentParams {
         public TextDocumentItem textDocument;
     }
 
-    [Serializable]
     public struct DidChangeTextDocumentParams {
         public VersionedTextDocumentIdentifier textDocument;
         public TextDocumentContentChangedEvent[] contentChanges;
@@ -157,24 +141,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool? _enqueueForAnalysis;
     }
 
-    [Serializable]
     public struct WillSaveTextDocumentParams {
         public TextDocumentIdentifier textDocument;
         public TextDocumentSaveReason reason;
     }
 
-    [Serializable]
     public struct DidSaveTextDocumentParams {
         public TextDocumentIdentifier textDocument;
         public string content;
     }
 
-    [Serializable]
     public struct DidCloseTextDocumentParams {
         public TextDocumentIdentifier textDocument;
     }
 
-    [Serializable]
     public sealed class PublishDiagnosticsEventArgs : EventArgs {
         public Uri uri { get; set; }
         public IReadOnlyList<Diagnostic> diagnostics { get; set; }
@@ -185,7 +165,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version { get; set; }
     }
 
-    [Serializable]
     public struct TextDocumentPositionParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -202,7 +181,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string _expr;
     }
 
-    [Serializable]
     public struct CompletionParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -257,12 +235,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool _includeDefinitionRanges;
     }
 
-    [Serializable]
     public struct DocumentSymbolParams {
         public TextDocumentIdentifier textDocument;
     }
 
-    [Serializable]
     public struct CodeActionParams {
         public TextDocumentIdentifier textDocument;
         public Range range;
@@ -275,7 +251,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
-    [Serializable]
     public struct CodeActionContext {
         public Diagnostic[] diagnostics;
 
@@ -286,18 +261,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
-    [Serializable]
     public struct DocumentLinkParams {
         public TextDocumentIdentifier textDocument;
     }
 
-    [Serializable]
     public struct DocumentFormattingParams {
         public TextDocumentIdentifier textDocument;
         public FormattingOptions options;
     }
 
-    [Serializable]
     public struct DocumentRangeFormattingParams {
         public TextDocumentIdentifier textDocument;
         public Range range;
@@ -310,7 +282,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
-    [Serializable]
     public struct DocumentOnTypeFormattingParams {
         public TextDocumentIdentifier textDocument;
         public Position position;
@@ -324,7 +295,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
-    [Serializable]
     public struct RenameParams {
         public TextDocumentIdentifier textDocument;
         public Position position;

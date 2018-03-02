@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase {
@@ -61,115 +60,131 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client Requests
 
-        [JsonRpcMethod("$/initialize")]
         public abstract Task<InitializeResult> Initialize(InitializeParams @params);
 
-        public virtual Task Initialized(InitializedParams @params) => Task.CompletedTask;
+        public virtual async Task Initialized(InitializedParams @params) { }
 
-        [JsonRpcMethod("$/shutdown")]
-        public virtual Task Shutdown() => Task.CompletedTask;
+        public virtual async Task Shutdown() { }
 
-        [JsonRpcMethod("$/exit")]
-        public virtual Task Exit() => Task.CompletedTask;
+        public virtual async Task Exit() { }
 
-        [JsonRpcMethod("$/cancelRequest")]
-        public virtual void CancelRequest() => Volatile.Read(ref _lock)?.Cancel();
+        public virtual void CancelRequest() {
+            Volatile.Read(ref _lock)?.Cancel();
+        }
 
-        [JsonRpcMethod("window/showMessageRequest")]
-        public virtual Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params)
-           => Task.FromResult((MessageActionItem?)null);
+        public virtual async Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params) {
+            return null;
+        }
 
-        [JsonRpcMethod("workspace/didChangeConfiguration")]
-        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
+        public virtual async Task DidChangeConfiguration(DidChangeConfigurationParams @params) { }
 
-        [JsonRpcMethod("workspace/didChangeWatchedFiles")]
-        public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
+        public virtual async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) { }
 
-        [JsonRpcMethod("workspace/symbol")]
-        public virtual Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params)
-             => Task.FromResult(new SymbolInformation[0]);
+        public virtual async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
+            return null;
+        }
 
-        public virtual Task<object> ExecuteCommand(ExecuteCommandParams @params) => Task.FromResult((object)null);
+        public virtual async Task<object> ExecuteCommand(ExecuteCommandParams @params) {
+            return null;
+        }
 
-        [JsonRpcMethod("textDocument/didOpen")]
-        public virtual Task DidOpenTextDocument(DidOpenTextDocumentParams @params) => Task.CompletedTask;
 
-        [JsonRpcMethod("textDocument/didChange")]
-        public virtual Task DidChangeTextDocument(DidChangeTextDocumentParams @params) => Task.CompletedTask;
+        public virtual async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) { }
 
-        [JsonRpcMethod("textDocument/willSave")]
-        public virtual Task WillSaveTextDocument(WillSaveTextDocumentParams @params) => Task.CompletedTask;
+        public virtual async Task DidChangeTextDocument(DidChangeTextDocumentParams @params) { }
 
-        public virtual Task<TextEdit[]> WillSaveWaitUntilTextDocument(WillSaveTextDocumentParams @params)
-            => Task.FromResult(new TextEdit[0]);
+        public virtual async Task WillSaveTextDocument(WillSaveTextDocumentParams @params) { }
 
-        [JsonRpcMethod("textDocument/didSave")]
-        public virtual Task DidSaveTextDocument(DidSaveTextDocumentParams @params) => Task.CompletedTask;
+        public virtual async Task<TextEdit[]> WillSaveWaitUntilTextDocument(WillSaveTextDocumentParams @params) {
+            return null;
+        }
 
-        [JsonRpcMethod("textDocument/didClose")]
-        public virtual Task DidCloseTextDocument(DidCloseTextDocumentParams @params) => Task.CompletedTask;
+        public virtual async Task DidSaveTextDocument(DidSaveTextDocumentParams @params) { }
 
-        [JsonRpcMethod("textDocument/completion")]
-        public virtual Task<CompletionList> Completion(CompletionParams @params) => throw new NotImplementedException();
+        public virtual async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) { }
 
-        [JsonRpcMethod("completionItem/resolve")]
-        public virtual Task<CompletionItem> CompletionItemResolve(CompletionItem item) => throw new NotImplementedException();
+        public virtual async Task<CompletionList> Completion(CompletionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/hover")]
-        public virtual Task<Hover> Hover(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/signatureHelp")]
-        public virtual Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual async Task<Hover> Hover(TextDocumentPositionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/definition")]
-        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/references")]
-        public virtual Task<Reference[]> FindReferences(ReferencesParams @params) => throw new NotImplementedException();
+        public virtual async Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/documentHighlight")]
-        public virtual Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual async Task<Reference[]> FindReferences(ReferencesParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/documentSymbol")]
-        public virtual Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) => throw new NotImplementedException();
+        public virtual async Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/codeAction")]
-        public virtual Task<Command[]> CodeAction(CodeActionParams @params) => throw new NotImplementedException();
+        public virtual async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/codeLens")]
-        public virtual Task<CodeLens[]> CodeLens(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual async Task<Command[]> CodeAction(CodeActionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("codeLens/resolve")]
-        public virtual Task<CodeLens> CodeLensResolve(CodeLens item) => throw new NotImplementedException();
+        public virtual async Task<CodeLens[]> CodeLens(TextDocumentPositionParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/documentLink")]
-        public virtual Task<DocumentLink[]> DocumentLink(DocumentLinkParams @params) => throw new NotImplementedException();
+        public virtual async Task<CodeLens> CodeLensResolve(CodeLens item) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("documentLink/resolve")]
-        public virtual Task<DocumentLink> DocumentLinkResolve(DocumentLink item) => throw new NotImplementedException();
+        public virtual async Task<DocumentLink[]> DocumentLink(DocumentLinkParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/formatting")]
-        public virtual Task<TextEdit[]> DocumentFormatting(DocumentFormattingParams @params) => throw new NotImplementedException();
+        public virtual async Task<DocumentLink> DocumentLinkResolve(DocumentLink item) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/rangeFormatting")]
-        public virtual Task<TextEdit[]> DocumentRangeFormatting(DocumentRangeFormattingParams @params) => throw new NotImplementedException();
+        public virtual async Task<TextEdit[]> DocumentFormatting(DocumentFormattingParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/onTypeFormatting")]
-        public virtual Task<TextEdit[]> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params) => throw new NotImplementedException();
+        public virtual async Task<TextEdit[]> DocumentRangeFormatting(DocumentRangeFormattingParams @params) {
+            throw new NotImplementedException();
+        }
 
-        [JsonRpcMethod("textDocument/rename")]
-        public virtual Task<WorkspaceEdit> Rename(RenameParams @params) => throw new NotImplementedException();
+        public virtual async Task<TextEdit[]> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params) {
+            throw new NotImplementedException();
+        }
+
+        public virtual async Task<WorkspaceEdit> Rename(RenameParams @params) {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Server Requests
 
         public event EventHandler<ShowMessageEventArgs> OnShowMessage;
+
         protected void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
 
         public event EventHandler<LogMessageEventArgs> OnLogMessage;
+
         protected void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
 
         public event EventHandler<TelemetryEventArgs> OnTelemetry;
+
         protected void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
 
         public event EventHandler<RegisterCapabilityEventArgs> OnRegisterCapability;
