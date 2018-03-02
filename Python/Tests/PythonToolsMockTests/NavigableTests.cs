@@ -253,18 +253,19 @@ res = my_var * 10
 
                     Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
                     foreach (var actualLocation in actualLocations) {
-                        Console.WriteLine(actualLocation.Location);
+                        Console.WriteLine($"line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
                     }
 
-                    Assert.AreEqual(expectedLocations.Length, actualLocations.Length);
+                    Assert.AreEqual(expectedLocations.Length, actualLocations.Length, "incorrect number of locations");
                     for (int i = 0; i < expectedLocations.Length; i++) {
-                        Assert.AreEqual(expectedLocations[i], actualLocations[i].Location);
+                        Assert.AreEqual(expectedLocations[i].StartLine, actualLocations[i].Location.StartLine, "incorrect line");
+                        Assert.AreEqual(expectedLocations[i].StartColumn, actualLocations[i].Location.StartColumn, "incorrect column");
                         if (expectedLocations[i].FilePath != null) {
                             Assert.AreEqual(expectedLocations[i].FilePath, Path.GetFileName(actualLocations[i].Location.FilePath));
                         }
                     }
                 } else {
-                    Assert.AreEqual(0, actualLocations.Length);
+                    Assert.AreEqual(0, actualLocations.Length, "incorrect number of locations");
                 }
             }
         }
