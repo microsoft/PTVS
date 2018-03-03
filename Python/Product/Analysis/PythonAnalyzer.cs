@@ -589,12 +589,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 yield break;
             }
-            
+
             // provide module names first
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
-            
+
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
                     if (modName == name) {
@@ -785,10 +785,9 @@ namespace Microsoft.PythonTools.Analysis {
                 _diagnostics.Remove(entry);
             }
         }
+        #endregion
 
-#endregion
-
-#region Internal Implementation
+        #region Internal Implementation
 
         internal IKnownPythonTypes Types {
             get;
@@ -1019,9 +1018,9 @@ namespace Microsoft.PythonTools.Analysis {
             return (BuiltinClassInfo)GetAnalysisValueFromObjects(res);
         }
 
-#endregion
+        #endregion
 
-#region IGroupableAnalysisProject Members
+        #region IGroupableAnalysisProject Members
 
         public void AnalyzeQueuedEntries(CancellationToken cancel) {
             if (cancel.IsCancellationRequested) {
@@ -1032,7 +1031,7 @@ namespace Microsoft.PythonTools.Analysis {
                 Debug.Fail("Used analyzer without reloading modules");
                 ReloadModulesAsync().WaitAndUnwrapExceptions();
             }
-            
+
             var ddg = new DDG();
             ddg.Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
             foreach (var entry in ddg.AnalyzedEntries) {
@@ -1040,7 +1039,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-#endregion
+        #endregion
 
         /// <summary>
         /// Specifies a callback to invoke to provide feedback on the number of
@@ -1078,7 +1077,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public event EventHandler SearchPathsChanged;
 
-#region IDisposable Members
+        #region IDisposable Members
 
         public void Dispose() {
             Dispose(true);
@@ -1102,7 +1101,7 @@ namespace Microsoft.PythonTools.Analysis {
             Dispose(false);
         }
 
-#endregion
+        #endregion
 
         internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
             Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
