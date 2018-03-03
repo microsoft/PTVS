@@ -1352,7 +1352,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task<Response> GetAllMembers(Request request) {
             var req = (AP.GetAllMembersRequest)request;
 
-            var members = await _server.WorkplaceSymbols(new LS.WorkplaceSymbolParams {
+            var members = await _server.WorkspaceSymbols(new LS.WorkspaceSymbolParams {
                 query = req.prefix
             }).ConfigureAwait(false);
 
