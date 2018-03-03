@@ -36,6 +36,7 @@ from ptvsd.util import to_bytes
 try:
     import jupyter_client
     import jupyter_client.manager
+    import zmq.error
 except ImportError:
     raise UnsupportedReplException("Jupyter mode requires the jupyter_client and ipykernel packages. " + traceback.format_exc())
 
@@ -362,6 +363,8 @@ class JupyterClientBackend(ReplBackend):
                     for callable in on_reply:
                         callable(m)
 
+        except zmq.error.ZMQError:
+            self.exit_process()
         except KeyboardInterrupt:
             self.exit_process()
         except:
@@ -400,6 +403,8 @@ class JupyterClientBackend(ReplBackend):
                     print("Received: " + m.msg_type + ":" + str(m) + "\n")
                     self.write_stdout(str(m) + '\n')
 
+        except zmq.error.ZMQError:
+            self.exit_process()
         except KeyboardInterrupt:
             self.exit_process()
         except:
