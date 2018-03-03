@@ -889,7 +889,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
         }
 
-        public async void SetSearchPaths(IEnumerable<string> searchPaths) {
+        public void SetSearchPaths(IEnumerable<string> searchPaths) {
             _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         }
 
