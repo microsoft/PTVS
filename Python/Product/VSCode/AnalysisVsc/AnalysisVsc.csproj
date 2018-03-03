@@ -20,9 +20,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
     </ItemGroup>
-    <ItemGroup>
-        <Folder Include="obj\Debug\" />
-    </ItemGroup>
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
     <Import Project="..\..\NetStandard.targets" />
 </Project>
