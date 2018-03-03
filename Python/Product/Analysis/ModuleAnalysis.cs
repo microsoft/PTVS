@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Analysis {
             var parse = locatedDef?.Entry?.GetCurrentParse();
             if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
                 var tree = parse.Tree;
-                var version = (parse.Cookie as Intellisense.VersionCookie)?.DefaultVersion;
+                var version = (parse.Cookie as PythonTools.Intellisense.VersionCookie)?.DefaultVersion;
                 var identifierStart = locatedDef.Node.GetStart(tree);
                 var identifierEnd = locatedDef.Node.GetEnd(tree);
 

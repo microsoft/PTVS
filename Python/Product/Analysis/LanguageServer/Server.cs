@@ -112,7 +112,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     completionProvider = new CompletionOptions { resolveProvider = true },
-                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental }
+                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
+                    hoverProvider = true
                 }
             };
         }
@@ -239,7 +240,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+        public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
             var doc = GetEntry(@params.textDocument.uri) as IDocument;
 
             if (doc != null) {
@@ -249,6 +250,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
+            return Task.CompletedTask;
         }
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
@@ -265,7 +267,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override async Task<CompletionList> Completion(CompletionParams @params) {
+        public override Task<CompletionList> Completion(CompletionParams @params) {
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -274,7 +276,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return new CompletionList { };
+                return Task.FromResult(new CompletionList { });
             }
 
             var opts = (GetMemberOptions)0;
@@ -351,7 +353,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (members == null) {
                 TraceMessage($"No members found in document {uri}");
-                return new CompletionList { };
+                return Task.FromResult(new CompletionList { });
             }
 
             var filtered = members.Select(m => ToCompletionItem(m, opts));
@@ -363,15 +365,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList { items = filtered.ToArray() };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
-            return res;
+            return Task.FromResult(res);
         }
 
-        public override async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
+        public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
-            return item;
+            return Task.FromResult(item);
         }
 
-        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+        public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -380,7 +382,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return new SignatureHelp { };
+                return Task.FromResult(new SignatureHelp { });
             }
 
             IEnumerable<IOverloadResult> overloads;
@@ -399,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                     LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
-                    return new SignatureHelp { };
+                    return Task.FromResult(new SignatureHelp { });
                 }
             }
 
@@ -413,14 +415,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     ?.Item2 ?? -1;
             }
 
-            return new SignatureHelp {
+            return Task.FromResult(new SignatureHelp {
                 signatures = sigs,
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
-            };
+            });
         }
 
-        public async override Task<Reference[]> FindReferences(ReferencesParams @params) {
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -429,7 +431,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Array.Empty<Reference>();
+                return Task.FromResult(Array.Empty<Reference>());
             }
 
             int? version = null;
@@ -480,7 +482,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
                     LogMessage(MessageType.Info, $"No references found in {uri} at {@params.position}");
-                    return Array.Empty<Reference>();
+                    return Task.FromResult(Array.Empty<Reference>());
                 }
             }
 
@@ -494,16 +496,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             bool includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
 
-            return filtered.Select(v => new Reference {
+            var res = filtered.Select(v => new Reference {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
                 _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
                 _kind = ToReferenceKind(v.Type),
                 _version = version
             }).Concat(extras).ToArray();
+            return Task.FromResult(res);
         }
 
-        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -512,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return default(Hover);
+                return Task.FromResult(default(Hover));
             }
 
             int? version = null;
@@ -537,7 +540,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _analyzer.Modules.TryImport(w.ImportedName, out modRef)) {
 
                 // Return module information
-                return new Hover { contents = "{0} : module".FormatUI(w.ImportedName) };
+                return Task.FromResult(new Hover { contents = "{0} : module".FormatUI(w.ImportedName) });
             }
 
             Expression expr;
@@ -558,7 +561,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             if (expr == null) {
                 LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
-                return default(Hover);
+                return Task.FromResult(default(Hover));
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
@@ -576,15 +579,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
 
-            return new Hover {
+            var res = new Hover {
                 contents = MakeHoverText(values, originalExpr),
                 range = exprSpan,
                 _version = version,
                 _typeNames = names
             };
+            return Task.FromResult(res);
         }
 
-        public override async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
+        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -595,8 +599,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-
-            return members.Select(m => ToSymbolInformation(m)).ToArray();
+            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
         }
 
         #endregion
@@ -886,7 +889,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
         }
 
-        public async void SetSearchPaths(IEnumerable<string> searchPaths) {
+        public void SetSearchPaths(IEnumerable<string> searchPaths) {
             _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         }
 

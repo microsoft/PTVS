@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {

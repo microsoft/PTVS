@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DESKTOP
 using System.Collections.Generic;
 using System.IO;
 using System.Xaml;
@@ -160,3 +160,4 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 }
+#endif
