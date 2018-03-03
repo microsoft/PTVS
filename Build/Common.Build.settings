@@ -52,7 +52,6 @@
     <!-- The default Platform value is specified in the imports below -->
     
     <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>
-    <DefineConstants>DESKTOP;$(DefineConstants)</DefineConstants>
     <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
     
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.6</TargetFrameworkVersion>
