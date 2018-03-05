@@ -49,6 +49,10 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
         }
 
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
+            if (!_callback.EnsureDocumentIsOpen()) {
+                return false;
+            }
+
             // build the new method handler
             var insertPoint = _callback.GetInsertionPoint(null);
 

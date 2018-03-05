@@ -2061,9 +2061,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className) {
+        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className, AnalysisEntry entry = null) {
+            if (textSnapshot == null) {
+                return null;
+            }
             var bi = _services.GetBufferInfo(textSnapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
+            entry = entry ?? bi?.AnalysisEntry;
             if (entry == null) {
                 return null;
             }
