@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="BuildOutputRoot;BuildRoot;OutputPathSuffix;OutputPath;IntermediateOutputPath;ReleaseOutputPath">
+
+  <!-- Ensures that if this file changes it forces a rebuild -->
+  <PropertyGroup>
+    <MSBuildAllProjects>
+        $(MSBuildAllProjects);$(MSBuildThisFileFullPath)
+    </MSBuildAllProjects>
+  </PropertyGroup>
+
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='15.0'">15.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='14.0'">14.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    
+    <VSTargetName Condition="'$(VSTarget)' == '15.0'">2017</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '14.0'">2015</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '12.0'">2013</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
+    
+    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
+    <!--
+    The version number that will identify a specific build. This appears in
+    Programs and Features, Extension Manager, and Help About.
+    -->
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">15.7</FileVersionPrefix>
+    <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
+    <!--
+    The version number that will identify assembly compatibility.
+    -->
+    <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">15.0.0</StableVersionPrefix>
+    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).0</StableVersion>
+    
+    <!-- When true, increases build restrictions to ensure complete public releases -->
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
+
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-MM-dd`))</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Alpha'">$(FileVersionPrefix) Alpha $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Beta'">$(FileVersionPrefix) Beta $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'RC'">$(FileVersionPrefix) RC $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Rel'">$(FileVersionPrefix)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifier)' != ''">$(CustomBuildIdentifier.Trim())</CustomBuildIdentifier>
+
+    <!-- The default Platform value is specified in the imports below -->
+    
+    <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>
+
+    <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
+    
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.6</TargetFrameworkVersion>
+    <TargetFrameworkMoniker>.NETFramework,Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+    
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+    <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
+    <TargetsPath>$(BuildRoot)Build</TargetsPath>
+
+    <PackagesPath Condition="Exists('$(BuildRoot)\packages.$(VSTarget)')">$(BuildRoot)\packages.$(VSTarget)\</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\packages\</PackagesPath>
+    <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
+
+    <!-- BuildOutputRoot contains all build files.
+    
+    Rather than customizing OutputPath or IntermediateOutputPath in projects,
+    $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set.
+    -->
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
+    <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
+
+    <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)raw\$(OutputPathSuffix)\</OutputPath>
+    <OutputPath Condition="!HasTrailingSlash($(OutputPath))">$(OutputPath)\</OutputPath>
+
+    <BinariesOutputPath Condition="'$(BinariesOutputPath)' == ''">$(BuildOutputRoot)raw\binaries\</BinariesOutputPath>
+    <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesOutputPath))">$(BinariesOutputPath)\</BinariesOutputPath>
+
+    <LayoutOutputRoot Condition="'$(LayoutOutputRoot)' == ''">$(BuildOutputRoot)layout\</LayoutOutputRoot>
+    <LayoutOutputRoot Condition="!HasTrailingSlash($(LayoutOutputRoot))">$(LayoutOutputRoot)\</LayoutOutputRoot>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) == ''">$(LayoutOutputRoot)</LayoutOutputPath>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) != ''">$(LayoutOutputRoot)$(LayoutOutputPathSuffix)\</LayoutOutputPath>
+    <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
+
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\release\</ReleaseOutputPath>
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == ''">$(BuildOutputRoot)release\</ReleaseOutputPath>
+    <ReleaseOutputPath Condition="!HasTrailingSlash($(ReleaseOutputPath))">$(ReleaseOutputPath)\</ReleaseOutputPath>
+
+    <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
+    <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
+
+    <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
+    <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
+
+    <UnsignedOutputPath Condition="'$(UnsignedOutputPath)' == ''">$(BuildOutputRoot)raw\unsigned\</UnsignedOutputPath>
+    <UnsignedOutputPath Condition="!HasTrailingSlash($(UnsignedOutputPath))">$(UnsignedOutputPath)\</UnsignedOutputPath>
+
+    <IntermediateOutputRoot Condition="'$(IntermediateOutputRoot)' == ''">$(BuildOutputRoot)raw\obj\</IntermediateOutputRoot>
+    <IntermediateOutputRoot Condition="!HasTrailingSlash($(IntermediateOutputRoot))">$(IntermediateOutputRoot)\</IntermediateOutputRoot>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
+
+    <LocOutputPath>$(BinariesOutputPath)localize\</LocOutputPath>
+
+    <OutDir>$(OutputPath)</OutDir>
+    <IntDir>$(IntermediateOutputPath)</IntDir>
+
+    <Languages Condition="$(Languages) == ''">ENU,CHS,CHT,DEU,ESN,FRA,ITA,JPN,KOR,RUS,CSY,PTB,PLK,TRK</Languages>
+
+    <!-- Allows assemblies to specify their own version -->
+    <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>
+    
+    <!-- Enables VS SDK build steps.
+    
+    Set CreateVsixContainer for projects that create a .vsix file.
+    Set UseVSSDKTemplateOnly for projects that build templates but no code.
+    -->
+    <UseVSSDK Condition="'$(UseVSSDK)' == ''">false</UseVSSDK>
+    <UseVSSDKTemplateOnly Condition="'$(UseVSSDKTemplateOnly)' == ''">false</UseVSSDKTemplateOnly>
+    <!-- The location to copy VSIX contents so they can be signed and zipped -->
+    <CopyVsixExtensionRoot Condition="'$(CopyVsixExtensionRoot)' == ''">$(LayoutOutputPath)</CopyVsixExtensionRoot>
+
+    <!-- These targets are invoked to find VSIX contents on all projects.
+    
+    The files found are used for deployment to the Experimental hive and
+    creation of .vsix files.
+    -->
+    <IncludeVsixItemsFromTargets Condition="'$(IncludeVsixItemsFromTargets)' == '' and '$(Configuration)' == 'Debug'">BuiltProjectOutputGroup;DebugSymbolsProjectOutputGroup</IncludeVsixItemsFromTargets>
+    <IncludeVsixItemsFromTargets Condition="'$(IncludeVsixItemsFromTargets)' == ''">BuiltProjectOutputGroup</IncludeVsixItemsFromTargets>
+    <!-- Copies entire VSIX contents to the output directory. -->
+    <CopyLocalReferenceVsixItems Condition="'$(CopyLocalReferenceVsixItems)' == ''">false</CopyLocalReferenceVsixItems>
+  </PropertyGroup>
+
+
+
+  <PropertyGroup>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">true</TreatWarningsAsErrors>
+    <!-- Suppress warning about multiply defined AssemblyVersionInfo -->
+    <NoWarn>436;1998</NoWarn>
+    <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
+    <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
+
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+
+    <DevEnvDir Condition="$(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\</DevEnvDir>
+    <DevEnvDir Condition="!Exists($(DevEnvDir))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <!-- By default, references are never copied.
+    
+    Setting Private to true will treat the reference as a critical dependency,
+    but files are only copied if CopyLocalReferenceVsixItems is also true, or if
+    a .vsix file is generated.
+    -->
+    <Reference>
+      <Private>false</Private>
+    </Reference>
+    <ProjectReference>
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference2>
+      <Visible>false</Visible>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <BuildReference>true</BuildReference>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </ProjectReference2>
+    <ProjectFile>
+      <Properties>BuildRoot=$(BuildRoot)</Properties>
+      <BuildTarget>Build</BuildTarget>
+      <CleanTarget>Clean</CleanTarget>
+    </ProjectFile>
+    <SequencedProjectFile>
+      <Properties>BuildRoot=$(BuildRoot)</Properties>
+      <BuildTarget>Build</BuildTarget>
+      <CleanTarget>Clean</CleanTarget>
+    </SequencedProjectFile>
+  </ItemDefinitionGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
+  <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
+  <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
+  <Import Project="$(TargetsPath)\MicroBuild.props" />
+
+  <!-- Check for the VSSDK Build Tools arbitrarily to see whether we should run the script. -->
+  <Target Name="_EnsureDependenciesInstalled" BeforeTargets="PrepareForBuild" Condition="!Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')">
+    <Exec Command='powershell.exe -ExecutionPolicy Bypass -File "$(TargetsPath)\PreBuild.ps1" -VsTarget $(VSTarget)' />
+  </Target>
+</Project>

@@ -2,6 +2,7 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp2.0</TargetFramework>
     </PropertyGroup>
+    <Import Project="..\..\NetStandard.settings" />
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
     <ItemGroup>
         <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
@@ -11,7 +12,43 @@
         <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
     </ItemGroup>
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+    
+    <!-- .NET Core publishing -->
+    <ItemGroup>
+        <TargetOS Include="win-x86" />
+        <TargetOS Include="win-x64" />
+        <TargetOS Include="osx-x64" />
+        <TargetOS Include="linux-x64" />
+    </ItemGroup>
     <Target Name="AfterBuild">
-        <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj" />
+        <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration)" />
+        <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity)" />
+        <Message Text="Zipping $(OutputPath)\ptvs-ls-%(TargetOS.Identity).zip..." />
+        <ZipDir ZipFileName="$(OutputPath)\ptvs-ls-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)\%(TargetOS.Identity)\publish" />
     </Target>
+    
+    <!-- Zipping -->
+    <UsingTask TaskName="ZipDir" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+        <ParameterGroup>
+            <ZipFileName ParameterType="System.String" Required="true" />
+            <DirectoryName ParameterType="System.String" Required="true" />
+        </ParameterGroup>
+        <Task>
+            <Reference Include="System.IO.Compression.FileSystem" />
+            <Using Namespace="System.IO.Compression" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                      try {
+                        Log.LogMessage(string.Format("Zipping Directory {0} to {1}", DirectoryName, ZipFileName));
+                        ZipFile.CreateFromDirectory(DirectoryName, ZipFileName);
+                        return true;
+                      }
+                      catch(Exception ex) {
+                        Log.LogErrorFromException(ex);
+                        return false;
+                      }
+                ]]>
+            </Code>
+        </Task>
+    </UsingTask>
 </Project>
