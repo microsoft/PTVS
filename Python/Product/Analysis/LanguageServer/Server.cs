@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.Log, "Initializing for unknown interpreter");
+                LogMessage(MessageType.Log, "Initializing for generic interpreter");
             } else {
                 LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
             }
@@ -111,9 +112,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
-                    completionProvider = new CompletionOptions { resolveProvider = true },
                     textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
-                    hoverProvider = true
+                    completionProvider = new CompletionOptions { resolveProvider = true },
+                    hoverProvider = true,
+                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } }
                 }
             };
         }
@@ -676,6 +678,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 } catch (Exception ex) {
                     LogMessage(MessageType.Warning, ex.ToString());
                 }
+            } else {
+                factory = new AstPythonInterpreterFactory(interpreter.properties);
             }
 
             if (factory == null) {

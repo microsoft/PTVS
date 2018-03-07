@@ -73,15 +73,12 @@ namespace Microsoft.PythonTools.Interpreter {
             Architecture = InterpreterArchitecture.TryParse(Read(properties, nameof(Architecture)));
             try {
                 Version = Version.Parse(Read(properties, nameof(Version)));
-            } catch (ArgumentException) {
-                Version = new Version();
-            } catch (FormatException) {
+            } catch (Exception ex) when (ex is ArgumentException || ex is ArgumentNullException || ex is FormatException) {
                 Version = new Version();
             }
             UIMode = 0;
             foreach (var bit in (Read(properties, nameof(UIMode)) ?? "").Split('|')) {
-                InterpreterUIMode m;
-                if (Enum.TryParse(bit, out m)) {
+                if (Enum.TryParse(bit, out InterpreterUIMode m)) {
                     UIMode |= m;
                 }
             }
