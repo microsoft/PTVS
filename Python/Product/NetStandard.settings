@@ -33,12 +33,6 @@
         <DefineConstants>NETSTANDARD;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
 
-    <!-- Target OS -->
-    <PropertyGroup>
-        <!-- See https://docs.microsoft.com/en-us/dotnet/core/rid-catalog -->
-        <RuntimeIdentifiers>win-x86;win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-    </PropertyGroup>
-
     <!-- Versioning -->
     <PropertyGroup>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

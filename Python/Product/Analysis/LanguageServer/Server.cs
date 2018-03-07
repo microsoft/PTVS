@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private bool _traceLogging;
 
         // If null, all files must be added manually
-        private Uri _rootDir;
+        private string _rootDir;
 
         public Server() {
             _queue = new AnalysisQueue();
@@ -94,9 +94,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _clientCaps = @params.capabilities;
 
             if (@params.rootUri != null) {
-                _rootDir = @params.rootUri;
+                _rootDir = @params.rootUri.ToAbsolutePath();
             } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                _rootDir = new Uri(PathUtils.NormalizePath(@params.rootPath));
+                _rootDir = PathUtils.NormalizePath(@params.rootPath);
             }
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
@@ -548,7 +548,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             Expression expr;
-            SourceSpan exprSpan;
+            SourceSpan? exprSpan;
             Analyzer.InterpreterScope scope = null;
 
             if (!string.IsNullOrEmpty(@params._expr)) {
@@ -557,11 +557,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // This span will not be valid within the document, but it will at least
                 // have the correct length. If we have passed "_expr" then we are likely
                 // planning to ignore the returned span anyway.
-                exprSpan = expr.GetSpan(exprTree);
+                exprSpan = expr?.GetSpan(exprTree);
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
                 expr = finder.GetExpression(@params.position) as Expression;
-                exprSpan = expr.GetSpan(tree);
+                exprSpan = expr?.GetSpan(tree);
             }
             if (expr == null) {
                 LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
@@ -697,12 +697,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IEnumerable<ModulePath> GetImportNames(Uri document) {
-            var localRoot = GetLocalPath(_rootDir);
             var filePath = GetLocalPath(document);
-            ModulePath mp;
 
             if (!string.IsNullOrEmpty(filePath)) {
-                if (!string.IsNullOrEmpty(localRoot) && ModulePath.FromBasePathAndFile_NoThrow(localRoot, filePath, out mp)) {
+                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, out var mp)) {
                     yield return mp;
                 }
 
@@ -1120,8 +1118,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async Task LoadFromDirectoryAsync(Uri rootDir) {
-            foreach (var file in PathUtils.EnumerateFiles(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
+        private async Task LoadFromDirectoryAsync(string rootDir) {
+            foreach (var file in PathUtils.EnumerateFiles(rootDir, recurse: false, fullPaths: true)) {
                 if (!ModulePath.IsPythonSourceFile(file)) {
                     if (ModulePath.IsPythonFile(file, true, true, true)) {
                         // TODO: Deal with scrapable files (if we need to do anything?)
@@ -1134,10 +1132,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     FileFound(entry.DocumentUri);
                 }
             }
-            foreach (var dir in PathUtils.EnumerateDirectories(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir, recurse: false, fullPaths: true)) {
                 if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
                     !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
-                    await LoadFromDirectoryAsync(new Uri(dir));
+                    await LoadFromDirectoryAsync(dir);
                 }
             }
         }

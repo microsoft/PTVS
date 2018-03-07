@@ -11,6 +11,6 @@ namespace Microsoft.PythonTools.VsCode.Services {
         public TelemetryService(JsonRpc rpc) {
             _rpc = rpc;
         }
-        public Task SendTelemetry(object o) => _rpc.InvokeAsync("telemetry/event", o);
+        public Task SendTelemetry(object o) => _rpc.NotifyWithParameterObjectAsync("telemetry/event", o);
     }
 }

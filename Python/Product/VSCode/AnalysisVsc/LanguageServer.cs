@@ -11,6 +11,7 @@ using Microsoft.DsTools.Core.Services;
 using Microsoft.DsTools.Core.Services.Shell;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Core.Shell;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
@@ -26,12 +27,12 @@ namespace Microsoft.PythonTools.VsCode {
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
         private IUIService _ui;
         private ITelemetryService _telemetry;
-        private JsonRpc _rpc;
+        private JsonRpc _vscode;
 
-        public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
+        public CancellationToken Start(IServiceContainer services, JsonRpc vscode) {
             _ui = services.GetService<IUIService>();
             _telemetry = services.GetService<ITelemetryService>();
-            _rpc = rpc;
+            _vscode = vscode;
 
             _server.OnLogMessage += OnLogMessage;
             _server.OnShowMessage += OnShowMessage;
@@ -58,8 +59,11 @@ namespace Microsoft.PythonTools.VsCode {
             _server.Dispose();
         }
 
-        struct PublishDiagnosticsParams {
-            public Uri uri;
+        [JsonObject]
+        class PublishDiagnosticsParams {
+            [JsonProperty]
+            public string uri;
+            [JsonProperty]
             public Diagnostic[] diagnostics;
         }
 
@@ -69,14 +73,17 @@ namespace Microsoft.PythonTools.VsCode {
         private void OnLogMessage(object sender, LogMessageEventArgs e) => _ui.LogMessage(e.message, e.type);
         private void OnPublishDiagnostics(object sender, PublishDiagnosticsEventArgs e) {
             var parameters = new PublishDiagnosticsParams {
-                uri = e.uri,
+                uri = e.uri.ToString(),
                 diagnostics = e.diagnostics.ToArray()
             };
-            _rpc.InvokeAsync("textDocument/publishDiagnostics", parameters);
+            _vscode.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters);
         }
-        private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e) => _rpc.InvokeAsync("workspace/applyEdit", e.@params);
-        private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e) => _rpc.InvokeAsync("client/registerCapability", e.@params);
-        private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e) => _rpc.InvokeAsync("client/unregisterCapability", e.@params);
+        private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e) 
+            => _vscode.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params);
+        private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e) 
+            => _vscode.NotifyWithParameterObjectAsync("client/registerCapability", e.@params);
+        private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e) 
+            => _vscode.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params);
         #endregion
 
         #region Lifetime
@@ -93,8 +100,10 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         [JsonRpcMethod("initialized")]
-        public Task Initialized(JToken token) 
-            => _server.Initialized(token.ToObject<InitializedParams>());
+        public async Task Initialized(JToken token) { 
+            await _server.Initialized(token.ToObject<InitializedParams>());
+            await _ui.ShowMessage("Initialized!", MessageType.Info);
+        }
 
         [JsonRpcMethod("shutdown")]
         public Task Shutdown() => _server.Shutdown();
@@ -106,12 +115,6 @@ namespace Microsoft.PythonTools.VsCode {
         #region Cancellation
         [JsonRpcMethod("cancelRequest")]
         public void CancelRequest() => _server.CancelRequest();
-        #endregion
-
-        #region Window
-        [JsonRpcMethod("window/showMessageRequest")]
-        public Task<MessageActionItem?> ShowMessageRequest(JToken token)
-           => _server.ShowMessageRequest(token.ToObject<ShowMessageRequestParams>());
         #endregion
 
         #region Workspace

@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.VsCode.Services {
                 type = messageType,
                 message = message
             };
-            return _rpc.InvokeAsync("window/showMessage", parameters);
+            return _rpc.NotifyWithParameterObjectAsync("window/showMessage", parameters);
         }
 
         public Task<MessageActionItem?> ShowMessage(string message, MessageActionItem[] actions, MessageType messageType) {
@@ -27,11 +27,11 @@ namespace Microsoft.PythonTools.VsCode.Services {
                 message = message,
                 actions = actions
             };
-            return _rpc.InvokeAsync<MessageActionItem?>("window/showMessageRequest", parameters);
+            return _rpc.InvokeWithParameterObjectAsync<MessageActionItem?>("window/showMessageRequest", parameters);
         }
 
         [Serializable]
-        struct LogMessageParams {
+        class LogMessageParams {
             public MessageType type;
             public string message;
         }
@@ -41,10 +41,10 @@ namespace Microsoft.PythonTools.VsCode.Services {
                 type = messageType,
                 message = message
             };
-            return _rpc.InvokeAsync<MessageActionItem?>("window/logMessage", parameters);
+            return _rpc.NotifyWithParameterObjectAsync("window/logMessage", parameters);
         }
 
         public Task SetStatusBarMessage(string message) 
-            => _rpc.InvokeAsync<MessageActionItem?>("window/setStatusBarMessage", message);
+            => _rpc.NotifyWithParameterObjectAsync("window/setStatusBarMessage", message);
     }
 }

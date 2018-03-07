@@ -70,8 +70,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual void CancelRequest()  => Volatile.Read(ref _lock)?.Cancel();
 
-        public virtual Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params) => Task.FromResult((MessageActionItem?)null);
-
         public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
         public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
@@ -168,12 +166,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<ApplyWorkspaceEditEventArgs> OnApplyWorkspaceEdit;
-        protected Task<ApplyWorkspaceEditResponse?> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
+        protected Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
             var evt = OnApplyWorkspaceEdit;
             if (evt == null) {
-                return Task.FromResult((ApplyWorkspaceEditResponse?)null);
+                return Task.FromResult((ApplyWorkspaceEditResponse)null);
             }
-            var tcs = new TaskCompletionSource<ApplyWorkspaceEditResponse?>();
+            var tcs = new TaskCompletionSource<ApplyWorkspaceEditResponse>();
             var e = new ApplyWorkspaceEditEventArgs(tcs) { @params = @params };
             evt(this, e);
             return tcs.Task;
