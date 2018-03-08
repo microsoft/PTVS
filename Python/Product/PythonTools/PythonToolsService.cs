@@ -123,10 +123,6 @@ namespace Microsoft.PythonTools {
         }
 
         public void Dispose() {
-            // This will probably never be called by VS, but we use it in unit
-            // tests to avoid leaking memory when we reinitialize state between
-            // each test.
-
             if (_langPrefs.IsValueCreated) {
                 _langPrefs.Value.Dispose();
             }
@@ -139,7 +135,7 @@ namespace Microsoft.PythonTools {
             _codeWindowManagers.Clear();
 
             foreach (var kv in GetActiveSharedAnalyzers()) {
-                Debug.Assert(kv.Value.IsDisposed, $"Unclosed shared analyzer for {kv.Key}");
+                kv.Value.Dispose();
             }
         }
 
@@ -213,12 +209,7 @@ namespace Microsoft.PythonTools {
         internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null) {
             var result = TryGetSharedAnalyzer(factory, out var id);
             if (result != null) {
-                try {
-                    result.AddUser();
-                    return result;
-                } catch (ObjectDisposedException) {
-                    _analyzers.TryRemove(id, out _);
-                }
+                return result;
             }
 
             result = await CreateAnalyzerAsync(factory);
@@ -231,9 +222,12 @@ namespace Microsoft.PythonTools {
 
         /// <summary>
         /// Gets an active shared analyzer if one exists and can be
-        /// obtained without blocking. This does not add a user.
+        /// obtained without blocking. If this returns non-null and
+        /// <paramref name="addUser"/> is <c>true</c>, the caller
+        /// is responsible to call <see cref="VsProjectAnalyzer.RemoveUser"/>
+        /// and if necessary, <see cref="VsProjectAnalyzer.Dispose"/>.
         /// </summary>
-        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id) {
+        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true) {
             id = factory?.Configuration?.Id;
             if (string.IsNullOrEmpty(id)) {
                 factory = _interpreterOptionsService.Value?.DefaultInterpreter;
@@ -241,7 +235,12 @@ namespace Microsoft.PythonTools {
             }
 
             if (_analyzers.TryGetValue(id, out var result)) {
-                return result;
+                try {
+                    result.AddUser();
+                    return result;
+                } catch (ObjectDisposedException) {
+                    _analyzers.TryRemove(id, out _);
+                }
             }
 
             return null;

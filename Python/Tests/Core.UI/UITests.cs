@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pythontools;
+extern alias util;
 using System;
 using System.IO;
 using System.Linq;
@@ -22,18 +24,16 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
-using TestUtilities.UI;
 using TestUtilities.UI.Python;
-using Keyboard = TestUtilities.UI.Keyboard;
+using util::TestUtilities.UI;
+using static pythontools::Microsoft.PythonTools.Extensions;
+using Keyboard = util::TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
-using Mouse = TestUtilities.UI.Mouse;
+using Mouse = util::TestUtilities.UI.Mouse;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
@@ -154,7 +154,7 @@ namespace PythonToolsUITests {
 
             // Ensure we complete analysis. VS may crash if the invalid
             // path is not handled correctly.
-            project.GetPythonProject().TryGetAnalyzer().WaitForCompleteAnalysis(_ => true);
+            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
             var tree = app.OpenSolutionExplorer();
 

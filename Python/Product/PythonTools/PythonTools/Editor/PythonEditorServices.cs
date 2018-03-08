@@ -97,10 +97,6 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public IContentTypeRegistryService ContentTypeRegistryService;
 
-        //[Import]
-        //private Lazy<AnalysisEntryService> _analysisEntryService = null;
-        //public AnalysisEntryService AnalysisEntryService => _analysisEntryService.Value;
-
         [Import]
         public IInterpreterOptionsService InterpreterOptionsService;
 
