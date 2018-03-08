@@ -16,14 +16,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -37,7 +40,7 @@ namespace Microsoft.PythonTools.Commands {
             
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override async void DoCommand(object sender, EventArgs args) {
             var oe = args as OleMenuCmdEventArgs;
             string file = oe.InValue as string;
             PythonLanguageVersion? version = null;
@@ -59,19 +62,29 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             if (file != null) {
-                var outFilename = Path.ChangeExtension(file, ".coveragexml");
-
                 try {
-                    ConvertCoveragePy(file, outFilename, version);
-                } catch (IOException ioex) {
-                    MessageBox.Show(String.Format(Strings.FailedToConvertCoverageFile, ioex.Message));
+                    await DoConvert(file, version);
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
-
-                _serviceProvider.GetDTE().ItemOperations.OpenFile(outFilename);
             }
         }
 
-        private void ConvertCoveragePy(string inputFile, string outputFile, PythonLanguageVersion? version) {
+        private async Task DoConvert(string file, PythonLanguageVersion? version) {
+            var outFilename = Path.ChangeExtension(file, ".coveragexml");
+
+            try {
+                await ConvertCoveragePyAsync(file, outFilename, version);
+            } catch (IOException ioex) {
+                MessageBox.Show(String.Format(Strings.FailedToConvertCoverageFile, ioex.Message));
+            } catch (Exception ex) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+            }
+
+            _serviceProvider.GetDTE().ItemOperations.OpenFile(outFilename);
+        }
+
+        private async Task ConvertCoveragePyAsync(string inputFile, string outputFile, PythonLanguageVersion? version) {
             var baseDir = Path.GetDirectoryName(inputFile);
             using (FileStream tmp = new FileStream(inputFile, FileMode.Open))
             using (FileStream outp = new FileStream(outputFile, FileMode.Create)) {
@@ -80,19 +93,11 @@ namespace Microsoft.PythonTools.Commands {
 
                 // Discover what version we should use for this if one hasn't been provided...
                 if (version == null) {
-                    var entryService = _serviceProvider.GetEntryService();
                     foreach (var file in fileInfo) {
-                        version = entryService.GetAnalyzersForFile(file.Filename)
-                            .OfType<VsProjectAnalyzer>()
-                            .Select(a => (PythonLanguageVersion?)a.LanguageVersion)
-                            .FirstOrDefault();
+                        version = ((await _serviceProvider.FindAnalyzerAsync(file.Filename)) as VsProjectAnalyzer)?.LanguageVersion;
                         if (version.HasValue) {
                             break;
                         }
-                    }
-
-                    if (version == null) {
-                        version = (entryService.DefaultAnalyzer as VsProjectAnalyzer)?.LanguageVersion;
                     }
                 }
 

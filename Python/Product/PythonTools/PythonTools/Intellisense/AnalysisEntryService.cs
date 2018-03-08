@@ -32,38 +32,38 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public interface IAnalysisEntryService {
-        /// <summary>
-        /// Tries to get the analyzer and filename of the specified text buffer.
-        /// </summary>
-        /// <returns>True if an analyzer and filename are found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
-        bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename);
-        /// <summary>
-        /// Tries to get the analyzer and filename of the specified text view. This is
-        /// equivalent to using the view's default text buffer, with some added checks
-        /// for non-standard editors.
-        /// </summary>
-        /// <returns>True if an analyzer and filename are found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
-        bool TryGetAnalyzer(ITextView textView, out ProjectAnalyzer analyzer, out string filename);
-        /// <summary>
-        /// Gets all the analyzers that apply to the specified file. Must be
-        /// called from the UI thread.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="filename"/> is null or empty.</exception>
-        IEnumerable<ProjectAnalyzer> GetAnalyzersForFile(string filename);
+    //public interface IAnalysisEntryService {
+    //    /// <summary>
+    //    /// Tries to get the analyzer and filename of the specified text buffer.
+    //    /// </summary>
+    //    /// <returns>True if an analyzer and filename are found.</returns>
+    //    /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
+    //    bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename);
+    //    /// <summary>
+    //    /// Tries to get the analyzer and filename of the specified text view. This is
+    //    /// equivalent to using the view's default text buffer, with some added checks
+    //    /// for non-standard editors.
+    //    /// </summary>
+    //    /// <returns>True if an analyzer and filename are found.</returns>
+    //    /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
+    //    bool TryGetAnalyzer(ITextView textView, out ProjectAnalyzer analyzer, out string filename);
+    //    /// <summary>
+    //    /// Gets all the analyzers that apply to the specified file. Must be
+    //    /// called from the UI thread.
+    //    /// </summary>
+    //    /// <exception cref="ArgumentNullException"><paramref name="filename"/> is null or empty.</exception>
+    //    IEnumerable<ProjectAnalyzer> GetAnalyzersForFile(string filename);
 
-        /// <summary>
-        /// Returns the default analyzer for the Visual Studio session. Must be accessed from
-        /// the UI thread.
-        /// </summary>
-        ProjectAnalyzer DefaultAnalyzer { get; }
-    }
+    //    /// <summary>
+    //    /// Returns the default analyzer for the Visual Studio session. Must be accessed from
+    //    /// the UI thread.
+    //    /// </summary>
+    //    ProjectAnalyzer DefaultAnalyzer { get; }
+    //}
 
-    [Export(typeof(IAnalysisEntryService))]
-    [Export(typeof(AnalysisEntryService))]
-    class AnalysisEntryService : IAnalysisEntryService {
+    //[Export(typeof(IAnalysisEntryService))]
+    //[Export(typeof(AnalysisEntryService))]
+    class AnalysisEntryService /*: IAnalysisEntryService*/ {
         private readonly Lazy<PythonEditorServices> _services;
         private IWpfDifferenceViewerFactoryService _diffService;
 
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = buffer.GetFilePath();
             if (path != null) {
-                analyzer = _services.Value.Site.GetProjectFromFile(path)?.GetAnalyzer();
+                analyzer = _services.Value.Site.GetProjectFromFile(path)?.TryGetAnalyzer();
                 if (analyzer is VsProjectAnalyzer vpa) {
                     return vpa;
                 }

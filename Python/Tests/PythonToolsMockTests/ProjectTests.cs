@@ -1,4 +1,3 @@
-extern alias pythontools;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -15,6 +14,7 @@ extern alias pythontools;
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pythontools;
 using System.Linq;
 using System.Threading;
 using System.Windows.Input;
@@ -32,6 +32,7 @@ using pythontools::Microsoft.PythonTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]

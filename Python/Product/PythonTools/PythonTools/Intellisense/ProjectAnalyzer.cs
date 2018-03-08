@@ -454,7 +454,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        /// <summary>
+        /// Increases the number of known users by one.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">
+        /// The analyzer is being or has been disposed.
+        /// </exception>
         public void AddUser() {
+            if (_disposing) {
+                throw new ObjectDisposedException(GetType().Name);
+            }
             Interlocked.Increment(ref _userCount);
         }
 
@@ -529,6 +538,8 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (ObjectDisposedException) {
             }
         }
+
+        public bool IsDisposed => _disposing;
 
         #endregion
 
@@ -1436,9 +1447,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var entryService = serviceProvider.GetEntryService();
-            AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return MissingImportAnalysis.Empty;
             }
 

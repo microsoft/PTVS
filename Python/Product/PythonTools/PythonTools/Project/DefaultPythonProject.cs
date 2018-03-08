@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public Projects.ProjectAnalyzer GetProjectAnalyzer() {
-            return _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
+            return _serviceProvider.GetPythonToolsService().TryGetSharedAnalyzer(null, out _);
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory() {

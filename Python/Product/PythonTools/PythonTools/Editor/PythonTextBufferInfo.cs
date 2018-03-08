@@ -20,6 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,11 +30,15 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Editor {
     sealed class PythonTextBufferInfo {
@@ -738,5 +743,152 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         #endregion
+    }
+
+    static class PythonTextBufferInfoExtensions {
+        public static PythonTextBufferInfo TryGetInfo(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer);
+
+        public static AnalysisEntry TryGetAnalysisEntry(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntry;
+
+        public static Task<AnalysisEntry> GetAnalysisEntryAsync(this ITextBuffer buffer, PythonEditorServices services = null, CancellationToken cancellationToken = default(CancellationToken)) {
+            var bi = services == null ? PythonTextBufferInfo.TryGetForBuffer(buffer) : services.GetBufferInfo(buffer);
+            if (bi != null) {
+                return bi.GetAnalysisEntryAsync(cancellationToken);
+            }
+            return Task.FromResult<AnalysisEntry>(null);
+        }
+
+        public static AnalysisEntry TryGetAnalysisEntry(this ITextView view, IServiceProvider site) {
+            var entry = view.TextBuffer.TryGetAnalysisEntry();
+            if (entry != null) {
+                return entry;
+            }
+
+            var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+            var viewer = diffViewer?.TryGetViewerForTextView(view);
+            if (viewer != null) {
+                entry = viewer.DifferenceBuffer.RightBuffer.TryGetAnalysisEntry() ??
+                    viewer.DifferenceBuffer.LeftBuffer.TryGetAnalysisEntry();
+                if (entry != null) {
+                    return entry;
+                }
+            }
+
+            return null;
+        }
+
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, ITextView view) {
+            ProjectAnalyzer analyzer;
+
+            var bi = view.TextBuffer.TryGetInfo();
+            if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+                return analyzer;
+            }
+
+            var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+            var viewer = diffViewer?.TryGetViewerForTextView(view);
+            if (viewer != null) {
+                bi = viewer.DifferenceBuffer.RightBuffer.TryGetInfo();
+                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+                    return analyzer;
+                }
+                bi = viewer.DifferenceBuffer.LeftBuffer.TryGetInfo();
+                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+                    return analyzer;
+                }
+            }
+
+            return null;
+        }
+
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, PythonTextBufferInfo buffer) {
+            ProjectAnalyzer analyzer;
+
+            // If we have an analyzer in Properties, we will use that
+            // NOTE: This should only be used for tests.
+            if (buffer.Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
+                return analyzer;
+            }
+
+            // If we have a REPL evaluator we'll use its analyzer
+            IPythonInteractiveIntellisense evaluator;
+            if ((evaluator = buffer.Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
+                return evaluator.Analyzer;
+            }
+
+            // If the file is associated with a project, use its analyzer
+            analyzer = await site.GetUIThread().InvokeTask(() => site.GetProjectFromFile(buffer.Filename)?.GetAnalyzerAsync());
+            if (analyzer != null) {
+                return analyzer;
+            }
+
+            return null;
+        }
+
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, string filename) {
+            return (await FindAllAnalyzersForFile(site, filename, true)).FirstOrDefault() ??
+                (await site.GetPythonToolsService().GetSharedAnalyzerAsync());
+        }
+
+        public static Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename) {
+            return FindAllAnalyzersForFile(site, filename, false);
+        }
+
+        private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly) {
+                if (string.IsNullOrEmpty(filename)) {
+                throw new ArgumentNullException(nameof(filename));
+            }
+
+            var found = new HashSet<ProjectAnalyzer>();
+
+            // If we have an open document, return that
+            var buffer = site.GetTextBufferFromOpenFile(filename)?.TryGetInfo();
+            if (buffer != null) {
+                var analyzer = await site.FindAnalyzerAsync(buffer);
+                if (analyzer != null) {
+                    found.Add(analyzer);
+                    if (firstOnly) {
+                        return found.ToArray();
+                    }
+                }
+            }
+
+            // Yield all loaded projects containing the file
+            var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
+            if (sln != null) {
+                if (Path.IsPathRooted(filename)) {
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+                        if (project.FindNodeByFullPath(filename) != null) {
+                            var analyzer = project.TryGetAnalyzer();
+                            if (analyzer != null) {
+                                found.Add(analyzer);
+                                if (firstOnly) {
+                                    return found.ToArray();
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    var withSlash = "\\" + filename;
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+                        if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
+                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
+                            var analyzer = project.TryGetAnalyzer();
+                            if (analyzer != null) {
+                                found.Add(analyzer);
+                                if (firstOnly) {
+                                    return found.ToArray();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // TODO: When we add non-project attached analyzers, return them here
+
+            return found.ToArray();
+        }
+
     }
 }

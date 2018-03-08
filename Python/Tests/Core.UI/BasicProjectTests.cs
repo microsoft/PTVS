@@ -53,6 +53,7 @@ using Mouse = TestUtilities.UI.Mouse;
 using Thread = System.Threading.Thread;
 using Task = System.Threading.Tasks.Task;
 using System.Text;
+using pythontools::Microsoft.PythonTools.Editor;
 
 namespace PythonToolsUITests {
     public class BasicProjectTests {
@@ -898,14 +899,14 @@ namespace PythonToolsUITests {
             });
 
             var pyProject = project.GetPythonProject();
-            VsProjectAnalyzer analyzer = pyProject != null ? pyProject.GetAnalyzer() : null;
+            VsProjectAnalyzer analyzer = pyProject?.TryGetAnalyzer();
             for (int retries = 0; analyzer == null && retries < 10; ++retries) {
                 Thread.Sleep(1000);
                 if (pyProject == null) {
                     pyProject = project.GetPythonProject();
                 }
                 if (pyProject != null) {
-                    analyzer = pyProject.GetAnalyzer();
+                    analyzer = pyProject.TryGetAnalyzer();
                 }
             }
             Assert.IsNotNull(analyzer, "Unable to get analyzer for project");
@@ -952,9 +953,8 @@ namespace PythonToolsUITests {
         private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
             return serviceProvider.GetUIThread().InvokeTaskSync(async () => {
                 var index = snapshot.GetText().IndexOf(variable + " =");
-                var entryService = serviceProvider.GetEntryService();
-                AnalysisEntry entry;
-                if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+                var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+                if (entry == null) {
                     return Enumerable.Empty<string>();
                 }
                 return await entry.Analyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index));

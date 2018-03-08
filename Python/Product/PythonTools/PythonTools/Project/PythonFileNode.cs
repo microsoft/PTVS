@@ -20,14 +20,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -158,9 +155,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Remove(bool removeFromStorage) {
-            var analysis = GetAnalysisEntry();
-            if (analysis != null) {
-                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
+            var analyzer = GetAnalyzer();
+            if (analyzer != null) {
+                var entry = analyzer.GetAnalysisEntryFromPath(Url);
+                if (entry != null) {
+                    analyzer.UnloadFileAsync(entry).DoNotWait();
+                }
             }
 
             if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage) {
@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private VsProjectAnalyzer GetAnalyzer() {
-            return ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+            return ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
         }
 
         public AnalysisEntry GetAnalysisEntry() {
@@ -237,17 +237,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int IncludeInProject(bool includeChildren) {
-            var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            analyzer.AnalyzeFileAsync(Url).DoNotWait();
+            var analyzer = GetAnalyzer();
+            analyzer?.AnalyzeFileAsync(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }
 
         internal override int ExcludeFromProject() {
-            var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            var analysis = GetAnalysisEntry();
-            if (analysis != null) {
-                analyzer.UnloadFileAsync(analysis).DoNotWait();
+            var analyzer = GetAnalyzer();
+            if (analyzer != null) {
+                var analysis = analyzer.GetAnalysisEntryFromPath(Url);
+                if (analysis != null) {
+                    analyzer.UnloadFileAsync(analysis).DoNotWait();
+                }
             }
 
             return base.ExcludeFromProject();

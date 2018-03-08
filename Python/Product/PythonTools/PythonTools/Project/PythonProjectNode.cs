@@ -67,6 +67,9 @@ namespace Microsoft.PythonTools.Project {
         // they can be located and removed when that directory is removed from the path.
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
+        private readonly PythonEditorServices _services;
+        private readonly VsProjectContextProvider _vsProjectContext;
+
         private object _designerContext;
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
@@ -93,6 +96,13 @@ namespace Microsoft.PythonTools.Project {
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
+            _services = serviceProvider.GetEditorServices();
+            if (_services == null) {
+                throw new InvalidOperationException("Unable to initialize services");
+            }
+
+            _vsProjectContext = _services.ComponentModel.GetService<VsProjectContextProvider>();
+
             _searchPaths = new SearchPathManager(serviceProvider);
             _searchPaths.Changed += SearchPaths_Changed;
 
@@ -135,8 +145,7 @@ namespace Microsoft.PythonTools.Project {
             }
             _customCommands = null;
 
-            var contextProvider = Site.GetComponentModel().GetService<VsProjectContextProvider>();
-            contextProvider.UpdateProject(this, project);
+            _vsProjectContext.UpdateProject(this, project);
 
             // Project has been cleared, so nothing else to do here
             if (project == null) {
@@ -202,17 +211,9 @@ namespace Microsoft.PythonTools.Project {
             });
         }
 
-        public IInterpreterOptionsService InterpreterOptions {
-            get {
-                return Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            }
-        }
+        public IInterpreterOptionsService InterpreterOptions => _services.InterpreterOptionsService;
 
-        public IInterpreterRegistryService InterpreterRegistry {
-            get {
-                return Site.GetComponentModel().GetService<IInterpreterRegistryService>();
-            }
-        }
+        public IInterpreterRegistryService InterpreterRegistry => _services.InterpreterRegistryService;
 
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
@@ -317,9 +318,7 @@ namespace Microsoft.PythonTools.Project {
                 BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, id);
             }
 
-            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(
-                BuildProject
-            );
+            _vsProjectContext.OnProjectChanged(BuildProject);
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -358,17 +357,14 @@ namespace Microsoft.PythonTools.Project {
                     BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, config.Id);
                 }
             }
-            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+            _vsProjectContext.OnProjectChanged(BuildProject);
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void SaveMSBuildProjectFile(string filename) {
             base.SaveMSBuildProjectFile(filename);
-            Site.GetComponentModel().GetService<VsProjectContextProvider>().UpdateProject(
-                this,
-                BuildProject
-            );
+            _vsProjectContext.UpdateProject(this, BuildProject);
         }
 
         /// <summary>
@@ -427,7 +423,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (projectChanged) {
                 BuildProject.MarkDirty();
-                Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+                _vsProjectContext.OnProjectChanged(BuildProject);
             }
 
             lock (_validFactories) {
@@ -460,11 +456,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal IEnumerable<string> InvalidInterpreterIds {
             get {
-                var compModel = Site.GetComponentModel();
-                var registry = compModel.GetService<IInterpreterRegistryService>();
-
                 foreach (var id in _validFactories) {
-                    if (registry.FindConfiguration(id) == null) {
+                    if (InterpreterRegistry.FindConfiguration(id) == null) {
                         yield return id;
                     }
                 }
@@ -473,11 +466,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
-                var compModel = Site.GetComponentModel();
-                var registry = compModel.GetService<IInterpreterRegistryService>();
-
                 foreach (var config in _validFactories) {
-                    var value = registry.FindConfiguration(config);
+                    var value = InterpreterRegistry.FindConfiguration(config);
                     if (value != null) {
                         yield return value;
                     }
@@ -487,10 +477,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal IEnumerable<IPythonInterpreterFactory> InterpreterFactories {
             get {
-                var compModel = Site.GetComponentModel();
-                var registry = compModel.GetService<IInterpreterRegistryService>();
                 return InterpreterConfigurations
-                    .Select(x => registry.FindInterpreter(x.Id))
+                    .Select(x => InterpreterRegistry.FindInterpreter(x.Id))
                     .Where(x => x != null);
             }
         }
@@ -650,8 +638,7 @@ namespace Microsoft.PythonTools.Project {
             }
 #endif
 
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            var designerSupport = model?.GetService<IXamlDesignerSupport>();
+            var designerSupport = _services.ComponentModel?.GetService<IXamlDesignerSupport>();
 
             if (designerSupport != null && guidService == designerSupport.DesignerContextTypeGuid) {
                 result = DesignerContext;
@@ -825,12 +812,11 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var remaining = node.AllChildren.OfType<InterpretersNode>().ToList();
-            var vsProjectContext = Site.GetComponentModel().GetService<VsProjectContextProvider>();
 
             if (!IsActiveInterpreterGlobalDefault) {
                 foreach (var fact in InterpreterFactories) {
                     if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
-                        bool isProjectSpecific = vsProjectContext.IsProjectSpecific(fact.Configuration);
+                        bool isProjectSpecific = _vsProjectContext.IsProjectSpecific(fact.Configuration);
                         bool canRemove = !this.IsAppxPackageableProject(); // Do not allow change python enivronment for UWP
                         node.AddChild(new InterpretersNode(
                             this,
@@ -1025,8 +1011,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        Projects.ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
-            return GetAnalyzer();
+        ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+            return _analyzer;
         }
 
         public event EventHandler ProjectAnalyzerChanged;
@@ -1123,28 +1109,17 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        public VsProjectAnalyzer GetAnalyzer() {
-            if (IsClosed) {
+        public async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (IsClosing || IsClosed) {
                 Debug.Fail("GetAnalyzer() called on closed project " + new StackTrace(true).ToString());
-                var service = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
-                if (service == null) {
-                    throw new InvalidOperationException("Called GetAnalyzer() with no Python Tools service available");
-                }
-                return service.DefaultAnalyzer;
+                return await _services.Python.GetSharedAnalyzerAsync();
             } else if (_analyzer == null) {
-                // So many deadlocks, but can't force all callers to become async, so do the best we can
-                for (int retries = 3; retries > 0; --retries) {
-                    var cts = new CancellationTokenSource(10000);
-                    try {
-                        return Site.GetUIThread().InvokeTaskSync(async () => {
-                            if (_analyzer == null) {
-                                _analyzer = await CreateAnalyzerAsync();
-                            }
-                            return _analyzer;
-                        }, cts.Token);
-                    } catch (OperationCanceledException) {
+                return await Site.GetUIThread().InvokeTask(async () => {
+                    if (_analyzer == null) {
+                        _analyzer = await CreateAnalyzerAsync();
                     }
-                }
+                    return _analyzer;
+                });
             }
             return _analyzer;
         }
@@ -1440,7 +1415,6 @@ namespace Microsoft.PythonTools.Project {
                 ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
 
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
-                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
 
                 if (oldAnalyzer != null) {
                     if (analyzer != null) {
@@ -1457,18 +1431,18 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+                var fileSet = new Lazy<HashSet<string>>(() => new HashSet<string>(files, StringComparer.OrdinalIgnoreCase));
 
                 log?.WriteLine($"Project includes files:{Environment.NewLine}    {string.Join(Environment.NewLine + "    ", files)}");
 
-                if (defAnalyzer != null) {
-                    foreach (var f in files) {
-                        var entry = defAnalyzer.GetAnalysisEntryFromPath(f);
-                        if (entry != null) {
-                            log?.WriteLine($"Unloading {f} from default analyzer");
-                            await defAnalyzer.UnloadFileAsync(entry);
-                            foreach (var b in entry.TryGetBufferParser().AllBuffers) {
+                foreach (var existing in _services.Python.GetActiveSharedAnalyzers().Select(kv => kv.Value).Where(v => !v.IsDisposed)) {
+                    foreach (var kv in existing.LoadedFiles) {
+                        if (fileSet.Value.Contains(kv.Key)) {
+                            log?.WriteLine($"Unloading {kv.Key} from default analyzer");
+                            foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate()) {
                                 PythonTextBufferInfo.MarkForReplacement(b);
                             }
+                            await existing.UnloadFileAsync(kv.Value);
                         }
                     }
                 }
@@ -2907,13 +2881,18 @@ namespace Microsoft.PythonTools.Project {
                 return _node.GetLaunchConfigurationOrThrow();
             }
 
+            [Obsolete("Use the async version if possible")]
             public override ProjectAnalyzer Analyzer {
                 get {
                     if (_node.IsClosing || _node.IsClosed) {
                         return null;
                     }
-                    return _node.GetAnalyzer();
+                    return _node.TryGetAnalyzer();
                 }
+            }
+
+            public override Task<ProjectAnalyzer> GetAnalyzerAsync() {
+                return _node.GetAnalyzerAsync().ContinueWith(t => (ProjectAnalyzer)t.Result);
             }
 
             public override string GetProperty(string name) {

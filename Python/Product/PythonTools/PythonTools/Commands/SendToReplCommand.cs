@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Commands {
                         current,
                         _window.CurrentLanguageBuffer?.CurrentSnapshot.GetText(),
                         supportsMultipleStatements,
-                        textView.GetLanguageVersion(_serviceProvider),
+                        await textView.GetLanguageVersionAsync(_serviceProvider),
                         textView.Options.GetNewLineCharacter()
                     );
 

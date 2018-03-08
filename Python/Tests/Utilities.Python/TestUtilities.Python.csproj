@@ -109,6 +109,7 @@
     <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="PythonExperimentalGeneralOptionsSetter.cs" />
+    <Compile Include="PythonProjectExtensions.cs" />
     <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
     <Compile Include="PythonDebuggingGeneralOptionsSetter.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />

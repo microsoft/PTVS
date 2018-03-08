@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using TestUtilities;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace DjangoUITests {
     public class DjangoEditingUITests {

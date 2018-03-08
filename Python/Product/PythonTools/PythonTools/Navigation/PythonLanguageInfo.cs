@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
@@ -91,10 +92,9 @@ namespace Microsoft.PythonTools.Navigation {
         public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            var entryService = model.GetService<AnalysisEntryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-            AnalysisEntry entry;
-            if (entryService != null && entryService.TryGetAnalysisEntry(buffer, out entry)) {
+            var entry = buffer.TryGetAnalysisEntry();
+            if (entry != null) {
                 var location = entry.Analyzer.WaitForRequest(entry.Analyzer.GetNameOfLocationAsync(entry, buffer, iLine, iCol), "PythonLanguageInfo.GetNameOfLocation");
                 if (location != null) {
                     pbstrName = location.name;
@@ -119,10 +119,9 @@ namespace Microsoft.PythonTools.Navigation {
         public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            var entryService = model.GetService<AnalysisEntryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-            AnalysisEntry entry;
-            if (entryService != null && entryService.TryGetAnalysisEntry(buffer, out entry)) {
+            var entry = buffer.TryGetAnalysisEntry();
+            if (entry != null) {
                 var names = entry.Analyzer.WaitForRequest(entry.Analyzer.GetProximityExpressionsAsync(entry, buffer, iLine, iCol, cLines), "PythonLanguageInfo.GetProximityExpressions");
                 ppEnum = new EnumBSTR(names ?? Enumerable.Empty<string>());
             } else {

@@ -284,7 +284,7 @@
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisEntryService.cs" />
+    <None Include="PythonTools\Intellisense\AnalysisEntryService.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAtPoint.cs" />
     <Compile Include="PythonTools\Intellisense\BufferAnalysisSquiggleProviderBase.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />

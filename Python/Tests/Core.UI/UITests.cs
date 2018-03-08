@@ -154,7 +154,7 @@ namespace PythonToolsUITests {
 
             // Ensure we complete analysis. VS may crash if the invalid
             // path is not handled correctly.
-            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+            project.GetPythonProject().TryGetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
             var tree = app.OpenSolutionExplorer();
 

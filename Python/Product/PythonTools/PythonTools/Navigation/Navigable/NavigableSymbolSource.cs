@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -37,7 +38,6 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
         private readonly ITextBuffer _buffer;
         private readonly IClassifier _classifier;
         private readonly ITextStructureNavigator _textNavigator;
-        private readonly AnalysisEntryService _entryService;
 
         private static readonly string[] _classifications = new string[] {
             PredefinedClassificationTypeNames.Identifier,
@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _classifier = classifier ?? throw new ArgumentNullException(nameof(classifier));
             _textNavigator = textNavigator ?? throw new ArgumentNullException(nameof(textNavigator));
-            _entryService = serviceProvider.GetEntryService();
         }
 
         public void Dispose() {
@@ -70,8 +69,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            AnalysisEntry entry = null;
-            _entryService?.TryGetAnalysisEntry(_buffer, out entry);
+            var entry = _buffer.TryGetAnalysisEntry();
             if (entry == null) {
                 return null;
             }
