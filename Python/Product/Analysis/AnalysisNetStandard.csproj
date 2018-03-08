@@ -10,6 +10,18 @@
     <Compile Remove="AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="get_search_paths.py" />
+    <None Remove="scrape_module.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="get_search_paths.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="scrape_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
