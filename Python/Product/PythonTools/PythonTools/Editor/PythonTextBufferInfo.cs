@@ -817,7 +817,13 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // If the file is associated with a project, use its analyzer
-            analyzer = await site.GetUIThread().InvokeTask(() => site.GetProjectFromFile(buffer.Filename)?.GetAnalyzerAsync());
+            analyzer = await site.GetUIThread().InvokeTask(() => {
+                var p = site.GetProjectFromFile(buffer.Filename);
+                if (p != null) {
+                    return p.GetAnalyzerAsync();
+                }
+                return Task.FromResult<VsProjectAnalyzer>(null);
+            });
             if (analyzer != null) {
                 return analyzer;
             }
