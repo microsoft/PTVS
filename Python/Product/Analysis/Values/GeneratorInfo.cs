@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
-            if (strength < MergeStrength.IgnoreIterableNode) {
+            if (strength < MergeStrength.ToBaseClass) {
                 if (ns is GeneratorInfo other) {
                     return Yields.Types.SetEquals(other.Yields.Types);
                 }
@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
-            if (strength < MergeStrength.IgnoreIterableNode) {
+            if (strength < MergeStrength.ToBaseClass) {
                 if (ns is GeneratorInfo other && Push()) {
                     try {
                         other.Yields.CopyTo(Yields);
