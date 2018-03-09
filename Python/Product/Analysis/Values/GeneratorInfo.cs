@@ -136,24 +136,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
-            if (ns is GeneratorInfo other) {
-                return Yields.Types.SetEquals(other.Yields.Types);
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                if (ns is GeneratorInfo other) {
+                    return Yields.Types.SetEquals(other.Yields.Types);
+                }
+                return false;
             }
-            return false;
-        }
-
-        internal override int UnionHashCode(int strength) {
-            // Arbitrarily selected prime number
-            return 968897;
+            return base.UnionEquals(ns, strength);
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
-            if (ns is GeneratorInfo other) {
-                other.Yields.CopyTo(Yields);
-                other.Sends.CopyTo(Sends);
-                other.Returns.CopyTo(Returns);
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                if (ns is GeneratorInfo other && Push()) {
+                    try {
+                        other.Yields.CopyTo(Yields);
+                        other.Sends.CopyTo(Sends);
+                        other.Returns.CopyTo(Returns);
+                    } finally {
+                        Pop();
+                    }
+                }
             }
-            return this;
+            return base.UnionMergeTypes(ns, strength);
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
