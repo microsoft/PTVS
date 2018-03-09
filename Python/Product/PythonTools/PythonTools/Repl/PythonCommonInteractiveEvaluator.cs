@@ -156,13 +156,17 @@ namespace Microsoft.PythonTools.Repl {
                 factory = interpreterService.FindInterpreter(config.Interpreter.Id);
             }
 
-            if (factory == null) {
-                _analyzer = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
-            } else {
-                _analyzer = await _serviceProvider.GetUIThread().InvokeTask(async () => {
+            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
+                var a = _analyzer;
+                if (a != null) {
+                    return a;
+                }
+                if (factory == null) {
+                    a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
+                } else {
                     var pyProject = GetAssociatedPythonProject(config.Interpreter);
 
-                    var a = await VsProjectAnalyzer.CreateForInteractiveAsync(
+                    a = await VsProjectAnalyzer.CreateForInteractiveAsync(
                         _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
                         DisplayName.IfNullOrEmpty("Unnamed")
@@ -176,11 +180,14 @@ namespace Microsoft.PythonTools.Repl {
                         sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
                     }
                     await a.SetSearchPathsAsync(sp.MaybeEnumerate());
-
-                    return a;
-                });
-            }
-            return _analyzer;
+                }
+                if (_analyzer != null) {
+                    a.Dispose();
+                } else {
+                    _analyzer = a;
+                }
+                return _analyzer;
+            });
         }
 
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }

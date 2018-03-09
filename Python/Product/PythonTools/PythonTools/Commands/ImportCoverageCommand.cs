@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Commands {
                 try {
                     await DoConvert(file, version);
                 } catch (Exception ex) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                    ex.ReportUnhandledException(_serviceProvider, GetType());
                 }
             }
         }
@@ -77,8 +77,6 @@ namespace Microsoft.PythonTools.Commands {
                 await ConvertCoveragePyAsync(file, outFilename, version);
             } catch (IOException ioex) {
                 MessageBox.Show(String.Format(Strings.FailedToConvertCoverageFile, ioex.Message));
-            } catch (Exception ex) {
-                ex.ReportUnhandledException(_serviceProvider, GetType());
             }
 
             _serviceProvider.GetDTE().ItemOperations.OpenFile(outFilename);

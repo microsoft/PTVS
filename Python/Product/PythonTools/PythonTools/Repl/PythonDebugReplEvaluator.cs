@@ -200,6 +200,13 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_activeEvaluator != null) {
+                return _activeEvaluator.GetAnalyzerAsync();
+            }
+            return Task.FromResult<VsProjectAnalyzer>(null);
+        }
+
         public Uri DocumentUri => _activeEvaluator?.DocumentUri;
         public Uri NextDocumentUri() => _activeEvaluator?.NextDocumentUri();
 

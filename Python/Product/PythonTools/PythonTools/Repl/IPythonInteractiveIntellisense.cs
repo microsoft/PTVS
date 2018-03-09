@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
@@ -25,6 +26,7 @@ namespace Microsoft.PythonTools.Repl {
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
         VsProjectAnalyzer Analyzer { get; }
+        Task<VsProjectAnalyzer> GetAnalyzerAsync();
         Uri DocumentUri { get; }
 
         Uri NextDocumentUri();

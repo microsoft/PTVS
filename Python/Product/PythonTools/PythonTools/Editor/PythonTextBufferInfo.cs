@@ -785,6 +785,7 @@ namespace Microsoft.PythonTools.Editor {
                 return analyzer;
             }
 
+            site.MustBeCalledFromUIThread();
             var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
             var viewer = diffViewer?.TryGetViewerForTextView(view);
             if (viewer != null) {
@@ -811,9 +812,8 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // If we have a REPL evaluator we'll use its analyzer
-            IPythonInteractiveIntellisense evaluator;
-            if ((evaluator = buffer.Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                return evaluator.Analyzer;
+            if (buffer.Buffer.GetInteractiveWindow()?.Evaluator is IPythonInteractiveIntellisense evaluator) {
+                return await evaluator.GetAnalyzerAsync();
             }
 
             // If the file is associated with a project, use its analyzer

@@ -146,6 +146,13 @@ namespace Microsoft.PythonTools.Repl {
         public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
 
         public VsProjectAnalyzer Analyzer => (_evaluator as IPythonInteractiveIntellisense)?.Analyzer;
+        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_evaluator is IPythonInteractiveIntellisense eval) {
+                return eval.GetAnalyzerAsync();
+            }
+            return Task.FromResult<VsProjectAnalyzer>(null);
+        }
+
         public Uri DocumentUri => (_evaluator as IPythonInteractiveIntellisense)?.DocumentUri;
         public Uri NextDocumentUri() => (_evaluator as IPythonInteractiveIntellisense)?.NextDocumentUri();
 
