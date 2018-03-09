@@ -23,6 +23,7 @@ the second argument.
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.0.0"
 
+import ctypes
 import os
 import os.path
 import sys
@@ -73,8 +74,12 @@ try:
     if bundled_ptvsd:
         ptvs_lib_path = os.path.dirname(__file__)
         sys.path.insert(0, ptvs_lib_path)
-    import ptvsd
-    import ptvsd.debugger as vspd
+    try:
+        import ptvsd
+        import ptvsd.debugger as vspd
+    except ImportError:
+        # 16 : OK button with Error icon
+        ctypes.windll.user32.MessageBoxW(0, "Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger", "ImportError: ptvsd not found", 16)
     vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 except:
     traceback.print_exc()
