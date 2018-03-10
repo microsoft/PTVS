@@ -23,7 +23,6 @@ the second argument.
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.0.0"
 
-import ctypes
 import os
 import os.path
 import sys
@@ -77,12 +76,19 @@ try:
     try:
         import ptvsd
         import ptvsd.debugger as vspd
+        ptvsd_loaded = True
     except ImportError:
-        # 16 : OK button with Error icon
-        ctypes.windll.user32.MessageBoxW(0, "Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger", "ImportError: ptvsd not found", 16)
+        ptvsd_loaded = False
+        raise
     vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 except:
     traceback.print_exc()
+    if not bundled_ptvsd and not ptvsd_loaded:
+        # This is experimental debugger import error. Exit immediately.
+        # This process will be killed by VS since it does not see a debugger
+        # connect to it. The exit code we will get there will be wrong.
+        # 126 : ERROR_MOD_NOT_FOUND
+        sys.exit(126)
     print('''
 Internal error detected. Please copy the above traceback and report at
 https://go.microsoft.com/fwlink/?LinkId=293415

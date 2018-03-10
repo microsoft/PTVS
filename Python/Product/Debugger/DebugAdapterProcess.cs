@@ -25,6 +25,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
@@ -178,6 +179,24 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream != null) {
                 _stream.Dispose();
             }
+
+            if (_process.ExitCode == 126) {
+                // 126 : ERROR_MOD_NOT_FOUND
+                // This error code is returned only for the experimental debugger. MessageBox must be
+                // bound to the VS Main window otherwise it can be hidden behind the main window and the 
+                // user may not see it.
+                MessageBox.Show(
+                    new VSWin32Window(Process.GetCurrentProcess().MainWindowHandle),
+                    Strings.ImportPtvsdFailedMessage,
+                    Strings.ImportPtvsdFailedTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private class VSWin32Window : IWin32Window {
+            public VSWin32Window(IntPtr handle) { Handle = handle; }
+            public IntPtr Handle { get; private set; }
         }
 
         public IntPtr Handle => _process.Handle;
