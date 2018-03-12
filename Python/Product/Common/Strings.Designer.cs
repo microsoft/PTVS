@@ -2911,6 +2911,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please &apos;pip install ptvsd --pre&apos; in your Python environment to use the experimental debugger.
+        /// </summary>
+        public static string ImportPtvsdFailedMessage {
+            get {
+                return ResourceManager.GetString("ImportPtvsdFailedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ImportError: ptvsd not found.
+        /// </summary>
+        public static string ImportPtvsdFailedTitle {
+            get {
+                return ResourceManager.GetString("ImportPtvsdFailedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Back.
         /// </summary>
         public static string ImportWizard_BackButton {
