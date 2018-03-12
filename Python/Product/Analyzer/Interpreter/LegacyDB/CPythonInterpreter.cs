@@ -37,11 +37,14 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
         private CancellationTokenSource _searchPathPackagesCancellation;
+        private readonly HashSet<string> _importing;
         private Dictionary<string, HashSet<string>> _zipPackageCache;
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             _langVersion = factory.Configuration.Version;
             _factory = factory;
+            _importing = new HashSet<string>();
+
             _typeDb = _factory.GetCurrentDatabase();
             _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
         }
@@ -104,20 +107,31 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 }
                 mod = db?.GetModule(name);
                 if (mod == null) {
-                    foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
-                        try {
-                            if (File.Exists(searchPath)) {
-                                mod = LoadModuleFromZipFile(searchPath, name);
-                            } else if (Directory.Exists(searchPath)) {
-                                mod = LoadModuleFromDirectory(searchPath, name);
-                            }
-                        } catch (ArgumentException ex) {
-                            Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                    lock (_importing) {
+                        if (!_importing.Add(name)) {
                             return null;
                         }
+                    }
+                    try {
+                        foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
+                            try {
+                                if (File.Exists(searchPath)) {
+                                    mod = LoadModuleFromZipFile(searchPath, name);
+                                } else if (Directory.Exists(searchPath)) {
+                                    mod = LoadModuleFromDirectory(searchPath, name);
+                                }
+                            } catch (ArgumentException ex) {
+                                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                                return null;
+                            }
 
-                        if (mod != null) {
-                            break;
+                            if (mod != null) {
+                                break;
+                            }
+                        }
+                    } finally {
+                        lock (_importing) {
+                            _importing.Remove(name);
                         }
                     }
                 }
