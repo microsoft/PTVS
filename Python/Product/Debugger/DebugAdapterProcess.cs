@@ -48,6 +48,7 @@ namespace Microsoft.PythonTools.Debugger {
         private string _interpreterOptions;
         private int _listenerPort = -1;
         private Stream _stream;
+        private bool _debuggerConnected = false;
 
         public DebugAdapterProcess() {
             _processGuid = Guid.NewGuid();
@@ -128,6 +129,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
                     var socket = connection.Result;
                     if (socket != null) {
+                        _debuggerConnected = true;
                         _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
@@ -180,7 +182,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.Dispose();
             }
 
-            if (_process.ExitCode == 126) {
+            if (_process.ExitCode == 126 && !_debuggerConnected) {
                 // 126 : ERROR_MOD_NOT_FOUND
                 // This error code is returned only for the experimental debugger. MessageBox must be
                 // bound to the VS Main window otherwise it can be hidden behind the main window and the 
