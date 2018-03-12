@@ -246,21 +246,17 @@ namespace Microsoft.VisualStudioTools {
             public AssertException(string message) : base(message) { }
         }
 
+#if DEBUG
         class NoDeadlockAssertListener : TraceListener {
             public static IDisposable Push() {
-#if DEBUG
                 var inner = new TraceListener[Trace.Listeners.Count];
                 Trace.Listeners.CopyTo(inner, 0);
                 Trace.Listeners.Clear();
                 var res = new NoDeadlockAssertListener(inner);
                 Trace.Listeners.Add(res);
                 return res;
-#else
-                return null;
-#endif
             }
 
-#if DEBUG
             private readonly TraceListener[] _inner;
 
             protected NoDeadlockAssertListener(TraceListener[] inner) : base(nameof(NoDeadlockAssertListener)) {
@@ -307,6 +303,10 @@ namespace Microsoft.VisualStudioTools {
             public override void Fail(string message, string detailMessage) {
                 Fail(message + Environment.NewLine + detailMessage);
             }
+        }
+#else
+        class NoDeadlockAssertListener {
+            public static IDisposable Push() => null;
         }
 #endif
 
