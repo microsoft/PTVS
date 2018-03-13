@@ -105,9 +105,14 @@ namespace Microsoft.PythonTools.VsCode {
             var p = token.ToObject<InitializeParams>();
             // Monitor parent process
             if (p.processId.HasValue) {
+                try {
                 Process.GetProcessById(p.processId.Value).Exited += (s, e) => {
                     _sessionTokenSource.Cancel();
                 };
+                } catch(ArgumentException) {
+                    // Parent process is dead
+                    return Task.FromResult(new InitializeResult());
+                }
             }
             return _server.Initialize(p);
         }

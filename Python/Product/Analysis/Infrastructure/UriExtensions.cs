@@ -16,18 +16,25 @@
 
 using System;
 using System.Net;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     public static class UriExtensions {
         public static string ToAbsolutePath(this Uri uri) {
-            var path = WebUtility.UrlDecode(uri.AbsolutePath).Replace('/', '\\');
-            if(path.Length > 2 && path[0] == '\\') {
-                if (path[2] == ':' || path[2] == '\\') {
-                    // Fix URL like file:///C:\foo or file:///\\Server\Share
-                    return path.Substring(1);
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            if(isWindows) {
+               var path = WebUtility.UrlDecode(uri.AbsolutePath).Replace('/', '\\');
+                if(path.Contains(":\\")) {
+                     if(path.Length > 2 && path[0] == '\\') {
+                        if (path[2] == ':' || path[2] == '\\') {
+                            // Fix URL like file:///C:\foo or file:///\\Server\Share
+                            return path.Substring(1);
+                        }
+                    }
                 }
+                return path;
             }
-            return path;
+            return uri.AbsolutePath;
         }
     }
 }
