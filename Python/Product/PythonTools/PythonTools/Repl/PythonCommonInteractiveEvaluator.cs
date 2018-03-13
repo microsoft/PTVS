@@ -644,8 +644,11 @@ namespace Microsoft.PythonTools.Repl {
 
             Span span;
             var write = isError ? (Func<string, Span>)window.WriteError : window.Write;
+            int lastEscape = -1;
 
-            while (escape >= 0) {
+            while (escape > lastEscape) {
+                lastEscape = escape;
+
                 span = write(text.Substring(start, escape - start));
                 if (span.Length > 0) {
                     colors.Add(new ColoredSpan(span, color));
@@ -653,7 +656,10 @@ namespace Microsoft.PythonTools.Repl {
 
                 start = escape + 2;
                 color = GetColorFromEscape(text, ref start);
+                Debug.Assert(start >= escape + 2);
+
                 escape = text.IndexOfOrdinal("\x1b[", start);
+                Debug.Assert(escape < 0 || escape > lastEscape);
             }
 
             var rest = text.Substring(start);

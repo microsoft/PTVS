@@ -73,11 +73,22 @@ try:
     if bundled_ptvsd:
         ptvs_lib_path = os.path.dirname(__file__)
         sys.path.insert(0, ptvs_lib_path)
-    import ptvsd
-    import ptvsd.debugger as vspd
+    try:
+        import ptvsd
+        import ptvsd.debugger as vspd
+        ptvsd_loaded = True
+    except ImportError:
+        ptvsd_loaded = False
+        raise
     vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 except:
     traceback.print_exc()
+    if not bundled_ptvsd and not ptvsd_loaded:
+        # This is experimental debugger import error. Exit immediately.
+        # This process will be killed by VS since it does not see a debugger
+        # connect to it. The exit code we will get there will be wrong.
+        # 126 : ERROR_MOD_NOT_FOUND
+        sys.exit(126)
     print('''
 Internal error detected. Please copy the above traceback and report at
 https://go.microsoft.com/fwlink/?LinkId=293415
