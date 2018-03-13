@@ -1878,11 +1878,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
 
-            _projectFiles.TryRemove(entry.Path, out _);
-            _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
-            entry.TryGetBufferParser()?.ClearBuffers();
-
-            await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            entry?.TryGetBufferParser()?.ClearBuffers();
+            if (entry?.Path != null) {
+                _projectFiles.TryRemove(entry.Path, out _);
+            }
+            if (entry?.DocumentUri != null) {
+                _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
+                await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            }
         }
 
         internal void ClearAllTasks() {
