@@ -325,7 +325,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void AddInterpreterReference(InterpreterConfiguration config) {
-            lock(_validFactories) {
+            lock (_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
                 }
@@ -340,7 +340,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                PathUtils.GetRelativeDirectoryPath(projectHome, rootPath).IfNullOrEmpty("."),
                 new Dictionary<string, string> {
                     { MSBuildConstants.IdKey, id },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
