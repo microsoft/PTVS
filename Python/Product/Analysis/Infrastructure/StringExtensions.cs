@@ -86,6 +86,15 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             return string.Join(" ", args.Select(QuoteArgument).Where(a => !string.IsNullOrEmpty(a)));
         }
 
+        private static IEnumerable<int> FindUnescapedChar(string s, char c, int start = 0, int end = int.MaxValue) {
+            start -= 1;
+            while ((start = s.IndexOf(c, start + 1)) > 0 && start < end) {
+                if (s[start - 1] != '\\') {
+                    yield return start;
+                }
+            }
+        }
+
         public static string QuoteArgument(this string arg) {
             if (arg == null) {
                 // Null arguments are excluded
@@ -103,18 +112,27 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             }
 
             if (arg.First() == '"' && arg.Last() == '"') {
-                // Already quoted
-                return arg;
-            }
-
-            if (arg.IndexOfAny(new[] { ' ', '"' }) < 0) {
+                if (!FindUnescapedChar(arg, '"', 1, arg.Length).Any()) {
+                    // Already quoted correctly
+                    return arg;
+                }
+                // Needs re-quoting, so strip the existing quotes
+                // We do not want to return unquoted though
+                arg = arg.Substring(1, arg.Length - 2);
+            } else if (arg.IndexOf(' ') < 0 && !FindUnescapedChar(arg, '"').Any()) {
                 // Does not need quoting
                 return arg;
             }
 
-            if (arg.Last() == '\\') {
+            if (arg.Length > 1 && arg[arg.Length - 1] == '\\' && arg[arg.Length - 2] != '\\') {
                 // Need to escape the trailing backslash
                 arg += '\\';
+            }
+
+            foreach (int i in FindUnescapedChar(arg, '"').Reverse().ToArray()) {
+                // We are going to quote with double quotes, so escape any
+                // inline double quotes first
+                arg = arg.Insert(i, "\\");
             }
 
             return "\"{0}\"".FormatInvariant(arg);
