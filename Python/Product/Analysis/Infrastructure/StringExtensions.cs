@@ -124,8 +124,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 return arg;
             }
 
-            if (arg.Length > 1 && arg[arg.Length - 1] == '\\' &&
-                (arg.Length < 2 || arg[arg.Length - 2] != '\\')) {
+            if (arg.Length > 1 && arg[arg.Length - 1] == '\\' && arg[arg.Length - 2] != '\\') {
                 // Need to escape the trailing backslash
                 arg += '\\';
             }
