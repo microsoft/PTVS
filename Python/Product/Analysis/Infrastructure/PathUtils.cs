@@ -155,16 +155,12 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWithOrdinal("\\")) {
-                root += "\\";
-            }
+            root = EnsureEndSeparator(root);
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWithOrdinal("\\")) {
-                    path += "\\";
-                }
+                path = EnsureEndSeparator(path);
 
                 IEnumerable<string> dirs = null;
                 try {
@@ -239,7 +235,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 if (!Path.IsPathRooted(dir)) {
                     dirPrefix = EnsureEndSeparator(dir);
                 }
-                
+
 
                 IEnumerable<string> files = null;
                 try {

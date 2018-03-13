@@ -268,12 +268,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             // Do normal searches
             if (!string.IsNullOrEmpty(Factory.Configuration?.InterpreterPath)) {
                 var importTask = ImportFromSearchPathsAsync(name);
-                if (importTask.Wait(2000)) {
-                    mod = importTask.Result;
-                } else {
+                mod = null;
+                try {
+                    if (importTask.Wait(2000)) {
+                        mod = importTask.Result;
+                    }
+                } catch {
                     _log?.Log(TraceLevel.Error, "ImportTimeout", name, "ImportFromSearchPaths");
-                    mod = null;
-                }
+                 }
                 mod = mod ?? ImportFromBuiltins(name);
             }
             if (mod == null) {

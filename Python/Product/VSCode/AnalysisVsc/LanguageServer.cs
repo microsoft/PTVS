@@ -91,11 +91,11 @@ namespace Microsoft.PythonTools.VsCode {
             };
             _vscode.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters);
         }
-        private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e) 
+        private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e)
             => _vscode.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params);
-        private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e) 
+        private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e)
             => _vscode.NotifyWithParameterObjectAsync("client/registerCapability", e.@params);
-        private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e) 
+        private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e)
             => _vscode.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params);
         #endregion
 
@@ -106,10 +106,10 @@ namespace Microsoft.PythonTools.VsCode {
             // Monitor parent process
             if (p.processId.HasValue) {
                 try {
-                Process.GetProcessById(p.processId.Value).Exited += (s, e) => {
-                    _sessionTokenSource.Cancel();
-                };
-                } catch(ArgumentException) {
+                    Process.GetProcessById(p.processId.Value).Exited += (s, e) => {
+                        _sessionTokenSource.Cancel();
+                    };
+                } catch (ArgumentException) {
                     // Parent process is dead
                     return Task.FromResult(new InitializeResult());
                 }
