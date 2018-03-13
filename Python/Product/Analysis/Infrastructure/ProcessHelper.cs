@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
     sealed class ProcessHelper : IDisposable {
         private readonly ProcessStartInfo _psi;
         private Process _process;
+        private int? _exitCode;
         private readonly SemaphoreSlim _seenNullOutput, _seenNullError;
 
         public ProcessHelper(string filename, IEnumerable<string> arguments, string workingDir = null) {
@@ -72,7 +73,19 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             p.OutputDataReceived += Process_OutputDataReceived;
             p.ErrorDataReceived += Process_ErrorDataReceived;
 
-            p.Start();
+            try {
+                p.Start();
+            } catch (Exception ex) {
+                // Capture the error as stderr and exit code, then
+                // clean up.
+                _exitCode = ex.HResult;
+                OnErrorLine?.Invoke(ex.ToString());
+                _seenNullError.Release();
+                _seenNullOutput.Release();
+                p.OutputDataReceived -= Process_OutputDataReceived;
+                p.ErrorDataReceived -= Process_ErrorDataReceived;
+                return;
+            }
 
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
@@ -119,6 +132,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         }
 
         public int? Wait(int milliseconds) {
+            if (_exitCode != null) {
+                return _exitCode;
+            }
             var cts = new CancellationTokenSource(milliseconds);
             try {
                 var t = WaitAsync(cts.Token);
@@ -134,6 +150,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         }
 
         public async Task<int> WaitAsync(CancellationToken cancellationToken) {
+            if (_exitCode != null) {
+                return _exitCode.Value;
+            }
             if (_process == null) {
                 throw new InvalidOperationException("Process was not started");
             }
