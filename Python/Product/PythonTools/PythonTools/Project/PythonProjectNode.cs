@@ -1375,11 +1375,18 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task ReanalyzeProjectHelper(Redirector log) {
-            var projectHome = ProjectHome;
-
-            if (IsClosing || IsClosed || string.IsNullOrEmpty(projectHome)) {
+            if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
                 log?.WriteLine("Project has closed");
+                return;
+            }
+
+            var projectHome = ProjectHome;
+
+            if (string.IsNullOrEmpty(projectHome)) {
+                // The project is still opening, so we are probably
+                // creating the wrong analyzer anyway.
+                log?.WriteLine("Project was not open");
                 return;
             }
 
