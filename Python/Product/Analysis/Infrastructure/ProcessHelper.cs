@@ -124,7 +124,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
 
         public void Kill() {
             try {
-                _process?.Kill();
+                if (!_process.HasExited) {
+                    _process?.Kill();
+                }
             } catch (SystemException) {
             }
         }

@@ -16,13 +16,11 @@
 
 using System;
 using System.Net;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     public static class UriExtensions {
         public static string ToAbsolutePath(this Uri uri) {
-            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            if(isWindows) {
+            if(IsWindows()) {
                var path = WebUtility.UrlDecode(uri.AbsolutePath).Replace('/', '\\');
                 if(path.Contains(":\\")) {
                      if(path.Length > 2 && path[0] == '\\') {
@@ -35,6 +33,15 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 return path;
             }
             return uri.AbsolutePath;
+        }
+
+        private static bool IsWindows() {
+#if DESKTOP
+            return true;
+#else
+            return System.Runtime.InteropServices.RuntimeInformation
+                .IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+#endif
         }
     }
 }
