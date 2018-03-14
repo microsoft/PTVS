@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
     static class Validation {
         public static void Assert(bool expression) {
             if (!expression) {
+                System.Diagnostics.Debugger.Launch();
                 try {
                     throw new ValidationException();
                 } catch (ValidationException ex) {
@@ -54,6 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public static void Assert<T>(bool expression) where T : ValidationException, new() {
             if (!expression) {
+                System.Diagnostics.Debugger.Launch();
                 try {
                     throw new T();
                 } catch (ValidationException ex) {
@@ -64,6 +66,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public static void Assert(bool expression, string message, params object[] args) {
             if (!expression) {
+                System.Diagnostics.Debugger.Launch();
                 try {
                     throw new ValidationException(message.FormatInvariant(args));
                 } catch (ValidationException ex) {

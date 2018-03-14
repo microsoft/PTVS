@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return ns is ClassInfo || ns is BuiltinClassInfo || ns == type || ns == type.Instance;
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                if (this == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
+                if (this == ProjectState.ClassInfos[BuiltinTypeId.Type] || ns == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
                     return false;
                 }
                 

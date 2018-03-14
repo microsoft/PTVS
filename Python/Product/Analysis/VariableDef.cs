@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Analysis {
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
                                 Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
-                            } else {
+                            } else if (afterAdded.Count == original.Count) {
                                 Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
                             }
                         }

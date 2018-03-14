@@ -654,7 +654,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } else if (data.Length < 5) {
                     return "{" + string.Join(", ", data.AsEnumerable()) + "}";
                 } else {
-                    return "${{Size = {data.Length}}}";
+                    return $"{{Size = {data.Length}}}";
                 }
             }
 
