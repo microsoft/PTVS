@@ -66,6 +66,8 @@ namespace Microsoft.PythonTools.Options {
             _invalidEncodingWarning.Checked = pyService.GeneralOptions.InvalidEncodingWarning;
             _clearGlobalPythonPath.Checked = pyService.GeneralOptions.ClearGlobalPythonPath;
             IndentationInconsistencySeverity = pyService.GeneralOptions.IndentationInconsistencySeverity;
+
+            _autoAnalysis.Visible = !pyService.ExperimentalOptions.NoDatabaseFactory;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
