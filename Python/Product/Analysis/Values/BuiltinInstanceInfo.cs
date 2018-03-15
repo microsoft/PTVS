@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return false;
             }
-            
+
             if (strength >= MergeStrength.ToObject) {
                 if (TypeId == BuiltinTypeId.NoneType || ns.TypeId == BuiltinTypeId.NoneType) {
                     // BII + BII(None) => do not merge
@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (ii != null) {
                     return _klass != null && _klass.UnionEquals(ii.ClassInfo, strength);
                 }
-            } else if (this is ConstantInfo || ns is ConstantInfo) {
+            } else if (ns is BuiltinInstanceInfo) {
                 // ConI + BII => BII if CIs match
                 var bii = ns as BuiltinInstanceInfo;
                 return bii != null && _klass != null && _klass.Equals(bii.ClassInfo);
