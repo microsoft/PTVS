@@ -604,6 +604,8 @@ namespace Microsoft.PythonTools.Analysis {
                 Validation.Assert(z.UnionEquals(z2, Strength), $"{Strength}\n{x} + {y} => {z}\n{y} + {x} => {z2}");
                 Validation.Assert(z2.UnionEquals(z, Strength), $"{Strength}\n{y} + {x} => {z2}\n{x} + {y} => {z}");
             }
+            Validation.Assert(x.UnionEquals(z, Strength), $"{Strength}\n{x} != {z}");
+            Validation.Assert(y.UnionEquals(z, Strength), $"{Strength}\n{y} != {z}");
 #endif
             return z;
         }

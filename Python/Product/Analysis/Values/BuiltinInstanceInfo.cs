@@ -248,11 +248,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return TypeId == BuiltinTypeId.NoneType && ns.TypeId == BuiltinTypeId.NoneType;
                 }
 
-                var func = ProjectState.ClassInfos[BuiltinTypeId.Function];
-                if (this == func.Instance) {
+                if (TypeId == BuiltinTypeId.Function) {
                     // FI + BII(function) => BII(function)
-                    return ns is FunctionInfo || ns is BuiltinFunctionInfo || ns == func.Instance;
-                } else if (ns == func.Instance) {
+                    return ns is FunctionInfo || ns is BuiltinFunctionInfo ||
+                        (ns is BuiltinInstanceInfo && ns.TypeId == BuiltinTypeId.Function);
+                } else if (ns.TypeId == BuiltinTypeId.Function) {
                     return false;
                 }
 
@@ -265,9 +265,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return false;
                 }
 
-                /// BII + II => BII(object)
-                /// BII + BII => BII(object)
-                return ns is InstanceInfo || ns is BuiltinInstanceInfo;
+                // BII + II => BII(object)
+                // BII + BII(!function) => BII(object)
+                return ns is InstanceInfo ||
+                    (ns is BuiltinInstanceInfo && ns.TypeId != BuiltinTypeId.Function);
 
             } else if (strength >= MergeStrength.ToBaseClass) {
                 var bii = ns as BuiltinInstanceInfo;

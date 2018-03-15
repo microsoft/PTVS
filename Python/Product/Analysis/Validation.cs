@@ -15,63 +15,25 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Analysis.Infrastructure;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Analysis {
 #if FULL_VALIDATION || DEBUG
-    [Serializable]
-    public class ValidationException : Exception {
-        public ValidationException() { }
-        public ValidationException(string message) : base(message) { }
-        public ValidationException(string message, Exception inner) : base(message, inner) { }
-        protected ValidationException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context)
-            : base(info, context) { }
-    }
-
-    [Serializable]
-    public class ChangeCountExceededException : ValidationException {
-        public ChangeCountExceededException() { }
-        public ChangeCountExceededException(string message) : base(message) { }
-        public ChangeCountExceededException(string message, Exception inner) : base(message, inner) { }
-        protected ChangeCountExceededException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context)
-            : base(info, context) { }
-    }
-
     static class Validation {
         public static void Assert(bool expression) {
             if (!expression) {
-                System.Diagnostics.Debugger.Launch();
-                try {
-                    throw new ValidationException();
-                } catch (ValidationException ex) {
-                    Console.Error.WriteLine(ex.ToString());
-                }
-            }
-        }
-
-        public static void Assert<T>(bool expression) where T : ValidationException, new() {
-            if (!expression) {
-                System.Diagnostics.Debugger.Launch();
-                try {
-                    throw new T();
-                } catch (ValidationException ex) {
-                    Console.Error.WriteLine(ex.ToString());
-                }
+                Console.Error.WriteLine("Validation failure");
+                Console.Error.WriteLine(new StackTrace(true));
+                Debugger.Break();
             }
         }
 
         public static void Assert(bool expression, string message, params object[] args) {
             if (!expression) {
-                System.Diagnostics.Debugger.Launch();
-                try {
-                    throw new ValidationException(message.FormatInvariant(args));
-                } catch (ValidationException ex) {
-                    Console.Error.WriteLine(ex.ToString());
-                }
+                Console.Error.WriteLine("Validation failure");
+                Console.Error.WriteLine(message);
+                Console.Error.WriteLine(new StackTrace(true));
+                Debugger.Break();
             }
         }
     }
