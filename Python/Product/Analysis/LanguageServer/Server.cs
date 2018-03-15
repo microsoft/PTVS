@@ -113,7 +113,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
-                    completionProvider = new CompletionOptions { resolveProvider = true },
+                    completionProvider = new CompletionOptions {
+                        triggerCharacters = new[] { "." },
+                        resolveProvider = true
+                    },
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } }
                 }
