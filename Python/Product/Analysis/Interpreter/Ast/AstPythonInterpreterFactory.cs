@@ -68,7 +68,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _databasePath = CreationOptions.DatabasePath;
             _useDefaultDatabase = useDefaultDatabase;
             if (_useDefaultDatabase) {
-                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                var dbPath = Path.Combine("DefaultDB", $"v{Configuration.Version.Major}", "python.pyi");
+                if (InstallPath.TryGetFile(dbPath, out string biPath)) {
                     CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
                 } else {
                     _skipCache = true;
