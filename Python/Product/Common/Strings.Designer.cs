@@ -817,7 +817,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to conda install {0} from Conda.
+        ///   Looks up a localized string similar to Run command: conda install {0}.
         /// </summary>
         public static string CondaExtensionCondaInstallFrom {
             get {
@@ -3790,7 +3790,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to pip install {0} from PyPI.
+        ///   Looks up a localized string similar to Run command: pip install {0}.
         /// </summary>
         public static string PipExtensionPipInstallFrom {
             get {
