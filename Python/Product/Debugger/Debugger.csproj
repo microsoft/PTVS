@@ -190,4 +190,24 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <Target Name="_GatherPtvsd" BeforeTargets="_IncludePtvsd" Condition="!Exists('$(IntermediateOutputPath)Packages\ptvsd')">
+    <PropertyGroup>
+      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install ptvsd</PipCommand>
+      <PipCommand>$(PipCommand) --pre --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
+    </PropertyGroup>
+    <Exec Command="$(PipCommand)" />
+  </Target>
+  <Target Name="_IncludePtvsd" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <PtvsdFiles Include="$(IntermediateOutputPath)Packages\ptvsd\**\*" />
+      <PtvsdFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>Packages\ptvsd\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>Packages\ptvsd\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </PtvsdFiles>
+      <Content Include="@(PtvsdFiles)" />
+      <FileWrites Include="@(PtvsdFiles)" />
+    </ItemGroup>
+  </Target>
 </Project>
