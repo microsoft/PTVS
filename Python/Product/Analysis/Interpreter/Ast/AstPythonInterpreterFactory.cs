@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return fullPath;
             }
             var p = fullPath.Substring(Configuration.PrefixPath.Length);
-            if (p.StartsWithOrdinal("\\")) {
+            if (p.Length > 0 && p[0] == Path.DirectorySeparatorChar) {
                 return p.Substring(1);
             }
             return p;
