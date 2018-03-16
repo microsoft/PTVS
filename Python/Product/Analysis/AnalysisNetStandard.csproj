@@ -26,4 +26,5 @@
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\NetStandard.targets" />
+  <Import Project="PythonDb.Generator.targets" />
 </Project>

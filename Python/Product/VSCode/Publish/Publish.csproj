@@ -14,6 +14,9 @@
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
     
     <!-- .NET Core publishing -->
+    <PropertyGroup>
+      <AnalysisEngineName>python-analysis</AnalysisEngineName>
+    </PropertyGroup>
     <ItemGroup>
         <TargetOS Include="win-x86" />
         <TargetOS Include="win-x64" />
@@ -23,8 +26,8 @@
     <Target Name="AfterBuild">
         <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration)" />
         <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity)" />
-        <Message Text="Zipping $(OutputPath)\ptvs-ls-%(TargetOS.Identity).zip..." />
-        <ZipDir ZipFileName="$(OutputPath)\ptvs-ls-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)\%(TargetOS.Identity)\publish" />
+        <Message Text="Zipping $(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip..." />
+        <ZipDir ZipFileName="$(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)\%(TargetOS.Identity)\publish" />
     </Target>
     
     <!-- Zipping -->
