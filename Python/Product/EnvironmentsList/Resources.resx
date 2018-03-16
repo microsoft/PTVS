@@ -469,9 +469,9 @@ The folder will be deleted from disk. This operation cannot be undone.</value>
     <value>IntelliSense databases will be removed in a future update and have been disabled to help with testing. See the link below to reactivate the database.</value>
   </data>
   <data name="NoDBExtensionMessage" xml:space="preserve">
-    <value>In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, and have enabled it in Preview.
+    <value>In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, which does not use databases.
 
-Click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python.</value>
+If you are having trouble, you can click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python.</value>
   </data>
   <data name="NoDBExtensionReactivate" xml:space="preserve">
     <value>Reactivate IntelliSense databases in my next session</value>
