@@ -2150,16 +2150,16 @@ Expand selection to the full expression?</value>
     <comment>Do not translate 'Conda'</comment>
   </data>
   <data name="PipExtensionPipInstallFrom" xml:space="preserve">
-    <value>pip install {0} from PyPI</value>
-    <comment>'pip install {0}' is a command-line that should not be translated. Do not translate 'PyPI'</comment>
+    <value>Run command: pip install {0}</value>
+    <comment>'pip install {0}' is a command-line that should not be translated.</comment>
   </data>
   <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
     <value>Search PyPI and installed packages</value>
     <comment>Do not translate 'PyPI'</comment>
   </data>
   <data name="CondaExtensionCondaInstallFrom" xml:space="preserve">
-    <value>conda install {0} from Conda</value>
-    <comment>'conda install {0}' is a command-line that should not be translated. Do not translate 'Conda'</comment>
+    <value>Run command: conda install {0}</value>
+    <comment>'conda install {0}' is a command-line that should not be translated.</comment>
   </data>
   <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
     <value>Search Conda and installed packages</value>

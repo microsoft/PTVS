@@ -277,6 +277,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
             [JsonProperty("envs_dirs")]
             public string[] EnvironmentRootFolders = null;
+
+            [JsonProperty("root_prefix")]
+            public string RootPrefixFolder = null;
         }
 
         private void FindCondaEnvironments(List<PythonInterpreterInformation> envs) {
@@ -292,9 +295,15 @@ namespace Microsoft.PythonTools.Interpreter {
         private static IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
             var condaInfoResult = ExecuteCondaInfo(condaPath);
             if (condaInfoResult != null) {
+                // We skip the root to avoid duplicate entries, root is
+                // discovered by CPythonInterpreterFactoryProvider already.
+                // Older versions of `conda info` used to not return the root.
                 return condaInfoResult.EnvironmentFolders
                     .AsParallel()
-                    .Where(folder => Directory.Exists(folder))
+                    .Where(folder =>
+                        Directory.Exists(folder) &&
+                        !PathUtils.IsSameDirectory(folder, condaInfoResult.RootPrefixFolder)
+                    )
                     .Select(folder => CreateEnvironmentInfo(folder))
                     .Where(env => env != null)
                     .ToList();
