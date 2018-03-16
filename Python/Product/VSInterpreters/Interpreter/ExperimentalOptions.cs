@@ -30,8 +30,8 @@ namespace Microsoft.PythonTools.Interpreter {
         internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseVsCodeDebugger);
 
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
-        public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: false);
-        public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: false);
+        public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: true);
+        public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: true);
         public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: true);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
