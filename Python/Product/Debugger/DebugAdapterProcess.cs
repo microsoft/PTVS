@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Debugger {
                 Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
             }
 
-            if (_stream == null) {
+            if (_stream == null && !_process.HasExited) {
                 _process.Kill();
             }
         }

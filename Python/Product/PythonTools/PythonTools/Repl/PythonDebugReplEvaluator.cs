@@ -134,7 +134,14 @@ namespace Microsoft.PythonTools.Repl {
 
             if (_activeEvaluator != null) {
                 return _activeEvaluator.ExecuteCodeAsync(text);
+            } else {
+                // TODO: Move this to DebugReplEvaluator for Experimental Debugger
+                if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+                    var result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text);
+                    CurrentWindow.Write(result);
+                }
             }
+
             return ExecutionResult.Succeeded;
         }
 
