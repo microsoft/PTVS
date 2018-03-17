@@ -37,7 +37,7 @@
       <Name>PresentationFramework</Name>
       <Private>False</Private>
     </Reference>
-    <Reference Include="WindowsBase, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+    <Reference Include="WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <Name>WindowsBase</Name>
       <Private>False</Private>
     </Reference>
