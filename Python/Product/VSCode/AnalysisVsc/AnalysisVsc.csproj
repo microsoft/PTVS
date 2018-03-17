@@ -16,6 +16,8 @@
     <ItemGroup>
         <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
         <PackageReference Include="StreamJsonRpc" Version="1.3.23" />
+        <PackageReference Include="Python2" version="2.7.14" />
+        <PackageReference Include="Python" version="3.6.4" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
