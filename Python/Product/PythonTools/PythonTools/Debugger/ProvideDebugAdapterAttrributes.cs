@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudioTools {
         private readonly Type _adapterLauncherType;
         private readonly Type _customProtocolType;
 
-        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID,string customProtocolExtensionCLSID, string languageName, string languageId, Type adapterLauncherType, Type customProtocolType) {
+        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string customProtocolExtensionCLSID, string languageName, string languageId, Type adapterLauncherType, Type customProtocolType) {
             _name = name;
             _engineId = engineId;
             _adapterLauncherCLSID = adapterLauncherCLSID;

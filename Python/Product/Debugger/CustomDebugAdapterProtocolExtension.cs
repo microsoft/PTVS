@@ -37,10 +37,16 @@ namespace Microsoft.PythonTools.Debugger {
         public static bool CanUseExperimental() {
             return Evaluator != null;
         }
-        public static string EvaluateReplRequest(string expression) {
-            // TODO: Replace this with code that uses correct frame id
-            var fid = 1;
-            var response = Evaluator?._hostOperations.SendRequestSync(new EvaluateRequest(expression.Replace("\r","").Replace("\n",""), frameId: fid, context: EvaluateArguments.ContextValue.Repl));
+
+        public static string GetCurrentFrameFilename(int threadId) {
+            var stackTraceResponse = Evaluator?._hostOperations.SendRequestSync(new StackTraceRequest(threadId));
+            return stackTraceResponse.StackFrames[0].Source.Path;
+        }
+
+        public static string EvaluateReplRequest(string expression, int threadId) {
+            var stackTraceResponse = Evaluator?._hostOperations.SendRequestSync(new StackTraceRequest(threadId));
+            var fid = stackTraceResponse.StackFrames[0].Id;
+            var response = Evaluator?._hostOperations.SendRequestSync(new EvaluateRequest(expression.Replace("\n", "@LINE@"), frameId: fid, context: EvaluateArguments.ContextValue.Repl));
             return response?.Result;
         }
 
