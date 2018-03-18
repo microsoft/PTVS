@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <Python3 Condition="'$(Python3)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python3.6.4\tools\python.exe</Python3>
+    <Python3 Condition="'$(Python3)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python.3.6.4\tools\python.exe</Python3>
     <Python3 Condition="'$(Python3)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
     <Python2 Condition="'$(Python2)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.714\tools\python.exe</Python2>
     <Python2 Condition="'$(Python2)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
