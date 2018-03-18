@@ -957,7 +957,7 @@ namespace Microsoft.PythonTools.Parsing {
             Expression ret = ParseTestListAsExpr();
             bool hasAnnotation = false;
 
-            if (PeekToken(TokenKind.Colon) && (_stubFile || _langVersion >= PythonLanguageVersion.V36)) {
+            if (PeekToken(TokenKind.Colon) && (_stubFile || _langVersion.Is3x())) {
                 ret = ParseNameAnnotation(ret);
                 hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
@@ -968,7 +968,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             if (PeekToken(TokenKind.Assign)) {
-                if (_langVersion >= PythonLanguageVersion.V30) {
+                if (_stubFile || _langVersion.Is3x()) {
                     SequenceExpression seq = ret as SequenceExpression;
                     bool hasStar = false;
                     if (seq != null) {
@@ -1500,7 +1500,7 @@ namespace Microsoft.PythonTools.Parsing {
                     var commaStart = GetStart();
                     commaWhiteSpace = _tokenWhiteSpace;
                     value = ParseExpression();
-                    if (_langVersion.Is3x()) {
+                    if (_stubFile || _langVersion.Is3x()) {
                         ReportSyntaxError(commaStart, GetEnd(), "invalid syntax, only exception value is allowed in 3.x.");
                     }
                     if (MaybeEat(TokenKind.Comma)) {
@@ -1513,7 +1513,7 @@ namespace Microsoft.PythonTools.Parsing {
                     cause = ParseExpression();
                     isFromForm = true;
 
-                    if (_langVersion.Is2x()) {
+                    if (!_stubFile && _langVersion.Is2x()) {
                         ReportSyntaxError(fromStart, cause.EndIndex, "invalid syntax, from cause not allowed in 2.x.");
                     }
                 }
@@ -1679,7 +1679,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (MaybeEat(TokenKind.LeftParenthesis)) {
                 leftParenWhiteSpace = _tokenWhiteSpace;
                 commaWhiteSpace = MakeWhiteSpaceList();
-                if (_langVersion.Is3x()) {
+                if (_stubFile || _langVersion.Is3x()) {
                     args = FinishArgumentList(null, commaWhiteSpace, out ateTerminator);
                     rightParenWhiteSpace = _tokenWhiteSpace;
                 } else {
@@ -2023,7 +2023,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (MaybeEat(TokenKind.Multiply)) {
                         start = GetStart();
                         kind = ParameterKind.List;
-                        namedOnly = _langVersion.Is3x();
+                        namedOnly = _langVersion.Is3x() || _stubFile;
                         preStarWhitespace = _tokenWhiteSpace;
                     } else if (MaybeEat(TokenKind.Power)) {
                         start = GetStart();
@@ -2099,7 +2099,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 if (p is SublistParameter sp) {
-                    if (_langVersion.Is3x()) {
+                    if (_stubFile || _langVersion.Is3x()) {
                         ReportSyntaxError(p.StartIndex, p.EndIndex, "sublist parameters are not supported in 3.x");
                     } else {
                         ValidateSublistParameter(sp.Tuple?.Items, seenNames);
@@ -2113,7 +2113,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 if (string.IsNullOrEmpty(p.Name)) {
-                    if (p.Kind != ParameterKind.List || !_langVersion.Is3x()) {
+                    if (p.Kind != ParameterKind.List || !(_stubFile || _langVersion.Is3x())) {
                         ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax");
                         continue;
                     }
@@ -2158,7 +2158,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (sublist is TupleExpression te) {
                 p = new SublistParameter(position, te);
                 p.SetLoc(te.StartIndex, te.EndIndex);
-            } else if ((sublist as ParenthesisExpression)?.Expression is NameExpression ne && _langVersion.Is2x()) {
+            } else if ((sublist as ParenthesisExpression)?.Expression is NameExpression ne && _langVersion.Is2x() && !_stubFile) {
                 p = new Parameter(ne, ParameterKind.Normal);
                 p.SetLoc(ne.StartIndex, ne.EndIndex);
                 MoveNodeAttributes(p, sublist, NodeAttributes.PreceedingWhiteSpace);
@@ -2637,7 +2637,7 @@ namespace Microsoft.PythonTools.Parsing {
                 var lookahead = _lookahead;
                 if (MaybeEat(TokenKind.KeywordAs) || MaybeEatName("as")) {
                     commaWhiteSpace = _tokenWhiteSpace;
-                    if (_langVersion < PythonLanguageVersion.V26) {
+                    if (_langVersion < PythonLanguageVersion.V26 && !_stubFile) {
                         ReportSyntaxError(lookahead.Span.Start, lookahead.Span.End, "'as' requires Python 2.6 or later");
                     }
                     test2 = ParseExpression();
@@ -2645,7 +2645,7 @@ namespace Microsoft.PythonTools.Parsing {
                 } else if (MaybeEat(TokenKind.Comma)) {
                     commaWhiteSpace = _tokenWhiteSpace;
                     test2 = ParseExpression();
-                    if (_langVersion.Is3x()) {
+                    if (_langVersion.Is3x() || _stubFile) {
                         ReportSyntaxError(lookahead.Span.Start, GetEnd(), "\", variable\" not allowed in 3.x - use \"as variable\" instead.");
                     }
                 }
@@ -3723,7 +3723,7 @@ namespace Microsoft.PythonTools.Parsing {
             var token = PeekToken().Kind;
             if ((token == TokenKind.Multiply || token == TokenKind.Power) && Eat(token)) {
                 string whitespace = _tokenWhiteSpace;
-                if (_langVersion.Is2x()) {
+                if (_langVersion.Is2x() && !_stubFile) {
                     ReportSyntaxError("invalid syntax");
                 }
                 var start = GetStart();
@@ -4016,7 +4016,7 @@ namespace Microsoft.PythonTools.Parsing {
                         se.SetLoc(e1.StartIndex, e2.EndIndex);
 
                         if (PeekTokenForOrAsyncFor) {
-                            if (!first || _langVersion < PythonLanguageVersion.V27) {
+                            if (!first || (!_stubFile && _langVersion < PythonLanguageVersion.V27)) {
                                 ReportSyntaxError("invalid syntax");
                             }
 
@@ -4038,7 +4038,7 @@ namespace Microsoft.PythonTools.Parsing {
                             setMembers.Add(se);
                         }
                     } else { // set literal or dict unpack
-                        if (_langVersion < PythonLanguageVersion.V27 && !reportedError) {
+                        if (!_stubFile && _langVersion < PythonLanguageVersion.V27 && !reportedError) {
                             ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax, set literals require Python 2.7 or later.");
                             reportedError = true;
                         }
@@ -4086,6 +4086,7 @@ namespace Microsoft.PythonTools.Parsing {
                                 setMembers.Add(e1);
                             } else {
                                 var slice = new DictKeyOnlyExpression(e1);
+                                slice.SetLoc(e1.IndexSpan);
                                 if (_verbatim) {
                                     AddErrorIsIncompleteNode(slice);
                                 }
@@ -4360,7 +4361,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             if (ateIn) {
                 inWhiteSpace = _tokenWhiteSpace;
-                if (_langVersion.Is3x()) {
+                if (_stubFile || _langVersion.Is3x()) {
                     list = ParseOrTest();
                 } else {
                     list = ParseOldExpressionListAsExpr();
@@ -4518,7 +4519,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             foreach (Arg arg in args) {
                 if (arg.Name == null) {
-                    if (_langVersion >= PythonLanguageVersion.V35) {
+                    if (_stubFile || _langVersion >= PythonLanguageVersion.V35) {
                         if (hasKeywordDict) {
                             ReportSyntaxError(arg.StartIndex, arg.EndIndex, "positional argument follows keyword argument unpacking");
                         } else if (keywordCount > 0) {
@@ -4529,7 +4530,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 } else if (arg.Name == "*") {
                     if (hasArgsTuple || hasKeywordDict) {
-                        if (_langVersion < PythonLanguageVersion.V35) {
+                        if (!_stubFile && _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError(arg.StartIndex, arg.EndIndex, "only one * allowed");
                         } else if (hasKeywordDict) {
                             ReportSyntaxError(arg.StartIndex, arg.EndIndex, "iterable argument unpacking follows keyword argument unpacking");
@@ -4538,13 +4539,13 @@ namespace Microsoft.PythonTools.Parsing {
                     hasArgsTuple = true; extraArgs++;
                 } else if (arg.Name == "**") {
                     if (hasKeywordDict) {
-                        if (_langVersion < PythonLanguageVersion.V35) {
+                        if (!_stubFile && _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError(arg.StartIndex, arg.EndIndex, "only one ** allowed");
                         }
                     }
                     hasKeywordDict = true; extraArgs++;
                 } else {
-                    if (hasKeywordDict && _langVersion < PythonLanguageVersion.V35) {
+                    if (hasKeywordDict && !_stubFile && _langVersion < PythonLanguageVersion.V35) {
                         ReportSyntaxError(arg.StartIndex, arg.EndIndex, "keywords must come before ** args");
                     }
                     keywordCount++;
