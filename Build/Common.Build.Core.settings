@@ -55,9 +55,9 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
-    <PackagesPath Condition="Exists('$(BuildRoot)\packages.$(VSTarget)')">$(BuildRoot)\packages.$(VSTarget)\</PackagesPath>
+    <PackagesPath Condition="Exists('$(BuildRoot)packages.$(VSTarget)')">$(BuildRoot)packages.$(VSTarget)\</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
-    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\packages\</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)packages\</PackagesPath>
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
 
     <!-- BuildOutputRoot contains all build files.
@@ -65,7 +65,7 @@
          $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set. 
     -->
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
-    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
     <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
 
     <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)raw\$(OutputPathSuffix)\</OutputPath>
