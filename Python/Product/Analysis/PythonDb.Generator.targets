@@ -1,4 +1,13 @@
 ﻿<Project>
+  <PropertyGroup>
+    <Python2 Condition="'$(Python)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python3.6.4\tools\python.exe</Python2>
+    <Python2 Condition="'$(Python)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
+    <Python3 Condition="'$(Python)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.714\tools\python.exe</Python3>
+    <Python3 Condition="'$(Python)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
+    <DbBasePath>$(IntermediateOutputPath)DefaultDB\</DbBasePath>
+    <DbPath2>$(DbBasePath)v2\</DbPath2>
+    <DbPath3>$(DbBasePath)v3\</DbPath3>
+  </PropertyGroup>
   <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <Python3DB Include="$(IntermediateOutputPath)DefaultDB\v3\*.pyi" />
@@ -12,11 +21,12 @@
       <FileWrites Include="@(Python3DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython3DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v3\python.pyi')" BeforeTargets="_IncludePython3DB">
+  <Target Name="_RegeneratePython3DB" Condition="$(ReleaseBuild) or !Exists('$(DbPath3)python.pyi')" BeforeTargets="_IncludePython3DB">
     <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
+      <_RefreshCmd>"$(Python3)" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(DbPath3)" "$(Python3)"</_RefreshCmd>
     </PropertyGroup>
-    <Exec Command="$(_RefreshCmd)" />
+   <Message Text="Building on $(OS)" />
+   <Exec Command="$(_RefreshCmd)" />
   </Target>
   <Target Name="_IncludePython2DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
@@ -31,10 +41,11 @@
       <FileWrites Include="@(Python2DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(IntermediateOutputPath)DefaultDB\v2\python.pyi')" BeforeTargets="_IncludePython2DB">
+  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(DbPath2)python.pyi')" BeforeTargets="_IncludePython2DB">
     <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
+      <_RefreshCmd>"$(Python3)" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(DbPath2)" "$(Python2)"</_RefreshCmd>
     </PropertyGroup>
+    <Message Text="Building on $(OS)" />
     <Exec Command="$(_RefreshCmd)" />
   </Target>
 </Project>
