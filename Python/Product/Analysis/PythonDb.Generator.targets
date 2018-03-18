@@ -2,15 +2,17 @@
   <PropertyGroup>
     <Python3 Condition="'$(Python3)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python.3.6.4\tools\python.exe</Python3>
     <Python3 Condition="'$(Python3)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
-    <Python2 Condition="'$(Python2)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.714\tools\python.exe</Python2>
+    <Python2 Condition="'$(Python2)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.14\tools\python.exe</Python2>
     <Python2 Condition="'$(Python2)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
     <DbBasePath>$(IntermediateOutputPath)DefaultDB\</DbBasePath>
-    <DbPath2>$(DbBasePath)v2\</DbPath2>
-    <DbPath3>$(DbBasePath)v3\</DbPath3>
+    <DbPath2>$(DbBasePath)v2</DbPath2>
+    <DbPath3>$(DbBasePath)v3</DbPath3>
+    <Python2DBPath>DbPath2\</Python2DBPath>
+    <Python3DBPath>DbPath3\</Python3DBPath>
   </PropertyGroup>
   <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <Python3DB Include="$(DbPath3)*.pyi" />
+      <Python3DB Include="$(Python3DBPath)*.pyi" />
       <Python3DB>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>$(DbPath3)%(Filename)%(Extension)</Link>
@@ -21,7 +23,7 @@
       <FileWrites Include="@(Python3DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython3DB" Condition="$(ReleaseBuild) or !Exists('$(DbPath3)python.pyi')" BeforeTargets="_IncludePython3DB">
+  <Target Name="_RegeneratePython3DB" Condition="$(ReleaseBuild) or !Exists('$(Python3DBPath)python.pyi')" BeforeTargets="_IncludePython3DB">
     <PropertyGroup>
       <_RefreshCmd>"$(Python3)" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(DbPath3)" "$(Python3)"</_RefreshCmd>
     </PropertyGroup>
@@ -30,7 +32,7 @@
   </Target>
   <Target Name="_IncludePython2DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <Python2DB Include="$(DbPath2)*.pyi" />
+       <Python2DB Include="$(Python2DBPath)*.pyi" />
       <Python2DB>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>$(DbPath2)%(Filename)%(Extension)</Link>
@@ -41,7 +43,7 @@
       <FileWrites Include="@(Python2DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(DbPath2)python.pyi')" BeforeTargets="_IncludePython2DB">
+  <Target Name="_RegeneratePython2DB" Condition="$(ReleaseBuild) or !Exists('$(Python2DBPath)python.pyi')" BeforeTargets="_IncludePython2DB">
     <PropertyGroup>
       <_RefreshCmd>"$(Python3)" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(DbPath2)" "$(Python2)"</_RefreshCmd>
     </PropertyGroup>
