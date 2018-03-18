@@ -13,8 +13,8 @@
       <Python3DB Include="$(DbPath3)*.pyi" />
       <Python3DB>
         <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>DefaultDB\v3\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+        <Link>$(DbPath3)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>$(DbPath3)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Python3DB>
       <Content Include="@(Python3DB)" />
@@ -33,8 +33,8 @@
       <Python2DB Include="$(DbPath2)*.pyi" />
       <Python2DB>
         <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>DefaultDB\v2\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+        <Link>$(DbPath2)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>$(DbPath2)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Python2DB>
       <Content Include="@(Python2DB)" />
