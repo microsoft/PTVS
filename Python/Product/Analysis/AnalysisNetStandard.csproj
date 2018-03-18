@@ -11,8 +11,9 @@
   </ItemGroup>
      <ItemGroup>
         <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
-        <PackageReference Include="Python2" version="2.7.14" />
-        <PackageReference Include="Python" version="3.6.4" />
+        <PackageReference Include="NewtonSoft.Json" Version="10.0.1" />
+        <PackageReference Include="Python2" version="2.7.14" Condition="'$(OS)' == 'Windows_NT'"/>
+        <PackageReference Include="Python" version="3.6.4" Condition="'$(OS)' == 'Windows_NT'"/>
     </ItemGroup> <ItemGroup>
     <None Remove="get_search_paths.py" />
     <None Remove="scrape_module.py" />
@@ -24,9 +25,6 @@
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\NetStandard.targets" />
