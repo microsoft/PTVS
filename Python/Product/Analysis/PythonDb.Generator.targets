@@ -6,8 +6,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Python3 Condition="'$(Python3)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python.3.6.4\tools\python.exe</Python3>
-    <Python3 Condition="'$(Python3)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
+    <NuGetPackages Condition=" '$(NetStandard)' == '' ">$(PackagesPath)</NuGetPackages>
+    <NuGetPackages Condition=" '$(NetStandard)' != '' and '$(OS)' == 'Windows_NT'">$(UserProfile)\.nuget\packages\</NuGetPackages>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Python3 Condition="'$(NetStandard)' != '' and '$(OS)' == 'Windows_NT'">$(NuGetPackages)python\3.6.4\tools\python.exe</Python3>
+    <Python3 Condition="'$(NetStandard)' == ''">$(NuGetPackages)python.3.6.4\tools\python.exe</Python3>
+    <Python3 Condition="'$(OS)' != 'Windows_NT'">python3</Python3>
     <DbFullPath3>$(DbFullBasePathSlash)v3</DbFullPath3>
     <DbFullPath3Slash>$(DbFullPath3)\</DbFullPath3Slash>
     <DbRelPath3>$(DbFolderSlash)v3</DbRelPath3>
@@ -15,7 +21,8 @@
  </PropertyGroup>
 
   <PropertyGroup>
-    <Python2 Condition="'$(Python2)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.14\tools\python.exe</Python2>
+    <Python2 Condition="'$(NetStandard)' != '' and '$(OS)' == 'Windows_NT'">$(NuGetPackages)python2\2.7.14\tools\python.exe</Python2>
+    <Python2 Condition="'$(NetStandard)' == ''">$(NuGetPackages)python2.2.7.14\tools\python.exe</Python2>
     <Python2 Condition="'$(Python2)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
     <DbFullPath2>$(DbFullBasePathSlash)v2</DbFullPath2>
     <DbFullPath2Slash>$(DbFullPath2)\</DbFullPath2Slash>
