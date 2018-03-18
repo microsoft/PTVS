@@ -1,16 +1,16 @@
 ﻿<Project>
   <PropertyGroup>
-    <Python2 Condition="'$(Python)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python3.6.4\tools\python.exe</Python2>
-    <Python2 Condition="'$(Python)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
-    <Python3 Condition="'$(Python)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.714\tools\python.exe</Python3>
-    <Python3 Condition="'$(Python)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
+    <Python3 Condition="'$(Python3)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python3.6.4\tools\python.exe</Python3>
+    <Python3 Condition="'$(Python3)' == '' and '$(OS)' != 'Windows_NT'">python3</Python3>
+    <Python2 Condition="'$(Python2)' == '' and '$(OS)' == 'Windows_NT'">$(PackagesPath)python2.2.7.714\tools\python.exe</Python2>
+    <Python2 Condition="'$(Python2)' == '' and '$(OS)' != 'Windows_NT'">python2.7</Python2>
     <DbBasePath>$(IntermediateOutputPath)DefaultDB\</DbBasePath>
     <DbPath2>$(DbBasePath)v2\</DbPath2>
     <DbPath3>$(DbBasePath)v3\</DbPath3>
   </PropertyGroup>
   <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <Python3DB Include="$(IntermediateOutputPath)DefaultDB\v3\*.pyi" />
+      <Python3DB Include="$(DbPath3)*.pyi" />
       <Python3DB>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>DefaultDB\v3\%(Filename)%(Extension)</Link>
@@ -30,7 +30,7 @@
   </Target>
   <Target Name="_IncludePython2DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <Python2DB Include="$(IntermediateOutputPath)DefaultDB\v2\*.pyi" />
+      <Python2DB Include="$(DbPath2)*.pyi" />
       <Python2DB>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>DefaultDB\v2\%(Filename)%(Extension)</Link>
