@@ -71,6 +71,9 @@ sys.path[0] = ''
 # Load the debugger package
 try:
     if bundled_ptvsd:
+        ptvs_lib_path = os.path.dirname(__file__)
+        sys.path.insert(0, ptvs_lib_path)
+    else:
         ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'Packages')
         sys.path.append(ptvs_lib_path)
     try:
