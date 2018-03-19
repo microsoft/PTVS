@@ -91,7 +91,8 @@ namespace Microsoft.PythonTools.Debugger {
                 cwd.Trim('\\'),
                 $"{_listenerPort}",
                 $"{_processGuid}",
-                $"{_debugOptions}"
+                $"{_debugOptions}",
+                "-g"
             };
             var launcherArgs = string.Join(" ", argsList.Where(a => !string.IsNullOrWhiteSpace(a)).Select(ProcessOutput.QuoteSingleArgument));
             var arguments = $"{launcherArgs} {scriptAndScriptArgs}";
