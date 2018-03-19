@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
         public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: true);
         public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: true);
-        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
+        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: true);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
