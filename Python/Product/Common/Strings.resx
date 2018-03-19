@@ -2249,7 +2249,7 @@ Expand selection to the full expression?</value>
   <data name="ImportPtvsdFailedTitle" xml:space="preserve">
     <value>ImportError: ptvsd not found</value>
   </data>
-  <data name="DebugReplFeatureNotSupportedWithExpeimentalDebugger" xml:space="preserve">
+  <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
     <value>This debug REPL feature is not supported with the experimental debugger.</value>
   </data>
 </root>

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
@@ -24,6 +25,7 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
@@ -119,6 +121,29 @@ namespace Microsoft.PythonTools.Repl {
             }
             if (_activeEvaluator != null) {
                 return _activeEvaluator.CanExecuteCode(text);
+            }else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+                return CanExecuteCodeExperimental(text);
+            }
+            return true;
+        }
+
+        bool CanExecuteCodeExperimental(string text) {
+            var pr = ParseResult.Complete;
+            if (string.IsNullOrEmpty(text)) {
+                return true;
+            }
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
+                pr = ParseResult.Empty;
+                return true;
+            }
+
+            var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
+            parser.ParseInteractiveCode(out pr);
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+                return text.EndsWithOrdinal("\n");
+            }
+            if (pr == ParseResult.IncompleteToken) {
+                return false;
             }
             return true;
         }
@@ -584,7 +609,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void NotSupported() {
-            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupportedWithExpeimentalDebugger);
+            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupportedWithExperimentalDebugger);
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {

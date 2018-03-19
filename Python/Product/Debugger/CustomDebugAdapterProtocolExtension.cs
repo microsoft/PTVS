@@ -24,13 +24,13 @@ using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
-    [Guid("A5E59A97-43B8-4B65-833A-5300076553E1")]
-    public class CustomDebugAdapterProtocolExtension
-#if !USE_15_5
-        : ICustomProtocolExtension
-#endif
-{
-        public const string CustomProtocolExtensionCLSID = "{A5E59A97-43B8-4B65-833A-5300076553E1}";
+    [Guid(CustomProtocolExtensionCLSIDNoBraces)]
+    public class CustomDebugAdapterProtocolExtension : ICustomProtocolExtension { 
+        private IDebugAdapterHostContext _context;
+        private IProtocolHostOperations _hostOperations;
+
+        public const string CustomProtocolExtensionCLSIDNoBraces = "A5E59A97-43B8-4B65-833A-5300076553E1";
+        public const string CustomProtocolExtensionCLSID = "{" + CustomProtocolExtensionCLSIDNoBraces + "}";
         public CustomDebugAdapterProtocolExtension() {}
 
         private static CustomDebugAdapterProtocolExtension Evaluator { get; set; }
@@ -72,12 +72,10 @@ namespace Microsoft.PythonTools.Debugger {
             Evaluator?._hostOperations.SendRequestSync(request);
         }
 
-#if !USE_15_5
-        private IDebugAdapterHostContext _context;
-        private IProtocolHostOperations _hostOperations;
+
 
         public void Initialize(IDebugAdapterHostContext context) {
-            _context = context;
+            _context = context ?? throw new ArgumentException(nameof(context));
             _context.Events.DebuggingEnded += OnDebuggingEnded;
             Evaluator = this;
         }
@@ -90,6 +88,5 @@ namespace Microsoft.PythonTools.Debugger {
             _hostOperations = hostOperations;
 
         }
-#endif
     }
 }

@@ -272,7 +272,7 @@
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\NoStartupFileException.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
-    <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttrributes.cs" />
+    <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttributes.cs" />
     <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
     <Compile Include="PythonTools\Editor\IVsFeatureFlags.cs" />
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />

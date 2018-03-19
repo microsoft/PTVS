@@ -143,18 +143,18 @@ namespace Microsoft.VisualStudioTools {
              * Adapter launcher registration 
              */
             var adapterKey = context.CreateKey($"CLSID\\{_adapterLauncherCLSID}");
-            var assembly = _adapterLauncherType.Assembly.GetName().Name;
-            var className = _adapterLauncherType.FullName;
-            adapterKey.SetValue("Assembly", assembly);
-            adapterKey.SetValue("Class", className);
-            adapterKey.SetValue("CodeBase", $@"$PackageFolder$\{assembly}.dll");
+            var adapterAssembly = _adapterLauncherType.Assembly.GetName().Name;
+            var adapterClassName = _adapterLauncherType.FullName;
+            adapterKey.SetValue("Assembly", adapterAssembly);
+            adapterKey.SetValue("Class", adapterClassName);
+            adapterKey.SetValue("CodeBase", $@"$PackageFolder$\{adapterAssembly}.dll");
 
             var customProtocolKey = context.CreateKey($"CLSID\\{_customProtocolExtensionCLSID}");
-            var assembly2 = _customProtocolType.Assembly.GetName().Name;
-            var className2 = _customProtocolType.FullName;
-            customProtocolKey.SetValue("Assembly", assembly2);
-            customProtocolKey.SetValue("Class", className2);
-            customProtocolKey.SetValue("CodeBase", $@"$PackageFolder$\{assembly2}.dll");
+            var customProtocolAssembly = _customProtocolType.Assembly.GetName().Name;
+            var customProtocolClassName = _customProtocolType.FullName;
+            customProtocolKey.SetValue("Assembly", customProtocolAssembly);
+            customProtocolKey.SetValue("Class", customProtocolClassName);
+            customProtocolKey.SetValue("CodeBase", $@"$PackageFolder$\{customProtocolAssembly}.dll");
         }
 
         public override void Unregister(RegistrationContext context) {

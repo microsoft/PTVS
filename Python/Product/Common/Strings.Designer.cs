@@ -1527,9 +1527,9 @@ namespace Microsoft.PythonTools {
         /// <summary>
         ///   Looks up a localized string similar to This debug REPL feature is not supported with the experimental debugger..
         /// </summary>
-        public static string DebugReplFeatureNotSupportedWithExpeimentalDebugger {
+        public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
             get {
-                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExpeimentalDebugger", resourceCulture);
+                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExperimentalDebugger", resourceCulture);
             }
         }
         
