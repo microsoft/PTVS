@@ -957,7 +957,7 @@ namespace Microsoft.PythonTools.Parsing {
             Expression ret = ParseTestListAsExpr();
             bool hasAnnotation = false;
 
-            if (PeekToken(TokenKind.Colon) && (_stubFile || _langVersion.Is3x())) {
+            if (PeekToken(TokenKind.Colon) && (_stubFile || _langVersion >= PythonLanguageVersion.V36)) {
                 ret = ParseNameAnnotation(ret);
                 hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
