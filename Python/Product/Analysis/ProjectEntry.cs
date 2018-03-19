@@ -134,12 +134,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public void SetCurrentParse(PythonAst tree, IAnalysisCookie cookie) {
+        public void SetCurrentParse(PythonAst tree, IAnalysisCookie cookie, bool notify = true) {
             lock (this) {
                 Tree = tree;
                 Cookie = cookie;
             }
-            OnNewParseTree?.Invoke(this, EventArgs.Empty);
+            if (notify) {
+                OnNewParseTree?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public IPythonParse WaitForCurrentParse(int timeout = -1) {
@@ -413,7 +415,13 @@ namespace Microsoft.PythonTools.Analysis {
                 if (!_buffers.TryGetValue(part, out var buffer)) {
                     _buffers[part] = buffer = new DocumentBuffer();
                 }
+                int versionBefore = buffer.Version;
                 buffer.Update(changes);
+
+                // Reset the current cookie if the version did not increase
+                if (buffer.Version <= versionBefore) {
+                    SetCurrentParse(Tree, null, false);
+                }
             }
         }
 
@@ -422,6 +430,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _buffers.Clear();
                 _buffers[0] = new DocumentBuffer();
                 _buffers[0].Reset(version, content);
+                SetCurrentParse(Tree, null, false);
             }
         }
     }
