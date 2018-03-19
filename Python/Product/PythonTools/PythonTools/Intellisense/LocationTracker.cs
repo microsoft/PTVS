@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// version of the buffer.
     /// </summary>
     internal class LocationTracker {
-        private ITextSnapshot _snapshot;
+        private readonly Queue<ITextSnapshot> _snapshots;
         private readonly Dictionary<int, NewLineLocation[]> _lineCache;
 
         /// <summary>
@@ -49,13 +49,14 @@ namespace Microsoft.PythonTools.Intellisense {
             // prevents us from holding onto every version in the world.
 
             _lineCache = new Dictionary<int, NewLineLocation[]>();
-            _snapshot = snapshot;
+            _snapshots = new Queue<ITextSnapshot>();
+            _snapshots.Enqueue(snapshot);
         }
 
         public ITextBuffer TextBuffer {
             get {
                 lock (_lineCache) {
-                    return _snapshot.TextBuffer;
+                    return _snapshots.Peek().TextBuffer;
                 }
             }
         }
@@ -68,19 +69,22 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void UpdateBaseSnapshot(ITextSnapshot snapshot) {
             lock (_lineCache) {
-                if (_snapshot.TextBuffer != TextBuffer && TextBuffer != null) {
+                if (_snapshots.Peek().TextBuffer != TextBuffer && TextBuffer != null) {
                     throw new InvalidOperationException("Cannot change buffer");
                 }
 
-                _snapshot = snapshot;
-                foreach (var key in _lineCache.Keys.Where(k => k < _snapshot.Version.VersionNumber).ToArray()) {
+                _snapshots.Enqueue(snapshot);
+                while (_snapshots.Count > 5) {
+                    _snapshots.Dequeue();
+                }
+                foreach (var key in _lineCache.Keys.Where(k => k < _snapshots.Last().Version.VersionNumber).ToArray()) {
                     _lineCache.Remove(key);
                 }
             }
         }
 
         public bool CanTranslateFrom(int version) {
-            var ver = _snapshot?.Version;
+            var ver = _snapshots.LastOrDefault()?.Version;
             if (ver == null || version < ver.VersionNumber) {
                 return false;
             }
@@ -146,13 +150,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal NewLineLocation[] GetLineLocations(int version) {
-            var ver = _snapshot.Version;
+            var ver = _snapshots.Peek().Version;
             NewLineLocation[] initial;
 
             lock (_lineCache) {
                 // Precalculated for this version
                 if (_lineCache.TryGetValue(version, out initial)) {
                     return initial;
+                }
+
+                // We simply can't provide these lines any more
+                if (ver.VersionNumber > version) {
+                    throw new NotSupportedException($"version {version} is no longer in memory");
                 }
 
                 int fromVersion = version;
@@ -166,7 +175,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Create the initial set if it wasn't cached
                 if (initial == null) {
                     fromVersion = ver.VersionNumber;
-                    _lineCache[fromVersion] = initial = LinesToLineEnds(_snapshot.Lines).ToArray();
+                    _lineCache[fromVersion] = initial = LinesToLineEnds(_snapshots.Peek().Lines).ToArray();
                 }
 
                 while (ver.Next != null && ver.VersionNumber < fromVersion) {
@@ -301,12 +310,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SourceLocation Translate(SourceLocation loc, int fromVersion, int toVersion) {
-            var fromVer = _snapshot.Version;
+            var snapVer = _snapshots.Peek().Version;
+            var fromVer = snapVer;
             while (fromVer.Next != null && fromVer.VersionNumber < fromVersion) {
                 fromVer = fromVer.Next;
             }
 
-            var toVer = toVersion > fromVersion ? fromVer : _snapshot.Version;
+            var toVer = toVersion > fromVersion ? fromVer : snapVer;
             while (toVer.Next != null && toVer.VersionNumber < toVersion) {
                 toVer = toVer.Next;
             }

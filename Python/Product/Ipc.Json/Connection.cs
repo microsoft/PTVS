@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly TextWriter _basicLog;
         private readonly TextWriter _logFile;
         private readonly object _logFileLock;
-        private int _seq;
+        private int _seq, _sentSeq;
         private static readonly char[] _headerSeparator = new[] { ':' };
 
         // Exposed settings for tests
@@ -556,30 +556,65 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// </remarks>
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
+            int seq = packet.seq, sentSeq = -1;
+
+            int retries = 1000;
             LogToDisk(str);
             try {
-                try {
-                    await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
-                } catch (ArgumentNullException) {
-                    throw new ObjectDisposedException(nameof(_writeLock));
-                } catch (ObjectDisposedException) {
-                    throw new ObjectDisposedException(nameof(_writeLock));
-                }
-                try {
-                    // The content part is encoded using the charset provided in the Content-Type field.
-                    // It defaults to utf-8, which is the only encoding supported right now.
-                    var contentBytes = TextEncoding.GetBytes(str);
+                while (true) {
+                    try {
+                        await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+                    } catch (ArgumentNullException) {
+                        throw new ObjectDisposedException(nameof(_writeLock));
+                    } catch (ObjectDisposedException) {
+                        throw new ObjectDisposedException(nameof(_writeLock));
+                    }
+                    try {
+                        sentSeq = Interlocked.CompareExchange(ref _sentSeq, seq, seq - 1);
+                        if (sentSeq == seq - 1) {
+                            // The content part is encoded using the charset provided in the Content-Type field.
+                            // It defaults to utf-8, which is the only encoding supported right now.
+                            var contentBytes = TextEncoding.GetBytes(str);
 
-                    // The header part is encoded using the 'ascii' encoding.
-                    // This includes the '\r\n' separating the header and content part.
-                    var header = "Content-Length: " + contentBytes.Length + "\r\n\r\n";
-                    var headerBytes = Encoding.ASCII.GetBytes(header);
+                            // The header part is encoded using the 'ascii' encoding.
+                            // This includes the '\r\n' separating the header and content part.
+                            var header = "Content-Length: " + contentBytes.Length + "\r\n\r\n";
+                            var headerBytes = Encoding.ASCII.GetBytes(header);
 
-                    await _writer.WriteAsync(headerBytes, 0, headerBytes.Length).ConfigureAwait(false);
-                    await _writer.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
-                    await _writer.FlushAsync(cancel).ConfigureAwait(false);
-                } finally {
-                    _writeLock.Release();
+                            await _writer.WriteAsync(headerBytes, 0, headerBytes.Length).ConfigureAwait(false);
+                            await _writer.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
+                            await _writer.FlushAsync(cancel).ConfigureAwait(false);
+                            return;
+                        } else if (sentSeq < seq - 1) {
+                            // Not our turn to send yet
+                        } else if (sentSeq == seq) {
+                            // Uh... what happened here?
+                            Debug.Fail($"Message {seq} has already been sent");
+                            LogToDisk($"Message {seq} has already been sent");
+                            break;
+                        } else if (sentSeq > seq) {
+                            // We were missed
+                            Debug.Fail("Message was not sent");
+                            LogToDisk($"Message {seq} was skipped because message {sentSeq} has already been sent");
+                            break;
+                        }
+                    } finally {
+                        _writeLock.Release();
+                    }
+
+                    --retries;
+                    if (retries > 100) {
+                        // Fast looping
+                        await Task.Yield();
+                    } else if (retries > 0) {
+                        // Slow looping
+                        await Task.Delay(1);
+                    } else if (retries == 0) {
+                        // We looped for this message so many times that we gave up.
+                        Debug.Fail($"Message {seq - 1} was never sent so we skipped it");
+                        LogToDisk($"Message {seq - 1} was never sent so we skipped it");
+                        Interlocked.Increment(ref _sentSeq);
+                    }
                 }
             } catch (Exception ex) {
                 LogToDisk(ex);
