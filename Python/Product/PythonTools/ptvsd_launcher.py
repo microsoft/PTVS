@@ -70,6 +70,7 @@ sys.path[0] = ''
 
 # Load the debugger package
 try:
+    ptvs_lib_path = None
     if bundled_ptvsd:
         ptvs_lib_path = os.path.dirname(__file__)
         sys.path.insert(0, ptvs_lib_path)
@@ -103,7 +104,7 @@ Press Enter to close. . .''')
         input()
     sys.exit(1)
 finally:
-    if bundled_ptvsd:
+    if ptvs_lib_path:
         sys.path.remove(ptvs_lib_path)
 
 # and start debugging
