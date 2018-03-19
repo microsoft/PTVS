@@ -353,6 +353,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 version
             );
 
+            config.SwitchToFullDescription();
+
             var unique = new PythonInterpreterInformation(
                 config,
                 vendor,
