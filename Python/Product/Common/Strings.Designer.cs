@@ -1525,6 +1525,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This debug REPL feature is not supported with the experimental debugger..
+        /// </summary>
+        public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
+            get {
+                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExperimentalDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current frame changed to {0}.
         /// </summary>
         public static string DebugReplFrameChanged {
