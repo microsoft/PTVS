@@ -21,8 +21,11 @@ __version__ = "15.7"
 
 import ast
 import keyword
+import importlib
 import inspect
 import io
+import os
+import pkgutil
 import re
 import sys
 import tokenize
@@ -1319,12 +1322,47 @@ def add_builtin_objects(state):
 
     # Also write out the builtin module names here so that we cache them
     try:
-        builtin_module_names = sys.builtin_module_names
+        builtin_module_names = BuiltinModuleCollector().getModules()
     except AttributeError:
         pass
     else:
         add_literal('__builtin_module_names__', '"' + ','.join(builtin_module_names) + '"')
 
+class BuiltinModuleCollector():       
+    def moduleFileHasExtension(self, module_name, extensions):
+        try:
+            mod = importlib.import_module(module_name)
+            try:
+                filename, file_extension = os.path.splitext(mod.__file__)
+                for ext in extensions:
+                    if file_extension == ext:
+                        return True
+            except:
+                pass
+        except:
+            pass
+        return False
+        
+    def getModules(self):
+        builtin_module_names = []
+        for importer, module_name, ispkg in pkgutil.iter_modules():
+            if module_name == 'antigravity':
+                continue
+            # exclude modules with _Uppercase
+            if module_name[0] == '_':
+                if module_name[1].isupper():
+                    continue
+            # if module is compiled into a native library
+            if self.moduleFileHasExtension(module_name, ['.so', '.dylib']):
+                # but has no module with leading underscore or the other way around
+                # that is in Python, then take it
+                builtin_module_names.append(module_name)
+
+        for module_name in sys.builtin_module_names:
+            builtin_module_names.append(module_name)
+
+        builtin_module_names.sort();   
+        return builtin_module_names
 
 if __name__ == '__main__':
     EXCLUDED_MEMBERS = ()
