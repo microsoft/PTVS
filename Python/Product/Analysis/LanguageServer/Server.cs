@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc);
+                EnqueueItem(doc).DoNotWait();
             }
         }
 
@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 TraceMessage($"Applied changes to {uri}");
-                EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
+                EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true).DoNotWait();
             }
 
         }
@@ -232,7 +232,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         if ((entry = GetEntry(c.uri, false)) is IDocument doc) {
                             // If document version is >=0, it is loaded in memory.
                             if (doc.GetDocumentVersion(0) < 0) {
-                                EnqueueItem(doc, AnalysisPriority.Low);
+                                EnqueueItem(doc, AnalysisPriority.Low).DoNotWait();
                             }
                         }
                         break;
@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 doc.ResetDocument(-1, null);
 
                 // Pick up any changes on disk that we didn't know about
-                EnqueueItem(doc, AnalysisPriority.Low);
+                EnqueueItem(doc, AnalysisPriority.Low).DoNotWait();
             }
             return Task.CompletedTask;
         }
@@ -957,7 +957,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (item is IDocument doc) {
-                EnqueueItem(doc);
+                EnqueueItem(doc).DoNotWait();
             }
 
             if (reanalyzeEntries != null) {
@@ -1018,7 +1018,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+        private async Task EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             try {
                 VersionCookie vc;
                 using (_pendingAnalysisEnqueue.Incremented()) {
