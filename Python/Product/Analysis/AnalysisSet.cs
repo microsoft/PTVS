@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (x != null && y != null) {
                 Validation.Assert(x.UnionEquals(y, Strength) == y.UnionEquals(x, Strength), $"{Strength}\n{x}\n{y}");
                 if (x.UnionEquals(y, Strength)) {
-                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), "Strength:{Strength}\n{x} - {x.UnionHashCode(Strength)}\n{y} - {y.UnionHashCode(Strength)}");
+                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), $"Strength:{Strength}\n{x} - {x.UnionHashCode(Strength)}\n{y} - {y.UnionHashCode(Strength)}");
                 }
             }
 #endif

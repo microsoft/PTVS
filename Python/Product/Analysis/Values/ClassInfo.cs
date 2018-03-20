@@ -577,36 +577,58 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// defined with the same name at the same character index in two
         /// different files and with problematic MROs.
         /// </remarks>
-        private static bool IsFirstForMroUnion(ClassDefinition cd1, ClassDefinition cd2) {
-            if (cd1.StartIndex != cd2.StartIndex) {
-                return cd1.StartIndex > cd2.StartIndex;
+        private static bool IsFirstForMroUnion(AnalysisValue ns1, AnalysisValue ns2) {
+            var ci1 = ns1 as ClassInfo;
+            var ci2 = ns2 as ClassInfo;
+
+            if (ci1 == null && ci2 != null) {
+                return true;
+            } else if (ci1 != null && ci2 == null) {
+                return false;
+            } else if (ci1 != null && ci2 != null) {
+                return ci1.ClassDefinition.StartIndex > ci2.ClassDefinition.StartIndex;
             }
-            return string.CompareOrdinal(cd1.NameExpression.Name, cd2.NameExpression.Name) > 0;
+
+            return string.CompareOrdinal(ns1.Name, ns2.Name) > 0;
+        }
+
+        internal static AnalysisValue GetFirstCommonBase(PythonAnalyzer state, AnalysisValue ns1, AnalysisValue ns2) {
+            if (ns1.TypeId != BuiltinTypeId.Type || ns2.TypeId != BuiltinTypeId.Type) {
+                if ((ns1 is BuiltinClassInfo || ns1 is ClassInfo) &&
+                    (ns2 is BuiltinClassInfo || ns2 is ClassInfo) &&
+                    ns1.TypeId == ns2.TypeId) {
+                    return state.ClassInfos[ns1.TypeId];
+                }
+                return null;
+            }
+
+            IEnumerable<AnalysisValue> mro1;
+            AnalysisValue[] mro2;
+            if (IsFirstForMroUnion(ns1, ns2)) {
+                mro1 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
+                mro2 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
+            } else {
+                mro1 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
+                mro2 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
+            }
+            return mro1.FirstOrDefault(cls => mro2.Contains(cls));
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {
+                AnalysisValue type;
+                if (TypeId == ns.TypeId && (type = _projectState.ClassInfos[TypeId]) != null) {
+                    return type;
+                }
                 return _projectState.ClassInfos[BuiltinTypeId.Type];
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                var ci = ns as ClassInfo;
-                if (ci != null) {
-                    IEnumerable<AnalysisValue> mro1;
-                    AnalysisValue[] mro2;
-                    if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
-                    } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
-                    }
-                    return mro1.FirstOrDefault(cls => mro2.Contains(cls)) ?? _projectState.ClassInfos[BuiltinTypeId.Object];
+                var commonBase = GetFirstCommonBase(_projectState, this, ns);
+                if (commonBase != null) {
+                    return commonBase;
                 }
 
-                var bci = ns as BuiltinClassInfo;
-                if (bci != null) {
-                    return bci;
-                }
+                return _projectState.ClassInfos[BuiltinTypeId.Object];
             }
 
             return base.UnionMergeTypes(ns, strength);
@@ -618,26 +640,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return ns is ClassInfo || ns is BuiltinClassInfo || ns == type || ns == type.Instance;
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                var ci = ns as ClassInfo;
-                if (ci != null) {
-                    IEnumerable<AnalysisValue> mro1;
-                    AnalysisValue[] mro2;
-                    if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
-                    } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
-                    }
-                    return mro1.Any(cls => mro2.Contains(cls));
-                }
-
-                var bci = ns as BuiltinClassInfo;
-                if (bci != null &&
-                    !_projectState.DoNotUnionInMro.Contains(this) &&
-                    !_projectState.DoNotUnionInMro.Contains(bci)) {
-                    return Mro.Any(m => m.Contains(bci));
-                }
+                return GetFirstCommonBase(_projectState, this, ns) != null;
             }
 
             return base.UnionEquals(ns, strength);

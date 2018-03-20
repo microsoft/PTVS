@@ -563,7 +563,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             try {
                 while (true) {
                     try {
-                        await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+                        await _writeLock.WaitAsync().ConfigureAwait(false);
                     } catch (ArgumentNullException) {
                         throw new ObjectDisposedException(nameof(_writeLock));
                     } catch (ObjectDisposedException) {
@@ -572,6 +572,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     try {
                         sentSeq = Interlocked.CompareExchange(ref _sentSeq, seq, seq - 1);
                         if (sentSeq == seq - 1) {
+                            cancel.ThrowIfCancellationRequested();
+
                             // The content part is encoded using the charset provided in the Content-Type field.
                             // It defaults to utf-8, which is the only encoding supported right now.
                             var contentBytes = TextEncoding.GetBytes(str);
@@ -583,7 +585,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
                             await _writer.WriteAsync(headerBytes, 0, headerBytes.Length).ConfigureAwait(false);
                             await _writer.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
-                            await _writer.FlushAsync(cancel).ConfigureAwait(false);
+                            await _writer.FlushAsync().ConfigureAwait(false);
                             return;
                         } else if (sentSeq < seq - 1) {
                             // Not our turn to send yet

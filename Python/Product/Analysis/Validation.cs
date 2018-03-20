@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
 #if FULL_VALIDATION || DEBUG
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static void Assert(bool expression, string message, params object[] args) {
             if (!expression) {
                 Console.Error.WriteLine("Validation failure");
-                Console.Error.WriteLine(message);
+                Console.Error.WriteLine(args.Length > 0 ? message.FormatInvariant(args) : message);
                 Console.Error.WriteLine(new StackTrace(true));
                 Debugger.Break();
             }
