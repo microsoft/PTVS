@@ -434,7 +434,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var languageVersion = entry.Analyzer.LanguageVersion;
-            var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true });
+            var parser = Parser.CreateParser(new StringReader(text), languageVersion, ParserOptions.Default);
             var ast = parser.ParseSingleStatement();
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);

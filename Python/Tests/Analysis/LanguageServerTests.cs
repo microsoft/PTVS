@@ -309,8 +309,8 @@ mc";
 
             await AssertCompletion(s, mod1,
                 position: new Position { line = 2, character = 5 },
-                contains: new string[0],
-                excludes: new[] { "value" }
+                contains: new[] { "value" },
+                excludes: new string[0]
             );
 
             await s.UnloadFileAsync(mod2);
@@ -471,6 +471,42 @@ mod1.f(a=D)", "mod2");
         }
 
         [TestMethod, Priority(0)]
+        public async Task Hover() {
+            var s = await CreateServer();
+            var mod = await AddModule(s, @"123
+'abc'
+f()
+def f(): pass
+
+class C:
+    def f(self):
+        def g(self):
+            pass
+        return g
+
+C.f
+c = C()
+c_g = c.f()
+
+x = 123
+x = 3.14
+");
+
+            await AssertHover(s, mod, new SourceLocation(1, 1), "int", new[] { "int" }, new SourceSpan(1, 1, 1, 4));
+            await AssertHover(s, mod, new SourceLocation(2, 1), "str", new[] { "str" }, new SourceSpan(2, 1, 2, 6));
+            await AssertHover(s, mod, new SourceLocation(3, 1), "f: def test-module.f()", new[] { "test-module.f" }, new SourceSpan(3, 1, 3, 2));
+            await AssertHover(s, mod, new SourceLocation(4, 6), "f: def test-module.f()", new[] { "test-module.f" }, new SourceSpan(4, 5, 4, 6));
+
+            await AssertHover(s, mod, new SourceLocation(12, 1), "C: class test-module.C", new[] { "test-module.C" }, new SourceSpan(12, 1, 12, 2));
+            await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
+            await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
+            await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
+            await AssertHover(s, mod, new SourceLocation(14, 1), "c_g: def test-module.C.f.g(self)\r\ndeclared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+
+            await AssertHover(s, mod, new SourceLocation(16, 1), "x: int, float", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
+        }
+
+        [TestMethod, Priority(0)]
         public async Task MultiPartDocument() {
             var s = await CreateServer();
 
@@ -612,6 +648,29 @@ mod1.f(a=D)", "mod2");
                 contains,
                 excludes
             );
+        }
+
+        public static async Task AssertHover(Server s, TextDocumentIdentifier document, SourceLocation position, string hoverText, IEnumerable<string> typeNames, SourceSpan? range = null, string expr = null) {
+            var hover = await s.Hover(new TextDocumentPositionParams {
+                textDocument = document,
+                position = position,
+                _expr = expr
+            });
+
+            if (hoverText.EndsWith("*")) {
+                // Check prefix first, but then show usual message for mismatched value
+                if (!hover.contents.value.StartsWith(hoverText.Remove(hoverText.Length - 1))) {
+                    Assert.AreEqual(hoverText, hover.contents.value);
+                }
+            } else {
+                Assert.AreEqual(hoverText, hover.contents.value);
+            }
+            if (typeNames != null) {
+                AssertUtil.ContainsExactly(hover._typeNames, typeNames.ToArray());
+            }
+            if (range.HasValue) {
+                Assert.AreEqual(range.Value, (SourceSpan)hover.range);
+            }
         }
 
         public static async Task AssertReferences(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null, bool returnDefinition = false) {

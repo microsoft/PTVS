@@ -171,6 +171,8 @@ namespace Microsoft.PythonTools.Debugger {
                     ex.ObjectName == typeof(Socket).FullName,
                     "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
                 );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(DebugConnection)));
             } finally {
                 lock (_isListeningLock) {
                     // Exit out of the event handling thread

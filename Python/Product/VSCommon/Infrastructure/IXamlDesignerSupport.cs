@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             get;
         }
 
+        bool EnsureDocumentIsOpen();
         InsertionPoint GetInsertionPoint(string className);
 
         string[] FindMethods(string className, int? paramCount);

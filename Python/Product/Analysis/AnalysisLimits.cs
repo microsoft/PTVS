@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string AssignedTypesId = "AssignedTypes";
         private const string UnifyCallsToNewId = "UnifyCallsToNew";
         private const string ProcessCustomDecoratorsId = "ProcessCustomDecorators";
-
+#if DESKTOP
         /// <summary>
         /// Loads a new instance from the specified registry key.
         /// </summary>
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
             key.SetValue(ProcessCustomDecoratorsId, ProcessCustomDecorators ? 1 : 0, RegistryValueKind.DWord);
         }
-
+#endif
         /// <summary>
         /// The key to use with ProjectEntry.Properties to override the call
         /// depth for functions in that module.

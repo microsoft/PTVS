@@ -2150,16 +2150,16 @@ Expand selection to the full expression?</value>
     <comment>Do not translate 'Conda'</comment>
   </data>
   <data name="PipExtensionPipInstallFrom" xml:space="preserve">
-    <value>pip install {0} from PyPI</value>
-    <comment>'pip install {0}' is a command-line that should not be translated. Do not translate 'PyPI'</comment>
+    <value>Run command: pip install {0}</value>
+    <comment>'pip install {0}' is a command-line that should not be translated.</comment>
   </data>
   <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
     <value>Search PyPI and installed packages</value>
     <comment>Do not translate 'PyPI'</comment>
   </data>
   <data name="CondaExtensionCondaInstallFrom" xml:space="preserve">
-    <value>conda install {0} from Conda</value>
-    <comment>'conda install {0}' is a command-line that should not be translated. Do not translate 'Conda'</comment>
+    <value>Run command: conda install {0}</value>
+    <comment>'conda install {0}' is a command-line that should not be translated.</comment>
   </data>
   <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
     <value>Search Conda and installed packages</value>
@@ -2242,5 +2242,14 @@ Expand selection to the full expression?</value>
   </data>
   <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
+  </data>
+  <data name="ImportPtvsdFailedMessage" xml:space="preserve">
+    <value>Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger</value>
+  </data>
+  <data name="ImportPtvsdFailedTitle" xml:space="preserve">
+    <value>ImportError: ptvsd not found</value>
+  </data>
+  <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
+    <value>This debug REPL feature is not supported with the experimental debugger.</value>
   </data>
 </root>

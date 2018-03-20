@@ -47,7 +47,9 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
+#if DESKTOP
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
+#endif
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
         private Action<int> _reportQueueSize;
@@ -249,16 +251,18 @@ namespace Microsoft.PythonTools.Analysis {
             Contract.EndContractBlock();
 
             ModuleInfo removed;
-            _modulesByFilename.TryRemove(entry.FilePath, out removed);
+            if (!string.IsNullOrEmpty(entry.FilePath)) {
+                _modulesByFilename.TryRemove(entry.FilePath, out removed);
+            }
 
             var pyEntry = entry as IPythonProjectEntry;
-            if (pyEntry != null) {
+            if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
                 ModuleReference modRef;
                 Modules.TryRemove(pyEntry.ModuleName, out modRef);
             }
             entry.RemovedFromProject();
         }
-
+#if DESKTOP
         /// <summary>
         /// Adds a XAML file to be analyzed.  
         /// 
@@ -271,7 +275,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return entry;
         }
-
+#endif
         /// <summary>
         /// Returns a sequence of project entries that import the specified
         /// module. The sequence will be empty if the module is unknown.
@@ -585,12 +589,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 yield break;
             }
-            
+
             // provide module names first
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
-            
+
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
                     if (modName == name) {
@@ -781,7 +785,6 @@ namespace Microsoft.PythonTools.Analysis {
                 _diagnostics.Remove(entry);
             }
         }
-
         #endregion
 
         #region Internal Implementation
@@ -1028,7 +1031,7 @@ namespace Microsoft.PythonTools.Analysis {
                 Debug.Fail("Used analyzer without reloading modules");
                 ReloadModulesAsync().WaitAndUnwrapExceptions();
             }
-            
+
             var ddg = new DDG();
             ddg.Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
             foreach (var entry in ddg.AnalyzedEntries) {

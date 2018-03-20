@@ -169,6 +169,62 @@ C().fff", GetExpressionOptions.Complete);
         }
 
         [TestMethod, Priority(0)]
+        public void FindExpressionsForDefinition() {
+            var code = Parse(@"class C(object):
+    def f(a):
+        return a
+
+b = C().f(1)
+", GetExpressionOptions.FindDefinition);
+            var clsCode = code.Source.Substring(0, code.Source.IndexOfEnd("return a"));
+            var funcCode = clsCode.Substring(clsCode.IndexOf("def"));
+
+            AssertNoExpr(code, 1, 1);
+            AssertExpr(code, 1, 7, "C");
+            AssertExpr(code, 1, 8, "C");
+            AssertNoExpr(code, 1, 7, 1, 9);
+            AssertExpr(code, 1, 9, "object");
+            AssertExpr(code, 1, 15, "object");
+            AssertNoExpr(code, 1, 16);
+            AssertNoExpr(code, 1, 15, 1, 16);
+
+            AssertNoExpr(code, 2, 1);
+            AssertNoExpr(code, 2, 5);
+            AssertExpr(code, 2, 9, "f");
+            AssertExpr(code, 2, 10, "f");
+            AssertExpr(code, 2, 11, "a");
+
+            AssertNoExpr(code, 3, 15);
+            AssertExpr(code, 3, 16, "a");
+            AssertExpr(code, 3, 17, "a");
+
+            AssertExpr(code, 5, 1, "b");
+            AssertExpr(code, 5, 5, "C");
+            AssertExpr(code, 5, 6, "C");
+            AssertNoExpr(code, 5, 7);
+            AssertExpr(code, 5, 9, "C().f");
+            AssertExpr(code, 5, 10, "C().f");
+            AssertExpr(code, 5, 9, 5, 10, "C().f");
+            AssertNoExpr(code, 5, 11);
+
+            // Same code as in the GotoDefinition test
+            code = Parse(@"class C:
+    def fff(self, x=a): pass
+i=1+2
+C().fff", GetExpressionOptions.FindDefinition);
+
+            AssertExpr(code, 1, 8, "C");
+            AssertExpr(code, 2, 9, 2, 12, "fff");
+            AssertExpr(code, 2, 13, 2, 17, "self");
+            AssertExpr(code, 2, 22, "a");
+            AssertNoExpr(code, 2, 29);
+            AssertNoExpr(code, 3, 4);
+            AssertNoExpr(code, 3, 6);
+            AssertExpr(code, 4, 1, 4, 2, "C");
+            AssertExpr(code, 4, 6, 4, 8, "C().fff");
+        }
+
+        [TestMethod, Priority(0)]
         public void FindKeywords() {
             var code = Parse(@"a and b
 assert a

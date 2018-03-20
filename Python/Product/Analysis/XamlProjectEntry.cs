@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DESKTOP
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        #region IProjectEntry Members
+#region IProjectEntry Members
 
         public bool IsAnalyzed {
             get { return _analysis != null; }
@@ -110,15 +110,15 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void RemovedFromProject() { }
 
-        #endregion
+#endregion
 
-        #region IXamlProjectEntry Members
+#region IXamlProjectEntry Members
 
         public XamlAnalysis Analysis {
             get { return _analysis; }
         }
 
-        #endregion
+#endregion
 
     }
 
@@ -128,3 +128,4 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 }
+#endif

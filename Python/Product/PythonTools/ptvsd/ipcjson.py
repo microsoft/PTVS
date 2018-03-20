@@ -238,7 +238,13 @@ class IpcChannel(object):
         try:
             msg = self.__message.pop(0)
         except IndexError:
-            self._wait_for_message()
+            msg = None
+
+        if msg is None:
+            try:
+                self._wait_for_message()
+            except OSError:
+                return self.__exit
             try:
                 msg = self.__message.pop(0)
             except IndexError:

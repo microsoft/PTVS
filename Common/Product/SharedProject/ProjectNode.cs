@@ -633,8 +633,12 @@ namespace Microsoft.VisualStudioTools.Project {
             get {
                 var home = projectHome;
                 if (home == null) {
+                    var folder = ProjectFolder;
+                    if (string.IsNullOrEmpty(folder)) {
+                        return null;
+                    }
                     home = CommonUtils.GetAbsoluteDirectoryPath(
-                        this.ProjectFolder,
+                        folder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
                     projectHome = home = CommonUtils.TrimEndSeparator(home);
                 }

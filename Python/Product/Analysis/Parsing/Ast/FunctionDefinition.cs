@@ -103,6 +103,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             internal set { _decorators = value; }
         }
 
+        internal LambdaExpression LambdaExpression { get; set; }
+
         /// <summary>
         /// True if the function is a generator.  Generators contain at least one yield
         /// expression and instead of returning a value when called they return a generator

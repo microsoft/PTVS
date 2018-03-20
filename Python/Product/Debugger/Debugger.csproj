@@ -48,6 +48,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -104,6 +105,7 @@
       <Link>Debugger\Transports\WebSocketStream.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="CustomDebugAdapterProtocolExtension.cs" />
     <Compile Include="DebugAdapterLauncher.cs" />
     <Compile Include="DebugAdapterProcess.cs" />
     <Compile Include="DebugAdapterProcessStream.cs" />
@@ -190,4 +192,24 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <Target Name="_GatherPtvsd" BeforeTargets="_IncludePtvsd" Condition="!Exists('$(IntermediateOutputPath)Packages\ptvsd\__init__.py')">
+    <PropertyGroup>
+      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install ptvsd</PipCommand>
+      <PipCommand>$(PipCommand) --pre --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
+    </PropertyGroup>
+    <Exec Command="$(PipCommand)" />
+  </Target>
+  <Target Name="_IncludePtvsd" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <PtvsdFiles Include="$(IntermediateOutputPath)Packages\ptvsd\**\*" />
+      <PtvsdFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>Packages\ptvsd\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>Packages\ptvsd\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </PtvsdFiles>
+      <Content Include="@(PtvsdFiles)" />
+      <FileWrites Include="@(PtvsdFiles)" />
+    </ItemGroup>
+  </Target>
 </Project>

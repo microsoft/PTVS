@@ -1306,7 +1306,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.Location;
+                var location = analysis.SourceSpan.End;
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
@@ -1878,11 +1878,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
 
-            _projectFiles.TryRemove(entry.Path, out _);
-            _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
-            entry.TryGetBufferParser()?.ClearBuffers();
-
-            await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            entry?.TryGetBufferParser()?.ClearBuffers();
+            if (entry?.Path != null) {
+                _projectFiles.TryRemove(entry.Path, out _);
+            }
+            if (entry?.DocumentUri != null) {
+                _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
+                await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            }
         }
 
         internal void ClearAllTasks() {
@@ -2061,9 +2064,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className) {
+        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className, AnalysisEntry entry = null) {
+            if (textSnapshot == null) {
+                return null;
+            }
             var bi = _services.GetBufferInfo(textSnapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
+            entry = entry ?? bi?.AnalysisEntry;
             if (entry == null) {
                 return null;
             }
@@ -2627,7 +2633,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bi.AnalysisEntry,
                 span.GetText(),
                 span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
-                sourceSpan.Value.Start
+                sourceSpan.Value
             );
         }
 

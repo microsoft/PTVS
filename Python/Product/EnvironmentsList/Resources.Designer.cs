@@ -940,9 +940,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, and have enabled it in Preview.
+        ///   Looks up a localized string similar to In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, which does not use databases.
         ///
-        ///Click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python..
+        ///If you are having trouble, you can click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python..
         /// </summary>
         public static string NoDBExtensionMessage {
             get {

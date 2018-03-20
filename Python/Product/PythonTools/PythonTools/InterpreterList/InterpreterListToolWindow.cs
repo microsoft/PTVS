@@ -479,7 +479,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
 
             public void OnErrorTextReceived(ICondaEnvironmentManager sender, string text) {
-                _window.WriteErrorLine(text);
+                _window.WriteErrorLine(text.TrimEndNewline());
             }
 
             public void OnOperationFinished(ICondaEnvironmentManager sender, string operation, bool success) {
@@ -490,7 +490,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
 
             public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text) {
-                _window.WriteLine(text);
+                _window.WriteLine(text.TrimEndNewline());
             }
         }
 

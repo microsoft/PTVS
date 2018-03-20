@@ -15,11 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -211,7 +213,7 @@ namespace Microsoft.VisualStudioTools {
             _factory.RunAsync(async () => {
                 // Convert assertions to exceptions while joining on a task
                 // or the message box will deadlock.
-                using (ThrowOnAssertListener.Push()) {
+                using (NoDeadlockAssertListener.Push()) {
                     await _factory.SwitchToMainThreadAsync(cancellationToken);
                     await func();
                 }
@@ -231,7 +233,7 @@ namespace Microsoft.VisualStudioTools {
             return _factory.RunAsync(async () => {
                 // Convert assertions to exceptions while joining on a task
                 // or the message box will deadlock.
-                using (ThrowOnAssertListener.Push()) {
+                using (NoDeadlockAssertListener.Push()) {
                     await _factory.SwitchToMainThreadAsync(cancellationToken);
                     return await func();
                 }
@@ -240,23 +242,24 @@ namespace Microsoft.VisualStudioTools {
 
         #region ThrowOnAssertListener class
 
-        class ThrowOnAssertListener : TraceListener {
-            TraceListener[] _inner;
+        sealed class AssertException : Exception {
+            public AssertException(string message) : base(message) { }
+        }
 
-            public static IDisposable Push() {
 #if DEBUG
+        class NoDeadlockAssertListener : TraceListener {
+            public static IDisposable Push() {
                 var inner = new TraceListener[Trace.Listeners.Count];
                 Trace.Listeners.CopyTo(inner, 0);
                 Trace.Listeners.Clear();
-                var res = new ThrowOnAssertListener(inner);
+                var res = new NoDeadlockAssertListener(inner);
                 Trace.Listeners.Add(res);
                 return res;
-#else
-                return null;
-#endif
             }
 
-            protected ThrowOnAssertListener(TraceListener[] inner) : base(nameof(ThrowOnAssertListener)) {
+            private readonly TraceListener[] _inner;
+
+            protected NoDeadlockAssertListener(TraceListener[] inner) : base(nameof(NoDeadlockAssertListener)) {
                 _inner = inner;
             }
 
@@ -283,14 +286,30 @@ namespace Microsoft.VisualStudioTools {
             }
 
             public override void Fail(string message) {
-                throw new Exception(message);
+                var trace = new StackTrace(true).ToString();
+                var fullMessage = string.IsNullOrEmpty(message) ? trace : (message + Environment.NewLine + trace);
+                switch (MessageBox.Show(fullMessage, "Failed Assertion", MessageBoxButtons.AbortRetryIgnore)) {
+                    case DialogResult.Abort:
+                        Environment.FailFast(string.IsNullOrEmpty(message) ? fullMessage : message);
+                        break;
+                    case DialogResult.Retry:
+                        Debugger.Launch();
+                        break;
+                    case DialogResult.Ignore:
+                        break;
+                }
             }
 
             public override void Fail(string message, string detailMessage) {
-                throw new Exception(message + Environment.NewLine + detailMessage);
+                Fail(message + Environment.NewLine + detailMessage);
             }
         }
+#else
+        class NoDeadlockAssertListener {
+            public static IDisposable Push() => null;
+        }
+#endif
 
-#endregion
+        #endregion
     }
 }

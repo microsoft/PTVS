@@ -285,7 +285,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return GetValueFromExpression(expr.Target);
             }
 
-            var type = GetTypeFromLiteral(expr.Target);
+            var type = GetTypeFromValue(GetValueFromExpression(expr.Target));
             if (type != null) {
                 switch (type.TypeId) {
                     case BuiltinTypeId.Bytes:
@@ -297,9 +297,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     case BuiltinTypeId.Unicode:
                         return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unicode), GetLoc(expr));
                 }
+                _log?.Log(TraceLevel.Verbose, "UnknownIndex", type.TypeId, expr.ToCodeString(Ast, CodeFormattingOptions.Traditional).Trim());
+            } else {
+                _log?.Log(TraceLevel.Verbose, "UnknownIndex", expr.ToCodeString(Ast, CodeFormattingOptions.Traditional).Trim());
             }
-
-            _log?.Log(TraceLevel.Verbose, "UnknownIndex", expr.ToCodeString(Ast).Trim());
             return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
 

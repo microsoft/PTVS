@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LCX SchemaVersion="6.0" Name="E:\A\_work\9\b\raw\binaries\Microsoft.PythonTools.Common.dll" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="zh-CN" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
@@ -2809,6 +2809,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[请使用 Python 环境中的 "pip install ptvsd --pre"，以使用试验性调试程序]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ImportPtvsdFailedTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ImportError: ptvsd not found]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ImportError: 找不到 ptvsd]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ImportWizardBottleProjectCustomization" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Bottle Web Project]]></Val>
@@ -3332,7 +3350,7 @@
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";IssueTrackerUrl" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[https://go.microsoft.com/fwlink/?LinkId=402428]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -5562,8 +5580,8 @@
   <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
     <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
     <Item ItemId=";AssemblyVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.0.0]]></Val>
+      <Str Cat="Text" DevLk="true" UsrLk="true">
+        <Val><![CDATA[15.0.0.0]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5577,7 +5595,7 @@
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";CompanyName" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text">
+      <Str Cat="Text" UsrLk="true">
         <Val><![CDATA[Microsoft Corporation]]></Val>
       </Str>
       <Disp Icon="Str" />
@@ -5592,13 +5610,13 @@
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18012.2]]></Val>
+      <Str Cat="Text" DevLk="true" UsrLk="true">
+        <Val><![CDATA[15.7.18071.4]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";InternalName" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true">
+      <Str Cat="Text" DevLk="true" UsrLk="true">
         <Val><![CDATA[Microsoft.PythonTools.Common.dll]]></Val>
       </Str>
       <Disp Icon="Str" />
@@ -5613,7 +5631,7 @@
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";OriginalFilename" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true">
+      <Str Cat="Text" DevLk="true" UsrLk="true">
         <Val><![CDATA[Microsoft.PythonTools.Common.dll]]></Val>
       </Str>
       <Disp Icon="Str" />
@@ -5628,8 +5646,8 @@
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.18012.2]]></Val>
+      <Str Cat="Text" DevLk="true" UsrLk="true">
+        <Val><![CDATA[15.7.18071.4]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
