@@ -15,8 +15,6 @@
         <PackageReference Include="Python2" version="2.7.14" Condition="'$(OS)' == 'Windows_NT'"/>
         <PackageReference Include="Python" version="3.6.4" Condition="'$(OS)' == 'Windows_NT'"/>
     </ItemGroup> <ItemGroup>
-    <None Remove="get_search_paths.py" />
-    <None Remove="scrape_module.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="get_search_paths.py">
