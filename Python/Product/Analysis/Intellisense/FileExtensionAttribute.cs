@@ -16,13 +16,17 @@
 
 using System;
 using System.Collections.Generic;
+#if DESKTOP
 using System.ComponentModel.Composition;
+#endif
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.Intellisense {
+    #if DESKTOP
     [MetadataAttribute]
+    #endif
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     sealed class FileExtensionAttribute  : Attribute {
         private readonly string _extension;

@@ -817,7 +817,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to conda install {0} from Conda.
+        ///   Looks up a localized string similar to Run command: conda install {0}.
         /// </summary>
         public static string CondaExtensionCondaInstallFrom {
             get {
@@ -1521,6 +1521,15 @@ namespace Microsoft.PythonTools {
         public static string DebugReplDisplayName {
             get {
                 return ResourceManager.GetString("DebugReplDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This debug REPL feature is not supported with the experimental debugger..
+        /// </summary>
+        public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
+            get {
+                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExperimentalDebugger", resourceCulture);
             }
         }
         
@@ -2911,6 +2920,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please &apos;pip install ptvsd --pre&apos; in your Python environment to use the experimental debugger.
+        /// </summary>
+        public static string ImportPtvsdFailedMessage {
+            get {
+                return ResourceManager.GetString("ImportPtvsdFailedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ImportError: ptvsd not found.
+        /// </summary>
+        public static string ImportPtvsdFailedTitle {
+            get {
+                return ResourceManager.GetString("ImportPtvsdFailedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Back.
         /// </summary>
         public static string ImportWizard_BackButton {
@@ -3772,7 +3799,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to pip install {0} from PyPI.
+        ///   Looks up a localized string similar to Run command: pip install {0}.
         /// </summary>
         public static string PipExtensionPipInstallFrom {
             get {

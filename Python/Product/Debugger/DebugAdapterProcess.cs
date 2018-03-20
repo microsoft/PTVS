@@ -25,6 +25,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
@@ -32,11 +33,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    sealed class DebugAdapterProcess :
-#if !USE_15_5
-        ITargetHostProcess,
-#endif
-        IDisposable {
+    sealed class DebugAdapterProcess : ITargetHostProcess, IDisposable {
         private const int _debuggerConnectionTimeout = 5000; // 5000 ms
         private const int _connectionCloseTimeout = 5000; // 5000 ms
 
@@ -47,6 +44,7 @@ namespace Microsoft.PythonTools.Debugger {
         private string _interpreterOptions;
         private int _listenerPort = -1;
         private Stream _stream;
+        private bool _debuggerConnected = false;
 
         public DebugAdapterProcess() {
             _processGuid = Guid.NewGuid();
@@ -127,6 +125,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
                     var socket = connection.Result;
                     if (socket != null) {
+                        _debuggerConnected = true;
                         _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
@@ -139,7 +138,7 @@ namespace Microsoft.PythonTools.Debugger {
                 Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
             }
 
-            if (_stream == null) {
+            if (_stream == null && !_process.HasExited) {
                 _process.Kill();
             }
         }
@@ -178,6 +177,24 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream != null) {
                 _stream.Dispose();
             }
+
+            if (_process.ExitCode == 126 && !_debuggerConnected) {
+                // 126 : ERROR_MOD_NOT_FOUND
+                // This error code is returned only for the experimental debugger. MessageBox must be
+                // bound to the VS Main window otherwise it can be hidden behind the main window and the 
+                // user may not see it.
+                MessageBox.Show(
+                    new VSWin32Window(Process.GetCurrentProcess().MainWindowHandle),
+                    Strings.ImportPtvsdFailedMessage,
+                    Strings.ImportPtvsdFailedTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private class VSWin32Window : IWin32Window {
+            public VSWin32Window(IntPtr handle) { Handle = handle; }
+            public IntPtr Handle { get; private set; }
         }
 
         public IntPtr Handle => _process.Handle;

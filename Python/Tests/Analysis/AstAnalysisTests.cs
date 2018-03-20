@@ -386,7 +386,9 @@ R_A3 = R_A1.r_A()");
 
         [TestMethod, Priority(0)]
         public void ScrapedTypeWithWrongModule() {
-            var version = PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "numpy")));
+            var version = PythonPaths.Versions
+                .Concat(PythonPaths.AnacondaVersions)
+                .LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "numpy")));
             version.AssertInstalled();
             Console.WriteLine("Using {0}", version.PrefixPath);
             using (var analysis = CreateAnalysis(version)) {

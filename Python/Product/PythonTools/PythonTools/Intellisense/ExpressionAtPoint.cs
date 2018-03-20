@@ -23,13 +23,14 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly string Text;
         public readonly AnalysisEntry Entry;
         public readonly ITrackingSpan Span;
-        public readonly SourceLocation Location;
+        public readonly SourceSpan SourceSpan;
+        public SourceLocation Location => SourceSpan.Start;
 
-        public ExpressionAtPoint(AnalysisEntry entry, string text, ITrackingSpan span, SourceLocation location) {
+        public ExpressionAtPoint(AnalysisEntry entry, string text, ITrackingSpan span, SourceSpan sourceSpan) {
             Entry = entry;
             Text = text;
             Span = span;
-            Location = location;
+            SourceSpan = sourceSpan;
         }
     }
 
