@@ -756,10 +756,13 @@
       </Item>
       <Item ItemId=";CondaExtensionCondaInstallFrom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[conda install {0} from Conda]]></Val>
+          <Val><![CDATA[Run command: conda install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[instalação conda {0} do Conda]]></Val>
+            <Val><![CDATA[Execute o comando: conda instalar {0}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[conda install {0} from Conda]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1435,6 +1438,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Depurar]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3675,10 +3684,13 @@
       </Item>
       <Item ItemId=";PipExtensionPipInstallFrom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[pip install {0} from PyPI]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Run command: pip install {0}]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[instalação pip {0} do PyPI]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[pip install {0} from PyPI]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5611,7 +5623,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18073.1]]></Val>
+        <Val><![CDATA[15.7.18078.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5647,7 +5659,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18073.1]]></Val>
+        <Val><![CDATA[15.7.18078.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
