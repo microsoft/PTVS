@@ -1153,6 +1153,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = m.Name,
                 insertText = m.Completion,
                 documentation = m.Documentation,
+                // Place regular items first, advanced entries last
+                sortText = Char.IsLetter(m.Completion[0]) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
