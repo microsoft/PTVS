@@ -259,6 +259,20 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     break;
                 case "analyze":
                     Console.Write("Waiting for complete analysis... ");
+                    if (!Console.IsOutputRedirected) {
+                        int cLine = Console.CursorTop;
+                        int cChar = Console.CursorLeft, lastChar = 0;
+                        var start = DateTime.UtcNow;
+                        analyzer.SetQueueReporting(i => {
+                            Console.SetCursorPosition(cChar, cLine);
+                            if (lastChar > cChar) {
+                                Console.Write(new string(' ', lastChar - cChar));
+                                Console.SetCursorPosition(cChar, cLine);
+                            }
+                            Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
+                            lastChar = Console.CursorLeft;
+                        }, 500);
+                    }
                     analyzer.AnalyzeQueuedEntries(CancellationToken.None);
                     Console.WriteLine("done!");
                     break;

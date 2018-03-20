@@ -593,12 +593,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal static AnalysisValue GetFirstCommonBase(PythonAnalyzer state, AnalysisValue ns1, AnalysisValue ns2) {
-            if (ns1.TypeId != BuiltinTypeId.Type || ns2.TypeId != BuiltinTypeId.Type) {
-                if ((ns1 is BuiltinClassInfo || ns1 is ClassInfo) &&
-                    (ns2 is BuiltinClassInfo || ns2 is ClassInfo) &&
-                    ns1.TypeId == ns2.TypeId) {
-                    return state.ClassInfos[ns1.TypeId];
-                }
+            if (ns1.MemberType != PythonMemberType.Class || ns2.MemberType != PythonMemberType.Class) {
                 return null;
             }
 
