@@ -26,8 +26,8 @@
   <Target Name="AfterBuild">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) /p:DotNetPublish=1" />
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
-    <Message Text="Zipping $(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip..." />
-    <ZipDir ZipFileName="$(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)\%(TargetOS.Identity)\publish" />
+    <Message Text="Zipping $(OutputPath)$(AnalysisEngineName)-%(TargetOS.Identity).zip..." />
+    <ZipDir ZipFileName="$(OutputPath)$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)%(TargetOS.Identity)" />
   </Target>
 
   <!-- Zipping -->
@@ -56,16 +56,16 @@
     </Task>
   </UsingTask>
   <ItemGroup>
-    <FilesToSign Include="$(OutputPath)\$(AnalysisEngineName)-win-x86.zip">
+    <FilesToSign Include="$(OutputPath)$(AnalysisEngineName)-win-x86.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutputPath)\$(AnalysisEngineName)-win-x64.zip">
+    <FilesToSign Include="$(OutputPath)$(AnalysisEngineName)-win-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutputPath)\$(AnalysisEngineName)-osx-x64.zip">
+    <FilesToSign Include="$(OutputPath)$(AnalysisEngineName)-osx-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutputPath)\$(AnalysisEngineName)-linux-x64.zip">
+    <FilesToSign Include="$(OutputPath)$(AnalysisEngineName)-linux-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
   </ItemGroup>
