@@ -425,10 +425,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 // II + II => BII(object)
-                // II + BII => BII(object)
+                // II + BII(!function) => BII(object)
                 var obj = ProjectState.ClassInfos[BuiltinTypeId.Object];
                 return ns is InstanceInfo || 
-                    (ns is BuiltinInstanceInfo && ns.TypeId != BuiltinTypeId.Type && ns.TypeId != BuiltinTypeId.Function) ||
+                    (ns is BuiltinInstanceInfo && ns.TypeId != BuiltinTypeId.Function && ns != ProjectState.ClassInfos[BuiltinTypeId.Type].Instance) ||
                     ns == obj.Instance;
 
             } else if (strength >= MergeStrength.ToBaseClass) {

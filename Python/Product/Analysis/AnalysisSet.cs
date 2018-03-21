@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (x != null && y != null) {
                 Validation.Assert(x.UnionEquals(y, Strength) == y.UnionEquals(x, Strength), $"{Strength}\n{x}\n{y}");
                 if (x.UnionEquals(y, Strength)) {
-                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), "Strength:{Strength}\n{x} - {x.UnionHashCode(Strength)}\n{y} - {y.UnionHashCode(Strength)}");
+                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), $"Strength:{Strength}\n{x} - {x.UnionHashCode(Strength)}\n{y} - {y.UnionHashCode(Strength)}");
                 }
             }
 #endif
@@ -604,6 +604,8 @@ namespace Microsoft.PythonTools.Analysis {
                 Validation.Assert(z.UnionEquals(z2, Strength), $"{Strength}\n{x} + {y} => {z}\n{y} + {x} => {z2}");
                 Validation.Assert(z2.UnionEquals(z, Strength), $"{Strength}\n{y} + {x} => {z2}\n{x} + {y} => {z}");
             }
+            Validation.Assert(x.UnionEquals(z, Strength), $"{Strength}\n{x} != {z}");
+            Validation.Assert(y.UnionEquals(z, Strength), $"{Strength}\n{y} != {z}");
 #endif
             return z;
         }
@@ -654,7 +656,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } else if (data.Length < 5) {
                     return "{" + string.Join(", ", data.AsEnumerable()) + "}";
                 } else {
-                    return "${{Size = {data.Length}}}";
+                    return $"{{Size = {data.Length}}}";
                 }
             }
 

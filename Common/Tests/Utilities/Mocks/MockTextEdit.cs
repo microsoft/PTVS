@@ -57,12 +57,7 @@ namespace TestUtilities.Mocks {
         }
 
         public bool Replace(int startPosition, int charsToReplace, string replaceWith) {
-            if (charsToReplace > 0) {
-                Delete(startPosition, charsToReplace);
-            }
-            if (!string.IsNullOrEmpty(replaceWith)) {
-                Insert(startPosition, replaceWith);
-            }
+            _edits.Add(new ReplacementEdit(startPosition, charsToReplace, replaceWith));
             return true;
         }
 
@@ -92,7 +87,15 @@ namespace TestUtilities.Mocks {
             var adjust = 0;
             foreach (var edit in _edits.OrderBy(e => e.Position).ThenByDescending(e => e, EditTypeComparer.Instance)) {
                 MockTextChange change;
-                if (edit is InsertionEdit insert) {
+                if (edit is ReplacementEdit replace) {
+                    text.Remove(replace.Position + adjust, replace.Length);
+                    text.Insert(replace.Position + adjust, replace.Text);
+                    change = new MockTextChange(
+                        new SnapshotSpan(_snapshot, replace.Position, replace.Length),
+                        replace.Position,
+                        replace.Text
+                    );
+                } else if (edit is InsertionEdit insert) {
                     text.Insert(insert.Position + adjust, insert.Text);
                     change = new MockTextChange(
                         new SnapshotSpan(_snapshot, insert.Position, 0),
@@ -184,6 +187,21 @@ namespace TestUtilities.Mocks {
 
             public override string ToString() {
                 return String.Format("<Delete Length={0} at {1}>", Length, Position);
+            }
+        }
+
+        sealed class ReplacementEdit : Edit {
+            public readonly int Length;
+            public readonly string Text;
+
+            public ReplacementEdit(int startPosition, int charsToDelete, string text)
+                : base(startPosition) {
+                Length = charsToDelete;
+                Text = text;
+            }
+
+            public override string ToString() {
+                return String.Format("<Replace Length={0} at {1} with {2}>", Length, Position, Text.Length);
             }
         }
     }
