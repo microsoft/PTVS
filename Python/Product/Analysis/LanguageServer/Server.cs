@@ -461,7 +461,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     // Return a module reference
                     extras.AddRange(modRef.AnalysisModule.Locations
                         .Select(l => new Reference {
-                            uri = uri,
+                            uri = l.DocumentUri,
                             range = l.Span,
                             _version = version,
                             _kind = ReferenceKind.Definition
@@ -502,7 +502,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
                 _kind = ToReferenceKind(v.Type),
                 _version = version
-            }).Concat(extras).ToArray();
+            })
+                .Concat(extras)
+                .GroupBy(r => r, ReferenceComparer.Instance)
+                .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
+                .ToArray();
             return Task.FromResult(res);
         }
 
@@ -1271,6 +1275,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        private sealed class ReferenceComparer : IEqualityComparer<Reference> {
+            public static readonly IEqualityComparer<Reference> Instance = new ReferenceComparer();
 
+            private ReferenceComparer() { }
+
+            public bool Equals(Reference x, Reference y) {
+                return x.uri == y.uri && (SourceLocation)x.range.start == y.range.start;
+            }
+
+            public int GetHashCode(Reference obj) {
+                return new { u = obj.uri, l = obj.range.start.line, c = obj.range.start.character }.GetHashCode();
+            }
+        }
     }
 }

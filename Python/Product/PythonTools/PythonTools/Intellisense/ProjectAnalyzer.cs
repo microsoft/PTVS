@@ -1291,8 +1291,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     expr,
                     null,
                     definitions.variables
-                        .Where(x => x.file != null)
                         .Select(ToAnalysisVariable)
+                        .Where(v => v != null)
                         .ToArray(),
                     definitions.privatePrefix
                 );
@@ -1321,8 +1321,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         analysis.Text,
                         analysis.Span,
                         definitions.variables
-                            .Where(x => x.file != null)
                             .Select(ToAnalysisVariable)
+                            .Where(x => x != null)
                             .ToArray(),
                         definitions.privatePrefix
                     );
@@ -2566,8 +2566,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
+            var file = arg.file;
+            if (string.IsNullOrEmpty(file)) {
+                try {
+                    file = arg.documentUri?.LocalPath;
+                } catch (InvalidOperationException) {
+                }
+                if (!File.Exists(file)) {
+                    return null;
+                }
+            }
+
             var location = new LocationInfo(
-                arg.file,
+                file,
                 arg.documentUri,
                 arg.startLine,
                 arg.startColumn,
@@ -2576,7 +2587,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             var defLocation = new LocationInfo(
-                arg.file,
+                file,
                 arg.documentUri,
                 arg.definitionStartLine ?? arg.startLine,
                 arg.definitionStartColumn ?? arg.startColumn,
