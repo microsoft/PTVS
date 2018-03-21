@@ -24,8 +24,8 @@
     <TargetOS Include="linux-x64" />
   </ItemGroup>
   <Target Name="AfterBuild">
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration)" />
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity)" />
+    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) /p:DotNetPublish=1" />
+    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
     <Message Text="Zipping $(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip..." />
     <ZipDir ZipFileName="$(OutputPath)\$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(OutputPath)\%(TargetOS.Identity)\publish" />
   </Target>
