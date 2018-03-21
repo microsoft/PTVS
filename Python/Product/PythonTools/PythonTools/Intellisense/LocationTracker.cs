@@ -226,6 +226,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 }
                             }
                         }
+                        lineNo = oldLoc.Line - 1;
                         if (!string.IsNullOrEmpty(c.NewText)) {
                             var line = asLengths[lineNo];
                             NewLineLocation addedLine = new NewLineLocation(0, NewLineKind.None);
@@ -257,6 +258,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     initial = LineLengthsToLineEnds(asLengths).ToArray();
+                    if (asLengths.Count != initial.Length) {
+                        asLengths = null;
+                    }
                     _lineCache[ver.VersionNumber + 1] = initial;
 
 #if DEBUG
@@ -290,6 +294,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var expected = LinesToLineEnds(snapshot.Lines).ToArray();
             var actual = GetLineLocations(snapshot.Version.VersionNumber);
             if (expected.Length != actual.Length) {
+                System.Diagnostics.Debugger.Break();
                 Debug.Fail($"Expected {expected.Length} lines; got {actual.Length} lines");
             }
             var mismatches = expected.Zip(actual, (x, y) => {
