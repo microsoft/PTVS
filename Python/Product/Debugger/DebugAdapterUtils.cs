@@ -18,59 +18,19 @@ using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Debugger {
     public class DebugAdapterUtils {
-        public static void GetProcessInfoFromUri(Uri uri, out int pid, out string processName) {
-            ProcessStartInfo psi = new ProcessStartInfo {
-                FileName = @"C:\Windows\System32\NETSTAT.EXE",
-                Arguments = "-a -n -o -p TCP",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardInput = true,
-                RedirectStandardError = true
-            };
-
-            using (var process = Process.Start(psi)) {
-                process.WaitForExit(250);
-                var portStr = $":{uri.Port}";
-
-                var delimiters = new string[] { " " };
-                while (!process.StandardOutput.EndOfStream) {
-                    var line = process.StandardOutput.ReadLine().ToUpper();
-                    var parts = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length > 3
-                        && parts[0] == "TCP"
-                        && parts[1].EndsWith(portStr)
-                        && parts[parts.Length - 2] == "LISTENING") {
-                        if (int.TryParse(parts[parts.Length - 1], out pid)) {
-                            var proc = Process.GetProcessById(pid);
-                            processName = proc.ProcessName;
-                            return;
-                        }
-                    }
-                }
-
-                pid = 55555;
-                processName = "python";
-            }
-        }
-
         public static bool UseExperimentalDebugger() {
-            bool defaultValue = true;
+            var defaultValue = 1; // Experimental debugger is on by default
             if (!_useExperimental.HasValue) {
                 try {
                     var experimentalKey = @"Software\Microsoft\PythonTools\Experimental";
                     using (var root = Registry.CurrentUser.OpenSubKey(experimentalKey, false)) {
                         var value = root?.GetValue("UseVsCodeDebugger", 1);
-                        if (value == null) {
-                            _useExperimental = defaultValue;
-                        } else {
-                            int? asInt = value as int?;
-                            _useExperimental = asInt.HasValue ? (asInt.GetValueOrDefault() == 1) : defaultValue;
-                        }
+                        _useExperimental = ((int)value == 1);
                     }
-                } catch(Exception) {
-                    _useExperimental = defaultValue;
+                } catch (Exception) {
+                    _useExperimental = (defaultValue == 1);
                 }
             }
 

@@ -15,13 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -29,22 +30,29 @@ namespace Microsoft.PythonTools.Debugger {
         private const int _debuggerConnectionTimeout = 5000; // 5000 ms
         private Stream _stream;
         private bool _debuggerConnected = false;
+        private static Dictionary<int, Socket> _sockets = new Dictionary<int, Socket>();
 
         private DebugAdapterRemoteProcess() {}
 
         public static ITargetHostProcess Attach(string attachJson) {
             var process = new DebugAdapterRemoteProcess();
-            process.AttachProcess(attachJson);
-            return process;
+            var attached = process.AttachProcess(attachJson);
+            return attached ? process : null;
         }
 
-        private void AttachProcess(string attachJson) {
+        private bool AttachProcess(string attachJson) {
             var json = JObject.Parse(attachJson);
             var uri = new Uri(json["remote"].Value<string>());
-            ConnectSocket(uri);
+            return ConnectSocket(uri);
         }
 
-        private void ConnectSocket(Uri uri) {
+        private bool ConnectSocket(Uri uri) {
+            if (_sockets.ContainsKey(uri.Port)) {
+                _sockets[uri.Port].Close();
+                _sockets.Remove(uri.Port);
+            }
+
+            _debuggerConnected = false;
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
             EndPoint endpoint;
             if (uri.IsLoopback) {
@@ -53,13 +61,12 @@ namespace Microsoft.PythonTools.Debugger {
                 endpoint = new DnsEndPoint(uri.Host, uri.Port);
             }
             Debug.WriteLine("Connecting to remote debugger at {0}", uri.ToString());
-            var connection = Task.Factory.FromAsync(
-                (AsyncCallback callback, object state) => socket.BeginConnect(endpoint, callback, state),
-                socket.EndConnect,
-                null);
-
+            Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(() => Task.WhenAny(
+                    Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, endpoint, null),
+                    Task.Delay(_debuggerConnectionTimeout)));
             try {
-                if (connection.Wait(_debuggerConnectionTimeout)) {
+                if (socket.Connected) {
+                    _sockets.Add(uri.Port, socket);
                     _debuggerConnected = true;
                     _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                 } else {
@@ -68,6 +75,8 @@ namespace Microsoft.PythonTools.Debugger {
             } catch (AggregateException ex) {
                 Debug.WriteLine("Error waiting for debuger to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterRemoteProcess));
             }
+
+            return _debuggerConnected;
         }
 
         public IntPtr Handle => IntPtr.Zero;
@@ -89,6 +98,10 @@ namespace Microsoft.PythonTools.Debugger {
             ErrorDataReceived?.Invoke(this, null);
         }
 
-        public void Terminate() {}
+        public void Terminate() {
+            if (_stream != null) {
+                _stream.Dispose();
+            }
+        }
     }
 }

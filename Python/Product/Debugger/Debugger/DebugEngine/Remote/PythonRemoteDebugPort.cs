@@ -44,8 +44,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
             if (DebugAdapterUtils.UseExperimentalDebugger()) {
-                DebugAdapterUtils.GetProcessInfoFromUri(_uri, out int pid, out string processName);
-                var process = new PythonRemoteDebugProcess(this, pid, processName, "*", "*");
+                var process = new PythonRemoteDebugProcess(this, 54321, "Python", "*", "*");
                 ppEnum = new PythonRemoteEnumDebugProcesses(process);
                 return VSConstants.S_OK;
             } else {
