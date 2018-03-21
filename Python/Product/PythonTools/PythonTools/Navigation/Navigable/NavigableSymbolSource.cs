@@ -110,7 +110,11 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
                 }
             }
 
-            return list.ToArray();
+            return list
+                .OrderBy(v => v.Location.DocumentUri?.AbsoluteUri ?? "")
+                .ThenBy(v => v.Location.StartLine)
+                .ThenBy(v => v.Location.StartColumn)
+                .ToArray();
         }
     }
 }

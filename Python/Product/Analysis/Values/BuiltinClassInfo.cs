@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -307,8 +308,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return ProjectState.ClassInfos[BuiltinTypeId.Type];
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                return ProjectState.ClassInfos[TypeId] ?? this;
+                var commonBase = ClassInfo.GetFirstCommonBase(ProjectState, this, ns);
+                if (commonBase != null) {
+                    return commonBase;
+                }
 
+                return ProjectState.ClassInfos[BuiltinTypeId.Object];
             }
 
             return base.UnionMergeTypes(ns, strength);
@@ -320,29 +325,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return ns is ClassInfo || ns is BuiltinClassInfo || ns == type || ns == type.Instance;
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                if (this == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
-                    return false;
-                }
-                
-                var bci = ns as BuiltinClassInfo;
-                if (bci != null) {
-                    return TypeId == bci.TypeId;
-                }
-
-                var ci = ns as ClassInfo;
-                if (ci != null && TypeId != BuiltinTypeId.Object) {
-                    return ci.Mro.Any(m => m.Contains(this));
-                }
+                return ClassInfo.GetFirstCommonBase(ProjectState, this, ns) != null;
             }
 
             return base.UnionEquals(ns, strength);
         }
 
         internal override int UnionHashCode(int strength) {
-            if (strength < MergeStrength.ToBaseClass) {
-                return base.UnionHashCode(strength);
-            } else {
+            if (strength >= MergeStrength.ToBaseClass) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Type].GetHashCode();
+            } else {
+                return base.UnionHashCode(strength);
             }
         }
 

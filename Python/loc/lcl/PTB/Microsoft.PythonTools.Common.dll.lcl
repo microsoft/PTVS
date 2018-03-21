@@ -756,10 +756,13 @@
       </Item>
       <Item ItemId=";CondaExtensionCondaInstallFrom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[conda install {0} from Conda]]></Val>
+          <Val><![CDATA[Run command: conda install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[instalação conda {0} do Conda]]></Val>
+            <Val><![CDATA[Execute o comando: conda instalar {0}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[conda install {0} from Conda]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1435,6 +1438,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Depurar]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2809,6 +2818,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Use o comando 'pip install ptvsd --pre' em seu ambiente Python para usar o depurador experimental]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ImportPtvsdFailedTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ImportError: ptvsd not found]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ImportError: o ptvsd não foi encontrado]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ImportWizardBottleProjectCustomization" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Bottle Web Project]]></Val>
@@ -3657,10 +3684,13 @@
       </Item>
       <Item ItemId=";PipExtensionPipInstallFrom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[pip install {0} from PyPI]]></Val>
+          <Val><![CDATA[Run command: pip install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[instalação pip {0} do PyPI]]></Val>
+            <Val><![CDATA[Execute o comando: pip install {0}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[pip install {0} from PyPI]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5593,7 +5623,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18059.1]]></Val>
+        <Val><![CDATA[15.7.18079.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5629,7 +5659,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18059.1]]></Val>
+        <Val><![CDATA[15.7.18079.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

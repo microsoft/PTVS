@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
         private readonly HashSet<ModuleInfo> _modulesWithUnresolvedImports;
         private readonly object _modulesWithUnresolvedImportsLock = new object();
+        private IKnownPythonTypes _knownTypes;
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
@@ -148,9 +149,8 @@ namespace Microsoft.PythonTools.Analysis {
             Modules.AddBuiltinModuleWrapper("sys", SysModuleInfo.Wrap);
             Modules.AddBuiltinModuleWrapper("typing", TypingModuleInfo.Wrap);
 
-            Types = KnownTypes.Create(this, fallback);
+            _knownTypes = KnownTypes.Create(this, fallback);
 
-            ClassInfos = (IKnownClasses)Types;
             _noneInst = (ConstantInfo)GetCached(
                 _nullKey,
                 () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], null, PythonMemberType.Constant)
@@ -790,13 +790,21 @@ namespace Microsoft.PythonTools.Analysis {
         #region Internal Implementation
 
         internal IKnownPythonTypes Types {
-            get;
-            private set;
+            get {
+                if (_knownTypes != null) {
+                    return _knownTypes;
+                }
+                throw new InvalidOperationException("Analyzer has not been initialized. Call ReloadModulesAsync() first.");
+            }
         }
 
         internal IKnownClasses ClassInfos {
-            get;
-            private set;
+            get {
+                if (_knownTypes != null) {
+                    return (IKnownClasses)_knownTypes;
+                }
+                throw new InvalidOperationException("Analyzer has not been initialized. Call ReloadModulesAsync() first.");
+            }
         }
 
         internal IAnalysisSet DoNotUnionInMro {

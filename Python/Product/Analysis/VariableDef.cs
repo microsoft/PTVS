@@ -218,7 +218,9 @@ namespace Microsoft.PythonTools.Analysis {
         // are memory intensive, since they perform the add an extra time. The
         // flag is static but non-const to allow it to be enabled while
         // debugging.
-#if FULL_VALIDATION || DEBUG
+#if FULL_VALIDATION
+        private static bool ENABLE_SET_CHECK = true;
+#elif DEBUG
         private static bool ENABLE_SET_CHECK = false;
 #endif
 
@@ -242,7 +244,7 @@ namespace Microsoft.PythonTools.Analysis {
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
                                 Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
-                            } else {
+                            } else if (afterAdded.Count == original.Count) {
                                 Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
                             }
                         }

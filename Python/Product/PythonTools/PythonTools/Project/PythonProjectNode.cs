@@ -324,7 +324,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void AddInterpreterReference(InterpreterConfiguration config) {
-            lock(_validFactories) {
+            lock (_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
                 }
@@ -339,7 +339,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                PathUtils.GetRelativeDirectoryPath(projectHome, rootPath).IfNullOrEmpty("."),
                 new Dictionary<string, string> {
                     { MSBuildConstants.IdKey, id },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
@@ -1350,11 +1350,18 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task ReanalyzeProjectHelper(Redirector log) {
-            var projectHome = ProjectHome;
-
-            if (IsClosing || IsClosed || string.IsNullOrEmpty(projectHome)) {
+            if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
                 log?.WriteLine("Project has closed");
+                return;
+            }
+
+            var projectHome = ProjectHome;
+
+            if (string.IsNullOrEmpty(projectHome)) {
+                // The project is still opening, so we are probably
+                // creating the wrong analyzer anyway.
+                log?.WriteLine("Project was not open");
                 return;
             }
 

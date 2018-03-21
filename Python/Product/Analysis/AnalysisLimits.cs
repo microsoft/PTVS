@@ -43,9 +43,9 @@ namespace Microsoft.PythonTools.Analysis {
             limits.YieldTypes = 10;
             limits.InstanceMembers = 5;
             limits.DictKeyTypes = 5;
-            limits.DictValueTypes = 20;
+            limits.DictValueTypes = 10;
             limits.IndexTypes = 5;
-            limits.AssignedTypes = 50;
+            limits.AssignedTypes = 20;
             limits.UnifyCallsToNew = true;
             limits.ProcessCustomDecorators = true;
             return limits;
@@ -135,16 +135,16 @@ namespace Microsoft.PythonTools.Analysis {
             CrossModule = 0;
             CallDepth = 3;
             DecreaseCallDepth = 30;
-            NormalArgumentTypes = 50;
-            ListArgumentTypes = 20;
-            DictArgumentTypes = 20;
+            NormalArgumentTypes = 30;
+            ListArgumentTypes = 10;
+            DictArgumentTypes = 10;
             ReturnTypes = 20;
             YieldTypes = 20;
-            InstanceMembers = 50;
+            InstanceMembers = 30;
             DictKeyTypes = 10;
             DictValueTypes = 30;
-            IndexTypes = 30;
-            AssignedTypes = 100;
+            IndexTypes = 10;
+            AssignedTypes = 50;
             UnifyCallsToNew = true;
             ProcessCustomDecorators = true;
         }

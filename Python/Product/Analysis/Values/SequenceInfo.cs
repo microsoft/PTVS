@@ -71,6 +71,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             idx.AddTypes(unit, GetEnumeratorTypes(node, unit), true, DeclaringModule);
                         }
                         idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit), true, DeclaringModule);
+                        idx.MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes);
                     }
 
                     if (seq != null) {
@@ -186,6 +187,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 IndexTypes = newTypes;
             }
+            IndexTypes[index].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
             IndexTypes[index].AddTypes(unit, value, true, DeclaringModule);
         }
 
@@ -198,6 +200,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (IndexTypes.Length == 0) {
                     IndexTypes = new[] { new VariableDef() };
                 }
+                IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
                 IndexTypes[0].AddTypes(unit, value, true, DeclaringModule);
             }
         }

@@ -390,7 +390,7 @@ mod1.f(a=D)", "mod2");
             // f
             var expected = new[] {
                 "Definition;(2, 5) - (2, 6)",
-                "Value;(2, 5) - (3, 11)",
+                "Definition;(2, 5) - (3, 11)",
                 "Reference;(5, 1) - (5, 2)",
                 "Reference;(10, 1) - (10, 2)",
                 "Reference;(17, 6) - (17, 7)"

@@ -33,11 +33,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    sealed class DebugAdapterProcess :
-#if !USE_15_5
-        ITargetHostProcess,
-#endif
-        IDisposable {
+    sealed class DebugAdapterProcess : ITargetHostProcess, IDisposable {
         private const int _debuggerConnectionTimeout = 5000; // 5000 ms
         private const int _connectionCloseTimeout = 5000; // 5000 ms
 
@@ -142,7 +138,7 @@ namespace Microsoft.PythonTools.Debugger {
                 Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
             }
 
-            if (_stream == null) {
+            if (_stream == null && !_process.HasExited) {
                 _process.Kill();
             }
         }

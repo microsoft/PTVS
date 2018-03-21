@@ -135,31 +135,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal override bool UnionEquals(AnalysisValue ns, int strength) {
-            if (strength < MergeStrength.ToBaseClass) {
-                if (ns is GeneratorInfo other) {
-                    return Yields.Types.SetEquals(other.Yields.Types);
-                }
-                return false;
-            }
-            return base.UnionEquals(ns, strength);
-        }
-
-        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
-            if (strength < MergeStrength.ToBaseClass) {
-                if (ns is GeneratorInfo other && Push()) {
-                    try {
-                        other.Yields.CopyTo(Yields);
-                        other.Sends.CopyTo(Sends);
-                        other.Returns.CopyTo(Returns);
-                    } finally {
-                        Pop();
-                    }
-                }
-            }
-            return base.UnionMergeTypes(ns, strength);
-        }
-
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             var desc = new List<KeyValuePair<string, string>> {
                 new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "generator")
