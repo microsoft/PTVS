@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -555,11 +556,20 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Base protocol defined at https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol
         /// </remarks>
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
-            var str = JsonConvert.SerializeObject(packet);
+            string str = null;
+            ExceptionDispatchInfo edi = null;
+            try {
+                str = JsonConvert.SerializeObject(packet);
+            } catch (Exception ex) {
+                edi = ExceptionDispatchInfo.Capture(ex);
+                LogToDisk(ex);
+            }
             int seq = packet.seq, sentSeq = -1;
 
             int retries = 1000;
-            LogToDisk(str);
+            if (!string.IsNullOrEmpty(str)) {
+                LogToDisk(str);
+            }
             try {
                 while (true) {
                     try {
@@ -572,6 +582,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     try {
                         sentSeq = Interlocked.CompareExchange(ref _sentSeq, seq, seq - 1);
                         if (sentSeq == seq - 1) {
+                            edi?.Throw();
                             cancel.ThrowIfCancellationRequested();
 
                             // The content part is encoded using the charset provided in the Content-Type field.
@@ -618,6 +629,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         Interlocked.Increment(ref _sentSeq);
                     }
                 }
+
+                edi?.Throw();
             } catch (Exception ex) {
                 LogToDisk(ex);
                 throw;
