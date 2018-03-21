@@ -25,7 +25,7 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
-    <ZipDir ZipFileName="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <ZipDir ZipFileName="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
   </Target>
 
   <!-- Zipping -->
