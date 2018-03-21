@@ -188,6 +188,9 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private static BraceKind GetBraceKind(string brace) {
+            if (string.IsNullOrEmpty(brace)) {
+                throw new InvalidOperationException();
+            }
             switch (brace[0]) {
                 case '[':
                 case ']': return BraceKind.Bracket;
