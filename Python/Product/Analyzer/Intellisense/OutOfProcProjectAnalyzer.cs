@@ -1077,7 +1077,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     var startLoc = classDef.GetStart(bufferVersion.Ast);
                     var endLoc = classDef.GetEnd(bufferVersion.Ast);
-
+                    if (startLoc >= endLoc) {
+                        Debug.Fail($"Invalid span on AST node {classDef}");
+                        endLoc = bufferVersion.Ast.IndexToLocation(classDef.StartIndex + 1);
+                    }
                     navs.Add(new AP.Navigation() {
                         type = "class",
                         name = classDef.Name,
@@ -1129,6 +1132,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             var startLoc = stmt.GetStart(ast);
             var endLoc = stmt.GetStart(ast);
+            if (startLoc >= endLoc) {
+                Debug.Fail($"Invalid span on AST node {stmt}");
+                endLoc = ast.IndexToLocation(stmt.StartIndex + 1);
+            }
+
             return new AP.Navigation {
                 type = type,
                 name = name,
