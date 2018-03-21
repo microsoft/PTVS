@@ -109,6 +109,8 @@
     <Compile Include="DebugAdapterLauncher.cs" />
     <Compile Include="DebugAdapterProcess.cs" />
     <Compile Include="DebugAdapterProcessStream.cs" />
+    <Compile Include="DebugAdapterRemoteProcess.cs" />
+    <Compile Include="DebugAdapterUtils.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />

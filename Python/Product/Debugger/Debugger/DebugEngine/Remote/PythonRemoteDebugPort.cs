@@ -43,13 +43,20 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
-            if (process == null) {
-                ppEnum = null;
-                return VSConstants.E_FAIL;
-            } else {
+            if (DebugAdapterUtils.UseExperimentalDebugger()) {
+                DebugAdapterUtils.GetProcessInfoFromUri(_uri, out int pid, out string processName);
+                var process = new PythonRemoteDebugProcess(this, pid, processName, "*", "*");
                 ppEnum = new PythonRemoteEnumDebugProcesses(process);
                 return VSConstants.S_OK;
+            } else {
+                var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
+                if (process == null) {
+                    ppEnum = null;
+                    return VSConstants.E_FAIL;
+                } else {
+                    ppEnum = new PythonRemoteEnumDebugProcesses(process);
+                    return VSConstants.S_OK;
+                }
             }
         }
 
