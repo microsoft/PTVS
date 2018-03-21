@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetEngineInfo(out string pbstrEngine, out Guid pguidEngine) {
-            pguidEngine = ExperimentalOptions.GetUseVsCodeDebugger() ? 
+            pguidEngine = ExperimentalOptions.UseVsCodeDebugger ? 
                 DebugAdapterLauncher.VSCodeDebugEngine : 
                 AD7Engine.DebugEngineGuid;
             pbstrEngine = null;
