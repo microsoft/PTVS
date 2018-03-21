@@ -28,9 +28,8 @@ using Newtonsoft.Json.Linq;
 namespace Microsoft.PythonTools.Debugger {
     sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
         private const int _debuggerConnectionTimeout = 5000; // 5000 ms
-        private Stream _stream;
+        private DebugAdapterProcessStream _stream;
         private bool _debuggerConnected = false;
-        private static Dictionary<int, Socket> _sockets = new Dictionary<int, Socket>();
 
         private DebugAdapterRemoteProcess() {}
 
@@ -47,11 +46,6 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private bool ConnectSocket(Uri uri) {
-            if (_sockets.ContainsKey(uri.Port)) {
-                _sockets[uri.Port].Close();
-                _sockets.Remove(uri.Port);
-            }
-
             _debuggerConnected = false;
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
             EndPoint endpoint;
@@ -66,17 +60,24 @@ namespace Microsoft.PythonTools.Debugger {
                     Task.Delay(_debuggerConnectionTimeout)));
             try {
                 if (socket.Connected) {
-                    _sockets.Add(uri.Port, socket);
                     _debuggerConnected = true;
                     _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
+                    _stream.Disconnected += OnDisconnected;
                 } else {
-                    Debug.WriteLine("Timed out waiting for debuger to connect.", nameof(DebugAdapterRemoteProcess));
+                    Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
                 }
             } catch (AggregateException ex) {
-                Debug.WriteLine("Error waiting for debuger to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterRemoteProcess));
+                Debug.WriteLine("Error waiting for debugger to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterRemoteProcess));
             }
 
             return _debuggerConnected;
+        }
+
+        private void OnDisconnected(object sender, EventArgs e) {
+            if (_stream != null) {
+                _stream.Dispose();
+            }
+            Exited?.Invoke(this, null);
         }
 
         public IntPtr Handle => IntPtr.Zero;
@@ -94,14 +95,13 @@ namespace Microsoft.PythonTools.Debugger {
             if(_stream != null) {
                 _stream.Dispose();
             }
-            Exited?.Invoke(this, null);
-            ErrorDataReceived?.Invoke(this, null);
         }
 
         public void Terminate() {
             if (_stream != null) {
                 _stream.Dispose();
             }
+            ErrorDataReceived?.Invoke(this, null);
         }
     }
 }
