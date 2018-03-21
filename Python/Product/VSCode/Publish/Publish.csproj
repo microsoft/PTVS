@@ -5,14 +5,10 @@
     <Import Project="..\..\NetStandard.settings" />
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
     <ItemGroup>
-        <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
-    </ItemGroup>
-    <ItemGroup>
         <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
         <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
     </ItemGroup>
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-    
     <!-- .NET Core publishing -->
     <PropertyGroup>
       <AnalysisEngineName>python-analysis</AnalysisEngineName>
