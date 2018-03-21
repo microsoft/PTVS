@@ -16,6 +16,7 @@
   <PropertyGroup>
     <AnalysisEngineName>python-analysis</AnalysisEngineName>
     <DotNetPublish>true</DotNetPublish>
+    <BaseZipName>$(DotNetPublishPathZipPath)$(AnalysisEngineName)</BaseZipName>
   </PropertyGroup>
   <ItemGroup>
     <TargetOS Include="win-x86" />
@@ -24,14 +25,14 @@
     <TargetOS Include="linux-x64" />
   </ItemGroup>
   <ItemGroup>
-    <MySourceFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll"/>
+    <MySourceFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll" />
   </ItemGroup>
   <Target Name="AfterBuild">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
     <Exec Command="copy $(OutputPath)Microsoft.Python.Analysis.Engine.dll $(DotNetPublishPath)%(TargetOS.Identity)\publish" />
     <Exec Command="copy $(OutputPath)Microsoft.PythonTools.VsCode.dll $(DotNetPublishPath)%(TargetOS.Identity)\publish" />
-    <ZipDir ZipFileName="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
+    <ZipDir ZipFileName="$(BaseZipName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
   </Target>
 
   <!-- Zipping -->
@@ -60,16 +61,16 @@
     </Task>
   </UsingTask>
   <ItemGroup>
-    <FilesToSign Include="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-win-x86.zip">
+    <FilesToSign Include="$(BaseZipName)-win-x86.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-win-x64.zip">
+    <FilesToSign Include="$(BaseZipName)-win-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-osx-x64.zip">
+    <FilesToSign Include="$(BaseZipName)-osx-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishPathZipPath)$(AnalysisEngineName)-linux-x64.zip">
+    <FilesToSign Include="$(BaseZipName)-linux-x64.zip">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
   </ItemGroup>
