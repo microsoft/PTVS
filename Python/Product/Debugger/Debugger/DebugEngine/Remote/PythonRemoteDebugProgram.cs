@@ -16,6 +16,7 @@
 
 using System;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetEngineInfo(out string pbstrEngine, out Guid pguidEngine) {
-            pguidEngine = DebugAdapterUtils.UseExperimentalDebugger() ? 
+            pguidEngine = ExperimentalOptions.GetUseVsCodeDebugger() ? 
                 DebugAdapterLauncher.VSCodeDebugEngine : 
                 AD7Engine.DebugEngineGuid;
             pbstrEngine = null;

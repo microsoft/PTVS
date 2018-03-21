@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            if (DebugAdapterUtils.UseExperimentalDebugger()) {
+            if (ExperimentalOptions.GetUseVsCodeDebugger()) {
                 var process = new PythonRemoteDebugProcess(this, 54321, "Python", "*", "*");
                 ppEnum = new PythonRemoteEnumDebugProcesses(process);
                 return VSConstants.S_OK;
