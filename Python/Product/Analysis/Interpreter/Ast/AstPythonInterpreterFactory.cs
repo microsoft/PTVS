@@ -220,7 +220,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 var cacheTime = File.GetLastWriteTimeUtc(path);
                 var sourceTime = File.GetLastWriteTimeUtc(filePath);
                 if (sourceTime <= cacheTime) {
-                    fileIsOkay = true;
+                    var assemblyTime = File.GetLastWriteTimeUtc(typeof(AstPythonInterpreterFactory).Assembly.Location);
+                    if (assemblyTime <= cacheTime) {
+                        fileIsOkay = true;
+                    }
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
