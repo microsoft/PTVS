@@ -47,7 +47,7 @@
     <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
      <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetVersion) -NoPackageAnalysis" />
   </Target>
-  <ItemGroup>
+  <ItemGroup Condition="$(SignType) == 'real'">
     <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
