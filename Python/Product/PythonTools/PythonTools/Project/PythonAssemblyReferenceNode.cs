@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task ReferenceChangedOnDisk(FileChangedOnDiskEventArgs e) {
-            var analyzer = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+            var analyzer = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
             if (analyzer != null && PathUtils.IsSamePath(e.FileName, Url)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override bool Remove(bool removeFromStorage) {
             if (base.Remove(removeFromStorage)) {
-                var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+                var interp = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
                 if (interp != null) {
                     interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
                 }

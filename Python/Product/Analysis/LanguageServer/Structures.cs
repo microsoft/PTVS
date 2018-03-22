@@ -699,6 +699,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// Used instead of Position when returning references so we can include
     /// the kind.
     /// </summary>
+    [Serializable]
     public struct Reference {
         public Uri uri;
         public Range range;

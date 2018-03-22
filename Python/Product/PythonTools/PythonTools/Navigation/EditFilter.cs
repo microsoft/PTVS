@@ -798,8 +798,8 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
-            AnalysisEntry entry;
-            if (!_editorServices.AnalysisEntryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
+            var entry = span.Snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry != null) {
                 return;
             }
 

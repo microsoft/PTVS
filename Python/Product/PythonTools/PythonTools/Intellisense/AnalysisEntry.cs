@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal BufferParser GetOrCreateBufferParser(PythonEditorServices services) {
             BufferParser parser;
-            if (!_bufferParser.TryGetTarget(out parser)) {
+            if (!_bufferParser.TryGetTarget(out parser) || parser == null || parser.IsDisposed) {
                 parser = new BufferParser(services, Analyzer, Path) {
                     IsTemporaryFile = IsTemporaryFile,
                     SuppressErrorList = SuppressErrorList

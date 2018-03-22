@@ -204,7 +204,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         protected override IEnumerable<CompletionResult> GetChildren() {
-            var analysis = _hierarchy.GetAnalysisEntry();
+            var analysis = (_hierarchy as PythonFileNode)?.GetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetAllAvailableMembersAsync(
                 analysis,
                 new SourceLocation(1, 1),
@@ -226,7 +229,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         protected override IEnumerable<CompletionResult> GetChildren() {
-            var analysis = _hierarchy.GetAnalysisEntry();
+            var analysis = (_hierarchy as PythonFileNode)?.GetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetMembersAsync(
                 analysis,
                 _member,
