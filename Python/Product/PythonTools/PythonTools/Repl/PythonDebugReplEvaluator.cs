@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Repl {
                     var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
                     var result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
                     CurrentWindow.Write(result);
-            }
+                }
             }
 
             return ExecutionResult.Succeeded;

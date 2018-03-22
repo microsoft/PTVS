@@ -68,7 +68,10 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public string[] FindMethods(string className, int? paramCount) {
-                var fileInfo = _node.GetAnalysisEntry();
+                var fileInfo = _node.TryGetAnalysisEntry();
+                if (fileInfo == null) {
+                    return Array.Empty<string>();
+                }
                 return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
                     fileInfo,
                     _node.GetTextBuffer(),
@@ -78,7 +81,10 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public InsertionPoint GetInsertionPoint(string className) {
-                var fileInfo = _node.GetAnalysisEntry();
+                var fileInfo = _node.TryGetAnalysisEntry();
+                if (fileInfo == null) {
+                    return null;
+                }
                 return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
                     Buffer?.CurrentSnapshot,
                     className,
@@ -87,7 +93,10 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public MethodInformation GetMethodInfo(string className, string methodName) {
-                var fileInfo = _node.GetAnalysisEntry();
+                var fileInfo = _node.TryGetAnalysisEntry();
+                if (fileInfo == null) {
+                    return null;
+                }
                 var info = fileInfo.Analyzer.WaitForRequest(
                     fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName),
                     "PythonNonCodeFileNode.GetMethodInfo"

@@ -1449,7 +1449,11 @@ namespace Microsoft.PythonTools.Project {
                             foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate()) {
                                 PythonTextBufferInfo.MarkForReplacement(b);
                             }
-                            await existing.UnloadFileAsync(kv.Value);
+                            try {
+                                await existing.UnloadFileAsync(kv.Value);
+                            } catch (ObjectDisposedException) {
+                                break;
+                            }
                         }
                     }
                 }
