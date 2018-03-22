@@ -8,17 +8,20 @@
     <!-- Override build output during dotnet publish so it goes into a separate folder and does not stomp over signed assemblies -->
     <DotNetPublishPath Condition="'$(DotNetPublishPath)' == ''">$(BuildOutputRoot)publish\</DotNetPublishPath>
     <DotNetPublishNugetPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\raw\nuget\</DotNetPublishNugetPath>
-    <OutputPath Condition="'$(DotNetPublish)' != ''">$(DotNetPublishPath)</OutputPath>
+    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <NugetExe Condition="$(OS) == 'Windows_NT'">$(NuGetPackageRoot)NuGet.CommandLine\4.5.1\tools\nuget.exe</NugetExe>
+    <NugetExe Condition="$(OS) != 'Windows_NT'">nuget</NugetExe>
   </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
     <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
     <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
   </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+    <PackageReference Include="Nuget.CommandLine" Version="4.5.1" />
   </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- .NET Core publishing -->
   <PropertyGroup>
     <AnalysisEngineName>python-analysis</AnalysisEngineName>
@@ -36,14 +39,13 @@
     <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />  
   </ItemGroup>
   <Target Name="AfterBuild">
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
+    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity)" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
+    <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
     <!-- Copy nuspec to platform folders -->
-    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
-     <Exec Command="nuget pack $(DotNetPublishPath)%(TargetOS.Identity)\publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetVersion)"/>
-   <!-- <ZipDir ZipFileName="$(BaseZipName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" /> -->
+    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
+     <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
     <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetVersion).nupkg">
