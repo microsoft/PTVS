@@ -6,11 +6,7 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\VsCode\</BuildOutputRoot>
-    <!-- Override build output during dotnet publish so it goes into a separate folder and does not stomp over signed assemblies -->
-    <DotNetPublishPath Condition="'$(DotNetPublishPath)' == ''">$(BuildOutputRoot)publish\</DotNetPublishPath>
-    <DotNetPublishPathZipPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\bin\</DotNetPublishPathZipPath>
-    <OutputPath Condition="'$(DotNetPublish)' != ''">$(DotNetPublishPath)</OutputPath>
-  </PropertyGroup>
+   </PropertyGroup>
 
   <Import Project="$(BuildRoot)\Build\Common.Build.Core.settings" />
 

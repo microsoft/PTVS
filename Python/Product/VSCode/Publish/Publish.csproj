@@ -3,6 +3,12 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
+  <PropertyGroup>
+    <!-- Override build output during dotnet publish so it goes into a separate folder and does not stomp over signed assemblies -->
+    <DotNetPublishPath Condition="'$(DotNetPublishPath)' == ''">$(BuildOutputRoot)publish\</DotNetPublishPath>
+    <DotNetPublishPathZipPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\raw\zip\</DotNetPublishPathZipPath>
+    <OutputPath Condition="'$(DotNetPublish)' != ''">$(DotNetPublishPath)</OutputPath>
+  </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
     <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
@@ -24,15 +30,14 @@
     <TargetOS Include="osx-x64" />
     <TargetOS Include="linux-x64" />
   </ItemGroup>
-  <ItemGroup>
-    <MySourceFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll" />
+  <ItemGroup>  
+    <EngineFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />  
   </ItemGroup>
   <Target Name="AfterBuild">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Exec Command="copy $(OutputPath)Microsoft.Python.Analysis.Engine.dll $(DotNetPublishPath)%(TargetOS.Identity)\publish" />
-    <Exec Command="copy $(OutputPath)Microsoft.PythonTools.VsCode.dll $(DotNetPublishPath)%(TargetOS.Identity)\publish" />
-    <Exec Command="md $(DotNetPublishPathZipPath)" ContinueOnError="true" />
+    <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
+    <Exec Command="mkdir $(DotNetPublishPathZipPath)" ContinueOnError="true" />
     <ZipDir ZipFileName="$(BaseZipName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
   </Target>
 
