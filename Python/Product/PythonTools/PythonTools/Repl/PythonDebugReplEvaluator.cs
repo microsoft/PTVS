@@ -253,7 +253,19 @@ namespace Microsoft.PythonTools.Repl {
             return Task.FromResult<VsProjectAnalyzer>(null);
         }
 
-        public Uri DocumentUri => _activeEvaluator?.DocumentUri;
+        public Uri DocumentUri {
+            get {
+                if (_activeEvaluator != null) {
+                    return _activeEvaluator.DocumentUri;
+                } else if (_documentUri != null) {
+                    return _documentUri;
+                } else {
+                    _documentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
+                    return _documentUri;
+                }
+            }
+        }
+
         public Uri NextDocumentUri() => _activeEvaluator?.NextDocumentUri();
 
         public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
@@ -284,8 +296,7 @@ namespace Microsoft.PythonTools.Repl {
                                     .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
                                     .ToArray();
                     return completionResults;
-            }
-                return new CompletionResult[0];
+                }
             }
 
             return new CompletionResult[0];
