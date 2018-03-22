@@ -1131,7 +1131,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 type = "class";
             }
             var startLoc = stmt.GetStart(ast);
-            var endLoc = stmt.GetStart(ast);
+            var endLoc = stmt.GetEnd(ast);
             if (startLoc >= endLoc) {
                 Debug.Fail($"Invalid span on AST node {stmt}");
                 endLoc = ast.IndexToLocation(stmt.StartIndex + 1);
