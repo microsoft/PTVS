@@ -60,19 +60,19 @@
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName)-netcore.$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
   </ItemGroup>
