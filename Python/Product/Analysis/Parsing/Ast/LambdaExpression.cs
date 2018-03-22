@@ -43,7 +43,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append("lambda");
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 
-            _function.ParamsToString(res, ast, commaWhiteSpace, format);
+            if (_function.ParametersInternal.Length > 0) {
+                _function.ParamsToString(res, ast, commaWhiteSpace, format, _function.ParametersInternal[0].GetPreceedingWhiteSpaceDefaultNull(ast) ?? " ");
+            }
             string namedOnlyText = this.GetExtraVerbatimText(ast);
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);

@@ -291,5 +291,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return rest;
         }
+
+        public override bool Equals(object obj) {
+            if (obj is LazyIndexableInfo other) {
+                return _indexTypes.SetEquals(other._indexTypes);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return typeof(LazyIndexableInfo).GetHashCode() ^ _indexTypes.GetHashCode();
+        }
     }
 }

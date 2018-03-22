@@ -58,5 +58,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override string ToString() => $"<arg {Name} in {_function.Name}>";
+
+        public override bool Equals(object obj) {
+            if (obj is ParameterInfo other) {
+                return Name == other.Name && _function == other._function;
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return new { Name, F = _function.Name }.GetHashCode();
+        }
     }
 }

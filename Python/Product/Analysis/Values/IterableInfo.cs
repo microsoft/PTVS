@@ -187,9 +187,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected VariableDef[] ResolveIndexTypes(AnalysisUnit unit, ResolutionContext context) {
             var resolvedTypes = new IAnalysisSet[IndexTypes.Length];
             bool anyChange = false;
-            for (int i = 0; i < IndexTypes.Length; ++i) {
-                resolvedTypes[i] = IndexTypes[i].TypesNoCopy.Resolve(unit, context, out bool changed);
-                anyChange |= changed;
+
+            if (Push()) {
+                try {
+                    for (int i = 0; i < IndexTypes.Length; ++i) {
+                        resolvedTypes[i] = IndexTypes[i].TypesNoCopy.Resolve(unit, context, out bool changed);
+                        anyChange |= changed;
+                    }
+                } finally {
+                    Pop();
+                }
             }
 
             if (!anyChange) {

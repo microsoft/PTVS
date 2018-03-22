@@ -43,7 +43,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope, declEntry);
             _scope = scope;
 
-            AnalysisLog.NewUnit(this);
+            if (GetType() == typeof(FunctionAnalysisUnit)) {
+                AnalysisLog.NewUnit(this);
+            }
         }
 
         internal virtual void EnsureParameters() {
@@ -200,7 +202,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return "{0}{1}({2})->{3}".FormatInvariant(
                 base.ToString(),
                 " def:",
-                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
+                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.TryGetVariable(p.Name, out var v) ? v.TypesNoCopy.ToString() : "{}")),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
         }
@@ -209,17 +211,26 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     class FunctionClosureAnalysisUnit : FunctionAnalysisUnit {
         private readonly FunctionAnalysisUnit _inner;
 
-        internal FunctionClosureAnalysisUnit(FunctionAnalysisUnit inner) :
+        internal FunctionClosureAnalysisUnit(ClosureSet key, FunctionAnalysisUnit inner) :
             base(inner.Function, inner._declUnit, inner._declUnit.Scope, inner.ProjectEntry) {
             _inner = inner;
+            Key = key;
             ((FunctionScope)_inner.Scope).AddLinkedScope((FunctionScope)Scope);
 
             var node = inner.Function.FunctionDefinition;
             node.Body.Walk(new OverviewWalker(inner.ProjectEntry, this, inner.Tree));
+
+            AnalysisLog.NewUnit(this);
         }
+
+        internal ClosureSet Key { get; set; }
 
         internal override void EnsureParameters() {
             ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
+        }
+
+        public override string ToString() {
+            return base.ToString() + " " + (Key?.ToString() ?? "<>");
         }
     }
 }

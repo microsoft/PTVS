@@ -1125,7 +1125,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var ns1 = other as AnalysisSetOneUnion;
                 if (ns1 != null) {
                     return Comparer.Equals(Value, ns1.Value);
-                } else if (other == null) {
+                } else if (other == null || other.Count == 0) {
                     return false;
                 } else if (other.Count == 1) {
                     return Comparer.Equals(Value, other.First());
@@ -1282,7 +1282,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (ns2 != null) {
                     return Comparer.Equals(Value1, ns2.Value1) && Comparer.Equals(Value2, ns2.Value2) ||
                         Comparer.Equals(Value1, ns2.Value2) && Comparer.Equals(Value2, ns2.Value1);
-                } else if (other != null) {
+                } else if (other != null && other.Count > 0) {
                     return other.All(ns => Comparer.Equals(Value1) || Comparer.Equals(Value2));
                 } else {
                     return false;

@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 lock (_callsWithClosure) {
                     if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
                         if (!unit.ForEval) {
-                            calledUnit = new FunctionClosureAnalysisUnit(_analysisUnit);
+                            calledUnit = new FunctionClosureAnalysisUnit(key, _analysisUnit);
                             calledUnit.EnsureParameters();
                             calledUnit.Enqueue();
                         }
@@ -104,6 +104,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (!unit.ForEval) {
                         // Always replace the key
                         _callsWithClosure[key] = calledUnit;
+                        if (calledUnit is FunctionClosureAnalysisUnit fcau) {
+                            fcau.Key = key;
+                        }
                     }
                 }
                 res = DoCall(node, unit, calledUnit, callArgs);
