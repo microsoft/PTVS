@@ -4,11 +4,16 @@
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
   <PropertyGroup>
-    <NugetVersion>0.1.0</NugetVersion>
     <!-- Override build output during dotnet publish so it goes into a separate folder and does not stomp over signed assemblies -->
     <DotNetPublishPath Condition="'$(DotNetPublishPath)' == ''">$(BuildOutputRoot)publish\</DotNetPublishPath>
-    <DotNetPublishNugetPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\raw\nuget\</DotNetPublishNugetPath>
+    <!-- Nuget packages must be under the $(OutputPath) folder or signing task will fail. -->
+    <DotNetPublishNugetPath Condition="'$(DotNetPublishNugetPath)' == ''">$(BuildOutputRoot)\raw\nuget\</DotNetPublishNugetPath>
+    <OutputPath Condition="'$(DotNetPublish)' != ''">$(DotNetPublishPath)</OutputPath>
+  </PropertyGroup>
+  <!-- Nuget packaging -->
+  <PropertyGroup>
     <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <NugetPackageVersion>0.1.0</NugetPackageVersion>
     <NugetExe Condition="$(OS) == 'Windows_NT'">$(NuGetPackageRoot)NuGet.CommandLine\4.5.1\tools\nuget.exe</NugetExe>
     <NugetExe Condition="$(OS) != 'Windows_NT'">nuget</NugetExe>
   </PropertyGroup>
@@ -25,7 +30,7 @@
   <!-- .NET Core publishing -->
   <PropertyGroup>
     <AnalysisEngineName>python-analysis</AnalysisEngineName>
-    <NugetPackageName>python-analysis-vscode</NugetPackageName>
+    <NugetPackageName>$(AnalysisEngineName)-vscode</NugetPackageName>
     <DotNetPublish>true</DotNetPublish>
   </PropertyGroup>
   <ItemGroup>
@@ -34,30 +39,40 @@
     <TargetOS Include="osx-x64" />
     <TargetOS Include="linux-x64" />
   </ItemGroup>
-  <ItemGroup>  
-    <EngineFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />  
-    <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />  
+  <ItemGroup>
+    <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />
+    <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />
   </ItemGroup>
   <Target Name="AfterBuild">
+    <CallTarget Targets="PackPlatformSpecificFolders" />
+    <CallTarget Targets="PackNetcoreDependentFolder" />
+  </Target>
+  <Target Name="PackPlatformSpecificFolders">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
-    <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
+    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <!-- Copy nuspec to platform folders -->
     <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
-     <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetVersion) -NoPackageAnalysis" />
+    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+  </Target>
+  <Target Name="PackNetcoreDependentFolder">
+    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup Condition="$(SignType) == 'real'">
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
+      <Authenticode>Microsoft</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
   </ItemGroup>
