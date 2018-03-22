@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
@@ -51,6 +52,21 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            public bool EnsureDocumentIsOpen() {
+                var view = TextView;
+                if (view == null) {
+                    var viewGuid = Guid.Empty;
+                    if (ErrorHandler.Failed(_node.GetDocumentManager().Open(ref viewGuid, IntPtr.Zero, out _, WindowFrameShowAction.Show))) {
+                        return false;
+                    }
+                    view = TextView;
+                    if (view == null) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             public string[] FindMethods(string className, int? paramCount) {
                 var fileInfo = _node.GetAnalysisEntry();
                 return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
@@ -64,8 +80,9 @@ namespace Microsoft.PythonTools.Project {
             public InsertionPoint GetInsertionPoint(string className) {
                 var fileInfo = _node.GetAnalysisEntry();
                 return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
-                    Buffer.CurrentSnapshot,
-                    className
+                    Buffer?.CurrentSnapshot,
+                    className,
+                    fileInfo
                 ), "PythonNonCodeFileNode.GetInsertionPoint");
             }
 

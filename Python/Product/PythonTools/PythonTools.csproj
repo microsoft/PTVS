@@ -146,6 +146,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -272,7 +273,7 @@
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\NoStartupFileException.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
-    <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttrributes.cs" />
+    <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttributes.cs" />
     <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
     <Compile Include="PythonTools\Editor\IVsFeatureFlags.cs" />
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />

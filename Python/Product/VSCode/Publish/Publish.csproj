@@ -1,0 +1,17 @@
+﻿<Project>
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.0</TargetFramework>
+    </PropertyGroup>
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+    <ItemGroup>
+        <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
+        <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
+    </ItemGroup>
+    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+    <Target Name="AfterBuild">
+        <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj" />
+    </Target>
+</Project>

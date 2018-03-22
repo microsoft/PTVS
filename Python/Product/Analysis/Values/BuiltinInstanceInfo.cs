@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return false;
             }
-            
+
             if (strength >= MergeStrength.ToObject) {
                 if (TypeId == BuiltinTypeId.NoneType || ns.TypeId == BuiltinTypeId.NoneType) {
                     // BII + BII(None) => do not merge
@@ -248,11 +248,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return TypeId == BuiltinTypeId.NoneType && ns.TypeId == BuiltinTypeId.NoneType;
                 }
 
-                var func = ProjectState.ClassInfos[BuiltinTypeId.Function];
-                if (this == func.Instance) {
+                if (TypeId == BuiltinTypeId.Function) {
                     // FI + BII(function) => BII(function)
-                    return ns is FunctionInfo || ns is BuiltinFunctionInfo || ns == func.Instance;
-                } else if (ns == func.Instance) {
+                    return ns is FunctionInfo || ns is BuiltinFunctionInfo ||
+                        (ns is BuiltinInstanceInfo && ns.TypeId == BuiltinTypeId.Function);
+                } else if (ns.TypeId == BuiltinTypeId.Function) {
                     return false;
                 }
 
@@ -265,9 +265,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return false;
                 }
 
-                /// BII + II => BII(object)
-                /// BII + BII => BII(object)
-                return ns is InstanceInfo || ns is BuiltinInstanceInfo;
+                // BII + II => BII(object)
+                // BII + BII(!function) => BII(object)
+                return ns is InstanceInfo ||
+                    (ns is BuiltinInstanceInfo && ns.TypeId != BuiltinTypeId.Function);
 
             } else if (strength >= MergeStrength.ToBaseClass) {
                 var bii = ns as BuiltinInstanceInfo;
@@ -278,7 +279,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (ii != null) {
                     return _klass != null && _klass.UnionEquals(ii.ClassInfo, strength);
                 }
-            } else if (this is ConstantInfo || ns is ConstantInfo) {
+            } else if (ns is BuiltinInstanceInfo) {
                 // ConI + BII => BII if CIs match
                 var bii = ns as BuiltinInstanceInfo;
                 return bii != null && _klass != null && _klass.Equals(bii.ClassInfo);

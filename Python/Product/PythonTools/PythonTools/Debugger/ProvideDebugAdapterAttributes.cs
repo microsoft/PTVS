@@ -24,17 +24,21 @@ namespace Microsoft.VisualStudioTools {
         private readonly string _name;
         private readonly string _engineId;
         private readonly string _adapterLauncherCLSID;
+        private readonly string _customProtocolExtensionCLSID;
         private readonly string _languageName;
         private readonly string _languageId;
         private readonly Type _adapterLauncherType;
+        private readonly Type _customProtocolType;
 
-        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string languageName, string languageId, Type adapterLauncherType) {
+        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string customProtocolExtensionCLSID, string languageName, string languageId, Type adapterLauncherType, Type customProtocolType) {
             _name = name;
             _engineId = engineId;
             _adapterLauncherCLSID = adapterLauncherCLSID;
+            _customProtocolExtensionCLSID = customProtocolExtensionCLSID;
             _languageName = languageName;
             _languageId = languageId;
             _adapterLauncherType = adapterLauncherType;
+            _customProtocolType = customProtocolType;
         }
 
         public override void Register(RegistrationContext context) {
@@ -73,6 +77,14 @@ namespace Microsoft.VisualStudioTools {
              * attach and don't need the "modules" request, so it can be disabled by setting this property to "1".
              */
             engineKey.SetValue("SuppressModulesRequestOnAttach", 1);
+            /*
+             * Custom Protocol Extensions (optional)
+             *   A debug adapter can implement non-standard extensions to the VS Code Debug Protocol, e.g. to communicate with
+             *   custom UI or services hosted in Visual Studio.  To register custom protocol extensions, provide an implementation
+             *   of "ICustomProtocolExtension", and specify its CLSID below.  The CLSID is defined in the "Type Registrations"
+             *   section of this file.
+             */
+            engineKey.SetValue("CustomProtocolExtension", _customProtocolExtensionCLSID);
 
             /*
              * Set to "1" if the debug adapter will use the VS "Exception Setting" tool window.  The debug adapter's must
@@ -131,11 +143,18 @@ namespace Microsoft.VisualStudioTools {
              * Adapter launcher registration 
              */
             var adapterKey = context.CreateKey($"CLSID\\{_adapterLauncherCLSID}");
-            var assembly = _adapterLauncherType.Assembly.GetName().Name;
-            var className = _adapterLauncherType.FullName;
-            adapterKey.SetValue("Assembly", assembly);
-            adapterKey.SetValue("Class", className);
-            adapterKey.SetValue("CodeBase", $@"$PackageFolder$\{assembly}.dll");
+            var adapterAssembly = _adapterLauncherType.Assembly.GetName().Name;
+            var adapterClassName = _adapterLauncherType.FullName;
+            adapterKey.SetValue("Assembly", adapterAssembly);
+            adapterKey.SetValue("Class", adapterClassName);
+            adapterKey.SetValue("CodeBase", $@"$PackageFolder$\{adapterAssembly}.dll");
+
+            var customProtocolKey = context.CreateKey($"CLSID\\{_customProtocolExtensionCLSID}");
+            var customProtocolAssembly = _customProtocolType.Assembly.GetName().Name;
+            var customProtocolClassName = _customProtocolType.FullName;
+            customProtocolKey.SetValue("Assembly", customProtocolAssembly);
+            customProtocolKey.SetValue("Class", customProtocolClassName);
+            customProtocolKey.SetValue("CodeBase", $@"$PackageFolder$\{customProtocolAssembly}.dll");
         }
 
         public override void Unregister(RegistrationContext context) {

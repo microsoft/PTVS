@@ -156,13 +156,13 @@ namespace Microsoft.PythonTools.Analysis {
                         }
                     } else {
                         var orStr = types.Count == 2 ? " or " : ", or ";
-                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last() + ": ";
+                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
                     }
-                    typeToDoc[typeDisplay] = docType.Key;
+                    typeToDoc[string.Join(",", types)] = typeDisplay + ": " + docType.Key;
                 }
 
                 foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
-                    doc.AppendLine(typeDoc.Key + typeDoc.Value);
+                    doc.AppendLine(typeDoc.Value);
                     doc.AppendLine();
                 }
 

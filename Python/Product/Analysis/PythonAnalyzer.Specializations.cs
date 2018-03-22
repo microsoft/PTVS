@@ -218,8 +218,9 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("unittest", "skipUnless", IdentityDecorator);
 
             // cached for quick checks to see if we're a call to clr.AddReference
-
+#if DESKTOP
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
+#endif
         }
 
         private static IAnalysisSet GetArg(
@@ -591,6 +592,7 @@ namespace Microsoft.PythonTools.Analysis {
             return memb?.GetInstanceType() ?? unit.State.ClassInfos[BuiltinTypeId.Object].Instance;
         }
 
+#if DESKTOP
         IAnalysisSet LoadComponent(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 2 && unit.State.Interpreter is IDotNetPythonInterpreter) {
                 var self = args[0];
@@ -687,5 +689,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             return AnalysisSet.Empty;
         }
+#endif
     }
 }

@@ -17,7 +17,7 @@
 from __future__ import print_function
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.2"
+__version__ = "15.7"
 
 import ast
 import keyword
@@ -25,6 +25,7 @@ import inspect
 import io
 import re
 import sys
+import tokenize
 import warnings
 
 try:
@@ -55,6 +56,23 @@ def _triple_quote(s):
         return '"""' + s.replace('"""', '\\"\\"\\"') + ' """'
     return "''' " + s.replace("'''", "\\'\\'\\'") + " '''"
 
+try:
+    EXACT_TOKEN_TYPES = tokenize.EXACT_TOKEN_TYPES
+except AttributeError:
+    # Bare minimum that we need here
+    EXACT_TOKEN_TYPES = {
+        '(': tokenize.LPAR,
+        ')': tokenize.RPAR,
+        '[': tokenize.LSQB,
+        ']': tokenize.RSQB,
+        '{': tokenize.LBRACE,
+        '}': tokenize.RBRACE,
+        ',': tokenize.COMMA,
+        ':': tokenize.COLON,
+        '*': tokenize.STAR,
+        '**': tokenize.DOUBLESTAR,
+        '=': tokenize.EQUAL,
+    }
 
 SKIP_TYPENAME_FOR_TYPES = bool, str, bytes, int, float
 STATICMETHOD_TYPES = ()
@@ -298,7 +316,12 @@ class Signature(object):
 
         # If signature has a return annotation, it's in the
         # full signature and we don't need it from here.
-        return 'pass'
+        if not sig or sig.return_annotation == inspect._empty:
+            return
+        ann = inspect.formatannotation(sig.return_annotation)
+        if not ann or not self._can_eval(ann):
+            return
+        return 'return ' + ann
 
     def _init_argspec_fromargspec(self, defaults):
         try:
@@ -306,13 +329,25 @@ class Signature(object):
         except Exception:
             return
 
-        argn = list(args.args)
+        argn = []
+        seen_names = set(keyword.kwlist)
+        defaults = list(defaults)
+        for a in args.args:
+            if defaults:
+                if defaults[0] == a:
+                    defaults.pop()
+                else:
+                    argn.extend(defaults)
+                    defaults = []
+            argn.append(self._make_unique_name(a, seen_names))
+        if defaults and not argn:
+            argn.extend(defaults)
+
         if getattr(args, 'varargs', None):
             argn.append('*' + args.varargs)
         if getattr(args, 'varkw', None):
             argn.append('**' + args.varkw)
 
-        self._insert_default_arguments(argn, defaults)
         return self.name + '(' + ', '.join(argn) + ')'
 
     def _init_argspec_fromknown(self, defaults, scope_alias):
@@ -355,53 +390,154 @@ class Signature(object):
         if not doc:
             return
 
-        call = self._parse_funcdef(doc, allow_name_mismatch)
-        if not call:
-            # Remove optional parameter marks
-            doc = re.sub(r'[\[\]]', '', doc)
-            call = self._parse_funcdef(doc, allow_name_mismatch)
-        if not call:
-            # Replace "X.y(" with y(self : X,"
-            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self : \1, ', doc)
-            call = self._parse_funcdef(doc2, allow_name_mismatch)
-        if not call:
-            # Replace "X.y(" with y(self,"
-            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self, ', doc)
-            call = self._parse_funcdef(doc2, allow_name_mismatch)
-        if not call:
-            doc = re.sub(r'\=.+?([,\)])', r'\1', doc)
-            call = self._parse_funcdef(doc, allow_name_mismatch)
-        if not call:
-            return
+        return self._parse_funcdef(doc, allow_name_mismatch, defaults)
 
-        args = self._ast_args_to_list(call.args)
-        self._insert_default_arguments(args, defaults)
-        return self.name + '(' + ', '.join(args) + ')'
+    def _make_unique_name(self, name, seen_names):
+        if name not in seen_names:
+            seen_names.add(name)
+            return name
 
-    def _insert_default_arguments(self, args, defaults):
-        if len(args) < len(defaults):
-            args[:0] = defaults
+        n = name + '_'
+        if n not in seen_names:
+            seen_names.add(n)
+            return n
+
+        i = 0
+        while True:
+            i += 1
+            n = name + '_' + int(i)
+            if n not in seen_names:
+                seen_names.add(n)
+                return n
+
+        raise RuntimeError("Too many arguments in definition")
+
+    def _tokenize(self, expr):
+        buf = io.BytesIO(expr.strip().encode('utf-8'))
+        if sys.version_info[0] == 3:
+            tokens = tokenize.tokenize(buf.readline)
         else:
-            for i, (x, y) in enumerate(zip(defaults, args)):
-                if x == 'cls' and y == 'type':
-                    continue
-                if x != y:
-                    args[:i] = defaults
-                    break
+            tokens = tokenize.generate_tokens(buf.readline)
+        return [(EXACT_TOKEN_TYPES.get(s, tt) if tt == tokenize.OP else tt, s)
+                for tt, s, _, _, _ in tokens]
 
-    def _parse_funcdef(self, expr, allow_name_mismatch):
+    _PAREN_TOKEN_MAP = {
+        tokenize.LPAR: tokenize.RPAR,
+        tokenize.LBRACE: tokenize.RBRACE,
+        tokenize.LSQB: tokenize.RSQB,
+    }
+
+    def _parse_take_expr(self, tokens, *stop_at):
+        nesting = []
+        expr = []
+        while tokens:
+            tt, s = tokens[0]
+            if tt == tokenize.LSQB and len(tokens) > 2 and tokens[1][0] in stop_at:
+                return expr
+            if tt in self._PAREN_TOKEN_MAP:
+                expr.append((tt, s))
+                nesting.append(self._PAREN_TOKEN_MAP[tt])
+            elif nesting and tt == nesting[-1]:
+                expr.append((tt, s))
+                nesting.pop()
+            elif tt in (tokenize.RPAR, tokenize.RBRACE, tokenize.RSQB):
+                return expr
+            elif not nesting and tt in stop_at:
+                return expr
+            else:
+                expr.append((tt, s))
+            tokens.pop(0)
+        return expr
+
+    def _can_eval(self, s):
+        if not s:
+            return False
+        try:
+            ast.parse(s, mode='eval')
+        except SyntaxError:
+            return False
+        else:
+            return True
+
+    def _parse_format_arg(self, name, args, defaults):
+        defaults = list(defaults)
+        seen_names = set(keyword.kwlist)
+        parts = [name or '<function>', '(']
+        any_default = False
+
+        for a_names, a_ann, a_def, a_opt in args:
+            if not a_names:
+                continue
+            a_name = ''.join(a_names)
+            if defaults:
+                if a_name != defaults[0]:
+                    for n in defaults:
+                       parts.append(n)
+                       parts.append(', ')
+                    defaults = []
+                else:
+                    defaults.pop(0)
+
+            parts.append(self._make_unique_name(a_name, seen_names))
+            if self._can_eval(''.join(a_ann)):
+                parts.append(': ')
+                parts.extend(a_ann)
+            if self._can_eval(''.join(a_def)):
+                parts.append('=')
+                parts.extend(a_def)
+                any_default = True
+            elif a_opt[0] or (any_default and '*' not in a_name and '**' not in a_name):
+                parts.append('=None')
+                any_default = True
+            if a_name.startswith('*'):
+                any_default = True
+            parts.append(', ')
+        if parts[-1] == ', ':
+            parts.pop()
+        parts.append(')')
+
+        return ''.join(parts)
+
+    def _parse_funcdef(self, expr, allow_name_mismatch, defaults):
         '''Takes a call expression that was part of a docstring
         and parses the AST as if it were a definition. If the parsed
         AST matches the callable we are wrapping, returns the node.
         '''
         try:
-            node = ast.parse("def " + expr + ": pass").body[0]
-            if isinstance(node, ast.FunctionDef):
-                if allow_name_mismatch or node.name == self.name:
-                    return node
-                warnings.warn('function ' + self.name + ' had call to ' + node.name + ' in docstring', InspectWarning)
-        except SyntaxError:
-            pass
+            tokens = self._tokenize(expr)
+        except (TypeError, tokenize.TokenError):
+            warnings.warn('failed to tokenize ' + expr, InspectWarning)
+            return
+
+        name = None
+        args = [([], [], [], [False])]
+        optional = False
+
+        while tokens:
+            tt, s = tokens.pop(0)
+            if tt == tokenize.NAME:
+                if name is None:
+                    name = s
+                else:
+                    args[-1][0].append(s)
+                    args[-1][3][0] = optional
+            elif tt in (tokenize.STAR, tokenize.DOUBLESTAR):
+                args[-1][0].append(s)
+            elif tt == tokenize.COLON:
+                e = self._parse_take_expr(tokens, tokenize.EQUAL, tokenize.COMMA)
+                args[-1][1].append(''.join(i[1] for i in e))
+            elif tt == tokenize.EQUAL:
+                e = self._parse_take_expr(tokens, tokenize.COMMA)
+                args[-1][2].append(''.join(i[1] for i in e))
+            elif tt == tokenize.COMMA:
+                args.append(([], [], [], [False]))
+            elif tt == tokenize.LSQB:
+                optional = True
+            elif tt == tokenize.RSQB:
+                optional = False
+
+        if name and (allow_name_mismatch or name == self.name):
+            return self._parse_format_arg(name, args, defaults)
 
     def _get_first_function_call(self, expr):
         '''Scans the string for the first closing parenthesis,
@@ -418,124 +554,9 @@ class Signature(object):
                     return expr[:i + 1]
             elif c == '(':
                 n += 1
+            elif c in '\r\n\t' and n == 0:
+                return
 
-    def _ast_args_to_list(self, node):
-        args = node.args
-        defaults = list(getattr(node, 'defaults', ()))
-        defaults[:0] = [None for _ in range(len(args) - len(defaults))]
-
-        seen_names = set()
-        return [self._ast_arg_to_str(a, d, seen_names) for a, d in zip(args, defaults)]
-
-    _AST_ARG_TYPES = tuple(getattr(ast, n) for n in (
-        'arg', 'keyword', 'Name'
-    ) if hasattr(ast, n))
-
-    class DefaultValueWriter(object):
-        def walk(self, node):
-            try:
-                op = getattr(self, 'walk_' + type(node).__name__)
-            except AttributeError:
-                print('walk_' + type(node).__name__, vars(node), file=sys.stderr)
-                return None
-            else:
-                return op(node)
-
-        def walk_BitOr(self, node):         return '|'
-        def walk_Call(self, node):          pass    # Do not generate defaults from calls
-        def walk_Name(self, node):          return node.id
-        def walk_NameConstant(self, node):  return repr(node.value)
-        def walk_Num(self, node):           return str(node.n)
-        def walk_Str(self, node):           return repr(node.s)
-        def walk_USub(self, node):          return '-'
-
-        def walk_Attribute(self, node):
-            v = self.walk(node.value)
-            if v:
-                return v + '.' + node.attr
-
-        def walk_List(self, node):
-            elts = [self.walk(n) for n in node.elts]
-            if any(n is None for n in elts):
-                return '[]'
-            return '[' + ', '.join(elts) + ']'
-
-        def walk_Tuple(self, node):
-            elts = [self.walk(n) for n in node.elts]
-            if any(n is None for n in elts):
-                return '()'
-            return '(' + ', '.join(elts) + ')'
-
-        def walk_Dict(self, node):
-            return '{}'
-
-        def walk_BinOp(self, node):
-            v1 = self.walk(node.left)
-            op = self.walk(node.op)
-            v2 = self.walk(node.right)
-            if v1 and op and v2:
-                return v1 + op + v2
-
-        def walk_UnaryOp(self, node):
-            op = self.walk(node.op)
-            value = self.walk(node.operand)
-            if op and value:
-                return op + value
-
-    def _ast_arg_to_str(self, arg, default, seen_names):
-        '''Converts an AST argument object into a string.'''
-        arg_id = None
-        default_value = ''
-        if isinstance(arg, ast.List):
-            default_value = '=None'
-            arg = arg.elts[0]
-
-        if isinstance(arg, ast.keyword):
-            try:
-                default_value = '=' + arg.value.id
-            except AttributeError:
-                pass
-            arg_id = arg.arg
-
-        if default:
-            v = self.DefaultValueWriter().walk(default)
-            if v is not None:
-                default_value = '=' + v
-
-        if isinstance(arg, ast.Tuple):
-            arg_id = '(' + ', '.join(a.id for a in arg.elts) + ')'
-
-        if not arg_id and not isinstance(arg, self._AST_ARG_TYPES):
-            warnings.warn('failed to get argument name for ' + repr(arg) + repr(vars(arg)), InspectWarning)
-
-        if not arg_id:
-            arg_id = getattr(arg, 'arg', None)
-            if arg_id is None:
-                arg_id = arg.id
-
-        if arg_id in seen_names:
-            i = 2
-            new_arg_id = arg_id + str(i)
-            while new_arg_id in seen_names:
-                i += 1
-                new_arg_id = arg_id + str(i)
-            arg_id = new_arg_id
-        seen_names.add(arg_id)
-
-        if default_value:
-            final_arg = arg_id + default_value
-            try:
-                ast.parse(final_arg)
-            except SyntaxError:
-                pass
-            else:
-                seen_names.add(' default_value')
-                return final_arg
-        
-        if ' default_value' in seen_names:
-            return arg_id + '=None'
-
-        return arg_id
 
 class MemberInfo(object):
     NO_VALUE = object()
@@ -555,6 +576,12 @@ class MemberInfo(object):
         self.alias = alias
         if not isinstance(self.documentation, str):
             self.documentation = None
+
+        # Special case for __init__ that refers to class docs
+        if self.name == '__init__' and (
+            not self.documentation
+            or 'See help(type(self))' in self.documentation):
+            self.documentation = module_doc
 
         if self.name:
             self.name = self.name.replace('-', '_')
@@ -625,7 +652,7 @@ class MemberInfo(object):
                 return (module,), fullname
             return (), type_name
         except Exception:
-            warnings.warn('could not get type of ' + repr(value), InspectWarning)
+            warnings.warn('could not get type of ' + repr(value_type), InspectWarning)
             return (), None
 
     def _str_from_literal(self, lit):
@@ -925,13 +952,19 @@ def add_builtin_objects(state):
         "__truediv__": "__Float__()",
         "__Type__.__subclasscheck__": "False",
         "__subclasshook__": "False",
+        "all": "False",
+        "any": "False",
+        "ascii": "''",
         "__Set__.add": "None",
         "__List__.append": "None",
         "__Float__.as_integer_ratio": "(0, 0)",
+        "bin": "''",
         "__Int__.bit_length": "0",
+        "callable": "False",
         "capitalize": "__T__()",
         "casefold": "__T__()",
         "center": "__T__()",
+        "chr": "''",
         "clear": "None",
         "__Generator__.close": "None",
         "conjugate": "__Complex__()",
@@ -943,6 +976,7 @@ def add_builtin_objects(state):
         "__FrozenSet__.difference": "__T__()",
         "__Set__.difference_update": "None",
         "__Set__.discard": "None",
+        "divmod": "(0, 0)",
         "__Bytes__.encode": "b''",
         "__Unicode__.encode": "b''",
         "endswith": "False",
@@ -959,8 +993,14 @@ def add_builtin_objects(state):
         "__Dict__.fromkeys": "{}",
         "__Dict__.get": "self[0]",
         "__Property__.getter": "func",
+        "format": "''",
+        "globals": "__Dict__()",
+        "hasattr": "False",
+        "hash": "0",
         "hex": "''",
+        "id": "0",
         "index": "0",
+        "input": "''",
         "__List__.insert": "None",
         "__Set__.intersection": "__T__()",
         "__FrozenSet__.intersection": "__T__()",
@@ -989,12 +1029,15 @@ def add_builtin_objects(state):
         "__Bytes__.join": "b''",
         "__Unicode__.join": "''",
         "__Dict__.keys": "__DictKeys__()",
+        "len": "0",
+        "locals": "__Dict__()",
         "lower": "__T__()",
         "ljust": "__T__()",
         "lstrip": "__T__()",
         "__Bytes__.maketrans": "b''",
         "__Unicode__.maketrans": "{}",
         "__Type__.mro": "[__Type__()]",
+        "oct": "''",
         "partition": "(__T__(), __T__(), __T__())",
         "__List__.pop": "self[0]",
         "__Dict__.pop": "self.keys()[0]",
@@ -1002,10 +1045,12 @@ def add_builtin_objects(state):
         "__Dict__.popitem": "self.items()[0]",
         "remove": "None",
         "replace": "__T__()",
+        "repr": "''",
         "rfind": "0",
         "__List__.reverse": "None",
         "rindex": "0",
         "rjust": "__T__()",
+        "round": "0.0",
         "rpartition": "(__T__(), __T__(), __T__())",
         "rsplit": "[__T__()]",
         "rstrip": "__T__()",
@@ -1013,6 +1058,7 @@ def add_builtin_objects(state):
         "__Dict__.setdefault": "self[0]",
         "__Property__.setter": "func",
         "__List__.sort": "None",
+        "sorted": "__List__()",
         "split": "[__T__()]",
         "splitlines": "[self()]",
         "startswith": "False",
@@ -1178,6 +1224,8 @@ def add_builtin_objects(state):
             "__Function__.func_closure": "()",
             "__Function__.func_doc": "b''",
             "__Function__.func_name": "b''",
+            "input": None,
+            "raw_input": "b''",
         })
 
         Signature.KNOWN_ARGSPECS.update({

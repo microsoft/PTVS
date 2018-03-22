@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetPythonCaret();
             var analysis = _textView.GetAnalysisAtCaret(_editorServices.Site);
             if (analysis != null && caret != null) {
-                var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
+                var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value, ExpressionAtPointPurpose.FindDefinition);
                 if (defs == null) {
                     return;
                 }
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetPythonCaret();
             var analysis = _textView.GetAnalysisAtCaret(_editorServices.Site);
             if (analysis != null && caret != null) {
-                var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
+                var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value, ExpressionAtPointPurpose.FindDefinition);
                 if (references == null) {
                     return;
                 }

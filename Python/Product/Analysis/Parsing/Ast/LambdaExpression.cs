@@ -48,14 +48,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);
             }
-            res.Append(this.GetSecondWhiteSpace(ast));
+            format.Append(res, format.SpaceBeforeLambdaColon, " ", "", this.GetSecondWhiteSpace(ast));
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(":");
+                string afterColon = null;
+                if (format.SpaceAfterLambdaColon == true) {
+                    afterColon = " ";
+                } else if (format.SpaceAfterLambdaColon == false) {
+                    afterColon = "";
+                }
                 if (_function.Body is ReturnStatement) {
-                    ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast, format);
+                    ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast, format, afterColon);
                 } else {
                     Debug.Assert(_function.Body is ExpressionStatement);
-                    ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast, format);
+                    ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast, format, afterColon);
                 }
             }
         }

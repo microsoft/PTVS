@@ -2957,9 +2957,7 @@ from baz import abc2 as abc";
                 new VariableLocation(2, 25, VariableType.Reference)
             );
             state.AssertReferences(fobMod, "abc", 0,
-                new VariableLocation(1, 7, VariableType.Value),         // possible value
-                                                                        //new VariableLocation(1, 7, VariableType.Value),
-                                                                        // appears twice for two modules, but cannot test that
+                new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
                 new VariableLocation(2, 25, VariableType.Reference),    // as
@@ -3300,7 +3298,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
 
             entry = ProcessText(@"
 class C(object):
@@ -3311,7 +3309,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
         }
 
         [TestMethod, Priority(0)]
@@ -5665,7 +5663,7 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
-                new VariableLocation(5, 9, VariableType.Value),
+                new VariableLocation(5, 9, VariableType.Definition),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );
@@ -5693,7 +5691,7 @@ n1 = g(1)";
             entry.AssertReferences("g",
                 new VariableLocation(7, 5, VariableType.Definition),
                 new VariableLocation(10, 6, VariableType.Reference),
-                new VariableLocation(2, 9, VariableType.Value)
+                new VariableLocation(2, 9, VariableType.Definition)
             );
         }
 
@@ -5782,8 +5780,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "def test-module.f() -> str");
-            entry.AssertDescription("fob.f", "def test-module.fob.f(self)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of fob objects ");
+            entry.AssertDescription("fob.f", "def test-module.fob.f(self : fob)\r\ndeclared in fob");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "def test-module.g()");    // return info could be better
@@ -5804,7 +5802,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "def test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...
+            entry.AssertDescription("return_func_class().return_func", @"method return_func of test-module.return_func_class objects  -> method return_func of test-module.return_func_class objects ...
 some help");
         }
 
@@ -6448,7 +6446,7 @@ test1_result = test1()
             var fi = state.GetValue<FunctionInfo>("test1");
             Assert.AreEqual("doc", fi.Documentation);
             state.GetValue<FunctionInfo>("test1.__wrapped__");
-            Assert.AreEqual(1, fi.Overloads.Count());
+            Assert.AreEqual(3, state.GetValue<FunctionInfo>("test1").Overloads.Count());
             state.AssertConstantEquals("test1_result", "decorated");
 
             // __name__ should not have been changed by update_wrapper
@@ -6544,7 +6542,7 @@ test1_result = test1()
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

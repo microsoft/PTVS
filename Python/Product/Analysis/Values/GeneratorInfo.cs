@@ -141,27 +141,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal override bool UnionEquals(AnalysisValue ns, int strength) {
-            if (ns is GeneratorInfo other) {
-                return Yields.Types.SetEquals(other.Yields.Types);
-            }
-            return false;
-        }
-
-        internal override int UnionHashCode(int strength) {
-            // Arbitrarily selected prime number
-            return 968897;
-        }
-
-        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
-            if (ns is GeneratorInfo other) {
-                other.Yields.CopyTo(Yields);
-                other.Sends.CopyTo(Sends);
-                other.Returns.CopyTo(Returns);
-            }
-            return this;
-        }
-
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             var desc = new List<KeyValuePair<string, string>> {
                 new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "generator")

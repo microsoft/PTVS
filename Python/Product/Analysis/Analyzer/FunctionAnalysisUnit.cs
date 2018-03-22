@@ -221,9 +221,5 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal override void EnsureParameters() {
             ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
         }
-
-        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            base.AnalyzeWorker(ddg, cancel);
-        }
     }
 }

@@ -62,114 +62,69 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public abstract Task<InitializeResult> Initialize(InitializeParams @params);
 
-        public virtual async Task Initialized(InitializedParams @params) { }
+        public virtual Task Initialized(InitializedParams @params) => Task.CompletedTask;
 
-        public virtual async Task Shutdown() { }
+        public virtual Task Shutdown() => Task.CompletedTask;
 
-        public virtual async Task Exit() { }
+        public virtual Task Exit() => Task.CompletedTask;
 
-        public virtual void CancelRequest() {
-            Volatile.Read(ref _lock)?.Cancel();
-        }
+        public virtual void CancelRequest()  => Volatile.Read(ref _lock)?.Cancel();
 
-        public virtual async Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params) {
-            return null;
-        }
+        public virtual Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params) => Task.FromResult((MessageActionItem?)null);
 
-        public virtual async Task DidChangeConfiguration(DidChangeConfigurationParams @params) { }
+        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
-        public virtual async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) { }
+        public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
 
-        public virtual async Task<SymbolInformation[]> WorkplaceSymbols(WorkplaceSymbolParams @params) {
-            return null;
-        }
+        public virtual Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) => Task.FromResult(Array.Empty<SymbolInformation>());
 
-        public virtual async Task<object> ExecuteCommand(ExecuteCommandParams @params) {
-            return null;
-        }
+        public virtual Task<object> ExecuteCommand(ExecuteCommandParams @params) => Task.FromResult((object)null);
 
+        public virtual Task DidOpenTextDocument(DidOpenTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) { }
+        public virtual Task DidChangeTextDocument(DidChangeTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual async Task DidChangeTextDocument(DidChangeTextDocumentParams @params) { }
+        public virtual Task WillSaveTextDocument(WillSaveTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual async Task WillSaveTextDocument(WillSaveTextDocumentParams @params) { }
+        public virtual Task<TextEdit[]> WillSaveWaitUntilTextDocument(WillSaveTextDocumentParams @params) => Task.FromResult(Array.Empty<TextEdit>());
 
-        public virtual async Task<TextEdit[]> WillSaveWaitUntilTextDocument(WillSaveTextDocumentParams @params) {
-            return null;
-        }
+        public virtual Task DidSaveTextDocument(DidSaveTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual async Task DidSaveTextDocument(DidSaveTextDocumentParams @params) { }
+        public virtual Task DidCloseTextDocument(DidCloseTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) { }
+        public virtual Task<CompletionList> Completion(CompletionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<CompletionList> Completion(CompletionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<CompletionItem> CompletionItemResolve(CompletionItem item) => throw new NotImplementedException();
 
-        public virtual async Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<Hover> Hover(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<Reference[]> FindReferences(ReferencesParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<Command[]> CodeAction(CodeActionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<Command[]> CodeAction(CodeActionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<CodeLens[]> CodeLens(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<CodeLens[]> CodeLens(TextDocumentPositionParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<CodeLens> CodeLensResolve(CodeLens item) => throw new NotImplementedException();
 
-        public virtual async Task<CodeLens> CodeLensResolve(CodeLens item) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<DocumentLink[]> DocumentLink(DocumentLinkParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<DocumentLink[]> DocumentLink(DocumentLinkParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<DocumentLink> DocumentLinkResolve(DocumentLink item) => throw new NotImplementedException();
 
-        public virtual async Task<DocumentLink> DocumentLinkResolve(DocumentLink item) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<TextEdit[]> DocumentFormatting(DocumentFormattingParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<TextEdit[]> DocumentFormatting(DocumentFormattingParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<TextEdit[]> DocumentRangeFormatting(DocumentRangeFormattingParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<TextEdit[]> DocumentRangeFormatting(DocumentRangeFormattingParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<TextEdit[]> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params) => throw new NotImplementedException();
 
-        public virtual async Task<TextEdit[]> DocumentOnTypeFormatting(DocumentOnTypeFormattingParams @params) {
-            throw new NotImplementedException();
-        }
-
-        public virtual async Task<WorkspaceEdit> Rename(RenameParams @params) {
-            throw new NotImplementedException();
-        }
+        public virtual Task<WorkspaceEdit> Rename(RenameParams @params) => throw new NotImplementedException();
 
         #endregion
 

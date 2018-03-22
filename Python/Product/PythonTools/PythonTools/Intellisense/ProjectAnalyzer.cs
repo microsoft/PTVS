@@ -256,7 +256,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
-            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", true) ?? true;
+            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
 
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
@@ -1291,8 +1291,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     expr,
                     null,
                     definitions.variables
-                        .Where(x => x.file != null)
                         .Select(ToAnalysisVariable)
+                        .Where(v => v != null)
                         .ToArray(),
                     definitions.privatePrefix
                 );
@@ -1306,7 +1306,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.Location;
+                var location = analysis.SourceSpan.End;
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
@@ -1321,8 +1321,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         analysis.Text,
                         analysis.Span,
                         definitions.variables
-                            .Where(x => x.file != null)
                             .Select(ToAnalysisVariable)
+                            .Where(x => x != null)
                             .ToArray(),
                         definitions.privatePrefix
                     );
@@ -1878,11 +1878,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
 
-            _projectFiles.TryRemove(entry.Path, out _);
-            _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
-            entry.TryGetBufferParser()?.ClearBuffers();
-
-            await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            entry?.TryGetBufferParser()?.ClearBuffers();
+            if (entry?.Path != null) {
+                _projectFiles.TryRemove(entry.Path, out _);
+            }
+            if (entry?.DocumentUri != null) {
+                _projectFilesByUri.TryRemove(entry.DocumentUri, out _);
+                await SendRequestAsync(new AP.UnloadFileRequest() { documentUri = entry.DocumentUri }).ConfigureAwait(false);
+            }
         }
 
         internal void ClearAllTasks() {
@@ -2061,9 +2064,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className) {
+        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className, AnalysisEntry entry = null) {
+            if (textSnapshot == null) {
+                return null;
+            }
             var bi = _services.GetBufferInfo(textSnapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
+            entry = entry ?? bi?.AnalysisEntry;
             if (entry == null) {
                 return null;
             }
@@ -2560,8 +2566,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
+            var file = arg.file;
+            if (string.IsNullOrEmpty(file)) {
+                try {
+                    file = arg.documentUri?.LocalPath;
+                } catch (InvalidOperationException) {
+                }
+                if (!File.Exists(file)) {
+                    return null;
+                }
+            }
+
             var location = new LocationInfo(
-                arg.file,
+                file,
                 arg.documentUri,
                 arg.startLine,
                 arg.startColumn,
@@ -2570,7 +2587,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             var defLocation = new LocationInfo(
-                arg.file,
+                file,
                 arg.documentUri,
                 arg.definitionStartLine ?? arg.startLine,
                 arg.definitionStartColumn ?? arg.startColumn,
@@ -2627,7 +2644,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bi.AnalysisEntry,
                 span.GetText(),
                 span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
-                sourceSpan.Value.Start
+                sourceSpan.Value
             );
         }
 

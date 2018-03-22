@@ -15,24 +15,23 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
+using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
-    [Guid("C2990BF1-A87B-4459-9478-322482C535D6")]
-    public sealed class DebugAdapterLauncher
-#if !USE_15_5
-        : IAdapterLauncher
-#endif
-{
-        public const string DebugAdapterLauncherCLSID = "{C2990BF1-A87B-4459-9478-322482C535D6}";
+    [Guid(DebugAdapterLauncherCLSIDNoBraces)]
+    public sealed class DebugAdapterLauncher : IAdapterLauncher {
+        public const string DebugAdapterLauncherCLSIDNoBraces = "C2990BF1-A87B-4459-9478-322482C535D6";
+        public const string DebugAdapterLauncherCLSID = "{"+ DebugAdapterLauncherCLSIDNoBraces + "}";
         public const string VSCodeDebugEngineId = "{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}";
         public static Guid VSCodeDebugEngine = new Guid(VSCodeDebugEngineId);
 
         public DebugAdapterLauncher(){}
 
-#if !USE_15_5
         public void Initialize(IDebugAdapterHostContext context) {
         }
 
@@ -41,10 +40,19 @@ namespace Microsoft.PythonTools.Debugger {
             // return targetInterop.ExecuteCommandAsync(path, "");
 
             // If you need more control use the DebugAdapterProcess
+            if(launchInfo.LaunchType == LaunchType.Attach) {
+                return DebugAdapterRemoteProcess.Attach(launchInfo.LaunchJson);
+            }
             return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
+            if(launchInfo.LaunchType == LaunchType.Attach) {
+                launchInfo.DebugPort.GetPortName(out string uri);
+                JObject obj = new JObject {
+                    ["remote"] = uri
+                };
+                launchInfo.LaunchJson = obj.ToString();
+            }
         }
-#endif
     }
 }

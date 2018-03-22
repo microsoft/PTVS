@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public override IVsSimpleObjectList2 FindReferences() {
-            var analyzer = this.Hierarchy.GetPythonProject().GetAnalyzer();
+            var analyzer = this.Hierarchy.GetPythonProject()?.GetAnalyzer();
 
 
             List<IAnalysisVariable> vars = new List<IAnalysisVariable>();

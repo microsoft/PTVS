@@ -192,7 +192,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task ConnectSubjectBufferAsync(PythonTextBufferInfo buffer) {
-            buffer.AddSink(GetType(), this);
+            buffer.AddSink(this, this);
             // Cannot analyze buffers without a URI
             if (buffer.DocumentUri == null) {
                 return;
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
-            bi?.RemoveSink(GetType());
+            bi?.RemoveSink(this);
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
 
@@ -434,7 +434,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var languageVersion = entry.Analyzer.LanguageVersion;
-            var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true });
+            var parser = Parser.CreateParser(new StringReader(text), languageVersion, ParserOptions.Default);
             var ast = parser.ParseSingleStatement();
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);

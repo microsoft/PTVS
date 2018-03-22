@@ -187,9 +187,6 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private ITextBuffer GetTextBufferOnUIThread(bool create) {
-            IVsTextManager textMgr = (IVsTextManager)GetService(typeof(SVsTextManager));
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
             uint itemid;
 
             IVsRunningDocumentTable rdt = ProjectMgr.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
@@ -236,7 +233,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 if (srpTextLines != null) {
-                    return adapter.GetDocumentBuffer(srpTextLines);
+                    var model = GetService(typeof(SComponentModel)) as IComponentModel;
+                    var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
+                    var buffer = adapter.GetDocumentBuffer(srpTextLines);
+                    if (buffer != null) {
+                        return buffer;
+                    }
                 }
             }
 
