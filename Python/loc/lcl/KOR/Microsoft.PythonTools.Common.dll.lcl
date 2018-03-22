@@ -1444,6 +1444,9 @@
       <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[실험적 디버거에서는 이 디버그 REPL 기능이 지원되지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5623,7 +5626,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18078.2]]></Val>
+        <Val><![CDATA[15.7.18081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5659,7 +5662,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18078.2]]></Val>
+        <Val><![CDATA[15.7.18081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
