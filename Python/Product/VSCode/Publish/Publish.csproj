@@ -59,7 +59,7 @@
   <Target Name="PackNetcoreDependentFolder">
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
-  <ItemGroup Condition="$(SignType) == 'real'">
+  <ItemGroup>
     <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
