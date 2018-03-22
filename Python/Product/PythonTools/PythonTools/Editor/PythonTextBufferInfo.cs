@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-//#define BUFFERINFO_TRACING
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -104,9 +102,7 @@ namespace Microsoft.PythonTools.Editor {
 
         internal PythonLanguageVersion _defaultLanguageVersion;
 
-#if BUFFERINFO_TRACING
         private readonly AnalysisLogWriter _traceLog;
-#endif
 
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
@@ -133,14 +129,7 @@ namespace Microsoft.PythonTools.Editor {
 
             _locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
 
-#if BUFFERINFO_TRACING
-            _traceLog = new AnalysisLogWriter(
-                PathUtils.GetAvailableFilename(System.IO.Path.GetTempPath(), "PythonTools_Buffer_{0}_{1:yyyyMMddHHmmss}".FormatInvariant(PathUtils.GetFileOrDirectoryName(_filename.Value), DateTime.Now), ".log"),
-                false,
-                false,
-                cacheSize: 1
-            );
-#endif
+            _traceLog = OpenTraceLog();
         }
 
         private PythonTextBufferInfo ReplaceBufferInfo() {
@@ -165,9 +154,7 @@ namespace Microsoft.PythonTools.Editor {
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
-#if BUFFERINFO_TRACING
             _traceLog?.Dispose();
-#endif
 
             return newInfo;
         }
@@ -724,22 +711,49 @@ namespace Microsoft.PythonTools.Editor {
         }
         #endregion
 
-        #region Extreme Tracing
+        #region Diagnostic Tracing
 
-        [Conditional("BUFFERINFO_TRACING")]
-        private void Trace(string eventName, params object[] args) {
-#if BUFFERINFO_TRACING
-            _traceLog.Log(eventName, args);
-#endif
+        private const string LoggingRegistrySubkey = @"Software\Microsoft\PythonTools\ConnectionLog";
+        private static readonly Lazy<bool> _shouldUseTraceLog = new Lazy<bool>(GetShouldUseTraceLog);
+        private static bool GetShouldUseTraceLog() {
+            using (var root = Win32.Registry.CurrentUser.OpenSubKey(LoggingRegistrySubkey, false)) {
+                var value = root?.GetValue("BufferInfo");
+                int? asInt = value as int?;
+                if (asInt.HasValue) {
+                    if (asInt.GetValueOrDefault() == 0) {
+                        // REG_DWORD but 0 means no logging
+                        return false;
+                    }
+                } else if (string.IsNullOrEmpty(value as string)) {
+                    // Empty string or no value means no logging
+                    return false;
+                }
+            }
+            return true;
         }
 
-        [Conditional("BUFFERINFO_TRACING")]
+        private AnalysisLogWriter OpenTraceLog() {
+            if (!_shouldUseTraceLog.Value) {
+                return null;
+            }
+            return new AnalysisLogWriter(
+                PathUtils.GetAvailableFilename(Path.GetTempPath(), "PythonTools_Buffer_{0}_{1:yyyyMMddHHmmss}".FormatInvariant(PathUtils.GetFileOrDirectoryName(_filename.Value), DateTime.Now), ".log"),
+                false,
+                false,
+                cacheSize: 1
+            );
+        }
+
+        private void Trace(string eventName, params object[] args) {
+            _traceLog?.Log(eventName, args);
+        }
+
         private void TraceWithStack(string eventName, params object[] args) {
-#if BUFFERINFO_TRACING
-            var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
-            _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
-            _traceLog.Flush();
-#endif
+            if (_traceLog != null) {
+                var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
+                _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
+                _traceLog.Flush();
+            }
         }
 
         #endregion
