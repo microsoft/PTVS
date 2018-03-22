@@ -261,11 +261,13 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
-                    var traceLogging = key?.GetValue("TraceLogging", null);
-                    if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
-                        initialize.traceLogging = true;
-                        _analysisOptions.traceLevel = LS.MessageType.Log;
-                    }
+                }
+            }
+            using (var key = Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey)) {
+                var traceLogging = key?.GetValue("AnalyzerTrace", null);
+                if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
+                    initialize.traceLogging = true;
+                    _analysisOptions.traceLevel = LS.MessageType.Log;
                 }
             }
 

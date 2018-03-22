@@ -713,11 +713,10 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Diagnostic Tracing
 
-        private const string LoggingRegistrySubkey = @"Software\Microsoft\PythonTools\ConnectionLog";
         private static readonly Lazy<bool> _shouldUseTraceLog = new Lazy<bool>(GetShouldUseTraceLog);
         private static bool GetShouldUseTraceLog() {
-            using (var root = Win32.Registry.CurrentUser.OpenSubKey(LoggingRegistrySubkey, false)) {
-                var value = root?.GetValue("BufferInfo");
+            using (var root = Win32.Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey, false)) {
+                var value = root?.GetValue("BufferInfo", null);
                 int? asInt = value as int?;
                 if (asInt.HasValue) {
                     if (asInt.GetValueOrDefault() == 0) {
