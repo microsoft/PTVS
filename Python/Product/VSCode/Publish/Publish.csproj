@@ -61,19 +61,19 @@
   </Target>
   <ItemGroup>
     <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
     <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
     <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
     <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
     <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
   </ItemGroup>
 </Project>
