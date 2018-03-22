@@ -39,7 +39,7 @@
     <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />  
   </ItemGroup>
   <Target Name="AfterBuild">
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
     <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
