@@ -4,9 +4,10 @@
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
   <PropertyGroup>
+    <NugetVersion>0.1.0</NugetVersion>
     <!-- Override build output during dotnet publish so it goes into a separate folder and does not stomp over signed assemblies -->
     <DotNetPublishPath Condition="'$(DotNetPublishPath)' == ''">$(BuildOutputRoot)publish\</DotNetPublishPath>
-    <DotNetPublishPathZipPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\raw\zip\</DotNetPublishPathZipPath>
+    <DotNetPublishNugetPath Condition="'$(DotNetPublishPathZip)' == ''">$(BuildOutputRoot)\raw\nuget\</DotNetPublishNugetPath>
     <OutputPath Condition="'$(DotNetPublish)' != ''">$(DotNetPublishPath)</OutputPath>
   </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -21,8 +22,8 @@
   <!-- .NET Core publishing -->
   <PropertyGroup>
     <AnalysisEngineName>python-analysis</AnalysisEngineName>
+    <NugetPackageName>python-analysis-vscode</NugetPackageName>
     <DotNetPublish>true</DotNetPublish>
-    <BaseZipName>$(DotNetPublishPathZipPath)$(AnalysisEngineName)</BaseZipName>
   </PropertyGroup>
   <ItemGroup>
     <TargetOS Include="win-x86" />
@@ -32,53 +33,30 @@
   </ItemGroup>
   <ItemGroup>  
     <EngineFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />  
+    <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />  
   </ItemGroup>
   <Target Name="AfterBuild">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
     <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
-    <Exec Command="mkdir $(DotNetPublishPathZipPath)" ContinueOnError="true" />
-    <ZipDir ZipFileName="$(BaseZipName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
+    <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
+    <!-- Copy nuspec to platform folders -->
+    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)\publish" />
+     <Exec Command="nuget pack $(DotNetPublishPath)%(TargetOS.Identity)\publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetVersion)"/>
+   <!-- <ZipDir ZipFileName="$(BaseZipName)-%(TargetOS.Identity).zip" DirectoryName="$(DotNetPublishPath)%(TargetOS.Identity)\publish" /> -->
   </Target>
-
-  <!-- Zipping -->
-  <UsingTask TaskName="ZipDir" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <ZipFileName ParameterType="System.String" Required="true" />
-      <DirectoryName ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.IO" />
-      <Reference Include="System.IO.Compression.FileSystem" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.IO.Compression" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-              try {
-                  Log.LogMessage(string.Format("Zipping Directory {0} to {1}", DirectoryName, ZipFileName));
-                  try { File.Delete(ZipFileName); } catch { }
-                  ZipFile.CreateFromDirectory(DirectoryName, ZipFileName);
-                  return true;
-              } catch(Exception ex) {
-                  Log.LogErrorFromException(ex);
-                  return false;
-              }
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
   <ItemGroup>
-    <FilesToSign Include="$(BaseZipName)-win-x86.zip">
-      <Authenticode>VsixSHA2</Authenticode>
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName).$(NugetVersion).nupkg">
+      <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(BaseZipName)-win-x64.zip">
-      <Authenticode>VsixSHA2</Authenticode>
+    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+      <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(BaseZipName)-osx-x64.zip">
-      <Authenticode>VsixSHA2</Authenticode>
+    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+      <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(BaseZipName)-linux-x64.zip">
-      <Authenticode>VsixSHA2</Authenticode>
+    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName).$(NugetVersion).nupkg">
+      <Authenticode>Microsoft</Authenticode>
     </FilesToSign>
   </ItemGroup>
 </Project>

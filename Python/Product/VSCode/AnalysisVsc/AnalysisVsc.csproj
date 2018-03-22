@@ -13,6 +13,9 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Remove="AssemblyInfo.cs" />
+        <Content Include="Python-Analysis-VsCode.nuspec">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="MicroBuild.Core" Version="0.2.0" />

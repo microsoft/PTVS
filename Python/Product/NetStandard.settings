@@ -4,7 +4,6 @@
   </Target>
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\VsCode\</BuildOutputRoot>
    </PropertyGroup>
 
