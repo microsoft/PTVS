@@ -60,7 +60,7 @@
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName)-netcore.$(NugetPackageVersion).nupkg">
+    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
     <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg">
