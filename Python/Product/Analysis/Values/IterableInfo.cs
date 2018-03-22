@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Implementors just need to provide the UnionType and the ability to make
     /// an iterator for the iterable.
     /// </summary>
-    internal abstract class BaseIterableValue : BuiltinInstanceInfo {
+    internal abstract class BaseIterableValue : BuiltinInstanceInfo, IHasRichDescription {
         protected IAnalysisSet _unionType;        // all types that have been seen
         private AnalysisValue _iterMethod;
 
@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected abstract void EnsureUnionType();
+        protected virtual string TypeName => _type?.Name ?? "iterable";
         protected abstract IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit);
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
@@ -78,41 +79,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return AnalysisSet.Empty;
         }
 
+        public override string Description => string.Join("", GetRichDescription().Select(kv => kv.Value));
+        public override string ShortDescription => string.Join("", GetRichDescription().TakeWhile(kv => kv.Key != WellKnownRichDescriptionKinds.EndOfDeclaration).Select(kv => kv.Value));
 
-        public override string Description {
-            get {
-                return MakeDescription("iterable");
+        public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, TypeName);
+            var indexTypes = UnionType;
+            if (indexTypes.IsObjectOrUnknown()) {
+                yield break;
             }
-        }
 
-        protected string MakeDescription(string typeName) {
-            EnsureUnionType();
-            return MakeDescription(this, typeName, UnionType);
-        }
-
-        internal static string MakeDescription(AnalysisValue type, string typeName, IAnalysisSet indexTypes) {
-            if (type.Push()) {
-                try {
-                    if (indexTypes == null || indexTypes.Count == 0) {
-                        return typeName;
-                    } else if (indexTypes.Count == 1) {
-                        return typeName + " of " + indexTypes.First().ShortDescription;
-                    } else if (indexTypes.Count < 4) {
-                        return typeName + " of {" + string.Join(", ", indexTypes.Select(ns => ns.ShortDescription)) + "}";
-                    } else {
-                        return typeName + " of multiple types";
-                    }
-                } finally {
-                    type.Pop();
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+            if (indexTypes.Count < 4) {
+                foreach (var kv in indexTypes.GetRichDescriptions()) {
+                    yield return kv;
                 }
+            } else {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "...");
             }
-            return typeName;
-        }
-
-        public override string ShortDescription {
-            get {
-                return _type.Name;
-            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
         }
     }
 
@@ -225,10 +210,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (context.CallSite == null) {
-                return this;
-            }
-
             if (Push()) {
                 try {
                     var types = ResolveIndexTypes(unit, context);
@@ -236,6 +217,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return this;
                     }
 
+                    if (context.CallSite == null) {
+                        return CreateWithNewTypes(_node, types);
+                    }
                     return unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => CreateWithNewTypes(n, types));
                 } finally {
                     Pop();

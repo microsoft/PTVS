@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 case "Tuple":
                     if (!args.SelectMany(a => a).Any(a => a.TypeId == BuiltinTypeId.Ellipsis)) {
-                        return MakeTuple(args.ToArray());
+                        return MakeTuple(args.Select(ToInstance).ToArray());
                     }
                     goto case "List";
 

@@ -683,6 +683,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string label;
         public MarkupContent? documentation;
         public ParameterInformation[] parameters;
+
+        public string[] _returnTypes;
     }
 
     [Serializable]

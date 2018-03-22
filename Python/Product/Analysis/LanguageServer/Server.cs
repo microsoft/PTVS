@@ -1252,7 +1252,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     },
                     _type = p.Type,
                     _defaultValue = p.DefaultValue
-                }).ToArray()
+                }).ToArray(),
+                _returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray()
             };
         }
 

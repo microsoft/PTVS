@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private OverloadResult[] GenerateOverloads() {
             return new[] {
-                new OverloadResult(Arguments.Select(ToParameterResult).ToArray(), Name)
+                new OverloadResult(Arguments.Select(ToParameterResult).ToArray(), Name, null, ReturnType.GetShortDescriptions())
             };
         }
 

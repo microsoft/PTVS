@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis {
 #endif
         }
 
-        private static IAnalysisSet GetArg(
+        internal static IAnalysisSet GetArg(
             IAnalysisSet[] args,
             NameExpression[] keywordArgNames,
             string name,

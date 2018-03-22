@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
-            new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
+            new[] { new OverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs", null) };
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;

@@ -30,8 +30,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ArgumentSet(IAnalysisSet[] args, IAnalysisSet sequenceArgs, IAnalysisSet dictArgs, IReadOnlyDictionary<PythonVariable, IAnalysisSet> closure) {
             Args = args;
-            SequenceArgs = sequenceArgs;
-            DictArgs = dictArgs;
+            SequenceArgs = sequenceArgs ?? AnalysisSet.Empty;
+            DictArgs = dictArgs ?? AnalysisSet.Empty;
             Closure = closure;
         }
 

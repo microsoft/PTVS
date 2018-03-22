@@ -29,6 +29,17 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class TypeAnnotationTests : BaseAnalysisTest {
+        [TestInitialize]
+        public void TestInitialize() {
+            StartAnalysisLog();
+        }
+
+        [TestCleanup]
+        public void TestCleanup() {
+            EndAnalysisLog();
+            AssertListener.ThrowUnhandled();
+        }
+
         internal static TypeAnnotation Parse(string expr, PythonLanguageVersion version = PythonLanguageVersion.V36) {
             var errors = new CollectingErrorSink();
             var ops = new ParserOptions { ErrorSink = errors };
@@ -358,6 +369,227 @@ x = f()
             var sigs = analyzer.GetSignatures("f").Single();
             Assert.AreEqual("a : int, b : float", string.Join(", ", sigs.Parameters.Select(p => $"{p.Name} : {p.Type}")));
             analyzer.AssertIsInstance("x", BuiltinTypeId.Str);
+        }
+
+        private void TypingModuleDocumentationExample(string code, IEnumerable<string> signatures) {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
+            );
+
+            analyzer.AddModule("test-module", code);
+            analyzer.WaitForAnalysis();
+
+            foreach (var sig in signatures) {
+                int i = sig.IndexOf(':');
+                Assert.AreNotEqual(-1, i, sig);
+                var f = analyzer.GetSignatures(sig.Substring(0, i));
+                var actualSig = string.Join("|", f.Select(o => o.ToString()));
+
+                Console.WriteLine("Expected: {0}", sig.Substring(i + 1));
+                Console.WriteLine("Actual:   {0}", actualSig);
+
+                Assert.AreEqual(sig.Substring(i + 1), actualSig);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_1() {
+            TypingModuleDocumentationExample(@"def greeting(name: str) -> str:
+    return 'Hello ' + name
+", 
+                new[] {
+                    "greeting:greeting(name:str=)->[str]"
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_2() {
+            TypingModuleDocumentationExample(@"from typing import List
+Vector = List[float]
+
+def scale(scalar: float, vector: Vector) -> Vector:
+    return [scalar * num for num in vector]
+
+# typechecks; a list of floats qualifies as a Vector.
+new_vector = scale(2.0, [1.0, -4.2, 5.4])
+",
+                new[] {
+                    "scale:scale(scalar:float=,vector:list[float]=)->[list[float]]"
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_3() {
+            TypingModuleDocumentationExample(@"from typing import Dict, Tuple, List
+
+ConnectionOptions = Dict[str, str]
+Address = Tuple[str, int]
+Server = Tuple[Address, ConnectionOptions]
+
+def broadcast_message(message: str, servers: List[Server]) -> None:
+    ...
+
+# The static type checker will treat the previous type signature as
+# being exactly equivalent to this one.
+def broadcast_message(
+        message: str,
+        servers: List[Tuple[Tuple[str, int], Dict[str, str]]]) -> None:
+    ...
+",
+                new[] {
+                    // Two matching functions means only one overload is returned
+                    "broadcast_message:broadcast_message(message:str=,servers:list[tuple[tuple[str, int], dict[str, str]]]=)->[]"
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_4() {
+            TypingModuleDocumentationExample(@"from typing import NewType
+
+UserId = NewType('UserId', int)
+some_id = UserId(524313)
+
+def get_user_name(user_id: UserId) -> str:
+    ...
+
+# typechecks
+user_a = get_user_name(UserId(42351))
+
+# does not typecheck; an int is not a UserId
+user_b = get_user_name(-1)
+",
+                new[] {
+                    "get_user_name:get_user_name(user_id:int, UserId=)->[str]"
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_5() {
+            TypingModuleDocumentationExample(@"from typing import NewType
+
+UserId = NewType('UserId', int)
+
+# Fails at runtime and does not typecheck
+class AdminUserId(UserId): pass
+
+ProUserId = NewType('ProUserId', UserId)
+",
+                new[] {
+                    ""
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_6() {
+            TypingModuleDocumentationExample(@"from typing import Callable
+
+def feeder(get_next_item: Callable[[], str]) -> None:
+    # Body
+
+def async_query(on_success: Callable[[int], None],
+                on_error: Callable[[int, Exception], None]) -> None:
+    # Body
+
+",
+                new[] {
+                    ""
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_7() {
+            TypingModuleDocumentationExample(@"from typing import Mapping, Sequence
+
+def notify_by_email(employees: Sequence[Employee],
+                    overrides: Mapping[str, str]) -> None: ...
+",
+                new[] {
+                    ""
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_8() {
+            TypingModuleDocumentationExample(@"from typing import Sequence, TypeVar
+
+T = TypeVar('T')      # Declare type variable
+
+def first(l: Sequence[T]) -> T:   # Generic function
+    return l[0]
+",
+                new[] {
+                    ""
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_9() {
+            TypingModuleDocumentationExample(@"from typing import TypeVar, Generic, Iterable
+from logging import Logger
+
+T = TypeVar('T')
+
+class LoggedVar(Generic[T]):
+    def __init__(self, value: T, name: str, logger: Logger) -> None:
+        self.name = name
+        self.logger = logger
+        self.value = value
+
+    def set(self, new: T) -> None:
+        self.log('Set ' + repr(self.value))
+        self.value = new
+
+    def get(self) -> T:
+        self.log('Get ' + repr(self.value))
+        return self.value
+
+    def log(self, message: str) -> None:
+        self.logger.info('%s: %s', self.name, message)
+
+def zero_all_vars(vars: Iterable[LoggedVar[int]]) -> None:
+    for var in vars:
+        var.set(0)
+",
+                new[] {
+                    ""
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleDocumentationExample_10() {
+            TypingModuleDocumentationExample(@"from typing import TypeVar, Generic
+...
+
+T = TypeVar('T')
+S = TypeVar('S', int, str)
+
+class StrangePair(Generic[T, S]):
+    ...
+
+class Pair(Generic[T, T]):   # INVALID
+    ...
+
+class LinkedList(Sized, Generic[T]):
+    ...
+
+class MyDict(Mapping[str, T]):
+    ...
+",
+                new[] {
+                    ""
+                }
+            );
         }
     }
 }

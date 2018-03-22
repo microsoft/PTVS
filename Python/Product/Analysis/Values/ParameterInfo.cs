@@ -31,6 +31,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override int DeclaringVersion => _function.DeclaringVersion;
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            if (_function == context.Caller && Push()) {
+                try {
+                    return _function.ResolveParameter(unit, Name, context.CallArgs);
+                } finally {
+                    Pop();
+                }
+            }
+
             if (context.ResolveParametersFully) {
                 if (Push()) {
                     try {
@@ -42,13 +50,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return AnalysisSet.Empty;
             }
 
-            if (_function == context.Caller && Push()) {
-                try {
-                    return _function.ResolveParameter(unit, Name, context.CallArgs);
-                } finally {
-                    Pop();
-                }
-            }
             return this;
         }
 

@@ -14,22 +14,58 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class TypingModuleInfo : BuiltinModule {
         private readonly BuiltinModule _inner;
+        private readonly Dictionary<string, IAnalysisSet> _callables;
 
         private TypingModuleInfo(BuiltinModule inner)
             : base(inner.InterpreterModule, inner.ProjectState) {
             _inner = inner;
+            _callables = new Dictionary<string, IAnalysisSet>();
         }
 
         public static BuiltinModule Wrap(BuiltinModule inner) => new TypingModuleInfo(inner);
 
         private IAnalysisSet GetBuiltin(BuiltinTypeId typeId) {
             return ProjectState.ClassInfos[typeId];
+        }
+
+        private IAnalysisSet GetFunction(Node node, AnalysisUnit unit, string name, CallDelegate callable) {
+            lock (_callables) {
+                if (_callables.TryGetValue(name, out var res)) {
+                    return res;
+                }
+            }
+            if (unit.ForEval) {
+                return null;
+            }
+
+            var inner = _inner.GetMember(node, unit, name).OfType<BuiltinFunctionInfo>().FirstOrDefault();
+            lock (_callables) {
+                return _callables[name] = new SpecializedCallable(inner, callable, false);
+            }
+        }
+
+        private IAnalysisSet NewType_Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.Scope.GetOrMakeNodeValue(node, Analyzer.NodeValueKind.TypeAnnotation, n => {
+                var name = PythonAnalyzer.GetArg(args, keywordArgNames, null, 0).GetConstantValueAsString().FirstOrDefault(x => !string.IsNullOrEmpty(x));
+                var baseType = PythonAnalyzer.GetArg(args, keywordArgNames, null, 1) ?? unit.State.ClassInfos[BuiltinTypeId.Object].Instance;
+                if (string.IsNullOrEmpty(name)) {
+                    return baseType;
+                }
+                var pi = new ProtocolInfo(unit.Entry, unit.State);
+                pi.AddProtocol(new NameProtocol(pi, name));
+                pi.AddProtocol(new CallableProtocol(pi, name, Array.Empty<IAnalysisSet>(), pi, PythonMemberType.Class));
+                pi.AddReference(n, unit);
+                return pi;
+            });
         }
 
         private IAnalysisSet Import(string moduleName, string typeName, Node node, AnalysisUnit unit) {
@@ -101,6 +137,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "ByteString": res = GetBuiltin(BuiltinTypeId.Bytes); break;
                 case "AnyStr": res = GetBuiltin(BuiltinTypeId.Unicode).Union(GetBuiltin(BuiltinTypeId.Bytes), canMutate: false); break;
                 case "Text": res = GetBuiltin(BuiltinTypeId.Str); break;
+
+                case "NewType": res = GetFunction(node, unit, name, NewType_Call); break;
 
                 // The following are added depending on presence
                 // of their non-generic counterparts in stdlib:

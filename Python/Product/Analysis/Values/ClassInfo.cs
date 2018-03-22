@@ -310,10 +310,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 try {
                                     foreach (var overload in ns.Overloads) {
                                         result.Add(
-                                            new SimpleOverloadResult(
+                                            new OverloadResult(
                                                 overload.Parameters,
                                                 ClassDefinition.Name,
-                                                overload.Documentation
+                                                overload.Documentation,
+                                                overload.ReturnType
                                             )
                                         );
                                     }
@@ -327,7 +328,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 if (result.Count == 0) {
                     // Old style class?
-                    result.Add(new SimpleOverloadResult(new ParameterResult[0], ClassDefinition.Name, ClassDefinition.Body.Documentation.TrimDocumentation()));
+                    result.Add(new OverloadResult(
+                        new ParameterResult[0],
+                        ClassDefinition.Name,
+                        ClassDefinition.Body.Documentation.TrimDocumentation(),
+                        new[] { ShortDescription }
+                    ));
                 }
 
                 // TODO: Filter out duplicates?
@@ -335,21 +341,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private SimpleOverloadResult GetNewOverloadResult(OverloadResult overload) {
+        private OverloadResult GetNewOverloadResult(OverloadResult overload) {
             var doc = overload.Documentation;
-            return new SimpleOverloadResult(
+            return new OverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc,
+                overload.ReturnType
             );
         }
 
-        private SimpleOverloadResult GetInitOverloadResult(OverloadResult overload) {
+        private OverloadResult GetInitOverloadResult(OverloadResult overload) {
             var doc = overload.Documentation;
-            return new SimpleOverloadResult(
+            return new OverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc,
+                overload.ReturnType
             );
         }
 

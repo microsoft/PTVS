@@ -448,19 +448,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var vars = FunctionDefinition.ParametersInternal.Select(p => {
                         VariableDef param;
                         if (unit != AnalysisUnit && unit.Scope.TryGetVariable(p.Name, out param)) {
-                            return param.Types;
+                            return param.Types.Resolve(unit);
                         } else if (_analysisUnit._scope is FunctionScope fs) {
-                            return fs.GetParameter(p.Name)?.Types;
+                            return fs.GetParameter(p.Name)?.Types.Resolve(unit) ?? AnalysisSet.Empty;
                         }
-                        return null;
+                        return AnalysisSet.Empty;
                     }).ToArray();
 
                     var defaults = FunctionDefinition.ParametersInternal.Select(p => GetDefaultValue(unit.State, p, DeclaringModule.Tree)).ToArray();
 
+                    var rtypes = (unit.Scope as FunctionScope)?.ReturnValue
+                        .TypesNoCopy
+                        .Resolve(unit, new ResolutionContext {
+                            Caller = this,
+                            LazyCallArgs = new Lazy<ArgumentSet>(() => new ArgumentSet(vars, null, null, null)),
+                            ResolveParametersFully = true
+                        }, out _)
+                        .GetShortDescriptions()
+                        .ToArray();
+
                     bool needNewSet = true;
                     foreach (var set in parameterSets) {
                         if (set.ParameterCount == names.Length) {
-                            if (set.TryAddOverload(null, null, names, vars, defaults)) {
+                            if (set.TryAddOverload(null, null, names, vars, defaults, rtypes)) {
                                 needNewSet = false;
                                 break;
                             }
@@ -470,7 +480,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (needNewSet) {
                         var set = new AccumulatedOverloadResult(FunctionDefinition.Name, Documentation, names.Length);
                         parameterSets.Add(set);
-                        set.TryAddOverload(null, null, names, vars, defaults);
+                        set.TryAddOverload(null, null, names, vars, defaults, rtypes);
                     }
                 }
 

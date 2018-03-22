@@ -26,30 +26,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableValue {
-        private readonly ProjectEntry _declaringModule;
-        private readonly int _declaringVersion;
-        
-        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
+        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, IPythonProjectEntry entry)
             : base(indexTypes, seqType, node) {
-            _declaringModule = entry;
-            _declaringVersion = entry.AnalysisVersion;
+            DeclaringModule = entry;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _declaringModule;
-            }
-        }
-
-        public override int DeclaringVersion {
-            get {
-                return _declaringVersion;
-            }
-        }
-
-        public override int? GetLength() {
-            return IndexTypes.Length;
-        }
+        public override IPythonProjectEntry DeclaringModule { get; }
+        public override int DeclaringVersion { get; }
+        public override int? GetLength() => IndexTypes.Length;
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             SequenceInfo seq = null;
@@ -142,21 +127,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return constIndex;
         }
 
-        public override string ShortDescription {
-            get {
-                return _type.Name;
-            }
-        }
-
-        public override string ToString() {
-            return Description;
-        }
-
-        public override string Description {
-            get {
-                return MakeDescription(_type.Name);
-            }
-        }
 
         public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
             for (int i = 0; i < IndexTypes.Length; i++) {
@@ -170,12 +140,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override IAnalysisSet CreateWithNewTypes(Node node, VariableDef[] types) {
-            return new SequenceInfo(types, ClassInfo, node, _declaringModule);
+            return new SequenceInfo(types, ClassInfo, node, DeclaringModule);
         }
     }
 
     internal class StarArgsSequenceInfo : SequenceInfo {
-        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node, ProjectEntry entry)
+        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node, IPythonProjectEntry entry)
             : base(variableDef, builtinClassInfo, node, entry) {
         }
 
@@ -206,13 +176,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
                 IndexTypes[0].AddTypes(unit, value, true, DeclaringModule);
-            }
-        }
-
-
-        public override string ShortDescription {
-            get {
-                return base.ShortDescription;
             }
         }
 
