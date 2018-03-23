@@ -2953,9 +2953,7 @@ from baz import abc2 as abc";
                 new VariableLocation(2, 25, VariableType.Reference)
             );
             state.AssertReferences(fobMod, "abc", 0,
-                new VariableLocation(1, 7, VariableType.Value),         // possible value
-                                                                        //new VariableLocation(1, 7, VariableType.Value),
-                                                                        // appears twice for two modules, but cannot test that
+                new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
                 new VariableLocation(2, 25, VariableType.Reference),    // as
@@ -5651,7 +5649,7 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
-                new VariableLocation(5, 9, VariableType.Value),
+                new VariableLocation(5, 9, VariableType.Definition),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );
@@ -5679,7 +5677,7 @@ n1 = g(1)";
             entry.AssertReferences("g",
                 new VariableLocation(7, 5, VariableType.Definition),
                 new VariableLocation(10, 6, VariableType.Reference),
-                new VariableLocation(2, 9, VariableType.Value)
+                new VariableLocation(2, 9, VariableType.Definition)
             );
         }
 

@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -43,13 +44,19 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
-            if (process == null) {
-                ppEnum = null;
-                return VSConstants.E_FAIL;
-            } else {
+            if (ExperimentalOptions.UseVsCodeDebugger) {
+                var process = new PythonRemoteDebugProcess(this, 54321, "Python", "*", "*");
                 ppEnum = new PythonRemoteEnumDebugProcesses(process);
                 return VSConstants.S_OK;
+            } else {
+                var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
+                if (process == null) {
+                    ppEnum = null;
+                    return VSConstants.E_FAIL;
+                } else {
+                    ppEnum = new PythonRemoteEnumDebugProcesses(process);
+                    return VSConstants.S_OK;
+                }
             }
         }
 

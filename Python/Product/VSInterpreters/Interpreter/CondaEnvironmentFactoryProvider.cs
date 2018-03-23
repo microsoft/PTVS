@@ -353,6 +353,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 version
             );
 
+            config.SwitchToFullDescription();
+
             var unique = new PythonInterpreterInformation(
                 config,
                 vendor,
@@ -393,13 +395,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
             if (!ExperimentalOptions.NoDatabaseFactory) {
-                return new LegacyDB.CPythonInterpreterFactory(
+                var fact = new LegacyDB.CPythonInterpreterFactory(
                     info.Configuration,
                     new InterpreterFactoryCreationOptions {
                         WatchFileSystem = true,
                         DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, LegacyDB.PythonTypeDatabase.FormatVersion)
                     }
                 );
+                fact.BeginRefreshIsCurrent();
+                return fact;
             }
 
             return new Ast.AstPythonInterpreterFactory(

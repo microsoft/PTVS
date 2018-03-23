@@ -44,6 +44,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<LocationInfo> Locations => Function.Locations;
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            if (Push()) {
+                try {
+                    return GetRichDescriptionWorker(true).ToArray();
+                } finally {
+                    Pop();
+                }
+            }
+            return GetRichDescriptionWorker(false);
+        }
+
+        private IEnumerable<KeyValuePair<string, string>> GetRichDescriptionWorker(bool includeTypes) {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "method ");
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Function.FunctionDefinition.Name);
 
@@ -53,20 +64,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
             }
 
-            foreach (var kv in FunctionInfo.GetReturnTypeString(Function.GetReturnValue)) {
-                yield return kv;
-            }
-
-            bool needsNl = true;
-            var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
-
-            foreach (var kv in FunctionInfo.GetDocumentationString(Function.Documentation)) {
-                if (needsNl) {
-                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
-                    nlKind = WellKnownRichDescriptionKinds.Misc;
-                    needsNl = false;
+            if (includeTypes) {
+                foreach (var kv in FunctionInfo.GetReturnTypeString(Function.GetReturnValue)) {
+                    yield return kv;
                 }
-                yield return kv;
+
+                bool needsNl = true;
+                var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
+
+                foreach (var kv in FunctionInfo.GetDocumentationString(Function.Documentation)) {
+                    if (needsNl) {
+                        yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                        nlKind = WellKnownRichDescriptionKinds.Misc;
+                        needsNl = false;
+                    }
+                    yield return kv;
+                }
             }
         }
 

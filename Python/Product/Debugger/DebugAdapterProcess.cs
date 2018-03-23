@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public static DebugAdapterProcess Start(string launchJson) {
+        public static ITargetHostProcess Start(string launchJson) {
             var debugProcess = new DebugAdapterProcess();
             debugProcess.StartProcess(launchJson);
             return debugProcess;

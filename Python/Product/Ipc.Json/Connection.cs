@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -556,7 +557,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// </remarks>
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
-            LogToDisk(str);
+
             try {
                 try {
                     await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
@@ -566,6 +567,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     throw new ObjectDisposedException(nameof(_writeLock));
                 }
                 try {
+                    LogToDisk(str);
+
                     // The content part is encoded using the charset provided in the Content-Type field.
                     // It defaults to utf-8, which is the only encoding supported right now.
                     var contentBytes = TextEncoding.GetBytes(str);
@@ -577,7 +580,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
                     await _writer.WriteAsync(headerBytes, 0, headerBytes.Length).ConfigureAwait(false);
                     await _writer.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
-                    await _writer.FlushAsync(cancel).ConfigureAwait(false);
+                    await _writer.FlushAsync().ConfigureAwait(false);
                 } finally {
                     _writeLock.Release();
                 }

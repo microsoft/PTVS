@@ -322,6 +322,26 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void TestRelativeImport() {
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = new[] { TestInfo.RelativeImportSuccess };
+            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+            var testCases = runContext.TestCases;
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void TestInheritance() {
             // TODO: Figure out the proper fix to make this test pass.
             // There's a confusion between source file path and class file path.

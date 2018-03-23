@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                     if (!wasChanged) {
                         return this;
                     }
-                    return ((AnalysisHashSet)Clone()).Remove(existing).Add(item, true);
+                    return ((AnalysisHashSet)Clone()).Remove(existing).Add(item, out wasChanged, true);
                 }
                 wasChanged = true;
                 return Clone().Add(item, true);
@@ -219,13 +219,27 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         public IAnalysisSet Clone() {
             var buckets = _buckets;
             var count = _count;
-            if (buckets != null) {
-                var newBuckets = new Bucket[buckets.Length];
-                Array.Copy(buckets, newBuckets, buckets.Length);
-                buckets = newBuckets;
+            if (buckets == null) {
+                return new AnalysisHashSet(Comparer);
             }
+
+            // Check whether we can reuse the same buckets or if
+            // we need to combine values. We can't use 'seen' for
+            // anything other than checking equality, as it does
+            // not have the merge logic we need.
+            var seen = new HashSet<AnalysisValue>(Comparer);
+            foreach (var b in buckets) {
+                if (b.Key != null && b.Key != _removed && !seen.Add(b.Key)) {
+                    // Cannot reuse the buckets
+                    return new AnalysisHashSet(Comparer).Union(this, canMutate: true);
+                }
+            }
+
             var res = new AnalysisHashSet(Comparer);
-            res._buckets = buckets;
+            var newBuckets = new Bucket[buckets.Length];
+            Array.Copy(buckets, newBuckets, buckets.Length);
+
+            res._buckets = newBuckets;
             res._count = count;
             return res;
         }
@@ -368,14 +382,11 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                         // The hash code should not change, but if it does, we
                         // need to keep things consistent
                         Debug.Fail("Hash code changed when merging AnalysisValues");
-                        Thread.MemoryBarrier();
-                        buckets[index].Key = _removed;
-                        AddOne(buckets, newKey, newHc);
-                        return true;
                     }
                     Thread.MemoryBarrier();
-                    buckets[index].Key = newKey;
-                    return true;
+                    buckets[index].Key = _removed;
+                    _count--;
+                    return AddOne(buckets, newKey, newHc);
                 }
 
                 index = ProbeNext(buckets, index);

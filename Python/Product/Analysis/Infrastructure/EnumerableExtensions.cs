@@ -39,5 +39,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public static IEnumerable<T> Ordered<T>(this IEnumerable<T> source) {
             return source.OrderBy(Identity);
         }
+
+        private static bool NotNull<T>(T obj) where T : class => obj != null;
+
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> source) where T : class {
+            return source.Where(NotNull);
+        }
     }
 }
