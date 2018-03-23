@@ -62,7 +62,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override PythonMemberType MemberType => PythonMemberType.Unknown;
 
+        // Do not return any default values from protocols. We call these directly and handle null.
+        public override IAnalysisSet Await(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) => null;
+        public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetDescriptor(PythonAnalyzer projectState, AnalysisValue instance, AnalysisValue context) => null;
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) => null;
         public override IAnalysisSet GetInstanceType() => null;
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() => null;
+        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) => null;
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             EnsureMembers();

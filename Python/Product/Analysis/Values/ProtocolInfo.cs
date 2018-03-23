@@ -59,9 +59,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool RemoveProtocol<T>(Func<T, bool> pred) where T : Protocol {
-            var remove = _protocols.OfType<T>().Where(pred).ToArray();
+            var remove = _protocols.OfType<T>().Where(pred).ToList();
             if (remove.Any()) {
-                _protocols.RemoveAll(remove.Contains);
+                _protocols.RemoveAll(p => p is T t && remove.Contains(t));
                 _instance = null;
                 _members = null;
                 _typeId = null;
@@ -191,11 +191,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetAsyncEnumeratorTypes(node, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetAsyncEnumeratorTypes(node, unit)).WhereNotNull());
         }
 
         public override IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetAsyncIterator(node, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetAsyncIterator(node, unit)).WhereNotNull());
         }
 
         public override object GetConstantValue() {
@@ -203,28 +203,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetDescriptor(node, instance, context, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetDescriptor(node, instance, context, unit)).WhereNotNull());
         }
 
         public override IAnalysisSet GetDescriptor(PythonAnalyzer projectState, AnalysisValue instance, AnalysisValue context) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetDescriptor(projectState, instance, context)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetDescriptor(projectState, instance, context)).WhereNotNull());
         }
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetEnumeratorTypes(node, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetEnumeratorTypes(node, unit)).WhereNotNull());
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetIndex(node, unit, index)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetIndex(node, unit, index)).WhereNotNull());
         }
 
         public override IAnalysisSet GetInstanceType() {
-            _instance = _instance ?? AnalysisSet.UnionAll(_protocols.Select(p => p.GetInstanceType()).Where(p => p != null).DefaultIfEmpty(this));
+            _instance = _instance ?? AnalysisSet.UnionAll(_protocols.Select(p => p.GetInstanceType()).WhereNotNull().DefaultIfEmpty(this));
             return _instance;
         }
 
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetIterator(node, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetIterator(node, unit)).WhereNotNull());
         }
 
         public override int? GetLength() {
@@ -232,19 +232,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetMember(node, unit, name)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetMember(node, unit, name)).WhereNotNull());
         }
 
         public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetReturnForYieldFrom(node, unit)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetReturnForYieldFrom(node, unit)).WhereNotNull());
         }
 
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetTypeMember(node, unit, name)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.GetTypeMember(node, unit, name)).WhereNotNull());
         }
 
         public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.ReverseBinaryOperation(node, unit, operation, rhs)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.ReverseBinaryOperation(node, unit, operation, rhs)).WhereNotNull());
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
-            return AnalysisSet.UnionAll(_protocols.Select(p => p.UnaryOperation(node, unit, operation)));
+            return AnalysisSet.UnionAll(_protocols.Select(p => p.UnaryOperation(node, unit, operation)).WhereNotNull());
         }
 
         public override bool Equals(object obj) {

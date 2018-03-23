@@ -234,13 +234,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (context.CallSite == null) {
                 // No ability to come back to this instance later, so resolve and return
                 // imitation type
-                var union = UnionType.Resolve(unit, context, out var changed);
-                if (!changed) {
-                    return this;
+                if (Push()) {
+                    try {
+                        var union = UnionType.Resolve(unit, context, out var changed);
+                        if (!changed) {
+                            return this;
+                        }
+                        var pi = new ProtocolInfo(DeclaringModule, ProjectState);
+                        pi.AddProtocol(new IterableProtocol(pi, union));
+                        return pi;
+                    } finally {
+                        Pop();
+                    }
                 }
-                var pi = new ProtocolInfo(DeclaringModule, ProjectState);
-                pi.AddProtocol(new IterableProtocol(pi, union));
-                return pi;
+                return this;
             }
 
             VariableDef[] newTypes;
