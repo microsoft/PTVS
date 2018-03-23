@@ -150,13 +150,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (parameters[i].Name == name) {
                     IAnalysisSet res = AnalysisSet.Empty;
                     if (i < arguments.Count) {
-                        res = res.Union(arguments.Args[i]);
+                        arguments.Args[i].Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Union(args);
                     }
                     if (parameters[i].IsList) {
-                        res = res.Add(new LazyIndexableInfo(parameters[i], arguments.SequenceArgs, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                        arguments.SequenceArgs.Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Add(new LazyIndexableInfo(parameters[i], args, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
                     }
                     if (parameters[i].IsDictionary) {
-                        res = res.Add(new LazyIndexableInfo(parameters[i], arguments.DictArgs, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                        arguments.DictArgs.Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Add(new LazyIndexableInfo(parameters[i], args, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
                     }
                     return res;
                 }

@@ -18,22 +18,21 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class ParameterInfo : LazyValueInfo {
-        private readonly FunctionInfo _function;
-
         public ParameterInfo(FunctionInfo function, Node node, string name) : base(node) {
-            _function = function;
+            Function = function;
             Name = name;
         }
 
         public override string Name { get; }
+        public FunctionInfo Function { get; }
 
-        public override IPythonProjectEntry DeclaringModule => _function.DeclaringModule;
-        public override int DeclaringVersion => _function.DeclaringVersion;
+        public override IPythonProjectEntry DeclaringModule => Function.DeclaringModule;
+        public override int DeclaringVersion => Function.DeclaringVersion;
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (_function == context.Caller && Push()) {
+            if (Function == context.Caller && Push()) {
                 try {
-                    return _function.ResolveParameter(unit, Name, context.CallArgs);
+                    return Function.ResolveParameter(unit, Name, context.CallArgs);
                 } finally {
                     Pop();
                 }
@@ -42,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (context.ResolveParametersFully) {
                 if (Push()) {
                     try {
-                        return _function.ResolveParameter(unit, Name);
+                        return Function.ResolveParameter(unit, Name);
                     } finally {
                         Pop();
                     }
@@ -54,20 +53,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
-            _function.AddParameterReference(node, analysisUnit, Name);
+            Function.AddParameterReference(node, analysisUnit, Name);
         }
 
-        public override string ToString() => $"<arg {Name} in {_function.Name}>";
+        public override string ToString() => $"<arg {Name} in {Function.Name}>";
 
         public override bool Equals(object obj) {
             if (obj is ParameterInfo other) {
-                return Name == other.Name && _function == other._function;
+                return Name == other.Name && Function == other.Function;
             }
             return false;
         }
 
         public override int GetHashCode() {
-            return new { Name, F = _function.Name }.GetHashCode();
+            return new { Name, F = Function.Name }.GetHashCode();
         }
     }
 }

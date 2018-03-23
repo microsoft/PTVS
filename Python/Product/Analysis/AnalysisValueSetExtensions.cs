@@ -298,7 +298,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             self.Split(removed.Contains, out _, out var unchanged);
-            return unchanged.Union(added, out changed);
+            var res = unchanged.Union(added, out changed);
+#if FULL_VALIDATION || DEBUG
+            if (changed) {
+                Validation.Assert(!res.SetEquals(self));
+            }
+#endif
+            return res;
         }
 
         class DotsLastStringComparer : IComparer<string> {
