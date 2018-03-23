@@ -194,6 +194,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 throw new ArgumentException("Each element of newTypes must be initialized");
             }
 
+            if (newTypes.Length == 0 || IndexTypes.Length == 0) {
+                return false;
+            }
+
             var resolvedTypes = new IAnalysisSet[IndexTypes.Length];
             bool anyChange = false;
 
@@ -258,7 +262,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return newSeq;
             } else {
-                newTypes = VariableDef.Generator.Take(IndexTypes.Length).ToArray();
+                newTypes = VariableDef.Generator.Take(Math.Max(1, IndexTypes.Length)).ToArray();
                 if (ResolveIndexTypes(unit, context, newTypes)) {
                     return unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => CreateWithNewTypes(n, newTypes));
                 }
