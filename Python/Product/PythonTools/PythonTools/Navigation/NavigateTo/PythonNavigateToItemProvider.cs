@@ -53,8 +53,8 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         public PythonNavigateToItemProvider(PythonEditorServices services) {
             _services = services;
             var solution = (IVsSolution)_services.Site.GetService(typeof(SVsSolution));
-            _analyzers = solution.EnumerateLoadedPythonProjects()
-                .Select(p => new AnalyzerInfo { Analyzer = p.GetAnalyzer(), ProjectName = p.Caption })
+            _analyzers = _services.Python.GetActiveAnalyzers()
+                .Select(p => new AnalyzerInfo { Analyzer = p.Value, ProjectName = p.Key })
                 .Where(a => a.Analyzer != null)
                 .ToArray();
         }

@@ -242,10 +242,6 @@ namespace Microsoft.VisualStudioTools {
 
         #region ThrowOnAssertListener class
 
-        sealed class AssertException : Exception {
-            public AssertException(string message) : base(message) { }
-        }
-
 #if DEBUG
         class NoDeadlockAssertListener : TraceListener {
             public static IDisposable Push() {

@@ -116,10 +116,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
 
-                AnalysisEntry entry;
-                if (!_services.AnalysisEntryService.TryGetAnalysisEntry(pt.Value.Snapshot.TextBuffer, out entry)) {
+                var entry = await e.View.TextBuffer.GetAnalysisEntryAsync(_services);
+                if (entry == null) {
                     return;
                 }
+
                 var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
                 var quickInfo = await Task.Run(() => entry.Analyzer.WaitForRequest(t, "GetQuickInfo", null, 2));
 
@@ -171,14 +172,16 @@ namespace Microsoft.PythonTools.Intellisense {
             var services = bufferInfo.Services;
 
             bool isTemporaryFile = false;
-            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out _)) {
+            analyzer = await services.Site.FindAnalyzerAsync(bufferInfo);
+            if (analyzer == null) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
                 // to analyze against the project we're diffing from).  But in either case this
                 // is just a temporary file which should be closed when the view is closed.
                 isTemporaryFile = true;
-                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out _)) {
-                    analyzer = services.AnalysisEntryService.DefaultAnalyzer;
+                analyzer = await services.Site.FindAnalyzerAsync(textView);
+                if (analyzer == null) {
+                    analyzer = await services.Python.GetSharedAnalyzerAsync();
                 }
             }
 
@@ -428,8 +431,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
-            AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return false;
             }
 

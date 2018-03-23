@@ -685,12 +685,6 @@ namespace Microsoft.PythonTools.Repl {
             return prevText;
         }
 
-        internal IEnumerable<string> JoinCode(IEnumerable<string> code) {
-            var version = _textView.GetLanguageVersion(_serviceProvider);
-            var split = JoinToCompleteStatements(TrimIndent(code), version);
-            return Enumerable.Repeat(string.Join(Environment.NewLine, split), 1);
-        }
-
         private static bool ShouldAppendCode(ParseResult? prevParseResult, ParseResult result) {
             if (result == ParseResult.Invalid) {
                 if (prevParseResult == ParseResult.IncompleteStatement || prevParseResult == ParseResult.Invalid) {

@@ -238,25 +238,26 @@ namespace Microsoft.PythonTools.Repl {
 
         public IInteractiveWindow CurrentWindow { get; set; }
 
-        public VsProjectAnalyzer Analyzer {
-            get {
-                if (_activeEvaluator != null) {
-                    return _activeEvaluator?.Analyzer;
-                } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
-                    var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                    var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
-                    var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
-                    var analyzer = project?.TryGetAnalyzer();
-                    return analyzer;
+        public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_activeEvaluator != null) {
+                return _activeEvaluator.GetAnalyzerAsync();
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+                var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
+                var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
+                var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
+                if (project != null) {
+                    return project.GetAnalyzerAsync();
                 }
-                return null;
             }
+            return Task.FromResult<VsProjectAnalyzer>(null);
         }
+
         public Uri DocumentUri {
             get {
                 if (_activeEvaluator != null) {
-                    return _activeEvaluator?.DocumentUri;
-                } else if(_documentUri != null) {
+                    return _activeEvaluator.DocumentUri;
+                } else if (_documentUri != null) {
                     return _documentUri;
                 } else {
                     _documentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
@@ -264,6 +265,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
         }
+
         public Uri NextDocumentUri() => _activeEvaluator?.NextDocumentUri();
 
         public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
@@ -295,7 +297,6 @@ namespace Microsoft.PythonTools.Repl {
                                     .ToArray();
                     return completionResults;
                 }
-                return new CompletionResult[0];
             }
 
             return new CompletionResult[0];

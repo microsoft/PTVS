@@ -256,71 +256,35 @@ namespace Microsoft.PythonTools {
             return guid;
         }
 
-        internal static AnalysisEntry GetAnalysisEntry(this FileNode node) {
-            return ((PythonProjectNode)node.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(node.Url);
-        }
-
-        internal static PythonProjectNode GetProject(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            var path = buffer.GetFilePath();
-            if (path != null) {
-                var sln = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-                if (sln != null) {
-                    foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
-                        int found;
-                        var priority = new VSDOCUMENTPRIORITY[1];
-                        uint itemId;
-                        ErrorHandler.ThrowOnFailure(proj.IsDocumentInProject(path, out found, priority, out itemId));
-                        if (found != 0) {
-                            return proj;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        internal static AnalysisEntryService GetEntryService(this IServiceProvider serviceProvider) {
-            return serviceProvider.GetComponentModel()?.GetService<AnalysisEntryService>();
-        }
 
         internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
             return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
         }
 
-        internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
+        internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
             var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
             if (evaluator != null) {
                 return evaluator.LanguageVersion;
             }
 
-            var service = serviceProvider.GetEntryService();
-            if (service != null) {
-                var analyzer = service.GetVsAnalyzer(textView, null) ?? (service.DefaultAnalyzer as VsProjectAnalyzer);
-                if (analyzer != null) {
-                    return analyzer.LanguageVersion;
-                }
-            }
-            return PythonLanguageVersion.None;
-        }
-
-        internal static PythonLanguageVersion GetLanguageVersion(this ITextBuffer textBuffer, IServiceProvider serviceProvider) {
-            var evaluator = textBuffer.GetInteractiveWindow().GetPythonEvaluator();
-            if (evaluator != null) {
-                return evaluator.LanguageVersion;
+            var entry = textView.TextBuffer.TryGetAnalysisEntry();
+            if (entry?.Analyzer != null) {
+                return entry.Analyzer.LanguageVersion;
             }
 
-            var service = serviceProvider.GetEntryService();
-            if (service != null) {
-                VsProjectAnalyzer analyzer = service.GetVsAnalyzer(null, textBuffer);
-                if (analyzer != null) {
-                    return analyzer.LanguageVersion;
-                }
+            var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
+            if (analyzer is VsProjectAnalyzer pyAnalyzer) {
+                return pyAnalyzer.LanguageVersion;
+            }
 
-                analyzer = service.DefaultAnalyzer as VsProjectAnalyzer;
-                if (analyzer != null) {
-                    return analyzer.LanguageVersion;
+            var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
+            if (defaultInterp?.Configuration != null) {
+                try {
+                    return defaultInterp.Configuration.Version.ToLanguageVersion();
+                } catch (InvalidOperationException) {
                 }
             }
+
             return PythonLanguageVersion.None;
         }
 
@@ -337,16 +301,11 @@ namespace Microsoft.PythonTools {
         /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
         /// </summary>
         internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var service = serviceProvider.GetEntryService();
-            AnalysisEntry entry = null;
-
             var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer == null) {
-                service?.TryGetAnalysisEntry(textView, out entry);
-            } else {
-                service?.TryGetAnalysisEntry(buffer, out entry);
+            if (buffer != null) {
+                return buffer.TryGetAnalysisEntry();
             }
-            return entry;
+            return textView.TryGetAnalysisEntry(serviceProvider);
         }
 
         /// <summary>

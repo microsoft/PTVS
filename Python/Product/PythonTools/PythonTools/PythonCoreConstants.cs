@@ -22,7 +22,9 @@ namespace Microsoft.PythonTools {
     internal static class PythonCoreConstants {
         public const string ContentType = "Python";
         public const string BaseRegistryKey = "PythonTools";
-        
+
+        public const string LoggingRegistrySubkey = "Software\\Microsoft\\" + BaseRegistryKey + "\\Logging";
+
         [Export, Name(ContentType), BaseDefinition("code")]
         internal static ContentTypeDefinition ContentTypeDefinition = null;
     }

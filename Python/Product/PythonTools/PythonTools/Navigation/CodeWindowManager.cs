@@ -95,8 +95,8 @@ namespace Microsoft.PythonTools.Navigation {
             var result = _client.Register((IVsDropdownBarManager)_window);
  
             if (refresh) {
-                var entryService = _serviceProvider.GetEntryService();
-                if (entryService != null && entryService.TryGetAnalysisEntry(wpfTextView, out AnalysisEntry entry) && entry.IsAnalyzed) {
+                var entry = wpfTextView.TryGetAnalysisEntry(_serviceProvider);
+                if (entry != null && entry.IsAnalyzed) {
                     _client.RefreshNavigationsFromAnalysisEntry(entry)
                         .HandleAllExceptions(_serviceProvider, GetType())
                         .DoNotWait();
