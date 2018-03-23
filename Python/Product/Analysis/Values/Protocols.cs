@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected abstract bool Equals(Protocol other);
 
         public override bool Equals(object obj) {
-            if (obj is Protocol other && obj.GetType() == other.GetType()) {
+            if (obj is Protocol other && GetType() == other.GetType()) {
                 return Equals(other);
             }
             return false;
@@ -212,15 +212,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) {
-            if (Name != other.Name) {
-                return false;
-            }
-            if (!Arguments.Zip(((CallableProtocol)other).Arguments, (x, y) => x.SetEquals(y)).All(b => b)) {
-                return false;
-            }
-            return true;
-        }
+        protected override bool Equals(Protocol other) =>
+            Name == other.Name &&
+            other is CallableProtocol cp &&
+            Arguments.Zip(cp.Arguments, (x, y) => x.SetEquals(y)).All(b => b);
         public override int GetHashCode() => Name.GetHashCode();
     }
 
@@ -255,7 +250,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IterableProtocol)other)._yielded);
+        protected override bool Equals(Protocol other) =>
+            other is IterableProtocol ip &&
+            ObjectComparer.Instance.Equals(_yielded, ip._yielded);
+
         public override int GetHashCode() => new {
             Type = GetType(),
             x = ObjectComparer.Instance.GetHashCode(_yielded)
@@ -294,7 +292,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IteratorProtocol)other)._yielded);
+        protected override bool Equals(Protocol other) =>
+            other is IteratorProtocol ip &&
+            ObjectComparer.Instance.Equals(_yielded, ip._yielded);
+
         public override int GetHashCode() => new {
             Type = GetType(),
             x = ObjectComparer.Instance.GetHashCode(_yielded)
@@ -343,8 +344,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override bool Equals(Protocol other) =>
-            ObjectComparer.Instance.Equals(_keyType, ((GetItemProtocol)other)._keyType) &&
-            ObjectComparer.Instance.Equals(_valueType, ((GetItemProtocol)other)._valueType);
+            other is GetItemProtocol gip &&
+            ObjectComparer.Instance.Equals(_keyType, gip._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, gip._valueType);
         public override int GetHashCode() => new {
             x = ObjectComparer.Instance.GetHashCode(_keyType),
             y = ObjectComparer.Instance.GetHashCode(_valueType)
@@ -401,8 +403,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => _values.Zip(((TupleProtocol)other)._values,
-            (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
+        protected override bool Equals(Protocol other) => 
+            other is TupleProtocol tp &&
+            _values.Zip(tp._values, (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
         public override int GetHashCode() => _values.Aggregate(GetType().GetHashCode(), (h, s) => h + 37 * ObjectComparer.Instance.GetHashCode(s));
     }
 
@@ -488,8 +491,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override bool Equals(Protocol other) =>
-            ObjectComparer.Instance.Equals(_keyType, ((MappingProtocol)other)._keyType) &&
-            ObjectComparer.Instance.Equals(_valueType, ((MappingProtocol)other)._valueType);
+            other is MappingProtocol mp &&
+            ObjectComparer.Instance.Equals(_keyType, mp._keyType) &&
+            ObjectComparer.Instance.Equals(_valueType, mp._valueType);
         public override int GetHashCode() => new {
             Type = GetType(),
             x = ObjectComparer.Instance.GetHashCode(_keyType),

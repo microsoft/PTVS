@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int GetHashCode() {
-            return typeof(LazyIndexableInfo).GetHashCode() ^ _indexTypes.GetHashCode();
+            return _indexTypes.Aggregate(typeof(LazyIndexableInfo).GetHashCode(), (hc, v) => unchecked(hc * 31 + _indexTypes.Comparer.GetHashCode(v)));
         }
     }
 }

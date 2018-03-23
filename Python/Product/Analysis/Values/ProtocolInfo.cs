@@ -265,13 +265,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override bool Equals(object obj) {
             if (obj is ProtocolInfo other) {
-                return !_protocols.Except(other._protocols).Any();
+                return ObjectComparer.Instance.Equals(
+                    AnalysisSet.Create(_protocols),
+                    AnalysisSet.Create(other._protocols)
+                );
             }
             return false;
         }
 
         public override int GetHashCode() {
-            return _protocols.Aggregate(GetType().GetHashCode(), (h, p) => h ^ p.GetHashCode());
+            return ObjectComparer.Instance.GetHashCode(AnalysisSet.Create(_protocols));
         }
 
         internal override bool UnionEquals(AnalysisValue av, int strength) {
@@ -293,6 +296,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
             if (strength < 2) {
+                return this;
+            }
+
+            if (_protocols.Count == 1 && _protocols[0] is NameProtocol) {
                 return this;
             }
 
