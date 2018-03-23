@@ -40,10 +40,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand InstallPip = new RoutedCommand();
 
         private readonly PipExtensionProvider _provider;
+        private readonly Timer _focusTimer;
 
         public PipExtension(PipExtensionProvider provider) {
             _provider = provider;
             DataContextChanged += PackageExtension_DataContextChanged;
+            _focusTimer = new Timer(FocusWaitExpired);
             InitializeComponent();
         }
 
@@ -51,19 +53,48 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Dispatcher.BeginInvoke((Action)(() => {
                 try {
                     Focus();
-                    if (SearchQueryText.IsVisible) {
+                    if (SearchQueryText.IsVisible && SearchQueryText.IsEnabled) {
                         Keyboard.Focus(SearchQueryText);
                     } else {
-                        SearchQueryText.IsVisibleChanged += SearchQueryText_IsVisibleChanged;
+                        // Package manager may still be initializing itself
+                        // Search box is disabled if package manager is not ready
+                        if (!SearchQueryText.IsEnabled) {
+                            SearchQueryText.IsEnabledChanged += SearchQueryText_IsEnabledChanged;
+                        }
+                        if (!SearchQueryText.IsVisible) {
+                            SearchQueryText.IsVisibleChanged += SearchQueryText_IsVisibleChanged;
+                        }
+                        // It may never become ready/enabled, so don't wait for too long.
+                        _focusTimer.Change(1000, Timeout.Infinite);
                     }
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                 }
             }), DispatcherPriority.Loaded);
         }
 
+        private void FocusWaitExpired(object state) {
+            // Waited long enough, the user might start clicking around soon,
+            // so cancel focus operation.
+            SearchQueryText.IsEnabledChanged -= SearchQueryText_IsEnabledChanged;
+            SearchQueryText.IsVisibleChanged -= SearchQueryText_IsVisibleChanged;
+        }
+
         private void SearchQueryText_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
             SearchQueryText.IsVisibleChanged -= SearchQueryText_IsVisibleChanged;
-            Keyboard.Focus(SearchQueryText);
+            if (SearchQueryText.IsVisible && SearchQueryText.IsEnabled) {
+                SearchQueryText.IsEnabledChanged -= SearchQueryText_IsEnabledChanged;
+                Keyboard.Focus(SearchQueryText);
+                _focusTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+        }
+
+        private void SearchQueryText_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
+            SearchQueryText.IsEnabledChanged -= SearchQueryText_IsEnabledChanged;
+            if (SearchQueryText.IsVisible && SearchQueryText.IsEnabled) {
+                SearchQueryText.IsVisibleChanged -= SearchQueryText_IsVisibleChanged;
+                Keyboard.Focus(SearchQueryText);
+                _focusTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
         }
 
         private void PackageExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) {
