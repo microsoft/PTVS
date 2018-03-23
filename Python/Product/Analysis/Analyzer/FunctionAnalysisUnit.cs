@@ -209,28 +209,32 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     }
 
     class FunctionClosureAnalysisUnit : FunctionAnalysisUnit {
-        private readonly FunctionAnalysisUnit _inner;
+        private readonly FunctionAnalysisUnit _originalUnit;
+        private readonly IVersioned _agg;
 
-        internal FunctionClosureAnalysisUnit(ClosureSet key, FunctionAnalysisUnit inner) :
-            base(inner.Function, inner._declUnit, inner._declUnit.Scope, inner.ProjectEntry) {
-            _inner = inner;
-            Key = key;
-            ((FunctionScope)_inner.Scope).AddLinkedScope((FunctionScope)Scope);
+        internal FunctionClosureAnalysisUnit(IVersioned agg, FunctionAnalysisUnit originalUnit, CallChain callChain) :
+            base(originalUnit.Function, originalUnit._declUnit, originalUnit._declUnit.Scope, originalUnit.ProjectEntry) {
+            _originalUnit = originalUnit;
+            _agg = agg;
+            CallChain = callChain;
 
-            var node = inner.Function.FunctionDefinition;
-            node.Body.Walk(new OverviewWalker(inner.ProjectEntry, this, inner.Tree));
+            var node = originalUnit.Function.FunctionDefinition;
+            node.Body.Walk(new OverviewWalker(originalUnit.ProjectEntry, this, originalUnit.Tree));
 
             AnalysisLog.NewUnit(this);
         }
 
-        internal ClosureSet Key { get; set; }
+        public override IVersioned DependencyProject => _agg;
+        internal override ILocationResolver AlternateResolver => _originalUnit;
+
+        public CallChain CallChain { get; }
 
         internal override void EnsureParameters() {
             ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
         }
 
         public override string ToString() {
-            return base.ToString() + " " + (Key?.ToString() ?? "<>");
+            return base.ToString() + " " + CallChain.ToString();
         }
     }
 }

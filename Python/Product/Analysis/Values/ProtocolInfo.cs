@@ -58,6 +58,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _protocols.OfType<T>();
         }
 
+        public bool RemoveProtocol<T>(Func<T, bool> pred) where T : Protocol {
+            var remove = _protocols.OfType<T>().Where(pred).ToArray();
+            if (remove.Any()) {
+                _protocols.RemoveAll(remove.Contains);
+                _instance = null;
+                _members = null;
+                _typeId = null;
+                _members = null;
+                return true;
+            }
+            return false;
+        }
+
         public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name));
         public override string Documentation => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Documentation ?? string.Join(", ", _protocols.Select(p => p.Documentation).Where(d => !string.IsNullOrEmpty(d)));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);

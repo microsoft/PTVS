@@ -34,8 +34,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly int _declVersion;
         private string _doc;
 
-        private readonly ClosureSetDefinition _closureDefinition;
-        private readonly Dictionary<ClosureSet, FunctionAnalysisUnit> _callsWithClosure;
+        private readonly CallChainSet _callsWithClosure;
+        private int _callDepthLimit;
+        private int _callsSinceLimitChange;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
             ProjectEntry = declUnit.ProjectEntry;
@@ -48,19 +49,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             _doc = node.Body?.Documentation?.TrimDocumentation();
 
+            if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out object value) ||
+                (_callDepthLimit = (value as int?) ?? -1) < 0) {
+                _callDepthLimit = declUnit.State.Limits.CallDepth;
+            }
+
             _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry);
 
-            if (node.Parameters.Any()) {
-                if (node.ContainsNestedFreeVariables) {
-                    var paramNames = node.Parameters.Select(p => p.Name).ToArray();
-                    _closureDefinition = new ClosureSetDefinition(
-                        node.Variables.Values.Where(v => v.AccessedInNestedScope).Select(v => Array.IndexOf(paramNames, v.Name))
-                    );
-                    _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
-                } else if (node.IsGenerator) {
-                    _closureDefinition = new ClosureSetDefinition(Enumerable.Range(0, node.Parameters.Count));
-                    _callsWithClosure = new Dictionary<ClosureSet, FunctionAnalysisUnit>();
-                }
+            if (node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator) {
+                _callsWithClosure = new CallChainSet();
             }
         }
 
@@ -73,8 +70,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override AnalysisUnit AnalysisUnit => _analysisUnit;
 
         public override int DeclaringVersion => _declVersion;
-
-        public IReadOnlyList<string> ClosureNames { get; }
 
         public bool IsStatic { get; set; }
         public bool IsClassMethod { get; set; }
@@ -89,27 +84,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var res = DoCall(node, unit, _analysisUnit, callArgs);
 
-            if (_closureDefinition != null) {
-                FunctionAnalysisUnit calledUnit;
-                var key = _closureDefinition.Get(callArgs);
-                lock (_callsWithClosure) {
-                    if (!_callsWithClosure.TryGetValue(key, out calledUnit)) {
-                        if (!unit.ForEval) {
-                            calledUnit = new FunctionClosureAnalysisUnit(key, _analysisUnit);
-                            calledUnit.EnsureParameters();
-                            calledUnit.Enqueue();
-                        }
+            if (_callsWithClosure != null) {
+                var chain = new CallChain(node, unit, _callDepthLimit);
+                var aggregate = GetAggregate(unit);
+
+                if (!_callsWithClosure.TryGetValue(aggregate, chain, _callDepthLimit, out var calledUnit) &&
+                    !unit.ForEval) {
+                    _callsSinceLimitChange += 1;
+                    if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
+                        _callDepthLimit -= 1;
+                        _callsSinceLimitChange = 0;
+                        AnalysisLog.ReduceCallDepth(this, _callsWithClosure.Count, _callDepthLimit);
+
+                        _callsWithClosure.Clear();
+                        chain = chain.Trim(_callDepthLimit);
                     }
 
-                    if (!unit.ForEval) {
-                        // Always replace the key
-                        _callsWithClosure[key] = calledUnit;
-                        if (calledUnit is FunctionClosureAnalysisUnit fcau) {
-                            fcau.Key = key;
-                        }
-                    }
+                    calledUnit = new FunctionClosureAnalysisUnit(aggregate, (FunctionAnalysisUnit)AnalysisUnit, chain);
+                    _callsWithClosure.Add(aggregate, chain, calledUnit);
+                    calledUnit.Enqueue();
                 }
-                res = DoCall(node, unit, calledUnit, callArgs);
+
+                var res2 = DoCall(node, unit, calledUnit, callArgs);
+                res.Split<LazyValueInfo>(out var _, out res);
+                res = res2.Union(res);
             }
 
             var context = new ResolutionContext {
@@ -125,6 +123,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
             calledUnit.UpdateParameters(callArgs);
             calledUnit.ReturnValue.AddDependency(callingUnit);
             return calledUnit.ReturnValue.Types;
+        }
+
+        private IVersioned GetAggregate(AnalysisUnit unit) {
+            IVersioned agg;
+            var fau = unit as FunctionClosureAnalysisUnit;
+            if (fau == null || _callDepthLimit == 1) {
+                // The caller is top-level or a normal FAU, not one with a call chain.
+                // Just aggregate the caller w/ ourselves
+                agg = AggregateProjectEntry.GetAggregate(unit.ProjectEntry, ProjectEntry);
+            } else {
+                // The caller is part of a call chain, aggregate ourselves with everyone
+                // else who's in it.
+                agg = AggregateProjectEntry.GetAggregate(fau.DependencyProject, ProjectEntry);
+            }
+
+            return agg;
         }
 
         internal void AddParameterReference(Node node, AnalysisUnit unit, string name) {
@@ -271,7 +285,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (FunctionDefinition.IsCoroutine) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "async ");
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "def ");
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullyQualifiedName);
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
                 foreach (var kv in GetParameterString()) {

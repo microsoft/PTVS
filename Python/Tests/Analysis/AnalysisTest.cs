@@ -160,10 +160,10 @@ f(x=42, y = 'abc')
             var quox = analyzer.AddModule("fob.oar.quox", "def func(): return 42");
             analyzer.ReanalyzeAll();
 
-            analyzer.AssertDescription(fob, "func", "def fob.oar.quox.func() -> int");
-            analyzer.AssertDescription(oar, "func", "def fob.oar.quox.func() -> int");
-            analyzer.AssertDescription(baz, "func", "def fob.oar.quox.func() -> int");
-            analyzer.AssertDescription(quox, "func", "def fob.oar.quox.func() -> int");
+            analyzer.AssertDescription(fob, "func", "fob.oar.quox.func() -> int");
+            analyzer.AssertDescription(oar, "func", "fob.oar.quox.func() -> int");
+            analyzer.AssertDescription(baz, "func", "fob.oar.quox.func() -> int");
+            analyzer.AssertDescription(quox, "func", "fob.oar.quox.func() -> int");
         }
 
         [TestMethod, Priority(0)]
@@ -292,8 +292,14 @@ def f(x):
             // If we complete processing then we have succeeded
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
+        [TestCategory("ExpectFail")]
         public void CartesianStarArgs() {
+            // TODO: Figure out whether this is useful behaviour
+            // It currently does not work because we no longer treat
+            // the dict created by **args as a lasting object - it
+            // exists solely for receiving arguments.
+
             var code = @"def f(a, **args):
     args['fob'] = a
     return args['fob']
@@ -3153,7 +3159,7 @@ mod1.l.append(a)
                 mod2.Analyze(CancellationToken.None, true);
                 state.WaitForAnalysis();
 
-                state.AssertDescription("l", "list of C");
+                state.AssertDescription("l", "list[C]");
                 state.AssertIsInstance("l[0]", "C");
             }
         }
@@ -3185,7 +3191,7 @@ for abc in x:
     print(abc)
 ";
             var entry = ProcessText(code);
-            entry.AssertDescription("x", "set of int");
+            entry.AssertDescription("x", "set[int]");
             entry.AssertIsInstance("abc", code.IndexOf("print(abc)"), BuiltinTypeId.Int);
         }
 
@@ -4161,7 +4167,8 @@ x([])
 ";
             var entry = ProcessText(text);
             var values = entry.GetValues("self.abc", text.IndexOf("self.abc"));
-            Assert.AreEqual(4, values.Length);
+            Assert.AreEqual(1, values.Length);
+            entry.AssertDescription("self.abc", text.IndexOf("self.abc"), "list");
         }
 
         [TestMethod, Priority(0)]
@@ -5260,12 +5267,12 @@ import imp as impp
 ";
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 state.DefaultModule = "mod1";
-                state.AssertDescription("g", "def mod1.g() -> built-in module _io");
-                state.AssertDescription("f", "def mod1.f() -> built-in module sys");
-                state.AssertDescription("h", "def mod1.h() -> built-in module sys");
-                state.AssertDescription("i", "def mod1.i() -> built-in module zlib");
-                state.AssertDescription("j", "def mod1.j() -> built-in module mmap");
-                state.AssertDescription("k", "def mod1.k() -> built-in module imp");
+                state.AssertDescription("g", "mod1.g() -> built-in module _io");
+                state.AssertDescription("f", "mod1.f() -> built-in module sys");
+                state.AssertDescription("h", "mod1.h() -> built-in module sys");
+                state.AssertDescription("i", "mod1.i() -> built-in module zlib");
+                state.AssertDescription("j", "mod1.j() -> built-in module mmap");
+                state.AssertDescription("k", "mod1.k() -> built-in module imp");
             });
         }
 
@@ -5779,31 +5786,30 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("c.Length");
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
-            entry.AssertDescription("f", "def test-module.f() -> str");
-            entry.AssertDescription("fob.f", "def test-module.fob.f(self : fob)\r\ndeclared in fob");
+            entry.AssertDescription("f", "test-module.f() -> str");
+            entry.AssertDescription("fob.f", "test-module.fob.f(self)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
-            entry.AssertDescription("g", "def test-module.g()");    // return info could be better
+            entry.AssertDescription("g", "test-module.g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
             entry.AssertDescription("None", "None");
             entry.AssertDescription("f.func_name", "property of type str");
-            entry.AssertDescription("h", "def test-module.h() -> def test-module.f() -> str, def test-module.g()");
-            entry.AssertDescription("docstr_func", "def test-module.docstr_func() -> int\r\nuseful documentation");
+            entry.AssertDescription("h", "test-module.h() -> test-module.f() -> str, test-module.g()");
+            entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int\r\nuseful documentation");
 
-            entry.AssertDescription("with_params", "def test-module.with_params(a, b, c)");
-            entry.AssertDescription("with_params_default", "def test-module.with_params_default(a, b, c : int = 100)");
-            entry.AssertDescription("with_params_default_2", "def test-module.with_params_default_2(a, b, c : list = [])");
-            entry.AssertDescription("with_params_default_3", "def test-module.with_params_default_3(a, b, c : tuple = ())");
-            entry.AssertDescription("with_params_default_4", "def test-module.with_params_default_4(a, b, c : dict = {})");
-            entry.AssertDescription("with_params_default_2a", "def test-module.with_params_default_2a(a, b, c : list = [...])");
-            entry.AssertDescription("with_params_default_3a", "def test-module.with_params_default_3a(a, b, c : tuple = (...))");
-            entry.AssertDescription("with_params_default_4a", "def test-module.with_params_default_4a(a, b, c : dict = {...})");
-            entry.AssertDescription("with_params_default_starargs", "def test-module.with_params_default_starargs(*args, **kwargs)");
+            entry.AssertDescription("with_params", "test-module.with_params(a, b, c)");
+            entry.AssertDescription("with_params_default", "test-module.with_params_default(a, b, c : int = 100)");
+            entry.AssertDescription("with_params_default_2", "test-module.with_params_default_2(a, b, c : list = [])");
+            entry.AssertDescription("with_params_default_3", "test-module.with_params_default_3(a, b, c : tuple = ())");
+            entry.AssertDescription("with_params_default_4", "test-module.with_params_default_4(a, b, c : dict = {})");
+            entry.AssertDescription("with_params_default_2a", "test-module.with_params_default_2a(a, b, c : list = [...])");
+            entry.AssertDescription("with_params_default_3a", "test-module.with_params_default_3a(a, b, c : tuple = (...))");
+            entry.AssertDescription("with_params_default_4a", "test-module.with_params_default_4a(a, b, c : dict = {...})");
+            entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
-            // method which returns it's self, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", @"method return_func of test-module.return_func_class objects  -> method return_func of test-module.return_func_class objects ...
-some help");
+            // method which returns itself, we shouldn't stack overflow producing the help...
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...\r\nsome help");
         }
 
         [TestMethod, Priority(0)]
@@ -6446,7 +6452,7 @@ test1_result = test1()
             var fi = state.GetValue<FunctionInfo>("test1");
             Assert.AreEqual("doc", fi.Documentation);
             state.GetValue<FunctionInfo>("test1.__wrapped__");
-            Assert.AreEqual(3, state.GetValue<FunctionInfo>("test1").Overloads.Count());
+            Assert.AreEqual(2, state.GetValue<FunctionInfo>("test1").Overloads.Count());
             state.AssertConstantEquals("test1_result", "decorated");
 
             // __name__ should not have been changed by update_wrapper
@@ -6542,7 +6548,7 @@ test1_result = test1()
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
+                "test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

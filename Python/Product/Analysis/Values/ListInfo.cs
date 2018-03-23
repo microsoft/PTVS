@@ -107,6 +107,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
             var res = base.Resolve(unit, context);
             if (res is ProtocolInfo pi) {
+                pi.RemoveProtocol<NameProtocol>(n => true);
+                pi.AddProtocol(new NameProtocol(pi, ProjectState.Types[BuiltinTypeId.List]));
                 pi.AddProtocol(new GetItemProtocol(pi, unit.State.ClassInfos[BuiltinTypeId.Int].Instance, pi.GetEnumeratorTypes(_node, unit)));
             }
             return res;

@@ -173,6 +173,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             for (int i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
                 var name = astParams[i].Name;
                 VariableDef param;
+                if (string.IsNullOrEmpty(name)) {
+                    continue;
+                }
                 if (name == _seqParameters?.Name) {
                     param = _seqParameters;
                 } else if (name == _dictParameters?.Name) {

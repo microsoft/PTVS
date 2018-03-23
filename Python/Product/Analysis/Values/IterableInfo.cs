@@ -14,7 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
@@ -168,6 +170,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         Pop();
                     }
                 }
+                unionType.Split(this.Equals, out _, out unionType);
                 _unionType = unionType;
             }
         }
@@ -184,13 +187,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.UnionEquals(ns, strength);
         }
 
-        protected VariableDef[] ResolveIndexTypes(AnalysisUnit unit, ResolutionContext context) {
+        protected virtual bool ResolveIndexTypes(AnalysisUnit unit, ResolutionContext context, VariableDef[] newTypes) {
+            if (newTypes == null) {
+                throw new ArgumentNullException(nameof(newTypes));
+            } else if (newTypes.Any(v => v == null)) {
+                throw new ArgumentException("Each element of newTypes must be initialized");
+            }
+
             var resolvedTypes = new IAnalysisSet[IndexTypes.Length];
             bool anyChange = false;
 
             if (Push()) {
                 try {
-                    for (int i = 0; i < IndexTypes.Length; ++i) {
+                    for (int i = 0; i < resolvedTypes.Length; ++i) {
                         resolvedTypes[i] = IndexTypes[i].TypesNoCopy.Resolve(unit, context, out bool changed);
                         anyChange |= changed;
                     }
@@ -200,16 +209,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (!anyChange) {
-                return null;
+                return false;
             }
 
-            var newTypes = new VariableDef[resolvedTypes.Length];
-            for (int i = 0; i < newTypes.Length; ++i) {
-                VariableDef v;
-                newTypes[i] = v = new VariableDef();
-                v.AddTypes(DeclaringModule, resolvedTypes[i]);
+            anyChange = false;
+            if (resolvedTypes.Length <= newTypes.Length) {
+                for (int i = 0; i < resolvedTypes.Length; ++i) {
+                    anyChange |= newTypes[i].AddTypes(DeclaringModule, resolvedTypes[i]);
+                }
+            } else {
+                // Add all types to the first element
+                for (int i = 0; i < resolvedTypes.Length; ++i) {
+                    anyChange |= newTypes[0].AddTypes(DeclaringModule, resolvedTypes[i]);
+                }
             }
-            return newTypes;
+            return anyChange;
         }
 
         protected virtual IAnalysisSet CreateWithNewTypes(Node node, VariableDef[] types) {
@@ -217,21 +231,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
-            if (Push()) {
-                try {
-                    var types = ResolveIndexTypes(unit, context);
-                    if (types == null) {
-                        return this;
-                    }
+            if (context.CallSite == null) {
+                // No ability to come back to this instance later, so resolve and return
+                // imitation type
+                var union = UnionType.Resolve(unit, context, out var changed);
+                if (!changed) {
+                    return this;
+                }
+                var pi = new ProtocolInfo(DeclaringModule, ProjectState);
+                pi.AddProtocol(new IterableProtocol(pi, union));
+                return pi;
+            }
 
-                    if (context.CallSite == null) {
-                        return CreateWithNewTypes(_node, types);
-                    }
-                    return unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => CreateWithNewTypes(n, types));
-                } finally {
-                    Pop();
+            VariableDef[] newTypes;
+            if (unit.Scope.TryGetNodeValue(context.CallSite, NodeValueKind.Sequence, out var newSeq)) {
+                newTypes = (newSeq as IterableValue)?.IndexTypes;
+                if (newTypes != null) {
+                    ResolveIndexTypes(unit, context, newTypes);
+                }
+                return newSeq;
+            } else {
+                newTypes = VariableDef.Generator.Take(IndexTypes.Length).ToArray();
+                if (ResolveIndexTypes(unit, context, newTypes)) {
+                    return unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => CreateWithNewTypes(n, newTypes));
                 }
             }
+
             return this;
         }
     }
