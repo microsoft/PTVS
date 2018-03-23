@@ -86,6 +86,13 @@ namespace PythonToolsTests {
             }
         }
 
+        private void AssertLines(PythonTextBufferInfo buffer, params int[] lengths) {
+            AssertLines(
+                buffer.LocationTracker.GetLineLocations(buffer.Buffer.CurrentSnapshot.Version.VersionNumber),
+                lengths
+            );
+        }
+
         private void AssertLines(NewLineLocation[] lines, params int[] lengths) {
             int p = 0;
             for (int i = 0; i < lines.Length || i < lengths.Length; ++i) {
@@ -189,6 +196,47 @@ namespace PythonToolsTests {
                 .Select(u => string.Join(", ", u.changes.Select(c => $"({c.startLine},{c.startColumn},'{c.newText}')")))
                 .Select(u => $"[{u}]"));
             Assert.AreEqual("[(1,5,'\r\n')], [(2,1,'    c')], [(2,6,'o')]", changeInfo);
+        }
+
+        [TestMethod, Priority(0)]
+        public void BufferSync_Issue3733() {
+            // https://github.com/Microsoft/PTVS/issues/3733
+
+            var bigString = string.Join("\n", Enumerable.Repeat("content", 1000));
+
+            var buffer = new MockTextBuffer("");
+            var bi = PythonTextBufferInfo.ForBuffer(null, buffer);
+
+            bi.AddSentSnapshot(buffer.CurrentSnapshot);
+            bi.LocationTracker.UpdateBaseSnapshot(buffer.CurrentSnapshot);
+
+            AssertLines(bi, 0);
+
+            using (var e = buffer.CreateEdit()) {
+                e.Insert(e.Snapshot.Length, bigString);
+                e.Apply();
+            }
+            bi.LocationTracker.UpdateBaseSnapshot(buffer.CurrentSnapshot);
+
+            int beforeVersion = bi.Buffer.CurrentSnapshot.Version.VersionNumber;
+
+            using (var e = buffer.CreateEdit()) {
+                e.Replace(0, e.Snapshot.Length, "z");
+                e.Apply();
+            }
+            bi.LocationTracker.UpdateBaseSnapshot(buffer.CurrentSnapshot);
+
+            using (var e = buffer.CreateEdit()) {
+                e.Insert(e.Snapshot.Length, bigString);
+                e.Apply();
+            }
+            bi.LocationTracker.UpdateBaseSnapshot(buffer.CurrentSnapshot);
+
+            var before = bi.LocationTracker.GetLineLocations(beforeVersion);
+            var after = bi.LocationTracker.GetLineLocations(bi.Buffer.CurrentSnapshot.Version.VersionNumber);
+            foreach (var t in before.Zip(after, Tuple.Create)) {
+                Assert.AreEqual(t.Item1.EndIndex, t.Item2.EndIndex - 1);
+            }
         }
 
         void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true) {

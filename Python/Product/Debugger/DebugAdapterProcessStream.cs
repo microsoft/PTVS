@@ -18,6 +18,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     internal sealed class DebugAdapterProcessStream : Stream {
@@ -43,7 +46,9 @@ namespace Microsoft.PythonTools.Debugger {
 
         public override int Read(byte[] buffer, int offset, int count) {
             try {
-                return _networkStream.Read(buffer, offset, count);
+                var bytes = _networkStream.Read(buffer, offset, count);
+                CheckForDisconnect(buffer, bytes);
+                return bytes;
             } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to read remaining messages.
                 // Returning 0 here will tell the debugger that the stream is empty.
@@ -72,5 +77,26 @@ namespace Microsoft.PythonTools.Debugger {
         private static bool IsExpectedError(SocketException ex) {
             return ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
         }
+
+        private void CheckForDisconnect(byte[] buffer, int count) {
+            if(Disconnected == null) {
+                return;
+            }
+
+            var text = Encoding.UTF8.GetString(buffer, 0, count);
+            try {
+                var json = JObject.Parse(text);
+                if(json["command"].Value<string>() == "disconnect") {
+                    Task.Factory.StartNew(async () => {
+                        await Task.Delay(50);
+                        Disconnected?.Invoke(this, null);
+                    });
+                }
+            } catch (Exception) {
+                // Ignore any parse errors
+            }
+        }
+
+        public event EventHandler Disconnected;
     }
 }

@@ -287,12 +287,15 @@ namespace Microsoft.PythonTools.Repl {
                 var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
                 var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
                 var result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
-                var completionResults = result
-                                .Split(':')
-                                .Where(r => !string.IsNullOrEmpty(r))
-                                .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
-                                .ToArray();
-                return completionResults;
+                if (result != null) {
+                    var completionResults = result
+                                    .Split(':')
+                                    .Where(r => !string.IsNullOrEmpty(r))
+                                    .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                    .ToArray();
+                    return completionResults;
+                }
+                return new CompletionResult[0];
             }
 
             return new CompletionResult[0];

@@ -192,7 +192,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task ConnectSubjectBufferAsync(PythonTextBufferInfo buffer) {
-            buffer.AddSink(GetType(), this);
+            buffer.AddSink(this, this);
             // Cannot analyze buffers without a URI
             if (buffer.DocumentUri == null) {
                 return;
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
-            bi?.RemoveSink(GetType());
+            bi?.RemoveSink(this);
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
 

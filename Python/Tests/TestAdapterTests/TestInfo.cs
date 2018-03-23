@@ -177,5 +177,7 @@ namespace TestAdapterTests {
         public static string TestAdapterTeardownProject = TestData.GetPath(@"TestData\TestAdapterTests\TeardownTest.pyproj");
         public static TestInfo TeardownSuccess = TestInfo.FromRelativePaths("TeardownTests", "test_success", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 10, TestOutcome.Passed);
         public static TestInfo TeardownFailure = TestInfo.FromRelativePaths("TeardownTests", "test_failure", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 13, TestOutcome.Failed);
+
+        public static TestInfo RelativeImportSuccess = TestInfo.FromRelativePaths("RelativeImportTests", "test_relative_import", @"TestData\TestAdapterTests\RelativeImportTest.pyproj", @"TestData\TestAdapterTests\relativeimportpackage\relativeimporttests.py", 6, TestOutcome.Passed);
     }
 }

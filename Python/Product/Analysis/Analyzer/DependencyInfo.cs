@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _changeCount += wasChanged ? 1 : 0;
             // The value doesn't mean anything, we just want to know if a variable is being
             // updated too often.
-            Validation.Assert<ChangeCountExceededException>(_changeCount < 10000);
+            Validation.Assert(_changeCount < 10000);
 #endif
             return wasChanged;
         }

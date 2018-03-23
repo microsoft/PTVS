@@ -247,15 +247,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var defScope = _originalUnit.Scope;
             return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, (FunctionScope)defScope);
         }
-
-        public override string ToString() {
-            return "{0}{1}({2})->{3}".FormatInvariant(
-                base.ToString(),
-                "",
-                string.Join(", ", Ast.ParametersInternal.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
-                ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
-            );
-        }
     }
 
 }

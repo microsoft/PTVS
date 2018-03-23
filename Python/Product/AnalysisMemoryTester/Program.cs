@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             Console.WriteLine();
             Console.WriteLine("== Configuration Commands ==");
             Console.WriteLine(" python <version in x.y format> <interpreter path>");
+            Console.WriteLine(" logs <path to log directory>");
             Console.WriteLine();
             Console.WriteLine("== Analysis Sequence Commands ==");
             Console.WriteLine(" module <module name> <relative path to source file>");
@@ -88,10 +89,20 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
 
             Environment.CurrentDirectory = Path.GetDirectoryName(responseFile);
 
-            var interpreter = GetFirstCommand(commands, "python\\s+(\\d\\.\\d)\\s+(.+)", m => m.Value, v => v.Length > 4 && File.Exists(v.Substring(4).Trim()));
+            var interpreter = GetFirstCommand(commands, "python\\s+(\\d\\.\\d)\\s+(.+)", m => m.Groups[1].Value + " " + m.Groups[2].Value, v => v.Length > 4 && File.Exists(v.Substring(4).Trim()));
             var version = Version.Parse(interpreter.Substring(0, 3));
             interpreter = interpreter.Substring(4).Trim();
             Console.WriteLine($"Using Python from {interpreter}");
+
+            var logs = GetFirstCommand(commands, "logs\\s+(.+)", m => m.Groups[1].Value, v => PathUtils.IsValidPath(v.Trim()));
+            if (!string.IsNullOrEmpty(logs)) {
+                if (!Path.IsPathRooted(logs)) {
+                    logs = Path.GetFullPath(logs);
+                }
+                Directory.CreateDirectory(logs);
+                AnalysisLog.Output = Path.Combine(logs, "Detailed.csv");
+                AnalysisLog.AsCSV = true;
+            }
 
             var config = new InterpreterConfiguration(
                 "Python|" + interpreter,
@@ -104,7 +115,17 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 version
             );
 
-            using (var factory = new Interpreter.Ast.AstPythonInterpreterFactory(config, new InterpreterFactoryCreationOptions()))
+            var creationOpts = new InterpreterFactoryCreationOptions {
+                UseExistingCache = false,
+                WatchFileSystem = false,
+                TraceLevel = TraceLevel.Verbose
+            };
+
+            if (!string.IsNullOrEmpty(logs)) {
+                creationOpts.DatabasePath = logs;
+            }
+
+            using (var factory = new Interpreter.Ast.AstPythonInterpreterFactory(config, creationOpts))
             using (var analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                 var modules = new Dictionary<string, IPythonProjectEntry>();
                 var state = new State();
@@ -123,6 +144,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
 
         private static HashSet<string> IgnoredCommands = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase) {
             "python",
+            "logs",
             "",
             null
         };
@@ -237,6 +259,20 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     break;
                 case "analyze":
                     Console.Write("Waiting for complete analysis... ");
+                    if (!Console.IsOutputRedirected) {
+                        int cLine = Console.CursorTop;
+                        int cChar = Console.CursorLeft, lastChar = 0;
+                        var start = DateTime.UtcNow;
+                        analyzer.SetQueueReporting(i => {
+                            Console.SetCursorPosition(cChar, cLine);
+                            if (lastChar > cChar) {
+                                Console.Write(new string(' ', lastChar - cChar));
+                                Console.SetCursorPosition(cChar, cLine);
+                            }
+                            Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
+                            lastChar = Console.CursorLeft;
+                        }, 500);
+                    }
                     analyzer.AnalyzeQueuedEntries(CancellationToken.None);
                     Console.WriteLine("done!");
                     break;
@@ -303,18 +339,21 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
 
             var opt = SearchOption.TopDirectoryOnly;
 
-            if (fileName.StartsWith("**\\")) {
+            var dir = PathUtils.TrimEndSeparator(PathUtils.GetParent(fileName));
+            var filter = PathUtils.GetFileOrDirectoryName(fileName);
+
+            if (dir.EndsWith("**")) {
                 opt = SearchOption.AllDirectories;
-                fileName = fileName.Substring(3);
+                dir = dir.Substring(0, dir.Length - 2);
             }
 
-            if (!Path.IsPathRooted(fileName)) {
-                fileName = Path.Combine(Environment.CurrentDirectory, fileName);
+            if (!Path.IsPathRooted(dir)) {
+                dir = Path.Combine(Environment.CurrentDirectory, dir);
             }
 
-            Console.WriteLine("Adding modules from {0}", fileName);
-            foreach (var file in Directory.EnumerateFiles(Path.GetDirectoryName(fileName), Path.GetFileName(fileName), opt)) {
-                yield return ModulePath.FromFullPath(file);
+            Console.WriteLine("Adding modules from {0}:{1}", dir, filter);
+            foreach (var file in Directory.EnumerateFiles(dir, filter, opt)) {
+                yield return ModulePath.FromFullPath(file, PathUtils.GetParent(dir));
             }
         }
 

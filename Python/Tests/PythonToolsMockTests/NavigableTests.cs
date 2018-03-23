@@ -56,7 +56,7 @@ namespace PythonToolsMockTests {
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // os
-                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"));
+                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"), Location(1, 8));
             }
         }
 
@@ -186,8 +186,8 @@ print(obj._my_attr_val)
                 await helper.CheckDefinitionLocations(71, 7, Location(9, 9));
                 await helper.CheckDefinitionLocations(128, 7, Location(9, 9));
                 await helper.CheckDefinitionLocations(152, 7, Location(9, 9));
-                await helper.CheckDefinitionLocations(229, 7, Location(13, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(252, 7, Location(13, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(229, 7, Location(9, 9), Location(13, 5));
+                await helper.CheckDefinitionLocations(252, 7, Location(9, 9), Location(13, 5));
 
                 // val
                 await helper.CheckDefinitionLocations(166, 3, Location(9, 23));
@@ -195,9 +195,9 @@ print(obj._my_attr_val)
 
                 // _my_attr_val
                 await helper.CheckDefinitionLocations(28, 12, Location(2, 5));
-                await helper.CheckDefinitionLocations(107, 12, Location(10, 14), Location(2, 5));
-                await helper.CheckDefinitionLocations(186, 12, Location(10, 14), Location(2, 5));
-                await helper.CheckDefinitionLocations(272, 12, Location(10, 14), Location(2, 5));
+                await helper.CheckDefinitionLocations(107, 12, Location(2, 5), Location(10, 14));
+                await helper.CheckDefinitionLocations(186, 12, Location(2, 5), Location(10, 14));
+                await helper.CheckDefinitionLocations(272, 12, Location(2, 5), Location(10, 14));
 
                 // self
                 await helper.CheckDefinitionLocations(79, 4, Location(5, 17));
@@ -253,7 +253,7 @@ res = my_var * 10
 
                     Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
                     foreach (var actualLocation in actualLocations) {
-                        Console.WriteLine($"line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
+                        Console.WriteLine($"file={actualLocation.Location.DocumentUri},line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
                     }
 
                     Assert.AreEqual(expectedLocations.Length, actualLocations.Length, "incorrect number of locations");

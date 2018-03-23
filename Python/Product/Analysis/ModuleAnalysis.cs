@@ -104,14 +104,6 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
-            foreach (var def in defs) {
-                foreach (var res in ToVariables(def)) {
-                    yield return res;
-                }
-            }
-        }
-
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
@@ -161,11 +153,19 @@ namespace Microsoft.PythonTools.Analysis {
                 );
             }
 
-            VariableDef def = referenceable as VariableDef;
-            if (def != null) {
-                foreach (var loc in def.TypesNoCopy.SelectMany(type => type.Locations)) {
-                    if (loc != null) {
-                        yield return new AnalysisVariable(VariableType.Value, loc);
+            if (referenceable is VariableDef def) {
+                foreach (var type in def.TypesNoCopy.WhereNotNull()) {
+                    var varType = VariableType.Value;
+                    if (type.DeclaringModule == null ||
+                        type.MemberType == PythonMemberType.Class ||
+                        type.MemberType == PythonMemberType.Function) {
+                        // For non-project values, classes, and functions, treat "Value"
+                        // as the definition.
+                        varType = VariableType.Definition;
+                    }
+
+                    foreach (var loc in type.Locations.WhereNotNull()) {
+                        yield return new AnalysisVariable(varType, loc);
                     }
                 }
             }

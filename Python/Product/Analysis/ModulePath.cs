@@ -581,15 +581,14 @@ namespace Microsoft.PythonTools.Analysis {
             var fullName = nameMatch.Groups["name"].Value;
             var remainder = Path.GetDirectoryName(path);
             if (isPackage == null) {
-                // We know that f will be the result of GetParent() and always
-                // ends with a directory separator, so just concatenate to avoid
-                // potential path length problems.
+                // We know that f will always end with a directory separator,
+                // so just concatenate.
                 isPackage = f => File.Exists(f + "__init__.py") || File.Exists(f + "__init__.pyw") || File.Exists(f + "__init__.pyi");
             }
 
             while (
                 PathEqualityComparer.IsValidPath(remainder) &&
-                isPackage(remainder) &&
+                isPackage(PathUtils.EnsureEndSeparator(remainder)) &&
                 (string.IsNullOrEmpty(topLevelPath) ||
                  PathEqualityComparer.Instance.StartsWith(remainder, topLevelPath, allowFullMatch: false))
             ) {
