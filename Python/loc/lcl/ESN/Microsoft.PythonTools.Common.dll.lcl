@@ -1441,6 +1441,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[El depurador experimental no admite esta característica REPL de depuración.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DebugReplFrameChanged" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Current frame changed to {0}]]></Val>
@@ -5617,7 +5626,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18077.1]]></Val>
+        <Val><![CDATA[15.7.18081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5653,7 +5662,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18077.1]]></Val>
+        <Val><![CDATA[15.7.18081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

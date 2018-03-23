@@ -711,7 +711,7 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
 
-            ReanalyzeProject()
+            ReanalyzeProject(ActiveInterpreter)
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
         }
@@ -1116,7 +1116,10 @@ namespace Microsoft.PythonTools.Project {
             } else if (_analyzer == null) {
                 return await Site.GetUIThread().InvokeTask(async () => {
                     if (_analyzer == null) {
-                        _analyzer = await CreateAnalyzerAsync();
+                        await ReanalyzeProject(ActiveInterpreter);
+                    }
+                    if (_analyzer == null) {
+                        return await _services.Python.GetSharedAnalyzerAsync(ActiveInterpreter);
                     }
                     return _analyzer;
                 });
@@ -1128,11 +1131,7 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
-            var model = Site.GetComponentModel();
-            var interpreterService = model.GetService<IInterpreterRegistryService>();
-            var factory = GetInterpreterFactory();
-
+        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             bool inProc = false;
             var ipp = BuildProject.GetProperty("_InProcessPythonAnalyzer");
             if (ipp != null) {
@@ -1142,7 +1141,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var res = await VsProjectAnalyzer.CreateForProjectAsync(
-                model.GetService<PythonEditorServices>(),
+                _services,
                 factory,
                 Url,
                 ProjectHome,
@@ -1327,8 +1326,10 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            var factory = ActiveInterpreter;
+
             Site.GetUIThread().InvokeTask(async () => {
-                await ReanalyzeProject().HandleAllExceptions(Site, GetType());
+                await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
             }).DoNotWait();
         }
 
@@ -1340,16 +1341,16 @@ namespace Microsoft.PythonTools.Project {
             });
         }
 
-        private async Task ReanalyzeProject() {
+        private async Task ReanalyzeProject(IPythonInterpreterFactory factory) {
 #if DEBUG
             var output = OutputWindowRedirector.GetGeneral(Site);
-            await ReanalyzeProjectHelper(output);
+            await ReanalyzeProjectHelper(factory, output);
 #else
-            await ReanalyzeProjectHelper(null);
+            await ReanalyzeProjectHelper(factory, null);
 #endif
         }
 
-        private async Task ReanalyzeProjectHelper(Redirector log) {
+        private async Task ReanalyzeProjectHelper(IPythonInterpreterFactory factory, Redirector log) {
             if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
                 log?.WriteLine("Project has closed");
@@ -1370,9 +1371,16 @@ namespace Microsoft.PythonTools.Project {
                     // Someone else is recreating, so wait for them to finish and return
                     log?.WriteLine("Waiting for existing call");
                     await _recreatingAnalyzer.WaitAsync();
-                    _recreatingAnalyzer.Release();
-                    log?.WriteLine("Existing call complete");
-                    return;
+                    try {
+                        log?.WriteLine("Existing call complete");
+                    } catch {
+                        _recreatingAnalyzer.Release();
+                        throw;
+                    }
+                    if (_analyzer?.InterpreterFactory == factory) {
+                        _recreatingAnalyzer.Release();
+                        return;
+                    }
                 }
             } catch (ObjectDisposedException) {
                 return;
@@ -1415,7 +1423,7 @@ namespace Microsoft.PythonTools.Project {
                 oldWatcher?.Dispose();
 
                 log?.WriteLine("Creating new analyzer");
-                var analyzer = await CreateAnalyzerAsync();
+                var analyzer = await CreateAnalyzerAsync(factory);
                 Debug.Assert(analyzer != null);
                 log?.WriteLine($"Created analyzer {analyzer}");
 
@@ -1449,7 +1457,11 @@ namespace Microsoft.PythonTools.Project {
                             foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate()) {
                                 PythonTextBufferInfo.MarkForReplacement(b);
                             }
-                            await existing.UnloadFileAsync(kv.Value);
+                            try {
+                                await existing.UnloadFileAsync(kv.Value);
+                            } catch (ObjectDisposedException) {
+                                break;
+                            }
                         }
                     }
                 }
