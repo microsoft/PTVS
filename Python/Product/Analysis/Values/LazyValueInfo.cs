@@ -88,6 +88,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _argNames = argNames;
         }
 
+        public Node Node => _node;
+
         internal static IAnalysisSet GetInstance(Node node, LazyValueInfo value) {
             return new LazyValueInfo(node, value, null, LazyOperation.GetInstance);
         }
@@ -368,7 +370,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly Func<IAnalysisSet> _fallback;
 
         public LazyIndexableInfo(Node node, IAnalysisSet indexTypes, Func<IAnalysisSet> fallback) : base(node) {
-            _indexTypes = indexTypes;
+            _indexTypes = indexTypes.AsUnion(1);
             _fallback = fallback;
         }
 
@@ -396,6 +398,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string ToString() {
             return "[{0}]".FormatInvariant(_indexTypes);
+        }
+
+        internal override bool UnionEquals(AnalysisValue av, int strength) {
+            return av is LazyIndexableInfo;
+        }
+
+        internal override int UnionHashCode(int strength) {
+            return GetType().GetHashCode();
+        }
+
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
+            var combined = _indexTypes.Union((av as LazyIndexableInfo)?._indexTypes ?? AnalysisSet.Empty);
+            if (!combined.SetEquals(_indexTypes)) {
+                return new LazyIndexableInfo(Node, combined, _fallback);
+            }
+            return this;
         }
     }
 }
