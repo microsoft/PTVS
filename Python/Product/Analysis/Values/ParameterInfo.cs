@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            if (context.ResolveParametersFully) {
+            if (context.ResolveFully) {
                 if (Push()) {
                     try {
                         return Function.ResolveParameter(unit, Name);

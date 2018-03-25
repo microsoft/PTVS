@@ -93,17 +93,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            if (context.Cache.TryGetValue(this, out var res)) {
+                return res;
+            }
+
             if (!Push()) {
                 return AnalysisSet.Empty;
             }
 
             try {
-                var res = ResolveOnce(unit, context);
-                bool changed = true;
-                while (changed) {
-                    res = res.Resolve(unit, context, out changed);
+                if (!context.Push()) {
+                    return AnalysisSet.Empty;
                 }
-                return res;
+                try {
+                    res = ResolveOnce(unit, context);
+                    bool changed = true;
+                    while (changed && context.ResolveFully) {
+                        res = res.Resolve(unit, context, out changed);
+                    }
+                    if (context.ResolveFully) {
+                        res.Split<LazyValueInfo>(out _, out res);
+                    }
+                    context.Cache[this] = res;
+                    return res;
+                } finally {
+                    context.Pop();
+                }
             } finally {
                 Pop();
             }
@@ -127,7 +142,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case LazyOperation.GetEnumeratorTypes:
                     return left.Value.GetEnumeratorTypes(_node, unit);
                 case LazyOperation.GetIndex:
-                    return left.Value.GetIndex(_node, unit, right.Value);
+                    // Only non-lazy indexes are supported
+                    return left.Value.GetIndex(_node, unit, _right?._value ?? AnalysisSet.Empty);
                 case LazyOperation.GetIterator:
                     return left.Value.GetIterator(_node, unit);
                 case LazyOperation.GetYieldFromReturn:
@@ -172,6 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // Eager call, but lazy result
             foreach (var ns in Resolve(unit)) {
+                Debug.Assert(!ReferenceEquals(this, ns));
                 ns.GetMember(node, unit, name);
             }
             return new LazyValueInfo(node, this, name);
@@ -180,25 +197,57 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             // Eager call, but lazy result
             foreach (var ns in Resolve(unit)) {
+                Debug.Assert(!ReferenceEquals(this, ns));
                 ns.Call(node, unit, args, keywordArgNames);
             }
             return new LazyValueInfo(node, this, args, keywordArgNames);
         }
 
+        private static IAnalysisSet QuickOp(IAnalysisSet lhs, PythonOperator op, IAnalysisSet rhs, PythonAnalyzer state) {
+            // Concrete return for known (or conventional) operations
+            switch (op) {
+                case PythonOperator.Equal:
+                case PythonOperator.In:
+                case PythonOperator.Is:
+                case PythonOperator.IsNot:
+                case PythonOperator.Not:
+                case PythonOperator.NotEqual:
+                case PythonOperator.NotIn:
+                    return state.ClassInfos[BuiltinTypeId.Bool].Instance;
+                case PythonOperator.GreaterThan:
+                case PythonOperator.GreaterThanOrEqual:
+                case PythonOperator.LessThan:
+                case PythonOperator.LessThanOrEqual:
+                    return lhs.Union(rhs);
+                case PythonOperator.Negate:
+                case PythonOperator.Pos:
+                    return rhs;
+            }
+            return null;
+        }
+
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
-            return new LazyValueInfo(node, this, operation, new LazyValueInfo(node, rhs));
+            return QuickOp(SelfSet, operation, rhs, unit.State) ??
+                new LazyValueInfo(node, this, operation, new LazyValueInfo(node, rhs));
         }
 
         public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
-            return new LazyValueInfo(node, new LazyValueInfo(node, rhs), operation, this);
+            return QuickOp(rhs, operation, SelfSet, unit.State) ??
+                new LazyValueInfo(node, new LazyValueInfo(node, rhs), operation, this);
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
-            return new LazyValueInfo(node, operation, this);
+            return QuickOp(AnalysisSet.Empty, operation, SelfSet, unit.State) ??
+                new LazyValueInfo(node, operation, this);
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            return new LazyValueInfo(node, this, new LazyValueInfo(node, index), LazyOperation.GetIndex);
+            LazyValueInfo lazyIndex = null;
+            // We only use the index if it is not lazy
+            if (!index.OfType<LazyValueInfo>().Any()) {
+                lazyIndex = new LazyValueInfo(node, index);
+            }
+            return new LazyValueInfo(node, this, lazyIndex, LazyOperation.GetIndex);
         }
 
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
@@ -270,6 +319,48 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override int GetHashCode() {
             return GetType().GetHashCode() ^ _node.GetHashCode();
         }
+
+        public override string ToString() {
+            switch (_lazyOp) {
+                case LazyOperation.Automatic:
+                    break;
+                case LazyOperation.GetIndex:
+                    return "{0}[{1}]".FormatInvariant(_left, _right);
+                case LazyOperation.GetIterator:
+                    return "iter({0})".FormatInvariant(_left);
+                case LazyOperation.GetEnumeratorTypes:
+                    return "next({0})".FormatInvariant(_left);
+                case LazyOperation.Await:
+                    return "(await {0})".FormatInvariant(_left);
+                case LazyOperation.GetYieldFromReturn:
+                    return "(yield from {0})".FormatInvariant(_left);
+                case LazyOperation.GetInstance:
+                    return "new({0})".FormatInvariant(_left);
+                default:
+                    break;
+            }
+
+            if (_memberName != null) {
+                return "{0}.{1}".FormatInvariant(_left, _memberName);
+            }
+
+            if (_args != null) {
+                return "{0}({1})".FormatInvariant(_left, string.Join(", ", (object[])_args));
+            }
+
+            if (_op.HasValue) {
+                if (_left == null) {
+                    return "{0}{1}".FormatInvariant(_op.Value.ToCodeString(), _right);
+                }
+                return "{0}{1}{2}".FormatInvariant(_left, _op.Value.ToCodeString(), _right);
+            }
+
+            if (_value != null) {
+                return "<{0}>".FormatInvariant(_value);
+            }
+
+            return "<{0}>".FormatInvariant(GetType().Name);
+        }
     }
 
     class LazyIndexableInfo : LazyValueInfo {
@@ -301,6 +392,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override int GetHashCode() {
             return _indexTypes.Aggregate(typeof(LazyIndexableInfo).GetHashCode(), (hc, v) => unchecked(hc * 31 + _indexTypes.Comparer.GetHashCode(v)));
+        }
+
+        public override string ToString() {
+            return "[{0}]".FormatInvariant(_indexTypes);
         }
     }
 }

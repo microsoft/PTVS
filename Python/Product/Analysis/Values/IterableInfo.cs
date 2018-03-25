@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, TypeName);
             var indexTypes = UnionType;
-            if (indexTypes.IsObjectOrUnknown()) {
+            if (indexTypes.IsObjectOrUnknownOrNone()) {
                 yield break;
             }
 

@@ -233,10 +233,22 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Returns true if the set contains no or only the object type
+        /// Returns true if the set contains no or only the object or unknown types
         /// </summary>
         public static bool IsObjectOrUnknown(this IAnalysisSet res) {
-            return res == null || res.Count == 0 || (res.Count == 1 && res.First().TypeId == BuiltinTypeId.Object);
+            return res == null ||
+                res.Count == 0 ||
+                res.All(v => v.TypeId == BuiltinTypeId.Object || v.TypeId == BuiltinTypeId.Unknown);
+        }
+
+        /// <summary>
+        /// Returns true if the set contains no types, only the object or unknown
+        /// types, or None.
+        /// </summary>
+        public static bool IsObjectOrUnknownOrNone(this IAnalysisSet res) {
+            return res == null ||
+                res.Count == 0 ||
+                res.All(v => v.TypeId == BuiltinTypeId.Object || v.TypeId == BuiltinTypeId.Unknown || v.TypeId == BuiltinTypeId.NoneType);
         }
 
         /// <summary>
@@ -279,32 +291,39 @@ namespace Microsoft.PythonTools.Analysis {
             // So we want to quickly validate and get out without allocating
             // or changing anything.
 
-            List<AnalysisValue> removed = null;
-            IAnalysisSet added = null;
-            foreach (var ns in self) {
-                var r = ns.Resolve(unit, context);
-                if (!ReferenceEquals(r, ns)) {
-                    if (removed == null) {
-                        removed = new List<AnalysisValue>(self.Count);
-                    }
-                    removed.Add(ns);
-                    added = added?.Union(r) ?? r;
-                }
-            }
-
-            if (removed == null) {
+            if (!context.Push()) {
                 changed = false;
                 return self;
             }
+            try {
+                List<AnalysisValue> removed = null;
+                IAnalysisSet added = null;
+                foreach (var ns in self) {
+                    var r = ns.Resolve(unit, context);
+                    if (!ReferenceEquals(r, ns)) {
+                        if (removed == null) {
+                            removed = new List<AnalysisValue>(self.Count);
+                        }
+                        removed.Add(ns);
+                        added = added?.Union(r) ?? r;
+                    }
+                }
 
-            self.Split(removed.Contains, out _, out var unchanged);
-            var res = unchanged.Union(added, out changed);
-#if FULL_VALIDATION || DEBUG
-            if (changed) {
-                Validation.Assert(!res.SetEquals(self));
+                if (removed == null) {
+                    changed = false;
+                    return self;
+                }
+
+                self.Split(removed.Contains, out _, out var unchanged);
+                var res = unchanged.Union(added, out changed);
+                if (changed && res.SetEquals(self)) {
+                    changed = false;
+                    return self;
+                }
+                return res;
+            } finally {
+                context.Pop();
             }
-#endif
-            return res;
         }
 
         class DotsLastStringComparer : IComparer<string> {

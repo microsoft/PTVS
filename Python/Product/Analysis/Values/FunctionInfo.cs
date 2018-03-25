@@ -105,9 +105,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     calledUnit.Enqueue();
                 }
 
-                var res2 = DoCall(node, unit, calledUnit, callArgs);
-                res.Split<LazyValueInfo>(out var _, out res);
-                res = res2.Union(res);
+                res = DoCall(node, unit, calledUnit, callArgs);
             }
 
             var context = new ResolutionContext {
@@ -151,7 +149,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (unit != AnalysisUnit) {
                 vd?.AddDependency(unit);
             }
-            return vd?.Types ?? AnalysisSet.Empty;
+            var res = vd?.Types ?? AnalysisSet.Empty;
+            res.Split(v => (v as ParameterInfo)?.Function == this, out _, out res);
+            return res;
         }
 
         public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name, ArgumentSet arguments) {
@@ -481,7 +481,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         .Resolve(unit, new ResolutionContext {
                             Caller = this,
                             LazyCallArgs = new Lazy<ArgumentSet>(() => new ArgumentSet(vars, null, null, null)),
-                            ResolveParametersFully = true
+                            ResolveFully = true
                         }, out _)
                         .GetShortDescriptions()
                         .ToArray();

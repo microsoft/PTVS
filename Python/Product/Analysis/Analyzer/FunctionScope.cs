@@ -114,7 +114,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else if (!_parameters.ContainsKey(name)) {
                     var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, p);
-                    AddParameter(unit, name, p, usePlaceholders ? null : v);
+                    if (i == 0 && Function.FunctionDefinition.Parent is ClassDefinition) {
+                        AddParameter(unit, name, p, v);
+                    } else {
+                        AddParameter(unit, name, p, usePlaceholders ? null : v);
+                    }
                 }
             }
         }

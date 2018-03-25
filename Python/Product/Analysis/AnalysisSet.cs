@@ -94,6 +94,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="ns">The namespaces to contain in the set.</param>
         public static IAnalysisSet Create(IEnumerable<AnalysisValue> ns) {
             // TODO: Replace Trim() call with more efficient enumeration.
+            if (ns is IReadOnlyList<AnalysisValue> lst) {
+                if (lst.Count == 0) {
+                    return AnalysisSet.Empty;
+                } else if (lst.Count == 1) {
+                    return lst[0];
+                } else if (lst.Count == 2) {
+                    if (ObjectComparer.Instance.Equals(lst[0], lst[1])) {
+                        return lst[0];
+                    }
+                    return new AnalysisSetDetails.AnalysisSetTwoObject(lst[0], lst[1]);
+                }
+            }
             return new AnalysisSetDetails.AnalysisHashSet(ns, ObjectComparer.Instance).Trim();
         }
 
@@ -523,6 +535,14 @@ namespace Microsoft.PythonTools.Analysis {
             return true;
         }
 
+        /// <summary>
+        /// Determines whether there is any overlap between two sets.
+        /// </summary>
+        public static bool ContainsAny(this IAnalysisSet set, IAnalysisSet values) {
+            // TODO: This can be optimised for specific set types
+            return set.Intersect(values).Any();
+        }
+
         #endregion
     }
 
@@ -737,6 +757,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -834,6 +857,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -954,6 +980,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
 
@@ -1035,6 +1064,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -1157,6 +1189,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -1313,6 +1348,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
     }

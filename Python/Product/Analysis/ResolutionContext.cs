@@ -15,15 +15,18 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class ResolutionContext {
         private ArgumentSet? _callArgs;
+        private int _depth;
 
-        public static readonly ResolutionContext Empty = new ResolutionContext();
-        public static readonly ResolutionContext Complete = new ResolutionContext { ResolveParametersFully = true };
+        public static ResolutionContext Empty => new ResolutionContext();
+        public static ResolutionContext Complete => new ResolutionContext { ResolveFully = true };
 
         public FunctionInfo Caller { get; set; }
         public ArgumentSet CallArgs {
@@ -32,6 +35,26 @@ namespace Microsoft.PythonTools.Analysis {
         }
         public Lazy<ArgumentSet> LazyCallArgs { get; set; }
         public Node CallSite { get; set; }
-        public bool ResolveParametersFully { get; set; }
+        public bool ResolveFully { get; set; }
+        public int ResolveDepth { get; set; } = 10;
+
+        private Lazy<Dictionary<AnalysisValue, IAnalysisSet>> _cache = new Lazy<Dictionary<AnalysisValue, IAnalysisSet>>();
+        public Dictionary<AnalysisValue, IAnalysisSet> Cache => _cache.Value;
+
+        public bool Push() {
+            if (_depth >= ResolveDepth) {
+                return false;
+            }
+            _depth += 1;
+            return true;
+        }
+
+        public void Pop() {
+            _depth -= 1;
+            if (_depth < 0) {
+                Debug.Fail("ResolutionContext.Pop() called without Push()");
+                _depth = 0;
+            }
+        }
     }
 }
