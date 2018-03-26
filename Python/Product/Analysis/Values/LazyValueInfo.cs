@@ -267,7 +267,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         // Eager operations
 
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
-            foreach (var ns in Resolve(analysisUnit)) {
+            foreach (var ns in Resolve(analysisUnit, new ResolutionContext { ResolveFully = true, ResolveDepth = 3 })) {
                 ns.AddReference(node, analysisUnit);
             }
         }

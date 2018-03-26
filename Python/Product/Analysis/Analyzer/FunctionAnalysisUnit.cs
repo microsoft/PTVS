@@ -218,6 +218,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _agg = agg;
             CallChain = callChain;
 
+            originalUnit.Scope.AddLinkedScope(Scope);
+
             var node = originalUnit.Function.FunctionDefinition;
             node.Body.Walk(new OverviewWalker(originalUnit.ProjectEntry, this, originalUnit.Tree));
 
@@ -231,6 +233,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal override void EnsureParameters() {
             ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
+            var origScope = (FunctionScope)_originalUnit.Scope;
+            origScope.PropagateParameters(DependencyProject, (FunctionScope)Scope);
         }
 
         public override string ToString() {

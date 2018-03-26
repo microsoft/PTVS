@@ -24,25 +24,26 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     abstract class InterpreterScope {
         public readonly InterpreterScope OuterScope;
-        public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
+        public readonly List<InterpreterScope> Children;
         public bool ContainsImportStar;
 
-        private readonly AnalysisValue _av;
-        private readonly Node _node;
         private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
         private readonly AnalysisDictionary<Node, NodeValue> _nodeValues;
         private readonly AnalysisDictionary<string, VariableDef> _variables;
         private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
+        private readonly List<InterpreterScope> _linkedScopes;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
-            _av = av;
-            _node = ast;
+            AnalysisValue = av;
+            Node = ast;
             OuterScope = outerScope;
 
+            Children = new List<InterpreterScope>();
             _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
             _nodeValues = new AnalysisDictionary<Node, NodeValue>();
             _variables = new AnalysisDictionary<string, VariableDef>();
             _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
+            _linkedScopes = new List<InterpreterScope>();
         }
 
         public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
@@ -50,12 +51,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         protected InterpreterScope(AnalysisValue av, InterpreterScope cloned, bool isCloned) {
             Debug.Assert(isCloned);
-            _av = av;
-            Children.AddRange(cloned.Children);
+            AnalysisValue = av;
+            Children = cloned.Children.ToList();
             _nodeScopes = cloned._nodeScopes;
             _nodeValues = cloned._nodeValues;
             _variables = cloned._variables;
             _linkedVariables = cloned._linkedVariables;
+            OriginalScope = cloned.OriginalScope;
+            _linkedScopes = cloned._linkedScopes;
         }
 
         public InterpreterScope GlobalScope {
@@ -83,6 +86,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        internal InterpreterScope OriginalScope { get; private set; }
+
         /// <summary>
         /// Gets the index in the file/buffer that the scope actually starts on.  This is the index where the colon
         /// is on for the start of the body if we're a function or class definition.
@@ -96,31 +101,27 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// the definition it's self (e.g. def fob(...) or class fob(...)).
         /// </summary>
         public virtual int GetStart(PythonAst ast) {
-            if (_node == null) {
+            if (Node == null) {
                 return 1;
             }
-            return _node.StartIndex;
+            return Node.StartIndex;
         }
 
         /// <summary>
         /// Gets the index in the file/buffer that this scope ends at.
         /// </summary>
         public virtual int GetStop(PythonAst ast) {
-            if (_node == null) {
+            if (Node == null) {
                 return int.MaxValue;
             }
-            return _node.EndIndex;
+            return Node.EndIndex;
         }
 
         public abstract string Name {
             get;
         }
 
-        public Node Node {
-            get {
-                return _node;
-            }
-        }
+        public Node Node { get; }
 
         internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables {
             get { return _variables; }
@@ -320,11 +321,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        public AnalysisValue AnalysisValue {
-            get {
-                return _av;
-            }
-        }
+        public AnalysisValue AnalysisValue { get; }
 
         public void ClearLinkedVariables() {
             _linkedVariables.Clear();
@@ -355,6 +352,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 linkedVar.AddReference(node, unit);
             }
         }
+
+        internal void AddLinkedScope(InterpreterScope scope) {
+            lock (_linkedScopes) {
+                Debug.Assert(!_linkedScopes.Contains(scope));
+                Debug.Assert(scope.OriginalScope == null);
+                scope.OriginalScope = this;
+                _linkedScopes.Add(scope);
+            }
+        }
+
+        internal IEnumerable<InterpreterScope> GetLinkedScopes() => _linkedScopes.AsLockedEnumerable();
 
         internal bool TryGetNodeValue(Node node, NodeValueKind kind, out IAnalysisSet variable) {
             foreach (var s in EnumerateTowardsGlobal) {

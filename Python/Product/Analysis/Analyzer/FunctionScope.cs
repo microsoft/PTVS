@@ -24,7 +24,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class FunctionScope : InterpreterScope {
         private readonly AnalysisDictionary<string, VariableDef> _parameters;
-        private List<FunctionScope> _linkedScope;
 
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
@@ -49,13 +48,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 Generator = new GeneratorInfo(function.ProjectState, declModule);
                 ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false, declModule);
             }
-        }
 
-        internal void AddLinkedScope(FunctionScope scope) {
-            if (_linkedScope == null) {
-                _linkedScope = new List<FunctionScope>();
+            if (declScope.OriginalScope != null && declScope.OriginalScope.TryGetNodeScope(node, out var origScope)) {
+                origScope.AddLinkedScope(this);
             }
-            _linkedScope.Add(scope);
         }
 
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
@@ -71,8 +67,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ReturnValue.AddTypes(unit, types, enqueue);
             }
 
-            foreach (var scope in _linkedScope.MaybeEnumerate()) {
-                scope.AddReturnTypes(node, unit, types, enqueue);
+            types.Split<LazyValueInfo>(out _, out var rest);
+            if (rest.Any()) {
+                foreach (var scope in GetLinkedScopes().OfType<FunctionScope>()) {
+                    scope.AddReturnTypes(node, unit, rest, enqueue);
+                }
             }
         }
 
@@ -224,6 +223,32 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return added;
         }
 
+        public void PropagateParameters(IVersioned projectEntry, FunctionScope fromScope) {
+            if (fromScope.Function != Function) {
+                Debug.Fail("Can only propagate parameters from the same function");
+                return;
+            }
+
+            foreach (var kv in fromScope._parameters) {
+                kv.Value.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
+                if (values.Any()) {
+                    GetParameter(kv.Key)?.AddTypes(projectEntry, values);
+                }
+            }
+            if (fromScope._seqParameters != null) {
+                fromScope._seqParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
+                if (values.Any()) {
+                    GetParameter(fromScope._seqParameters.Name)?.AddTypes(projectEntry, values);
+                }
+            }
+            if (fromScope._dictParameters != null) {
+                fromScope._dictParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
+                if (values.Any()) {
+                    GetParameter(fromScope._dictParameters.Name)?.AddTypes(projectEntry, values);
+                }
+            }
+        }
+
 
         public FunctionInfo Function => (FunctionInfo)AnalysisValue;
 
@@ -270,6 +295,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var seen = new HashSet<InterpreterScope>();
             var queue = new Queue<FunctionScope>();
             queue.Enqueue(this);
+            foreach (var linked in GetLinkedScopes().OfType<FunctionScope>()) {
+                queue.Enqueue(linked);
+            }
 
             while (queue.Any()) {
                 var scope = queue.Dequeue();
@@ -284,6 +312,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (scope.TryGetVariable(name, out res)) {
                         yield return res;
                     }
+                }
+
+                foreach (var r2 in scope.GetLinkedVariables(name)) {
+                    yield return r2;
                 }
 
                 foreach (var keyValue in scope.AllNodeScopes.Where(kv => nodes.Contains(kv.Key))) {

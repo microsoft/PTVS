@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Represents a value that implements one or more protocols.
     /// </summary>
     class ProtocolInfo : AnalysisValue, IHasRichDescription {
-        private readonly List<Protocol> _protocols;
+        private IAnalysisSet _protocols;
         private readonly ReferenceDict _references;
 
         private IAnalysisSet _instance;
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private PythonMemberType? _memberType;
 
         public ProtocolInfo(IPythonProjectEntry declaringModule, PythonAnalyzer state) {
-            _protocols = new List<Protocol>();
+            _protocols = AnalysisSet.CreateUnion(1);
             DeclaringModule = declaringModule;
             DeclaringVersion = declaringModule?.AnalysisVersion ?? -1;
             _references = new ReferenceDict();
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal PythonAnalyzer State { get; }
 
         public void AddProtocol(Protocol p) {
-            _protocols.Add(p);
+            _protocols = _protocols.Add(p);
             _instance = null;
             _members = null;
             _typeId = null;
@@ -59,9 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool RemoveProtocol<T>(Func<T, bool> pred) where T : Protocol {
-            var remove = _protocols.OfType<T>().Where(pred).ToList();
-            if (remove.Any()) {
-                _protocols.RemoveAll(p => p is T t && remove.Contains(t));
+            if (_protocols.Split(v => v is T p && pred(p), out _protocols, out _)) {
                 _instance = null;
                 _members = null;
                 _typeId = null;
@@ -71,8 +69,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name));
-        public override string Documentation => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Documentation ?? string.Join(", ", _protocols.Select(p => p.Documentation).Where(d => !string.IsNullOrEmpty(d)));
+        public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name).Ordered());
+        public override string Documentation => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Documentation ?? string.Join(", ", _protocols.OrderBy(p => p.Name).Select(p => p.Documentation).Where(d => !string.IsNullOrEmpty(d)));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);
         public override IPythonProjectEntry DeclaringModule { get; }
         public override int DeclaringVersion { get; }
@@ -268,47 +266,53 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (GetHashCode() != other.GetHashCode()) {
                     return false;
                 }
-                return ObjectComparer.Instance.Equals(
-                    AnalysisSet.Create(_protocols),
-                    AnalysisSet.Create(other._protocols)
-                );
+                return ObjectComparer.Instance.Equals(_protocols, other._protocols);
             }
             return false;
         }
 
-        public override int GetHashCode() {
-            return _protocols.Aggregate(GetType().GetHashCode(), (hc, v) => hc ^ ObjectComparer.Instance.GetHashCode(v));
-        }
+        public override int GetHashCode() => ObjectComparer.Instance.GetHashCode(_protocols);
 
         internal override bool UnionEquals(AnalysisValue av, int strength) {
-            if (strength < 2) {
-                return Equals(av);
-            }
-            if (av is ProtocolInfo pi) {
-                return Name == pi.Name;
+            if (strength > 0) {
+                if (av is ProtocolInfo pi) {
+                    return Name == pi.Name;
+                }
+                return false;
             }
             return false;
         }
 
         internal override int UnionHashCode(int strength) {
-            if (strength < 2) {
-                return GetHashCode();
+            if (strength > 0) {
+                return Name.GetHashCode();
             }
-            return Name.GetHashCode();
+            return GetHashCode();
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            if (strength < 2) {
-                return this;
+            if (strength > 0 && av is ProtocolInfo pi) {
+                var name = _protocols.OfType<NameProtocol>().FirstOrDefault();
+                if (_protocols.Count == 1 && name != null) {
+                    return this;
+                }
+
+                var protocols = _protocols.Union(pi._protocols, out bool changed);
+                if (!changed) {
+                    return this;
+                }
+
+                if (name != null) {
+                    protocols.Split<NameProtocol>(out _, out protocols);
+                    protocols = protocols.Add(name);
+                }
+
+                return new ProtocolInfo(DeclaringModule, State) {
+                    _protocols = protocols
+                };
             }
 
-            if (_protocols.Count == 1 && _protocols[0] is NameProtocol) {
-                return this;
-            }
-
-            var pi = new ProtocolInfo(DeclaringModule, State);
-            pi.AddProtocol(new NameProtocol(pi, Name));
-            return pi;
+            return this;
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
@@ -321,7 +325,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var res = new List<KeyValuePair<string, string>>();
             var namespaces = _protocols.OfType<NamespaceProtocol>().ToArray();
-            var other = _protocols.Except(names).Except(namespaces).ToArray();
+            var other = _protocols.OfType<Protocol>().Except(names).Except(namespaces).ToArray();
 
             var fallbackName = other.Select(p => p.Name).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "<unknown>";
             if (!string.IsNullOrEmpty(fallbackName)) {

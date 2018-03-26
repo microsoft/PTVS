@@ -116,6 +116,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int GetHashCode() => GetType().GetHashCode();
+
+        protected virtual bool UnionEquals(Protocol p) => Equals(p);
+        protected virtual Protocol UnionMergeTypes(Protocol p) => this;
+
+        internal sealed override bool UnionEquals(AnalysisValue av, int strength) => av is Protocol p && GetType() == p.GetType() && UnionEquals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
+        internal sealed override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) => av is Protocol p ? UnionMergeTypes(p) : this;
     }
 
     class NameProtocol : Protocol {
@@ -253,11 +260,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) =>
-            other is IterableProtocol ip &&
-            _yielded.SetEquals(ip._yielded);
+        // Types are already checked for an exact match
+        protected override bool Equals(Protocol other) => other is IterableProtocol ip && _yielded.SetEquals(ip._yielded);
+        protected override bool UnionEquals(Protocol p) => true;
 
-        public override int GetHashCode() => new { Type = GetType(), x = _yielded }.GetHashCode();
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is IterableProtocol ip) {
+                var yielded = _yielded.Union(ip._yielded, out bool changed, canMutate: false);
+                if (changed && !yielded.SetEquals(_yielded)) {
+                    return new IterableProtocol(Self, yielded);
+                }
+            }
+            return this;
+        }
     }
 
     class IteratorProtocol : Protocol {
@@ -292,11 +307,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) =>
-            other is IteratorProtocol ip &&
-            _yielded.SetEquals(ip._yielded);
+        // Types are already checked for an exact match
+        protected override bool Equals(Protocol other) => other is IteratorProtocol ip && _yielded.SetEquals(ip._yielded);
+        protected override bool UnionEquals(Protocol p) => true;
 
-        public override int GetHashCode() => new { Type = GetType(), x = _yielded }.GetHashCode();
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is IteratorProtocol ip) {
+                var yielded = _yielded.Union(ip._yielded, out bool changed);
+                if (changed) {
+                    return new IteratorProtocol(Self, yielded);
+                }
+            }
+            return this;
+        }
     }
 
     class GetItemProtocol : Protocol {
@@ -346,7 +369,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             other is GetItemProtocol gip &&
             _keyType.SetEquals(gip._keyType) &&
             _valueType.SetEquals(gip._valueType);
-        public override int GetHashCode() => new { _keyType, _valueType }.GetHashCode();
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is GetItemProtocol gip) {
+                var keyType = _keyType.Union(gip._keyType, out bool changed1);
+                var valueType = _valueType.Union(gip._valueType, out bool changed2);
+                if (changed1 || changed2) {
+                    return new GetItemProtocol(Self, keyType, valueType);
+                }
+            }
+            return this;
+        }
     }
 
     class TupleProtocol : IterableProtocol {
@@ -402,7 +438,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected override bool Equals(Protocol other) => 
             other is TupleProtocol tp &&
             _values.Zip(tp._values, (x, y) => x.SetEquals(y)).All(b => b);
-        public override int GetHashCode() => _values.Aggregate(GetType().GetHashCode(), (h, s) => h + 37 * s.GetHashCode());
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => p is TupleProtocol tp && _values.Length == tp._values.Length;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is TupleProtocol tp) {
+                bool anyChanged = false;
+                var values = _values.Zip(tp._values, (x, y) => {
+                    var xy = x.Union(y, out bool changed);
+                    anyChanged |= changed;
+                    return xy;
+                }).ToArray();
+                if (anyChanged) {
+                    return new TupleProtocol(Self, values);
+                }
+            }
+            return this;
+        }
     }
 
     class MappingProtocol : IterableProtocol {
@@ -490,7 +543,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             other is MappingProtocol mp &&
             _keyType.SetEquals(mp._keyType) &&
             _valueType.SetEquals(mp._valueType);
-        public override int GetHashCode() => new { Type = GetType(), _keyType, _valueType }.GetHashCode();
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is MappingProtocol mp) {
+                var keyType = _keyType.Union(mp._keyType, out bool changed1);
+                var valueType = _valueType.Union(mp._valueType, out bool changed2);
+                var itemType = _itemType.Union(mp._itemType, out bool changed3);
+                if (changed1 || changed2 || changed3) {
+                    return new MappingProtocol(Self, keyType, valueType, itemType);
+                }
+            }
+            return this;
+        }
     }
 
     class GeneratorProtocol : IteratorProtocol {
@@ -546,6 +613,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        protected override bool Equals(Protocol other) =>
+            other is GeneratorProtocol gp &&
+            _yielded.SetEquals(gp._yielded) &&
+            Sent.SetEquals(gp.Sent) &&
+            Returned.SetEquals(gp.Returned);
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is GeneratorProtocol gp) {
+                var yielded = _yielded.Union(gp._yielded, out bool changed1);
+                var sent = Sent.Union(gp.Sent, out bool changed2);
+                var returned = Returned.Union(gp.Returned, out bool changed3);
+                if (changed1 || changed2 || changed3) {
+                    return new GeneratorProtocol(Self, yielded, sent, returned);
+                }
+            }
+            return this;
+        }
     }
 
     class NamespaceProtocol : Protocol {
@@ -590,5 +678,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         protected override bool Equals(Protocol other) => Name == other.Name;
         public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is NamespaceProtocol np) {
+                np._values.MakeUnionStrongerIfMoreThan(Self.State.Limits.InstanceMembers, np._values.TypesNoCopy);
+                np._values.CopyTo(_values);
+            }
+            return this;
+        }
     }
 }

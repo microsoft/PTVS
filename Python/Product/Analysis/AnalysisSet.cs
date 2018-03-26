@@ -570,10 +570,11 @@ namespace Microsoft.PythonTools.Analysis {
                 return set1.SetEquals(set2);
             } else if (set2.Comparer == this) {
                 return set2.SetEquals(set1);
-            } else {
+            } else if (set1.Count == set2.Count) {
                 return set1.All(ns => set2.Contains(ns, this)) &&
                        set2.All(ns => set1.Contains(ns, this));
             }
+            return false;
         }
 
         public int GetHashCode(IAnalysisSet obj) {
