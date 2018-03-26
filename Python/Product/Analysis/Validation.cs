@@ -29,10 +29,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public static void Assert(bool expression, string message, params object[] args) {
+        public static void Assert(bool expression, FormattableString message) {
             if (!expression) {
                 Console.Error.WriteLine("Validation failure");
-                Console.Error.WriteLine(args.Length > 0 ? message.FormatInvariant(args) : message);
+                Console.Error.WriteLine(FormattableString.Invariant(message));
                 Console.Error.WriteLine(new StackTrace(true));
                 Debugger.Break();
             }

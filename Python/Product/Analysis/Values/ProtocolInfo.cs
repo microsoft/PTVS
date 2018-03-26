@@ -265,6 +265,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override bool Equals(object obj) {
             if (obj is ProtocolInfo other) {
+                if (GetHashCode() != other.GetHashCode()) {
+                    return false;
+                }
                 return ObjectComparer.Instance.Equals(
                     AnalysisSet.Create(_protocols),
                     AnalysisSet.Create(other._protocols)
@@ -274,7 +277,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int GetHashCode() {
-            return ObjectComparer.Instance.GetHashCode(AnalysisSet.Create(_protocols));
+            return _protocols.Aggregate(GetType().GetHashCode(), (hc, v) => hc ^ ObjectComparer.Instance.GetHashCode(v));
         }
 
         internal override bool UnionEquals(AnalysisValue av, int strength) {

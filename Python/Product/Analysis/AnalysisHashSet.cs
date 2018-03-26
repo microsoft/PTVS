@@ -494,6 +494,9 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             }
         }
 
+        public override bool Equals(object obj) => obj is IAnalysisSet set && SetEquals(set);
+        public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
+
         /// <summary>
         /// Used to store a single hashed key/value.
         /// 

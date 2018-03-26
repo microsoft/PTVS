@@ -150,19 +150,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal void SetIndex(AnalysisUnit unit, int index, IAnalysisSet value) {
-            if (index >= IndexTypes.Length) {
-                var newTypes = new VariableDef[index + 1];
-                for (int i = 0; i < newTypes.Length; ++i) {
-                    if (i < IndexTypes.Length) {
-                        newTypes[i] = IndexTypes[i];
-                    } else {
-                        newTypes[i] = new VariableDef();
-                    }
+            var types = IndexTypes;
+            if (index < 0) {
+                index += types.Length;
+                if (index < 0) {
+                    return;
                 }
-                IndexTypes = newTypes;
             }
-            IndexTypes[index].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
-            IndexTypes[index].AddTypes(unit, value, true, DeclaringModule);
+
+            if (index >= types.Length) {
+                IndexTypes = types = types.Concat(VariableDef.Generator).Take(index + 1).ToArray();
+            }
+            types[index].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
+            types[index].AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {

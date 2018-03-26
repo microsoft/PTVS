@@ -327,8 +327,8 @@ namespace Microsoft.PythonTools.Analysis {
                     foreach (var y in newItems) {
                         if (object.ReferenceEquals(x, y)) continue;
 
-                        Validation.Assert(!comparer.Equals(x, y));
-                        Validation.Assert(!comparer.Equals(y, x));
+                        Validation.Assert(!comparer.Equals(x, y), $"Failed {comparer}.Equals({x}, {y})");
+                        Validation.Assert(!comparer.Equals(y, x), $"Failed {comparer}.Equals({y}, {x})");
                     }
                 }
             }
@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Analysis {
                         foreach (var other in keyValue.Value) {
                             bool merged;
 #if FULL_VALIDATION
-                            Validation.Assert(comparer.Equals(item, other));
+                            Validation.Assert(comparer.Equals(item, other), $"Merging non-equal items {item} and {other}");
 #endif
                             item = comparer.MergeTypes(item, other, out merged);
                             if (merged) {
@@ -552,9 +552,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool Equals(AnalysisValue x, AnalysisValue y) {
 #if FULL_VALIDATION
             if (x != null && y != null) {
-                Validation.Assert(x.Equals(y) == y.Equals(x));
+                Validation.Assert(x.Equals(y) == y.Equals(x), $"Non-commutative equality: {x} == {y}");
                 if (x.Equals(y)) {
-                    Validation.Assert(x.GetHashCode() == y.GetHashCode());
+                    Validation.Assert(x.GetHashCode() == y.GetHashCode(), $"Mismatched hash code for {x} ({x.GetHashCode()}) == {y} ({y.GetHashCode()})");
                 }
             }
 #endif
