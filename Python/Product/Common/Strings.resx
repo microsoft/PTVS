@@ -2252,4 +2252,8 @@ Expand selection to the full expression?</value>
   <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
     <value>This debug REPL feature is not supported with the experimental debugger.</value>
   </data>
+  <data name="RunMypyLabel" xml:space="preserve">
+    <value>Run Mypy</value>
+    <comment>Mypy is a product name and should not be localized</comment>
+  </data>
 </root>

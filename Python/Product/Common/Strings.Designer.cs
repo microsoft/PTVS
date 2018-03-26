@@ -5008,6 +5008,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Run Mypy.
+        /// </summary>
+        public static string RunMypyLabel {
+            get {
+                return ResourceManager.GetString("RunMypyLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Run PyLint.
         /// </summary>
         public static string RunPyLintLabel {
