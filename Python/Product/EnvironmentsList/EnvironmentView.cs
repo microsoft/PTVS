@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string LocalizedDisplayName { get; }
         public string LocalizedHelpText { get; }
         public string BrokenEnvironmentHelpUrl { get; }
+        public bool ExtensionsCreated { get; set; }
 
         private EnvironmentView(string id, string localizedName, string localizedHelpText) {
             Configuration = new InterpreterConfiguration(id, id);

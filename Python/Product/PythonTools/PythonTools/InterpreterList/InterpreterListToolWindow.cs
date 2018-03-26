@@ -73,6 +73,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             
             var list = new ToolWindow();
             list.ViewCreated += List_ViewCreated;
+            list.ViewSelected += List_ViewSelected;
             list.CondaProviderCreated += List_CondaCreateProviderCreated;
             list.Site = _site;
             try {
@@ -250,6 +251,20 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
             view.IPythonModeEnabledGetter = QueryIPythonEnabled;
+        }
+
+        private void List_ViewSelected(object sender, EnvironmentViewEventArgs e) {
+            var view = e.View;
+            if (view.Factory == null || view.ExtensionsCreated) {
+                return;
+            }
+
+            // We used to create all the extensions up front in List_ViewCreated
+            // but that slowed down initialization of the tool window considerably
+            // due to the package manager extension in particular.
+            // We now create the extensions only if they are likely to be used,
+            // the first time an environment is selected in the list view.
+            view.ExtensionsCreated = true;
 
             foreach (var pm in (_site.GetComponentModel().GetService<IInterpreterOptionsService>()?.GetPackageManagers(view.Factory)).MaybeEnumerate()) {
                 try {
@@ -605,6 +620,8 @@ namespace Microsoft.PythonTools.InterpreterList {
                 return;
             }
 
+            envs.OnViewSelected(select);
+
             var ext = select?.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
 
             envs.Environments.MoveCurrentTo(select);
@@ -627,6 +644,8 @@ namespace Microsoft.PythonTools.InterpreterList {
                 envs.Dispatcher.InvokeAsync(() => SelectEnvAndExt(envs, viewId, extension, retries - 1), DispatcherPriority.Background);
                 return;
             }
+
+            envs.OnViewSelected(select);
 
             var ext = select?.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
 
