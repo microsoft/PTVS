@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Disposables;
 using Microsoft.DsTools.Core.Services;
 using Microsoft.DsTools.Core.Services.Shell;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Core.Shell;
 using Newtonsoft.Json;
@@ -89,14 +90,14 @@ namespace Microsoft.PythonTools.VsCode {
                 uri = e.uri.ToString(),
                 diagnostics = e.diagnostics.ToArray()
             };
-            _vscode.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters);
+            _vscode.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
         }
         private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params);
+            => _vscode.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params).DoNotWait();
         private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("client/registerCapability", e.@params);
+            => _vscode.NotifyWithParameterObjectAsync("client/registerCapability", e.@params).DoNotWait();
         private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params);
+            => _vscode.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params).DoNotWait();
         #endregion
 
         #region Lifetime
