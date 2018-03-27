@@ -92,9 +92,5 @@ namespace Microsoft.PythonTools.Logging {
         /// Info about slow GetExpressionAtPoint events
         /// </summary>
         GetExpressionAtPoint,
-        /// <summary>
-        /// Unhandled exception message and call stack.
-        /// </summary>
-        //UnhandledException,
     }
 }

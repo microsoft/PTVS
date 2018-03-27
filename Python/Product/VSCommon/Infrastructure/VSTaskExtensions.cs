@@ -22,7 +22,6 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Telemetry;
 using Task = System.Threading.Tasks.Task;
@@ -30,7 +29,6 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.PythonTools.Infrastructure {
     static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
-        //internal static IPythonToolsLogger _logger;
 
         /// <summary>
         /// Logs an unhandled exception. May display UI to the user informing
@@ -43,7 +41,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
-            bool allowUI = true
+            bool allowUI = true,
+            string description = null
         ) {
             var message = ex.ToUnhandledExceptionMessage(callerType, callerFile, callerLineNumber, callerName);
 
@@ -82,43 +81,45 @@ namespace Microsoft.PythonTools.Infrastructure {
                 logFile = null;
             }
 
+            bool alreadySeen = true;
+            lock (_displayedMessages) {
+                var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
+                if (_displayedMessages.Add(key)) {
+                    alreadySeen = false;
+                }
+            }
+
             try {
                 var telemetry = TelemetryService.DefaultSession;
                 if (telemetry != null) {
-                    var evt = new TelemetryEvent("vs/python/UnhandledException");
-                    evt.Properties["VS.Python.FullExceptionName"] = ex.GetType().FullName;
-                    evt.Properties["VS.Python.Details"] = message;
-                    evt.Properties["VS.Python.UserNotified"] = allowUI;
-                    telemetry.PostEvent(evt);
+                    telemetry.PostFault(
+                        "vs/python/UnhandledException",
+                        !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Python extension.",
+                        ex,
+                        (faultUtility) => {
+                            if (!alreadySeen) {
+                                faultUtility.AddProcessDump(Process.GetCurrentProcess().Id);
+                                // 0 means send to watson
+                                return 0;
+                            }
+
+                            return -1;
+                        }
+                    );
                 }
             } catch (Exception e) {
                 Debug.Fail(e.Message);
             }
 
-            //try {
-            //    _logger?.LogEvent(PythonLogEvent.UnhandledException, new UnhandledExceptionInfo() {
-            //        FullName  = ex.GetType().FullName,
-            //        Details = message,
-            //        UserNotified = allowUI,
-            //    });
-            //} catch (Exception e) {
-            //    Debug.Fail(e.Message);
-            //}
-
-            if (allowUI) {
-                lock (_displayedMessages) {
-                    var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
-                    if (_displayedMessages.Add(key)) {
-                        // First time we've seen this error, so let the user know
-                        // Prefer the dialog with our issue tracker and exception
-                        // details, but if we don't have a site available then
-                        // refer the user to ActivityLog.xml.
-                        if (site != null) {
-                            TaskDialog.ForException(site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
-                        } else if (!string.IsNullOrEmpty(logFile)) {
-                            MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
-                        }
-                    }
+            if (allowUI && !alreadySeen) {
+                // First time we've seen this error, so let the user know
+                // Prefer the dialog with our issue tracker and exception
+                // details, but if we don't have a site available then
+                // refer the user to ActivityLog.xml.
+                if (site != null) {
+                    TaskDialog.ForException(site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
+                } else if (!string.IsNullOrEmpty(logFile)) {
+                    MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
                 }
             }
         }

@@ -108,8 +108,6 @@ namespace Microsoft.PythonTools {
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
-            //VSTaskExtensions._logger = _logger;
-
             _idleManager.OnIdle += OnIdleInitialization;
 
             EditorServices.SetPythonToolsService(this);

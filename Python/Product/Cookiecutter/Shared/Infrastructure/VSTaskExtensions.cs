@@ -41,7 +41,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
-            bool allowUI = true
+            bool allowUI = true,
+            string description = null
         ) {
             var message = ex.ToUnhandledExceptionMessage(callerType, callerFile, callerLineNumber, callerName);
             // Send the message to the trace listener in case there is
@@ -78,26 +79,40 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 // Activity Log is unavailable.
             }
 
+            bool alreadySeen = true;
+            lock (_displayedMessages) {
+                var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
+                if (_displayedMessages.Add(key)) {
+                    alreadySeen = false;
+                }
+            }
+
             try {
                 var telemetry = TelemetryService.DefaultSession;
                 if (telemetry != null) {
-                    var evt = new TelemetryEvent("VS/Cookiecutter/UnhandledException");
-                    evt.Properties["VS.Cookiecutter.FullExceptionName"] = ex.GetType().FullName;
-                    evt.Properties["VS.Cookiecutter.Details"] = message;
-                    evt.Properties["VS.Cookiecutter.UserNotified"] = allowUI;
-                    telemetry.PostEvent(evt);
+                    telemetry.PostFault(
+                        "VS/Cookiecutter/UnhandledException",
+                        !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Cookiecutter extension.",
+                        ex,
+                        (faultUtility) => {
+                            if (!alreadySeen) {
+                                faultUtility.AddProcessDump(Process.GetCurrentProcess().Id);
+                                // 0 means send to watson
+                                return 0;
+                            }
+
+                            return -1;
+                        }
+                    );
                 }
             } catch (Exception e) {
                 Debug.Fail(e.Message);
             }
 
-            if (allowUI) {
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add("{0}:{1}".FormatInvariant(callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
-                    }
+            if (allowUI && !alreadySeen) {
+                if (!string.IsNullOrEmpty(logFile)) {
+                    // First time we've seen this error, so let the user know
+                    MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
                 }
             }
         }
