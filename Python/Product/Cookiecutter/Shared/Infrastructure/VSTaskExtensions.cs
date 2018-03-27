@@ -22,8 +22,8 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.CookiecutterTools;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Telemetry;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
@@ -72,6 +72,25 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 // Unknown error prevented writing to the log
             }
 
+            try {
+                ActivityLog.LogError(Strings.ProductTitle, message);
+            } catch (InvalidOperationException) {
+                // Activity Log is unavailable.
+            }
+
+            try {
+                var telemetry = TelemetryService.DefaultSession;
+                if (telemetry != null) {
+                    var evt = new TelemetryEvent("VS/Cookiecutter/UnhandledException");
+                    evt.Properties["VS.Cookiecutter.FullExceptionName"] = ex.GetType().FullName;
+                    evt.Properties["VS.Cookiecutter.Details"] = message;
+                    evt.Properties["VS.Cookiecutter.UserNotified"] = allowUI;
+                    telemetry.PostEvent(evt);
+                }
+            } catch (Exception e) {
+                Debug.Fail(e.Message);
+            }
+
             if (allowUI) {
                 lock (_displayedMessages) {
                     if (!string.IsNullOrEmpty(logFile) &&
@@ -80,12 +99,6 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                         MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
                     }
                 }
-            }
-
-            try {
-                ActivityLog.LogError(Strings.ProductTitle, message);
-            } catch (InvalidOperationException) {
-                // Activity Log is unavailable.
             }
         }
 

@@ -22,12 +22,15 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Telemetry;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Infrastructure {
     static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
+        //internal static IPythonToolsLogger _logger;
 
         /// <summary>
         /// Logs an unhandled exception. May display UI to the user informing
@@ -78,6 +81,29 @@ namespace Microsoft.PythonTools.Infrastructure {
                 // Activity Log is unavailable.
                 logFile = null;
             }
+
+            try {
+                var telemetry = TelemetryService.DefaultSession;
+                if (telemetry != null) {
+                    var evt = new TelemetryEvent("vs/python/UnhandledException");
+                    evt.Properties["VS.Python.FullExceptionName"] = ex.GetType().FullName;
+                    evt.Properties["VS.Python.Details"] = message;
+                    evt.Properties["VS.Python.UserNotified"] = allowUI;
+                    telemetry.PostEvent(evt);
+                }
+            } catch (Exception e) {
+                Debug.Fail(e.Message);
+            }
+
+            //try {
+            //    _logger?.LogEvent(PythonLogEvent.UnhandledException, new UnhandledExceptionInfo() {
+            //        FullName  = ex.GetType().FullName,
+            //        Details = message,
+            //        UserNotified = allowUI,
+            //    });
+            //} catch (Exception e) {
+            //    Debug.Fail(e.Message);
+            //}
 
             if (allowUI) {
                 lock (_displayedMessages) {

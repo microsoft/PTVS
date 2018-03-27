@@ -111,4 +111,10 @@ namespace Microsoft.PythonTools.Logging {
         public bool Success { get; set; }
         public bool ExpressionFound { get; set; }
     }
+
+    //sealed class UnhandledExceptionInfo : PythonToolsLoggerData {
+    //    public string FullName { get; set; }
+    //    public string Details { get; set; }
+    //    public bool UserNotified { get; set; }
+    //}
 }
