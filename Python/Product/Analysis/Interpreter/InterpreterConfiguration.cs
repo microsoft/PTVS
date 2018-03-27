@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Interpreter {
             Architecture = InterpreterArchitecture.TryParse(Read(properties, nameof(Architecture)));
             try {
                 Version = Version.Parse(Read(properties, nameof(Version)));
-            } catch (Exception ex) when (ex is ArgumentException || ex is ArgumentNullException || ex is FormatException) {
+            } catch (Exception ex) when (ex is ArgumentException || ex is FormatException) {
                 Version = new Version();
             }
             UIMode = 0;
