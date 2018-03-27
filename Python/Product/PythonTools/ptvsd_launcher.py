@@ -25,6 +25,7 @@ __version__ = "3.2.0.0"
 
 import os
 import os.path
+import re
 import sys
 import traceback
 
@@ -48,9 +49,9 @@ debug_options = set([opt.strip() for opt in sys.argv[4].split(',')])
 del sys.argv[0:5]
 
 # Use bundled ptvsd or not?
-bundled_ptvsd = True
+legacy_ptvsd = True
 if sys.argv and sys.argv[0] == '-g':
-    bundled_ptvsd = False
+    legacy_ptvsd = False
     del sys.argv[0]
 
 # set run_as mode appropriately
@@ -68,14 +69,60 @@ filename = sys.argv[0]
 # fix sys.path to be the script file dir
 sys.path[0] = ''
 
+def parse_version(version):
+    """Version format is expected to be <int>.<int>.<int><optional str><optional int>"""
+    try:
+        regex = r"([0-9]+)\.([0-9]+)\.([0-9]+)([a-zA-Z]*)([0-9]*)"
+        match = re.match(regex, version.upper(), re.IGNORECASE)
+        parser = [int, int, int, str, int]
+        default = [0, 0, 0, 'z', 0]
+        result = []
+        for n in range(0, len(match.groups())):
+            m = n + 1
+            v = match.group(m)
+            result.append(parser[n](v) if v else default[n])
+        return result
+    except Exception:
+        pass
+    return []
+
+def get_bundled_packages_path():
+    return os.path.join(os.path.dirname(__file__), 'Packages')
+
+def get_bundled_ptvsd_version():
+    try:
+        ptvsd_path = os.path.join(get_bundled_packages_path(), 'ptvsd', '__init__.py')
+        with open(ptvsd_path, 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            if line.startswith('__version__'):
+                _, version = (s.strip().strip('"') for s in line.split('='))
+                return version
+    except Exception:
+        pass
+    return None
+
+def verify_version():
+    try:
+        # This import should load the installed version. If this fails it means we will be using bundled ptvsd
+        import ptvsd
+        installed_version = ptvsd.__version__
+        bundled_version = get_bundled_ptvsd_version()
+        if bundled_version and installed_version and parse_version(bundled_version) > parse_version(installed_version):
+            print('Warning: Installed ptvsd(%s) does not match VS bundled version ptvsd(%s)' % (installed_version, bundled_version))
+    except ImportError:
+        pass
+
 # Load the debugger package
 try:
     ptvs_lib_path = None
-    if bundled_ptvsd:
+    if legacy_ptvsd:
         ptvs_lib_path = os.path.dirname(__file__)
         sys.path.insert(0, ptvs_lib_path)
     else:
-        ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'Packages')
+        # verify_version must be called before we change sys.path
+        verify_version()
+        ptvs_lib_path = get_bundled_packages_path()
         sys.path.append(ptvs_lib_path)
     try:
         import ptvsd
@@ -87,7 +134,7 @@ try:
     vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 except:
     traceback.print_exc()
-    if not bundled_ptvsd and not ptvsd_loaded:
+    if not legacy_ptvsd and not ptvsd_loaded:
         # This is experimental debugger import error. Exit immediately.
         # This process will be killed by VS since it does not see a debugger
         # connect to it. The exit code we will get there will be wrong.
