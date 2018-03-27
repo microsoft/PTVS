@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -27,17 +28,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public readonly FunctionInfo Function;
 
         internal readonly AnalysisUnit _declUnit;
+        private readonly bool _concreteParameters;
         private readonly Dictionary<Node, Expression> _decoratorCalls;
 
         internal FunctionAnalysisUnit(
             FunctionInfo function,
             AnalysisUnit declUnit,
             InterpreterScope declScope,
-            IPythonProjectEntry declEntry
+            IPythonProjectEntry declEntry,
+            bool concreteParameters
         )
             : base(function.FunctionDefinition, null) {
             _declUnit = declUnit;
             Function = function;
+            _concreteParameters = concreteParameters;
             _decoratorCalls = new Dictionary<Node, Expression>();
 
             var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope, declEntry);
@@ -49,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void EnsureParameters() {
-            ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: true);
+            ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: !_concreteParameters);
         }
 
         internal virtual void EnsureParameterZero() {
@@ -57,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
-            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, null);
+            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, null, usePlaceholders: !_concreteParameters);
         }
 
         internal void AddNamedParameterReferences(AnalysisUnit caller, NameExpression[] names) {
@@ -76,6 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var funcType = ProcessFunctionDecorators(ddg);
             EnsureParameterZero();
+            (Scope.OriginalScope as FunctionScope)?.PropagateParameters(DependencyProject, (FunctionScope)Scope);
 
             var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
 
@@ -213,12 +218,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private readonly IVersioned _agg;
 
         internal FunctionClosureAnalysisUnit(IVersioned agg, FunctionAnalysisUnit originalUnit, CallChain callChain) :
-            base(originalUnit.Function, originalUnit._declUnit, originalUnit._declUnit.Scope, originalUnit.ProjectEntry) {
+            base(originalUnit.Function, originalUnit._declUnit, originalUnit._declUnit.Scope, originalUnit.ProjectEntry, true) {
             _originalUnit = originalUnit;
             _agg = agg;
             CallChain = callChain;
-
-            originalUnit.Scope.AddLinkedScope(Scope);
+            _originalUnit.Scope.AddLinkedScope(Scope);
 
             var node = originalUnit.Function.FunctionDefinition;
             node.Body.Walk(new OverviewWalker(originalUnit.ProjectEntry, this, originalUnit.Tree));
@@ -227,15 +231,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IVersioned DependencyProject => _agg;
+        public FunctionAnalysisUnit OriginalUnit => _originalUnit;
         internal override ILocationResolver AlternateResolver => _originalUnit;
 
         public CallChain CallChain { get; }
-
-        internal override void EnsureParameters() {
-            ((FunctionScope)Scope).EnsureParameters(this, usePlaceholders: false);
-            var origScope = (FunctionScope)_originalUnit.Scope;
-            origScope.PropagateParameters(DependencyProject, (FunctionScope)Scope);
-        }
 
         public override string ToString() {
             return base.ToString() + " " + CallChain.ToString();

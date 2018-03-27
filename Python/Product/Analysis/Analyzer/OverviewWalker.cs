@@ -139,7 +139,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             if (reference != null && reference.Variable != null) {
                 var declNode = reference.Variable.Scope;
-                declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
+                if (_scope.Node == declNode) {
+                    declScope = _scope;
+                } else {
+                    declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
+                    declScope = declScope?.OriginalScope ?? declScope;
+                }
             }
 
             if (isLocated) {

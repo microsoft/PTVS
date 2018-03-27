@@ -108,15 +108,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return AnalysisSet.Empty;
                 }
                 try {
-                    res = ResolveOnce(unit, context);
-                    bool changed = true;
+                    res = ResolveOnce(unit, context, out var allowCache);
+                    bool changed = !Equals(res);
                     while (changed && context.ResolveFully) {
                         res = res.Resolve(unit, context, out changed);
                     }
                     if (context.ResolveFully) {
                         res.Split<LazyValueInfo>(out _, out res);
                     }
-                    context.Cache[this] = res;
+                    if (allowCache) {
+                        context.Cache[this] = res;
+                    }
                     return res;
                 } finally {
                     context.Pop();
@@ -126,50 +128,58 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private IAnalysisSet ResolveOnce(AnalysisUnit unit, ResolutionContext context) {
+        private IAnalysisSet ResolveOnce(AnalysisUnit unit, ResolutionContext context, out bool cacheResult) {
+            cacheResult = true;
+
             if (_value is ParameterInfo pi) {
                 return pi.Resolve(unit, context);
             } else if (_value != null) {
                 return _value;
             }
 
-            var left = new Lazy<IAnalysisSet>(() => _left.Resolve(unit, context), LazyThreadSafetyMode.None);
+            var left = _left?.Resolve(unit, context);
+            if (left != null && left.Equals(_left)) {
+                // Failed to resolve the value, so we're not going to get any further here
+                cacheResult = false;
+                return this;
+            }
+
             var right = new Lazy<IAnalysisSet>(() => _right.Resolve(unit, context), LazyThreadSafetyMode.None);
 
             switch (_lazyOp) {
                 case LazyOperation.Automatic:
                     break;
                 case LazyOperation.Await:
-                    return left.Value.Await(_node, unit);
+                    return left.Await(_node, unit);
                 case LazyOperation.GetEnumeratorTypes:
-                    return left.Value.GetEnumeratorTypes(_node, unit);
+                    return left.GetEnumeratorTypes(_node, unit);
                 case LazyOperation.GetIndex:
                     // Only non-lazy indexes are supported
-                    return left.Value.GetIndex(_node, unit, _right?._value ?? AnalysisSet.Empty);
+                    return left.GetIndex(_node, unit, _right?._value ?? AnalysisSet.Empty);
                 case LazyOperation.GetIterator:
-                    return left.Value.GetIterator(_node, unit);
+                    return left.GetIterator(_node, unit);
                 case LazyOperation.GetYieldFromReturn:
-                    return left.Value.GetReturnForYieldFrom(_node, unit);
+                    return left.GetReturnForYieldFrom(_node, unit);
                 case LazyOperation.GetInstance:
-                    return left.Value.GetInstanceType();
+                    return left.GetInstanceType();
                 default:
                     Debug.Fail($"Unhandled op {_lazyOp}");
                     return AnalysisSet.Empty;
             }
 
             if (_memberName != null) {
-                return left.Value.GetMember(_node, unit, _memberName);
+                return left.GetMember(_node, unit, _memberName);
             }
 
             if (_args != null) {
-                return left.Value.Call(_node, unit, ResolveArgs(_args, unit, context).ToArray(), _argNames);
+                return left.Call(_node, unit, ResolveArgs(_args, unit, context).ToArray(), _argNames);
             }
 
             if (_op.HasValue) {
                 if (_left == null) {
                     return right.Value.UnaryOperation(_node, unit, _op.Value);
                 }
-                return left.Value.BinaryOperation(_node, unit, _op.Value, right.Value);
+                return left.BinaryOperation(_node, unit, _op.Value, right.Value);
             }
 
             return AnalysisSet.Empty;
@@ -189,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // Eager call, but lazy result
-            foreach (var ns in Resolve(unit)) {
+            foreach (var ns in Resolve(unit, new ResolutionContext { ResolveDepth = 2, ResolveFully = true })) {
                 Debug.Assert(!ReferenceEquals(this, ns));
                 ns.GetMember(node, unit, name);
             }
@@ -198,7 +208,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             // Eager call, but lazy result
-            foreach (var ns in Resolve(unit)) {
+            foreach (var ns in Resolve(unit, new ResolutionContext { ResolveDepth = 2, ResolveFully = true })) {
                 Debug.Assert(!ReferenceEquals(this, ns));
                 ns.Call(node, unit, args, keywordArgNames);
             }
@@ -306,6 +316,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         // Equality
 
         public override bool Equals(object obj) {
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
             if (!(obj is LazyValueInfo other)) {
                 return false;
             }
@@ -414,6 +427,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new LazyIndexableInfo(Node, combined, _fallback);
             }
             return this;
+        }
+    }
+
+    static class LazyValueInfoExtensions {
+        public static bool IsResolvable(this IAnalysisSet set) {
+            if (set is AnalysisValue av) {
+                return av.IsResolvable();
+            }
+            return set.Any(IsResolvable);
+        }
+
+        public static bool IsResolvable(this AnalysisValue av) {
+            if (av is LazyValueInfo) {
+                return true;
+            }
+            if (av is GeneratorInfo gi) {
+                return gi.Yields.TypesNoCopy.IsResolvable() ||
+                    gi.Returns.TypesNoCopy.IsResolvable() ||
+                    gi.Sends.TypesNoCopy.IsResolvable();
+            }
+            if (av is IterableValue iv) {
+                return iv.IndexTypes.Any(v => v.TypesNoCopy.IsResolvable());
+            }
+            return false;
         }
     }
 }

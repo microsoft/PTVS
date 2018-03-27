@@ -3353,16 +3353,16 @@ f(lambda x=x:x, lambda x=y:x)";
             var entry = ProcessText(code);
 
             // default value, should be a list
-            entry.AssertIsInstance("x", code.IndexOf("lambda x=") + 10, BuiltinTypeId.List);
+            entry.AssertIsInstance("x", code.IndexOfEnd("lambda x=x"), BuiltinTypeId.List);
 
             // parameter used in the lambda, should be list and str
-            entry.AssertIsInstance("x", code.IndexOf("lambda x=") + 12, BuiltinTypeId.List, BuiltinTypeId.Str);
+            entry.AssertIsInstance("x", code.IndexOfEnd("lambda x=x:x"), BuiltinTypeId.List, BuiltinTypeId.Str);
 
             // default value in the 2nd lambda, should be tuple
-            entry.AssertIsInstance("y", code.IndexOf("lambda x=") + 24, BuiltinTypeId.Tuple);
+            entry.AssertIsInstance("y", code.IndexOfEnd("lambda x=y"), BuiltinTypeId.Tuple);
 
             // value in the 2nd lambda, should be tuple and int
-            entry.AssertIsInstance("x", code.IndexOf("lambda x=") + 26, BuiltinTypeId.Tuple, BuiltinTypeId.Int);
+            entry.AssertIsInstance("x", code.IndexOfEnd("lambda x=y:x"), BuiltinTypeId.Tuple, BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -5047,7 +5047,7 @@ x = items(0)
         }
 
         [TestMethod, Priority(0)]
-        public void DecoratorReturnTypes() {
+        public void DecoratorReturnTypes_NoDecorator() {
             // https://pytools.codeplex.com/workitem/1694
             var text = @"# without decorator
 def returnsGiven(parm):
@@ -5056,8 +5056,19 @@ def returnsGiven(parm):
 retGivenInt = returnsGiven(1)
 retGivenString = returnsGiven('str')
 retGivenBool = returnsGiven(True)
+";
 
-# with decorator without wrap
+            var entry = ProcessText(text);
+
+            entry.AssertIsInstance("retGivenInt", BuiltinTypeId.Int);
+            entry.AssertIsInstance("retGivenString", BuiltinTypeId.Str);
+            entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DecoratorReturnTypes_DecoratorNoParams() {
+            // https://pytools.codeplex.com/workitem/1694
+            var text = @"# with decorator without wrap
 def decoratorFunctionTakesArg1(f):
     def wrapped_f(arg):
         return f(arg)
@@ -5067,10 +5078,22 @@ def decoratorFunctionTakesArg1(f):
 def returnsGivenWithDecorator1(parm):
     return parm
 
-retGivenInt1 = returnsGivenWithDecorator1(1)
-retGivenString1 = returnsGivenWithDecorator1('str')
-retGivenBool1 = returnsGivenWithDecorator1(True)
+retGivenInt = returnsGivenWithDecorator1(1)
+retGivenString = returnsGivenWithDecorator1('str')
+retGivenBool = returnsGivenWithDecorator1(True)
+";
 
+            var entry = ProcessText(text);
+
+            entry.AssertIsInstance("retGivenInt", BuiltinTypeId.Int);
+            entry.AssertIsInstance("retGivenString", BuiltinTypeId.Str);
+            entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DecoratorReturnTypes_DecoratorWithParams() {
+            // https://pytools.codeplex.com/workitem/1694
+            var text = @"
 # with decorator with wrap
 def decoratorFunctionTakesArg2():
     def wrap(f):
@@ -5083,18 +5106,15 @@ def decoratorFunctionTakesArg2():
 def returnsGivenWithDecorator2(parm):
     return parm
 
-retGivenInt2 = returnsGivenWithDecorator2(1)
-retGivenString2 = returnsGivenWithDecorator2('str')
-retGivenBool2 = returnsGivenWithDecorator2(True)";
+retGivenInt = returnsGivenWithDecorator2(1)
+retGivenString = returnsGivenWithDecorator2('str')
+retGivenBool = returnsGivenWithDecorator2(True)";
 
             var entry = ProcessText(text);
 
-            foreach (var suffix in new[] { "", "1", "2" }) {
-                Console.WriteLine($"Checking retGiven*{suffix}");
-                entry.AssertIsInstance("retGivenInt" + suffix, BuiltinTypeId.Int);
-                entry.AssertIsInstance("retGivenString" + suffix, BuiltinTypeId.Str);
-                entry.AssertIsInstance("retGivenBool" + suffix, BuiltinTypeId.Bool);
-            }
+            entry.AssertIsInstance("retGivenInt2", BuiltinTypeId.Int);
+            entry.AssertIsInstance("retGivenString2", BuiltinTypeId.Str);
+            entry.AssertIsInstance("retGivenBool2", BuiltinTypeId.Bool);
         }
 
         [TestMethod, Priority(0)]

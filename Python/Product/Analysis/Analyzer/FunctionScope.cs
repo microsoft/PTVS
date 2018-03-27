@@ -48,10 +48,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 Generator = new GeneratorInfo(function.ProjectState, declModule);
                 ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false, declModule);
             }
-
-            if (declScope.OriginalScope != null && declScope.OriginalScope.TryGetNodeScope(node, out var origScope)) {
-                origScope.AddLinkedScope(this);
-            }
         }
 
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
@@ -65,13 +61,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else {
                 ReturnValue.MakeUnionStrongerIfMoreThan(unit.State.Limits.ReturnTypes, types);
                 ReturnValue.AddTypes(unit, types, enqueue);
-            }
-
-            types.Split<LazyValueInfo>(out _, out var rest);
-            if (rest.Any()) {
-                foreach (var scope in GetLinkedScopes().OfType<FunctionScope>()) {
-                    scope.AddReturnTypes(node, unit, rest, enqueue);
-                }
             }
         }
 
@@ -113,7 +102,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else if (!_parameters.ContainsKey(name)) {
                     var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, p);
-                    if (i == 0 && Function.FunctionDefinition.Parent is ClassDefinition) {
+                    if (i == 0 &&
+                        p.Kind == ParameterKind.Normal &&
+                        !Function.IsStatic &&
+                        Function.FunctionDefinition.Parent is ClassDefinition) {
                         AddParameter(unit, name, p, v);
                     } else {
                         AddParameter(unit, name, p, usePlaceholders ? null : v);
@@ -252,22 +244,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public FunctionInfo Function => (FunctionInfo)AnalysisValue;
 
-        public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
-            values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
-            if (nonLazy.Any()) {
-                var vd = GetParameter(name);
-                if (vd != null) {
-                    AssignVariableWorker(Node, unit, nonLazy, vd);
-                }
-            }
-            return base.AssignVariable(name, location, unit, values);
-        }
-
         internal override bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
-            values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
-            if (nonLazy.Any()) {
-                var vd = GetParameter(name);
-                if (vd != null) {
+            var vd = GetParameter(name);
+            if (vd != null) {
+                values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
+                if (nonLazy.Any()) {
                     vd.AddTypes(unit, nonLazy);
                 }
             }
