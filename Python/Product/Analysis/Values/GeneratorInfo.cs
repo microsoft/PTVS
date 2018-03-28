@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -187,6 +188,45 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             return desc;
+        }
+
+        internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            IAnalysisSet yields, returns, sends;
+            if (Push()) {
+                try {
+                    bool anyChange = false, changed;
+                    yields = Yields.TypesNoCopy.Resolve(unit, context, out changed);
+                    anyChange |= changed;
+                    returns = Returns.TypesNoCopy.Resolve(unit, context, out changed);
+                    anyChange |= changed;
+                    sends = Sends.TypesNoCopy.Resolve(unit, context, out changed);
+                    anyChange |= changed;
+                    if (!anyChange) {
+                        return this;
+                    }
+                } finally {
+                    Pop();
+                }
+            } else {
+                return this;
+            }
+
+            if (context.CallSite == null) {
+                // No ability to come back to this instance later, so return imitation type
+                var pi = new ProtocolInfo(DeclaringModule, ProjectState);
+                pi.AddProtocol(new GeneratorProtocol(pi, yields, sends, returns));
+                return pi;
+            }
+
+            var gi = unit.Scope.GetOrMakeNodeValue(context.CallSite, NodeValueKind.Sequence, n => new GeneratorInfo(unit.State, unit.Entry)) as GeneratorInfo;
+            if (gi != null) {
+                gi.Yields.AddTypes(unit, yields);
+                gi.Returns.AddTypes(unit, returns);
+                gi.Sends.AddTypes(unit, sends);
+                return gi;
+            }
+
+            return this;
         }
     }
 }

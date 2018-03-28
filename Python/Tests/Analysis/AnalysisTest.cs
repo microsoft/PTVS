@@ -1280,32 +1280,32 @@ d = a.next()";
                 return;
             }
 
+//            var text = @"
+//def f():
+//    yield 1
+//    yield 2
+//    yield 3
+//    return 3.14
+
+//def g():
+//    x = yield from f()
+
+//a = g()
+//a2 = iter(a)
+//b = next(a)
+
+//for c in g():
+//    print(c)
+//";
+//            var entry = ProcessTextV3(text);
+
+//            entry.AssertIsInstance("a", BuiltinTypeId.Generator);
+//            entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
+//            entry.AssertIsInstance("b", BuiltinTypeId.Int);
+//            entry.AssertIsInstance("c", BuiltinTypeId.Int);
+//            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
+
             var text = @"
-def f():
-    yield 1
-    yield 2
-    yield 3
-    return 3.14
-
-def g():
-    x = yield from f()
-
-a = g()
-a2 = iter(a)
-b = next(a)
-
-for c in g():
-    print(c)
-";
-            var entry = ProcessTextV3(text);
-
-            entry.AssertIsInstance("a", BuiltinTypeId.Generator);
-            entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
-            entry.AssertIsInstance("b", BuiltinTypeId.Int);
-            entry.AssertIsInstance("c", BuiltinTypeId.Int);
-            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
-
-            text = @"
 def f(x):
     yield from x
 
@@ -1315,7 +1315,7 @@ b = a.__next__()
 #for c in f([42, 1337]):
 #    print(c)
 ";
-            entry = ProcessTextV3(text);
+            var entry = ProcessTextV3(text);
 
             entry.AssertIsInstance("a", BuiltinTypeId.Generator);
             entry.AssertIsInstance("b", BuiltinTypeId.Int);
@@ -5112,9 +5112,9 @@ retGivenBool = returnsGivenWithDecorator2(True)";
 
             var entry = ProcessText(text);
 
-            entry.AssertIsInstance("retGivenInt2", BuiltinTypeId.Int);
-            entry.AssertIsInstance("retGivenString2", BuiltinTypeId.Str);
-            entry.AssertIsInstance("retGivenBool2", BuiltinTypeId.Bool);
+            entry.AssertIsInstance("retGivenInt", BuiltinTypeId.Int);
+            entry.AssertIsInstance("retGivenString", BuiltinTypeId.Str);
+            entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
         }
 
         [TestMethod, Priority(0)]
