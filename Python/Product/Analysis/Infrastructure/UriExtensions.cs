@@ -18,7 +18,7 @@ using System;
 using System.Net;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
-    public static class UriExtensions {
+    internal static class UriExtensions {
         public static string ToAbsolutePath(this Uri uri) {
             if(IsWindows()) {
                 // VS Code always sends /-based paths with leading / such as

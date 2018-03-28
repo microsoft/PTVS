@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
-        private ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
 
         internal Task _loadingFromDirectory;
 
