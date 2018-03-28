@@ -17,7 +17,7 @@
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\</IntermediateOutputPath>
 
     <BaseOutputPath>$(BinDirectory)</BaseOutputPath>
-    <OutputPath>$(BaseOutputPath)\$(Configuration)\</OutputPath>
+    <OutputPath>$(BuildOutputRoot)raw\</OutputPath>
 
     <BuildDependsOn>ValidateAssemblyName;$(BuildDependsOn)</BuildDependsOn>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
