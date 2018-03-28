@@ -463,14 +463,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
 
             } else if (strength >= MergeStrength.ToBaseClass) {
-                var ii = ns as InstanceInfo;
-                if (ii != null) {
-                    return ii.ClassInfo.UnionMergeTypes(ClassInfo, strength).GetInstanceType().Single();
+                AnalysisValue newCls = null;
+                AnalysisValue defaultResult = this;
+                if (ns is InstanceInfo ii) {
+                    newCls = ClassInfo.GetFirstCommonBase(ProjectState, ClassInfo, ii.ClassInfo);
+                    if (ClassInfo.IsFirstForMroUnion(ii.ClassInfo, ClassInfo)) {
+                        defaultResult = ns;
+                    }
+                } else if (ns is BuiltinInstanceInfo bii) {
+                    newCls = ClassInfo.GetFirstCommonBase(ProjectState, ClassInfo, bii.ClassInfo);
+                    if (ClassInfo.IsFirstForMroUnion(bii.ClassInfo, ClassInfo)) {
+                        defaultResult = ns;
+                    }
                 }
-                var bii = ns as BuiltinInstanceInfo;
-                if (bii != null) {
-                    return bii.ClassInfo.UnionMergeTypes(ClassInfo, strength).GetInstanceType().Single();
+                if (newCls == null) {
+                    return defaultResult;
                 }
+                return newCls.GetInstanceType().Single();
             }
 
             return base.UnionMergeTypes(ns, strength);

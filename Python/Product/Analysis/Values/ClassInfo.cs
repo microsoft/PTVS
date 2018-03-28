@@ -585,7 +585,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// defined with the same name at the same character index in two
         /// different files and with problematic MROs.
         /// </remarks>
-        private static bool IsFirstForMroUnion(AnalysisValue ns1, AnalysisValue ns2) {
+        internal static bool IsFirstForMroUnion(AnalysisValue ns1, AnalysisValue ns2) {
             var ci1 = ns1 as ClassInfo;
             var ci2 = ns2 as ClassInfo;
 
@@ -605,16 +605,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return null;
             }
 
-            IEnumerable<AnalysisValue> mro1;
-            AnalysisValue[] mro2;
-            if (IsFirstForMroUnion(ns1, ns2)) {
-                mro1 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
-                mro2 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
-            } else {
-                mro1 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
-                mro2 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
+            var bases1 = (ns1 as ClassInfo)?.Bases;
+            var bases2 = (ns2 as ClassInfo)?.Bases;
+
+            var mro1 = bases1 != null ? Enumerable.Repeat(ns1, 1).Concat(bases1) : ns1.Mro;
+            var mro2 = bases2 != null ? Enumerable.Repeat(ns2, 1).Concat(bases2) : ns2.Mro;
+
+            if (!IsFirstForMroUnion(ns1, ns2)) {
+                var tmp = mro1;
+                mro1 = mro2;
+                mro2 = tmp;
             }
-            return mro1.FirstOrDefault(cls => mro2.Contains(cls));
+
+            var mro2Set = new HashSet<AnalysisValue>(mro2.MaybeEnumerate().SelectMany(), ObjectComparer.Instance);
+            var commonBase = mro1.MaybeEnumerate().SelectMany().Where(v => v is ClassInfo || v is BuiltinClassInfo).FirstOrDefault(mro2Set.Contains);
+            if (commonBase?.TypeId == BuiltinTypeId.Object) {
+                return null;
+            }
+            return commonBase;
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {

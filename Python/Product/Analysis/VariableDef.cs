@@ -243,7 +243,13 @@ namespace Microsoft.PythonTools.Analysis {
                         var afterAdded = original.Add(value, out testAdded, false);
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
-                                Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency adding {value} to {original}");
+                                if (!ObjectComparer.Instance.Equals(afterAdded, original)) {
+                                    // Double validation, as sometimes testAdded is a false positive
+                                    afterAdded = original.Add(value, out testAdded, false);
+                                    if (testAdded) {
+                                        Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency adding {value} to {original}");
+                                    }
+                                }
                             } else if (afterAdded.Count == original.Count) {
                                 Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency not adding {value} to {original}");
                             }
