@@ -54,14 +54,8 @@ namespace Microsoft.PythonTools.Interpreter {
             UIMode = uiMode;
         }
 
-        private static string Read(Dictionary<string, object> d, string k) {
-            try {
-                return (string)d[k];
-            } catch (KeyNotFoundException) {
-            } catch (InvalidCastException) {
-            }
-            return null;
-        }
+        private static string Read(Dictionary<string, object> d, string k) 
+            => d.TryGetValue(k, out var o) ? o as string: null;
 
         private InterpreterConfiguration(Dictionary<string, object> properties) {
             Id = Read(properties, nameof(Id));

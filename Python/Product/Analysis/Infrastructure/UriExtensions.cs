@@ -21,20 +21,17 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
     public static class UriExtensions {
         public static string ToAbsolutePath(this Uri uri) {
             if(IsWindows()) {
-                // VS Code always sends /-based paths. Also, its file URL looks like
-                // file:///C:/foo which yields AbsolutePath as /C:/foo which is wrong.
-                // We need to clean this up.
-                var path = WebUtility.UrlDecode(uri.AbsolutePath).Replace('/', '\\');
-                if(path.Contains(":\\")) { // Absolute path
-                     if(path.Length > 2 && path[0] == '\\') { // Looks like \C:\ or \\\
-                        if (path[2] == ':' || path[2] == '\\') {
-                            return path.Substring(1); // Drop the leading \
-                        }
+                // VS Code always sends /-based paths with leading / such as
+                // /f:/VSCP/src/test/pythonFiles. We need to clean this up.
+                var path = uri.LocalPath.Replace('/', '\\');
+                if(path.Length > 2 && path[0] == '\\') { // Looks like \C:\ or \\\
+                    if (path[2] == ':' || path[2] == '\\') {
+                        return path.Substring(1); // Drop the leading \
                     }
                 }
                 return path;
             }
-            return uri.AbsolutePath;
+            return uri.LocalPath;
         }
 
         private static bool IsWindows() {

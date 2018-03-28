@@ -14,17 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-#define WAIT_FOR_DEBUGGER
+// #define WAIT_FOR_DEBUGGER
 
 using System;
-using System.Linq;
 using Microsoft.PythonTools.VsCode.Services;
 using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.VsCode {
     internal static class Program {
         public static void Main(string[] args) {
-            var debugMode = CheckDebugMode(args);
+            CheckDebugMode();
             using (CoreShell.Create()) {
                 var services = CoreShell.Current.ServiceManager;
 
@@ -41,16 +40,12 @@ namespace Microsoft.PythonTools.VsCode {
             }
         }
 
-        private static bool CheckDebugMode(string[] args) {
-            var debugMode = args.Any(a => a == "--debug");
-            //if (debugMode) {
+        private static void CheckDebugMode() {
 #if WAIT_FOR_DEBUGGER
             while (!System.Diagnostics.Debugger.IsAttached) {
                 System.Threading.Thread.Sleep(1000);
             }
 #endif
-            //}
-            return debugMode;
         }
     }
 }
