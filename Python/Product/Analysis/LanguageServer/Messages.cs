@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string rootPath;
         public Uri rootUri;
         public PythonInitializationOptions initializationOptions;
-        public ClientCapabilities? capabilities;
+        public ClientCapabilities capabilities;
         public TraceLevel trace;
     }
 

@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task DidOpenTextDocument(DidOpenTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual Task DidChangeTextDocument(DidChangeTextDocumentParams @params) => Task.CompletedTask;
+        public virtual void DidChangeTextDocument(DidChangeTextDocumentParams @params) { }
 
         public virtual Task WillSaveTextDocument(WillSaveTextDocumentParams @params) => Task.CompletedTask;
 

@@ -119,10 +119,8 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         [JsonRpcMethod("initialized")]
-        public async Task Initialized(JToken token) { 
-            await _server.Initialized(token.ToObject<InitializedParams>());
-            await _ui.ShowMessage("Initialized!", MessageType.Info);
-        }
+        public Task Initialized(JToken token)
+            => _server.Initialized(token.ToObject<InitializedParams>());
 
         [JsonRpcMethod("shutdown")]
         public Task Shutdown() => _server.Shutdown();
@@ -162,7 +160,7 @@ namespace Microsoft.PythonTools.VsCode {
            => _server.DidOpenTextDocument(token.ToObject<DidOpenTextDocumentParams>());
 
         [JsonRpcMethod("textDocument/didChange")]
-        public Task DidChangeTextDocument(JToken token)
+        public void DidChangeTextDocument(JToken token)
            => _server.DidChangeTextDocument(token.ToObject<DidChangeTextDocumentParams>());
 
         [JsonRpcMethod("textDocument/willSave")]
