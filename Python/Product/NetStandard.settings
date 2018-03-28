@@ -10,15 +10,6 @@
   <Import Project="$(BuildRoot)\Build\Common.Build.Core.settings" />
 
   <PropertyGroup>
-    <ObjDirectory Condition="'$(ObjDirectory)' == ''">$(BuildOutputRoot)obj\</ObjDirectory>
-    <BinDirectory Condition="'$(BinDirectory)' == ''">$(BuildOutputRoot)bin\</BinDirectory>
-
-    <BaseIntermediateOutputPath>$(ObjDirectory)\$(AssemblyName)\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\</IntermediateOutputPath>
-
-    <BaseOutputPath>$(BinDirectory)</BaseOutputPath>
-    <OutputPath>$(BuildOutputRoot)raw\</OutputPath>
-
     <BuildDependsOn>ValidateAssemblyName;$(BuildDependsOn)</BuildDependsOn>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>

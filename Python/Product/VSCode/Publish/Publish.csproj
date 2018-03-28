@@ -13,7 +13,7 @@
   <!-- Nuget packaging -->
   <PropertyGroup>
     <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
-    <NugetPackageVersion>0.1.0</NugetPackageVersion>
+    <NugetPackageVersion Condition=" '$(NugetPackageVersion)' == '' ">0.1.0</NugetPackageVersion>
     <NugetExe Condition="$(OS) == 'Windows_NT'">$(NuGetPackageRoot)NuGet.CommandLine\4.5.1\tools\nuget.exe</NugetExe>
     <NugetExe Condition="$(OS) != 'Windows_NT'">nuget</NugetExe>
   </PropertyGroup>
@@ -46,6 +46,7 @@
   <Target Name="AfterBuild">
     <CallTarget Targets="PackPlatformSpecificFolders" />
     <CallTarget Targets="PackNetcoreDependentFolder" />
+    <CallTarget Targets="Sha512" />
   </Target>
   <Target Name="PackPlatformSpecificFolders">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
@@ -55,25 +56,64 @@
     <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
     <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
   </Target>
   <Target Name="PackNetcoreDependentFolder">
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg">
-      <Authenticode>NuGet</Authenticode>
-    </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg">
-      <Authenticode>NuGet</Authenticode>
-    </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg">
-      <Authenticode>NuGet</Authenticode>
-    </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg">
-      <Authenticode>NuGet</Authenticode>
-    </FilesToSign>
-    <FilesToSign Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg">
+    <NugetPackages Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToSign Include="@(NugetPackages)">
       <Authenticode>NuGet</Authenticode>
     </FilesToSign>
   </ItemGroup>
+  <UsingTask TaskName="GenerateHash" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <InputFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Security.Cryptography" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+                  var prefix = "python-analysis-vscode";
+
+                  using (var sha = SHA512.Create())              
+                  using (var tsFile = new StreamWriter(OutputFile.ItemSpec, false)) {
+
+                    foreach (var item in InputFiles) {
+                      var path = item.ItemSpec;
+
+                      var fn = Path.GetFileName(path);
+                      var platform = fn.Substring(prefix.Length, fn.IndexOf('.') - prefix.Length);
+                      platform = platform.Replace('-', '_');
+ 
+                      using (var stream = new FileStream(path, FileMode.Open)) {
+                        var hash = sha.ComputeHash(stream);
+                        var sb = new StringBuilder(hash.Length*2);
+                        foreach (var b in hash) {
+                          sb.Append(b.ToString("x2"));
+                        }
+ 
+                        if(platform.Length > 0) {
+                          tsFile.WriteLine("export const analysis_engine_" + platform.Substring(1) + "_sha512 = '" + sb.ToString() + "';");
+                        }
+                      }
+                    }
+                  }
+                ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+  <Target Name="Sha512">
+    <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)\analysisEngineHashes.ts" />
+  </Target>
 </Project>
