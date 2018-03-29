@@ -116,6 +116,7 @@ namespace Microsoft.PythonTools.VsCode {
                     parentProcess.Exited += (s, e) => {
                         _sessionTokenSource.Cancel();
                     };
+                    MonitorParentProcess(parentProcess);
                 }
             }
             return _server.Initialize(p);
@@ -129,7 +130,21 @@ namespace Microsoft.PythonTools.VsCode {
         public Task Shutdown() => _server.Shutdown();
 
         [JsonRpcMethod("exit")]
-        public Task Exit() => _server.Exit();
+        public async Task Exit() {
+            await _server.Exit();
+            _sessionTokenSource.Cancel();
+        }
+
+        private void MonitorParentProcess(Process process) {
+            Task.Run(async () => {
+                while(!_sessionTokenSource.IsCancellationRequested) {
+                    await Task.Delay(2000);
+                    if(process.HasExited) {
+                        _sessionTokenSource.Cancel();
+                    }
+                }
+            }).DoNotWait();
+        }
         #endregion
 
         #region Cancellation
