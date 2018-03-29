@@ -27,45 +27,40 @@ namespace Microsoft.PythonTools.VsCode
 {
     public class VTuneInvoker
     {
-        private static readonly string _vtuneCl = @"\bin32\amplxe-cl.exe";
-        private static readonly string _vtune17Envvar = "VTUNE_AMPLIFIER_2017_DIR";
-        private static readonly string _vtune18Envvar = "VTUNE_AMPLIFIER_2018_DIR";
+        // In Linux, make sure to run: 
+        // source $(VTUNE_INSTALL_PATH)/amplxe-vars.sh
+        private const string _vtune17Envvar = "VTUNE_AMPLIFIER_2017_DIR";
+        private const string _vtune18Envvar = "VTUNE_AMPLIFIER_2018_DIR";
+        private const string _vtuneExeBasename = "amplxe-cl";
 
-        public static string VTunePath()
-        {
-            // expecting something like "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
-            string envvarval;
+        public static string VTunePath() {
+            string envvarval = "dummyval";
             if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows ||
-                 RuntimeEnvironment.OperatingSystemPlatform == Platform.Linux)
-            {
-                envvarval = Environment.GetEnvironmentVariable(_vtune17Envvar);
-                if (envvarval == null)
-                {
-                    envvarval = Environment.GetEnvironmentVariable(_vtune18Envvar);
-                }
-                if (envvarval == null)
-                {
-                    throw new VTuneNotInstalledException();
-                }
+                 RuntimeEnvironment.OperatingSystemPlatform == Platform.Linux) {
+                envvarval = Environment.GetEnvironmentVariable(_vtune17Envvar) ?? 
+                    Environment.GetEnvironmentVariable(_vtune18Envvar) ?? throw new VTuneNotInstalledException();
+            } else {
+                throw new Exception("Only Linux and Windows are supported at this time");
+            }
 
+            string fname = "";
+            if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows) {
+                fname = Path.Combine("bin32", _vtuneExeBasename + ".exe");
+            } else {
+                string vtuneDir = (Environment.Is64BitOperatingSystem)? "bin64" : "bin32";
+                fname = Path.Combine(vtuneDir, _vtuneExeBasename);
             }
-            else
-            {
-                envvarval = "OS not supported"; // should this throw an exception?
-            }
-            if (File.Exists(envvarval + _vtuneCl)) // not exactly sure why Path.Combine doesn't work here
-            {
-                return envvarval + _vtuneCl;
-            }
-            else
-            {
-                // TODO: probably should throw an exception here
-                return string.Format("{0} does not exist, on path [{1}]", Path.Combine(envvarval, _vtuneCl), envvarval);
+            fname = Path.Combine(envvarval, fname);
+
+            if (File.Exists(fname)) {
+                return fname;
+            } else {
+                throw new Exception($"Could not find {fname}, please check you have installed VTune");
             }
         }
 
-        private readonly string _path;        // vtune path
-        private string _baseOutDir = "";  // user data dir
+        private readonly string _path;             // vtune path
+        private string _baseOutDir = "";           // user data dir
         private readonly string _resultDir = "";   // path of directory to store/retrieve collected results
                                                    // empty if collection has not started
 
@@ -81,30 +76,25 @@ namespace Microsoft.PythonTools.VsCode
         /// </summary>
         /// <param name="baseOutDir"></param>
         /// <param name="vtunePath"></param>
-        public VTuneInvoker(string baseOutDir, string vtunePath = "")
-        {
+        public VTuneInvoker(string baseOutDir, string vtunePath = "") {
             _baseOutDir = baseOutDir;
             _path = vtunePath;
         }
 
-        public string CollectCL()
-        {
+        public string CollectCL() {
             throw new NotImplementedException();
         }
 
-        public string Report()
-        {
+        public string Report() {
             throw new NotImplementedException();
         }
 
-        public void Start()
-        {
+        public void Start() {
             EnsureBaseDir();
             Console.WriteLine("Should be executing....");
         }
 
-        private void EnsureBaseDir()
-        {
+        private void EnsureBaseDir() {
             string possible = BaseOutDir;
             if (Directory.Exists(possible)) return;
 
@@ -113,8 +103,7 @@ namespace Microsoft.PythonTools.VsCode
             string candidatedirname = Path.Combine(Path.GetTempPath(), filename + "_" + date + ".vt");
 
             int count = 1;
-            while (Directory.Exists(candidatedirname))
-            {
+            while (Directory.Exists(candidatedirname)) {
                 candidatedirname = Path.Combine(Path.GetTempPath(), filename + "_" + date + "(" + count + ").vt");
                 count++;
             }
@@ -122,22 +111,18 @@ namespace Microsoft.PythonTools.VsCode
             _baseOutDir = candidatedirname;
         }
 
-        public void AddCollectorSpec(VTuneCollectSpec collector)
-        {
+        public void AddCollectorSpec(VTuneCollectSpec collector) {
             CollectSpec = collector;
         }
 
-        private static string NextResultDirInDir(string basedir)
-        {
-            if (!Directory.Exists(basedir))
-            {
+        private static string NextResultDirInDir(string basedir) {
+            if (!Directory.Exists(basedir)) {
                 throw new ArgumentException($"Expected directory {basedir} does not exist");
             }
 
             int latest = 0;
             IEnumerable<string> previous = Directory.GetDirectories(basedir, "r*hs");
-            if (previous.Count() != 0)
-            {
+            if (previous.Count() != 0) {
                 latest = previous
                            .Select(x => { var n = new FileInfo(x).Name; return n.Substring(1, n.Length - 3); })
                            .Select(x => Int32.Parse(x))
@@ -149,15 +134,12 @@ namespace Microsoft.PythonTools.VsCode
             return latestReportName;
         }
 
-        public static string FreshDirectory(string baseName = "results")
-        {
+        public static string FreshDirectory(string baseName = "results") {
             string date = DateTime.Now.ToString("yyyyMMdd");
             string outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date);
 
             int count = 1;
-            while (File.Exists(outPath))
-            {
-                //outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + "(" + count + ")");
+            while (File.Exists(outPath)) {
                 outPath = Path.Combine(Path.GetTempPath(), $"{baseName}_{date} ({count})");
                 count++;
             }
@@ -166,21 +148,17 @@ namespace Microsoft.PythonTools.VsCode
             return outPath;
         }
 
-        public static string FreshResultDir(string basedir)
-        {
+        public static string FreshResultDir(string basedir) {
             const string rdirtemplate = "r_{0:D4}";
-            if (basedir == "" || basedir == null || basedir == string.Empty)
-            {
+            if (basedir == "" || basedir == null || basedir == string.Empty) {
                 basedir = Path.GetTempPath();
             }
-            if (!Directory.Exists(basedir))
-            {
+            if (!Directory.Exists(basedir)) {
                 throw new ArgumentException($"Directory {basedir} does not exist");
             }
             int count = 1;
             string candidate = string.Format(rdirtemplate, count);
-            while (Directory.Exists(Path.Combine(basedir, candidate)))
-            {
+            while (Directory.Exists(Path.Combine(basedir, candidate))) {
                 count++;
                 candidate = string.Format(rdirtemplate, count);
             }
@@ -188,30 +166,22 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public class VTuneNotInstalledException : Exception
-    {
-        public override string Message
-        {
-            get
-            {
-                return "Only VTune 2017 or 2018 supported, see https://software.intel.com/en-us/intel-vtune-amplifier-xe";
+    public class VTuneNotInstalledException : Exception {
+        public override string Message {
+            get {
+                return "Only VTune 2017 or 2018 supported, see https://software.intel.com/intel-vtune-amplifier-xe";
             }
         }
     }
 
-    public abstract class VTuneSpec
-    {
+    public abstract class VTuneSpec {
         public string UserDataDir { get; set; }
         public string ResultDir { get; set; }
 
-        public string ResultDirCLI
-        {
-            get
-            {
-                if (ResultDir == null || ResultDir == string.Empty)
-                {
-                    if (UserDataDir == string.Empty || UserDataDir == null)
-                    {
+        public string ResultDirCLI {
+            get {
+                if (ResultDir == null || ResultDir == string.Empty) {
+                    if (UserDataDir == string.Empty || UserDataDir == null) {
                         UserDataDir = VTuneInvoker.FreshDirectory();
                     }
                     ResultDir = VTuneInvoker.FreshResultDir(UserDataDir);
@@ -222,36 +192,29 @@ namespace Microsoft.PythonTools.VsCode
 
         public VTuneInvoker Invoker;
         public abstract string FullCLI();
-        public string UserDataDirCLI()
-        {
-            if (UserDataDir == string.Empty || UserDataDir == null)
-            {
+        public string UserDataDirCLI() {
+            if (UserDataDir == string.Empty || UserDataDir == null) {
                 UserDataDir = VTuneInvoker.FreshDirectory();
             }
             return "-user-data-dir=" + UserDataDir; // should be outputdir in PTVS
         }
     }
 
-    public abstract class VTuneCollectSpec : VTuneSpec
-    {
+    public abstract class VTuneCollectSpec : VTuneSpec {
         public abstract string AnalysisName { get; }
         public string WorkloadSpec { get; set; }
-        public string AnalysisCLI
-        {
+        public string AnalysisCLI {
             get { return "-collect" + " " + AnalysisName; }
         }
 
-        public string WorkloadCLI
-        {
+        public string WorkloadCLI {
             get { return " -- " + WorkloadSpec; }
         }
     }
 
-    public class VTuneCollectHotspotsSpec : VTuneCollectSpec
-    {
+    public class VTuneCollectHotspotsSpec : VTuneCollectSpec {
         public override string AnalysisName { get { return "hotspots"; } }
-        public override string FullCLI()
-        {
+        public override string FullCLI() {
             // TODO: Make sure that userdatadir exists and workloadspec is not empty
             // (also that things are appropriately quoted)
             StringBuilder sb = new StringBuilder();
@@ -263,48 +226,39 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public abstract class VTuneReportSpec : VTuneSpec
-    {
+    public abstract class VTuneReportSpec : VTuneSpec {
         virtual public string ReportFileTemplate { get; }
         private string _reportOutFile = null;
-        public string ReportOutputFile
-        {
+        public string ReportOutputFile {
             get { return _reportOutFile; }
             set { _reportOutFile = value; } // should prevent this value from changing once it's been validated
         }
 
-        protected VTuneReportSpec(string reportName)
-        {
+        protected VTuneReportSpec(string reportName) {
             _reportPath = reportName;
         }
         public abstract string ReportName { get; }
-        public string ReportNameCLI
-        {
+        public string ReportNameCLI {
             get { return "-report " + ReportName; }
         }
         private string _reportPath;
 
-        public string ReportCLI
-        {
-            get
-            {
+        public string ReportCLI {
+            get {
                 ValidateReportPath();
                 return "-format=csv -csv-delimiter=comma -report-output=" + ReportOutputFile;
             }
         }
 
-        private bool ValidateReportPath()
-        {
-            if (ReportOutputFile != string.Empty && ReportOutputFile != null && ReportOutputFile.Length != 0)
-            {
+        private bool ValidateReportPath() {
+            if (ReportOutputFile != string.Empty && ReportOutputFile != null && ReportOutputFile.Length != 0) {
                 return true;
             }
 
             // Generate a new name
             int count = 0;
             string candidate = string.Format(ReportFileTemplate, count);
-            while (File.Exists(Path.Combine(UserDataDir, candidate)))
-            {
+            while (File.Exists(Path.Combine(UserDataDir, candidate))) {
                 count++;
                 candidate = string.Format(ReportFileTemplate, count);
             }
@@ -313,14 +267,12 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public class VTuneReportCallstacksSpec : VTuneReportSpec
-    {
+    public class VTuneReportCallstacksSpec : VTuneReportSpec {
         public override string ReportFileTemplate { get { return "r_stacks_{0:D4}.csv"; } }
         public VTuneReportCallstacksSpec(string reportName = "") : base(reportName) { }
         public override string ReportName { get { return "callstacks"; } }
 
-        public override string FullCLI()
-        {
+        public override string FullCLI() {
             StringBuilder sb = new StringBuilder();
             sb.Append(ReportNameCLI + " -call-stack-mode user-plus-one");
             sb.Append(" " + UserDataDirCLI());
@@ -331,13 +283,11 @@ namespace Microsoft.PythonTools.VsCode
     }
 
     // requires environment variable AMPLXE_EXPERIMENTAL
-    public class VTuneCPUUtilizationSpec : VTuneReportSpec
-    {
+    public class VTuneCPUUtilizationSpec : VTuneReportSpec {
 
         public override string ReportFileTemplate { get { return "r_cpu_{0:D4}.csv"; } }
         private Dictionary<string, string> _knobs;
-        public VTuneCPUUtilizationSpec(string reportName = "") : base(reportName)
-        {
+        public VTuneCPUUtilizationSpec(string reportName = "") : base(reportName) {
             _knobs = new Dictionary<string, string>();
             _knobs.Add("column-by", "CPUTime"); // these are case-sensitive
             _knobs.Add("query-type", "overtime");
@@ -347,11 +297,9 @@ namespace Microsoft.PythonTools.VsCode
 
         public override string ReportName { get { return "time"; } }
 
-        public override string FullCLI()
-        {
+        public override string FullCLI() {
             StringBuilder sb = new StringBuilder(ReportNameCLI + " ");
-            foreach (KeyValuePair<string, string> kv in _knobs)
-            {
+            foreach (KeyValuePair<string, string> kv in _knobs) {
                 sb.Append($"-r-k {kv.Key}={kv.Value}"); //should these be quoted?
                 sb.Append(" ");
             }

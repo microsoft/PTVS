@@ -26,20 +26,20 @@ namespace Microsoft.PythonTools.VsCode
     // Due to JSON limitations, this is represented as a 2D named tuple, where the fields are
     // "l" (low) and "h" (high), each containing a 32-bit *signed* integer.
     // In this way, the max value (0xffffffffffffffff) is represented as {"h" : -1, "l" : -1}
-    public class LongInt
+    class LongInt
     {
         public LongInt(long _h, long _l) { h = _h; l = _l; }
         public long h { get; set; }
         public long l { get; set; }
     }
 
-    public class TimeSpec
+    class TimeSpec
     {
         public LongInt begin { get; set; }
         public LongInt duration { get; set; }
     }
 
-    public class ProcessorSpec
+    class ProcessorSpec
     {
         public int logicalCount { get; set; }
         public long speedInMHz { get; set; }
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.VsCode
         public LongInt highestUserAddress { get; set; }
     }
 
-    public class ProcessSpec
+    class ProcessSpec
     {
         public string name { get; set; }
         public int id { get; set; }
@@ -59,13 +59,13 @@ namespace Microsoft.PythonTools.VsCode
         public IList<ThreadSpec> threads { get; set; }
     }
 
-    public class FrameInfo
+    class FrameInfo
     {
         public LongInt timestamp { get; set; }
         public IList<LongInt> frameIPs { get; set; }
     }
 
-    public class FunctionSpec
+    class FunctionSpec
     {
         public string name { get; set; }
         [JsonProperty("base")]
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public class ModuleSpec
+    class ModuleSpec
     {
         public string name { get; set; }
         public int id { get; set; }
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public class ThreadSpec
+    class ThreadSpec
     {
         public int id { get; set; }
         public LongInt begin { get; set; }
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.VsCode
         public IList<FrameInfo> stacks { get; set; }
     }
 
-    public class Trace
+    class Trace
     {
         public TimeSpec totalTimeRange { get; set; }
         public string name { get; set; }
@@ -126,14 +126,14 @@ namespace Microsoft.PythonTools.VsCode
         public IList<ModuleSpec> modules { get; set; }
     }
 
-    public class CPUUtilTrace
+    class CPUUtilTrace
     {
         public LongInt beginTime;
         public LongInt duration;
         public IList<ValueTrace> counters;
     }
 
-    public class ValueTrace
+    class ValueTrace
     {
         public string id;
         public IList<CPUSample> p;
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public class CPUSample
+    class CPUSample
     {
         public LongInt t;
         public float v;
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.VsCode
         }
     }
 
-    public static class TraceUtils
+    static class TraceUtils
     {
         public static LongInt ToNanoseconds(double timepoint)
         {
@@ -166,13 +166,10 @@ namespace Microsoft.PythonTools.VsCode
             var highlength = Math.Max(hexrep.Length - 8, 0);
             int highpart = 0, lowpart = 0;
 
-            if (highlength > 0)
-            {
+            if (highlength > 0) {
                 highpart = Convert.ToInt32("0x" + hexrep.Substring(0, highlength), 16);
                 lowpart = Convert.ToInt32("0x" + hexrep.Substring(highlength, 8), 16);
-            }
-            else
-            {
+            } else {
                 lowpart = Convert.ToInt32("0x" + hexrep, 16);
             }
 

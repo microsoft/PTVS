@@ -90,8 +90,7 @@ namespace Microsoft.PythonTools.VsCode
                 throw new Exception("Couldn't build the module/function dictionary, can't figure out why");
             }
 
-            // should zip on a sequence generator
-            var mods = mfdd.Zip(SequenceGenerator(1), (x, y) => new ModuleSpec()
+            var mods = mfdd.Zip(Enumerable.Range(1, int.MaxValue), (x, y) => new ModuleSpec()
             {
                 name = x.Key,
                 id = y,
@@ -135,7 +134,7 @@ namespace Microsoft.PythonTools.VsCode
                 end = duration,
                 isTarget = true,
                 isUser = true,
-                moduleIDs = SequenceGenerator(1).Take(mods.Count()).ToList()
+                moduleIDs = Enumerable.Range(1, int.MaxValue).Take(mods.Count()).ToList()
             };
             List<ProcessSpec> processes = new List<ProcessSpec>(); // TODO -- is there a literal for this?
             processes.Add(proc);
@@ -174,8 +173,6 @@ namespace Microsoft.PythonTools.VsCode
             };
 
             string json = JsonConvert.SerializeObject(trace, Formatting.Indented);
-
-            // StreamWriter writer = File.CreateText(@"C:\users\perf\Sample11.dwjson");
             StreamWriter writer = File.CreateText(outfname);
             writer.WriteLine(json);
             writer.Close();
@@ -191,16 +188,6 @@ namespace Microsoft.PythonTools.VsCode
                                           .Select(VTuneStackParser.RemovePrePosComma)))
                                           .ParseFromStream();
             return samples;
-        }
-
-        public static IEnumerable<int> SequenceGenerator(int start = 0)
-        {
-            int i = start;
-            while (true)
-            {
-                yield return i;
-                i++;
-            }
         }
 
         public static void CPUReportToDWJson(string filename, string outfname, double timeTotal = 0.0)
@@ -235,7 +222,7 @@ namespace Microsoft.PythonTools.VsCode
             double stepSize = totalTime / steps;
 
             List<ValueTrace> vts = new List<ValueTrace>();
-            vts.Add(new ValueTrace(SequenceGenerator().Take(steps).Zip(cpuRecords, (x, y) => new CPUSample(TraceUtils.ToNanoseconds(x * stepSize), (float)(y.CPUUtil)))));
+            vts.Add(new ValueTrace(Enumerable.Range(0, int.MaxValue).Take(steps).Zip(cpuRecords, (x, y) => new CPUSample(TraceUtils.ToNanoseconds(x * stepSize), (float)(y.CPUUtil)))));            
 
             CPUUtilTrace trace = new CPUUtilTrace
             {
@@ -270,7 +257,6 @@ namespace Microsoft.PythonTools.VsCode
 
         public LongInt Translate(string module, string function)
         {
-            //Console.WriteLine($"- Being asked to translate {module}/{function}");
             return new LongInt(0, modindex[module].l + modfundict[module][function].Base + 1);
         }
 
