@@ -15,15 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Projects {
     /// <summary>
-    /// Provides information about a Ptyhon project.  This is an abstract base class that
+    /// Provides information about a Python project.  This is an abstract base class that
     /// different project systems can implement.  Tools which want to plug in an extend the
     /// Python analysis system can work with the PythonProject to get information about
     /// the project.
@@ -58,9 +55,14 @@ namespace Microsoft.PythonTools.Projects {
         /// <summary>
         /// Gets the current analyzer for the project, or null if no analyzer is available.
         /// </summary>
-        public abstract ProjectAnalyzer Analyzer {
-            get;
-        }
+        [Obsolete("Use the async version if possible")]
+        public abstract ProjectAnalyzer Analyzer { get; }
+
+        /// <summary>
+        /// Gets the current analyzer for the project. May wait while creating an analyzer
+        /// if necessary, where the <see cref="Analyzer"/> property would return null.
+        /// </summary>
+        public abstract Task<ProjectAnalyzer> GetAnalyzerAsync();
 
         public abstract event EventHandler ProjectAnalyzerChanged;
 

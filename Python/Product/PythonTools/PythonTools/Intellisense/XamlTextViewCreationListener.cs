@@ -78,7 +78,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static async Task<AnalysisEntry> AnalyzeXamlFileAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
             var services = bufferInfo.Services;
-            var analyzer = services.AnalysisEntryService.GetVsAnalyzer(textView, null);
+
+            var analyzer = (await services.Site.FindAnalyzerAsync(textView)) as VsProjectAnalyzer;
             if (analyzer != null) {
                 return await analyzer.AnalyzeFileAsync(bufferInfo.Filename);
             }

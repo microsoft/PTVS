@@ -261,11 +261,13 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
-                    var traceLogging = key?.GetValue("TraceLogging", null);
-                    if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
-                        initialize.traceLogging = true;
-                        _analysisOptions.traceLevel = LS.MessageType.Log;
-                    }
+                }
+            }
+            using (var key = Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey)) {
+                var traceLogging = key?.GetValue("AnalyzerTrace", null);
+                if ((traceLogging is int i && i != 0) || (traceLogging is string s && s.IsTrue())) {
+                    initialize.traceLogging = true;
+                    _analysisOptions.traceLevel = LS.MessageType.Log;
                 }
             }
 
@@ -454,7 +456,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        /// <summary>
+        /// Increases the number of known users by one.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">
+        /// The analyzer is being or has been disposed.
+        /// </exception>
         public void AddUser() {
+            if (_disposing) {
+                throw new ObjectDisposedException(GetType().Name);
+            }
             Interlocked.Increment(ref _userCount);
         }
 
@@ -529,6 +540,8 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (ObjectDisposedException) {
             }
         }
+
+        public bool IsDisposed => _disposing;
 
         #endregion
 
@@ -1436,9 +1449,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var entryService = serviceProvider.GetEntryService();
-            AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return MissingImportAnalysis.Empty;
             }
 

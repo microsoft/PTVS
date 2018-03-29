@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -15,20 +15,17 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Repl {
-    interface IPythonInteractiveIntellisense {
-        bool LiveCompletionsOnly { get; }
-        IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
-        CompletionResult[] GetMemberNames(string text);
-        OverloadDoc[] GetSignatureDocumentation(string text);
-        VsProjectAnalyzer Analyzer { get; }
-        Task<VsProjectAnalyzer> GetAnalyzerAsync();
-        Uri DocumentUri { get; }
-
-        Uri NextDocumentUri();
+namespace TestUtilities.UI.Python {
+    static class PythonProjectExtensions {
+        public static VsProjectAnalyzer GetAnalyzer(this PythonProjectNode project) {
+            var analyzer = project.TryGetAnalyzer();
+            if (analyzer == null) {
+                throw new InvalidOperationException("Analyzer is not running");
+            }
+            return analyzer;
+        }
     }
 }

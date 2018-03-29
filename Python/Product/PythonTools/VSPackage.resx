@@ -550,4 +550,10 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="130" xml:space="preserve">
     <value>Experimental</value>
   </data>
+  <data name="5080" xml:space="preserve">
+    <value>Mypy configuration file</value>
+  </data>
+  <data name="5081" xml:space="preserve">
+    <value>A mypy.ini file for configuring Mypy settings</value>
+  </data>
 </root>

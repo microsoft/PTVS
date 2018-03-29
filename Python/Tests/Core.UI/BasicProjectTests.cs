@@ -14,7 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
 extern alias pythontools;
+extern alias util;
+extern alias vsinterpreters;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -22,37 +25,42 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
+using analysis::Microsoft.PythonTools.Interpreter;
+using analysis::Microsoft.PythonTools.Parsing;
 using EnvDTE;
 using EnvDTE80;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project.Automation;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Project;
+using pythontools::Microsoft.VisualStudioTools;
+using pythontools::Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
-using TestUtilities.UI;
 using TestUtilities.UI.Python;
+using util::TestUtilities.UI;
+using vsinterpreters::Microsoft.PythonTools.Interpreter;
 using VSLangProj;
-using Keyboard = TestUtilities.UI.Keyboard;
+using static Microsoft.VisualStudioTools.UIThreadExtensions;
+using DefaultInterpreterSetter = TestUtilities.UI.DefaultInterpreterSetter;
+using Keyboard = util::TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
-using Mouse = TestUtilities.UI.Mouse;
-using Thread = System.Threading.Thread;
+using Mouse = util::TestUtilities.UI.Mouse;
+using Strings = Microsoft.PythonTools.Strings;
 using Task = System.Threading.Tasks.Task;
-using System.Text;
+using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
     public class BasicProjectTests {
@@ -898,14 +906,14 @@ namespace PythonToolsUITests {
             });
 
             var pyProject = project.GetPythonProject();
-            VsProjectAnalyzer analyzer = pyProject != null ? pyProject.GetAnalyzer() : null;
+            VsProjectAnalyzer analyzer = pyProject?.TryGetAnalyzer();
             for (int retries = 0; analyzer == null && retries < 10; ++retries) {
                 Thread.Sleep(1000);
                 if (pyProject == null) {
                     pyProject = project.GetPythonProject();
                 }
                 if (pyProject != null) {
-                    analyzer = pyProject.GetAnalyzer();
+                    analyzer = pyProject.TryGetAnalyzer();
                 }
             }
             Assert.IsNotNull(analyzer, "Unable to get analyzer for project");
@@ -952,9 +960,8 @@ namespace PythonToolsUITests {
         private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
             return serviceProvider.GetUIThread().InvokeTaskSync(async () => {
                 var index = snapshot.GetText().IndexOf(variable + " =");
-                var entryService = serviceProvider.GetEntryService();
-                AnalysisEntry entry;
-                if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+                var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+                if (entry == null) {
                     return Enumerable.Empty<string>();
                 }
                 return await entry.Analyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index));

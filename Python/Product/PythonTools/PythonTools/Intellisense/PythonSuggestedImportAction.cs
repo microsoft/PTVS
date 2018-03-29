@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
@@ -112,8 +113,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            AnalysisEntry entry;
-            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(_buffer, out entry)) {
+            var entry = _buffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return;
             }
 

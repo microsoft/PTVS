@@ -50,6 +50,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
         }
 
+        public bool IsDisposed { get; private set; }
+
         public string FilePath { get; }
         public bool IsTemporaryFile { get; set; }
         public bool SuppressErrorList { get; set; }
@@ -119,10 +121,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (bi != null) {
                     var existing = _buffers.FirstOrDefault(b => b.Buffer == bi);
                     if (existing != null && existing.Release()) {
+                        if (DefaultBufferInfo == bi) {
+                            DefaultBufferInfo = null;
+                        }
+
                         _buffers = _buffers.Where(b => b != existing).ToArray();
 
+                        bi.ClearAnalysisEntry();
                         bi.RemoveSink(this);
-
                         VsProjectAnalyzer.DisconnectErrorList(bi);
 
                         bi.Buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
@@ -320,7 +326,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void Requeue() {
             RequeueWorker();
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+            ReparseNever();
+        }
+
+        private void ReparseNever() {
+            ReparseSoon(Timeout.Infinite);
+        }
+
+        private void ReparseSoon(int delay = ReparseDelay) {
+            try {
+                _timer.Change(delay, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private void RequeueWorker() {
@@ -364,8 +381,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void Dispose() {
-            ClearBuffers();
-            _timer.Dispose();
+            if (!IsDisposed) {
+                IsDisposed = true;
+                ClearBuffers();
+                _timer.Dispose();
+            }
         }
 
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
@@ -378,7 +398,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (_parsing) {
                             // we are currently parsing, just reque when we complete
                             _requeue = true;
-                            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                            ReparseNever();
                         } else if (_parseImmediately) {
                             // we are a test buffer, we should requeue immediately
                             Requeue();
@@ -391,7 +411,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         } else {
                             // parse if the user doesn't do anything for a while.
                             _textChange = IncludesTextChanges(ne);
-                            _timer.Change(ReparseDelay, Timeout.Infinite);
+                            ReparseSoon();
                         }
                     }
                     break;
@@ -401,7 +421,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (_parsing) {
                             // we are currently parsing, just reque when we complete
                             _requeue = true;
-                            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                            ReparseNever();
                         } else {
                             Requeue();
                         }
