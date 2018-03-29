@@ -96,7 +96,7 @@ def get_bundled_ptvsd_version():
             lines = f.readlines()
         for line in lines:
             if line.startswith('__version__'):
-                _, version = (s.strip().strip('"') for s in line.split('='))
+                _, version = (s.strip().strip('"\'') for s in line.split('='))
                 return version
     except Exception:
         pass
