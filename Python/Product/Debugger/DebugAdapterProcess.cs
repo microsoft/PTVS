@@ -192,11 +192,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private class VSWin32Window : IWin32Window {
-            public VSWin32Window(IntPtr handle) { Handle = handle; }
-            public IntPtr Handle { get; private set; }
-        }
-
         public IntPtr Handle => _process.Handle;
 
         public Stream StandardInput => _stream;

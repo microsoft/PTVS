@@ -171,6 +171,7 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="VersionInfoEventArgs.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>

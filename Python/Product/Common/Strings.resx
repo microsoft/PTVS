@@ -2256,4 +2256,10 @@ Expand selection to the full expression?</value>
     <value>Run Mypy</value>
     <comment>Mypy is a product name and should not be localized</comment>
   </data>
+  <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
+    <value>Installed ptvsd({0}) is older than the version shipped with VS ptvsd({1})</value>
+  </data>
+  <data name="InstalledPtvsdOutdatedTitle" xml:space="preserve">
+    <value>Installed ptvsd is outdated</value>
+  </data>
 </root>
