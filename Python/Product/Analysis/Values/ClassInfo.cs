@@ -605,11 +605,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return null;
             }
 
-            var bases1 = (ns1 as ClassInfo)?.Bases;
-            var bases2 = (ns2 as ClassInfo)?.Bases;
+            (ns1.Mro as Mro)?.RecomputeIfNecessary();
+            (ns2.Mro as Mro)?.RecomputeIfNecessary();
 
-            var mro1 = bases1 != null ? Enumerable.Repeat(ns1, 1).Concat(bases1) : ns1.Mro;
-            var mro2 = bases2 != null ? Enumerable.Repeat(ns2, 1).Concat(bases2) : ns2.Mro;
+            var mro1 = ns1.Mro.SelectMany().ToArray();
+            var mro2 = ns2.Mro.SelectMany().ToArray();
 
             if (!IsFirstForMroUnion(ns1, ns2)) {
                 var tmp = mro1;
@@ -619,8 +619,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var mro2Set = new HashSet<AnalysisValue>(mro2.MaybeEnumerate().SelectMany(), ObjectComparer.Instance);
             var commonBase = mro1.MaybeEnumerate().SelectMany().Where(v => v is ClassInfo || v is BuiltinClassInfo).FirstOrDefault(mro2Set.Contains);
-            if (commonBase?.TypeId == BuiltinTypeId.Object) {
+            if (commonBase == null || commonBase.TypeId == BuiltinTypeId.Object || commonBase.TypeId == BuiltinTypeId.Type) {
                 return null;
+            }
+            if (commonBase.Push()) {
+                try {
+#if FULL_VALIDATION
+                    Validation.Assert(GetFirstCommonBase(state, ns1, commonBase) != null, $"No common base between {ns1} and {commonBase}");
+                    Validation.Assert(GetFirstCommonBase(state, ns2, commonBase) != null, $"No common base between {ns2} and {commonBase}");
+#endif
+                    if (GetFirstCommonBase(state, ns1, commonBase) == null || GetFirstCommonBase(state, ns2, commonBase) == null) {
+                        return null;
+                    }
+                } finally {
+                    commonBase.Pop();
+                }
             }
             return commonBase;
         }
@@ -905,6 +918,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             return result;
+        }
+
+        internal void RecomputeIfNecessary() {
+            if (IsValid && _mroList.Any()) {
+                var typeId = _mroList.Last().TypeId;
+                if (typeId == BuiltinTypeId.Object || typeId == BuiltinTypeId.Type) {
+                    return;
+                }
+            }
+
+            Recompute();
         }
     }
 }

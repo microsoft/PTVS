@@ -39,13 +39,12 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
     /// the buckets and then calls a static helper function to do the read from the bucket
     /// array to ensure that readers are not seeing multiple bucket arrays.
     /// </summary>
-    [DebuggerDisplay(AnalysisSetDetails.DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(AnalysisSetDetails.DebugViewProxy))]
+    [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
     [Serializable]
     internal sealed class AnalysisHashSet : IAnalysisSet {
 
         [NonSerialized]
-        private Bucket[] _buckets;
-        private int _count;
+        private BucketSet _buckets;
         private readonly IEqualityComparer<AnalysisValue> _comparer;
 
         private const int InitialBucketSize = 3;
@@ -67,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         /// Creates a new dictionary storage with no buckets
         /// </summary>
         public AnalysisHashSet(int count) {
-            _buckets = new Bucket[AnalysisDictionary<object, object>.GetPrime((int)(count / Load + 2))];
+            Buckets = new BucketSet(AnalysisDictionary<object, object>.GetPrime((int)(count / Load + 2)));
             _comparer = ObjectComparer.Instance;
         }
 
@@ -76,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         }
 
         public AnalysisHashSet(int count, IEqualityComparer<AnalysisValue> comparer) {
-            _buckets = new Bucket[AnalysisDictionary<object, object>.GetPrime((int)(count / Load + 2))];
+            Buckets = new BucketSet(AnalysisDictionary<object, object>.GetPrime((int)(count / Load + 2)));
             _comparer = comparer;
         }
 
@@ -87,6 +86,19 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
 
         public AnalysisHashSet(IEnumerable<AnalysisValue> enumerable) : this() {
             Union(enumerable);
+        }
+
+        private BucketSet Buckets {
+            get {
+                lock (this) {
+                    return _buckets;
+                }
+            }
+            set {
+                lock (this) {
+                    _buckets = value;
+                }
+            }
         }
 
         public IEqualityComparer<AnalysisValue> Comparer {
@@ -111,11 +123,19 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         }
 
         public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+#if FULL_VALIDATION
+            var r = AddWorker(item, out wasChanged, canMutate);
+            Validation.Assert(r.Count == r.GetTrueCount(), $"Set count is incorrect. Expected {r.GetTrueCount()}. Actual {r.Count}");
+            return r;
+        }
+
+        private IAnalysisSet AddWorker(AnalysisValue item, out bool wasChanged, bool canMutate) {
+#endif
             if (!canMutate) {
-                var buckets = _buckets;
-                var i = Contains(buckets, item);
+                var buckets = Buckets;
+                var i = Contains(buckets.Buckets, item);
                 if (i >= 0) {
-                    var existing = buckets[i].Key;
+                    var existing = buckets.Buckets[i].Key;
                     if (object.ReferenceEquals(existing, item)) {
                         wasChanged = false;
                         return this;
@@ -143,7 +163,16 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             return Union(items, out wasChanged, canMutate);
         }
 
+
         public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+#if FULL_VALIDATION
+            var r = UnionWorker(items, out wasChanged, canMutate);
+            Validation.Assert(r.Count == r.GetTrueCount(), $"Set count is incorrect. Expected {r.GetTrueCount()}. Actual {r.Count}");
+            return r;
+        }
+
+        private IAnalysisSet UnionWorker(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate) {
+#endif
             if (!canMutate) {
                 // Return ourselves if we aren't adding any new items
                 using (var e = items.GetEnumerator()) {
@@ -153,7 +182,9 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                             // enumerating
                             var res = (AnalysisHashSet)Clone();
                             res.AddOne(e.Current);
-                            res.AddFromEnumerator(e);
+                            var b = res.Buckets;
+                            AddFromEnumerator(ref b, e, res.Comparer);
+                            res.Buckets = b;
                             wasChanged = true;
                             return res;
                         }
@@ -164,19 +195,21 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             }
 
             // Faster path if we are allowed to mutate ourselves
+            var buckets = Buckets;
             AnalysisHashSet otherHc = items as AnalysisHashSet;
-            if (otherHc != null) {
+            if (otherHc != null && Comparer == otherHc.Comparer) {
+                var otherBuckets = otherHc.Buckets;
                 bool anyChanged = false;
 
-                if (otherHc._count != 0) {
+                if (otherBuckets.Capacity != 0) {
                     // do a fast copy from the other hash set...
-                    var buckets = otherHc._buckets;
-                    for (int i = 0; i < buckets.Length; i++) {
-                        var key = buckets[i].Key;
+                    for (int i = 0; i < otherBuckets.Capacity; i++) {
+                        var key = otherBuckets.Buckets[i].Key;
                         if (key != null && key != AnalysisDictionaryRemovedValue.Instance) {
-                            anyChanged |= AddOne(key);
+                            anyChanged |= AddOne(ref buckets, key, _comparer);
                         }
                     }
+                    Buckets = buckets;
                 }
                 wasChanged = anyChanged;
                 return this;
@@ -184,42 +217,42 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
 
             // some other set, copy it the slow way...
             using (var e = items.GetEnumerator()) {
-                wasChanged = AddFromEnumerator(e);
+                wasChanged = AddFromEnumerator(ref buckets, e, Comparer);
             }
+            Buckets = buckets;
             return this;
         }
 
-        private bool AddFromEnumerator(IEnumerator<AnalysisValue> items) {
+        private static bool AddFromEnumerator(ref BucketSet buckets, IEnumerator<AnalysisValue> items, IEqualityComparer<AnalysisValue> comparer) {
             bool wasChanged = false;
             while (items.MoveNext()) {
-                wasChanged |= AddOne(items.Current);
+                wasChanged |= AddOne(ref buckets, items.Current, comparer);
             }
             return wasChanged;
         }
 
-        public AnalysisHashSet Remove(AnalysisValue key) {
-            bool dummy;
-            return Remove(key, out dummy);
-        }
+        public AnalysisHashSet Remove(AnalysisValue key) => Remove(key, out _);
 
         public AnalysisHashSet Remove(AnalysisValue key, out bool wasChanged) {
-            var buckets = _buckets;
-            int i = Contains(buckets, key);
+            var buckets = Buckets;
+            int i = Contains(buckets.Buckets, key);
             if (i < 0) {
                 wasChanged = false;
                 return this;
             }
 
-            _buckets[i].Key = _removed;
-            _count--;
+            buckets.Buckets[i].Key = _removed;
+            buckets.Count -= 1;
+
+            Buckets = EnsureSize(buckets, buckets.Count, Comparer);
+
             wasChanged = true;
             return this;
         }
 
         public IAnalysisSet Clone() {
-            var buckets = _buckets;
-            var count = _count;
-            if (buckets == null) {
+            var buckets = Buckets;
+            if (buckets.Count == 0) {
                 return new AnalysisHashSet(Comparer);
             }
 
@@ -228,7 +261,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             // anything other than checking equality, as it does
             // not have the merge logic we need.
             var seen = new HashSet<AnalysisValue>(Comparer);
-            foreach (var b in buckets) {
+            foreach (var b in buckets.Buckets) {
                 if (b.Key != null && b.Key != _removed && !seen.Add(b.Key)) {
                     // Cannot reuse the buckets
                     return new AnalysisHashSet(Comparer).Union(this, canMutate: true);
@@ -236,15 +269,33 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             }
 
             var res = new AnalysisHashSet(Comparer);
-            var newBuckets = new Bucket[buckets.Length];
-            Array.Copy(buckets, newBuckets, buckets.Length);
+            var newBuckets = new BucketSet(buckets.Capacity, buckets.Count);
+            Array.Copy(buckets.Buckets, newBuckets.Buckets, buckets.Capacity);
 
-            res._buckets = newBuckets;
-            res._count = count;
+            res.Buckets = newBuckets;
             return res;
         }
 
         public bool SetEquals(IAnalysisSet other) {
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+
+            if (Comparer == other.Comparer) {
+                // Quick check for any unmatched hashcodes.
+                // This can conclusively prove the sets are not equal, but cannot
+                // prove equality.
+                var lBuckets = Buckets.Buckets;
+                var rBuckets = (other as AnalysisHashSet)?.Buckets.Buckets;
+                if (lBuckets != null && rBuckets != null) {
+                    var rKeys = new HashSet<int>(rBuckets.Select(b => b.HashCode));
+                    rKeys.ExceptWith(lBuckets.Select(b => b.HashCode));
+                    if (rKeys.Any()) {
+                        return false;
+                    }
+                }
+            }
+
             var otherHc = new HashSet<AnalysisValue>(other, _comparer);
             foreach (var key in this) {
                 if (!otherHc.Remove(key)) {
@@ -265,96 +316,93 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             if (key == null) {
                 throw new ArgumentNullException("key");
             }
-            if (key.IsAlive) {
-                if (_buckets == null) {
-                    Initialize();
-                }
+            if (!key.IsAlive) {
+                return false;
+            }
 
-                if (Add(_buckets, key)) {
-                    _count++;
+            var buckets = Buckets;
+            var res = AddOne(ref buckets, key, _comparer);
+            Buckets = buckets;
+            return res;
+        }
 
-                    CheckGrow();
-                    return true;
-                }
+        private static bool AddOne(ref BucketSet buckets, AnalysisValue key, IEqualityComparer<AnalysisValue> comparer) {
+            if (buckets.Buckets == null) {
+                buckets = new BucketSet(InitialBucketSize);
+            }
+
+            int hc = comparer.GetHashCode(key) & Int32.MaxValue;
+            if (AddOne(ref buckets, key, hc, comparer)) {
+                CheckGrow(ref buckets, comparer);
+                return true;
             }
             return false;
         }
 
-        private void CheckGrow() {
-            if (_count >= (_buckets.Length * Load)) {
+        private static void CheckGrow(ref BucketSet buckets, IEqualityComparer<AnalysisValue> comparer) {
+            if (buckets.Capacity == 0) {
+                return;
+            }
+            if (buckets.Count >= (buckets.Capacity * Load)) {
                 // grow the hash table
-                EnsureSize((int)(_buckets.Length / Load) * ResizeMultiplier);
+                buckets = EnsureSize(buckets, (int)(buckets.Capacity / Load) * ResizeMultiplier, comparer);
             }
         }
 
-        private void EnsureSize(int newSize) {
+        private static BucketSet EnsureSize(BucketSet oldBuckets, int newSize, IEqualityComparer<AnalysisValue> comparer) {
             // see if we can reclaim collected buckets before growing...
-            var oldBuckets = _buckets;
-            if (_buckets == null) {
-                _buckets = new Bucket[newSize];
-                return;
+            if (oldBuckets.Capacity == 0) {
+                return new BucketSet(newSize);
             }
 
-            if (oldBuckets != null) {
-                for (int i = 0; i < oldBuckets.Length; i++) {
-                    var curBucket = oldBuckets[i];
-                    if (curBucket.Key != null && !curBucket.Key.IsAlive) {
-                        oldBuckets[i].Key = _removed;
-                        newSize--;
-                        _count--;
-                    }
+            for (int i = 0; i < oldBuckets.Capacity; i++) {
+                var key = oldBuckets.Buckets[i].Key;
+                if (key != null && !key.IsAlive) {
+                    oldBuckets.Buckets[i].Key = _removed;
+                    newSize--;
+                    oldBuckets.Count--;
                 }
             }
 
-            if (newSize > oldBuckets.Length) {
+            if (newSize > oldBuckets.Buckets.Length || newSize < oldBuckets.Buckets.Length / 4) {
                 newSize = AnalysisDictionary<object, object>.GetPrime(newSize);
 
-                var newBuckets = new Bucket[newSize];
+                var newBuckets = new BucketSet(newSize);
 
-                for (int i = 0; i < oldBuckets.Length; i++) {
-                    var curBucket = oldBuckets[i];
-                    if (curBucket.Key != null &&
-                        curBucket.Key != _removed) {
-                        AddOne(newBuckets, curBucket.Key, curBucket.HashCode);
+                for (int i = 0; i < oldBuckets.Buckets.Length; i++) {
+                    var curBucket = oldBuckets.Buckets[i];
+                    if (curBucket.Key != null && curBucket.Key != _removed && curBucket.Key.IsAlive) {
+                        AddOne(ref newBuckets, curBucket.Key, curBucket.HashCode, comparer);
                     }
                 }
 
-                _buckets = newBuckets;
+                return newBuckets;
             }
+
+            return oldBuckets;
         }
 
         /// <summary>
         /// Initializes the buckets to their initial capacity, the caller
         /// must check if the buckets are empty first.
         /// </summary>
-        private void Initialize() {
-            _buckets = new Bucket[InitialBucketSize];
-        }
-
-        /// <summary>
-        /// Add helper that works over a single set of buckets.  Used for
-        /// both the normal add case as well as the resize case.
-        /// </summary>
-        private bool Add(Bucket[] buckets, AnalysisValue key) {
-            int hc = _comparer.GetHashCode(key) & Int32.MaxValue;
-
-            return AddOne(buckets, key, hc);
+        private static BucketSet Initialize() {
+            return new BucketSet(InitialBucketSize);
         }
 
         /// <summary>
         /// Add helper which adds the given key/value (where the key is not null) with
         /// a pre-computed hash code.
         /// </summary>
-        private bool AddOne(Bucket[] buckets, AnalysisValue/*!*/ key, int hc) {
+        private static bool AddOne(ref BucketSet buckets, AnalysisValue/*!*/ key, int hc, IEqualityComparer<AnalysisValue> comparer) {
             Debug.Assert(key != null);
 
-            Debug.Assert(_count < buckets.Length);
-            int index = hc % buckets.Length;
+            int index = hc % buckets.Capacity;
             int startIndex = index;
             int addIndex = -1;
 
             for (; ;) {
-                Bucket cur = buckets[index];
+                Bucket cur = buckets.Buckets[index];
                 var existingKey = cur.Key;
                 if (existingKey == null || existingKey == _removed || !existingKey.IsAlive) {
                     if (addIndex == -1) {
@@ -365,8 +413,8 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                     }
                 } else if (Object.ReferenceEquals(key, existingKey)) {
                     return false;
-                } else if (cur.HashCode == hc && _comparer.Equals(key, existingKey)) {
-                    var uc = _comparer as UnionComparer;
+                } else if (cur.HashCode == hc && comparer.Equals(key, existingKey)) {
+                    var uc = comparer as UnionComparer;
                     if (uc == null) {
                         return false;
                     }
@@ -377,35 +425,38 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                     }
                     // merging values has changed the one we should store, so
                     // replace it.
-                    var newHc = _comparer.GetHashCode(newKey) & Int32.MaxValue;
-                    if (newHc != buckets[index].HashCode) {
+                    var newHc = comparer.GetHashCode(newKey) & Int32.MaxValue;
+                    if (newHc != buckets.Buckets[index].HashCode) {
                         // The hash code should not change, but if it does, we
                         // need to keep things consistent
                         Debug.Fail("Hash code changed when merging AnalysisValues");
                     }
                     Thread.MemoryBarrier();
-                    buckets[index].Key = _removed;
-                    _count--;
-                    return AddOne(buckets, newKey, newHc);
+                    buckets.Buckets[index].Key = _removed;
+                    buckets.Count -= 1;
+                    return AddOne(ref buckets, newKey, newHc, comparer);
                 }
 
-                index = ProbeNext(buckets, index);
+                index = ProbeNext(buckets.Buckets, index);
 
                 if (index == startIndex) {
                     break;
                 }
             }
 
-            if (buckets[addIndex].Key != null &&
-                buckets[addIndex].Key != _removed &&
-                !buckets[addIndex].Key.IsAlive) {
-                _count--;
+            if (buckets.Buckets[addIndex].Key == null || buckets.Buckets[addIndex].Key == _removed) {
+                // Removal has been counted already
+                buckets.Count += 1;
+            } else if (!buckets.Buckets[addIndex].Key.IsAlive) {
+                // Remove/add means no change te count
+            } else {
+                buckets.Count += 1;
             }
-            buckets[addIndex].HashCode = hc;
+            buckets.Buckets[addIndex].HashCode = hc;
             Thread.MemoryBarrier();
             // we write the key last so that we can check for null to
             // determine if a bucket is available.
-            buckets[addIndex].Key = key;
+            buckets.Buckets[addIndex].Key = key;
 
             return true;
         }
@@ -422,7 +473,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             if (key == null) {
                 throw new ArgumentNullException("key");
             }
-            return Contains(_buckets, key) >= 0;
+            return Contains(Buckets.Buckets, key) >= 0;
         }
 
         /// <summary>
@@ -434,7 +485,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         private int Contains(Bucket[] buckets, AnalysisValue/*!*/ key) {
             Debug.Assert(key != null);
 
-            if (_count > 0 && buckets != null) {
+            if (buckets != null) {
                 int hc = _comparer.GetHashCode(key) & Int32.MaxValue;
 
                 return Contains(buckets, key, hc);
@@ -469,24 +520,22 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         /// <summary>
         /// Returns the number of key/value pairs currently in the dictionary.
         /// </summary>
-        public int Count {
-            get {
-                return _count;
-            }
-        }
+        public int Count => Buckets.Count;
+
+#if FULL_VALIDATION || DEBUG
+        public int GetTrueCount() => Buckets.Buckets?.Count(b => b.Key != null && b.Key != _removed) ?? 0;
+#endif
+
 
         public void Clear() {
-            if (_buckets != null && _count != 0) {
-                _buckets = new Bucket[InitialBucketSize];
-                _count = 0;
-            }
+            Buckets = default(BucketSet);
         }
 
         public IEnumerator<AnalysisValue> GetEnumerator() {
-            var buckets = _buckets;
-            if (buckets != null) {
-                for (int i = 0; i < buckets.Length; i++) {
-                    var key = buckets[i].Key;
+            var buckets = Buckets;
+            if (buckets.Capacity > 0) {
+                for (int i = 0; i < buckets.Capacity; i++) {
+                    var key = buckets.Buckets[i].Key;
                     if (key != null && key != _removed && key.IsAlive) {
                         yield return key;
                     }
@@ -506,6 +555,20 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         struct Bucket {
             public AnalysisValue Key;          // the key to be hashed
             public int HashCode;        // the hash code of the contained key.
+        }
+
+        struct BucketSet {
+            public BucketSet(int capacity, int count = 0) {
+                Buckets = capacity > 0 ? new Bucket[capacity] : Array.Empty<Bucket>();
+                Count = count;
+                if (count > capacity) {
+                    throw new ArgumentOutOfRangeException(nameof(count));
+                }
+            }
+
+            public readonly Bucket[] Buckets;
+            public int Count;
+            public int Capacity => Buckets?.Length ?? 0;
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

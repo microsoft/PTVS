@@ -391,6 +391,26 @@ namespace Microsoft.PythonTools.Analysis {
             return items;
         }
 
+#if FULL_VALIDATION || DEBUG
+        public static int GetTrueCount(this IAnalysisSet set) {
+            if (set is AnalysisSetDetails.AnalysisSetOneObject as1o) {
+                return as1o.Value == null ? 0 : 1;
+            } else if (set is AnalysisSetDetails.AnalysisSetOneUnion as1u) {
+                return as1u.Value == null ? 0 : 1;
+            } else if (set is AnalysisSetDetails.AnalysisSetTwoObject as2o) {
+                return (as2o.Value1 == null ? 0 : 1) + (as2o.Value2 == null ? 0 : 1);
+            } else if (set is AnalysisSetDetails.AnalysisSetTwoUnion as2u) {
+                return (as2u.Value1 == null ? 0 : 1) + (as2u.Value2 == null ? 0 : 1);
+            } else if (set is AnalysisSetDetails.AnalysisSetEmptyObject || set is AnalysisSetDetails.AnalysisSetEmptyUnion) {
+                return 0;
+            } else if (set is AnalysisSetDetails.AnalysisHashSet hashSet) {
+                return hashSet.GetTrueCount();
+            } else {
+                return set?.Count() ?? 0;
+            }
+        }
+#endif
+
         /// <summary>
         /// Removes excess capacity from <paramref name="set"/>.
         /// </summary>

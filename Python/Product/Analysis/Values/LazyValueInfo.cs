@@ -406,7 +406,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int GetHashCode() {
-            return _indexTypes.Aggregate(typeof(LazyIndexableInfo).GetHashCode(), (hc, v) => unchecked(hc * 31 + _indexTypes.Comparer.GetHashCode(v)));
+            return typeof(LazyIndexableInfo).GetHashCode() ^ _indexTypes.GetHashCode();
         }
 
         public override string ToString() {
@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            var combined = _indexTypes.Union((av as LazyIndexableInfo)?._indexTypes ?? AnalysisSet.Empty);
+            var combined = _indexTypes.Union(((av as LazyIndexableInfo)?._indexTypes).MaybeEnumerate().Where(v => !ReferenceEquals(v, this)));
             if (!combined.SetEquals(_indexTypes)) {
                 return new LazyIndexableInfo(Node, combined, _fallback);
             }
@@ -447,8 +447,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     gi.Returns.TypesNoCopy.IsResolvable() ||
                     gi.Sends.TypesNoCopy.IsResolvable();
             }
-            if (av is IterableValue iv) {
-                return iv.IndexTypes.Any(v => v.TypesNoCopy.IsResolvable());
+            if (av is IterableValue iv && iv.Push()) {
+                try {
+                    return iv.IndexTypes.Any(v => v.TypesNoCopy.IsResolvable());
+                } finally {
+                    iv.Pop();
+                }
             }
             return false;
         }

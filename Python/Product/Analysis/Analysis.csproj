@@ -37,7 +37,7 @@
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
-    <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
+    <!--<DefineConstants Condition="$(NoFullValidation) == ''">$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
     <DefineConstants>$(DefineConstants);DESKTOP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
