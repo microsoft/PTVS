@@ -39,15 +39,10 @@
     <MicroBuild_DoNotStrongNameSign>true</MicroBuild_DoNotStrongNameSign>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(SignType)' == 'real' OR '$(SignType)' == 'test' ">
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);SIGN</DefineConstants>
     <SignAssembly>true</SignAssembly>
     <DelaySign>true</DelaySign>
     <AssemblyOriginatorKeyFile>$(BuildRoot)\Build\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(SignType)' != 'real' AND '$(SignType)' != 'test' ">
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-
 </Project>
