@@ -15,10 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -96,8 +98,7 @@ namespace Microsoft.PythonTools.Editor {
         public IContentTypeRegistryService ContentTypeRegistryService;
 
         [Import]
-        private Lazy<AnalysisEntryService> _analysisEntryService = null;
-        public AnalysisEntryService AnalysisEntryService => _analysisEntryService.Value;
+        public IInterpreterOptionsService InterpreterOptionsService;
 
         [Import]
         public IInterpreterRegistryService InterpreterRegistryService;

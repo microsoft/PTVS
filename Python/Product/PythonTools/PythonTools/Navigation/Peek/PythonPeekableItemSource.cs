@@ -65,8 +65,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
         }
 
         private async Task<IPeekableItem> GetPeekableItemAsync(IPeekResultFactory peekResultFactory, ITextBuffer buffer, SnapshotPoint pt) {
-            AnalysisEntry entry = null;
-            _editorServices.AnalysisEntryService?.TryGetAnalysisEntry(buffer, out entry);
+            var entry = buffer.TryGetAnalysisEntry();
             if (entry == null) {
                 return null;
             }

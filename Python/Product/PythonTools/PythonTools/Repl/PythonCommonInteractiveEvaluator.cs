@@ -142,45 +142,52 @@ namespace Microsoft.PythonTools.Repl {
         }
 
 
-        public virtual VsProjectAnalyzer Analyzer {
-            get {
-                if (_analyzer != null) {
-                    return _analyzer;
-                }
+        public virtual VsProjectAnalyzer Analyzer => _analyzer;
 
-                var config = Configuration;
-                IPythonInterpreterFactory factory = null;
-                if (config?.Interpreter != null) {
-                    var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                    factory = interpreterService.FindInterpreter(config.Interpreter.Id);
-                }
-
-                if (factory == null) {
-                    _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
-                } else {
-                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
-                        var pyProject = GetAssociatedPythonProject(config.Interpreter);
-
-                        var a = await VsProjectAnalyzer.CreateForInteractiveAsync(
-                            _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
-                            factory,
-                            DisplayName.IfNullOrEmpty("Unnamed")
-                        );
-
-                        IEnumerable<string> sp;
-                        if (pyProject != null) {
-                            sp = pyProject.GetSearchPaths();
-                        } else {
-                            var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-                            sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
-                        }
-                        await a.SetSearchPathsAsync(sp.MaybeEnumerate());
-
-                        return a;
-                    }, CancellationToken.None);
-                }
+        public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_analyzer != null) {
                 return _analyzer;
             }
+
+            var config = Configuration;
+            IPythonInterpreterFactory factory = null;
+            if (config?.Interpreter != null) {
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                factory = interpreterService.FindInterpreter(config.Interpreter.Id);
+            }
+
+            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
+                var a = _analyzer;
+                if (a != null) {
+                    return a;
+                }
+                if (factory == null) {
+                    a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
+                } else {
+                    var pyProject = GetAssociatedPythonProject(config.Interpreter);
+
+                    a = await VsProjectAnalyzer.CreateForInteractiveAsync(
+                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
+                        factory,
+                        DisplayName.IfNullOrEmpty("Unnamed")
+                    );
+
+                    IEnumerable<string> sp;
+                    if (pyProject != null) {
+                        sp = pyProject.GetSearchPaths();
+                    } else {
+                        var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                        sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
+                    }
+                    await a.SetSearchPathsAsync(sp.MaybeEnumerate());
+                }
+                if (_analyzer != null) {
+                    a.Dispose();
+                } else {
+                    _analyzer = a;
+                }
+                return _analyzer;
+            });
         }
 
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }

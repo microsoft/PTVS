@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -35,6 +36,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -50,7 +52,8 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<LanguagePreferences> _langPrefs;
         private IPythonToolsOptionsService _optionsService;
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
-        private VsProjectAnalyzer _analyzer;
+        private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
+        private readonly ConcurrentDictionary<string, VsProjectAnalyzer> _analyzers;
         private readonly PythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
@@ -60,7 +63,6 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
-        private readonly AnalysisEntryService _entryService;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
         private ExpansionCompletionSource _expansionCompletions;
@@ -86,9 +88,11 @@ namespace Microsoft.PythonTools {
 
         internal PythonToolsService(IServiceContainer container) {
             _container = container;
+            _analyzers = new ConcurrentDictionary<string, VsProjectAnalyzer>();
 
             _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
-            _interpreterOptionsService = new Lazy<IInterpreterOptionsService>(CreateInterpreterOptionsService);
+            _interpreterOptionsService = new Lazy<IInterpreterOptionsService>(Site.GetComponentModel().GetService<IInterpreterOptionsService>);
+            _interpreterRegistryService = new Lazy<IInterpreterRegistryService>(Site.GetComponentModel().GetService<IInterpreterRegistryService>);
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
 
@@ -102,7 +106,6 @@ namespace Microsoft.PythonTools {
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
-            _entryService = (AnalysisEntryService)ComponentModel.GetService<IAnalysisEntryService>();
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
@@ -120,17 +123,8 @@ namespace Microsoft.PythonTools {
         }
 
         public void Dispose() {
-            // This will probably never be called by VS, but we use it in unit
-            // tests to avoid leaking memory when we reinitialize state between
-            // each test.
-
             if (_langPrefs.IsValueCreated) {
                 _langPrefs.Value.Dispose();
-            }
-
-            if (_interpreterOptionsService.IsValueCreated) {
-                _interpreterOptionsService.Value.DefaultInterpreterChanged -= UpdateDefaultAnalyzer;
-                (_interpreterOptionsService.Value as IDisposable)?.Dispose();
             }
 
             _idleManager.Dispose();
@@ -139,6 +133,10 @@ namespace Microsoft.PythonTools {
                 window.RemoveAdornments();
             }
             _codeWindowManagers.Clear();
+
+            foreach (var kv in GetActiveSharedAnalyzers()) {
+                kv.Value.Dispose();
+            }
         }
 
         private void InitializeLogging() {
@@ -168,24 +166,6 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private void UpdateDefaultAnalyzer(object sender, EventArgs args) {
-            // no need to update if analyzer isn't created yet.
-            if (_analyzer == null) {
-                return;
-            }
-
-            _container.GetUIThread().InvokeTask(async () => {
-                var analyzer = await CreateAnalyzerAsync();
-                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
-                if (oldAnalyzer != null) {
-                    await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
-                    if (oldAnalyzer.RemoveUser()) {
-                        oldAnalyzer.Dispose();
-                    }
-                }
-            }).DoNotWait();
-        }
-
         /// <summary>
         /// Asks the interpreter to generate its completion database if the
         /// option is enabled (the default) and the database is not current.
@@ -205,42 +185,85 @@ namespace Microsoft.PythonTools {
             _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
         }
 
-        private IInterpreterOptionsService CreateInterpreterOptionsService() {
-            var service = ComponentModel.GetService<IInterpreterOptionsService>();
-            // may not available in some test cases
-            if (service != null) {
-                service.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
-            }
-            return service;
-        }
-
-        private Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
-            var interpreters = _interpreterOptionsService.Value;
-
-            // may not available in some test cases
-            if (interpreters == null) {
-                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
-            }
-
-            var defaultFactory = interpreters.DefaultInterpreter;
-            EnsureCompletionDb(defaultFactory);
-            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, defaultFactory);
-        }
+        internal IInterpreterOptionsService InterpreterOptionsService => _interpreterOptionsService.Value;
+        internal IInterpreterRegistryService InterpreterRegistryService => _interpreterRegistryService.Value;
 
         internal PythonToolsLogger Logger => _logger;
 
-        #region Public API
-
-        internal VsProjectAnalyzer DefaultAnalyzer {
-            get {
-                if (_analyzer == null) {
-                    _analyzer = _container.GetUIThread().InvokeTaskSync(() => CreateAnalyzerAsync(), CancellationToken.None);
-                }
-                return _analyzer;
+        internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
+            EnsureCompletionDb(factory);
+            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
         }
 
-        internal VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
+        #region Public API
+
+        /// <summary>
+        /// <para>Gets a shared analyzer for a given environment.</para>
+        /// <para>When the analyzer is no longer required, call
+        /// <see cref="VsProjectAnalyzer.RemoveUser"/> and if it returns
+        /// <c>true</c>, call <see cref="VsProjectAnalyzer.Dispose"/>.</para>
+        /// </summary>
+        internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null) {
+            var result = TryGetSharedAnalyzer(factory, out var id);
+            if (result != null) {
+                return result;
+            }
+
+            result = await CreateAnalyzerAsync(factory);
+            var realResult = _analyzers.GetOrAdd(id, result);
+            if (realResult != result && result.RemoveUser()) {
+                result.Dispose();
+            }
+            return realResult;
+        }
+
+        /// <summary>
+        /// Gets an active shared analyzer if one exists and can be
+        /// obtained without blocking. If this returns non-null and
+        /// <paramref name="addUser"/> is <c>true</c>, the caller
+        /// is responsible to call <see cref="VsProjectAnalyzer.RemoveUser"/>
+        /// and if necessary, <see cref="VsProjectAnalyzer.Dispose"/>.
+        /// </summary>
+        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true) {
+            id = factory?.Configuration?.Id;
+            if (string.IsNullOrEmpty(id)) {
+                factory = _interpreterOptionsService.Value?.DefaultInterpreter;
+                id = _interpreterOptionsService.Value?.DefaultInterpreterId ?? string.Empty;
+            }
+
+            if (_analyzers.TryGetValue(id, out var result)) {
+                try {
+                    result.AddUser();
+                    return result;
+                } catch (ObjectDisposedException) {
+                    _analyzers.TryRemove(id, out _);
+                }
+            }
+
+            return null;
+        }
+
+        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveSharedAnalyzers() {
+            return _analyzers.ToArray();
+        }
+
+        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveAnalyzers() {
+            foreach (var kv in GetActiveSharedAnalyzers()) {
+                var config = _interpreterRegistryService.Value.FindConfiguration(kv.Key);
+                yield return new KeyValuePair<string, VsProjectAnalyzer>(config?.Description ?? kv.Key, kv.Value);
+            }
+
+            var sln = (IVsSolution)Site.GetService(typeof(SVsSolution));
+            foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
+                var analyzer = proj.TryGetAnalyzer();
+                if (analyzer != null) {
+                    yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
+                }
+            }
+        }
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
@@ -571,16 +594,16 @@ namespace Microsoft.PythonTools {
         }
 
         internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
         }
 
         internal Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+            if (entry == null) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
             }
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);

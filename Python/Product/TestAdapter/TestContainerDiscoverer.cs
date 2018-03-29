@@ -138,9 +138,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
-            var pyProj = PythonProject.FromObject(e.Project);
+            OnProjectLoadedAsync(e.Project).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private async Task OnProjectLoadedAsync(IVsProject project) {
+            var pyProj = PythonProject.FromObject(project);
             if (pyProj != null) {
-                var analyzer = pyProj.Analyzer;
+                var analyzer = await pyProj.GetAnalyzerAsync();
                 if (analyzer != null) {
                     _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
                 }
@@ -211,7 +215,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
-                _analyzer = _project.Analyzer;
+                _analyzer = await _project.GetAnalyzerAsync();
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete += AnalysisComplete;
                     await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
@@ -253,7 +257,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private async Task UpdateTestCasesAsync(IEnumerable<string> paths, bool notify) {
-                var analyzer = _project.Analyzer;
+                var analyzer = await _project.GetAnalyzerAsync();
                 if (analyzer == null) {
                     return;
                 }

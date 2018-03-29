@@ -459,27 +459,6 @@ namespace Microsoft.PythonTools {
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }
 
-        internal static bool TryGetStartupFileAndDirectory(System.IServiceProvider serviceProvider, out string filename, out string dir, out VsProjectAnalyzer analyzer) {
-            var startupProject = GetStartupProject(serviceProvider);
-            if (startupProject != null) {
-                filename = startupProject.GetStartupFile();
-                dir = startupProject.GetWorkingDirectory();
-                analyzer = ((PythonProjectNode)startupProject).GetAnalyzer();
-            } else {
-                var textView = CommonPackage.GetActiveTextView(serviceProvider);
-                if (textView == null) {
-                    filename = null;
-                    dir = null;
-                    analyzer = null;
-                    return false;
-                }
-                filename = textView.GetFilePath();
-                analyzer = textView.GetAnalyzerAtCaret(serviceProvider);
-                dir = Path.GetDirectoryName(filename);
-            }
-            return true;
-        }
-
         public EnvDTE.DTE DTE {
             get {
                 return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));

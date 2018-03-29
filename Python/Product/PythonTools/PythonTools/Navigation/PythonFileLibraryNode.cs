@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Navigation {
         public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
             var node = _hierarchy as PythonFileNode;
             if (node != null) {
-                var analysis = node.GetAnalysisEntry();
+                var analysis = node.TryGetAnalysisEntry();
 
                 if (analysis != null) {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
@@ -204,7 +204,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         protected override IEnumerable<CompletionResult> GetChildren() {
-            var analysis = _hierarchy.GetAnalysisEntry();
+            var analysis = (_hierarchy as PythonFileNode)?.TryGetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetAllAvailableMembersAsync(
                 analysis,
                 new SourceLocation(1, 1),
@@ -226,7 +229,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         protected override IEnumerable<CompletionResult> GetChildren() {
-            var analysis = _hierarchy.GetAnalysisEntry();
+            var analysis = (_hierarchy as PythonFileNode)?.TryGetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetMembersAsync(
                 analysis,
                 _member,

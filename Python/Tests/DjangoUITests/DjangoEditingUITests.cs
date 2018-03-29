@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,8 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using TestUtilities;
-using TestUtilities.UI;
+using util::TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace DjangoUITests {
     public class DjangoEditingUITests {
