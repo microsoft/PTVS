@@ -12,7 +12,6 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Remove="AssemblyInfo.cs" />
         <Content Include="Python-Analysis-VsCode.nuspec">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
