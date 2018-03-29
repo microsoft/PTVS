@@ -232,13 +232,17 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Create(types.SelectMany(ns => ns.GetInstanceType()));
         }
 
+        public static bool IsUnknown(this IAnalysisSet res) {
+            return res == null ||
+                res.Count == 0 ||
+                res.All(v => v.TypeId == BuiltinTypeId.Unknown && v.MemberType == PythonMemberType.Unknown);
+        }
+
         /// <summary>
         /// Returns true if the set contains no or only the object or unknown types
         /// </summary>
         public static bool IsObjectOrUnknown(this IAnalysisSet res) {
-            return res == null ||
-                res.Count == 0 ||
-                res.All(v => v.TypeId == BuiltinTypeId.Object || v.TypeId == BuiltinTypeId.Unknown);
+            return res.IsUnknown() || res.All(v => v.TypeId == BuiltinTypeId.Object);
         }
 
         /// <summary>
@@ -246,9 +250,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// types, or None.
         /// </summary>
         public static bool IsObjectOrUnknownOrNone(this IAnalysisSet res) {
-            return res == null ||
-                res.Count == 0 ||
-                res.All(v => v.TypeId == BuiltinTypeId.Object || v.TypeId == BuiltinTypeId.Unknown || v.TypeId == BuiltinTypeId.NoneType);
+            return res.IsObjectOrUnknown() || res.All(v => v.TypeId == BuiltinTypeId.NoneType);
         }
 
         /// <summary>

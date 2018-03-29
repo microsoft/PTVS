@@ -2391,10 +2391,10 @@ fob2 = []
 oar2 = fob2 * 100";
 
             var entry = ProcessTextV2(text);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("y", text.IndexOf("y =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("y1", text.IndexOf("y1 =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("oar", text.IndexOf("oar =")), "list");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("oar2", text.IndexOf("oar2 =")), "list");
+            entry.AssertDescription("y", text.IndexOf("y ="), "tuple");
+            entry.AssertDescription("y1", text.IndexOf("y1 ="), "tuple[int]");
+            entry.AssertDescription("oar", text.IndexOf("oar ="), "list[int]");
+            entry.AssertDescription("oar2", text.IndexOf("oar2 ="), "list");
 
             text = @"
 x = ()
@@ -2410,10 +2410,10 @@ fob2 = []
 oar2 = 100 * fob2";
 
             entry = ProcessTextV2(text);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("y", text.IndexOf("y =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("y1", text.IndexOf("y1 =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("oar", text.IndexOf("oar =")), "list");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("oar2", text.IndexOf("oar2 =")), "list");
+            entry.AssertDescription("y", text.IndexOf("y ="), "tuple");
+            entry.AssertDescription("y1", text.IndexOf("y1 ="), "tuple[int]");
+            entry.AssertDescription("oar", text.IndexOf("oar ="), "list[int]");
+            entry.AssertDescription("oar2", text.IndexOf("oar2 ="), "list");
         }
 
         [TestMethod, Priority(0)]
@@ -3108,7 +3108,7 @@ fob = abc";
 
                 var entry = ProcessText(code);
                 entry.AssertIsInstance("fob", BuiltinTypeId.Tuple);
-                entry.AssertDescription("fob", "tuple of int");
+                entry.AssertDescription("fob", "tuple[int]");
             }
 
             // dict methods which return a list of key/value tuple
@@ -3127,7 +3127,7 @@ for fob in abc:
                 var entry = ProcessText(code);
                 int i = code.IndexOf("print(fob)");
                 entry.AssertIsInstance("fob", i, BuiltinTypeId.Tuple);
-                entry.AssertDescription("fob", i, "tuple of int");
+                entry.AssertDescription("fob", i, "tuple[int]");
             }
         }
 
@@ -5807,7 +5807,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "test-module.f() -> str");
-            entry.AssertDescription("fob.f", "test-module.fob.f(self)\r\ndeclared in fob");
+            entry.AssertDescription("fob.f", "test-module.fob.f(self : fob)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
@@ -6568,7 +6568,7 @@ test1_result = test1()
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
+                "test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override void EnsureUnionType() {
-            if (_unionType == null) {
+            if (_unionType.IsObjectOrUnknown()) {
                 IAnalysisSet unionType = AnalysisSet.EmptyUnion;
                 if (Push()) {
                     try {
