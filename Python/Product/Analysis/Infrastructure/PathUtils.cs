@@ -239,7 +239,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
 
                 IEnumerable<string> files = null;
                 try {
-                    files = Directory.GetFiles(fullDir, pattern);
+                    if (Directory.Exists(fullDir)) {
+                        files = Directory.GetFiles(fullDir, pattern);
+                    }
                 } catch (UnauthorizedAccessException) {
                 } catch (IOException) {
                 }
@@ -269,9 +271,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public static bool DeleteFile(string path) {
             for (int retries = 5; retries > 0; --retries) {
                 try {
-                    File.SetAttributes(path, FileAttributes.Normal);
-                    File.Delete(path);
-                    return true;
+                    if (File.Exists(path)) {
+                        File.SetAttributes(path, FileAttributes.Normal);
+                        File.Delete(path);
+                        return true;
+                    }
                 } catch (UnauthorizedAccessException) {
                 } catch (IOException) {
                 }

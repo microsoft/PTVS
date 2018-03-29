@@ -106,13 +106,16 @@ namespace Microsoft.PythonTools.VsCode {
             var p = token.ToObject<InitializeParams>();
             // Monitor parent process
             if (p.processId.HasValue) {
+                Process parentProcess = null;
                 try {
-                    Process.GetProcessById(p.processId.Value).Exited += (s, e) => {
+                    parentProcess = Process.GetProcessById(p.processId.Value);
+                } catch (ArgumentException) { }
+
+                Debug.Assert(parentProcess != null, "Parent process does not exist");
+                if (parentProcess != null) {
+                    parentProcess.Exited += (s, e) => {
                         _sessionTokenSource.Cancel();
                     };
-                } catch (ArgumentException) {
-                    // Parent process is dead
-                    return Task.FromResult(new InitializeResult());
                 }
             }
             return _server.Initialize(p);

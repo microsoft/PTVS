@@ -162,6 +162,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 await _seenNullError.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
+            for (var i = 0; i < 5 && !_process.HasExited; i++) {
+                await Task.Delay(100);
+            }
+
+            Debug.Assert(_process.HasExited, "Process still has not exited.");
             return _process.ExitCode;
         }
     }
