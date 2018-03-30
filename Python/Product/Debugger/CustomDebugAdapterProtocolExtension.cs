@@ -15,11 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
@@ -88,24 +84,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void RegisterCustomMessages(ICustomMessageRegistry registry, IProtocolHostOperations hostOperations) {
             _hostOperations = hostOperations;
-
-            registry.RegisterEventType<VersionInfoEventArgs>(OnVersionInfo);
-            registry.SetInitializeRequestProperty("supportsVersionInfo", true);
-        }
-
-        private void OnVersionInfo(VersionInfoEventArgs e) {
-            if (PackageVersion.TryParse(e.Version, out PackageVersion runningVersion)) {
-                var bundledPtvsdVersionStr = "4.0.0a6";
-                var bundledPtvsdVersion = PackageVersion.Parse(bundledPtvsdVersionStr);
-                if(runningVersion.CompareTo(bundledPtvsdVersion) < 0) {
-                    MessageBox.Show(
-                        new VSWin32Window(Process.GetCurrentProcess().MainWindowHandle),
-                        Strings.InstalledPtvsdOutdatedMessage.FormatUI(e.Version, bundledPtvsdVersionStr),
-                        Strings.ProductTitle,
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                }
-            }
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger {
         private string _webBrowserUrl;
         private string _interpreterOptions;
         private int _listenerPort = -1;
-        private Stream _stream;
+        private DebugAdapterProcessStream _stream;
         private bool _debuggerConnected = false;
 
         public DebugAdapterProcess() {
@@ -127,6 +127,7 @@ namespace Microsoft.PythonTools.Debugger {
                     if (socket != null) {
                         _debuggerConnected = true;
                         _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
+                        _stream.Initialized += OnInitialized;
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
                         }
@@ -141,6 +142,10 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream == null && !_process.HasExited) {
                 _process.Kill();
             }
+        }
+
+        private void OnInitialized(object sender, EventArgs e) {
+            CustomDebugAdapterProtocolExtension.SendRequest(new PtvsdVersionRequest(), PtvsdVersionHelper.VerifyPtvsdVersion);
         }
 
         private void LaunchBrowserDebugger() {
@@ -184,7 +189,7 @@ namespace Microsoft.PythonTools.Debugger {
                 // bound to the VS Main window otherwise it can be hidden behind the main window and the 
                 // user may not see it.
                 MessageBox.Show(
-                    new VSWin32Window(Process.GetCurrentProcess().MainWindowHandle),
+                    new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
                     Strings.ImportPtvsdFailedMessage,
                     Strings.ImportPtvsdFailedTitle,
                     MessageBoxButtons.OK,

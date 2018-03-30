@@ -3264,20 +3264,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installed ptvsd({0}) is older than the version shipped with VS ptvsd({1}).
+        ///   Looks up a localized string similar to ptvsd({0}) you are using is older than the version shipped with VS ptvsd({1})..
         /// </summary>
         public static string InstalledPtvsdOutdatedMessage {
             get {
                 return ResourceManager.GetString("InstalledPtvsdOutdatedMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installed ptvsd is outdated.
-        /// </summary>
-        public static string InstalledPtvsdOutdatedTitle {
-            get {
-                return ResourceManager.GetString("InstalledPtvsdOutdatedTitle", resourceCulture);
             }
         }
         
