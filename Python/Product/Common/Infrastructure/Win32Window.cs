@@ -18,7 +18,7 @@ using System;
 using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Infrastructure {
-    public class Win32Window : IWin32Window {
+    internal class Win32Window : IWin32Window {
         public Win32Window(IntPtr handle) { Handle = handle; }
         public IntPtr Handle { get; private set; }
     }
