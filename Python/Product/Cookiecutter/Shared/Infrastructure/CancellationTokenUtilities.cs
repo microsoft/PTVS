@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
-using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft {
-    interface IPythonToolsToolWindowService {
-        Task ShowWindowPaneAsync(Type windowType, bool focus);
-        Task<ToolWindowPane> GetWindowPaneAsync(Type windowType, bool create);
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    public static class CancellationTokenUtilities {
+        public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task) 
+            => task.ContinueWith(UnregisterCancellationToken, registration, default(CancellationToken), TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+        private static void UnregisterCancellationToken(Task task, object state) => ((CancellationTokenRegistration)state).Dispose();
     }
 }

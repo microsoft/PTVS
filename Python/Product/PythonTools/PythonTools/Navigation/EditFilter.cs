@@ -886,8 +886,8 @@ namespace Microsoft.PythonTools.Language {
                             }
                             return VSConstants.S_OK;
                         default:
-                            lock (PythonToolsPackage.CommandsLock) {
-                                foreach (var command in PythonToolsPackage.Commands.Keys) {
+                            lock (CommonPackage.CommandsLock) {
+                                foreach (var command in CommonPackage.Commands.Keys) {
                                     if (command.CommandId == prgCmds[i].cmdID) {
                                         int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
                                         if (res != null) {

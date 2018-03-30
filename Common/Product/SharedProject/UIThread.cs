@@ -32,22 +32,16 @@ namespace Microsoft.VisualStudioTools {
         private readonly JoinableTaskFactory _factory;
         private readonly bool _needDispose;
 
-        private UIThread() {
-            try {
-                _factory = ThreadHelper.JoinableTaskFactory;
-                _context = _factory.Context;
+        public UIThread(JoinableTaskFactory joinableTaskFactory) {
+            if (joinableTaskFactory != null) {
+                _factory = joinableTaskFactory;
+                _context = joinableTaskFactory.Context;
                 Trace.TraceInformation("Using TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
-            } catch (NullReferenceException) {
+            } else {
                 _needDispose = true;
                 _context = new JoinableTaskContext();
                 _factory = new JoinableTaskFactory(_context);
                 Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
-            }
-        }
-
-        public static void EnsureService(IServiceContainer container) {
-            if (container.GetService(typeof(UIThreadBase)) == null) {
-                container.AddService(typeof(UIThreadBase), new UIThread(), true);
             }
         }
 

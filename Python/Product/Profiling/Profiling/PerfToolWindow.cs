@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal const string WindowGuid = "328AF5EC-350F-4A96-B847-90F38B18E9BF";
         private SessionsNode _sessions;
 
-        public PerfToolWindow() {
+        public PerfToolWindow(IServiceProvider services) : base(services) {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
             Caption = Strings.PerformanceToolWindowTitle;
         }
@@ -58,10 +58,6 @@ namespace Microsoft.PythonTools.Profiling {
             ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdPerfToolbar));
         }
 
-        public SessionsNode Sessions {
-            get {
-                return _sessions;
-            }
-        }
+        public SessionsNode Sessions => _sessions;
     }
 }
