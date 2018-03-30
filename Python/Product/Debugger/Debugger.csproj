@@ -171,7 +171,8 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="VersionInfoEventArgs.cs" />
+    <Compile Include="PtvsdVersion.cs" />
+    <Compile Include="PtvsdVersionHelper.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -198,10 +199,13 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <PropertyGroup>
+    <BundledPTVSDVersion>4.0.0a5</BundledPTVSDVersion>
+  </PropertyGroup>
   <Target Name="_GatherPtvsd" BeforeTargets="_IncludePtvsd" Condition="!Exists('$(IntermediateOutputPath)Packages\ptvsd\__init__.py')">
     <PropertyGroup>
-      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install ptvsd</PipCommand>
-      <PipCommand>$(PipCommand) --pre --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
+      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install ptvsd==$(BundledPTVSDVersion)</PipCommand>
+      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
     </PropertyGroup>
     <Exec Command="$(PipCommand)" />
   </Target>
@@ -216,6 +220,24 @@
       </PtvsdFiles>
       <Content Include="@(PtvsdFiles)" />
       <FileWrites Include="@(PtvsdFiles)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_UpdatePtvsdVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs" Outputs="$(IntermediateOutputPath)\PtvsdVersion.temp.cs">
+    <ItemGroup>
+      <_PtvsdVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'PtvsdVersion'" />
+      <Compile Remove="@(_PtvsdVersionOldItems)" />
+      <_PtvsdVersionNewItem Include="$(IntermediateOutputPath)\PtvsdVersion.temp.cs" />
+    </ItemGroup>
+    <PropertyGroup>
+      <OriginalPtvsdVersionText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs'))</OriginalPtvsdVersionText>
+      <PtvsdVersionText>$(OriginalPtvsdVersionText.Replace(` Version = "1.0.0"`, ` Version = "$(BundledPTVSDVersion)"`))</PtvsdVersionText>
+    </PropertyGroup>
+    <WriteLinesToFile File="@(_PtvsdVersionNewItem)" Lines="$(PtvsdVersionText)" Overwrite="true" />
+    <ItemGroup>
+      <Compile Include="@(_PtvsdVersionNewItem)">
+        <Link>PtvsdVersion.cs</Link>
+      </Compile>
+      <FileWrites Include="@(_PtvsdVersionNewItem)" />
     </ItemGroup>
   </Target>
 </Project>
