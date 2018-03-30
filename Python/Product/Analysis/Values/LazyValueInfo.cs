@@ -442,10 +442,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (av is LazyValueInfo) {
                 return true;
             }
-            if (av is GeneratorInfo gi) {
-                return gi.Yields.TypesNoCopy.IsResolvable() ||
-                    gi.Returns.TypesNoCopy.IsResolvable() ||
-                    gi.Sends.TypesNoCopy.IsResolvable();
+            if (av is GeneratorInfo gi && gi.Push()) {
+                try {
+                    return gi.Yields.TypesNoCopy.IsResolvable() ||
+                        gi.Returns.TypesNoCopy.IsResolvable() ||
+                        gi.Sends.TypesNoCopy.IsResolvable();
+                } finally {
+                    gi.Pop();
+                }
             }
             if (av is IterableValue iv && iv.Push()) {
                 try {
