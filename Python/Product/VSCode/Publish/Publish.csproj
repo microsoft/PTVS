@@ -51,11 +51,11 @@
   <Target Name="PackPlatformSpecificFolders">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
     <!-- Copy nuspec to platform folders -->
-    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
     <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
   </Target>
   <Target Name="PackNetcoreDependentFolder">
