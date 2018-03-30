@@ -27,25 +27,35 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     internal class PtvsdVersionResponse : ResponseBody {
-        [JsonProperty("version")]
-        public string Version { get; set; }
+        [JsonProperty("ptvsd")]
+        public PtvsdDebuggerVersion Debugger { get; set; }
+
+        [JsonProperty("python")]
+        public PythonVersionInfo Python { get; set; }
+
+        [JsonProperty("platform")]
+        public PtvsdPlatfromInfo Platfrom { get; set; }
+
+        [JsonProperty("process")]
+        public PtvsdProcessInfo Process { get; set; }
+
     }
 
     internal class PtvsdVersionRequest : DebugRequestWithResponse<PtvsdVersionArguments, PtvsdVersionResponse> {
-        public PtvsdVersionRequest(): base("ptvsd_version") {
+        public PtvsdVersionRequest(): base("ptvsd_systemInfo") {
         }
     }
 
     internal class PtvsdVersionHelper {
         public static void VerifyPtvsdVersion(PtvsdVersionArguments args, PtvsdVersionResponse response) {
-            if (PackageVersion.TryParse(response.Version, out PackageVersion runningVersion)) {
+            if (PackageVersion.TryParse(response.Debugger.Version, out PackageVersion runningVersion)) {
                 var bundledPtvsdVersion = PackageVersion.Parse(PtvsdVersion.Version);
                 if (runningVersion.CompareTo(bundledPtvsdVersion) < 0) {
                     ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         MessageBox.Show(
                             new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
-                            Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Version, PtvsdVersion.Version),
+                            Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version),
                             Strings.ProductTitle,
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Warning);
@@ -53,5 +63,40 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
         }
+    }
+
+    internal class PtvsdDebuggerVersion {
+        [JsonProperty("version")]
+        public string Version { get; set; }
+    }
+
+    internal class PythonVersionInfo {
+        [JsonProperty("version")]
+        public string Version { get; set; }
+        [JsonProperty("implementation")]
+        public PythonImplementationInfo Implementation { get; set; }
+    }
+
+    internal class PtvsdPlatfromInfo {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+    }
+
+    internal class PythonImplementationInfo {
+        [JsonProperty("version")]
+        public string Version { get; set; }
+        [JsonProperty("name")]
+        public string Name { get; set; }
+        [JsonProperty("description")]
+        public string Description { get; set; }
+    }
+
+    internal class PtvsdProcessInfo {
+        [JsonProperty("pid")]
+        public int ProcessId { get; set; }
+        [JsonProperty("bitness")]
+        public int Bitness { get; set; }
+        [JsonProperty("executable")]
+        public string Executable { get; set; }
     }
 }
