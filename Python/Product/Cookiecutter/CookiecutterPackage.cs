@@ -32,7 +32,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
-using TplTask = System.Threading.Tasks.Task;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.CookiecutterTools {
     /// <summary>
@@ -83,13 +83,13 @@ namespace Microsoft.CookiecutterTools {
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override async TplTask InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
             Trace.WriteLine("Entering {0}.InitializeAsync()".FormatInvariant(this));
 
             await base.InitializeAsync(cancellationToken, progress);
 
             if (await GetServiceAsync(typeof(UIThreadBase)) == null) {
-                var uiThreadTask = TplTask.FromResult<object>(new UIThread(JoinableTaskFactory));
+                var uiThreadTask = Task.FromResult<object>(new UIThread(JoinableTaskFactory));
                 AddService(typeof(UIThreadBase), (c, ct, t, p) => uiThreadTask, true);
             }
 
@@ -105,7 +105,7 @@ namespace Microsoft.CookiecutterTools {
             => toolWindowType == typeof(CookiecutterToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
 
         protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken) 
-            => toolWindowType == typeof(CookiecutterToolWindow) ? TplTask.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
+            => toolWindowType == typeof(CookiecutterToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
 
         protected override void Dispose(bool disposing) {
             CookiecutterTelemetry.Current.Dispose();
@@ -218,7 +218,7 @@ namespace Microsoft.CookiecutterTools {
             return (T)toolWindow;
         }
 
-        internal async TplTask NewCookiecutterSessionAsync(CookiecutterSessionStartInfo ssi = null) {
+        internal async Task NewCookiecutterSessionAsync(CookiecutterSessionStartInfo ssi = null) {
             var pane = await ShowWindowPaneAsync<CookiecutterToolWindow>(true);
             pane.NewSession(ssi);
         }

@@ -420,28 +420,27 @@ namespace Microsoft.PythonTools {
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(GuidList.guidPythonToolsCmdSet
-                , new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow)
-                , new OpenReplCommand(this, PythonConstants.OpenInteractiveForEnvironment)
-                , new OpenDebugReplCommand(this)
-                , new ExecuteInReplCommand(this)
-                , new SendToReplCommand(this)
-                , new FillParagraphCommand(this)
-                , new DiagnosticsCommand(this)
-                , new RemoveImportsCommand(this, true)
-                , new RemoveImportsCommand(this, false)
-                , new OpenInterpreterListCommand(this)
-                , new ImportWizardCommand(this)
-                , new ImportCoverageCommand(this)
-                , new ShowPythonViewCommand(this)
-                , new ShowCppViewCommand(this)
-                , new ShowNativePythonFrames(this)
-                , new UsePythonStepping(this)
-                , new AzureExplorerAttachDebuggerCommand(this)
-                , new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft)
-                , new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport)
-                , new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
-
+            RegisterCommands(GuidList.guidPythonToolsCmdSet,
+                new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow),
+                new OpenReplCommand(this, PythonConstants.OpenInteractiveForEnvironment),
+                new OpenDebugReplCommand(this),
+                new ExecuteInReplCommand(this),
+                new SendToReplCommand(this),
+                new FillParagraphCommand(this),
+                new DiagnosticsCommand(this),
+                new RemoveImportsCommand(this, true),
+                new RemoveImportsCommand(this, false),
+                new OpenInterpreterListCommand(this),
+                new ImportWizardCommand(this),
+                new ImportCoverageCommand(this),
+                new ShowPythonViewCommand(this),
+                new ShowCppViewCommand(this),
+                new ShowNativePythonFrames(this),
+                new UsePythonStepping(this),
+                new AzureExplorerAttachDebuggerCommand(this),
+                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
+                new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport),
+                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
