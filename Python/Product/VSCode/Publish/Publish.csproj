@@ -54,19 +54,20 @@
     <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
     <!-- Copy nuspec to platform folders -->
     <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
     <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
+    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
+    <Exec Command="rmdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" />
   </Target>
   <Target Name="PackNetcoreDependentFolder">
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)\netcore -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
-    <NugetPackages Include="$(DotNetPublishNugetPath)\netcore\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\win-x86\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\win-x64\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\osx-x64\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\linux-x64\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg" />
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="@(NugetPackages)">
