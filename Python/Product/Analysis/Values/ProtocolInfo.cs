@@ -291,25 +291,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            if (strength > 0 && av is ProtocolInfo pi) {
-                var name = _protocols.OfType<NameProtocol>().FirstOrDefault();
-                if (_protocols.Count == 1 && name != null) {
-                    return this;
-                }
+            if (strength > 0 && av is ProtocolInfo pi && pi.Push()) {
+                try {
+                    var name = _protocols.OfType<NameProtocol>().FirstOrDefault();
+                    if (_protocols.Count == 1 && name != null) {
+                        return this;
+                    }
 
-                var protocols = _protocols.Union(pi._protocols, out bool changed);
-                if (!changed) {
-                    return this;
-                }
+                    var protocols = _protocols.Union(pi._protocols, out bool changed);
+                    if (!changed) {
+                        return this;
+                    }
 
-                if (name != null) {
-                    protocols.Split<NameProtocol>(out _, out protocols);
-                    protocols = protocols.Add(name);
-                }
+                    if (name != null) {
+                        protocols.Split<NameProtocol>(out _, out protocols);
+                        protocols = protocols.Add(name);
+                    }
 
-                return new ProtocolInfo(DeclaringModule, State) {
-                    _protocols = protocols
-                };
+                    return new ProtocolInfo(DeclaringModule, State) {
+                        _protocols = protocols
+                    };
+                } finally {
+                    pi.Pop();
+                }
             }
 
             return this;
