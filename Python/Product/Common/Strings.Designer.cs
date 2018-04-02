@@ -3264,7 +3264,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ptvsd({0}) you are using is older than the version shipped with VS ptvsd({1})..
+        ///   Looks up a localized string similar to You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.
         /// </summary>
         public static string InstalledPtvsdOutdatedMessage {
             get {

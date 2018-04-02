@@ -222,11 +222,11 @@
       <FileWrites Include="@(PtvsdFiles)" />
     </ItemGroup>
   </Target>
-  <Target Name="_UpdatePtvsdVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs" Outputs="$(IntermediateOutputPath)\PtvsdVersion.temp.cs">
+  <Target Name="_UpdatePtvsdVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs" Outputs="$(IntermediateOutputPath)\PtvsdVersion.g.cs">
     <ItemGroup>
       <_PtvsdVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'PtvsdVersion'" />
       <Compile Remove="@(_PtvsdVersionOldItems)" />
-      <_PtvsdVersionNewItem Include="$(IntermediateOutputPath)\PtvsdVersion.temp.cs" />
+      <_PtvsdVersionNewItem Include="$(IntermediateOutputPath)\PtvsdVersion.g.cs" />
     </ItemGroup>
     <PropertyGroup>
       <OriginalPtvsdVersionText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs'))</OriginalPtvsdVersionText>

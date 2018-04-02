@@ -15,8 +15,10 @@
 // permissions and limitations under the License.
 
 
-class PtvsdVersion {
-    // These version string is automatically updated at build.
-    // See PTVSDVersion in Debugger.csproj
-    public const string Version = "1.0.0";
+namespace Microsoft.PythonTools.Debugger {
+    static class PtvsdVersion {
+        // These version string is automatically updated at build.
+        // See PTVSDVersion in Debugger.csproj
+        public const string Version = "1.0.0";
+    }
 }
