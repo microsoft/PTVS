@@ -15,18 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
+using System.Windows.Forms;
 
-namespace Microsoft.DsTools.Core.Services {
-    public interface IServiceContainer {
-        /// <summary>
-        /// Provides access to global application services
-        /// </summary>
-        T GetService<T>(Type type = null) where T : class;
-
-        /// <summary>
-        /// Enumerates all available services
-        /// </summary>
-        IEnumerable<Type> AllServices { get; }
+namespace Microsoft.PythonTools.Infrastructure {
+    internal class Win32Window : IWin32Window {
+        public Win32Window(IntPtr handle) { Handle = handle; }
+        public IntPtr Handle { get; private set; }
     }
 }

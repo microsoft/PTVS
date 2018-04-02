@@ -63,6 +63,7 @@ namespace Microsoft.PythonTools.Debugger {
                     _debuggerConnected = true;
                     _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
+                    _stream.Initialized += OnInitialized;
                 } else {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
                 }
@@ -78,6 +79,10 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.Dispose();
             }
             Exited?.Invoke(this, null);
+        }
+
+        private void OnInitialized(object sender, EventArgs e) {
+            CustomDebugAdapterProtocolExtension.SendRequest(new PtvsdVersionRequest(), PtvsdVersionHelper.VerifyPtvsdVersion);
         }
 
         public IntPtr Handle => IntPtr.Zero;
