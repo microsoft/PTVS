@@ -72,7 +72,7 @@ namespace Microsoft.CookiecutterTools.View {
                 return;
             }
 
-            ViewModel.CreateFilesAsync().DoNotWait();
+            ViewModel.CreateFilesAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

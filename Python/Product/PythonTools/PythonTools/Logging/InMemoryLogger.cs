@@ -110,6 +110,9 @@ namespace Microsoft.PythonTools.Logging {
             }
         }
 
+        public void LogFault(Exception ex, string description, bool dumpProcess) {
+        }
+
         #endregion
 
         public override string ToString() {

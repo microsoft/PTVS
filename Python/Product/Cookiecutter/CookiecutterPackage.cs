@@ -89,6 +89,8 @@ namespace Microsoft.CookiecutterTools {
             _projectSystem = new ProjectSystemClient(DTE);
 
             CookiecutterTelemetry.Initialize();
+
+            VSTaskExtensions._telemetry = CookiecutterTelemetry.Current;
         }
 
         protected override void Dispose(bool disposing) {

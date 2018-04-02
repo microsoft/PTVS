@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -41,6 +42,11 @@ namespace CookiecutterTests {
                 }
             }
         }
+
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
+            throw ex;
+        }
+
         #endregion
 
         #region ITelemetryTestSupport

@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.CookiecutterTools.Telemetry {
     /// <summary>
     /// Application telemetry service. In Visual Studio maps to IVsTelemetrySession.
@@ -34,5 +36,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// collection of string/object pairs.
         /// </param>
         void ReportEvent(string area, string eventName, object parameters = null);
+
+        void ReportFault(Exception ex, string description, bool dumpProcess);
     }
 }
