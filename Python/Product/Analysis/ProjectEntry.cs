@@ -144,8 +144,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public IPythonParse WaitForCurrentParse(int timeout = -1) {
-            if (!_pendingParse.Wait(timeout)) {
+        public IPythonParse WaitForCurrentParse(int timeout = Timeout.Infinite, CancellationToken token = default(CancellationToken)) {
+            if (!_pendingParse.Wait(timeout, token)) {
                 return null;
             }
             return GetCurrentParse();
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis {
             // the children were not registered. To handle this possibility, scan analyzed packages for children of this
             // package (checked by module name first, then sanity-checked by path), and register any that match.
             if (ModulePath.IsInitPyFile(FilePath)) {
-                string pathPrefix = Path.GetDirectoryName(FilePath) + "\\";
+                string pathPrefix = PathUtils.EnsureEndSeparator(Path.GetDirectoryName(FilePath));
                 var children =
                     from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
@@ -564,7 +564,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns the current tree if no parsing is currently pending, otherwise waits for the 
         /// current parse to finish and returns the up-to-date tree.
         /// </summary>
-        IPythonParse WaitForCurrentParse(int timeout = -1);
+        IPythonParse WaitForCurrentParse(int timeout = Timeout.Infinite, CancellationToken token = default(CancellationToken));
     }
 
     public interface IPythonParse : IDisposable {

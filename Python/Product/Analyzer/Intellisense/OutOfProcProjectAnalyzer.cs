@@ -1721,7 +1721,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else {
                     continue;
                 }
-                await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
+                _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
                         version = version
