@@ -34,9 +34,11 @@ namespace AnalysisTests {
         [TestInitialize]
         public void TestInitialize() {
             AnalysisLog.Reset();
-            AssertListener.Initialize();
+            TestEnvironmentImpl.TestInitialize();
         }
 
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void CrossThreadAnalysisCalls() {

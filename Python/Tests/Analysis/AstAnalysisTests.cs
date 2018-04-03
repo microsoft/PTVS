@@ -35,15 +35,17 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class AstAnalysisTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
         public TestContext TestContext { get; set; }
 
-        private string _analysisLog = null;
-        private string _moduleCache = null;
+        private string _analysisLog;
+        private string _moduleCache;
+
+        public AstAnalysisTests() {
+            _moduleCache = null;
+        }
 
         [TestCleanup]
         public void Cleanup() {
@@ -58,6 +60,8 @@ namespace AnalysisTests {
                     Console.WriteLine(_moduleCache);
                 }
             }
+
+            TestEnvironmentImpl.TestCleanup();
         }
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {

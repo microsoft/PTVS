@@ -20,6 +20,7 @@ using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace AnalysisTests {
     /// <summary>
@@ -27,6 +28,12 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class TokenizerRoundTripTest {
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+
         // TODO: Add an explicit test for grouping characters and white space, e.g.:
         // (a, b, [whitespace]
         //  [more whitespace]   c, d)

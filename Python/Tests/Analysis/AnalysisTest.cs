@@ -45,11 +45,13 @@ namespace AnalysisTests {
         [TestInitialize]
         public void TestInitialize() {
             StartAnalysisLog();
+            TestEnvironmentImpl.TestInitialize();
         }
 
         [TestCleanup]
         public void TestCleanup() {
             EndAnalysisLog();
+            TestEnvironmentImpl.TestCleanup();
         }
 
         #region Test Cases
@@ -6960,8 +6962,6 @@ y = mcc()
 
     [TestClass]
     public class StdLibAnalysisTest : AnalysisTest {
-        public StdLibAnalysisTest() { }
-
         protected override AnalysisLimits GetLimits() {
             return AnalysisLimits.GetStandardLibraryLimits();
         }

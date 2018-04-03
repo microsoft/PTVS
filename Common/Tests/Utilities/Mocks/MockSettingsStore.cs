@@ -22,6 +22,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace TestUtilities.Mocks {
     public class MockSettingsStore : IVsSettingsStore, IVsWritableSettingsStore {
+        public bool AllowEmptyCollections { get; set; }
+
         private readonly List<Tuple<string, string, object>> Settings = new List<Tuple<string, string, object>>();
 
         public void AddSetting(string path, string name, object value) {
@@ -148,7 +150,7 @@ namespace TestUtilities.Mocks {
                     .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
                     .Any()) {
                     subCollectionCount = 0;
-                    return VSConstants.E_INVALIDARG;
+                    return AllowEmptyCollections ? VSConstants.S_OK : VSConstants.E_INVALIDARG;
                 }
 
                 subCollectionCount = (uint)Settings

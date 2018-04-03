@@ -33,10 +33,11 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 namespace AnalysisTests {
     [TestClass]
     public class AnalysisSaveTest : BaseAnalysisTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void General() {

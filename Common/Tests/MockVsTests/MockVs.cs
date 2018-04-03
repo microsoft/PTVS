@@ -504,49 +504,44 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
             List<Type> packageTypes = new List<Type>();
 
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            try {
-                var _excludedAssemblies = new HashSet<string>(new string[] {
-                    "Microsoft.VisualStudio.Text.Internal.dll",
-                    "Microsoft.VisualStudio.Utilities.dll",
-                    "Microsoft.VisualStudio.Validation.dll",
-                    "Microsoft.VisualStudio.Workspace.dll",
-                    "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
-                }, StringComparer.OrdinalIgnoreCase);
+            var excludedAssemblies = new HashSet<string>(new string[] {
+                "Microsoft.VisualStudio.Text.Internal.dll",
+                "Microsoft.VisualStudio.Utilities.dll",
+                "Microsoft.VisualStudio.Validation.dll",
+                "Microsoft.VisualStudio.Workspace.dll",
+                "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
+            }, StringComparer.OrdinalIgnoreCase);
 
-                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    if (_excludedAssemblies.Contains(Path.GetFileName(file))) {
-                        continue;
-                    }
-
-                    Assembly asm;
-                    try {
-                        asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
-                    } catch {
-                        continue;
-                    }
-
-                    Console.WriteLine("Including {0}", file);
-                    try {
-                        foreach (var type in asm.GetTypes()) {
-                            if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
-                                packageTypes.Add(type);
-                            }
-                        }
-                        catalogs.Add(new AssemblyCatalog(asm));
-                    } catch (TypeInitializationException tix) {
-                        Console.WriteLine(tix);
-                    } catch (ReflectionTypeLoadException tlx) {
-                        Console.WriteLine(tlx);
-                        foreach (var ex in tlx.LoaderExceptions) {
-                            Console.WriteLine(ex);
-                        }
-                    } catch (IOException iox) {
-                        Console.WriteLine(iox);
-                    }
+            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                if (excludedAssemblies.Contains(Path.GetFileName(file))) {
+                    continue;
                 }
-            } finally {
-                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+
+                Assembly asm;
+                try {
+                    asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
+                } catch {
+                    continue;
+                }
+
+                Console.WriteLine("Including {0}", file);
+                try {
+                    foreach (var type in asm.GetTypes()) {
+                        if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
+                            packageTypes.Add(type);
+                        }
+                    }
+                    catalogs.Add(new AssemblyCatalog(asm));
+                } catch (TypeInitializationException tix) {
+                    Console.WriteLine(tix);
+                } catch (ReflectionTypeLoadException tlx) {
+                    Console.WriteLine(tlx);
+                    foreach (var ex in tlx.LoaderExceptions) {
+                        Console.WriteLine(ex);
+                    }
+                } catch (IOException iox) {
+                    Console.WriteLine(iox);
+                }
             }
 
             return new CachedVsInfo(
@@ -554,25 +549,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 packageTypes
             );
         }
-
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            Assembly asm = null;
-            var name = new AssemblyName(args.Name);
-            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
-            if (File.Exists(path)) {
-                asm = Assembly.LoadFile(path);
-            } else {
-                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
-                if (File.Exists(path)) {
-                    asm = Assembly.LoadFile(path);
-                }
-            }
-            if (asm != null && asm.FullName != name.FullName) {
-                asm = null;
-            }
-            return asm;
-        }
-
         #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
