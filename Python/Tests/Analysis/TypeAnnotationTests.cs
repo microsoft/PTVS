@@ -228,8 +228,8 @@ call_iis_i_ret = call_iis_i()
             analyzer.AddModule("test-module", @"from typing import *
 
 n : NamedTuple = ...
-n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
-n2 : ""NamedTuple('n2', [('x', int), ['y', str]])"" = ...
+n1 : NamedTuple('n1', [('x', int), ['y', float]]) = ...
+n2 : ""NamedTuple('n2', [('x', int), ['y', float]])"" = ...
 
 n1_x = n1.x
 n1_y = n1.y
@@ -254,26 +254,26 @@ n2_i = n2[i]
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
-            analyzer.AssertDescription("n1", "n1(x : int, y : str)");
-            analyzer.AssertDescription("n2", "n2(x : int, y : str)");
+            analyzer.AssertDescription("n1", "n1(x : int, y : float)");
+            analyzer.AssertDescription("n2", "n2(x : int, y : float)");
 
             analyzer.AssertIsInstance("n1_x", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n1_y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_y", BuiltinTypeId.Float);
             analyzer.AssertIsInstance("n2_x", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n2_y", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_y", BuiltinTypeId.Float);
 
             analyzer.AssertIsInstance("n1_0", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n1_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_1", BuiltinTypeId.Float);
             analyzer.AssertIsInstance("n2_0", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n2_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_1", BuiltinTypeId.Float);
 
             analyzer.AssertIsInstance("n1_m2", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n1_m1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_m1", BuiltinTypeId.Float);
             analyzer.AssertIsInstance("n2_m2", BuiltinTypeId.Int);
-            analyzer.AssertIsInstance("n2_m1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n2_m1", BuiltinTypeId.Float);
 
-            analyzer.AssertIsInstance("n1_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
-            analyzer.AssertIsInstance("n2_i", BuiltinTypeId.Int, BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("n1_i", BuiltinTypeId.Int, BuiltinTypeId.Float);
+            analyzer.AssertIsInstance("n2_i", BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
         [TestMethod, Priority(0)]

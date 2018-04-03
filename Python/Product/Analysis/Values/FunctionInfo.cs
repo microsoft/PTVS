@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 res = res.Union(nonLazy);
             }
 
-            var context = new ResolutionContext {
+            var context = unit.ForEval ? ResolutionContext.Complete : new ResolutionContext {
                 Caller = this,
                 CallArgs = callArgs,
                 CallSite = node

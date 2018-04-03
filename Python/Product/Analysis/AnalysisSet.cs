@@ -433,30 +433,27 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var uc = (UnionComparer)set.Comparer;
-            switch (set.Count) {
-                case 0:
-                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
-                case 1:
-                    return new AnalysisSetDetails.AnalysisSetOneUnion(set.First(), uc);
-                case 2: {
-                        var tup = AnalysisSetDetails.AnalysisSetTwoUnion.FromEnumerable(set, uc);
-                        if (tup == null) {
-                            return set;
-                        } else if (tup.Item1 == null && tup.Item2 == null) {
-                            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
-                        } else if (tup.Item2 == null) {
-                            return new AnalysisSetDetails.AnalysisSetOneUnion(tup.Item1, uc);
-                        } else if (set.Comparer.Equals(tup.Item1, tup.Item2)) {
-                            Debug.Fail($"Item {tup.Item1} ({uc.GetHashCode(tup.Item1)}) and {tup.Item2} ({uc.GetHashCode(tup.Item2)}) " +
-                                "should have been combined already by comparer {set.Comparer}");
-                            return new AnalysisSetDetails.AnalysisSetOneUnion(uc.MergeTypes(tup.Item1, tup.Item2, out _), uc);
+            AnalysisValue first = null, second = null;
+            using (var e = set.GetEnumerator()) {
+                if (e.MoveNext()) {
+                    first = e.Current;
+                    if (e.MoveNext()) {
+                        second = e.Current;
+                        if (e.MoveNext()) {
+                            var r = new AnalysisSetDetails.AnalysisHashSet(uc);
+                            r = (AnalysisSetDetails.AnalysisHashSet)r.Add(first).Add(second);
+                            r.AddFromEnumerator(e);
                         } else {
-                            return new AnalysisSetDetails.AnalysisSetTwoUnion(tup.Item1, tup.Item2, uc);
+                            return new AnalysisSetDetails.AnalysisSetTwoUnion(first, second, uc);
                         }
+                    } else {
+                        return new AnalysisSetDetails.AnalysisSetOneUnion(first, uc);
                     }
-                default:
-                    return set;
+                } else {
+                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
+                }
             }
+            return set;
         }
 
         /// <summary>
@@ -560,7 +557,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static bool ContainsAny(this IAnalysisSet set, IAnalysisSet values) {
             // TODO: This can be optimised for specific set types
-            return set.Intersect(values).Any();
+            return set.Intersect(values, set.Comparer).Any();
         }
 
         #endregion

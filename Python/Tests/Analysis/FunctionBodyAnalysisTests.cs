@@ -92,6 +92,7 @@ r_a = g(1, 3.14)
             Assert.AreEqual("x", ((ParameterInfo)rv).Name);
 
             // Ensure that normal resolution returns the union
+            AssertUtil.ContainsExactly(f.GetReturnValue().Select(v => v.TypeId), BuiltinTypeId.Int, BuiltinTypeId.Float);
             AssertUtil.ContainsExactly(g.GetReturnValue().Select(v => v.TypeId), BuiltinTypeId.Int, BuiltinTypeId.Float);
             entry.AssertIsInstance("f()", 0, BuiltinTypeId.Int, BuiltinTypeId.Float);
             entry.AssertIsInstance("g()", 0, BuiltinTypeId.Int, BuiltinTypeId.Float);

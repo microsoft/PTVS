@@ -679,9 +679,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected override bool Equals(Protocol other) => Name == other.Name;
         public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
 
-        // Types are already checked for an exact match
-        protected override bool UnionEquals(Protocol p) => true;
-
+        protected override bool UnionEquals(Protocol p) => Equals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
         protected override Protocol UnionMergeTypes(Protocol p) {
             if (p is NamespaceProtocol np) {
                 np._values.MakeUnionStrongerIfMoreThan(Self.State.Limits.InstanceMembers, np._values.TypesNoCopy);

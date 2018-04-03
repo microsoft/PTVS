@@ -223,6 +223,13 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             return this;
         }
 
+        internal AnalysisHashSet AddFromEnumerator(IEnumerator<AnalysisValue> items) {
+            var buckets = Buckets;
+            AddFromEnumerator(ref buckets, items, Comparer);
+            Buckets = buckets;
+            return this;
+        }
+
         private static bool AddFromEnumerator(ref BucketSet buckets, IEnumerator<AnalysisValue> items, IEqualityComparer<AnalysisValue> comparer) {
             bool wasChanged = false;
             while (items.MoveNext()) {

@@ -22,24 +22,18 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class CallExpression : Expression {
-        private readonly Expression _target;
         private readonly Arg[] _args;
 
         public CallExpression(Expression target, Arg[] args) {
-            _target = target;
+            Target = target;
             _args = args;
         }
 
-        public Expression Target {
-            get { return _target; }
-        }
-
-        public IList<Arg> Args {
-            get { return _args; }
-        } 
+        public Expression Target { get; }
+        public IList<Arg> Args => _args;
 
         public bool NeedsLocalsDictionary() {
-            NameExpression nameExpr = _target as NameExpression;
+            NameExpression nameExpr = Target as NameExpression;
             if (nameExpr == null) return false;
 
             if (_args.Length == 0) {
@@ -74,8 +68,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_target != null) {
-                    _target.Walk(walker);
+                if (Target != null) {
+                    Target.Walk(walker);
                 }
                 if (_args != null) {
                     foreach (Arg arg in _args) {
@@ -87,7 +81,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            _target.AppendCodeString(res, ast, format);
+            Target.AppendCodeString(res, ast, format);
             format.Append(
                 res,
                 format.SpaceBeforeCallParen,
@@ -157,45 +151,24 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (Args == null) {
                 return true;
             }
-            if (index == EndIndex) {
-                if (this.IsMissingCloseGrouping(ast)) {
-                    // No closing parenthesis, so assume last argument
-                    argIndex = Args.Count - 1;
-                    return true;
-                }
-                return false;
-            }
 
-            var listWhiteSpace = this.GetListWhiteSpace(ast);
             for (int i = 0; i < Args.Count; ++i) {
                 var a = Args[i];
-                int preWs = a.GetPreceedingWhiteSpaceDefaultNull(ast)?.Length ?? 0;
-                int preCommaWs = listWhiteSpace?.ElementAtOrDefault(i)?.Length ?? 0;
-                if (index < a.StartIndex - preWs) {
-                    break;
-                }
-                if (index <= a.EndIndex + preCommaWs) {
+                if (index <= a.EndIndexIncludingWhitespace) {
                     argIndex = i;
                     return true;
                 }
             }
 
-            if (listWhiteSpace == null || listWhiteSpace.Length == Args.Count) {
-                // Trailing comma, so we are not in any argument
-                argIndex = -1;
-                return true;
-            }
-
-            argIndex = Args.Count - 1;
-            return true;
+            return false;
         }
 
         public override string GetLeadingWhiteSpace(PythonAst ast) {
-            return _target.GetLeadingWhiteSpace(ast);
+            return Target.GetLeadingWhiteSpace(ast);
         }
 
         public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
-            _target.SetLeadingWhiteSpace(ast, whiteSpace);
+            Target.SetLeadingWhiteSpace(ast, whiteSpace);
         }
     }
 }

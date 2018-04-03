@@ -413,6 +413,8 @@ class Signature(object):
         raise RuntimeError("Too many arguments in definition")
 
     def _tokenize(self, expr):
+        if sys.version_info[0] == 3 and sys.version_info[1] <= 2:
+            expr = '# coding: utf-8\n' + expr
         buf = io.BytesIO(expr.strip().encode('utf-8'))
         if sys.version_info[0] == 3:
             tokens = tokenize.tokenize(buf.readline)
