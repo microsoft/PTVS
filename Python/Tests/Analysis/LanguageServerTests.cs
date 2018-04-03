@@ -336,7 +336,7 @@ def f(a, *b, **c): pass
 ");
 
             await AssertSignature(s, mod, new SourceLocation(1, 3),
-                new string[] { "f()", "f(a:=)", "f(a:=,b:=)", "f(a:=,*b:tuple=)", "f(a:=,**b:dict=)", "f(a:=,*b:tuple=,**c:dict=)" },
+                new string[] { "f()", "f(a)", "f(a, b)", "f(a, *b : tuple)", "f(a, **b : dict)", "f(a, *b : tuple, **c : dict)" },
                 new string[0]
             );
 
@@ -355,7 +355,7 @@ def f(a = 2, b): pass
 ");
 
             await AssertSignature(s, mod, new SourceLocation(1, 3),
-                new string[] { "f(a:int=)", "f(a:int=2,b:int=)", "f(x:str=,y:str=)" },
+                new string[] { "f(a : int)", "f(a : int = 2, b : int)", "f(x : str, y : str)" },
                 new string[0]
             );
         }
@@ -637,7 +637,7 @@ x = 3.14
             })).signatures;
 
             AssertUtil.CheckCollection(
-                sigs.Select(sig => $"{sig.label}({string.Join(",", sig.parameters.Select(p => $"{p.label}:{p._type}={p._defaultValue}"))})"),
+                sigs.Select(sig => sig.label),
                 contains,
                 excludes
             );

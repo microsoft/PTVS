@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Tests can only proceed when analysis is fully done.
                 _analyzer = CreateAnalyzer(@params.initializationOptions.interpreter).Result;
             } else {
-            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
             }
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
@@ -175,64 +175,64 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             _documentChangeProcessingComplete.Reset();
             try {
-            var uri = @params.textDocument.uri;
-            var entry = GetEntry(uri);
+                var uri = @params.textDocument.uri;
+                var entry = GetEntry(uri);
                 var part = GetPart(uri);
 
-            TraceMessage($"Received changes for {uri}");
+                TraceMessage($"Received changes for {uri}");
 
-            if (entry is IDocument doc) {
+                if (entry is IDocument doc) {
                     var docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
                     var fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
 
-                List<DidChangeTextDocumentParams> pending;
-                if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
-                    // Expected from version hasn't been seen yet, and there are no resets in this
-                    // change, so enqueue it for later.
-                    LogMessage(MessageType.Log, $"Deferring changes for {uri} until version {fromVersion} is seen");
-                    pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
-                    lock (pending) {
-                        pending.Add(@params);
+                    List<DidChangeTextDocumentParams> pending;
+                    if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
+                        // Expected from version hasn't been seen yet, and there are no resets in this
+                        // change, so enqueue it for later.
+                        LogMessage(MessageType.Log, $"Deferring changes for {uri} until version {fromVersion} is seen");
+                        pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
+                        lock (pending) {
+                            pending.Add(@params);
+                        }
+                        return;
                     }
-                    return;
-                }
 
                     var toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
 
-                doc.UpdateDocument(part, new DocumentChangeSet(
-                    fromVersion,
-                    toVersion,
-                    changes.Select(c => new DocumentChange {
-                        ReplacedSpan = c.range.GetValueOrDefault(),
-                        WholeBuffer = !c.range.HasValue,
-                        InsertedText = c.text
-                    })
-                ));
+                    doc.UpdateDocument(part, new DocumentChangeSet(
+                        fromVersion,
+                        toVersion,
+                        changes.Select(c => new DocumentChange {
+                            ReplacedSpan = c.range.GetValueOrDefault(),
+                            WholeBuffer = !c.range.HasValue,
+                            InsertedText = c.text
+                        })
+                    ));
 
-                if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {
-                    DidChangeTextDocumentParams? next = null;
-                    lock (pending) {
-                        var notExpired = pending.Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion).OrderBy(p => p.textDocument.version.GetValueOrDefault()).ToArray();
-                        if (notExpired.Any()) {
-                            pending.Clear();
-                            next = notExpired.First();
-                            pending.AddRange(notExpired.Skip(1));
-                        } else {
-                            _pendingChanges.TryRemove(uri, out _);
+                    if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {
+                        DidChangeTextDocumentParams? next = null;
+                        lock (pending) {
+                            var notExpired = pending.Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion).OrderBy(p => p.textDocument.version.GetValueOrDefault()).ToArray();
+                            if (notExpired.Any()) {
+                                pending.Clear();
+                                next = notExpired.First();
+                                pending.AddRange(notExpired.Skip(1));
+                            } else {
+                                _pendingChanges.TryRemove(uri, out _);
+                            }
+                        }
+                        if (next.HasValue) {
+                            DidChangeTextDocument(next.Value);
+                            return;
                         }
                     }
-                    if (next.HasValue) {
-                            DidChangeTextDocument(next.Value);
-                        return;
-                    }
-                }
 
-                TraceMessage($"Applied changes to {uri}");
+                    TraceMessage($"Applied changes to {uri}");
                     EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
-            }
+                }
             } finally {
                 _documentChangeProcessingComplete.Set();
-        }
+            }
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
@@ -424,7 +424,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (finder.GetExpression(@params.position) is CallExpression callExpr) {
                     TraceMessage($"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     overloads = analysis.GetSignatures(callExpr.Target, @params.position);
-                        activeParameter = -1;
+                    activeParameter = -1;
                     if (callExpr.GetArgumentAtIndex(tree, index, out activeParameter) && activeParameter < 0) {
                         // Returned 'true' and activeParameter == -1 means that we are after 
                         // the trailing comma, so assume partially typed expression such as 'pow(x, y, |)
@@ -455,7 +455,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            BuildMarkdownSignature(sh);
             return Task.FromResult(sh);
         }
 
@@ -738,12 +737,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
+                var path = Path.Combine(document.Host, document.AbsolutePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar));
+                if (ModulePath.FromBasePathAndFile_NoThrow("", path, p => true, out var mp, out _, out _)) {
+                    yield return mp;
+                }
             }
         }
 
-        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression) {
+        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, bool limitLines = true) {
             string firstLongDescription = null;
             var multiline = false;
             var result = new StringBuilder();
@@ -751,7 +752,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var v in values) {
                 if (string.IsNullOrEmpty(firstLongDescription)) {
-                    firstLongDescription = v.Description;
+                    firstLongDescription = limitLines ? LimitLines(v.Description) : v.Description;
                 }
 
                 var description = LimitLines(v.ShortDescription ?? "");
@@ -1034,49 +1035,58 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
-                using (_pendingAnalysisEnqueue.Incremented()) {
+            var pending = _pendingAnalysisEnqueue.Incremented();
+            try {
                 Task<IAnalysisCookie> cookieTask;
                 using (GetDocumentParseCounter(doc, out var count)) {
-                        if (count > 3) {
-                            // Rough check to prevent unbounded queueing. If we have
-                            // multiple parses in queue, we will get the latest doc
-                            // version in one of the ones to come.
-                            return;
-                        }
-
-                        TraceMessage($"Parsing document {doc.DocumentUri}");
-                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
+                    if (count > 3) {
+                        // Rough check to prevent unbounded queueing. If we have
+                        // multiple parses in queue, we will get the latest doc
+                        // version in one of the ones to come.
+                        return;
                     }
+
+                    TraceMessage($"Parsing document {doc.DocumentUri}");
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
+                }
 
                 // The call must be fire and forget, but should not be yielding.
                 // It is called from DidChangeTextDocument which must fully finish
                 // since otherwise Complete() may come before the change is enqueued
                 // for processing and the completion list will be driven off the stale data.
+                var p = pending;
                 cookieTask.ContinueWith(t => {
                     if (t.IsFaulted) {
                         // Happens when file got deleted before processing
+                        p.Dispose();
                         LogMessage(MessageType.Error, t.Exception.Message);
                         return;
                     }
-                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority);
+                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
                 }).DoNotWait();
+                pending = null;
+            } finally {
+                pending?.Dispose();
             }
         }
 
-        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority) {
+        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
             try {
-                    if (vc != null) {
-                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            ParseComplete(kv.Key, kv.Value.Version);
-                        }
-                    } else {
-                        ParseComplete(doc.DocumentUri, 0);
+                if (vc != null) {
+                    foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                        ParseComplete(kv.Key, kv.Value.Version);
                     }
+                } else {
+                    ParseComplete(doc.DocumentUri, 0);
+                }
 
-                    if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
-                        TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
-                        _queue.Enqueue(analyzable, priority);
-                    }
+                if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
+                    TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
+                    _queue.Enqueue(analyzable, priority);
+                }
+
+                disposeWhenEnqueued?.Dispose();
+                disposeWhenEnqueued = null;
 
                 if (vc != null) {
                     var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, BufferVersion>());
@@ -1100,6 +1110,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 TraceMessage($"{ex}");
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
+            } finally {
+                disposeWhenEnqueued?.Dispose();
             }
         }
 
@@ -1268,24 +1280,66 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
+            if (requested == null) {
+                return supported.Last();
+            }
+            foreach (var k in requested) {
+                if (supported.Contains(k)) {
+                    return k;
+                }
+            }
+            return MarkupKind.PlainText;
+        }
+
+        private string FormatParameter(ParameterResult p) {
+            var res = new StringBuilder(p.Name);
+            if (!string.IsNullOrEmpty(p.Type)) {
+                res.Append(" : ");
+                res.Append(p.Type);
+            }
+            if (!string.IsNullOrEmpty(p.DefaultValue)) {
+                res.Append(" = ");
+                res.Append(p.DefaultValue);
+            }
+            return res.ToString();
+        }
+
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
-            return new SignatureInformation {
-                label = overload.Name,
-                documentation = string.IsNullOrEmpty(overload.Documentation) ? null : new MarkupContent {
-                    kind = MarkupKind.PlainText,
-                    value = overload.Documentation
-                },
-                parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
-                    label = p.Name,
-                    documentation = string.IsNullOrEmpty(p.Documentation) ? null : new MarkupContent {
-                        kind = MarkupKind.PlainText,
-                        value = p.Documentation
-                    },
-                    _type = p.Type,
-                    _defaultValue = p.DefaultValue
-                }).ToArray(),
-                _returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray()
-            };
+            var si = new SignatureInformation();
+
+            si.label = "{0}({1})".FormatInvariant(
+                overload.Name,
+                string.Join(", ", overload.Parameters.Select(FormatParameter))
+            );
+
+            si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
+            si.parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
+                label = p.Name,
+                documentation = string.IsNullOrEmpty(p.Documentation) ? null : p.Documentation,
+                _type = p.Type,
+                _defaultValue = p.DefaultValue
+            }).ToArray();
+
+            switch (SelectBestMarkup(_clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                case MarkupKind.Markdown:
+                    var converter = new RestTextConverter();
+                    if (!string.IsNullOrEmpty(si.documentation.value)) {
+                        si.documentation.kind = MarkupKind.Markdown;
+                        si.documentation.value = converter.ToMarkdown(si.documentation.value);
+                    }
+                    foreach (var p in si.parameters) {
+                        if (!string.IsNullOrEmpty(p.documentation.value)) {
+                            p.documentation.kind = MarkupKind.Markdown;
+                            p.documentation.value = converter.ToMarkdown(p.documentation.value);
+                        }
+                    }
+                    break;
+            }
+
+            si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
+
+            return si;
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(
@@ -1304,32 +1358,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         yield return m;
                     }
                 }
-            }
-        }
-
-        private void BuildMarkdownSignature(SignatureHelp signatureHelp) {
-            foreach (var s in signatureHelp.signatures) {
-                // Recostruct full signature so editor can display current parameter
-                var sb = new StringBuilder();
-
-                if (s.documentation != null) {
-                    s.documentation.value = _textConverter.ToMarkdown(s.documentation.value);
-                }
-                sb.Append(s.label);
-                sb.Append('(');
-                if (s.parameters != null) {
-                    foreach (var p in s.parameters) {
-                        if (sb[sb.Length - 1] != '(') {
-                            sb.Append(", ");
-                        }
-                        sb.Append(p.label);
-                        if (p.documentation != null) {
-                            p.documentation.value = _textConverter.ToMarkdown(p.documentation.value);
-                        }
-                    }
-                }
-                sb.Append(')');
-                s.label = sb.ToString();
             }
         }
 

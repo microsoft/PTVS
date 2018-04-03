@@ -96,22 +96,27 @@ namespace TestUtilities.Mocks {
         }
 
         public NormalizedSnapshotSpanCollection MapDownToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
-            throw new NotImplementedException();
+            return MapDownToFirstMatch(span, trackingMode, s => s.TextBuffer == targetBuffer);
         }
 
         public SnapshotPoint? MapDownToBuffer(SnapshotPoint position, PointTrackingMode trackingMode, ITextBuffer targetBuffer, PositionAffinity affinity) {
-            throw new NotImplementedException();
+            return MapDownToFirstMatch(position, trackingMode, s => s.TextBuffer == targetBuffer, affinity);
         }
 
         public NormalizedSnapshotSpanCollection MapDownToFirstMatch(SnapshotSpan span, SpanTrackingMode trackingMode, Predicate<ITextSnapshot> match) {
-            if (_buffers.Count == 1 && _buffers[0] == span.Snapshot.TextBuffer) {
-                return new NormalizedSnapshotSpanCollection(span.TranslateTo(span.Snapshot.TextBuffer.CurrentSnapshot, trackingMode));
+            var buffer = _buffers.FirstOrDefault(b => match(b.CurrentSnapshot));
+            if (buffer != null) {
+                return new NormalizedSnapshotSpanCollection(span.TranslateTo(buffer.CurrentSnapshot, trackingMode));
             }
-            throw new NotImplementedException();
+            return new NormalizedSnapshotSpanCollection();
         }
 
         public SnapshotPoint? MapDownToFirstMatch(SnapshotPoint position, PointTrackingMode trackingMode, Predicate<ITextSnapshot> match, PositionAffinity affinity) {
-            return position;
+            var buffer = _buffers.FirstOrDefault(b => match(b.CurrentSnapshot));
+            if (buffer != null) {
+                return position.TranslateTo(buffer.CurrentSnapshot, trackingMode);
+            }
+            return null;
         }
 
         public SnapshotPoint? MapDownToInsertionPoint(SnapshotPoint position, PointTrackingMode trackingMode, Predicate<ITextSnapshot> match) {

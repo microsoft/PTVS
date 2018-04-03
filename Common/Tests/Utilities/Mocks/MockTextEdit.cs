@@ -84,38 +84,36 @@ namespace TestUtilities.Mocks {
             var changes = new List<MockTextChange>();
 
             // Apply changes
-            var adjust = 0;
-            foreach (var edit in _edits.OrderBy(e => e.Position).ThenByDescending(e => e, EditTypeComparer.Instance)) {
+            foreach (var edit in _edits.OrderByDescending(e => e.Position).ThenByDescending(e => e, EditTypeComparer.Instance)) {
                 MockTextChange change;
                 if (edit is ReplacementEdit replace) {
-                    text.Remove(replace.Position + adjust, replace.Length);
-                    text.Insert(replace.Position + adjust, replace.Text);
+                    text.Remove(replace.Position, replace.Length);
+                    text.Insert(replace.Position, replace.Text);
                     change = new MockTextChange(
                         new SnapshotSpan(_snapshot, replace.Position, replace.Length),
                         replace.Position,
                         replace.Text
                     );
                 } else if (edit is InsertionEdit insert) {
-                    text.Insert(insert.Position + adjust, insert.Text);
+                    text.Insert(insert.Position, insert.Text);
                     change = new MockTextChange(
                         new SnapshotSpan(_snapshot, insert.Position, 0),
-                        insert.Position + adjust,
+                        insert.Position,
                         insert.Text
                     );
-                    adjust += insert.Text.Length;
                 } else {
                     var delete = (DeletionEdit)edit;
-                    text.Remove(delete.Position + adjust, delete.Length);
+                    text.Remove(delete.Position, delete.Length);
                     change = new MockTextChange(
                         new SnapshotSpan(_snapshot, delete.Position, delete.Length),
-                        delete.Position + adjust,
+                        delete.Position,
                         string.Empty
                     );
-                    adjust -= delete.Length;
                 }
 
                 changes.Add(change);
             }
+            changes.Reverse();
 
             var previous = _snapshot;
             var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
