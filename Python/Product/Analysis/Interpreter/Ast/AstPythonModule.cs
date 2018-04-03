@@ -131,6 +131,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if(_documentation == null) {
                     _members.TryGetValue("__doc__", out var m);
                     _documentation = (m as AstPythonStringLiteral)?.Value ?? string.Empty;
+                    if(string.IsNullOrEmpty(_documentation)) {
+                        _members.TryGetValue($"_{Name}", out m);
+                        _documentation = (m as AstNestedPythonModule)?.Documentation ?? string.Empty;
+                    }
                 }
                 return _documentation;
             }

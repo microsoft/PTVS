@@ -51,13 +51,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             string firstLongDescription = null;
-            var multiline = false;
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
-            string doc;
 
             foreach (var v in values) {
-                doc = !string.IsNullOrEmpty(v.Documentation) ? v.Documentation : v.Description;
+                var doc = !string.IsNullOrEmpty(v.Documentation) ? v.Documentation : string.Empty;
+                var desc = !string.IsNullOrEmpty(v.Description) ? v.Description : string.Empty;
+                doc = doc.Length > desc.Length ? doc : desc;
                 firstLongDescription = firstLongDescription ?? doc;
 
                 doc = displayOptions.trimDocumentationLines ? LimitLines(doc) : doc;
@@ -71,8 +71,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             // Nop
                         } else if (result[result.Length - 1] != '\n') {
                             result.Append(", ");
-                        } else {
-                            multiline = true;
                         }
                     }
                     result.Append(doc);
@@ -84,24 +82,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 result.Append(firstLongDescription);
             }
 
-            doc = result.ToString();
-            if (displayOptions.trimDocumentationText && doc.Length > displayOptions.maxDocumentationTextLength) {
-                doc = doc.Substring(0,
+            var displayText = result.ToString();
+            if (displayOptions.trimDocumentationText && displayText.Length > displayOptions.maxDocumentationTextLength) {
+                displayText = displayText.Substring(0,
                     Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
 
                 result.Clear();
-                result.Append(doc);
+                result.Append(displayText);
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
-                if (multiline) {
-                    result.Insert(0, originalExpression + ": " + Environment.NewLine);
-                } else if (result.Length > 0) {
-                    result.Insert(0, originalExpression + ": ");
-                } else {
-                    result.Append(originalExpression);
-                    result.Append(": ");
-                    result.Append("<unknown type>");
+                if (result.Length == 0) {
+                    result.Append($"{originalExpression}: <unknown type>");
                 }
             }
 
