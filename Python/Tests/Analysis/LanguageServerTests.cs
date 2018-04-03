@@ -336,7 +336,7 @@ def f(a, *b, **c): pass
 ");
 
             await AssertSignature(s, mod, new SourceLocation(1, 3),
-                new string[] { "f()", "f(a:=)", "f(a:=,b:=)", "f(a:=,*b:tuple=)", "f(a:=,**b:dict=)", "f(a:=,*b:tuple=,**c:dict=)" },
+                new string[] { "f()", "f(a)", "f(a, b)", "f(a, *b:tuple)", "f(a, **b:dict)", "f(a, *b:tuple, **c:dict)" },
                 new string[0]
             );
 
@@ -501,7 +501,7 @@ x = 3.14
             await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
             await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
             await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
-            await AssertHover(s, mod, new SourceLocation(14, 1), "c_g: def test-module.C.f.g(self)\r\ndeclared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+            await AssertHover(s, mod, new SourceLocation(14, 1), "c_g: def test-module.C.f.g(self)  \r\ndeclared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
 
             await AssertHover(s, mod, new SourceLocation(16, 1), "x: int, float", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
         }
@@ -644,7 +644,7 @@ x = 3.14
             })).signatures;
 
             AssertUtil.CheckCollection(
-                sigs.Select(sig => $"{sig.label}({string.Join(",", sig.parameters.Select(p => $"{p.label}:{p._type}={p._defaultValue}"))})"),
+                sigs.Select(sig => sig.label),
                 contains,
                 excludes
             );

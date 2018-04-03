@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // This is because some functions have signature as a first doc line and 
                 // some do not have one. We are already showing signature as part of the type.
                 var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
-                if(typeString != null && lines.Length > 0 && typeString.IndexOf(lines[0].Trim()) >= 0) {
+                if(!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
                     docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
                 }
 
@@ -111,9 +111,6 @@ namespace Microsoft.PythonTools.Analysis {
             var doc = new StringBuilder();
             var typeToDoc = new Dictionary<string, Tuple<string, string>>();
             foreach (var docType in docs) {
-                if (string.IsNullOrEmpty(docType.Key)) {
-                    continue;
-                }
                 if (!docType.Value.Any()) {
                     continue;
                 }
@@ -130,8 +127,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
-                doc.AppendLine(typeDoc.Value.Item1 + ":");
-                doc.Append(Utils.CleanDocumentation(typeDoc.Value.Item2));
+                doc.Append(typeDoc.Value.Item1);
+                if (!string.IsNullOrEmpty(typeDoc.Value.Item2)) {
+                    var cleaned = Utils.CleanDocumentation(typeDoc.Value.Item2);
+                    if (!string.IsNullOrEmpty(cleaned)) {
+                        if (cleaned.IndexOf('\n') >= 0) {
+                            doc.AppendLine(":");
+                        } else {
+                            doc.Append(": ");
+                        }
+                        doc.Append(cleaned);
+                    }
+                }
                 doc.AppendLine();
                 doc.AppendLine();
             }

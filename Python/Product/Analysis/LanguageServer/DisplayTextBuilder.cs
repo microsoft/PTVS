@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     sealed class DisplayTextBuilder {
@@ -39,6 +40,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             sb.Append(", ");
                         }
                         sb.Append(p.label);
+                        if (!string.IsNullOrEmpty(p._type)) {
+                            sb.Append(':');
+                            sb.Append(p._type);
+                        }
+                        if(!string.IsNullOrEmpty(p._defaultValue)) {
+                            sb.Append('=');
+                            sb.Append(p._defaultValue);
+                        }
                         if (p.documentation != null) {
                             p.documentation.value = _textConverter.ToMarkdown(p.documentation.value);
                         }
@@ -51,13 +60,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             string firstLongDescription = null;
+            var multiline = false;
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
 
             foreach (var v in values) {
-                var doc = !string.IsNullOrEmpty(v.Documentation) ? v.Documentation : string.Empty;
-                var desc = !string.IsNullOrEmpty(v.Description) ? v.Description : string.Empty;
-                doc = doc.Length > desc.Length ? doc : desc;
+                var doc = GetDocString(v);
                 firstLongDescription = firstLongDescription ?? doc;
 
                 doc = displayOptions.trimDocumentationLines ? LimitLines(doc) : doc;
@@ -71,6 +79,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             // Nop
                         } else if (result[result.Length - 1] != '\n') {
                             result.Append(", ");
+                        } else {
+                            multiline = true;
                         }
                     }
                     result.Append(doc);
@@ -92,7 +102,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
-                if (result.Length == 0) {
+                if (originalExpression.Length > 4096) {
+                    originalExpression = originalExpression.Substring(0, 4093) + "...";
+                }
+                if (multiline) {
+                    result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
+                } else if (result.Length > 0) {
+                    result.Insert(0, $"{originalExpression}: ");
+                } else {
                     result.Append($"{originalExpression}: <unknown type>");
                 }
             }
@@ -107,6 +124,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 contents += $"{Environment.NewLine}{Environment.NewLine}{modRef.Module.Documentation}";
             }
             return contents;
+        }
+
+        private static string GetDocString(AnalysisValue v) {
+            var doc = !string.IsNullOrEmpty(v.Documentation) ? v.Documentation : string.Empty;
+            var desc = !string.IsNullOrEmpty(v.Description) ? v.Description : string.Empty;
+            if (v.MemberType == PythonMemberType.Instance || v.MemberType == PythonMemberType.Constant) {
+                return !string.IsNullOrEmpty(desc) ? desc : doc;
+            }
+            return doc.Length > desc.Length ? doc : desc;
         }
 
         private static string LimitLines(
