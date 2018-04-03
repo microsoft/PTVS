@@ -99,7 +99,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Generic":
                 case "Optional":
                 case "Tuple":
-                case "TypeVar":
                 case "Union":
                 case "Container":
                 case "ItemsView":
@@ -148,6 +147,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "AnyStr": res = GetBuiltin(BuiltinTypeId.Unicode).Union(GetBuiltin(BuiltinTypeId.Bytes), canMutate: false); break;
                 case "Text": res = GetBuiltin(BuiltinTypeId.Str); break;
 
+                // TypeVar is not actually a synonym for NewType, but it is close enough for our purposes
+                case "TypeVar":
                 case "NewType": res = GetFunction(node, unit, name, NewType_Call); break;
 
                 // The following are added depending on presence

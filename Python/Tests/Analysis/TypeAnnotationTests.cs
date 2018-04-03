@@ -495,14 +495,17 @@ def f(u : UserId, a : AdminUserId, p : ProUserId):
 
 def feeder(get_next_item: Callable[[], str]) -> None:
     # Body
+    pass
 
 def async_query(on_success: Callable[[int], None],
                 on_error: Callable[[int, Exception], None]) -> None:
     # Body
+    pass
 
 ",
                 new[] {
-                    ""
+                    "feeder:feeder(get_next_item:function() -> str=)->[]",
+                    "async_query:async_query(on_success:function(int)=,on_error:function(int, Exception)=)->[]"
                 }
             );
         }
@@ -511,11 +514,13 @@ def async_query(on_success: Callable[[int], None],
         public void TypingModuleDocumentationExample_7() {
             TypingModuleDocumentationExample(@"from typing import Mapping, Sequence
 
+class Employee: pass
+
 def notify_by_email(employees: Sequence[Employee],
                     overrides: Mapping[str, str]) -> None: ...
 ",
                 new[] {
-                    ""
+                    "notify_by_email:notify_by_email(employees:list[Employee]=,overrides:dict[str, str]=)->[]"
                 }
             );
         }
@@ -530,7 +535,7 @@ def first(l: Sequence[T]) -> T:   # Generic function
     return l[0]
 ",
                 new[] {
-                    ""
+                    "first:first(l:list[T]=)->[T]"
                 }
             );
         }
@@ -564,7 +569,8 @@ def zero_all_vars(vars: Iterable[LoggedVar[int]]) -> None:
         var.set(0)
 ",
                 new[] {
-                    ""
+                    "LoggedVar.set:set(self:LoggedVar=,new:int, T=)->[]",
+                    "zero_all_vars:zero_all_vars(vars:iterable[LoggedVar]=)->[]"
                 }
             );
         }
@@ -588,9 +594,11 @@ class LinkedList(Sized, Generic[T]):
 
 class MyDict(Mapping[str, T]):
     ...
+
+def f(s: StrangePair[int, int], p: Pair, l: LinkedList, m: MyDict): ...
 ",
                 new[] {
-                    ""
+                    "f:f(s:StrangePair=,p:Pair=,l:LinkedList=,m:MyDict=)->[]"
                 }
             );
         }

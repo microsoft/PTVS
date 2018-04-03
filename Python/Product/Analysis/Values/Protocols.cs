@@ -212,11 +212,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (argNumber > 1) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, $"${argNumber}");
 
-                foreach (var kv in a.GetRichDescriptions(" : ")) {
+                foreach (var kv in a.GetRichDescriptions(defaultIfEmpty: "Any")) {
                     yield return kv;
                 }
+                argNumber += 1;
             }
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
 
@@ -250,8 +250,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) => _iterator;
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) => _yielded;
-
-        public override string Name => "iterable";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_yielded.Any()) {
@@ -297,8 +295,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return _yielded;
         }
-
-        public override string Name => "iterator";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_yielded.Any()) {
