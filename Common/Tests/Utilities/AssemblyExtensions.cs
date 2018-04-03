@@ -20,22 +20,12 @@ using System.Linq;
 using System.Reflection;
 
 namespace TestUtilities {
-    public static class AssemblyExtensions {
+    internal static class AssemblyExtensions {
         public static string GetAssemblyDirectory(this Assembly assembly) => Path.GetDirectoryName(assembly.GetAssemblyPath());
 
         public static string GetAssemblyPath(this Assembly assembly) {
             var codeBase = assembly.CodeBase;
             return new Uri(codeBase).LocalPath;
         }
-
-        //public static Assembly GetReferencedAssembly(this Assembly assembly, string referencedName) {
-        //    foreach (var a in assembly.GetReferencedAssemblies()) {
-        //        if (a.Name == referencedName) {
-        //            return AssemblyLoader.EnsureLoaded(a.Name);
-        //        }
-        //    }
-
-        //    return null;
-        //}
     }
 }
