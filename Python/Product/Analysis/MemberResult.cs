@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Analysis {
                         typeDisplay = "";
                     } else if (types.Count == 1) {
                         if (allTypes.Count > 1) {
-                            typeDisplay = types.First() + ": ";
+                            typeDisplay = types.First();
                         } else {
                             typeDisplay = "";
                         }

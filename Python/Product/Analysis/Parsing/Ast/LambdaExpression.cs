@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (_function.ParametersInternal.Length > 0) {
                 var paramStr = new StringBuilder();
                 _function.ParamsToString(paramStr, ast, commaWhiteSpace, format);
-                if (paramStr.Length > 0 && !char.IsWhiteSpace(paramStr[0])) {
+                if (paramStr.Length > 0 && !char.IsWhiteSpace(paramStr[0]) && !(_function.ParametersInternal[0] is ErrorParameter)) {
                     res.Append(' ');
                 }
                 res.Append(paramStr.ToString());

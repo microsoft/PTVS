@@ -419,20 +419,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return set;
             }
 
-            if (!(set.Comparer is UnionComparer)) {
-                switch (set.Count) {
-                    case 0:
-                        return Empty;
-                    case 1:
-                        return set.First();
-                    case 2:
-                        return new AnalysisSetDetails.AnalysisSetTwoObject(set);
-                    default:
-                        return set;
-                }
-            }
-
-            var uc = (UnionComparer)set.Comparer;
+            var uc = set.Comparer as UnionComparer;
             AnalysisValue first = null, second = null;
             using (var e = set.GetEnumerator()) {
                 if (e.MoveNext()) {
@@ -440,20 +427,24 @@ namespace Microsoft.PythonTools.Analysis {
                     if (e.MoveNext()) {
                         second = e.Current;
                         if (e.MoveNext()) {
-                            var r = new AnalysisSetDetails.AnalysisHashSet(uc);
-                            r = (AnalysisSetDetails.AnalysisHashSet)r.Add(first).Add(second);
-                            r.AddFromEnumerator(e);
-                        } else {
+                            // More than two items, so return unchanged
+                            return set;
+                        } else if (uc != null) {
                             return new AnalysisSetDetails.AnalysisSetTwoUnion(first, second, uc);
+                        } else {
+                            return new AnalysisSetDetails.AnalysisSetTwoObject(first, second);
                         }
-                    } else {
+                    } else if (uc != null) {
                         return new AnalysisSetDetails.AnalysisSetOneUnion(first, uc);
+                    } else {
+                        return first;
                     }
-                } else {
+                } else if (uc != null) {
                     return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
+                } else {
+                    return AnalysisSetDetails.AnalysisSetEmptyObject.Instance;
                 }
             }
-            return set;
         }
 
         /// <summary>

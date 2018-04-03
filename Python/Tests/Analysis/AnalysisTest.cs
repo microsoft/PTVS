@@ -2594,7 +2594,6 @@ class D(object):
             entry = ProcessTextV2(text);
 
             entry.AssertReferences("abc", text.IndexOf("abc ="),
-                new VariableLocation(4, 1, VariableType.Value),
                 new VariableLocation(4, 5, VariableType.Definition),
                 new VariableLocation(5, 11, VariableType.Reference),
                 new VariableLocation(6, 9, VariableType.Reference));
@@ -2986,11 +2985,12 @@ from baz import abc2 as abc";
             );
             state.AssertReferences(fobMod, "abc", 0,
                 new VariableLocation(1, 1, VariableType.Value),
-                new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(1, 25, VariableType.Reference),
-                new VariableLocation(2, 20, VariableType.Reference),    // import
-                new VariableLocation(2, 25, VariableType.Reference),    // as
-                new VariableLocation(4, 1, VariableType.Reference)      // call
+                new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
+                new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
+                new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
+                new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
+                new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
+                new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
             );
         }
 
@@ -6056,9 +6056,17 @@ class Derived(Base):
 
             var entry = ProcessText(text);
 
-            entry.AssertReferences("self.fob", text.IndexOf("'x'"), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
-            entry.AssertReferences("self.fob", text.IndexOf("pass"), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
-            entry.AssertReferences("self.fob", text.IndexOf("self.fob"), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
+            var refs = new[] {
+                new VariableLocation(4, 14, VariableType.Reference),
+                new VariableLocation(6, 5, VariableType.Value),
+                new VariableLocation(6, 9, VariableType.Definition),
+                new VariableLocation(11, 5, VariableType.Value),
+                new VariableLocation(11, 9, VariableType.Definition),
+            };
+
+            entry.AssertReferences("self.fob", text.IndexOf("'x'"), refs);
+            entry.AssertReferences("self.fob", text.IndexOf("pass"), refs);
+            entry.AssertReferences("self.fob", text.IndexOf("self.fob"), refs);
         }
 
         /// <summary>

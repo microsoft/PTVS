@@ -355,7 +355,7 @@ f([1, 2], 3)
                     .OfType<SequenceBuiltinInstanceInfo>()
                     .Where(s => s.TypeId == BuiltinTypeId.List)
                     .Single();
-                Assert.AreEqual("list of int", lst.ShortDescription);
+                Assert.AreEqual("list[int]", lst.ShortDescription);
             }
         }
 
