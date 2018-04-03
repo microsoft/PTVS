@@ -160,6 +160,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
 
+            if (index < EndIndex) {
+                argIndex = -1;
+                return true;
+            }
+
             return false;
         }
 

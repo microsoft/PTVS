@@ -44,13 +44,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 
             if (_function.ParametersInternal.Length > 0) {
-                _function.ParamsToString(res, ast, commaWhiteSpace, format, _function.ParametersInternal[0].GetPreceedingWhiteSpaceDefaultNull(ast) ?? " ");
+                var paramStr = new StringBuilder();
+                _function.ParamsToString(paramStr, ast, commaWhiteSpace, format);
+                if (paramStr.Length > 0 && !char.IsWhiteSpace(paramStr[0])) {
+                    res.Append(' ');
+                }
+                res.Append(paramStr.ToString());
             }
             string namedOnlyText = this.GetExtraVerbatimText(ast);
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);
             }
-            format.Append(res, format.SpaceBeforeLambdaColon, " ", "", this.GetSecondWhiteSpace(ast));
+            format.Append(res, format.SpaceBeforeLambdaColon, " ", "", this.GetSecondWhiteSpaceDefaultNull(ast) ?? "");
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(":");
                 string afterColon = null;

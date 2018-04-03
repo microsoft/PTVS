@@ -681,6 +681,7 @@ class D(object):
             state.WaitForAnalysis(CancellationTokens.After15s);
 
             state.AssertReferences(mod2, "D", 0,
+                new VariableLocation(2, 1, VariableType.Value, "mod2"),
                 new VariableLocation(2, 7, VariableType.Definition, "mod2"),
                 new VariableLocation(4, 5, VariableType.Reference, "mod1")
             );
@@ -712,6 +713,7 @@ class D(object):
             state.WaitForAnalysis();
 
             state.AssertReferences(mod1, "SomeMethod", text1.IndexOf("SomeMethod"),
+                new VariableLocation(5, 5, VariableType.Value),
                 new VariableLocation(5, 9, VariableType.Definition),
                 new VariableLocation(5, 20, VariableType.Reference)
             );
@@ -722,6 +724,7 @@ class D(object):
             state.WaitForAnalysis();
 
             state.AssertReferences(mod1, "SomeMethod", text1.IndexOf("SomeMethod"),
+                new VariableLocation(6, 5, VariableType.Value),
                 new VariableLocation(6, 9, VariableType.Definition),
                 new VariableLocation(5, 20, VariableType.Reference)
             );
@@ -733,6 +736,7 @@ class D(object):
             state.ReanalyzeAll();
 
             state.AssertReferences(mod1, "SomeMethod", text1.IndexOf("SomeMethod"),
+                new VariableLocation(6, 5, VariableType.Value),
                 new VariableLocation(6, 9, VariableType.Definition),
                 new VariableLocation(6, 20, VariableType.Reference)
             );
@@ -1399,7 +1403,10 @@ def f(abc):
 
             var entry = ProcessText(text);
 
-            entry.AssertReferences("f", new VariableLocation(2, 5, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
+            entry.AssertReferences("f",
+                new VariableLocation(2, 1, VariableType.Value),
+                new VariableLocation(2, 5, VariableType.Definition),
+                new VariableLocation(5, 2, VariableType.Reference));
         }
 
         [TestMethod, Priority(0)]
@@ -1462,7 +1469,10 @@ class C:
 
             var entry = ProcessTextV2(text);
 
-            entry.AssertReferences("self.__x", text.IndexOf("self.__"), new VariableLocation(3, 9, VariableType.Definition), new VariableLocation(7, 14, VariableType.Reference));
+            entry.AssertReferences("self.__x", text.IndexOf("self.__"),
+                new VariableLocation(3, 5, VariableType.Value),
+                new VariableLocation(3, 9, VariableType.Definition),
+                new VariableLocation(7, 14, VariableType.Reference));
         }
 
         [TestMethod, Priority(0)]
@@ -1517,7 +1527,10 @@ def f(abc):
 
             entry = ProcessTextV2(text);
             entry.AssertIsInstance("abc", text.IndexOf("print"), BuiltinTypeId.Int);
-            entry.AssertReferences("f", new VariableLocation(2, 5, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
+            entry.AssertReferences("f",
+                new VariableLocation(2, 1, VariableType.Value),
+                new VariableLocation(2, 5, VariableType.Definition),
+                new VariableLocation(5, 2, VariableType.Reference));
         }
 
 
@@ -2544,6 +2557,7 @@ D(42)";
                 new VariableLocation(5, 20, VariableType.Reference));
             entry.AssertReferences("D", text.IndexOf("D(42)"),
                 new VariableLocation(9, 1, VariableType.Reference),
+                new VariableLocation(3, 1, VariableType.Value),
                 new VariableLocation(3, 7, VariableType.Definition));
 
             // function definitions
@@ -2553,8 +2567,9 @@ def f(): pass
 x = f()";
             entry = ProcessTextV2(text);
             entry.AssertReferences("f", text.IndexOf("x ="),
-                new VariableLocation(4, 5, VariableType.Reference),
-                new VariableLocation(2, 5, VariableType.Definition));
+                new VariableLocation(2, 1, VariableType.Value),
+                new VariableLocation(2, 5, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Reference));
 
 
 
@@ -2564,8 +2579,9 @@ def f(): pass
 x = f";
             entry = ProcessTextV2(text);
             entry.AssertReferences("f", text.IndexOf("x ="),
-                new VariableLocation(4, 5, VariableType.Reference),
-                new VariableLocation(2, 5, VariableType.Definition));
+                new VariableLocation(2, 1, VariableType.Value),
+                new VariableLocation(2, 5, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Reference));
 
             // class variables
             text = @"
@@ -2578,6 +2594,7 @@ class D(object):
             entry = ProcessTextV2(text);
 
             entry.AssertReferences("abc", text.IndexOf("abc ="),
+                new VariableLocation(4, 1, VariableType.Value),
                 new VariableLocation(4, 5, VariableType.Definition),
                 new VariableLocation(5, 11, VariableType.Reference),
                 new VariableLocation(6, 9, VariableType.Reference));
@@ -2590,8 +2607,9 @@ a = D
 ";
             entry = ProcessTextV2(text);
             entry.AssertReferences("D", text.IndexOf("a ="),
-                new VariableLocation(4, 5, VariableType.Reference),
-                new VariableLocation(2, 7, VariableType.Definition));
+                new VariableLocation(2, 1, VariableType.Value),
+                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Reference));
 
             // method definition
             text = @"
@@ -2602,8 +2620,9 @@ a = D().f()
 ";
             entry = ProcessTextV2(text);
             entry.AssertReferences("D().f", text.IndexOf("a ="),
-                new VariableLocation(5, 9, VariableType.Reference),
-                new VariableLocation(3, 9, VariableType.Definition));
+                new VariableLocation(3, 5, VariableType.Value),
+                new VariableLocation(3, 9, VariableType.Definition),
+                new VariableLocation(5, 9, VariableType.Reference));
 
             // globals
             text = @"
@@ -2613,8 +2632,8 @@ del abc
 ";
             entry = ProcessTextV2(text);
             entry.AssertReferences("abc", text.IndexOf("abc ="),
-                new VariableLocation(4, 5, VariableType.Reference),
                 new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Reference),
                 new VariableLocation(3, 7, VariableType.Reference));
 
             // parameters
@@ -2900,7 +2919,8 @@ abc()
             state.WaitForAnalysis();
 
             state.AssertReferences(oarMod, "abc", 0,
-                new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition 
+                new VariableLocation(1, 1, VariableType.Value, "oar"),          // definition range
+                new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition name
                 new VariableLocation(2, 17, VariableType.Reference, "fob"),     // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")       // call
             );
@@ -2955,14 +2975,17 @@ from baz import abc2 as abc";
             state.ReanalyzeAll();
 
             state.AssertReferences(oarMod, "abc1", oarText.IndexOf("abc1"),
+                new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(1, 25, VariableType.Reference)
             );
             state.AssertReferences(bazMod, "abc2", bazText.IndexOf("abc2"),
+                new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(2, 25, VariableType.Reference)
             );
             state.AssertReferences(fobMod, "abc", 0,
+                new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(1, 25, VariableType.Reference),
                 new VariableLocation(2, 20, VariableType.Reference),    // import
@@ -5203,11 +5226,13 @@ class cls_d2(): pass
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("d1",
+                new VariableLocation(2, 1, VariableType.Value),
                 new VariableLocation(2, 5, VariableType.Definition),
                 new VariableLocation(6, 2, VariableType.Reference),
                 new VariableLocation(11, 2, VariableType.Reference)
             );
             entry.AssertReferences("d2",
+                new VariableLocation(3, 1, VariableType.Value),
                 new VariableLocation(3, 7, VariableType.Definition),
                 new VariableLocation(8, 2, VariableType.Reference),
                 new VariableLocation(13, 2, VariableType.Reference)
@@ -5685,12 +5710,13 @@ n1 = g(1)";
             var entry = ProcessText(text);
 
             entry.AssertReferences("d",
+                new VariableLocation(3, 1, VariableType.Value),
                 new VariableLocation(3, 5, VariableType.Definition),
                 new VariableLocation(9, 2, VariableType.Reference)
             );
 
             entry.AssertReferences("g",
-                new VariableLocation(5, 9, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Value),
                 new VariableLocation(10, 5, VariableType.Definition),
                 new VariableLocation(13, 6, VariableType.Reference)
             );
@@ -5711,6 +5737,7 @@ n1 = g(1)";
             entry = ProcessText(text);
 
             entry.AssertReferences("d",
+                new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 5, VariableType.Definition),
                 new VariableLocation(6, 2, VariableType.Reference)
             );
