@@ -392,7 +392,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
+                var start = FunctionDefinition.GetStart(FunctionDefinition.GlobalParent);
                 var end = FunctionDefinition.GetEnd(FunctionDefinition.GlobalParent);
                 return new[] {
                     new LocationInfo(

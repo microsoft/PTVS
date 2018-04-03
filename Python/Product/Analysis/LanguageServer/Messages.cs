@@ -252,7 +252,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool includeDeclaration;
 
         public bool _includeValues;
-        public bool _includeDefinitionRanges;
     }
 
     [Serializable]

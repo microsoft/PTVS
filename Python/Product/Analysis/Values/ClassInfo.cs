@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<LocationInfo> Locations {
             get {
                 if (_declVersion == DeclaringModule.AnalysisVersion) {
-                    var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
+                    var start = ClassDefinition.GetStart(ClassDefinition.GlobalParent);
                     var end = ClassDefinition.GetEnd(ClassDefinition.GlobalParent);
                     return new[] { new LocationInfo(DeclaringModule.FilePath, DeclaringModule.DocumentUri, start.Line, start.Column, end.Line, end.Column) };
                 }

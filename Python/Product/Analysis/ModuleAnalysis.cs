@@ -114,62 +114,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
-            LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
-
-            var parse = locatedDef?.Entry?.GetCurrentParse();
-            if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var tree = parse.Tree;
-                var version = (parse.Cookie as PythonTools.Intellisense.VersionCookie)?.DefaultVersion;
-                var identifierStart = locatedDef.Node.GetStart(tree);
-                var identifierEnd = locatedDef.Node.GetEnd(tree);
-
-                // For classes and functions, find the ClassDefinition or
-                // FunctionDefinition to get the full span of the definition.
-                var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
-                tree.Walk(walker);
-
-                SourceLocation definitionStart;
-                SourceLocation definitionEnd;
-                if (walker.Definition != null) {
-                    definitionStart = walker.Definition.GetStart(tree);
-                    definitionEnd = walker.Definition.GetEnd(tree);
-                } else {
-                    definitionStart = identifierStart;
-                    definitionEnd = locatedDef.Node.GetEnd(tree);
-                }
-
-                yield return new AnalysisVariable(
-                    VariableType.Definition,
-                    // Location of the identifier only
-                    new LocationInfo(
-                        locatedDef.Entry.FilePath,
-                        locatedDef.Entry.DocumentUri,
-                        identifierStart.Line,
-                        identifierStart.Column,
-                        identifierEnd.Line,
-                        identifierEnd.Column
-                    ),
-                    // Location of the full definition
-                    new LocationInfo(
-                        locatedDef.Entry.FilePath,
-                        locatedDef.Entry.DocumentUri,
-                        definitionStart.Line,
-                        definitionStart.Column,
-                        definitionEnd.Line,
-                        definitionEnd.Column
-                    ),
-                    version
-                );
-            }
-
             if (referenceable is VariableDef def) {
                 foreach (var type in def.TypesNoCopy.WhereNotNull()) {
                     var varType = VariableType.Value;
-                    if (type.DeclaringModule == null ||
-                        type.MemberType == PythonMemberType.Class ||
-                        type.MemberType == PythonMemberType.Function) {
-                        // For non-project values, classes, and functions, treat "Value"
-                        // as the definition.
+                    if (type.DeclaringModule == null) {
+                        // For non-project values, treat "Value" as the definition.
                         varType = VariableType.Definition;
                     }
 

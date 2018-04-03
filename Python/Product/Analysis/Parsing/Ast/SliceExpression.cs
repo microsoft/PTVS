@@ -72,15 +72,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 _sliceStart.AppendCodeString(res, ast, format);
             }
             if (!this.IsIncompleteNode(ast)) {
-                res.Append(this.GetPreceedingWhiteSpace(ast));
+                format.Append(res, format.SpaceBeforeSliceColon, " ", "", this.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
                 res.Append(':');
                 if (_sliceStop != null) {
-                    _sliceStop.AppendCodeString(res, ast, format);
+                    format.Append(res, format.SpaceAfterSliceColon, " ", "", _sliceStop.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
+                    _sliceStop.AppendCodeString(res, ast, format, "");
                 }
                 if (_stepProvided) {
-                    res.Append(this.GetSecondWhiteSpace(ast));
+                    format.Append(res, format.SpaceBeforeSliceColon, " ", "", this.GetSecondWhiteSpaceDefaultNull(ast) ?? "");
                     res.Append(':');
                     if (_sliceStep != null) {
+                        format.Append(res, format.SpaceAfterSliceColon, " ", "", _sliceStep.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
                         _sliceStep.AppendCodeString(res, ast, format);
                     }
                 }

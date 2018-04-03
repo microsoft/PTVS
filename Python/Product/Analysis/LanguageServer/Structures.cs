@@ -714,11 +714,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that range applies to
         /// </summary>
         public int? _version;
-        /// <summary>
-        /// The full range of the definition. For example, when 'range' points
-        /// to a function name, '_definitionRange' refers to the whole function.
-        /// </summary>
-        public Range? _definitionRange;
     }
 
     [Serializable]

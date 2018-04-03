@@ -175,14 +175,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit) {
             VariableDef value;
             if (!TryGetVariable(name, out value)) {
-                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location);
+                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location));
                 return AddVariable(name, def);
-            } else if (!(value is LocatedVariableDef)) {
-                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value);
-                return AddVariable(name, def);
+            } else if (value is LocatedVariableDef lv) {
+                lv.Location = new EncodedLocation(unit, location);
+                lv.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             } else {
-                ((LocatedVariableDef)value).Node = location;
-                ((LocatedVariableDef)value).DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
+                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location), value);
+                return AddVariable(name, def);
             }
             return value;
         }
@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, node));
+            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
             if (addRef) {
                 res.AddReference(node, unit);
             }

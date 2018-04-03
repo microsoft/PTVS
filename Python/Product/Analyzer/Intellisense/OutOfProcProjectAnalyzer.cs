@@ -1217,8 +1217,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 position = new SourceLocation(request.line, request.column),
                 context = new LS.ReferenceContext {
                     includeDeclaration = true,
-                    _includeValues = true,
-                    _includeDefinitionRanges = true
+                    _includeValues = true
                 }
             });
 
@@ -1233,7 +1232,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private AP.AnalysisReference MakeReference(LS.Reference r) {
             var range = (SourceSpan)r.range;
 
-            var resp = new AP.AnalysisReference {
+            return new AP.AnalysisReference {
                 documentUri = r.uri,
                 file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
                 startLine = range.Start.Line,
@@ -1243,14 +1242,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 kind = GetVariableType(r._kind),
                 version = r._version
             };
-            if (r._definitionRange != null) {
-                var defRange = (SourceSpan)r._definitionRange.Value;
-                resp.definitionStartLine = defRange.Start.Line;
-                resp.definitionStartColumn = defRange.Start.Column;
-                resp.definitionEndLine = defRange.End.Line;
-                resp.definitionEndColumn = defRange.End.Column;
-            }
-            return resp;
         }
 
         private static string GetVariableType(VariableType type) {
@@ -1434,10 +1425,6 @@ namespace Microsoft.PythonTools.Intellisense {
                                 startColumn = r.range.start.character + 1,
                                 endLine = r.range.end.line + 1,
                                 endColumn = r.range.end.character + 1,
-                                definitionStartLine = r.range.start.line + 1,
-                                definitionStartColumn = r.range.start.character + 1,
-                                definitionEndLine = r.range.end.line + 1,
-                                definitionEndColumn = r.range.end.character + 1,
                                 kind = GetVariableType(r._kind)
                             }).ToArray()
                         });

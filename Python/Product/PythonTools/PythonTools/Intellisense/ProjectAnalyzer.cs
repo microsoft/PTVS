@@ -2598,15 +2598,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 arg.endColumn
             );
 
-            var defLocation = new LocationInfo(
-                file,
-                arg.documentUri,
-                arg.definitionStartLine ?? arg.startLine,
-                arg.definitionStartColumn ?? arg.startColumn,
-                arg.definitionEndLine,
-                arg.definitionEndColumn
-            );
-            return new AnalysisVariable(type, location, defLocation, arg.version ?? -1);
+            return new AnalysisVariable(type, location, arg.version ?? -1);
         }
 
         internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {

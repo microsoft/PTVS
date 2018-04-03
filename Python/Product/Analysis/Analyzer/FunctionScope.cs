@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         AddParameter(unit, name, p, usePlaceholders ? null : _dictParameters);
                     }
                 } else if (!_parameters.ContainsKey(name)) {
-                    var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, p);
+                    var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, p));
                     if (i == 0 &&
                         p.Kind == ParameterKind.Normal &&
                         !Function.IsStatic &&
@@ -177,7 +177,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     param = _dictParameters;
                 } else if (!_parameters.TryGetValue(name, out param)) {
                     Debug.Fail($"Parameter {name} has no variable in this function");
-                    _parameters[name] = param = new LocatedVariableDef(Function.AnalysisUnit.ProjectEntry, (Node)astParams[i].NameExpression ?? astParams[i]);
+                    _parameters[name] = param = new LocatedVariableDef(Function.AnalysisUnit.ProjectEntry,
+                        new EncodedLocation(unit, (Node)astParams[i].NameExpression ?? astParams[i]));
                 }
                 var arg = others.Args[i].Resolve(unit);
                 param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, arg);

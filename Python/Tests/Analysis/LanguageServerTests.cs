@@ -390,7 +390,7 @@ mod1.f(a=D)", "mod2");
             // f
             var expected = new[] {
                 "Definition;(2, 5) - (2, 6)",
-                "Definition;(2, 5) - (3, 11)",
+                "Value;(2, 1) - (3, 11)",
                 "Reference;(5, 1) - (5, 2)",
                 "Reference;(10, 1) - (10, 2)",
                 "Reference;(17, 6) - (17, 7)"
@@ -405,13 +405,6 @@ mod1.f(a=D)", "mod2");
             await AssertReferences(s, mod2, new SourceLocation(17, 6), expected, unexpected);
 
             await AssertReferences(s, mod1, new SourceLocation(8, 5), unexpected, expected);
-
-            Assert.AreEqual(new SourceSpan(2, 1, 3, 11), (await s.FindReferences(new ReferencesParams {
-                textDocument = mod1,
-                position = SourceLocation.MinValue,
-                _expr = "f",
-                context = new ReferenceContext { includeDeclaration = true, _includeDefinitionRanges = true }
-            })).First(r => r._kind == ReferenceKind.Definition)._definitionRange);
 
             // a
             expected = new[] {
@@ -673,24 +666,18 @@ x = 3.14
             }
         }
 
-        public static async Task AssertReferences(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null, bool returnDefinition = false) {
+        public static async Task AssertReferences(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null) {
             var refs = (await s.FindReferences(new ReferencesParams {
                 textDocument = document,
                 position = position,
                 _expr = expr,
                 context = new ReferenceContext {
                     includeDeclaration = true,
-                    _includeDefinitionRanges = returnDefinition,
                     _includeValues = true
                 }
             }));
 
-            IEnumerable<string> set;
-            if (returnDefinition) {
-                set = refs.Select(r => $"{r._kind ?? ReferenceKind.Reference};{r._definitionRange}");
-            } else {
-                set = refs.Select(r => $"{r._kind ?? ReferenceKind.Reference};{r.range}");
-            }
+            var set = refs.Select(r => $"{r._kind ?? ReferenceKind.Reference};{r.range}");
 
             AssertUtil.CheckCollection(
                 set,

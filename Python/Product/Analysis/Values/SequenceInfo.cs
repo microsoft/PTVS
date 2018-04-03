@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public readonly string Name;
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, string name)
-            : base(unit.DeclaringModule.ProjectEntry, location) {
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location)) {
             Name = name;
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
-            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location), copy) {
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
                 unit.State.ClassInfos[BuiltinTypeId.Tuple],

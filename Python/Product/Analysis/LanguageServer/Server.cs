@@ -494,12 +494,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 filtered = filtered.Where(v => v.Type != VariableType.Value);
             }
 
-            bool includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
-
             var res = filtered.Select(v => new Reference {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
-                _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
                 _kind = ToReferenceKind(v.Type),
                 _version = version
             })
