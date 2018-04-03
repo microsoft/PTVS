@@ -130,10 +130,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly BuiltinTypeId _typeId;
         private List<KeyValuePair<string, string>> _richDescription;
 
-        public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Object) : base(self) {
+        public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Unknown, PythonMemberType memberType = PythonMemberType.Unknown) : base(self) {
             _name = name;
             _doc = documentation;
             _typeId = typeId;
+            MemberType = memberType;
             _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
         }
 
@@ -141,6 +142,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _name = type.Name;
             _doc = type.Documentation;
             _typeId = type.TypeId;
+            MemberType = type.MemberType;
             _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
         }
 
@@ -155,6 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => _name;
         public override string Documentation => _doc;
         internal override BuiltinTypeId TypeId => _typeId;
+        public override PythonMemberType MemberType { get; }
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() => _richDescription;
 
         protected override bool Equals(Protocol other) => Name == other.Name;
@@ -688,5 +691,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return this;
         }
+    }
+
+    class InstanceProtocol : CallableProtocol {
+        public InstanceProtocol(ProtocolInfo self, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet instance) :
+            base(self, null, arguments, instance, PythonMemberType.Class) { }
+
+        public override IAnalysisSet GetInstanceType() => ReturnType;
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) => ReturnType;
+
+        protected override bool Equals(Protocol other) => ReturnType.SetEquals(((InstanceProtocol)other).ReturnType);
+        public override int GetHashCode() => GetType().GetHashCode();
+
+        protected override bool UnionEquals(Protocol p) => Equals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
+        protected override Protocol UnionMergeTypes(Protocol p) => this;
     }
 }

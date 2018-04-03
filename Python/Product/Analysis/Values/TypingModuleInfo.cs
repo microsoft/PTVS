@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -60,10 +61,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (string.IsNullOrEmpty(name)) {
                     return baseType;
                 }
+                var instPi = new ProtocolInfo(unit.Entry, unit.State);
+                var np = new NameProtocol(instPi, name, memberType: PythonMemberType.Instance);
+                var cls = new NamespaceProtocol(instPi, "__class__");
+                instPi.AddProtocol(np);
+                instPi.AddProtocol(cls);
+
                 var pi = new ProtocolInfo(unit.Entry, unit.State);
                 pi.AddProtocol(new NameProtocol(pi, name));
-                pi.AddProtocol(new CallableProtocol(pi, name, Array.Empty<IAnalysisSet>(), pi, PythonMemberType.Class));
+                pi.AddProtocol(new InstanceProtocol(pi, Array.Empty<IAnalysisSet>(), instPi));
                 pi.AddReference(n, unit);
+
+                cls.SetMember(n, unit, null, pi);
+
                 return pi;
             });
         }

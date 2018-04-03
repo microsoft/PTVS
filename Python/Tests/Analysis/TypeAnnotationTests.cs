@@ -417,7 +417,7 @@ def scale(scalar: float, vector: Vector) -> Vector:
 new_vector = scale(2.0, [1.0, -4.2, 5.4])
 ",
                 new[] {
-                    "scale:scale(scalar:float=,vector:list[float]=)->[list[float]]"
+                    "scale:scale(scalar:float=,vector:list, list[float]=)->[list,list[float]]"
                 }
             );
         }
@@ -479,9 +479,12 @@ UserId = NewType('UserId', int)
 class AdminUserId(UserId): pass
 
 ProUserId = NewType('ProUserId', UserId)
+
+def f(u : UserId, a : AdminUserId, p : ProUserId):
+    return p
 ",
                 new[] {
-                    ""
+                    "f:f(u:UserId=,a:AdminUserId=,p:ProUserId=)->[ProUserId]"
                 }
             );
         }
