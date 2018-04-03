@@ -1,4 +1,4 @@
-﻿// Python Tools for Visual Studio
+// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,19 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
 
-namespace Microsoft.DsTools.Core.Services {
-    public interface IServiceContainer {
-        /// <summary>
-        /// Provides access to global application services
-        /// </summary>
-        T GetService<T>(Type type = null) where T : class;
-
-        /// <summary>
-        /// Enumerates all available services
-        /// </summary>
-        IEnumerable<Type> AllServices { get; }
+namespace Microsoft.PythonTools.Debugger {
+    static class PtvsdVersion {
+        // These version string is automatically updated at build.
+        // See PTVSDVersion in Debugger.csproj
+        public const string Version = "1.0.0";
     }
 }

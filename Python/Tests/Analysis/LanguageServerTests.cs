@@ -186,7 +186,7 @@ namespace AnalysisTests {
             };
             s.OnParseComplete += handler;
 
-            await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+            s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
                     uri = document,
                     version = finalVersion
@@ -273,7 +273,7 @@ mc";
             );
 
             // Send the document update.
-            await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+            s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier { uri = mod, version = 1 },
                 contentChanges = new[] { new TextDocumentContentChangedEvent {
                     text = ".",
@@ -572,7 +572,7 @@ x = 3.14
                 Trace.TraceInformation("Testing {0}", tc);
 
                 var mod = await AddModule(s, "");
-                await s.DidChangeTextDocument(new DidChangeTextDocumentParams {
+                s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                     contentChanges = new[] {
                             new TextDocumentContentChangedEvent {
                                 text = "def f():\r\n        pass\r\n\tpass"

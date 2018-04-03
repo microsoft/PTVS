@@ -306,9 +306,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (File.Exists(_factory.GetCacheFilePath("python.{0}.pyi".FormatInvariant(name)))) {
                 return new AstCachedPythonModule(name, "python.{0}".FormatInvariant(name));
-            } else if (File.Exists(_factory.GetCacheFilePath("{0}.pyi".FormatInvariant(name)))) {
+            } 
+            if (File.Exists(_factory.GetCacheFilePath("python._{0}.pyi".FormatInvariant(name)))) {
+                return new AstCachedPythonModule(name, "python._{0}".FormatInvariant(name));
+            } 
+            if (File.Exists(_factory.GetCacheFilePath("{0}.pyi".FormatInvariant(name)))) {
                 return new AstCachedPythonModule(name, name);
-            }
+            } 
 
             return null;
         }

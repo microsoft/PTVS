@@ -199,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct MarkupContent {
+    public class MarkupContent {
         public MarkupKind kind;
         public string value;
 
@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
     [Serializable]
-    public struct WorkspaceClientCapabilities {
+    public class WorkspaceClientCapabilities {
         public bool applyEdit;
 
         public struct WorkspaceEditCapabilities { public bool documentChanges; }
@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct TextDocumentClientCapabilities {
+    public class TextDocumentClientCapabilities {
         [Serializable]
         public struct SynchronizationCapabilities {
             public bool dynamicRegistration;
@@ -425,7 +425,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// client capabilities following the specification for extra settings.
     /// </summary>
     [Serializable]
-    public struct PythonClientCapabilities {
+    public class PythonClientCapabilities {
         /// <summary>
         /// Client expects analysis progress updates, including notifications
         /// when analysis is complete for a particular document version.
@@ -456,11 +456,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct ClientCapabilities {
-        public WorkspaceClientCapabilities? workspace;
-        public TextDocumentClientCapabilities? textDocument;
+    public class ClientCapabilities {
+        public WorkspaceClientCapabilities workspace;
+        public TextDocumentClientCapabilities textDocument;
         public object experimental;
-        public PythonClientCapabilities? python;
+        public PythonClientCapabilities python;
     }
 
 
@@ -672,28 +672,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct SignatureHelp {
+    public class SignatureHelp {
         public SignatureInformation[] signatures;
         public int activeSignature;
         public int activeParameter;
     }
 
     [Serializable]
-    public struct SignatureInformation {
+    public class SignatureInformation {
         public string label;
-        public MarkupContent? documentation;
+        public MarkupContent documentation;
         public ParameterInformation[] parameters;
 
         public string[] _returnTypes;
     }
 
     [Serializable]
-    public struct ParameterInformation {
+    public class ParameterInformation {
         public string label;
-        public MarkupContent? documentation;
+        public MarkupContent documentation;
 
+        [NonSerialized]
         public string _type;
+        [NonSerialized]
         public string _defaultValue;
+        [NonSerialized]
         public bool? _isOptional;
     }
 
@@ -790,4 +793,3 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string[] moreTriggerCharacters;
     }
 }
-

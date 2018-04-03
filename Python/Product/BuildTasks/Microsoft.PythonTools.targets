@@ -170,6 +170,33 @@ permissions and limitations under the License.
     </CreatePythonCommandItem>
   </Target>
 
+  <!-- MyPy -->
+
+  <PropertyGroup>
+    <PythonCommands>$(PythonCommands);PythonRunMypyCommand</PythonCommands>
+    <MypyErrorRegex>
+      <![CDATA[^(?<filename>.+?):(?<line>\d+):((?<column>\d+):)? error: (?<message>.+?)$]]>
+    </MypyErrorRegex>
+    <MypyWarningRegex>
+      <![CDATA[^(?<filename>.+?):(?<line>\d+):((?<column>\d+):)? warning: (?<message>.+?)$]]>
+    </MypyWarningRegex>
+  </PropertyGroup>
+
+  <Target Name="PythonRunMypyCommand"
+          Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;RunMypyLabel"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="mypy"
+                             TargetType="module"
+                             Arguments="--show-column-numbers @(Compile, ' ')"
+                             WorkingDirectory="$(MSBuildProjectDirectory)"
+                             ExecuteIn="output"
+                             RequiredPackages="mypy"
+                             ErrorRegex="$(MypyErrorRegex)"
+                             WarningRegex="$(MypyWarningRegex)">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
   <!-- Build system compatibility -->
 
   <PropertyGroup>

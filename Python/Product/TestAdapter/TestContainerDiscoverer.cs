@@ -234,7 +234,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 int originalCount;
                 lock (_containersLock) {
                     pendingRequests = _pendingRequests;
-                    _pendingRequests.Add(path);
+                    if (!_pendingRequests.Contains(path)) {
+                        _pendingRequests.Add(path);
+                    }
                     originalCount = _pendingRequests.Count;
 
                     if (originalCount > 50) {

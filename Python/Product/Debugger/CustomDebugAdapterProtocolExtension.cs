@@ -19,8 +19,6 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
-using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
@@ -86,7 +84,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void RegisterCustomMessages(ICustomMessageRegistry registry, IProtocolHostOperations hostOperations) {
             _hostOperations = hostOperations;
-
         }
     }
 }

@@ -99,34 +99,34 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         }
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data == null) {
-                try {
+            try {
+                if (e.Data == null) {
                     _seenNullError.Release();
-                } catch (ObjectDisposedException) {
+                } else {
+                    OnErrorLine?.Invoke(e.Data.TrimEnd());
                 }
+            } catch (ObjectDisposedException) {
                 ((Process)sender).ErrorDataReceived -= Process_ErrorDataReceived;
-                return;
             }
-
-            OnErrorLine?.Invoke(e.Data.TrimEnd());
         }
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data == null) {
-                try {
+            try {
+                if (e.Data == null) {
                     _seenNullOutput.Release();
-                } catch (ObjectDisposedException) {
+                } else {
+                    OnOutputLine?.Invoke(e.Data.TrimEnd());
                 }
+            } catch (ObjectDisposedException) {
                 ((Process)sender).OutputDataReceived -= Process_OutputDataReceived;
-                return;
             }
-
-            OnOutputLine?.Invoke(e.Data.TrimEnd());
         }
 
         public void Kill() {
             try {
-                _process?.Kill();
+                if (_process != null && !_process.HasExited) {
+                    _process.Kill();
+                }
             } catch (SystemException) {
             }
         }
@@ -162,6 +162,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 await _seenNullError.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
+            for (var i = 0; i < 5 && !_process.HasExited; i++) {
+                await Task.Delay(100);
+            }
+
+            Debug.Assert(_process.HasExited, "Process still has not exited.");
             return _process.ExitCode;
         }
     }

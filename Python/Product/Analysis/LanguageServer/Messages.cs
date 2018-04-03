@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string rootPath;
         public Uri rootUri;
         public PythonInitializationOptions initializationOptions;
-        public ClientCapabilities? capabilities;
+        public ClientCapabilities capabilities;
         public TraceLevel trace;
     }
 
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct ShowMessageRequestParams {
+    public class ShowMessageRequestParams {
         public MessageType type;
         public string message;
         public MessageActionItem[] actions;
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct ApplyWorkspaceEditParams {
+    public class ApplyWorkspaceEditParams {
         /// <summary>
         /// An optional label of the workspace edit.This label is
         /// presented in the user interface for example on an undo
@@ -131,13 +131,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct ApplyWorkspaceEditResponse {
+    public class ApplyWorkspaceEditResponse {
         public bool applied;
     }
 
     [ComVisible(false)]
     public sealed class ApplyWorkspaceEditEventArgs : CallbackEventArgs<ApplyWorkspaceEditParams, ApplyWorkspaceEditResponse> {
-        internal ApplyWorkspaceEditEventArgs(TaskCompletionSource<ApplyWorkspaceEditResponse?> task) : base(task) { }
+        internal ApplyWorkspaceEditEventArgs(TaskCompletionSource<ApplyWorkspaceEditResponse> task) : base(task) { }
     }
 
     [Serializable]

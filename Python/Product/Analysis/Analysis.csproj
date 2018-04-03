@@ -75,6 +75,7 @@
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\UriEqualityComparer.cs" />
+    <Compile Include="Infrastructure\UriExtensions.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
     <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
     <Compile Include="LanguageServer\ParseQueue.cs" />
+    <Compile Include="LanguageServer\RestTextConverter.cs" />
     <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
     <Compile Include="LanguageServer\Structures.cs" />

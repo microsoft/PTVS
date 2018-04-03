@@ -42,7 +42,6 @@ namespace Microsoft.PythonTools.TestAdapter {
     class PythonRunSettings : IRunSettingsService {
         private readonly IComponentModel _compModel;
         private readonly IServiceProvider _serviceProvider;
-        private readonly Dispatcher _dispatcher;
         internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private const string CodeCoverageImportName = "Microsoft.VisualStudio.TestWindow.CodeCoverage.ICodeCoverageSettingsService";
@@ -54,7 +53,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             _compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
             var opState = _compModel.GetService<IOperationState>();
             opState.StateChanged += StateChange;
-            _dispatcher = Dispatcher.CurrentDispatcher;
             _serviceProvider = serviceProvider;
         }
 
@@ -125,7 +123,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                             LaunchConfiguration config = null;
                             string nativeCode = "", djangoSettings = "";
-                            _dispatcher.Invoke(() => {
+
+                            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                 try {
                                     config = project.Key.GetLaunchConfigurationOrThrow();
                                 } catch {
