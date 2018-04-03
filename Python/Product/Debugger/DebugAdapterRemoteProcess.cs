@@ -82,7 +82,10 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void OnInitialized(object sender, EventArgs e) {
-            CustomDebugAdapterProtocolExtension.SendRequest(new PtvsdVersionRequest(), PtvsdVersionHelper.VerifyPtvsdVersion);
+            CustomDebugAdapterProtocolExtension.SendRequest(
+                new PtvsdVersionRequest(),
+                PtvsdVersionHelper.VerifyPtvsdVersion,
+                PtvsdVersionHelper.VerifyPtvsdVersionError);
         }
 
         public IntPtr Handle => IntPtr.Zero;
