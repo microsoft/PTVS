@@ -18,8 +18,8 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
-using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -51,17 +51,22 @@ namespace Microsoft.PythonTools.Debugger {
             if (PackageVersion.TryParse(response.Debugger.Version, out PackageVersion runningVersion)) {
                 var bundledPtvsdVersion = PackageVersion.Parse(PtvsdVersion.Version);
                 if (runningVersion.CompareTo(bundledPtvsdVersion) < 0) {
-                    ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
-                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                        MessageBox.Show(
-                            new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
-                            Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version),
-                            Strings.ProductTitle,
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning);
-                    });
+                    ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version));
                 }
             }
+        }
+
+        public static void VerifyPtvsdVersionError(PtvsdVersionArguments args, ProtocolException ex) {
+            ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", PtvsdVersion.Version));
+        }
+
+        private static void ShowPtvsdVersionMessage(string message) {
+            MessageBox.Show(
+                new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
+                message,
+                Strings.ProductTitle,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
         }
     }
 
@@ -71,8 +76,12 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     internal class PythonVersionInfo {
+        /// <summary>
+        /// Version can be a string such as '4.0.0' or a collection
+        /// of objects [major, minor, micro, releaseLevel, serial]
+        /// </summary>
         [JsonProperty("version")]
-        public string Version { get; set; }
+        public object Version { get; set; }
         [JsonProperty("implementation")]
         public PythonImplementationInfo Implementation { get; set; }
     }
@@ -83,8 +92,12 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     internal class PythonImplementationInfo {
+        /// <summary>
+        /// Version can be a string such as '4.0.0' or a collection
+        /// of objects [major, minor, micro, releaseLevel, serial]
+        /// </summary>
         [JsonProperty("version")]
-        public string Version { get; set; }
+        public object Version { get; set; }
         [JsonProperty("name")]
         public string Name { get; set; }
         [JsonProperty("description")]
