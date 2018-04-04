@@ -235,7 +235,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public Interpreter interpreter;
         public string[] searchPaths;
+        /// <summary>
+        /// Controls tooltip display appearance. Different between VS and VS Code.
+        /// </summary>
         public InformationDisplayOptions displayOptions;
+        /// <summary>
+        /// If true, analyzer will be created asynchronously. Used in VS Code.
+        /// </summary>
+        public bool asyncStartup;
     }
 
 

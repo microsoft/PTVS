@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
         private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
+        private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
 
         internal Task _loadingFromDirectory;
 
@@ -86,16 +87,49 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
 
-        public async override Task<InitializeResult> Initialize(InitializeParams @params) {
+        public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.interpreter.properties.ContainsKey("TestEnvironment");
             if (_testEnvironment) {
                 // Test environment needs predictable initialization.
                 // Tests can only proceed when analysis is fully done.
                 _analyzer = CreateAnalyzer(@params.initializationOptions.interpreter).Result;
             } else {
-                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+                if (@params.initializationOptions.asyncStartup) {
+                    CreateAnalyzer(@params.initializationOptions.interpreter).ContinueWith(t => {
+                        if (t.IsFaulted) {
+                            _analyzerCreationTcs.TrySetException(t.Exception);
+                        } else {
+                            try {
+                                _analyzer = t.Result;
+                                OnAnalyzerCreated(@params);
+                                _analyzerCreationTcs.TrySetResult(true);
+                            } catch (Exception ex) {
+                                _analyzerCreationTcs.TrySetException(ex);
+                            }
+                        }
+                    }).DoNotWait();
+                } else {
+                    _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+                    _analyzerCreationTcs.TrySetResult(true);
+                }
             }
+            return new InitializeResult {
+                capabilities = new ServerCapabilities {
+                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
+                    completionProvider = new CompletionOptions {
+                        triggerCharacters = new[] { "." },
+                        resolveProvider = true
+                    },
+                    hoverProvider = true,
+                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
+                    // https://github.com/Microsoft/PTVS/issues/3803
+                    // definitionProvider = true,
+                    referencesProvider = true
+                }
+            };
+        }
 
+        private void OnAnalyzerCreated(InitializeParams @params) {
             _displayOptions = @params.initializationOptions.displayOptions ?? new InformationDisplayOptions {
                 trimDocumentationLines = true,
                 maxDocumentationLineLength = 200,
@@ -126,21 +160,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
                 _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
-
-            return new InitializeResult {
-                capabilities = new ServerCapabilities {
-                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
-                    completionProvider = new CompletionOptions {
-                        triggerCharacters = new[] { "." },
-                        resolveProvider = true
-                    },
-                    hoverProvider = true,
-                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
-                    // https://github.com/Microsoft/PTVS/issues/3803
-                    // definitionProvider = true,
-                    referencesProvider = true
-                }
-            };
         }
 
         public override Task Shutdown() {
@@ -151,6 +170,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
+            await _analyzerCreationTcs.Task;
 
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -175,6 +195,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
+            _analyzerCreationTcs.Task.Wait();
+
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
@@ -243,6 +265,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
+            await _analyzerCreationTcs.Task;
+
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
                 switch (c.type) {
@@ -269,7 +293,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+        public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+            await _analyzerCreationTcs.Task;
             var doc = GetEntry(@params.textDocument.uri) as IDocument;
 
             if (doc != null) {
@@ -279,10 +304,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
-            return Task.CompletedTask;
         }
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+            await _analyzerCreationTcs.Task;
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
@@ -296,7 +321,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override Task<CompletionList> Completion(CompletionParams @params) {
+        public override async Task<CompletionList> Completion(CompletionParams @params) {
+            await _analyzerCreationTcs.Task;
             IfTestWaitForAnalysisComplete();
             // Make sure document is enqueued for processing
             _documentChangeProcessingComplete.Wait(200, CancellationToken);
@@ -309,7 +335,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new CompletionList { });
+                return new CompletionList();
             }
 
             var opts = GetMemberOptions.None;
@@ -386,7 +412,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (members == null) {
                 TraceMessage($"No members found in document {uri}");
-                return Task.FromResult(new CompletionList { });
+                return new CompletionList();
             }
 
             var filtered = members.Select(m => ToCompletionItem(m, opts));
@@ -398,7 +424,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList { items = filtered.ToArray() };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
-            return Task.FromResult(res);
+            return res;
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
@@ -406,7 +432,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(item);
         }
 
-        public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            await _analyzerCreationTcs.Task;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -417,7 +444,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new SignatureHelp { });
+                return new SignatureHelp();
             }
 
             IEnumerable<IOverloadResult> overloads;
@@ -439,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                     LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
-                    return Task.FromResult(new SignatureHelp { });
+                    return new SignatureHelp();
                 }
             }
 
@@ -463,10 +490,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 activeParameter = activeParameter
             };
             _displayTextBuilder.BuildMarkdownSignature(sh);
-            return Task.FromResult(sh);
+            return sh;
         }
 
-        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
+        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
+            await _analyzerCreationTcs.Task;
+
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -475,7 +504,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(Array.Empty<Reference>());
+                return Array.Empty<Reference>();
             }
 
             int? version = null;
@@ -526,7 +555,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
                     LogMessage(MessageType.Info, $"No references found in {uri} at {@params.position}");
-                    return Task.FromResult(Array.Empty<Reference>());
+                    return Array.Empty<Reference>();
                 }
             }
 
@@ -551,10 +580,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .GroupBy(r => r, ReferenceComparer.Instance)
                 .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
                 .ToArray();
-            return Task.FromResult(res);
+            return res;
         }
 
-        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
+        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
+            await _analyzerCreationTcs.Task;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -565,7 +595,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(default(Hover));
+                return default(Hover);
             }
 
             tree = GetParseTree(entry, uri, _clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, out var version) ?? tree;
@@ -577,7 +607,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
                 var contents = _displayTextBuilder.MakeModuleHoverText(modRef);
                 if (contents != null) {
-                    return Task.FromResult(new Hover { contents = contents });
+                    return new Hover { contents = contents };
                 }
             }
 
@@ -599,7 +629,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             if (expr == null) {
                 LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
-                return Task.FromResult(default(Hover));
+                return default(Hover);
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
@@ -626,10 +656,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _version = version,
                 _typeNames = names
             };
-            return Task.FromResult(res);
+            return res;
         }
 
-        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+            await _analyzerCreationTcs.Task;
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -640,7 +671,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
+            return members.Select(m => ToSymbolInformation(m)).ToArray();
         }
 
         #endregion
