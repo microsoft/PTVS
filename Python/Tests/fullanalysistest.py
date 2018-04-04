@@ -5,9 +5,6 @@ import re
 import subprocess
 import sys
 
-if sys.version_info[0] != 3:
-    import threading
-
 SCRIPT_NAME = 'script{sys.version_info[0]}{sys.version_info[1]}.rsp'
 
 TEMPLATE = r'''python {sys.version_info[0]}.{sys.version_info[1]} {sys.executable}
@@ -23,6 +20,17 @@ VERSION = '.'.join(str(i) for i in sys.version_info[:2])
 if len(sys.argv) < 3:
     print('Usage:', sys.argv[0], '<path to AnalysisMemoryTester.exe> <output path>', file=sys.stderr)
     sys.exit(1)
+
+if sys.version_info[0] == 2:
+    import threading
+    def wait(p, timeout):
+        t = threading.Timer(timeout, p.kill)
+        t.start()
+        p.wait()
+        t.cancel()
+else:
+    def wait(p, timeout):
+        p.wait(timeout)
 
 TOOL = os.path.abspath(sys.argv[1])
 OUTDIR = os.path.abspath(sys.argv[2] if len(sys.argv) > 2 else '.')
@@ -43,13 +51,9 @@ for module in os.listdir(os.path.join(sys.prefix, 'Lib', 'site-packages')):
         print(TEMPLATE.format(sys=sys, module=module), file=f)
     print("Testing", module)
     p = subprocess.Popen([TOOL, script])
+
     try:
-        if sys.version_info[0] == 3:
-            p.wait(3600)
-        else:
-            t = threading.Timer(3600, p.kill)
-            p.wait()
-            t.cancel()
+        wait(p, 3600)
     except KeyboardInterrupt:
         p.kill()
         sys.exit(0)

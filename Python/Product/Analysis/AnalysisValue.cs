@@ -344,30 +344,30 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
-            #region Union Equality
+        #region Union Equality
 
-            /// <summary>
-            /// Returns an analysis value representative of both this and another
-            /// analysis value. This should only be called when
-            /// <see cref="UnionEquals"/> returns true for the two values.
-            /// </summary>
-            /// <param name="av">The value to merge with.</param>
-            /// <param name="strength">A value matching that passed to
-            /// <see cref="UnionEquals"/>.</param>
-            /// <returns>A merged analysis value.</returns>
-            /// <remarks>
-            /// <para>Calling this function when <see cref="UnionEquals"/> returns
-            /// false for the same parameters is undefined.</para>
-            /// 
-            /// <para>Where there is no analysis value representative of those
-            /// provided, it is preferable to return this rather than
-            /// <paramref name="av"/>.</para>
-            /// 
-            /// <para>
-            /// <paramref name="strength"/> is used as a key in this function and must
-            /// match the value used in <see cref="UnionEquals"/>.
-            /// </para>
-            /// </remarks>
+        /// <summary>
+        /// Returns an analysis value representative of both this and another
+        /// analysis value. This should only be called when
+        /// <see cref="UnionEquals"/> returns true for the two values.
+        /// </summary>
+        /// <param name="av">The value to merge with.</param>
+        /// <param name="strength">A value matching that passed to
+        /// <see cref="UnionEquals"/>.</param>
+        /// <returns>A merged analysis value.</returns>
+        /// <remarks>
+        /// <para>Calling this function when <see cref="UnionEquals"/> returns
+        /// false for the same parameters is undefined.</para>
+        /// 
+        /// <para>Where there is no analysis value representative of those
+        /// provided, it is preferable to return this rather than
+        /// <paramref name="av"/>.</para>
+        /// 
+        /// <para>
+        /// <paramref name="strength"/> is used as a key in this function and must
+        /// match the value used in <see cref="UnionEquals"/>.
+        /// </para>
+        /// </remarks>
         internal virtual AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
             return this;
         }
