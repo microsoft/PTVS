@@ -758,7 +758,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Run command: conda install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[명령 실행: conda 설치 {0}]]></Val>
+            <Val><![CDATA[명령 실행: conda install {0}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[conda install {0} from Conda]]></Val>
@@ -3689,7 +3689,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Run command: pip install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[명령 실행: pip 설치 {0}]]></Val>
+            <Val><![CDATA[명령 실행: pip install {0}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[pip install {0} from PyPI]]></Val>
@@ -5626,7 +5626,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18081.1]]></Val>
+        <Val><![CDATA[15.7.18083.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5662,7 +5662,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18081.1]]></Val>
+        <Val><![CDATA[15.7.18083.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
