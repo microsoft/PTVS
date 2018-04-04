@@ -39,7 +39,6 @@ namespace Microsoft.PythonTools.Analysis {
             limits.NormalArgumentTypes = 10;
             limits.ListArgumentTypes = 5;
             limits.DictArgumentTypes = 5;
-            limits.ClosureTypes = 3;
             limits.ReturnTypes = 10;
             limits.YieldTypes = 10;
             limits.InstanceMembers = 5;
@@ -58,7 +57,6 @@ namespace Microsoft.PythonTools.Analysis {
         private const string NormalArgumentTypesId = "NormalArgumentTypes";
         private const string ListArgumentTypesId = "ListArgumentTypes";
         private const string DictArgumentTypesId = "DictArgumentTypes";
-        private const string ClosureTypesId = "ClosureTypes";
         private const string ReturnTypesId = "ReturnTypes";
         private const string YieldTypesId = "YieldTypes";
         private const string InstanceMembersId = "InstanceMembers";
@@ -92,7 +90,6 @@ namespace Microsoft.PythonTools.Analysis {
                 limits.NormalArgumentTypes = (key.GetValue(NormalArgumentTypesId) as int?) ?? limits.NormalArgumentTypes;
                 limits.ListArgumentTypes = (key.GetValue(ListArgumentTypesId) as int?) ?? limits.ListArgumentTypes;
                 limits.DictArgumentTypes = (key.GetValue(DictArgumentTypesId) as int?) ?? limits.DictArgumentTypes;
-                limits.ClosureTypes = (key.GetValue(ClosureTypesId) as int?) ?? limits.ClosureTypes;
                 limits.ReturnTypes = (key.GetValue(ReturnTypesId) as int?) ?? limits.ReturnTypes;
                 limits.YieldTypes = (key.GetValue(YieldTypesId) as int?) ?? limits.YieldTypes;
                 limits.InstanceMembers = (key.GetValue(InstanceMembersId) as int?) ?? limits.InstanceMembers;
@@ -117,7 +114,6 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(NormalArgumentTypesId, NormalArgumentTypes, RegistryValueKind.DWord);
             key.SetValue(ListArgumentTypesId, ListArgumentTypes, RegistryValueKind.DWord);
             key.SetValue(DictArgumentTypesId, DictArgumentTypes, RegistryValueKind.DWord);
-            key.SetValue(ClosureTypesId, ClosureTypes, RegistryValueKind.DWord);
             key.SetValue(ReturnTypesId, ReturnTypes, RegistryValueKind.DWord);
             key.SetValue(YieldTypesId, YieldTypes, RegistryValueKind.DWord);
             key.SetValue(InstanceMembersId, InstanceMembers, RegistryValueKind.DWord);
@@ -142,7 +138,6 @@ namespace Microsoft.PythonTools.Analysis {
             NormalArgumentTypes = 10;
             ListArgumentTypes = 6;
             DictArgumentTypes = 6;
-            ClosureTypes = 10;
             ReturnTypes = 10;
             YieldTypes = 5;
             InstanceMembers = 10;
@@ -162,7 +157,6 @@ namespace Microsoft.PythonTools.Analysis {
             if (limits.TryGetValue(NormalArgumentTypesId, out i)) NormalArgumentTypes = i;
             if (limits.TryGetValue(ListArgumentTypesId, out i)) ListArgumentTypes = i;
             if (limits.TryGetValue(DictArgumentTypesId, out i)) DictArgumentTypes = i;
-            if (limits.TryGetValue(ClosureTypesId, out i)) ClosureTypes = i;
             if (limits.TryGetValue(ReturnTypesId, out i)) ReturnTypes = i;
             if (limits.TryGetValue(YieldTypesId, out i)) YieldTypes = i;
             if (limits.TryGetValue(InstanceMembersId, out i)) InstanceMembers = i;
@@ -182,7 +176,6 @@ namespace Microsoft.PythonTools.Analysis {
                 { NormalArgumentTypesId, NormalArgumentTypes },
                 { ListArgumentTypesId, ListArgumentTypes },
                 { DictArgumentTypesId, DictArgumentTypes },
-                { ClosureTypesId, ClosureTypes },
                 { ReturnTypesId, ReturnTypes },
                 { YieldTypesId, YieldTypes },
                 { InstanceMembersId, InstanceMembers },
@@ -243,12 +236,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// similar types.
         /// </summary>
         public int DictArgumentTypes { get; set; }
-
-        /// <summary>
-        /// The number of types in a closure at which to start combining
-        /// similar types.
-        /// </summary>
-        public int ClosureTypes { get; set; }
 
         /// <summary>
         /// The number of types in a return value at which to start combining
