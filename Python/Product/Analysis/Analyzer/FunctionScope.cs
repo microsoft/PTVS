@@ -216,28 +216,32 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return added;
         }
 
-        public void PropagateParameters(IVersioned projectEntry, FunctionScope fromScope) {
+        public void PropagateParameters(IVersioned projectEntry, FunctionScope fromScope, PythonAnalyzer state) {
             if (fromScope.Function != Function) {
                 Debug.Fail("Can only propagate parameters from the same function");
                 return;
             }
 
+            VariableDef vd;
             foreach (var kv in fromScope._parameters) {
                 kv.Value.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any()) {
-                    GetParameter(kv.Key)?.AddTypes(projectEntry, values);
+                if (values.Any() && (vd = GetParameter(kv.Key)) != null) {
+                    vd.MakeUnionStrongerIfMoreThan(state.Limits.NormalArgumentTypes, values);
+                    vd.AddTypes(projectEntry, values);
                 }
             }
             if (fromScope._seqParameters != null) {
                 fromScope._seqParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any()) {
-                    GetParameter(fromScope._seqParameters.Name)?.AddTypes(projectEntry, values);
+                if (values.Any() && (vd = GetParameter(fromScope._seqParameters.Name)) != null) {
+                    vd.MakeUnionStrongerIfMoreThan(state.Limits.ListArgumentTypes, values);
+                    vd.AddTypes(projectEntry, values);
                 }
             }
             if (fromScope._dictParameters != null) {
                 fromScope._dictParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any()) {
-                    GetParameter(fromScope._dictParameters.Name)?.AddTypes(projectEntry, values);
+                if (values.Any() && (vd = GetParameter(fromScope._dictParameters.Name)) != null) {
+                    vd.MakeUnionStrongerIfMoreThan(state.Limits.DictArgumentTypes, values);
+                    vd.AddTypes(projectEntry, values);
                 }
             }
         }

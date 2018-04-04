@@ -355,6 +355,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// property.The order describes the preferred format of the client.
                 /// </summary>
                 public MarkupKind[] documentationFormat;
+
+                /// <summary>
+                /// When true, the label in the returned signature information will
+                /// only contain the function name. Otherwise, the label will contain
+                /// the full signature.
+                /// </summary>
+                public bool? _shortLabel;
             }
             public SignatureInformationCapabilities? signatureInformation;
         }

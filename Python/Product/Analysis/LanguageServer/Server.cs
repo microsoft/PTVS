@@ -1308,10 +1308,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
             var si = new SignatureInformation();
 
-            si.label = "{0}({1})".FormatInvariant(
-                overload.Name,
-                string.Join(", ", overload.Parameters.Select(FormatParameter))
-            );
+            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
+                si.label = overload.Name;
+            } else {
+                si.label = "{0}({1})".FormatInvariant(
+                    overload.Name,
+                    string.Join(", ", overload.Parameters.Select(FormatParameter))
+                );
+            }
 
             si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
             si.parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {

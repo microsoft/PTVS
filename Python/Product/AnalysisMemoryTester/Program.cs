@@ -351,6 +351,11 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 dir = Path.Combine(Environment.CurrentDirectory, dir);
             }
 
+            if (!Directory.Exists(dir)) {
+                Console.WriteLine("Invalid directory: {0}", dir);
+                yield break;
+            }
+
             Console.WriteLine("Adding modules from {0}:{1}", dir, filter);
             foreach (var file in Directory.EnumerateFiles(dir, filter, opt)) {
                 ModulePath mp;

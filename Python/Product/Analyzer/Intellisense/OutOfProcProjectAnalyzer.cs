@@ -247,6 +247,23 @@ namespace Microsoft.PythonTools.Intellisense {
                             manualFileLoad = !request.analyzeAllFiles,
                             traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
+                        },
+                        textDocument = new LS.TextDocumentClientCapabilities {
+                            completion = new LS.TextDocumentClientCapabilities.CompletionCapabilities {
+                                completionItem = new LS.TextDocumentClientCapabilities.CompletionCapabilities.CompletionItemCapabilities {
+                                    documentationFormat = new[] { LS.MarkupKind.PlainText },
+                                    snippetSupport = false
+                                }
+                            },
+                            signatureHelp = new LS.TextDocumentClientCapabilities.SignatureHelpCapabilities {
+                                signatureInformation = new LS.TextDocumentClientCapabilities.SignatureHelpCapabilities.SignatureInformationCapabilities {
+                                    documentationFormat = new[] { LS.MarkupKind.PlainText },
+                                    _shortLabel = true
+                                }
+                            },
+                            hover = new LS.TextDocumentClientCapabilities.HoverCapabilities {
+                                contentFormat = new[] { LS.MarkupKind.PlainText }
+                            }
                         }
                     }
                 });
