@@ -25,6 +25,7 @@ if sys.version_info[0] == 2:
     import threading
     def wait(p, timeout):
         t = threading.Timer(timeout, p.kill)
+        t.daemon = True
         t.start()
         p.wait()
         t.cancel()
