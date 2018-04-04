@@ -43,19 +43,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 (DictArgs.Any() ? ", **" + DictArgs.ToString() : "");
         }
 
-        public ArgumentSet WithClosure(IReadOnlyDictionary<PythonVariable, IAnalysisSet> closure) {
-            //IAnalysisSet[] closure = null;
-            //if ((node.FreeVariables?.Count ?? 0) > 0) {
-            //    closure = new IAnalysisSet[node.FreeVariables.Count];
-            //    var eval = new ExpressionEvaluator(unit, unit.Scope.OuterScope);
-            //    for (int i = 0; i < node.FreeVariables.Count; ++i) {
-            //        closure[i] = ReduceArgs(eval.Evaluate(new NameExpression(node.FreeVariables[i].Name)), limits.ClosureTypes);
-            //    }
-            //}
-
-            return new ArgumentSet(Args, SequenceArgs, DictArgs, closure);
-        }
-
         public static ArgumentSet FromArgs(FunctionDefinition node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgs) {
             // TODO: Warn when a keyword argument is provided and it maps to
             // something which is also a positional argument:

@@ -62,8 +62,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (OuterScope != null) {
                 var outerVar = OuterScope.GetVariable(location, unit, name, false);
                 if (outerVar != null && outerVar != vars) {
-                //    outerVar.AddAssignment(location, unit);
-                //    outerVar.AddTypes(unit, values);
                     OuterScope.AssignVariable(name, location, unit, values);
                 }
             }
