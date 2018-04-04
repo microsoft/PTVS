@@ -63,7 +63,8 @@ r_a = f(1, 3.14)
             // Ensure that specific calls return the specific type
             entry.AssertIsInstance("r_a", 0, BuiltinTypeId.Int);
             entry.AssertIsInstance("r_b", 0, BuiltinTypeId.Float);
-            entry.AssertIsInstance("f(1)", 0, BuiltinTypeId.Int);
+            // Unevaluated calls return all types
+            entry.AssertIsInstance("f(1)", 0, BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
         [TestMethod, Priority(0)]
@@ -104,7 +105,8 @@ r_a = g(1, 3.14)
             // Ensure that specific calls return the specific type
             entry.AssertIsInstance("r_a", 0, BuiltinTypeId.Int);
             entry.AssertIsInstance("r_b", 0, BuiltinTypeId.Float);
-            entry.AssertIsInstance("g(1)", 0, BuiltinTypeId.Int);
+            // Unevaluated calls return all types
+            entry.AssertIsInstance("g(1)", 0, BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
         [TestMethod, Priority(0)]

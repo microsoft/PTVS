@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
                 var arg = others.Args[i].Resolve(unit);
                 param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, arg);
-                added |= param.AddTypes(entry, arg, false, unit.ProjectEntry);
+                added |= param.AddTypes(entry, arg, enqueue, unit.ProjectEntry);
             }
             if (_seqParameters != null) {
                 var arg = others.SequenceArgs.Resolve(unit);
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             limits.NormalArgumentTypes, 
                             defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule)
                         );
-                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), false, unit.ProjectEntry);
+                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), enqueue, unit.ProjectEntry);
                     }
                 }
             }

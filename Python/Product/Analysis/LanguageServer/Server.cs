@@ -794,7 +794,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return result.ToString();
+            return result.ToString().Trim();
         }
 
         internal static string LimitLines(

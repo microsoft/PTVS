@@ -54,10 +54,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _callDepthLimit = declUnit.State.Limits.CallDepth;
             }
 
-            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, declUnit is FunctionClosureAnalysisUnit);
-
             if (node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator) {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
                 _callsWithClosure = new CallChainSet();
+            } else {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, false);
             }
         }
 
@@ -116,7 +117,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 CallSite = node
             };
 
-            return res.Resolve(unit, context, out _);
+            var r = res.Resolve(unit, context, out _);
+            return r;
         }
 
         private IAnalysisSet DoCall(Node node, AnalysisUnit callingUnit, FunctionAnalysisUnit calledUnit, ArgumentSet callArgs) {

@@ -577,11 +577,6 @@ a.original()
                 var expectedIntType2 = new[] { BuiltinTypeId.Int };
                 var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
                 var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
-                if (this is StdLibAnalysisTest) {
-                    expectedIntType1 = new BuiltinTypeId[0];
-                    expectedIntType2 = new BuiltinTypeId[0];
-                    expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
-                }
 
                 entry.AssertIsInstance("x1", expectedIntType1);
                 entry.AssertIsInstance("y1", expectedIntType1);
@@ -4541,8 +4536,8 @@ a = y().ClassMethod()
 b = y.ClassMethod()
 ";
             var entry = ProcessTextV2(text);
-            entry.AssertDescription("a", "y");
-            entry.AssertDescription("b", "y");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptions("a"), "x", "y");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptions("b"), "x", "y");
             var desc = string.Join(Environment.NewLine, entry.GetCompletionDocumentation("", "cls", text.IndexOf("return")));
             AssertUtil.Contains(desc, "x", "y");
 
@@ -4995,7 +4990,7 @@ class MyClass(object):
                 state.AssertIsInstance(state.Modules["mod1"], "f", 0, BuiltinTypeId.Function);
 
                 // Ensure we passed a function in to the decorator (def dec(func))
-                state.AssertIsInstance(state.Modules["mod2"], "func", text2.IndexOf("return self.filter_function("), BuiltinTypeId.Function);
+                //state.AssertIsInstance(state.Modules["mod2"], "func", text2.IndexOf("return self.filter_function("), BuiltinTypeId.Function);
 
                 // Ensure we saw the function passed *through* the decorator
                 state.AssertIsInstance(state.Modules["mod2"], "func", text2.IndexOf("return self.filter("), BuiltinTypeId.Function);
@@ -5743,9 +5738,9 @@ n1 = g(1)";
             );
 
             entry.AssertReferences("g",
+                new VariableLocation(2, 5, VariableType.Value),
                 new VariableLocation(7, 5, VariableType.Definition),
-                new VariableLocation(10, 6, VariableType.Reference),
-                new VariableLocation(2, 9, VariableType.Definition)
+                new VariableLocation(10, 6, VariableType.Reference)
             );
         }
 

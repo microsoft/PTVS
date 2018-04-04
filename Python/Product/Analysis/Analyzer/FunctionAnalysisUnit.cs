@@ -126,6 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             Expression nextExpr;
                             if (!_decoratorCalls.TryGetValue(d, out nextExpr)) {
                                 nextExpr = _decoratorCalls[d] = new CallExpression(d, new[] { new Arg(expr) });
+                                nextExpr.SetLoc(d.IndexSpan);
                             }
                             expr = nextExpr;
                             var decorated = AnalysisSet.Empty;

@@ -163,8 +163,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var getAttribute = _classInfo.GetMemberNoReferences(node, unit.CopyForEval(), "__getattribute__");
             if (getAttribute.Count > 0) {
                 foreach (var getAttrFunc in getAttribute) {
-                    var func = getAttrFunc as BuiltinMethodInfo;
-                    if (func != null && func.Function.DeclaringType.TypeId == BuiltinTypeId.Object) {
+                    if (getAttrFunc is BuiltinMethodInfo f && f.Function.DeclaringType.TypeId == BuiltinTypeId.Object ||
+                        getAttrFunc is BuiltinFunctionInfo) {
                         continue;
                     }
                     // TODO: We should really do a get descriptor / call here
