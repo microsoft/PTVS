@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -567,12 +568,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 filtered = filtered.Where(v => v.Type != VariableType.Value);
             }
 
-            var includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
-
             var res = filtered.Select(v => new Reference {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
-                _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
                 _kind = ToReferenceKind(v.Type),
                 _version = version
             })
@@ -782,9 +780,105 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
+                var path = Path.Combine(document.Host, document.AbsolutePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar));
+                if (ModulePath.FromBasePathAndFile_NoThrow("", path, p => true, out var mp, out _, out _)) {
+                    yield return mp;
+                }
             }
+        }
+
+        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, bool limitLines = true) {
+            string firstLongDescription = null;
+            var multiline = false;
+            var result = new StringBuilder();
+            var descriptions = new HashSet<string>();
+
+            foreach (var v in values) {
+                if (string.IsNullOrEmpty(firstLongDescription)) {
+                    firstLongDescription = limitLines ? LimitLines(v.Description) : v.Description;
+                }
+
+                var description = LimitLines(v.ShortDescription ?? "");
+                if (string.IsNullOrEmpty(description)) {
+                    continue;
+                }
+
+                if (descriptions.Add(description)) {
+                    if (descriptions.Count > 1) {
+                        if (result.Length == 0) {
+                            // Nop
+                        } else if (result[result.Length - 1] != '\n') {
+                            result.Append(", ");
+                        } else {
+                            multiline = true;
+                        }
+                    }
+                    result.Append(description);
+                }
+            }
+
+            if (descriptions.Count == 1 && !string.IsNullOrEmpty(firstLongDescription)) {
+                result.Clear();
+                result.Append(firstLongDescription);
+            }
+
+            if (!string.IsNullOrEmpty(originalExpression)) {
+                if (originalExpression.Length > 4096) {
+                    originalExpression = originalExpression.Substring(0, 4093) + "...";
+                }
+                if (multiline) {
+                    result.Insert(0, originalExpression + ": " + Environment.NewLine);
+                } else if (result.Length > 0) {
+                    result.Insert(0, originalExpression + ": ");
+                } else {
+                    result.Append(originalExpression);
+                    result.Append(": ");
+                    result.Append("<unknown type>");
+                }
+            }
+
+            return result.ToString().Trim();
+        }
+
+        internal static string LimitLines(
+            string str,
+            int maxLines = 30,
+            int charsPerLine = 200,
+            bool ellipsisAtEnd = true,
+            bool stopAtFirstBlankLine = false
+        ) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            var lineCount = 0;
+            var prettyPrinted = new StringBuilder();
+            var wasEmpty = true;
+
+            using (var reader = new StringReader(str)) {
+                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
+                    if (string.IsNullOrWhiteSpace(line)) {
+                        if (wasEmpty) {
+                            continue;
+                        }
+                        wasEmpty = true;
+                        if (stopAtFirstBlankLine) {
+                            lineCount = maxLines;
+                            break;
+                        }
+                        lineCount += 1;
+                        prettyPrinted.AppendLine();
+                    } else {
+                        wasEmpty = false;
+                        lineCount += (line.Length / charsPerLine) + 1;
+                        prettyPrinted.AppendLine(line);
+                    }
+                }
+            }
+            if (ellipsisAtEnd && lineCount >= maxLines) {
+                prettyPrinted.AppendLine("...");
+            }
+            return prettyPrinted.ToString().Trim();
         }
 
         private static string GetFullTypeName(AnalysisValue value) {
@@ -984,7 +1078,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
-            using (_pendingAnalysisEnqueue.Incremented()) {
+            var pending = _pendingAnalysisEnqueue.Incremented();
+            try {
                 Task<IAnalysisCookie> cookieTask;
                 using (GetDocumentParseCounter(doc, out var count)) {
                     if (count > 3) {
@@ -1002,18 +1097,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // It is called from DidChangeTextDocument which must fully finish
                 // since otherwise Complete() may come before the change is enqueued
                 // for processing and the completion list will be driven off the stale data.
+                var p = pending;
                 cookieTask.ContinueWith(t => {
                     if (t.IsFaulted) {
                         // Happens when file got deleted before processing
+                        p.Dispose();
                         LogMessage(MessageType.Error, t.Exception.Message);
                         return;
                     }
-                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority);
+                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
                 }).DoNotWait();
+                pending = null;
+            } finally {
+                pending?.Dispose();
             }
         }
 
-        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority) {
+        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
             try {
                 if (vc != null) {
                     foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
@@ -1027,6 +1127,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
                     _queue.Enqueue(analyzable, priority);
                 }
+
+                disposeWhenEnqueued?.Dispose();
+                disposeWhenEnqueued = null;
 
                 if (vc != null) {
                     var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, BufferVersion>());
@@ -1050,6 +1153,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 TraceMessage($"{ex}");
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
+            } finally {
+                disposeWhenEnqueued?.Dispose();
             }
         }
 
@@ -1218,23 +1323,70 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
+            if (requested == null) {
+                return supported.Last();
+            }
+            foreach (var k in requested) {
+                if (supported.Contains(k)) {
+                    return k;
+                }
+            }
+            return MarkupKind.PlainText;
+        }
+
+        private string FormatParameter(ParameterResult p) {
+            var res = new StringBuilder(p.Name);
+            if (!string.IsNullOrEmpty(p.Type)) {
+                res.Append(" : ");
+                res.Append(p.Type);
+            }
+            if (!string.IsNullOrEmpty(p.DefaultValue)) {
+                res.Append(" = ");
+                res.Append(p.DefaultValue);
+            }
+            return res.ToString();
+        }
+
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
-            return new SignatureInformation {
-                label = overload.Name,
-                documentation = string.IsNullOrEmpty(overload.Documentation) ? null : new MarkupContent {
-                    kind = MarkupKind.PlainText,
-                    value = overload.Documentation
-                },
-                parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
-                    label = p.Name,
-                    documentation = string.IsNullOrEmpty(p.Documentation) ? null : new MarkupContent {
-                        kind = MarkupKind.PlainText,
-                        value = p.Documentation
-                    },
-                    _type = p.Type,
-                    _defaultValue = p.DefaultValue
-                }).ToArray()
-            };
+            var si = new SignatureInformation();
+
+            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
+                si.label = overload.Name;
+            } else {
+                si.label = "{0}({1})".FormatInvariant(
+                    overload.Name,
+                    string.Join(", ", overload.Parameters.Select(FormatParameter))
+                );
+            }
+
+            si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
+            si.parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
+                label = p.Name,
+                documentation = string.IsNullOrEmpty(p.Documentation) ? null : p.Documentation,
+                _type = p.Type,
+                _defaultValue = p.DefaultValue
+            }).ToArray();
+
+            switch (SelectBestMarkup(_clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                case MarkupKind.Markdown:
+                    var converter = new RestTextConverter();
+                    if (!string.IsNullOrEmpty(si.documentation.value)) {
+                        si.documentation.kind = MarkupKind.Markdown;
+                        si.documentation.value = converter.ToMarkdown(si.documentation.value);
+                    }
+                    foreach (var p in si.parameters) {
+                        if (!string.IsNullOrEmpty(p.documentation.value)) {
+                            p.documentation.kind = MarkupKind.Markdown;
+                            p.documentation.value = converter.ToMarkdown(p.documentation.value);
+                        }
+                    }
+                    break;
+            }
+
+            si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
+
+            return si;
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(

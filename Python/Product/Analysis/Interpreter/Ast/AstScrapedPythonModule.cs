@@ -82,6 +82,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IEnumerable<string> ParseErrors { get; private set; }
 
+        internal static bool KeepAst { get; set; }
+        internal PythonAst Ast { get; private set; }
+
 #if DEBUG
         public IEnumerable<LocationInfo> Locations { get; private set; } = new LocationInfo[0];
 #endif
@@ -204,6 +207,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     code.Seek(0, SeekOrigin.Begin);
                     SaveCachedCode(interp, code);
                 }
+            }
+
+            if (KeepAst) {
+                Ast = ast;
             }
 
 #if DEBUG

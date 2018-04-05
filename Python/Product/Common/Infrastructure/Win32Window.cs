@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Analysis {
-    public interface IAnalysisVariable {
-        /// <summary>
-        /// Returns the location of where the variable is defined.
-        /// </summary>
-        LocationInfo Location { get; }
+using System;
+using System.Windows.Forms;
 
-        VariableType Type { get; }
+namespace Microsoft.PythonTools.Infrastructure {
+    internal class Win32Window : IWin32Window {
+        public Win32Window(IntPtr handle) { Handle = handle; }
+        public IntPtr Handle { get; private set; }
     }
 }

@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool TryImport(string name, out ModuleReference res) {
             bool firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
+                _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)), name);
                 firstImport = true;
             }
             if (res != null && res.Module == null) {
@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public ModuleReference GetOrAdd(string name) {
-            return _modules.GetOrAdd(name, _ => new ModuleReference());
+            return _modules.GetOrAdd(name, _ => new ModuleReference(name: name));
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (module.TryGetMember(child, out value)) {
                         var mod = value as IModule;
                         if (mod != null) {
-                            _modules[fullname] = new ModuleReference(mod);
+                            _modules[fullname] = new ModuleReference(mod, fullname);
                             _analyzer?.DoDelayedSpecialization(fullname);
                         }
                     }

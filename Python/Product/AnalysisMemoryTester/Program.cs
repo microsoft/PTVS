@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                             }
                             Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
                             lastChar = Console.CursorLeft;
-                        }, 500);
+                        }, 50);
                     }
                     analyzer.AnalyzeQueuedEntries(CancellationToken.None);
                     Console.WriteLine("done!");
@@ -351,9 +351,21 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 dir = Path.Combine(Environment.CurrentDirectory, dir);
             }
 
+            if (!Directory.Exists(dir)) {
+                Console.WriteLine("Invalid directory: {0}", dir);
+                yield break;
+            }
+
             Console.WriteLine("Adding modules from {0}:{1}", dir, filter);
             foreach (var file in Directory.EnumerateFiles(dir, filter, opt)) {
-                yield return ModulePath.FromFullPath(file, PathUtils.GetParent(dir));
+                ModulePath mp;
+                try {
+                    mp = ModulePath.FromFullPath(file, PathUtils.GetParent(dir));
+                } catch (ArgumentException) {
+                    Console.WriteLine("Failed to get module name for {0}", file);
+                    continue;
+                }
+                yield return mp;
             }
         }
 

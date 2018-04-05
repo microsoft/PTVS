@@ -234,9 +234,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 int originalCount;
                 lock (_containersLock) {
                     pendingRequests = _pendingRequests;
-                    if (!_pendingRequests.Contains(path)) {
-                        _pendingRequests.Add(path);
-                    }
+                    _pendingRequests.Add(path);
                     originalCount = _pendingRequests.Count;
 
                     if (originalCount > 50) {
@@ -267,7 +265,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var testCaseData = await analyzer.SendExtensionCommandAsync(
                     TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
-                    string.Join(";", paths)
+                    string.Join(";", paths.Distinct(Analysis.Infrastructure.PathEqualityComparer.Instance))
                 );
 
                 if (testCaseData == null) {

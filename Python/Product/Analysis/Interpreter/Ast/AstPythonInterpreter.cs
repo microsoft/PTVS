@@ -223,9 +223,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (_builtinModule == null) {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
                     _builtinModuleNames = null;
-                    _builtinModule.Imported(this);
-                    var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names__") as AstPythonStringLiteral;
-                    _builtinModuleNames = bmn?.Value?.Split(',') ?? Array.Empty<string>();
                 }
                 return _builtinModule;
             }
@@ -318,6 +315,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private IPythonModule ImportFromBuiltins(string name) {
+            if (_builtinModuleNames == null && _builtinModule != null) {
+                var bmn = (_builtinModule as AstBuiltinsPythonModule).GetAnyMember("__builtin_module_names__") as AstPythonStringLiteral;
+                _builtinModuleNames = bmn?.Value?.Split(',');
+            }
             if (_builtinModuleNames == null || !_builtinModuleNames.Contains(name)) {
                 return null;
             }

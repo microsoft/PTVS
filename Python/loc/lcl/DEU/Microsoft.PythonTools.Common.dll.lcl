@@ -758,7 +758,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Run command: conda install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Befehl ausführen: Conda-Installation "{0}"]]></Val>
+            <Val><![CDATA[Befehl ausführen: conda install {0}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[conda install {0} from Conda]]></Val>
@@ -3271,6 +3271,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";InstallingPackageFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install '{0}' -----]D;]A;]D;]A;]]></Val>
@@ -3689,7 +3695,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Run command: pip install {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Befehl ausführen: PIP-Installation "{0}"]]></Val>
+            <Val><![CDATA[Befehl ausführen: pip install {0}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[pip install {0} from PyPI]]></Val>
@@ -4870,6 +4876,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";RunMypyLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Run Mypy]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RunPyLintLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run PyLint]]></Val>
@@ -5626,7 +5638,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18081.1]]></Val>
+        <Val><![CDATA[15.7.18093.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5662,7 +5674,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18081.1]]></Val>
+        <Val><![CDATA[15.7.18093.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
@@ -42,35 +43,72 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return;
             }
 
-            foreach (var variable in _variables.Where(v => !string.IsNullOrEmpty(v.Location.FilePath))) {
-                resultCollection.Add(CreateResult(variable));
+            var grouped = _variables.Where(v => !string.IsNullOrEmpty(v.Location.FilePath))
+                .OrderByDescending(v => v.Location.EndLine - v.Location.StartLine)
+                .ThenBy(v => v.Location.StartLine)
+                .GroupBy(v => v.Location.FilePath);
+
+            var valueAndDefs = new List<IDocumentPeekResult>();
+            var defOnly = new List<IDocumentPeekResult>();
+
+            foreach (var g in grouped) {
+                bool anyValues = false;
+                foreach (var value in g.Where(v => v.Type == VariableType.Value)) {
+                    var def = g.FirstOrDefault(v => v.Type == VariableType.Value && LocationContains(value.Location, v.Location))?.Location ??
+                        new LocationInfo(value.Location.FilePath, value.Location.DocumentUri, value.Location.StartLine, value.Location.StartColumn);
+                    valueAndDefs.Add(CreateResult(g.Key, def, value.Location));
+                    anyValues = true;
+                }
+                if (!anyValues) {
+                    foreach (var def in g.Where(v => v.Type == VariableType.Definition)) {
+                        defOnly.Add(CreateResult(g.Key, def.Location));
+                    }
+                }
+            }
+
+            foreach (var v in valueAndDefs.Concat(defOnly)) {
+                resultCollection.Add(v);
             }
         }
 
-        private IDocumentPeekResult CreateResult(IAnalysisVariable variable) {
-            var fileName = PathUtils.GetFileOrDirectoryName(variable.Location.FilePath);
+        private static bool LocationContains(LocationInfo outer, LocationInfo inner) {
+            if (inner.StartLine < outer.StartLine || inner.EndLine > outer.EndLine) {
+                return false;
+            }
+            if (inner.StartLine == outer.StartLine && inner.StartColumn < outer.StartColumn) {
+                return false;
+            }
+            if (inner.EndLine == outer.EndLine && inner.EndColumn > outer.EndColumn) {
+                return false;
+            }
+            return true;
+        }
+
+        private IDocumentPeekResult CreateResult(string filePath, LocationInfo definition, LocationInfo value = null) {
+            var fileName = PathUtils.GetFileOrDirectoryName(filePath);
 
             var displayInfo = new PeekResultDisplayInfo2(
-                label: string.Format("{0} - ({1}, {2})", fileName, variable.Location.StartLine, variable.Location.StartColumn),
-                labelTooltip: variable.Location.FilePath,
+                label: string.Format("{0} - ({1}, {2})", fileName, definition.StartLine, definition.StartColumn),
+                labelTooltip: filePath,
                 title: fileName,
-                titleTooltip: variable.Location.FilePath,
+                titleTooltip: filePath,
                 startIndexOfTokenInLabel: 0,
                 lengthOfTokenInLabel: 0
             );
 
+            value = value ?? definition;
             return _peekResultFactory.Create(
                 displayInfo,
                 default(ImageMoniker),
-                variable.Location.FilePath,
-                variable.DefinitionLocation.StartLine - 1,
-                variable.DefinitionLocation.StartColumn - 1,
-                (variable.DefinitionLocation.EndLine ?? variable.DefinitionLocation.StartLine) - 1,
-                (variable.DefinitionLocation.EndColumn ?? variable.DefinitionLocation.StartColumn) - 1,
-                variable.Location.StartLine - 1,
-                variable.Location.StartColumn - 1,
-                (variable.Location.EndLine ?? variable.Location.StartLine) - 1,
-                (variable.Location.EndColumn ?? variable.Location.StartColumn) - 1,
+                filePath,
+                value.StartLine - 1,
+                value.StartColumn - 1,
+                (value.EndLine ?? value.StartLine) - 1,
+                (value.EndColumn ?? value.StartColumn) - 1,
+                definition.StartLine - 1,
+                definition.StartColumn - 1,
+                (definition.EndLine ?? definition.StartLine) - 1,
+                (definition.EndColumn ?? definition.StartColumn) - 1,
                 isReadOnly: false
             );
         }

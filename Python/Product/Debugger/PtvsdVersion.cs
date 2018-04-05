@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Analysis {
-    public interface IAnalysisVariable {
-        /// <summary>
-        /// Returns the location of where the variable is defined.
-        /// </summary>
-        LocationInfo Location { get; }
 
-        VariableType Type { get; }
+namespace Microsoft.PythonTools.Debugger {
+    static class PtvsdVersion {
+        // These version string is automatically updated at build.
+        // See PTVSDVersion in Debugger.csproj
+        public const string Version = "1.0.0";
     }
 }

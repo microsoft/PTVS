@@ -72,7 +72,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string Name { get; }
         public string Completion { get; }
-        public PythonMemberType MemberType => _type.Value;
 
         /// <summary>
         /// Gets the location(s) for the member(s) if they are available.
@@ -81,69 +80,69 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public IEnumerable<LocationInfo> Locations => Values.SelectMany(ns => ns.Locations);
 
-        public string Documentation => GetDocumentation();
-
         internal IEnumerable<AnalysisValue> Values => _vars.Value;
 
-        private string GetDocumentation() {
-            var docs = new Dictionary<string, HashSet<string>>();
+        public string Documentation {
+            get {
+                var docs = new Dictionary<string, HashSet<string>>();
 
-            foreach (var ns in SeparateMultipleMembers(Values)) {
-                var docString = ns.Documentation?.TrimDocumentation() ?? string.Empty;
-                var typeString = GetDescription(ns);
+                foreach (var ns in SeparateMultipleMembers(Values)) {
+                    var docString = ns.Documentation?.TrimDocumentation() ?? string.Empty;
+                    var typeString = GetDescription(ns);
 
-                // If first line of doc is already in the type string, then filter it out.
-                // This is because some functions have signature as a first doc line and 
-                // some do not have one. We are already showing signature as part of the type.
-                var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
-                if(!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
-                    docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
-                }
+                    // If first line of doc is already in the type string, then filter it out.
+                    // This is because some functions have signature as a first doc line and 
+                    // some do not have one. We are already showing signature as part of the type.
+                    var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
+                    if (!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
+                        docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
+                    }
 
-                if (!docs.TryGetValue(docString, out var docTypes)) {
-                    docs[docString] = docTypes = new HashSet<string>();
-                }
-                if (!string.IsNullOrEmpty(typeString)) {
-                    docTypes.Add(typeString);
-                }
-            }
-
-            var doc = new StringBuilder();
-            var typeToDoc = new Dictionary<string, Tuple<string, string>>();
-            foreach (var docType in docs) {
-                if (!docType.Value.Any()) {
-                    continue;
-                }
-
-                var typeDisplay = "unknown type";
-                var types = docType.Value.OrderBy(s => s).ToList();
-                if (types.Count == 1) {
-                    typeDisplay = types[0];
-                } else {
-                    var orStr = types.Count == 2 ? " or " : ", or ";
-                    typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
-                }
-                typeToDoc[string.Join(",", types)] = new Tuple<string, string>(typeDisplay, docType.Key);
-            }
-
-            foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
-                doc.Append(typeDoc.Value.Item1);
-                if (!string.IsNullOrEmpty(typeDoc.Value.Item2)) {
-                    var cleaned = Utils.CleanDocumentation(typeDoc.Value.Item2);
-                    if (!string.IsNullOrEmpty(cleaned)) {
-                        if (cleaned.IndexOf('\n') >= 0) {
-                            doc.AppendLine(":");
-                        } else {
-                            doc.Append(": ");
-                        }
-                        doc.Append(cleaned);
+                    if (!docs.TryGetValue(docString, out var docTypes)) {
+                        docs[docString] = docTypes = new HashSet<string>();
+                    }
+                    if (!string.IsNullOrEmpty(typeString)) {
+                        docTypes.Add(typeString);
                     }
                 }
-                doc.AppendLine();
-                doc.AppendLine();
-            }
 
-            return doc.ToString().Trim();
+                var doc = new StringBuilder();
+                var typeToDoc = new Dictionary<string, Tuple<string, string>>();
+                foreach (var docType in docs) {
+                    if (!docType.Value.Any()) {
+                        continue;
+                    }
+
+                    var typeDisplay = "unknown type";
+                    var types = docType.Value.OrderBy(s => s).ToList();
+                    if (types.Count == 1) {
+                        typeDisplay = types[0];
+                    } else {
+                        var orStr = types.Count == 2 ? " or " : ", or ";
+                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
+                    }
+                    typeToDoc[string.Join(",", types)] = new Tuple<string, string>(typeDisplay, docType.Key);
+                }
+
+                foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
+                    doc.Append(typeDoc.Value.Item1);
+                    if (!string.IsNullOrEmpty(typeDoc.Value.Item2)) {
+                        var cleaned = Utils.CleanDocumentation(typeDoc.Value.Item2);
+                        if (!string.IsNullOrEmpty(cleaned)) {
+                            if (cleaned.IndexOf('\n') >= 0) {
+                                doc.AppendLine(":");
+                            } else {
+                                doc.Append(": ");
+                            }
+                            doc.Append(cleaned);
+                        }
+                    }
+                    doc.AppendLine();
+                    doc.AppendLine();
+                }
+
+                return doc.ToString().Trim();
+            }
         }
 
         private static string GetDescription(AnalysisValue ns) {
@@ -171,6 +170,74 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
+
+        //public string Documentation {
+        //    get {
+        //        var docs = new Dictionary<string, HashSet<string>>();
+        //        var allTypes = new HashSet<string>();
+
+        //        foreach (var ns in SeparateMultipleMembers(Values)) {
+        //            var docString = ns.Documentation?.TrimDocumentation();
+        //            var typeString = GetDescription(ns);
+        //            if (string.IsNullOrEmpty(docString)) {
+        //                docString = "";
+        //            }
+        //            if (!docs.TryGetValue(docString, out var docTypes)) {
+        //                docs[docString] = docTypes = new HashSet<string>();
+        //            }
+        //            if (!string.IsNullOrEmpty(typeString)) {
+        //                docTypes.Add(typeString);
+        //                allTypes.Add(typeString);
+        //            }
+        //        }
+
+        //        var doc = new StringBuilder();
+
+        //        if (allTypes.Count == 0) {
+        //            return "unknown type";
+        //        } else if (allTypes.Count == 1) {
+        //            doc.AppendLine(allTypes.First());
+        //            doc.AppendLine();
+        //        } else {
+        //            var types = allTypes.OrderBy(s => s).ToList();
+        //            var orStr = types.Count == 2 ? " or " : ", or ";
+        //            doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
+        //            doc.AppendLine();
+        //        }
+
+        //        var typeToDoc = new Dictionary<string, string>();
+        //        foreach (var docType in docs) {
+        //            if (string.IsNullOrEmpty(docType.Key)) {
+        //                continue;
+        //            }
+
+        //            string typeDisplay = "unknown type";
+        //            var types = docType.Value.OrderBy(s => s).ToList();
+        //            if (types.Count == 0) {
+        //                typeDisplay = "";
+        //            } else if (types.Count == 1) {
+        //                if (allTypes.Count > 1) {
+        //                    typeDisplay = types.First();
+        //                } else {
+        //                    typeDisplay = "";
+        //                }
+        //            } else {
+        //                var orStr = types.Count == 2 ? " or " : ", or ";
+        //                typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
+        //            }
+        //            typeToDoc[string.Join(",", types)] = typeDisplay + ": " + docType.Key;
+        //        }
+
+        //        foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
+        //            doc.AppendLine(typeDoc.Value);
+        //            doc.AppendLine();
+        //        }
+
+        //        return Utils.CleanDocumentation(doc.ToString());
+        //    }
+        //}
+
+        public PythonMemberType MemberType => _type.Value;
 
         private PythonMemberType GetMemberType() {
             var includesNone = false;

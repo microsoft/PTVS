@@ -875,9 +875,6 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
             public int startLine, startColumn, endLine, endColumn;
-            // the span of the whole definition, when applicable
-            public int? definitionStartLine, definitionStartColumn;
-            public int? definitionEndLine, definitionEndColumn;
             public int? version;
         }
 

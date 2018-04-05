@@ -94,6 +94,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="ns">The namespaces to contain in the set.</param>
         public static IAnalysisSet Create(IEnumerable<AnalysisValue> ns) {
             // TODO: Replace Trim() call with more efficient enumeration.
+            if (ns is IReadOnlyList<AnalysisValue> lst) {
+                if (lst.Count == 0) {
+                    return AnalysisSet.Empty;
+                } else if (lst.Count == 1) {
+                    return lst[0];
+                } else if (lst.Count == 2) {
+                    if (ObjectComparer.Instance.Equals(lst[0], lst[1])) {
+                        return lst[0];
+                    }
+                    return new AnalysisSetDetails.AnalysisSetTwoObject(lst[0], lst[1]);
+                }
+            }
             return new AnalysisSetDetails.AnalysisHashSet(ns, ObjectComparer.Instance).Trim();
         }
 
@@ -315,8 +327,8 @@ namespace Microsoft.PythonTools.Analysis {
                     foreach (var y in newItems) {
                         if (object.ReferenceEquals(x, y)) continue;
 
-                        Validation.Assert(!comparer.Equals(x, y));
-                        Validation.Assert(!comparer.Equals(y, x));
+                        Validation.Assert(!comparer.Equals(x, y), $"Failed {comparer}.Equals({x}, {y})");
+                        Validation.Assert(!comparer.Equals(y, x), $"Failed {comparer}.Equals({y}, {x})");
                     }
                 }
             }
@@ -362,7 +374,7 @@ namespace Microsoft.PythonTools.Analysis {
                         foreach (var other in keyValue.Value) {
                             bool merged;
 #if FULL_VALIDATION
-                            Validation.Assert(comparer.Equals(item, other));
+                            Validation.Assert(comparer.Equals(item, other), $"Merging non-equal items {item} and {other}");
 #endif
                             item = comparer.MergeTypes(item, other, out merged);
                             if (merged) {
@@ -379,6 +391,26 @@ namespace Microsoft.PythonTools.Analysis {
             return items;
         }
 
+#if FULL_VALIDATION || DEBUG
+        public static int GetTrueCount(this IAnalysisSet set) {
+            if (set is AnalysisSetDetails.AnalysisSetOneObject as1o) {
+                return as1o.Value == null ? 0 : 1;
+            } else if (set is AnalysisSetDetails.AnalysisSetOneUnion as1u) {
+                return as1u.Value == null ? 0 : 1;
+            } else if (set is AnalysisSetDetails.AnalysisSetTwoObject as2o) {
+                return (as2o.Value1 == null ? 0 : 1) + (as2o.Value2 == null ? 0 : 1);
+            } else if (set is AnalysisSetDetails.AnalysisSetTwoUnion as2u) {
+                return (as2u.Value1 == null ? 0 : 1) + (as2u.Value2 == null ? 0 : 1);
+            } else if (set is AnalysisSetDetails.AnalysisSetEmptyObject || set is AnalysisSetDetails.AnalysisSetEmptyUnion) {
+                return 0;
+            } else if (set is AnalysisSetDetails.AnalysisHashSet hashSet) {
+                return hashSet.GetTrueCount();
+            } else {
+                return set?.Count() ?? 0;
+            }
+        }
+#endif
+
         /// <summary>
         /// Removes excess capacity from <paramref name="set"/>.
         /// </summary>
@@ -387,43 +419,31 @@ namespace Microsoft.PythonTools.Analysis {
                 return set;
             }
 
-            if (!(set.Comparer is UnionComparer)) {
-                switch (set.Count) {
-                    case 0:
-                        return Empty;
-                    case 1:
-                        return set.First();
-                    case 2:
-                        return new AnalysisSetDetails.AnalysisSetTwoObject(set);
-                    default:
-                        return set;
-                }
-            }
-
-            var uc = (UnionComparer)set.Comparer;
-            switch (set.Count) {
-                case 0:
-                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
-                case 1:
-                    return new AnalysisSetDetails.AnalysisSetOneUnion(set.First(), uc);
-                case 2: {
-                        var tup = AnalysisSetDetails.AnalysisSetTwoUnion.FromEnumerable(set, uc);
-                        if (tup == null) {
+            var uc = set.Comparer as UnionComparer;
+            AnalysisValue first = null, second = null;
+            using (var e = set.GetEnumerator()) {
+                if (e.MoveNext()) {
+                    first = e.Current;
+                    if (e.MoveNext()) {
+                        second = e.Current;
+                        if (e.MoveNext()) {
+                            // More than two items, so return unchanged
                             return set;
-                        } else if (tup.Item1 == null && tup.Item2 == null) {
-                            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
-                        } else if (tup.Item2 == null) {
-                            return new AnalysisSetDetails.AnalysisSetOneUnion(tup.Item1, uc);
-                        } else if (set.Comparer.Equals(tup.Item1, tup.Item2)) {
-                            Debug.Fail($"Item {tup.Item1} ({uc.GetHashCode(tup.Item1)}) and {tup.Item2} ({uc.GetHashCode(tup.Item2)}) " +
-                                "should have been combined already by comparer {set.Comparer}");
-                            return new AnalysisSetDetails.AnalysisSetOneUnion(uc.MergeTypes(tup.Item1, tup.Item2, out _), uc);
+                        } else if (uc != null) {
+                            return new AnalysisSetDetails.AnalysisSetTwoUnion(first, second, uc);
                         } else {
-                            return new AnalysisSetDetails.AnalysisSetTwoUnion(tup.Item1, tup.Item2, uc);
+                            return new AnalysisSetDetails.AnalysisSetTwoObject(first, second);
                         }
+                    } else if (uc != null) {
+                        return new AnalysisSetDetails.AnalysisSetOneUnion(first, uc);
+                    } else {
+                        return first;
                     }
-                default:
-                    return set;
+                } else if (uc != null) {
+                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
+                } else {
+                    return AnalysisSetDetails.AnalysisSetEmptyObject.Instance;
+                }
             }
         }
 
@@ -523,6 +543,14 @@ namespace Microsoft.PythonTools.Analysis {
             return true;
         }
 
+        /// <summary>
+        /// Determines whether there is any overlap between two sets.
+        /// </summary>
+        public static bool ContainsAny(this IAnalysisSet set, IAnalysisSet values) {
+            // TODO: This can be optimised for specific set types
+            return set.Intersect(values, set.Comparer).Any();
+        }
+
         #endregion
     }
 
@@ -532,9 +560,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool Equals(AnalysisValue x, AnalysisValue y) {
 #if FULL_VALIDATION
             if (x != null && y != null) {
-                Validation.Assert(x.Equals(y) == y.Equals(x));
+                Validation.Assert(x.Equals(y) == y.Equals(x), $"Non-commutative equality: {x} == {y}");
                 if (x.Equals(y)) {
-                    Validation.Assert(x.GetHashCode() == y.GetHashCode());
+                    Validation.Assert(x.GetHashCode() == y.GetHashCode(), $"Mismatched hash code for {x} ({x.GetHashCode()}) == {y} ({y.GetHashCode()})");
                 }
             }
 #endif
@@ -550,10 +578,11 @@ namespace Microsoft.PythonTools.Analysis {
                 return set1.SetEquals(set2);
             } else if (set2.Comparer == this) {
                 return set2.SetEquals(set1);
-            } else {
+            } else if (set1.Count == set2.Count) {
                 return set1.All(ns => set2.Contains(ns, this)) &&
                        set2.All(ns => set1.Contains(ns, this));
             }
+            return false;
         }
 
         public int GetHashCode(IAnalysisSet obj) {
@@ -737,6 +766,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -834,6 +866,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -954,6 +989,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => ((IEqualityComparer<IAnalysisSet>)Comparer).GetHashCode(this);
         }
 
 
@@ -1035,6 +1073,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -1125,7 +1166,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var ns1 = other as AnalysisSetOneUnion;
                 if (ns1 != null) {
                     return Comparer.Equals(Value, ns1.Value);
-                } else if (other == null) {
+                } else if (other == null || other.Count == 0) {
                     return false;
                 } else if (other.Count == 1) {
                     return Comparer.Equals(Value, other.First());
@@ -1157,6 +1198,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
@@ -1282,7 +1326,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (ns2 != null) {
                     return Comparer.Equals(Value1, ns2.Value1) && Comparer.Equals(Value2, ns2.Value2) ||
                         Comparer.Equals(Value1, ns2.Value2) && Comparer.Equals(Value2, ns2.Value1);
-                } else if (other != null) {
+                } else if (other != null && other.Count > 0) {
                     return other.All(ns => Comparer.Equals(Value1) || Comparer.Equals(Value2));
                 } else {
                     return false;
@@ -1313,6 +1357,9 @@ namespace Microsoft.PythonTools.Analysis {
             public override string ToString() {
                 return DebugViewProxy.ToString(this);
             }
+
+            public override bool Equals(object obj) => (obj is IAnalysisSet s) && SetEquals(s);
+            public override int GetHashCode() => Comparer.GetHashCode(this);
         }
 
     }

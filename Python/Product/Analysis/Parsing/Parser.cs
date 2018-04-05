@@ -1239,6 +1239,7 @@ namespace Microsoft.PythonTools.Parsing {
                         namesWhiteSpace = new List<string>() { _tokenWhiteSpace };
                     }
                     names = new[] { new NameExpression("*") };
+                    names[0].SetLoc(GetStart(), GetEnd());
                     asNames = null;
                 } else {
                     List<NameExpression/*!*/> l = new List<NameExpression>();
@@ -1684,7 +1685,8 @@ namespace Microsoft.PythonTools.Parsing {
                     rightParenWhiteSpace = _tokenWhiteSpace;
                 } else {
                     bool trailingComma;
-                    List<Expression> l = ParseTestListAsExpr(null, out commaWhiteSpace, out trailingComma);
+                    var trailingWS = new List<int>();
+                    List<Expression> l = ParseTestListAsExpr(null, out commaWhiteSpace, out trailingComma, trailingWS);
                     if (l.Count == 1 && l[0] is ErrorExpression) {
                         // error handling, classes is incomplete.
                         return ErrorStmt(
@@ -1695,10 +1697,17 @@ namespace Microsoft.PythonTools.Parsing {
                     for (int i = 0; i < l.Count; i++) {
                         args[i] = new Arg(l[i]);
                         args[i].SetLoc(l[i].StartIndex, l[i].EndIndex);
+                        args[i].EndIndexIncludingWhitespace = args[i].EndIndex;
+                        if (i < trailingWS.Count) {
+                            args[i].EndIndexIncludingWhitespace += trailingWS[i];
+                        }
                     }
 
                     ateTerminator = Eat(TokenKind.RightParenthesis);
                     rightParenWhiteSpace = _tokenWhiteSpace;
+                    if (trailingWS.Count < args.Length) {
+                        args[args.Length - 1].EndIndexIncludingWhitespace = GetStart();
+                    }
                 }
             } else {
                 isParenFree = true;
@@ -3536,6 +3545,7 @@ namespace Microsoft.PythonTools.Parsing {
                     ateTerminator = false;
                     a = new Arg(e);
                     a.SetLoc(e.StartIndex, e.EndIndex);
+                    a.EndIndexIncludingWhitespace = e.EndIndex;
                     return new[] { a };
                 }
 
@@ -3545,8 +3555,9 @@ namespace Microsoft.PythonTools.Parsing {
                     var genExpr = ParseGeneratorExpression(e);
                     AddIsAltForm(genExpr);
                     a = new Arg(genExpr);
-                    ateTerminator = Eat(TokenKind.RightParenthesis);
                     a.SetLoc(e.StartIndex, GetEnd());
+                    ateTerminator = Eat(TokenKind.RightParenthesis);
+                    a.EndIndexIncludingWhitespace = GetStart();
                     return new Arg[1] { a };       //  Generator expression is the argument
                 } else {
                     a = new Arg(e);
@@ -3559,9 +3570,10 @@ namespace Microsoft.PythonTools.Parsing {
                     if (commaWhiteSpace != null) {
                         commaWhiteSpace.Add(_tokenWhiteSpace);
                     }
+                    a.EndIndexIncludingWhitespace = GetStart();
                 } else {
                     ateTerminator = Eat(TokenKind.RightParenthesis);
-                    a.SetLoc(e.StartIndex, GetEnd());
+                    a.EndIndexIncludingWhitespace = GetStart();
                     return new Arg[1] { a };
                 }
             }
@@ -3656,8 +3668,10 @@ namespace Microsoft.PythonTools.Parsing {
                     if (commaWhiteSpace != null) {
                         commaWhiteSpace.Add(_tokenWhiteSpace);
                     }
+                    a.EndIndexIncludingWhitespace = GetStart();
                 } else {
                     ateTerminator = Eat(terminator);
+                    a.EndIndexIncludingWhitespace = ateTerminator ? GetStart() : a.EndIndex;
                     break;
                 }
             }
@@ -3753,14 +3767,13 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Expression ParseTestListAsExpr(Expression expr) {
-
             List<string> itemWhiteSpace;
             bool trailingComma;
             List<Expression> l = ParseTestListAsExpr(expr, out itemWhiteSpace, out trailingComma);
             return MakeTupleOrExpr(l, itemWhiteSpace, trailingComma, parenFreeTuple: true);
         }
 
-        private List<Expression> ParseTestListAsExpr(Expression expr, out List<string> itemWhiteSpace, out bool trailingComma) {
+        private List<Expression> ParseTestListAsExpr(Expression expr, out List<string> itemWhiteSpace, out bool trailingComma, List<int> whitespaceAfterExpression = null) {
             var l = new List<Expression>();
             itemWhiteSpace = MakeWhiteSpaceList();
             if (expr != null) {
@@ -3774,7 +3787,8 @@ namespace Microsoft.PythonTools.Parsing {
             trailingComma = true;
             while (true) {
                 if (NeverTestToken(PeekToken())) break;
-                l.Add(ParseExpression());
+                var e = ParseExpression();
+                l.Add(e);
 
                 if (!MaybeEat(TokenKind.Comma)) {
                     trailingComma = false;
@@ -3782,6 +3796,9 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 if (itemWhiteSpace != null) {
                     itemWhiteSpace.Add(_tokenWhiteSpace);
+                }
+                if (whitespaceAfterExpression != null) {
+                    whitespaceAfterExpression.Add(GetStart() - e.EndIndex);
                 }
             }
             return l;
