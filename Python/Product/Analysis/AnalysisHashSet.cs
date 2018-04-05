@@ -251,8 +251,9 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             buckets.Buckets[i].Key = _removed;
             buckets.Count -= 1;
 
-            Buckets = EnsureSize(buckets, buckets.Count, Comparer);
+            EnsureSize(ref buckets, buckets.Count, Comparer);
 
+            Buckets = buckets;
             wasChanged = true;
             return this;
         }
@@ -352,41 +353,40 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             }
             if (buckets.Count >= (buckets.Capacity * Load)) {
                 // grow the hash table
-                buckets = EnsureSize(buckets, (int)(buckets.Capacity / Load) * ResizeMultiplier, comparer);
+                EnsureSize(ref buckets, (int)(buckets.Capacity / Load) * ResizeMultiplier, comparer);
             }
         }
 
-        private static BucketSet EnsureSize(BucketSet oldBuckets, int newSize, IEqualityComparer<AnalysisValue> comparer) {
+        private static void EnsureSize(ref BucketSet buckets, int newSize, IEqualityComparer<AnalysisValue> comparer) {
             // see if we can reclaim collected buckets before growing...
-            if (oldBuckets.Capacity == 0) {
-                return new BucketSet(newSize);
+            if (buckets.Capacity == 0) {
+                buckets = new BucketSet(newSize);
+                return;
             }
 
-            for (int i = 0; i < oldBuckets.Capacity; i++) {
-                var key = oldBuckets.Buckets[i].Key;
+            for (int i = 0; i < buckets.Capacity; i++) {
+                var key = buckets.Buckets[i].Key;
                 if (key != null && !key.IsAlive) {
-                    oldBuckets.Buckets[i].Key = _removed;
+                    buckets.Buckets[i].Key = _removed;
                     newSize--;
-                    oldBuckets.Count--;
+                    buckets.Count--;
                 }
             }
 
-            if (newSize > oldBuckets.Buckets.Length || newSize < oldBuckets.Buckets.Length / 4) {
+            if (newSize > buckets.Buckets.Length || newSize < buckets.Buckets.Length / 4) {
                 newSize = AnalysisDictionary<object, object>.GetPrime(newSize);
 
                 var newBuckets = new BucketSet(newSize);
 
-                for (int i = 0; i < oldBuckets.Buckets.Length; i++) {
-                    var curBucket = oldBuckets.Buckets[i];
+                for (int i = 0; i < buckets.Buckets.Length; i++) {
+                    var curBucket = buckets.Buckets[i];
                     if (curBucket.Key != null && curBucket.Key != _removed && curBucket.Key.IsAlive) {
                         AddOne(ref newBuckets, curBucket.Key, curBucket.HashCode, comparer);
                     }
                 }
 
-                return newBuckets;
+                buckets = newBuckets;
             }
-
-            return oldBuckets;
         }
 
         /// <summary>

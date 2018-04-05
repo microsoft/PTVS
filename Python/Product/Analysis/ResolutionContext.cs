@@ -25,7 +25,6 @@ namespace Microsoft.PythonTools.Analysis {
         private ArgumentSet? _callArgs;
         private int _depth;
 
-        public static ResolutionContext Empty => new ResolutionContext();
         public static ResolutionContext Complete => new ResolutionContext { ResolveFully = true };
 
         public FunctionInfo Caller { get; set; }
