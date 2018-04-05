@@ -1239,6 +1239,7 @@ namespace Microsoft.PythonTools.Parsing {
                         namesWhiteSpace = new List<string>() { _tokenWhiteSpace };
                     }
                     names = new[] { new NameExpression("*") };
+                    names[0].SetLoc(GetStart(), GetEnd());
                     asNames = null;
                 } else {
                     List<NameExpression/*!*/> l = new List<NameExpression>();

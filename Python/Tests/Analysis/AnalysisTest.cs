@@ -678,6 +678,7 @@ class D(object):
             state.AssertReferences(mod2, "D", 0,
                 new VariableLocation(2, 1, VariableType.Value, "mod2"),
                 new VariableLocation(2, 7, VariableType.Definition, "mod2"),
+                new VariableLocation(2, 18, VariableType.Reference, "mod1"),
                 new VariableLocation(4, 5, VariableType.Reference, "mod1")
             );
         }
@@ -2982,6 +2983,7 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
+                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
                 new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
@@ -6946,6 +6948,21 @@ y = mcc()
             entry.AssertDiagnostics(
                 "not-callable:'MyClass' may not be callable:(10, 5) - (10, 7)"
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public void OsPathMembers() {
+            var code = @"import os.path as P
+";
+            var version = PythonPaths.Versions.LastOrDefault(v => v.IsCPython && File.Exists(v.InterpreterPath));
+            version.AssertInstalled();
+            var entry = CreateAnalyzer(new Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory(
+                version.Configuration,
+                new InterpreterFactoryCreationOptions { DatabasePath = TestData.GetTempPath(), WatchFileSystem = false }
+            ));
+            entry.AddModule("test-module", code);
+            entry.WaitForAnalysis();
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("P"), "abspath", "dirname");
         }
 
         #endregion
