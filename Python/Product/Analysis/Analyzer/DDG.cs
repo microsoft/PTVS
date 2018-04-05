@@ -483,7 +483,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 // Ensure a variable exists, even if the import fails
-                Scope.CreateVariable(node, _unit, saveName, false);
+                Scope.CreateVariable(nameNode, _unit, saveName);
 
                 if (!TryImportModule(importing, node.ForceAbsolute, out var modRef, out var bits)) {
                     _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);

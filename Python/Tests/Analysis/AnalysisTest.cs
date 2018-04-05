@@ -2983,6 +2983,7 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
+                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
                 new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
