@@ -103,6 +103,10 @@ VALUE_REPR_FIX = {
     float('-inf'): "float('-inf')",
 }
 
+IMPLICIT_CLASSMETHOD = (
+    '__new__',
+)
+
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
 
@@ -251,13 +255,13 @@ class Signature(object):
         self._defaults = defaults or ()
 
         if scope and '@staticmethod' not in self.decorators:
-            def_arg = 'cls' if '@classmethod' in self.decorators else 'self'
+            def_arg = 'cls' if ('@classmethod' in self.decorators or name in IMPLICIT_CLASSMETHOD) else 'self'
             if len(self._defaults) == 0 or self._defaults[0] != def_arg:
                 self._defaults = (def_arg,) + self._defaults
         
         self.fullsig = None
         if self.name in ('__init__', '__new__') and module_doc:
-            self.fullsig = self._init_argspec_fromdocstring(self._defaults, module_doc)
+            self.fullsig = self._init_argspec_fromdocstring(self._defaults, module_doc, override_name=self.name)
         elif not hasattr(self.callable, '__call__') and hasattr(self.callable, '__get__'):
             # We have a property
             self.decorators = '@property',
@@ -378,7 +382,7 @@ class Signature(object):
             return "return " + "; return ".join(restype)
         return "return " + restype
 
-    def _init_argspec_fromdocstring(self, defaults, doc=None):
+    def _init_argspec_fromdocstring(self, defaults, doc=None, override_name=None):
         allow_name_mismatch = True
         if not doc:
             doc = getattr(self.callable, '__doc__', None)
@@ -390,7 +394,7 @@ class Signature(object):
         if not doc:
             return
 
-        return self._parse_funcdef(doc, allow_name_mismatch, defaults)
+        return self._parse_funcdef(doc, allow_name_mismatch, defaults, override_name)
 
     def _make_unique_name(self, name, seen_names):
         if name not in seen_names:
@@ -500,7 +504,7 @@ class Signature(object):
 
         return ''.join(parts)
 
-    def _parse_funcdef(self, expr, allow_name_mismatch, defaults):
+    def _parse_funcdef(self, expr, allow_name_mismatch, defaults, override_name=None):
         '''Takes a call expression that was part of a docstring
         and parses the AST as if it were a definition. If the parsed
         AST matches the callable we are wrapping, returns the node.
@@ -537,9 +541,11 @@ class Signature(object):
                 optional = True
             elif tt == tokenize.RSQB:
                 optional = False
+            elif s == '...':
+                return
 
         if name and (allow_name_mismatch or name == self.name):
-            return self._parse_format_arg(name, args, defaults)
+            return self._parse_format_arg(override_name or name, args, defaults)
 
     def _get_first_function_call(self, expr):
         '''Scans the string for the first closing parenthesis,
@@ -547,18 +553,28 @@ class Signature(object):
         an example call at the start of the docstring.'''
         if not expr or ')' not in expr:
             return
-        expr = expr.lstrip('\r\n\t ')
+        found = []
         n = 0
-        for i, c in enumerate(expr):
-            if c == ')':
-                n -= 1
-                if n <= 0:
-                    return expr[:i + 1]
-            elif c == '(':
-                n += 1
-            elif c in '\r\n\t' and n == 0:
-                return
-
+        for line in expr.splitlines():
+            found_one = False
+            line = line.strip('\r\n\t ')
+            if not line:
+                break
+            for i, c in enumerate(line):
+                if c == ')':
+                    n -= 1
+                    if n == 0:
+                        found.append(line[:i + 1])
+                        found_one = True
+                elif c == '(':
+                    n += 1
+            
+            if not found_one:
+                break
+        if found:
+            found.sort(key=len)
+            return found[-1]
+        return
 
 class MemberInfo(object):
     NO_VALUE = object()
@@ -1235,7 +1251,7 @@ def add_builtin_objects(state):
             "__UnicodeIterator__.next": "(self)",
         })
 
-
+    already_added = set()
 
     def add_simple(name, doc, *members):
         mi = MemberInfo(name, MemberInfo.NO_VALUE)
@@ -1248,6 +1264,10 @@ def add_builtin_objects(state):
         state.members.append(MemberInfo(name, None, literal=literal))
 
     def add_type(alias, type_obj):
+        if type_obj.__name__ in already_added:
+            add_literal(alias, type_obj.__name__)
+            return
+        already_added.add(type_obj.__name__)
         mi = MemberInfo(type_obj.__name__, type_obj, module=builtins.__name__, alias=alias)
         state.members.append(mi)
         state.members.append(MemberInfo(alias, None, literal=mi.name))
