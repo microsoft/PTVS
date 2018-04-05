@@ -43,12 +43,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append("lambda");
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 
-            _function.ParamsToString(res, ast, commaWhiteSpace, format);
+            if (_function.ParametersInternal.Length > 0) {
+                var paramStr = new StringBuilder();
+                _function.ParamsToString(paramStr, ast, commaWhiteSpace, format);
+                if (paramStr.Length > 0 && !char.IsWhiteSpace(paramStr[0]) && !(_function.ParametersInternal[0] is ErrorParameter)) {
+                    res.Append(' ');
+                }
+                res.Append(paramStr.ToString());
+            }
             string namedOnlyText = this.GetExtraVerbatimText(ast);
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);
             }
-            format.Append(res, format.SpaceBeforeLambdaColon, " ", "", this.GetSecondWhiteSpace(ast));
+            format.Append(res, format.SpaceBeforeLambdaColon, " ", "", this.GetSecondWhiteSpaceDefaultNull(ast) ?? "");
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(":");
                 string afterColon = null;

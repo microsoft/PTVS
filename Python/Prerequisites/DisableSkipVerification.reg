@@ -1,5 +1,6 @@
 Windows Registry Editor Version 5.00
 
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\AnalysisMemoryTester,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\AnalysisTest,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\AnalysisTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\CookiecutterTests,B03F5F7F11D50A3A]
@@ -71,6 +72,7 @@ Windows Registry Editor Version 5.00
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\TestUtilities.Python.Analysis,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\TestUtilities.UI,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\VSInterpretersTests,B03F5F7F11D50A3A]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\StrongName\Verification\AnalysisMemoryTester,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\StrongName\Verification\AnalysisTest,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\StrongName\Verification\AnalysisTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\StrongName\Verification\CookiecutterTests,B03F5F7F11D50A3A]

@@ -16,18 +16,15 @@
 
 namespace Microsoft.PythonTools.Analysis {
     class AnalysisVariable : IAnalysisVariable {
-        public AnalysisVariable(VariableType type, LocationInfo location, LocationInfo definitionLocation = null, int? version = null) {
+        public AnalysisVariable(VariableType type, LocationInfo location, int? version = null) {
             Location = location;
             Type = type;
-            DefinitionLocation = definitionLocation ?? location;
             Version = version;
         }
 
         #region IAnalysisVariable Members
 
         public LocationInfo Location { get; }
-
-        public LocationInfo DefinitionLocation { get; }
 
         public VariableType Type { get; }
 
@@ -39,7 +36,6 @@ namespace Microsoft.PythonTools.Analysis {
             AnalysisVariable other = obj as AnalysisVariable;
             if (other != null) {
                 return LocationInfo.FullComparer.Equals(Location, other.Location) &&
-                       LocationInfo.FullComparer.Equals(DefinitionLocation, other.DefinitionLocation) &&
                        Type.Equals(other.Type) &&
                        Version == other.Version;
             }

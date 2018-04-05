@@ -69,8 +69,7 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEquatable<EncodedLocation> Members
 
         public bool Equals(EncodedLocation other) {
-            return Resolver == other.Resolver &&
-                Location == other.Location;
+            return Location == other.Location;
         }
 
         #endregion

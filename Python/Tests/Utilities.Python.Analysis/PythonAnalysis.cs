@@ -568,7 +568,7 @@ namespace TestUtilities.Python {
 
         public void AssertConstantEquals(IPythonProjectEntry module, string expr, int index, string value) {
             var val = GetValue<AnalysisValue>(module, expr, index);
-            Assert.AreEqual(val?.GetConstantValueAsString(), value, "{0}.{1}".FormatInvariant(module.ModuleName, expr));
+            Assert.AreEqual(value, val?.GetConstantValueAsString(), "{0}.{1}".FormatInvariant(module.ModuleName, expr));
         }
 
         private static IEnumerable<IAnalysisVariable> UniquifyReferences(IGrouping<LocationInfo, IAnalysisVariable> source) {

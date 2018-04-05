@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -23,5 +24,9 @@ namespace Microsoft.PythonTools.Analysis {
         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays",
             Justification = "breaking change")]
         ParameterResult[] Parameters { get; }
+    }
+
+    public interface IOverloadResult2 : IOverloadResult {
+        IReadOnlyList<string> ReturnType { get; }
     }
 }

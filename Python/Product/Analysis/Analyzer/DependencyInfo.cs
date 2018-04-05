@@ -66,19 +66,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 values.Add(keyValue);
             }
 
-            KeyValues = new Dictionary<AnalysisValue, IAnalysisSet>(cmp);
+            var keyValues = new Dictionary<AnalysisValue, IAnalysisSet>(cmp);
             foreach (var list in matches.Values) {
-                bool dummy;
-                var key = list[0].Key;
-                var value = list[0].Value.AsUnion(cmp, out dummy);
+                var key = AnalysisSet.CreateUnion(list.Select(kv => kv.Key), cmp);
+                var value = AnalysisSet.CreateUnion(list.SelectMany(kv => kv.Value), cmp);
 
-                foreach (var item in list.Skip(1)) {
-                    key = cmp.MergeTypes(key, item.Key, out dummy);
-                    value = value.Union(item.Value);
+                foreach (var k in key) {
+                    if (keyValues.TryGetValue(k, out var existing)) {
+                        keyValues[k] = value.Union(existing);
+                    } else {
+                        keyValues[k] = value;
+                    }
                 }
-
-                KeyValues[key] = value;
             }
+            KeyValues = keyValues;
         }
     }
 
@@ -119,7 +120,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _changeCount += wasChanged ? 1 : 0;
             // The value doesn't mean anything, we just want to know if a variable is being
             // updated too often.
-            Validation.Assert(_changeCount < 10000);
+            Validation.Assert(_changeCount < 10000, $"Excessive changes to a variable");
 #endif
             return wasChanged;
         }

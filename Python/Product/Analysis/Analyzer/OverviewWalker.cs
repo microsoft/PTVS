@@ -104,14 +104,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return false;
         }
 
-        public override bool Walk(Parameter node) {
-            if (!string.IsNullOrEmpty(node.Name)) {
-                // ensure we have a variable here so we don't get unresolved errors
-                _scope.AddLocatedVariable(node.Name, node, _curUnit, node.Kind);
-            }
-            return base.Walk(node);
-        }
-
         public override void PostWalk(FunctionDefinition node) {
             if (node.Body != null && node.Name != null) {
                 Debug.Assert(_scope.EnumerateTowardsGlobal.Contains(_curUnit.Scope.OuterScope));
@@ -147,7 +139,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             if (reference != null && reference.Variable != null) {
                 var declNode = reference.Variable.Scope;
-                declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
+                if (_scope.Node == declNode) {
+                    declScope = _scope;
+                } else {
+                    declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => s.Node == declNode);
+                    declScope = declScope?.OriginalScope ?? declScope;
+                }
             }
 
             if (isLocated) {
@@ -171,18 +168,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var func = new FunctionInfo(node, outerUnit, prevScope);
                 var unit = func.AnalysisUnit;
                 scope = unit.Scope;
+                (unit as FunctionAnalysisUnit)?.EnsureParameters();
 
                 prevScope.Children.Add(scope);
                 prevScope.AddNodeScope(node, scope);
 
                 if (!node.IsLambda && node.Name != "<genexpr>") {
-                    // lambdas don't have their names published
-
-                    var funcVar = prevScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
-                    // Decorated functions don't have their type set yet
-                    if (node.Decorators == null) {
-                        funcVar.AddTypes(unit, func.SelfSet);
-                    }
+                    // Create the variable (except for lambdas) but do not add any
+                    // values yet. (This happens in FunctionAnalysisUnit.)
+                    prevScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
                 }
 
                 unit.Enqueue();
