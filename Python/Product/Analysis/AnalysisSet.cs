@@ -31,10 +31,10 @@ namespace Microsoft.PythonTools.Analysis {
     /// provides factory and extension methods.
     /// </summary>
     public interface IAnalysisSet : IEnumerable<AnalysisValue> {
-        IAnalysisSet Add(AnalysisValue item, bool canMutate = true);
-        IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true);
-        IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true);
-        IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true);
+        IAnalysisSet Add(AnalysisValue item, bool canMutate = false);
+        IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false);
+        IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false);
+        IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false);
         IAnalysisSet Clone();
 
         bool Contains(AnalysisValue item);
@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="sets">The sets to contain in the set.</param>
         /// <param name="canMutate">True if sets in <paramref name="sets"/> may
         /// be modified.</param>
-        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, bool canMutate = false) {
             return Empty.UnionAll(sets, canMutate);
         }
 
@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// set.</param>
         /// <param name="canMutate">True if sets in <paramref name="sets"/> may
         /// be modified.</param>
-        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = false) {
             return Empty.UnionAll(sets, out wasChanged, canMutate);
         }
 
@@ -452,7 +452,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="sets">The sets to merge into this set.</param>
         /// <param name="canMutate">True if this set may be modified.</param>
-        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, bool canMutate = false) {
             return set.UnionAll(sets, out _, canMutate);
         }
 
@@ -463,7 +463,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="wasChanged">Returns True if the contents of the
         /// returned set are different to the original set.</param>
         /// <param name="canMutate">True if this set may be modified.</param>
-        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = false) {
             bool changed;
             wasChanged = false;
             foreach (var s in sets) {
@@ -703,16 +703,16 @@ namespace Microsoft.PythonTools.Analysis {
         sealed class AnalysisSetEmptyObject : IAnalysisSet, IImmutableAnalysisSet {
             public static readonly IAnalysisSet Instance = new AnalysisSetEmptyObject();
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 return item;
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 wasChanged = true;
                 return item;
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     return this;
                 }
@@ -722,7 +722,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return items.Any() ? AnalysisSet.Create(items) : this;
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     wasChanged = false;
                     return this;
@@ -779,7 +779,7 @@ namespace Microsoft.PythonTools.Analysis {
                 Value = value;
             }
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 if (ObjectComparer.Instance.Equals(Value, item)) {
                     return this;
                 } else {
@@ -787,7 +787,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 if (ObjectComparer.Instance.Equals(Value, item)) {
                     wasChanged = false;
                     return this;
@@ -797,12 +797,12 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 bool wasChanged;
                 return Union(items, out wasChanged, canMutate);
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 AnalysisSetOneObject ns1;
                 AnalysisSetTwoObject ns2;
                 if (items == null) {
@@ -816,9 +816,9 @@ namespace Microsoft.PythonTools.Analysis {
                         return ns2;
                     }
                     wasChanged = true;
-                    return new AnalysisHashSet(3, ObjectComparer.Instance).Add(ns2.Value1).Add(ns2.Value2).Add(Value);
+                    return new AnalysisHashSet(3, ObjectComparer.Instance).Add(ns2.Value1, canMutate: true).Add(ns2.Value2, canMutate: true).Add(Value, canMutate: true);
                 } else {
-                    return new AnalysisHashSet(items, ObjectComparer.Instance).Add(Value, out wasChanged);
+                    return new AnalysisHashSet(items, ObjectComparer.Instance).Add(Value, out wasChanged, canMutate: true);
                 }
             }
 
@@ -896,12 +896,12 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 bool wasChanged;
                 return Add(item, out wasChanged, canMutate);
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 if (ObjectComparer.Instance.Equals(Value1, item) || ObjectComparer.Instance.Equals(Value2, item)) {
                     wasChanged = false;
                     return this;
@@ -910,7 +910,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return new AnalysisHashSet(3, ObjectComparer.Instance).Add(Value1).Add(Value2).Add(item);
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneObject ns1;
                 if (items == null) {
@@ -924,7 +924,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneObject ns1;
                 if (items == null) {
@@ -1007,16 +1007,16 @@ namespace Microsoft.PythonTools.Analysis {
                 _comparer = comparer;
             }
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 return new AnalysisSetOneUnion(item, Comparer);
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 wasChanged = true;
                 return new AnalysisSetOneUnion(item, Comparer);
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 if (items == null) {
                     return this;
                 } else if (items is AnalysisSetOneUnion || items is AnalysisSetTwoUnion || items is AnalysisSetEmptyUnion) {
@@ -1025,7 +1025,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return items.Any() ? AnalysisSet.CreateUnion(items, Comparer) : this;
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     wasChanged = false;
                     return this;
@@ -1088,7 +1088,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _comparer = comparer;
             }
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 if (Object.ReferenceEquals(Value, item)) {
                     return this;
                 } else if (Comparer.Equals(Value, item)) {
@@ -1100,7 +1100,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 if (Object.ReferenceEquals(Value, item)) {
                     wasChanged = false;
                     return this;
@@ -1113,7 +1113,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneUnion ns1;
                 AnalysisSetOneObject nsO1;
@@ -1133,7 +1133,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneUnion ns1;
                 AnalysisSetOneObject nsO1;
@@ -1245,11 +1245,11 @@ namespace Microsoft.PythonTools.Analysis {
                 Value2 = tup.Item2;
             }
 
-            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
                 return Add(item, out _, canMutate);
             }
 
-            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
                 if (Object.ReferenceEquals(Value1, item) || Object.ReferenceEquals(Value2, item)) {
                     wasChanged = false;
                     return this;
@@ -1278,7 +1278,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return new AnalysisHashSet(3, Comparer).Add(Value1).Add(Value2).Add(item);
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneObject ns1o;
                 AnalysisSetOneUnion ns1u;
@@ -1295,7 +1295,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
                 AnalysisValue ns;
                 AnalysisSetOneObject ns1o;
                 AnalysisSetOneUnion ns1u;

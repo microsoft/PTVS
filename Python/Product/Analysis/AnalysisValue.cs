@@ -460,7 +460,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (items == null || items.All(av => ((IAnalysisSet)this).Comparer.Equals(this, av))) {
                 return this;
             }
-            return AnalysisSet.Create(items).Add(this, false);
+            return AnalysisSet.Create(items, ((IAnalysisSet)this).Comparer).Add(this, false);
         }
 
         IAnalysisSet IAnalysisSet.Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate) {
@@ -468,8 +468,7 @@ namespace Microsoft.PythonTools.Analysis {
                 wasChanged = false;
                 return this;
             }
-            wasChanged = true;
-            return AnalysisSet.Create(items).Add(this, false);
+            return AnalysisSet.Create(items, ((IAnalysisSet)this).Comparer).Add(this, out wasChanged, false);
         }
 
         IAnalysisSet IAnalysisSet.Clone() {
