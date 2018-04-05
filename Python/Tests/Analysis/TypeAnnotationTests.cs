@@ -417,7 +417,7 @@ def scale(scalar: float, vector: Vector) -> Vector:
 new_vector = scale(2.0, [1.0, -4.2, 5.4])
 ",
                 new[] {
-                    "scale:scale(scalar:float=,vector:list, list[float]=)->[list,list[float]]"
+                    "scale:scale(scalar:float=,vector:list[float]=)->[list,list[float]]"
                 }
             );
         }

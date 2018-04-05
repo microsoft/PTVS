@@ -3855,7 +3855,7 @@ class oar(list):
             var entry = ProcessTextV2(text);
             
             var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
-            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "object");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "value");
 
             entry = ProcessTextV3(text);
 

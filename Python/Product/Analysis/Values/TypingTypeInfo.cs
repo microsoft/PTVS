@@ -502,6 +502,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Iterator": {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
+                        p.AddProtocol(new NameProtocol(p, name.ToLowerInvariant(), memberType: PythonMemberType.Class));
                         p.AddProtocol(name == "Iterable" ? (Protocol)new IterableProtocol(p, AnalysisSet.Empty) : new IteratorProtocol(p, AnalysisSet.Empty));
                         return p;
                     }

@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -50,7 +49,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        public static bool IsOriginalClosureScope(InterpreterScope scope) => (scope as FunctionScope)?.Function.IsClosure == true && scope.OriginalScope == null;
+
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
+            if (IsOriginalClosureScope(OuterScope)) {
+                // Do not add return types to original scope of closure functions
+                return;
+            }
+
             if (types?.Any() != true) {
                 return;
             }
@@ -215,37 +221,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             return added;
         }
-
-        public void PropagateParameters(IVersioned projectEntry, FunctionScope fromScope, PythonAnalyzer state) {
-            if (fromScope.Function != Function) {
-                Debug.Fail("Can only propagate parameters from the same function");
-                return;
-            }
-
-            VariableDef vd;
-            foreach (var kv in fromScope._parameters) {
-                kv.Value.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any() && (vd = GetParameter(kv.Key)) != null) {
-                    vd.MakeUnionStrongerIfMoreThan(state.Limits.NormalArgumentTypes, values);
-                    vd.AddTypes(projectEntry, values);
-                }
-            }
-            if (fromScope._seqParameters != null) {
-                fromScope._seqParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any() && (vd = GetParameter(fromScope._seqParameters.Name)) != null) {
-                    vd.MakeUnionStrongerIfMoreThan(state.Limits.ListArgumentTypes, values);
-                    vd.AddTypes(projectEntry, values);
-                }
-            }
-            if (fromScope._dictParameters != null) {
-                fromScope._dictParameters.TypesNoCopy.Split<LazyValueInfo>(out _, out var values);
-                if (values.Any() && (vd = GetParameter(fromScope._dictParameters.Name)) != null) {
-                    vd.MakeUnionStrongerIfMoreThan(state.Limits.DictArgumentTypes, values);
-                    vd.AddTypes(projectEntry, values);
-                }
-            }
-        }
-
 
         public FunctionInfo Function => (FunctionInfo)AnalysisValue;
 

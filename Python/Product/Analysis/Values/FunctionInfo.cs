@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -75,6 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool IsStatic { get; set; }
         public bool IsClassMethod { get; set; }
         public bool IsProperty { get; set; }
+        public bool IsClosure => _callsWithClosure != null;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);

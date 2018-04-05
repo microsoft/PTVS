@@ -118,16 +118,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void AddYield(Node node, AnalysisUnit unit, IAnalysisSet yieldValue, bool enqueue = true) {
+            if (FunctionScope.IsOriginalClosureScope(unit.Scope)) {
+                // Do not add yield types to original scope of closure functions
+                return;
+            }
+
             Yields.MakeUnionStrongerIfMoreThan(ProjectState.Limits.YieldTypes, yieldValue);
             Yields.AddTypes(unit, yieldValue, enqueue, DeclaringModule);
         }
 
         public void AddReturn(Node node, AnalysisUnit unit, IAnalysisSet returnValue, bool enqueue = true) {
+            if (FunctionScope.IsOriginalClosureScope(unit.Scope)) {
+                // Do not add return types to original scope of closure functions
+                return;
+            }
+
             Returns.MakeUnionStrongerIfMoreThan(ProjectState.Limits.ReturnTypes, returnValue);
             Returns.AddTypes(unit, returnValue, enqueue, DeclaringModule);
         }
 
         public void AddSend(Node node, AnalysisUnit unit, IAnalysisSet sendValue, bool enqueue = true) {
+            if (FunctionScope.IsOriginalClosureScope(unit.Scope)) {
+                // Do not add sent types to original scope of closure functions
+                return;
+            }
+
             Sends.AddTypes(unit, sendValue, enqueue, DeclaringModule);
         }
 

@@ -80,7 +80,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var funcType = ProcessFunctionDecorators(ddg);
             EnsureParameterZero();
-            (Scope.OriginalScope as FunctionScope)?.PropagateParameters(DependencyProject, (FunctionScope)Scope, ddg._unit.State);
 
             var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
 
