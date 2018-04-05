@@ -24,39 +24,6 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     sealed class DisplayTextBuilder {
         private readonly RestTextConverter _textConverter = new RestTextConverter();
-        public void BuildMarkdownSignature(SignatureHelp signatureHelp) {
-            foreach (var s in signatureHelp.signatures) {
-                // Recostruct full signature so editor can display current parameter
-                var sb = new StringBuilder();
-
-                if (s.documentation != null) {
-                    s.documentation.value = _textConverter.ToMarkdown(s.documentation.value);
-                }
-                sb.Append(s.label);
-                sb.Append('(');
-                if (s.parameters != null) {
-                    foreach (var p in s.parameters) {
-                        if (sb[sb.Length - 1] != '(') {
-                            sb.Append(", ");
-                        }
-                        sb.Append(p.label);
-                        if (!string.IsNullOrEmpty(p._type)) {
-                            sb.Append(':');
-                            sb.Append(p._type);
-                        }
-                        if(!string.IsNullOrEmpty(p._defaultValue)) {
-                            sb.Append('=');
-                            sb.Append(p._defaultValue);
-                        }
-                        if (p.documentation != null) {
-                            p.documentation.value = _textConverter.ToMarkdown(p.documentation.value);
-                        }
-                    }
-                }
-                sb.Append(')');
-                s.label = sb.ToString();
-            }
-        }
 
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             string firstLongDescription = null;

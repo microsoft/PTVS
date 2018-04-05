@@ -490,7 +490,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            _displayTextBuilder.BuildMarkdownSignature(sh);
             return sh;
         }
 

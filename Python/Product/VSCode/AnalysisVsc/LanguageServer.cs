@@ -17,11 +17,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Disposables;
 using Microsoft.DsTools.Core.Services;
 using Microsoft.DsTools.Core.Services.Shell;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Core.Shell;
@@ -39,6 +41,7 @@ namespace Microsoft.PythonTools.VsCode {
         private readonly DisposableBag _disposables = new DisposableBag(nameof(LanguageServer));
         private readonly Server _server = new Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
+        private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
         private ITelemetryService _telemetry;
         private JsonRpc _vscode;
@@ -137,9 +140,9 @@ namespace Microsoft.PythonTools.VsCode {
 
         private void MonitorParentProcess(Process process) {
             Task.Run(async () => {
-                while(!_sessionTokenSource.IsCancellationRequested) {
+                while (!_sessionTokenSource.IsCancellationRequested) {
                     await Task.Delay(2000);
-                    if(process.HasExited) {
+                    if (process.HasExited) {
                         _sessionTokenSource.Cancel();
                     }
                 }
@@ -211,8 +214,11 @@ namespace Microsoft.PythonTools.VsCode {
            => _server.Hover(token.ToObject<TextDocumentPositionParams>());
 
         [JsonRpcMethod("textDocument/signatureHelp")]
-        public Task<SignatureHelp> SignatureHelp(JToken token)
-           => _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
+        public async Task<SignatureHelp> SignatureHelp(JToken token) {
+            var sh = await _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
+            BuildMarkdownSignature(sh);
+            return sh;
+        }
 
         [JsonRpcMethod("textDocument/definition")]
         public Task<Reference[]> GotoDefinition(JToken token)
@@ -266,5 +272,39 @@ namespace Microsoft.PythonTools.VsCode {
         public Task<WorkspaceEdit> Rename(JToken token)
             => _server.Rename(token.ToObject<RenameParams>());
         #endregion
+
+        private void BuildMarkdownSignature(SignatureHelp signatureHelp) {
+            foreach (var s in signatureHelp.signatures) {
+                // Recostruct full signature so editor can display current parameter
+                var sb = new StringBuilder();
+
+                if (s.documentation != null) {
+                    s.documentation.value = _textConverter.ToMarkdown(s.documentation.value);
+                }
+                sb.Append(s.label);
+                sb.Append('(');
+                if (s.parameters != null) {
+                    foreach (var p in s.parameters) {
+                        if (sb[sb.Length - 1] != '(') {
+                            sb.Append(", ");
+                        }
+                        sb.Append(p.label);
+                        if (!string.IsNullOrEmpty(p._type)) {
+                            sb.Append(':');
+                            sb.Append(p._type);
+                        }
+                        if (!string.IsNullOrEmpty(p._defaultValue)) {
+                            sb.Append('=');
+                            sb.Append(p._defaultValue);
+                        }
+                        if (p.documentation != null) {
+                            p.documentation.value = _textConverter.ToMarkdown(p.documentation.value);
+                        }
+                    }
+                }
+                sb.Append(')');
+                s.label = sb.ToString();
+            }
+        }
     }
 }
