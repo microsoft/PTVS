@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
                             if (!varName.StartsWithOrdinal("_")) {
                                 fullImpName[fullImpName.Length - 1] = varName;
-                                AssignImportedMember(nameNode, userMod, fullImpName, newName ?? varName);
+                                AssignImportedMember(nameNode, userMod, fullImpName, varName);
                             }
                         }
                     }
@@ -345,7 +345,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            foreach (var name in PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute)) {
+            var candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
+            foreach (var name in candidates) {
+                if (ProjectState.Modules.TryImport(name, out moduleRef)) {
+                    return true;
+                }
+            }
+
+            foreach (var name in candidates) {
                 moduleRef = null;
                 foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {

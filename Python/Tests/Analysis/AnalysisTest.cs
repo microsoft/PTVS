@@ -678,6 +678,7 @@ class D(object):
             state.AssertReferences(mod2, "D", 0,
                 new VariableLocation(2, 1, VariableType.Value, "mod2"),
                 new VariableLocation(2, 7, VariableType.Definition, "mod2"),
+                new VariableLocation(2, 18, VariableType.Reference, "mod1"),
                 new VariableLocation(4, 5, VariableType.Reference, "mod1")
             );
         }
