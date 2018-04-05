@@ -6887,6 +6887,21 @@ y = mcc()
             );
         }
 
+        [TestMethod, Priority(0)]
+        public void OsPathMembers() {
+            var code = @"import os.path as P
+";
+            var version = PythonPaths.Versions.LastOrDefault(v => v.IsCPython && File.Exists(v.InterpreterPath));
+            version.AssertInstalled();
+            var entry = CreateAnalyzer(new Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory(
+                version.Configuration,
+                new InterpreterFactoryCreationOptions { DatabasePath = TestData.GetTempPath(), WatchFileSystem = false }
+            ));
+            entry.AddModule("test-module", code);
+            entry.WaitForAnalysis();
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("P"), "abspath", "dirname");
+        }
+
         #endregion
 
         #region Helpers
