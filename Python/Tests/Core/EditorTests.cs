@@ -237,6 +237,7 @@ def f():
 
             SnapshotOutlineTest(content,
                 new ExpectedTag(33, 134, "\r\n    print('f')\r\n    def g(a, \r\n          b, \r\n          c):\r\n        print('g')\r\n        print('g')"),
+                new ExpectedTag(61, 92, "a, \r\n          b, \r\n          c"),
                 new ExpectedTag(94, 134, "\r\n        print('g')\r\n        print('g')"));
         }
 

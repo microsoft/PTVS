@@ -35,6 +35,20 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private static bool UnionInternalMutable(out object newSet, HashSet<T> items, T newItem) {
+            items.RemoveWhere(i => !i.IsAlive);
+            if (!items.Add(newItem)) {
+                newSet = items;
+                return false;
+            }
+            if (items.Count <= 1) {
+                newSet = items.FirstOrDefault();
+            } else {
+                newSet = items;
+            }
+            return true;
+        }
+
         private static bool UnionInternal(out object newSet, IEnumerable<T> items, T newItem) {
             bool seenNewItem = false;
             var set = new HashSet<T>();
@@ -65,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return true;
             }
             if (_set is HashSet<T> set) {
-                return UnionInternal(out _set, set, item);
+                return UnionInternalMutable(out _set, set, item);
             }
             if (_set is SetOfTwo<T> set2) {
                 return UnionInternal(out _set, set2, item);

@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (!(newFunc is BuiltinFunctionInfo) && !(newFunc is SpecializedCallable)) {
                     anyCustom = true;
                 }
-                newResult = newResult.Union(newFunc.Call(node, unit, newArgs, keywordArgNames));
+                newResult = newResult.Union(newFunc.Call(node, unit, newArgs, keywordArgNames).Resolve(unit));
             }
 
             if (anyCustom) {
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<LocationInfo> Locations {
             get {
                 if (_declVersion == DeclaringModule.AnalysisVersion) {
-                    var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
+                    var start = ClassDefinition.GetStart(ClassDefinition.GlobalParent);
                     var end = ClassDefinition.GetEnd(ClassDefinition.GlobalParent);
                     return new[] { new LocationInfo(DeclaringModule.FilePath, DeclaringModule.DocumentUri, start.Line, start.Column, end.Line, end.Column) };
                 }
@@ -310,10 +310,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 try {
                                     foreach (var overload in ns.Overloads) {
                                         result.Add(
-                                            new SimpleOverloadResult(
+                                            new OverloadResult(
                                                 overload.Parameters,
                                                 ClassDefinition.Name,
-                                                overload.Documentation
+                                                overload.Documentation,
+                                                overload.ReturnType
                                             )
                                         );
                                     }
@@ -327,7 +328,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 if (result.Count == 0) {
                     // Old style class?
-                    result.Add(new SimpleOverloadResult(new ParameterResult[0], ClassDefinition.Name, ClassDefinition.Body.Documentation.TrimDocumentation()));
+                    result.Add(new OverloadResult(
+                        new ParameterResult[0],
+                        ClassDefinition.Name,
+                        ClassDefinition.Body.Documentation.TrimDocumentation(),
+                        new[] { ShortDescription }
+                    ));
                 }
 
                 // TODO: Filter out duplicates?
@@ -335,21 +341,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private SimpleOverloadResult GetNewOverloadResult(OverloadResult overload) {
+        private OverloadResult GetNewOverloadResult(OverloadResult overload) {
             var doc = overload.Documentation;
-            return new SimpleOverloadResult(
+            return new OverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc,
+                overload.ReturnType
             );
         }
 
-        private SimpleOverloadResult GetInitOverloadResult(OverloadResult overload) {
+        private OverloadResult GetInitOverloadResult(OverloadResult overload) {
             var doc = overload.Documentation;
-            return new SimpleOverloadResult(
+            return new OverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc,
+                overload.ReturnType
             );
         }
 
@@ -577,7 +585,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// defined with the same name at the same character index in two
         /// different files and with problematic MROs.
         /// </remarks>
-        private static bool IsFirstForMroUnion(AnalysisValue ns1, AnalysisValue ns2) {
+        internal static bool IsFirstForMroUnion(AnalysisValue ns1, AnalysisValue ns2) {
             var ci1 = ns1 as ClassInfo;
             var ci2 = ns2 as ClassInfo;
 
@@ -597,16 +605,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return null;
             }
 
-            IEnumerable<AnalysisValue> mro1;
-            AnalysisValue[] mro2;
-            if (IsFirstForMroUnion(ns1, ns2)) {
-                mro1 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
-                mro2 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
-            } else {
-                mro1 = ns2.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable());
-                mro2 = ns1.Mro.SelectMany().Except(state.DoNotUnionInMro.AsEnumerable()).ToArray();
+            (ns1.Mro as Mro)?.RecomputeIfNecessary();
+            (ns2.Mro as Mro)?.RecomputeIfNecessary();
+
+            var mro1 = ns1.Mro.SelectMany().ToArray();
+            var mro2 = ns2.Mro.SelectMany().ToArray();
+
+            if (!IsFirstForMroUnion(ns1, ns2)) {
+                var tmp = mro1;
+                mro1 = mro2;
+                mro2 = tmp;
             }
-            return mro1.FirstOrDefault(cls => mro2.Contains(cls));
+
+            var mro2Set = new HashSet<AnalysisValue>(mro2.MaybeEnumerate().SelectMany(), ObjectComparer.Instance);
+            var commonBase = mro1.MaybeEnumerate().SelectMany().Where(v => v is ClassInfo || v is BuiltinClassInfo).FirstOrDefault(mro2Set.Contains);
+            if (commonBase == null || commonBase.TypeId == BuiltinTypeId.Object || commonBase.TypeId == BuiltinTypeId.Type) {
+                return null;
+            }
+            if (commonBase.Push()) {
+                try {
+#if FULL_VALIDATION
+                    Validation.Assert(GetFirstCommonBase(state, ns1, commonBase) != null, $"No common base between {ns1} and {commonBase}");
+                    Validation.Assert(GetFirstCommonBase(state, ns2, commonBase) != null, $"No common base between {ns2} and {commonBase}");
+#endif
+                    if (GetFirstCommonBase(state, ns1, commonBase) == null || GetFirstCommonBase(state, ns2, commonBase) == null) {
+                        return null;
+                    }
+                } finally {
+                    commonBase.Pop();
+                }
+            }
+            return commonBase;
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
@@ -889,6 +918,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             return result;
+        }
+
+        internal void RecomputeIfNecessary() {
+            if (IsValid && _mroList.Any()) {
+                var typeId = _mroList.Last().TypeId;
+                if (typeId == BuiltinTypeId.Object || typeId == BuiltinTypeId.Type) {
+                    return;
+                }
+            }
+
+            Recompute();
         }
     }
 }
