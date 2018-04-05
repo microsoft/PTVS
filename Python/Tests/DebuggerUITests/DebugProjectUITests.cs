@@ -111,10 +111,13 @@ namespace DebuggerUITests {
         public void DebugPythonCustomInterpreter(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+                var interpreter = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+                interpreter.AssertInstalled();
+
                 var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
                 var project = app.OpenProject(sln, "Program.py");
                 var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
-                var interpreter = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+
                 File.Copy(interpreter.InterpreterPath, interpreterPath, true);
 
                 app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 1);
@@ -465,11 +468,9 @@ namespace DebuggerUITests {
                     }
 
                     var local = locals.Single(e => e.Name == "i");
-                    Assert.IsNotNull(local);
                     Assert.AreEqual("42", local.Value);
 
                     local = locals.Single(e => e.Name == "l");
-                    Assert.IsNotNull(local);
                     // Experimental debugger includes __length__ as well
                     Assert.AreEqual(4, local.DataMembers.Count);
                     Assert.AreEqual("0", local.DataMembers.Item(1).Name);
@@ -545,7 +546,7 @@ namespace DebuggerUITests {
 
         public void SimpleExceptionUnhandled(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
             if (useVsCodeDebugger) {
-                // This should be done as part of jsut my code and the fix for hiding debugger
+                // This should be done as part of just my code and the fix for hiding debugger
                 // https://github.com/Microsoft/ptvsd/issues/194
                 // https://github.com/Microsoft/ptvsd/issues/199
                 Assert.Inconclusive();
