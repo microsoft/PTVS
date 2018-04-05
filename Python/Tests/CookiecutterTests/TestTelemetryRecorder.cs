@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using Microsoft.CookiecutterTools.Telemetry;
 
@@ -44,7 +45,7 @@ namespace CookiecutterTests {
         }
 
         public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
-            throw ex;
+            ExceptionDispatchInfo.Capture(ex).Throw();
         }
 
         #endregion

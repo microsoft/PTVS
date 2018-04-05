@@ -30,8 +30,6 @@ namespace Microsoft.PythonTools.Infrastructure {
     static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
 
-        internal static IPythonToolsLogger _logger;
-
         /// <summary>
         /// Logs an unhandled exception. May display UI to the user informing
         /// them that an error has been logged.
@@ -83,17 +81,15 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             bool alreadySeen = true;
+            var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
             lock (_displayedMessages) {
-                var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
                 if (_displayedMessages.Add(key)) {
                     alreadySeen = false;
                 }
             }
 
-            Debug.Assert(_logger != null);
-            if (_logger != null) {
-                _logger.LogFault(ex, null, !alreadySeen);
-            }
+            var logger = (IPythonToolsLogger)site?.GetService(typeof(IPythonToolsLogger));
+            logger?.LogFault(ex, null, !alreadySeen);
 
             if (allowUI && !alreadySeen) {
                 // First time we've seen this error, so let the user know

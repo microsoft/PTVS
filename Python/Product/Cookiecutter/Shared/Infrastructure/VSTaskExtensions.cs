@@ -22,7 +22,6 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
@@ -30,7 +29,6 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.CookiecutterTools.Infrastructure {
     public static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
-        internal static ICookiecutterTelemetry _telemetry;
 
         /// <summary>
         /// Logs an unhandled exception. May display UI to the user informing
@@ -81,17 +79,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
 
             bool alreadySeen = true;
+            var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
             lock (_displayedMessages) {
-                var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
                 if (_displayedMessages.Add(key)) {
                     alreadySeen = false;
                 }
             }
 
-            Debug.Assert(_telemetry != null);
-            if (_telemetry != null) {
-                _telemetry.TelemetryService.ReportFault(ex, null, !alreadySeen);
-            }
+            CookiecutterTelemetry.Current?.TelemetryService?.ReportFault(ex, null, !alreadySeen);
 
             if (allowUI && !alreadySeen && !string.IsNullOrEmpty(logFile)) {
                 // First time we've seen this error, so let the user know

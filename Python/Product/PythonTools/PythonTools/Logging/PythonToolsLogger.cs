@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.ComponentModel.Design;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Logging {
     /// <summary>
@@ -38,6 +40,14 @@ namespace Microsoft.PythonTools.Logging {
             foreach (var logger in _loggers) {
                 logger.LogFault(ex, description, dumpProcess);
             }
+        }
+
+        internal static object CreateService(IServiceContainer container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(IPythonToolsLogger))) {
+                var model = container.GetComponentModel();
+                return new PythonToolsLogger(model.GetExtensions<IPythonToolsLogger>().ToArray());
+            }
+            return null;
         }
     }
 }

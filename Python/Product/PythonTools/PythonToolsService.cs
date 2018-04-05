@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools {
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
         private readonly ConcurrentDictionary<string, VsProjectAnalyzer> _analyzers;
-        private readonly PythonToolsLogger _logger;
+        private readonly IPythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
         private readonly Lazy<Options.ExperimentalOptions> _experimentalOptions;
@@ -105,10 +105,8 @@ namespace Microsoft.PythonTools {
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
-            _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
+            _logger = (IPythonToolsLogger)container.GetService(typeof(IPythonToolsLogger));
             _diagnosticsProvider = new DiagnosticsProvider(container);
-
-            VSTaskExtensions._logger = _logger;
 
             _idleManager.OnIdle += OnIdleInitialization;
 
@@ -190,7 +188,7 @@ namespace Microsoft.PythonTools {
         internal IInterpreterOptionsService InterpreterOptionsService => _interpreterOptionsService.Value;
         internal IInterpreterRegistryService InterpreterRegistryService => _interpreterRegistryService.Value;
 
-        internal PythonToolsLogger Logger => _logger;
+        internal IPythonToolsLogger Logger => _logger;
 
         internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             if (factory == null) {

@@ -16,8 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -166,7 +164,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         public void UpdateTemplate() {
-            ViewModel.UpdateTemplateAsync().HandleAllExceptions(null, GetType()).HandleAllExceptions(null, GetType()).DoNotWait();
+            ViewModel.UpdateTemplateAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         internal void CheckForUpdates() {
