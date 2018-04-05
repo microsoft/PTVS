@@ -91,6 +91,6 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Info about slow GetExpressionAtPoint events
         /// </summary>
-        GetExpressionAtPoint
+        GetExpressionAtPoint,
     }
 }
