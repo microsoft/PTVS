@@ -430,6 +430,9 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var baseValue in bases) {
                 ClassInfo ci = baseValue as ClassInfo;
                 if (ci != null) {
+                    if (!ci._mro.IsValid) {
+                        ci._mro.Recompute();
+                    }
                     ci.SubClasses.AddTypes(newClass.AnalysisUnit, newClass);
                 }
             }

@@ -55,7 +55,14 @@ namespace Microsoft.PythonTools.ProjectWizards {
 
             var webRoleSource = PythonToolsInstallPath.TryGetFile("Microsoft.PythonTools.WebRole.dll", GetType().Assembly);
             if (File.Exists(webRoleSource)) {
-                projectItem.ContainingProject.ProjectItems.AddFromFileCopy(webRoleSource);
+                ProjectItem binFolderItem;
+                try {
+                    binFolderItem = projectItem.ContainingProject.ProjectItems.Item("bin");
+                } catch (ArgumentException) {
+                    binFolderItem = projectItem.ContainingProject.ProjectItems.AddFolder("bin");
+                }
+
+                binFolderItem?.ProjectItems.AddFromFileCopy(webRoleSource);
             }
         }
 

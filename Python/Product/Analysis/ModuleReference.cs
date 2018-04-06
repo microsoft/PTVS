@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public ModuleReference(IModule module = null, string name = null) {
             Module = module;
-            name = name ?? "";
+            Name = name ?? "";
         }
 
         public string Name { get; }

@@ -22,6 +22,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class FunctionScope : InterpreterScope {
+        private readonly AnalysisDictionary<string, VariableDef> _parameters;
+
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
         public readonly VariableDef ReturnValue;
@@ -35,6 +37,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             IPythonProjectEntry declModule
         )
             : base(function, node, declScope) {
+            _parameters = new AnalysisDictionary<string, VariableDef>();
+
             ReturnValue = new VariableDef();
             if (Function.FunctionDefinition.IsCoroutine) {
                 Coroutine = new CoroutineInfo(function.ProjectState, declModule);
@@ -45,7 +49,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        public static bool IsOriginalClosureScope(InterpreterScope scope) => (scope as FunctionScope)?.Function.IsClosure == true && scope.OriginalScope == null;
+
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
+            if (IsOriginalClosureScope(OuterScope)) {
+                // Do not add return types to original scope of closure functions
+                return;
+            }
+
             if (types?.Any() != true) {
                 return;
             }
@@ -59,34 +70,100 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        internal void EnsureParameters(FunctionAnalysisUnit unit) {
+        public VariableDef GetParameter(string name) {
+            if (string.IsNullOrEmpty(name)) {
+                return null;
+            }
+
+            if (name == _seqParameters?.Name) {
+                return _seqParameters;
+            } else if (name == _dictParameters?.Name) {
+                return _dictParameters;
+            } else if (_parameters.TryGetValue(name, out var vd)) {
+                return vd;
+            }
+            return null;
+        }
+
+        internal void EnsureParameters(FunctionAnalysisUnit unit, bool usePlaceholders) {
             var astParams = Function.FunctionDefinition.ParametersInternal;
             for (int i = 0; i < astParams.Length; ++i) {
-                if (!TryGetVariable(astParams[i].Name, out var param)) {
-                    var n = (Node)astParams[i].NameExpression ?? astParams[i];
-                    if (astParams[i].Kind == ParameterKind.List) {
-                        param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, n);
-                    } else if (astParams[i].Kind == ParameterKind.Dictionary) {
-                        param = _dictParameters = _dictParameters ?? new DictParameterVariableDef(unit, n);
-                    } else {
-                        param = new LocatedVariableDef(unit.ProjectEntry, n);
+                var p = astParams[i];
+                var name = p?.Name;
+                if (string.IsNullOrEmpty(name)) {
+                    continue;
+                }
+
+                var node = (Node)astParams[i].NameExpression ?? astParams[i];
+
+                if (astParams[i].Kind == ParameterKind.List) {
+                    if (_seqParameters == null) {
+                        _seqParameters = new ListParameterVariableDef(unit, p, name);
+                        AddParameter(unit, name, p, usePlaceholders ? null : _seqParameters);
                     }
-                    AddVariable(astParams[i].Name, param);
+                } else if (astParams[i].Kind == ParameterKind.Dictionary) {
+                    if (_dictParameters == null) {
+                        _dictParameters = new DictParameterVariableDef(unit, p, name);
+                        AddParameter(unit, name, p, usePlaceholders ? null : _dictParameters);
+                    }
+                } else if (!_parameters.ContainsKey(name)) {
+                    var v = _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, p));
+                    if (i == 0 &&
+                        p.Kind == ParameterKind.Normal &&
+                        !Function.IsStatic &&
+                        Function.FunctionDefinition.Parent is ClassDefinition) {
+                        AddParameter(unit, name, p, v);
+                    } else {
+                        AddParameter(unit, name, p, usePlaceholders ? null : v);
+                    }
                 }
             }
+        }
+
+        internal void EnsureParameterZero(FunctionAnalysisUnit unit) {
+            var p = Function.FunctionDefinition.ParametersInternal.FirstOrDefault();
+            if (!string.IsNullOrEmpty(p?.Name) &&
+                p.Kind == ParameterKind.Normal &&
+                !unit.Function.IsStatic &&
+                unit.Scope.OuterScope is ClassScope cls &&
+                _parameters.TryGetValue(p.Name, out var v)
+            ) {
+                v.AddTypes(unit, unit.Function.IsClassMethod ?
+                    cls.Class.SelfSet :
+                    cls.Class.Instance.SelfSet,
+                    enqueue: false);
+            }
+        }
+
+        private VariableDef AddParameter(AnalysisUnit unit, string name, Parameter node, VariableDef variableDef) {
+            if (variableDef != null) {
+                return AddVariable(name, variableDef);
+            }
+
+            if (!TryGetVariable(name, out var v)) {
+                v = CreateLocatedVariable(node, unit, name, addRef: false);
+            }
+            v.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
+            return v;
         }
 
         internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {
             foreach (var name in names) {
                 VariableDef param;
-                if (name != null && TryGetVariable(name.Name, out param)) {
+                if (name != null && _parameters.TryGetValue(name.Name, out param)) {
                     param.AddReference(name, caller);
                 }
             }
         }
 
-        internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
-            EnsureParameters(unit);
+        internal bool UpdateParameters(
+            FunctionAnalysisUnit unit,
+            ArgumentSet others,
+            bool enqueue = true,
+            FunctionScope scopeWithDefaultParameters = null,
+            bool usePlaceholders = false
+        ) {
+            EnsureParameters(unit, usePlaceholders);
 
             var astParams = Function.FunctionDefinition.ParametersInternal;
             var added = false;
@@ -94,21 +171,34 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var state = unit.State;
             var limits = state.Limits;
 
-            for (var i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
-                if (!TryGetVariable(astParams[i].Name, out var param)) {
-                    Debug.Assert(false, "Parameter " + astParams[i].Name + " has no variable in this scope");
-                    param = AddVariable(astParams[i].Name);
+            for (int i = 0; i < others.Args.Length && i < astParams.Length; ++i) {
+                var name = astParams[i].Name;
+                VariableDef param;
+                if (string.IsNullOrEmpty(name)) {
+                    continue;
                 }
-                param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, others.Args[i]);
-                added |= param.AddTypes(entry, others.Args[i], false, unit.ProjectEntry);
+                if (name == _seqParameters?.Name) {
+                    param = _seqParameters;
+                } else if (name == _dictParameters?.Name) {
+                    param = _dictParameters;
+                } else if (!_parameters.TryGetValue(name, out param)) {
+                    Debug.Fail($"Parameter {name} has no variable in this function");
+                    _parameters[name] = param = new LocatedVariableDef(Function.AnalysisUnit.ProjectEntry,
+                        new EncodedLocation(unit, (Node)astParams[i].NameExpression ?? astParams[i]));
+                }
+                var arg = others.Args[i].Resolve(unit);
+                param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, arg);
+                added |= param.AddTypes(entry, arg, enqueue, unit.ProjectEntry);
             }
             if (_seqParameters != null) {
-                _seqParameters.List.MakeUnionStrongerIfMoreThan(limits.ListArgumentTypes, others.SequenceArgs);
-                added |= _seqParameters.List.AddTypes(unit, new[] { others.SequenceArgs });
+                var arg = others.SequenceArgs.Resolve(unit);
+                _seqParameters.List.MakeUnionStrongerIfMoreThan(limits.ListArgumentTypes, arg);
+                added |= _seqParameters.List.AddTypes(unit, new[] { arg });
             }
             if (_dictParameters != null) {
-                _dictParameters.Dict.MakeUnionStrongerIfMoreThan(limits.DictArgumentTypes, others.DictArgs);
-                added |= _dictParameters.Dict.AddTypes(Function.FunctionDefinition, unit, state.GetConstant(""), others.DictArgs);
+                var arg = others.DictArgs.Resolve(unit);
+                _dictParameters.Dict.MakeUnionStrongerIfMoreThan(limits.DictArgumentTypes, arg);
+                added |= _dictParameters.Dict.AddTypes(Function.FunctionDefinition, unit, state.GetConstant(""), arg);
             }
 
             if (scopeWithDefaultParameters != null) {
@@ -121,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             limits.NormalArgumentTypes, 
                             defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule)
                         );
-                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), false, unit.ProjectEntry);
+                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), enqueue, unit.ProjectEntry);
                     }
                 }
             }
@@ -132,35 +222,30 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return added;
         }
 
+        public FunctionInfo Function => (FunctionInfo)AnalysisValue;
 
-        public FunctionInfo Function {
-            get {
-                return (FunctionInfo)AnalysisValue;
+        internal override bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
+            var vd = GetParameter(name);
+            if (vd != null) {
+                values.Split(out IReadOnlyList<LazyValueInfo> _, out var nonLazy);
+                if (nonLazy.Any()) {
+                    vd.AddTypes(unit, nonLazy);
+                }
             }
+            return base.TryPropagateVariable(node, unit, name, values, ifNot, addRef);
         }
 
         public override IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
-            if (this != Function.AnalysisUnit.Scope) {
-                // Many scopes reference one FunctionInfo, which references one
-                // FunctionAnalysisUnit which references one scope. Since we
-                // are not that scope, we won't look at _allCalls for other
-                // variables.
-                return AllVariables;
-            }
-            
-            var scopes = new HashSet<InterpreterScope>();
-            var result = AllVariables;
-            if (Function._allCalls != null) {
-                foreach (var callUnit in Function._allCalls.Values) {
-                    scopes.Add(callUnit.Scope);
-                }
-                scopes.Remove(this);
-                foreach (var scope in scopes) {
-                    result = result.Concat(scope.GetAllMergedVariables());
-                }
+            var param = _parameters;
+            foreach (var kv in param) {
+                yield return kv;
             }
 
-            return result;
+            foreach (var kv in AllVariables) {
+                if (!param.ContainsKey(kv.Key)) {
+                    yield return kv;
+                }
+            }
         }
 
         public override IEnumerable<VariableDef> GetMergedVariables(string name) {
@@ -171,6 +256,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var seen = new HashSet<InterpreterScope>();
             var queue = new Queue<FunctionScope>();
             queue.Enqueue(this);
+            foreach (var linked in GetLinkedScopes().OfType<FunctionScope>()) {
+                queue.Enqueue(linked);
+            }
 
             while (queue.Any()) {
                 var scope = queue.Dequeue();
@@ -178,17 +266,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     continue;
                 }
 
-                if (scope.Node == Node && scope.TryGetVariable(name, out res)) {
-                    yield return res;
+                if (scope.Node == Node) {
+                    if (scope._parameters.TryGetValue(name, out res)) {
+                        yield return res;
+                    }
+                    if (scope.TryGetVariable(name, out res)) {
+                        yield return res;
+                    }
                 }
 
-                if (scope.Function._allCalls != null) {
-                    foreach (var callUnit in scope.Function._allCalls.Values) {
-                        fnScope = callUnit.Scope as FunctionScope;
-                        if (fnScope != null && fnScope != this) {
-                            queue.Enqueue(fnScope);
-                        }
-                    }
+                foreach (var r2 in scope.GetLinkedVariables(name)) {
+                    yield return r2;
                 }
 
                 foreach (var keyValue in scope.AllNodeScopes.Where(kv => nodes.Contains(kv.Key))) {
@@ -206,13 +294,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IEnumerable<AnalysisValue> GetMergedAnalysisValues() {
             yield return AnalysisValue;
-            if (Function._allCalls != null) {
-                foreach (var callUnit in Function._allCalls.Values) {
-                    if (callUnit.Scope != this) {
-                        yield return callUnit.Scope.AnalysisValue;
-                    }
-                }
-            }
         }
 
         public override int GetBodyStart(PythonAst ast) {

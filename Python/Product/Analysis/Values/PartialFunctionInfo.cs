@@ -42,15 +42,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override int DeclaringVersion => _declVersion;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            var newArgs = _args.Take(_args.Length - _keywordArgNames.Length)
-                .Concat(args.Take(args.Length - keywordArgNames.Length))
-                .Concat(_args.Skip(_args.Length - _keywordArgNames.Length))
-                .Concat(args.Skip(args.Length - keywordArgNames.Length))
-                .ToArray();
+            if (Push()) {
+                try {
+                    var newArgs = _args.Take(_args.Length - _keywordArgNames.Length)
+                        .Concat(args.Take(args.Length - keywordArgNames.Length))
+                        .Concat(_args.Skip(_args.Length - _keywordArgNames.Length))
+                        .Concat(args.Skip(args.Length - keywordArgNames.Length))
+                        .ToArray();
 
-            var newKwArgs = _keywordArgNames.Concat(keywordArgNames).ToArray();
+                    var newKwArgs = _keywordArgNames.Concat(keywordArgNames).ToArray();
 
-            return _function.Call(node, unit, newArgs, newKwArgs);
+                    return _function.Call(node, unit, newArgs, newKwArgs);
+                } finally {
+                    Pop();
+                }
+            }
+            return AnalysisSet.Empty;
         }
 
         public override IEnumerable<OverloadResult> Overloads {

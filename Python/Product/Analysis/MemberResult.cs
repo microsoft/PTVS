@@ -147,9 +147,13 @@ namespace Microsoft.PythonTools.Analysis {
                     string typeDisplay = "unknown type";
                     var types = docType.Value.OrderBy(s => s).ToList();
                     if (types.Count == 0) {
-                        continue;
+                        typeDisplay = "";
                     } else if (types.Count == 1) {
-                        typeDisplay = types[0];
+                        if (allTypes.Count > 1) {
+                            typeDisplay = types.First();
+                        } else {
+                            typeDisplay = "";
+                        }
                     } else {
                         var orStr = types.Count == 2 ? " or " : ", or ";
                         typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
