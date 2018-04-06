@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
@@ -79,20 +80,26 @@ namespace Microsoft.PythonTools.Infrastructure {
                 logFile = null;
             }
 
-            if (allowUI) {
-                lock (_displayedMessages) {
-                    var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
-                    if (_displayedMessages.Add(key)) {
-                        // First time we've seen this error, so let the user know
-                        // Prefer the dialog with our issue tracker and exception
-                        // details, but if we don't have a site available then
-                        // refer the user to ActivityLog.xml.
-                        if (site != null) {
-                            TaskDialog.ForException(site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
-                        } else if (!string.IsNullOrEmpty(logFile)) {
-                            MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
-                        }
-                    }
+            bool alreadySeen = true;
+            var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
+            lock (_displayedMessages) {
+                if (_displayedMessages.Add(key)) {
+                    alreadySeen = false;
+                }
+            }
+
+            var logger = (IPythonToolsLogger)site?.GetService(typeof(IPythonToolsLogger));
+            logger?.LogFault(ex, null, !alreadySeen);
+
+            if (allowUI && !alreadySeen) {
+                // First time we've seen this error, so let the user know
+                // Prefer the dialog with our issue tracker and exception
+                // details, but if we don't have a site available then
+                // refer the user to ActivityLog.xml.
+                if (site != null) {
+                    TaskDialog.ForException(site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
+                } else if (!string.IsNullOrEmpty(logFile)) {
+                    MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
                 }
             }
         }

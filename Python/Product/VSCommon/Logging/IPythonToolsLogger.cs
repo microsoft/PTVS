@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.PythonTools.Logging {
     /// <summary>
     /// Provides an interface for logging events and statistics inside of PTVS.
@@ -28,5 +30,7 @@ namespace Microsoft.PythonTools.Logging {
         /// Informs the logger of an event.  Unknown events should be ignored.
         /// </summary>
         void LogEvent(PythonLogEvent logEvent, object argument);
+
+        void LogFault(Exception ex, string description, bool dumpProcess);
     }
 }

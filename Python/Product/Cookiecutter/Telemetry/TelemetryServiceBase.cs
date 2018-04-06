@@ -91,6 +91,12 @@ namespace Microsoft.CookiecutterTools.Telemetry {
                 this.TelemetryRecorder.RecordEvent(completeEventName, dictWithPrefix);
             }
         }
+
+        public void ReportFault(Exception ex, string description, bool dumpProcess) {
+            var completeEventName = this.EventNamePrefix + "UnhandledException";
+            this.TelemetryRecorder.RecordFault(completeEventName, ex, description, dumpProcess);
+        }
+
         #endregion
 
         private string MakeEventName(string area, string eventName) {

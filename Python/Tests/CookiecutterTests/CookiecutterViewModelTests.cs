@@ -15,14 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -68,6 +65,7 @@ namespace CookiecutterTests {
             var outputProjectFolder = Path.Combine(output, "project");
 
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
+            CookiecutterTelemetry.Initialize(_telemetry.TelemetryService);
             _vm = new CookiecutterViewModel(
                 _cutterClient,
                 _gitHubClient,
