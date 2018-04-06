@@ -47,6 +47,10 @@ namespace Microsoft.CookiecutterTools.Telemetry {
                 }
             }
         }
+
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
+        }
+
         #endregion
 
         #region ITelemetryLog

@@ -653,7 +653,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         /// efficiently as possible. This may involve executing the
         /// interpreter, and may cache the paths for retrieval later.
         /// </summary>
-        public async static Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
+        public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
             var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
             var cachePath = (string.IsNullOrEmpty(dbPath)) ? null : Path.Combine(dbPath, "database.path");
             if (string.IsNullOrEmpty(cachePath)) {

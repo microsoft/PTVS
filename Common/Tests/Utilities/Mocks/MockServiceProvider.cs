@@ -18,15 +18,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 
 namespace TestUtilities.Mocks {
-    public class MockServiceProvider : IServiceProvider, IServiceContainer {
+    public class MockServiceProvider : IServiceContainer {
         public readonly Dictionary<Guid, object> Services = new Dictionary<Guid, object>();
         private readonly Dictionary<Guid, Func<object>> _serviceCreators = new Dictionary<Guid, Func<object>>();
-        public readonly MockComponentModel ComponentModel = new MockComponentModel();
+        public readonly IComponentModel ComponentModel;
 
-        public MockServiceProvider() {
-            Services[typeof(SComponentModel).GUID] = ComponentModel;
+        public MockServiceProvider() : this (new MockComponentModel()) { }
+        public MockServiceProvider(IComponentModel componentModel) {
+            ComponentModel = componentModel;
+            Services[typeof(SComponentModel).GUID] = componentModel;
         }
 
         public object GetService(Type serviceType) {

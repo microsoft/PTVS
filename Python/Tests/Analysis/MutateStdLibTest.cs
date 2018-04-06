@@ -23,9 +23,11 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class MutateStdLibTest {
-        static MutateStdLibTest() {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]

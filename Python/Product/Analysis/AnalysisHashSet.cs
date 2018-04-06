@@ -81,11 +81,15 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
 
         public AnalysisHashSet(IEnumerable<AnalysisValue> enumerable, IEqualityComparer<AnalysisValue> comparer)
             : this(comparer) {
-            Union(enumerable);
+            using (var e = enumerable.GetEnumerator()) {
+                AddFromEnumerator(e);
+            }
         }
 
         public AnalysisHashSet(IEnumerable<AnalysisValue> enumerable) : this() {
-            Union(enumerable);
+            using (var e = enumerable.GetEnumerator()) {
+                AddFromEnumerator(e);
+            }
         }
 
         private BucketSet Buckets {
@@ -111,7 +115,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             return DebugViewProxy.ToString(this);
         }
 
-        public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+        public IAnalysisSet Add(AnalysisValue item, bool canMutate = false) {
             if (!canMutate) {
                 if (Contains(item)) {
                     return this;
@@ -122,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             return this;
         }
 
-        public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+        public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = false) {
 #if FULL_VALIDATION
             var r = AddWorker(item, out wasChanged, canMutate);
             Validation.Assert(r.Count == r.GetTrueCount(), $"Set count is incorrect. Expected {r.GetTrueCount()}. Actual {r.Count}");
@@ -158,13 +162,13 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             return this;
         }
 
-        public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+        public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = false) {
             bool wasChanged;
             return Union(items, out wasChanged, canMutate);
         }
 
 
-        public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+        public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = false) {
 #if FULL_VALIDATION
             var r = UnionWorker(items, out wasChanged, canMutate);
             Validation.Assert(r.Count == r.GetTrueCount(), $"Set count is incorrect. Expected {r.GetTrueCount()}. Actual {r.Count}");
@@ -259,28 +263,10 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         }
 
         public IAnalysisSet Clone() {
-            var buckets = Buckets;
-            if (buckets.Count == 0) {
-                return new AnalysisHashSet(Comparer);
-            }
-
-            // Check whether we can reuse the same buckets or if
-            // we need to combine values. We can't use 'seen' for
-            // anything other than checking equality, as it does
-            // not have the merge logic we need.
-            var seen = new HashSet<AnalysisValue>(Comparer);
-            foreach (var b in buckets.Buckets) {
-                if (b.Key != null && b.Key != _removed && !seen.Add(b.Key)) {
-                    // Cannot reuse the buckets
-                    return new AnalysisHashSet(Comparer).Union(this, canMutate: true);
-                }
-            }
-
             var res = new AnalysisHashSet(Comparer);
-            var newBuckets = new BucketSet(buckets.Capacity, buckets.Count);
-            Array.Copy(buckets.Buckets, newBuckets.Buckets, buckets.Capacity);
-
-            res.Buckets = newBuckets;
+            using (var e = GetEnumerator()) {
+                res.AddFromEnumerator(e);
+            }
             return res;
         }
 

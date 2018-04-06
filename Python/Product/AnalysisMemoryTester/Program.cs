@@ -259,22 +259,12 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     break;
                 case "analyze":
                     Console.Write("Waiting for complete analysis... ");
+                    var start = DateTime.UtcNow;
                     if (!Console.IsOutputRedirected) {
-                        int cLine = Console.CursorTop;
-                        int cChar = Console.CursorLeft, lastChar = 0;
-                        var start = DateTime.UtcNow;
-                        analyzer.SetQueueReporting(i => {
-                            Console.SetCursorPosition(cChar, cLine);
-                            if (lastChar > cChar) {
-                                Console.Write(new string(' ', lastChar - cChar));
-                                Console.SetCursorPosition(cChar, cLine);
-                            }
-                            Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
-                            lastChar = Console.CursorLeft;
-                        }, 50);
+                        ConfigureProgressOutput(analyzer);
                     }
                     analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-                    Console.WriteLine("done!");
+                    Console.WriteLine("done in {0} with peak memory {1}MB!", DateTime.UtcNow - start, Process.GetCurrentProcess().PeakWorkingSet64 / 1024 / 1024);
                     break;
 
                 case "pause":
@@ -320,6 +310,21 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     Console.WriteLine("Command not available: {0}", cmd);
                     break;
             }
+        }
+
+        private static void ConfigureProgressOutput(PythonAnalyzer analyzer) {
+            int cLine = Console.CursorTop;
+            int cChar = Console.CursorLeft, lastChar = 0;
+            var start = DateTime.UtcNow;
+            analyzer.SetQueueReporting(i => {
+                Console.SetCursorPosition(cChar, cLine);
+                if (lastChar > cChar) {
+                    Console.Write(new string(' ', lastChar - cChar));
+                    Console.SetCursorPosition(cChar, cLine);
+                }
+                Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
+                lastChar = Console.CursorLeft;
+            }, 50);
         }
 
         private static IEnumerable<ModulePath> GetModules(string args) {

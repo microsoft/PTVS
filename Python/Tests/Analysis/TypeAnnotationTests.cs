@@ -30,15 +30,10 @@ namespace AnalysisTests {
     [TestClass]
     public class TypeAnnotationTests : BaseAnalysisTest {
         [TestInitialize]
-        public void TestInitialize() {
-            StartAnalysisLog();
-        }
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
         [TestCleanup]
-        public void TestCleanup() {
-            EndAnalysisLog();
-            AssertListener.ThrowUnhandled();
-        }
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         internal static TypeAnnotation Parse(string expr, PythonLanguageVersion version = PythonLanguageVersion.V36) {
             var errors = new CollectingErrorSink();

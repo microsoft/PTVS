@@ -1110,25 +1110,21 @@ async def g():
             }
         }
 
-        private static void TestQuickInfo(PythonEditor view, int start, int end, params string[] expected) {
+        private static void TestQuickInfo(PythonEditor view, int start, int end, string expected = null) {
             var snapshot = view.CurrentSnapshot;
 
-            for (int i = start; i < end; i++) {
-                List<object> quickInfo = new List<object>();
-                ITrackingSpan span;
-                QuickInfoSource.AugmentQuickInfoWorker(
-                    quickInfo,
-                    view.Analyzer.GetQuickInfoAsync(
-                        (AnalysisEntry)view.GetAnalysisEntry(),
-                        view.View.TextView,
-                        new SnapshotPoint(snapshot, start)
-                    ).Result,
-                    out span
-                );
+            for (var i = start; i < end; i++) {
+                var quickInfo = view.Analyzer.GetQuickInfoAsync(
+                    (AnalysisEntry) view.GetAnalysisEntry(),
+                    view.View.TextView,
+                    new SnapshotPoint(snapshot, start)
+                ).Result;
 
-                Assert.AreEqual(expected.Length, quickInfo.Count);
-                for (int j = 0; j < expected.Length; j++) {
-                    Assert.AreEqual(expected[j], quickInfo[j]);
+                if (expected != null) {
+                    Assert.IsNotNull(quickInfo);
+                    Assert.AreEqual(expected, quickInfo.Text);
+                } else {
+                    Assert.IsNull(quickInfo);
                 }
             }
         }
