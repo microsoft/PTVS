@@ -168,13 +168,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ReportUnhandledException(Exception ex) {
-            SendUnhandledException(ex);
+            SendUnhandledExceptionAsync(ex).DoNotWait();
             // Allow some time for the other threads to write the event before
             // we (probably) come crashing down.
             Thread.Sleep(100);
         }
 
-        private async void SendUnhandledException(Exception ex) {
+        private async Task SendUnhandledExceptionAsync(Exception ex) {
             try {
                 Debug.Fail(ex.ToString());
                 await _connection.SendEventAsync(
@@ -1764,26 +1764,23 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public AP.AnalysisOptions Options { get; set; }
 
-        private async void AnalysisQueue_Complete(object sender, EventArgs e) {
-            if (_connection == null) {
-                return;
-            }
-            await _connection.SendEventAsync(new AP.AnalysisCompleteEvent()).ConfigureAwait(false);
+        private void AnalysisQueue_Complete(object sender, EventArgs e) {
+            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent()).DoNotWait();
         }
 
-        private async void OnModulesChanged(object sender, EventArgs args) {
-            await _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams { });
+        private void OnModulesChanged(object sender, EventArgs args) {
+            _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams()).DoNotWait();
         }
 
-        private async void OnFileChanged(AP.FileChangedEvent e) {
-            await _server.DidChangeWatchedFiles(new LS.DidChangeWatchedFilesParams {
+        private void OnFileChanged(AP.FileChangedEvent e) {
+            _server.DidChangeWatchedFiles(new LS.DidChangeWatchedFilesParams {
                 changes = e.changes.MaybeEnumerate().Select(c => new LS.FileEvent { uri = c.documentUri, type = c.kind }).ToArray()
-            });
+            }).DoNotWait();
         }
 
         private void OnAnalysisComplete(object sender, LS.AnalysisCompleteEventArgs e) {
             _connection.SendEventAsync(
-                new AP.FileAnalysisCompleteEvent() {
+                new AP.FileAnalysisCompleteEvent {
                     documentUri = e.uri,
                     version = e.version
                 }
@@ -1858,31 +1855,31 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </remarks>
         public PythonAnalyzer Project => _server._analyzer;
 
-        private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
-            await _connection.SendEventAsync(
+        private void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
+            _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {
                     documentUri = e.uri,
                     version = e._version ?? -1,
                     diagnostics = e.diagnostics?.ToArray()
                 }
-            );
+            ).DoNotWait();
         }
 
-        private async void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
-            await _connection.SendEventAsync(
+        private void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
+            _connection.SendEventAsync(
                 new AP.FileParsedEvent {
                     documentUri = e.uri,
                     version = e.version
                 }
-            );
+            ).DoNotWait();
         }
 
-        private async void OnFileFound(object sender, LS.FileFoundEventArgs e) {
+        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
             // Send a notification for this file
-            await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
+            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
                 documentUri = e.uri,
                 filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            });
+            }).DoNotWait();
         }
 
 

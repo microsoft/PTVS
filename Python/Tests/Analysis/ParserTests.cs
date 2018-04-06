@@ -36,15 +36,11 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
         [TestCleanup]
-        public void TestCleanup() {
-            AssertListener.ThrowUnhandled();
-        }
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36, PythonLanguageVersion.V37 };
         internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();

@@ -64,6 +64,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="AnalyzerTests.cs" />
+    <Compile Include="AssemblySetup.cs" />
     <Compile Include="AstAnalysisTests.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="DocumentBufferTests.cs" />

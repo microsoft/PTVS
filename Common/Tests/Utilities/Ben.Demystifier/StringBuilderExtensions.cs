@@ -58,16 +58,16 @@ namespace TestUtilities.Ben.Demystifier {
             }
 
             for (var i = 0; i < frames.Length; i++) {
-                if (i > 0) {
-                    stringBuilder.AppendLine();
-                }
-
                 var frame = frames[i];
                 var method = frame.GetMethod();
 
                 // Always show last stackFrame
                 if (!ShowInStackTrace(method) && i != frames.Length - 1) {
                     continue;
+                }
+
+                if (i > 0) {
+                    stringBuilder.AppendLine();
                 }
 
                 stringBuilder
