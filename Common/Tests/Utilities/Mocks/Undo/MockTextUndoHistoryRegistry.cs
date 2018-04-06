@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.CodeAnalysis;
@@ -10,11 +26,9 @@ namespace TestUtilities.Mocks {
     [Export(typeof(ITextUndoHistoryRegistry))]
     [Export(typeof(MockTextUndoHistoryRegistry))]
     public class MockTextUndoHistoryRegistry : ITextUndoHistoryRegistry {
-        #region Private Fields
         private readonly Dictionary<ITextUndoHistory, int> _histories;
         private readonly Dictionary<KeyWeakReference, ITextUndoHistory> _weakContextMapping;
         private readonly Dictionary<object, ITextUndoHistory> _strongContextMapping;
-        #endregion // Private Fields
 
         public MockTextUndoHistoryRegistry() {
             // set up the list of histories
@@ -54,31 +68,32 @@ namespace TestUtilities.Mocks {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            ITextUndoHistory result;
-
-            if (_strongContextMapping.ContainsKey(context)) {
-                result = _strongContextMapping[context];
-
+            if (_strongContextMapping.TryGetValue(context, out var result)) {
                 if (!keepAlive) {
                     _strongContextMapping.Remove(context);
                     _weakContextMapping.Add(new KeyWeakReference(context), result);
                 }
-            } else if (_weakContextMapping.ContainsKey(new KeyWeakReference(context))) {
-                result = _weakContextMapping[new KeyWeakReference(context)];
 
+                return result;
+            }
+
+            var reference = new KeyWeakReference(context);
+            if (_weakContextMapping.TryGetValue(reference, out result)) {
                 if (keepAlive) {
-                    _weakContextMapping.Remove(new KeyWeakReference(context));
+                    _weakContextMapping.Remove(reference);
                     _strongContextMapping.Add(context, result);
                 }
+
+                return result;
+            }
+
+            result = new MockTextUndoHistory(this);
+            _histories.Add(result, 1);
+
+            if (keepAlive) {
+                _strongContextMapping.Add(context, result);
             } else {
-                result = new MockTextUndoHistory(this);
-                _histories.Add(result, 1);
-
-                if (keepAlive) {
-                    _strongContextMapping.Add(context, result);
-                } else {
-                    _weakContextMapping.Add(new KeyWeakReference(context), result);
-                }
+                _weakContextMapping.Add(reference, result);
             }
 
             return result;
@@ -94,17 +109,11 @@ namespace TestUtilities.Mocks {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            ITextUndoHistory result;
-
-            if (_strongContextMapping.ContainsKey(context)) {
-                result = _strongContextMapping[context];
-            } else if (_weakContextMapping.ContainsKey(new KeyWeakReference(context))) {
-                result = _weakContextMapping[new KeyWeakReference(context)];
-            } else {
+            if (!TryGetHistory(context, out var history)) {
                 throw new InvalidOperationException("Cannot find context in registry");
             }
 
-            return result;
+            return history;
         }
 
         /// <summary>
@@ -118,16 +127,8 @@ namespace TestUtilities.Mocks {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            ITextUndoHistory result = null;
-
-            if (_strongContextMapping.ContainsKey(context)) {
-                result = _strongContextMapping[context];
-            } else if (_weakContextMapping.ContainsKey(new KeyWeakReference(context))) {
-                result = _weakContextMapping[new KeyWeakReference(context)];
-            }
-
-            history = result;
-            return (result != null);
+            return _strongContextMapping.TryGetValue(context, out history)
+                || _weakContextMapping.TryGetValue(new KeyWeakReference(context), out history);
         }
 
         /// <summary>

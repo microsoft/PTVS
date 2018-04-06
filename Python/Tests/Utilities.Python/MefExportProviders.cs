@@ -18,7 +18,7 @@ using System;
 using Microsoft.VisualStudio.Composition;
 using TestUtilities.Mocks;
 
-namespace TestUtilities {
+namespace TestUtilities.Python {
     public static class MefExportProviders {
         private static readonly Lazy<IExportProviderFactory> _editorExportProviderFactoryLazy = new Lazy<IExportProviderFactory>(CreateEditorExportProviderFactory);
 

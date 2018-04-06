@@ -23,5 +23,25 @@ namespace TestUtilities.Mocks {
         public KeyWeakReference(object target) : base(target) {
             HashCode = target.GetHashCode();
         }
+
+        public override int GetHashCode() => HashCode;
+
+        public override bool Equals(object obj) => Equals(obj as KeyWeakReference);
+
+        public bool Equals(KeyWeakReference other) {
+            if (other == null) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+
+            if (IsAlive && other.IsAlive) {
+                return Equals(Target, other.Target);
+            }
+
+            return !IsAlive && !other.IsAlive && HashCode == other.HashCode;
+        }
     }
 }

@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
 
-        public async override Task<InitializeResult> Initialize(InitializeParams @params) {
+        public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.interpreter.properties.ContainsKey("TestEnvironment");
             if (_testEnvironment) {
                 // Test environment needs predictable initialization.

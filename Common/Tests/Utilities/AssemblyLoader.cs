@@ -67,7 +67,7 @@ namespace TestUtilities {
         }
 
         private Assembly ResolveAssembly(string assemblyName, Func<string, string, Assembly> assemblyLoader) {
-            if (!string.Equals(Path.GetExtension(assemblyName), ".dll", StringComparison.Ordinal)) {
+            if (!string.Equals(Path.GetExtension(assemblyName), ".dll", StringComparison.OrdinalIgnoreCase)) {
                 assemblyName += ".dll";
             }
 

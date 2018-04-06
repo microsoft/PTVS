@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -47,7 +47,8 @@ namespace Microsoft.VisualStudioTools {
 
         public static void EnsureService(IServiceContainer container) {
             if (container.GetService(typeof(UIThreadBase)) == null) {
-                container.AddService(typeof(UIThreadBase), new UIThread(container.GetComponentModel()?.GetService<JoinableTaskContext>()), true);
+                var componentModel = container.GetService(typeof(SComponentModel)) as IComponentModel;
+                container.AddService(typeof(UIThreadBase), new UIThread(componentModel?.GetService<JoinableTaskContext>()), true);
             }
         }
 

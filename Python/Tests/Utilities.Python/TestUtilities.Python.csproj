@@ -105,6 +105,7 @@
     <Compile Include="EditorTestToolset.cs" />
     <Compile Include="EnvironmentVariableSetter.cs" />
     <Compile Include="InterpreterWithPackageSetter.cs" />
+    <Compile Include="MefExportProviders.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
     <Compile Include="MockPackageManager.cs" />
     <Compile Include="MockPythonToolsOptionsService.cs" />

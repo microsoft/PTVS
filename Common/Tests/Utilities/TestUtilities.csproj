@@ -112,7 +112,6 @@
     <Compile Include="ITreeNode.cs" />
     <Compile Include="IVisualStudioInstance.cs" />
     <Compile Include="MefCatalogFactory.cs" />
-    <Compile Include="MefExportProviders.cs" />
     <Compile Include="MefFactoryGenerator.cs" />
     <Compile Include="MessageBoxButton.cs" />
     <Compile Include="Mocks\IClassificationTypeDefinitionMetadata.cs" />
@@ -130,7 +129,7 @@
     <Compile Include="Mocks\MockVsShell.cs" />
     <Compile Include="Mocks\Undo\NullMergeUndoTransactionPolicy.cs" />
     <Compile Include="Mocks\TextVersionWorkaround.cs" />
-    <Compile Include="Mocks\WeakKeyComparer.cs" />
+    <Compile Include="Mocks\KeyWeakReferenceComparer.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />

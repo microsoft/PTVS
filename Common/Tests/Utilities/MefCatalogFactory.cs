@@ -29,7 +29,7 @@ using MefV1 = System.ComponentModel.Composition;
 using ComposablePartDefinition = Microsoft.VisualStudio.Composition.ComposablePartDefinition;
 
 namespace TestUtilities {
-    internal static class MefCatalogFactory {
+    public static class MefCatalogFactory {
         private static readonly Resolver StandardResolver = Resolver.DefaultInstance;
         private static readonly PartDiscovery Discovery = PartDiscovery.Combine(new AttributedPartDiscoveryV1(StandardResolver), new AttributedPartDiscovery(StandardResolver, true));
 

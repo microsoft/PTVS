@@ -21,15 +21,11 @@ using Microsoft.VisualStudio.Text.Operations;
 
 namespace TestUtilities.Mocks {
     internal class MockTextUndoTransaction : ITextUndoTransaction {
-        #region Private Fields
-
         private readonly MockTextUndoHistory _history;
         private readonly MockTextUndoTransaction _parent;
 
         private UndoTransactionState _state;
         private readonly List<ITextUndoPrimitive> _primitives;
-
-        #endregion
 
         public MockTextUndoTransaction(ITextUndoHistory history, ITextUndoTransaction parent, string description) {
             _history = history as MockTextUndoHistory;

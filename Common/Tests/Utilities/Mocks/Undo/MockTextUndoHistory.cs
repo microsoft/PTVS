@@ -25,16 +25,12 @@ namespace TestUtilities.Mocks {
 
         public event EventHandler<TextUndoTransactionCompletedEventArgs> UndoTransactionCompleted;
 
-        #region Private Fields
-
         private MockTextUndoTransaction _currentTransaction;
         private readonly Stack<ITextUndoTransaction> _undoStack;
         private readonly Stack<ITextUndoTransaction> _redoStack;
         private MockTextUndoPrimitive _activeUndoOperationPrimitive;
         private TextUndoHistoryState _state;
         private PropertyCollection _properties;
-
-        #endregion
 
         internal MockTextUndoHistoryRegistry UndoHistoryRegistry { get; set; }
 
