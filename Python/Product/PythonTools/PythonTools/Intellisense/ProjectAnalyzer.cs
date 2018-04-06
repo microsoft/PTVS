@@ -1353,6 +1353,43 @@ namespace Microsoft.PythonTools.Intellisense {
                    GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
         }
 
+        //internal async Task<CompletionSet> GetCompletionsAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
+        //    var bi = snapshot.TextBuffer.TryGetInfo();
+        //    if (bi == null) {
+        //        return null;
+        //    }
+
+        //    Debug.Assert(bi.AnalysisEntry == entry);
+
+        //    var pt = point.GetPoint(bi.LastSentSnapshot).ToSourceLocation();
+
+        //    AP.CompletionsResponse comp;
+        //    using (new DebugTimer("CompletionRequest", CompletionAnalysis.TooMuchTime)) {
+        //        comp = await SendRequestAsync(
+        //            new AP.CompletionsRequest {
+        //                documentUri = entry.DocumentUri,
+        //                line = pt.Line,
+        //                column = pt.Column,
+        //                options = options.MemberOptions
+        //            }
+        //        ).ConfigureAwait(false);
+        //    }
+
+        //    if ((comp?.completions?.Length ?? 0) == 0) {
+        //        return null;
+        //    }
+
+        //    var result = new FuzzyCompletionSet(
+        //        "Python",
+        //        "Python",
+        //        span,
+        //        members.Select(m => PythonCompletion(glyphService, m)),
+        //        _options,
+        //        CompletionComparer.UnderscoresLast,
+        //        matchInsertionText: true
+        //    );
+        //}
+
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>

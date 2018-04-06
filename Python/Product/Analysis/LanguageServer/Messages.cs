@@ -222,10 +222,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string triggerCharacter;
 
         public bool _intersection;
-        public bool? _statementKeywords;
-        public bool? _expressionKeywords;
-        public bool? _includeAllModules;
-        public bool? _includeArgumentNames;
+        //public bool? _statementKeywords;
+        //public bool? _expressionKeywords;
+        //public bool? _includeAllModules;
+        //public bool? _includeArgumentNames;
         public CompletionItemKind? _filterKind;
     }
 

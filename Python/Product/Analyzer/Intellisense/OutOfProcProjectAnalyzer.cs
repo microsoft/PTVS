@@ -1337,7 +1337,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 context = new LS.CompletionContext {
                     triggerKind = LS.CompletionTriggerKind.Invoked,
                     _filterKind = LS.CompletionItemKind.Module,
-                    _includeAllModules = true
+                    //_includeAllModules = true
                 }
             });
 
@@ -1354,9 +1354,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 textDocument = req.documentUri,
                 context = new LS.CompletionContext {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
-                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
-                    _includeArgumentNames = true
+                    //_statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    //_expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
+                    //_includeArgumentNames = true
                 },
                 _expr = req.text
             });

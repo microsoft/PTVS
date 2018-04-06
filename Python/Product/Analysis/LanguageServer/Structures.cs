@@ -626,6 +626,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public bool isIncomplete;
         public CompletionItem[] items;
+
+        /// <summary>
+        /// The range that should be replaced when committing a completion from this
+        /// list. Where <c>textEdit</c> is set on a completion, prefer that.
+        /// </summary>
+        public Range? _applicableSpan;
     }
 
     [Serializable]

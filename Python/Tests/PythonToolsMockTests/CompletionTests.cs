@@ -1162,9 +1162,8 @@ async def g():
                 index += snapshot.Length + 1;
             }
 
-            CompletionAnalysis context = null;
-            view.VS.InvokeSync(() => {
-                context = view.VS.GetPyService().GetCompletions(
+            var context = view.VS.InvokeTask(async () => {
+                return await view.VS.GetPyService().GetCompletionsAsync(
                     null,
                     view.View.TextView,
                     snapshot,

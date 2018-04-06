@@ -209,32 +209,86 @@ namespace AnalysisTests {
 
             await AssertCompletion(
                 s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                context: new CompletionContext {
-                    _statementKeywords = false,
-                    _expressionKeywords = false
-                },
-                contains: new[] { "x", "y", "z", "pi", "int", "float" },
-                excludes: new[] { "sys", "class", "def", "while", "in" }
+                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
+                new[] { "x", "y", "z", "int", "float", "class", "def", "while", "in" },
+                new[] { "return", "sys", "yield" }
             );
 
+            // Completions at def f(
             await AssertCompletion(
                 s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                context: new CompletionContext {
-                    _statementKeywords = true,
-                    _expressionKeywords = false
-                },
-                contains: new[] { "x", "y", "z", "pi", "int", "float", "class", "def", "while" },
-                excludes: new[] { "sys", "in" }
+                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
+                new[] { "x", "y", "z", "int", "float" },
+                new[] { "sys", "return", "yield", "class", "def", "while", "in" },
+                position: new Position { line = 4, character = 7 }
             );
 
+            // Completions in function body
             await AssertCompletion(
                 s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                new[] { "x", "y", "z", "pi", "int", "float", "class", "def", "while", "in" },
-                new[] { "sys" }
+                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
+                new[] { "x", "y", "z", "int", "float", "class", "def", "while", "in", "return", "yield" },
+                new[] { "sys" },
+                position: new Position { line = 5, character = 5 }
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInFunctionDefinition() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "def f(a, b:int, c=2, d:float=None): pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 7));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 10));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 19));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 34));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 35));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
+
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInClassDefinition() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "class C(object, metaclass=MC): pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 9));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 15));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 30));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 31));
+
+            u = await AddModule(s, "class D(o");
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 9));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInStatements() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "for f in l: pass\nwith x as y: pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 10));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 12));
+            await AssertAnyCompletion(s, u, new SourceLocation(2, 6));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 11));
+            await AssertAnyCompletion(s, u, new SourceLocation(2, 13));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInImport() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "import unittest.case");
+
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 17));
         }
 
         [TestMethod, Priority(0)]
@@ -627,6 +681,21 @@ x = 3.14
                 contains,
                 excludes
             );
+        }
+
+        private static async Task AssertAnyCompletion(Server s, TextDocumentIdentifier document, Position position) {
+            var res = (await s.Completion(new CompletionParams { textDocument = document, position = position })).items;
+            if (res == null || !res.Any()) {
+                Assert.Fail("Completions were not returned");
+            }
+        }
+
+        private static async Task AssertNoCompletion(Server s, TextDocumentIdentifier document, Position position) {
+            var res = (await s.Completion(new CompletionParams { textDocument = document, position = position })).items;
+            if (res != null && res.Any()) {
+                var msg = string.Join(", ", res.Select(c => c.label).Ordered());
+                Assert.Fail("Completions were returned: " + msg);
+            }
         }
 
         public static async Task AssertSignature(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null) {
