@@ -1329,7 +1329,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task<Response> GetModules(Request request) {
             var getModules = (AP.GetModulesRequest)request;
-            var prefix = getModules.package == null ? null : (string.Join(".", getModules.package) + ".");
+            var prefix = getModules.package == null ? null : (string.Join(".", getModules.package));
 
             var modules = await _server.Completion(new LS.CompletionParams {
                 textDocument = getModules.documentUri,
@@ -1337,7 +1337,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 context = new LS.CompletionContext {
                     triggerKind = LS.CompletionTriggerKind.Invoked,
                     _filterKind = LS.CompletionItemKind.Module,
-                    //_includeAllModules = true
+                    //_includeAllModules = getModules.package == null
                 }
             });
 

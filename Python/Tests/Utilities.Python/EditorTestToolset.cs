@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
@@ -43,7 +44,7 @@ namespace TestUtilities.Python {
             _serviceProvider.Services[typeof(SVsSettingsManager).GUID] = settingsManager;
 
             if (useRealUIThread) {
-                Microsoft.VisualStudioTools.UIThread.EnsureService(_serviceProvider);
+                _serviceProvider.AddService(typeof(UIThreadBase), new UIThread(_exportProvider.GetExportedValue<JoinableTaskContext>()));
             } else {
                 _serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             }

@@ -423,6 +423,7 @@ namespace Microsoft.PythonTools.Analysis {
             var modules = unit.State.Modules;
 
             if (modules.TryImport(moduleName, out modRef)) {
+                modRef.Module?.Imported(unit);
                 return modRef.AnalysisModule ?? AnalysisSet.Empty;
             }
 
@@ -435,6 +436,7 @@ namespace Microsoft.PythonTools.Analysis {
                 modName = modName.Remove(i);
 
                 if (modules.TryImport(modName, out modRef)) {
+                    modRef.Module?.Imported(unit);
                     break;
                 }
             }
