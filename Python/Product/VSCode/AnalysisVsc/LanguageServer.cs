@@ -214,11 +214,8 @@ namespace Microsoft.PythonTools.VsCode {
            => _server.Hover(token.ToObject<TextDocumentPositionParams>());
 
         [JsonRpcMethod("textDocument/signatureHelp")]
-        public async Task<SignatureHelp> SignatureHelp(JToken token) {
-            var sh = await _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
-            BuildMarkdownSignature(sh);
-            return sh;
-        }
+        public Task<SignatureHelp> SignatureHelp(JToken token)
+            => _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
 
         [JsonRpcMethod("textDocument/definition")]
         public Task<Reference[]> GotoDefinition(JToken token)
@@ -272,39 +269,5 @@ namespace Microsoft.PythonTools.VsCode {
         public Task<WorkspaceEdit> Rename(JToken token)
             => _server.Rename(token.ToObject<RenameParams>());
         #endregion
-
-        private void BuildMarkdownSignature(SignatureHelp signatureHelp) {
-            foreach (var s in signatureHelp.signatures) {
-                // Recostruct full signature so editor can display current parameter
-                var sb = new StringBuilder();
-
-                if (s.documentation != null) {
-                    s.documentation.value = _textConverter.ToMarkdown(s.documentation.value);
-                }
-                sb.Append(s.label);
-                sb.Append('(');
-                if (s.parameters != null) {
-                    foreach (var p in s.parameters) {
-                        if (sb[sb.Length - 1] != '(') {
-                            sb.Append(", ");
-                        }
-                        sb.Append(p.label);
-                        if (!string.IsNullOrEmpty(p._type)) {
-                            sb.Append(':');
-                            sb.Append(p._type);
-                        }
-                        if (!string.IsNullOrEmpty(p._defaultValue)) {
-                            sb.Append('=');
-                            sb.Append(p._defaultValue);
-                        }
-                        if (p.documentation != null) {
-                            p.documentation.value = _textConverter.ToMarkdown(p.documentation.value);
-                        }
-                    }
-                }
-                sb.Append(')');
-                s.label = sb.ToString();
-            }
-        }
     }
 }

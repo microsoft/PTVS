@@ -69,8 +69,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
-                if (originalExpression.Length > 4096) {
-                    originalExpression = originalExpression.Substring(0, 4093) + "...";
+                if (originalExpression.Length > displayOptions.maxDocumentationTextLength) {
+                    originalExpression = originalExpression.Substring(0, 
+                        Math.Max(3, displayOptions.maxDocumentationTextLength - 3)) + "...";
                 }
                 if (multiline) {
                     result.Insert(0, $"{originalExpression}:{Environment.NewLine}");

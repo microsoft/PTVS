@@ -383,16 +383,22 @@ class Signature(object):
         return "return " + restype
 
     def _init_argspec_fromdocstring(self, defaults, doc=None, override_name=None):
-        allow_name_mismatch = True
         if not doc:
             doc = getattr(self.callable, '__doc__', None)
-            allow_name_mismatch = False
         if not isinstance(doc, str):
+            return
+
+        if doc.startswith('<attribute'):
             return
 
         doc = self._get_first_function_call(doc)
         if not doc:
             return
+
+        if(override_name):
+            allow_name_mismatch = override_name not in doc
+        else:
+            allow_name_mismatch = False
 
         return self._parse_funcdef(doc, allow_name_mismatch, defaults, override_name)
 
@@ -691,6 +697,8 @@ class MemberInfo(object):
             yield '    ' + repr(self.documentation)
         if self.members:
             for mi in self.members:
+                if hasattr(mi, 'documentation') and not isinstance(mi.documentation, str):
+                    continue
                 if mi is not MemberInfo.NO_VALUE:
                     yield mi.as_str('    ')
         else:
@@ -889,7 +897,7 @@ class ScrapeState(object):
             else:
                 if not self._should_add_value(value):
                     continue
-                if self._mro_contains(mro, name, value):
+                if name != '__init__' and self._mro_contains(mro, name, value):
                     continue
                 members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc, scope_alias=scope_alias))
 

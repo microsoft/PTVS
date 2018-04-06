@@ -47,15 +47,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal static string CleanDocumentation(string doc) {
-            int ctr = 0;
+            // Remove excessive line breaks and remove line breaks inside 
+            // the body of documentation so text flows inside the tooltip.
+            var ctr = 0;
+            var seenParagraphGap = false;
             var result = new StringBuilder(doc.Length);
-            foreach (char c in doc) {
+            foreach (var c in doc) {
                 if (c == '\r') {
-                    // pass
-                } else if (c == '\n') {
-                    ctr++;
-                    if (ctr < 3) {
-                        result.Append("\r\n");
+                    continue;
+                }
+                if (c == '\n') {
+                    if (seenParagraphGap) {
+                        result.Append(' ');
+                    } else {
+                        ctr++;
+                        if (ctr < 3) {
+                            result.AppendLine();
+                            seenParagraphGap = ctr == 2;
+                        }
                     }
                 } else {
                     result.Append(c);

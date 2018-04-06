@@ -204,11 +204,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, name);
                 if (!string.IsNullOrWhiteSpace(annotation)) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " : ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ": ");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, annotation);
                 }
                 if (!string.IsNullOrWhiteSpace(defaultValue)) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " = ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "=");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, defaultValue);
                 }
             }
