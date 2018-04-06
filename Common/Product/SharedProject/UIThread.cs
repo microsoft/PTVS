@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudioTools {
         private readonly JoinableTaskFactory _factory;
         private readonly bool _needDispose;
 
-        private UIThread(JoinableTaskContext joinableTaskContext) {
+        internal UIThread(JoinableTaskContext joinableTaskContext) {
             try {
                 _context = joinableTaskContext ?? ThreadHelper.JoinableTaskContext;
                 Trace.TraceInformation("Using TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
@@ -47,8 +47,7 @@ namespace Microsoft.VisualStudioTools {
 
         public static void EnsureService(IServiceContainer container) {
             if (container.GetService(typeof(UIThreadBase)) == null) {
-                var componentModel = container.GetService(typeof(SComponentModel)) as IComponentModel;
-                container.AddService(typeof(UIThreadBase), new UIThread(componentModel?.GetService<JoinableTaskContext>()), true);
+                container.AddService(typeof(UIThreadBase), new UIThread(null), true);
             }
         }
 
