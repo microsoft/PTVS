@@ -1174,16 +1174,14 @@ async def g():
                 index += snapshot.Length + 1;
             }
 
-            var context = view.VS.InvokeTask(async () => {
-                return await view.VS.GetPyService().GetCompletionsAsync(
-                    null,
-                    view.View.TextView,
-                    snapshot,
-                    snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
-                    snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
-                    new CompletionOptions()
-                );
-            });
+            var context = view.VS.Invoke(() => view.VS.GetPyService().GetCompletions(
+                null,
+                view.View.TextView,
+                snapshot,
+                snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
+                snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
+                new CompletionOptions()
+            ));
 
             Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
             var normalContext = (NormalCompletionAnalysis)context;
