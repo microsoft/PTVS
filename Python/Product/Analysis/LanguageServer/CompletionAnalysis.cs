@@ -82,6 +82,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 GetCompletionsInDefinition(ref allowKeywords, ref additional) ??
                 GetCompletionsInForStatement() ??
                 GetCompletionsInWithStatement() ??
+                GetCompletionsInRaiseStatement(ref allowArguments, ref opts) ??
                 GetCompletionsInExceptStatement(ref allowKeywords, ref opts) ??
                 GetCompletionsFromTopLevel(allowKeywords, allowArguments, opts);
 
@@ -302,6 +303,43 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
+        private IEnumerable<CompletionItem> GetCompletionsInRaiseStatement(ref bool allowKeywords, ref GetMemberOptions opts) {
+            if (Statement is RaiseStatement rs) {
+                // raise Type, Value, Traceback with Cause
+                if (rs.Cause != null) {
+                    if (Index >= rs.Cause.StartIndex) {
+                        return null;
+                    }
+                }
+                if (rs.Traceback != null) {
+                    if (Index >= rs.Traceback.StartIndex) {
+                        return null;
+                    }
+                }
+                if (rs.Value != null) {
+                    if (Index >= rs.Value.StartIndex) {
+                        return null;
+                    }
+                }
+                if (rs.ExceptType != null) {
+                    if (Index > rs.ExceptType.EndIndex) {
+                        if (Tree.LanguageVersion.Is3x()) {
+                            return Once(FromKeywordCompletion);
+                        }
+                        return Empty;
+                    } else if (Index >= rs.ExceptType.StartIndex) {
+                        opts |= GetMemberOptions.ExceptionsOnly;
+                        return null;
+                    }
+                }
+                if (Index >= rs.StartIndex + 6) {
+                    opts |= GetMemberOptions.ExceptionsOnly;
+                    return null;
+                }
+            }
+            return null;
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsInExceptStatement(ref bool allowKeywords, ref GetMemberOptions opts) {
             if (Statement is TryStatementHandler ts) {
                 // except Test as Target
@@ -339,10 +377,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
                 if (Statement == null || Index == Statement.StartIndex) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
-                } else {
-                    if (System.Diagnostics.Debugger.IsAttached) {
-                        System.Diagnostics.Debugger.Break();
-                    }
                 }
             }
 
@@ -373,7 +407,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private static readonly CompletionItem MetadataArgCompletion = ToCompletionItem("metaclass=", PythonMemberType.NamedArgument);
         private static readonly CompletionItem AsKeywordCompletion = ToCompletionItem("as", PythonMemberType.Keyword);
+        private static readonly CompletionItem FromKeywordCompletion = ToCompletionItem("from", PythonMemberType.Keyword);
         private static readonly CompletionItem ImportKeywordCompletion = ToCompletionItem("import", PythonMemberType.Keyword);
+        private static readonly CompletionItem WithKeywordCompletion = ToCompletionItem("with", PythonMemberType.Keyword);
 
         private static CompletionItem KeywordCompletion(string keyword) => new CompletionItem {
             label = keyword,

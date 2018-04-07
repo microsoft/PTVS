@@ -129,8 +129,15 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             private bool SaveStmt(Statement stmt, bool baseWalk) {
-                if (stmt == null || !baseWalk) {
+                if (stmt == null) {
                     return false;
+                }
+                if (!baseWalk) {
+                    var stmtEnd = _ast.IndexToLocation(stmt.EndIndex);
+                    var spanStart = _ast.IndexToLocation(Location);
+                    if (stmtEnd.Line != spanStart.Line || stmtEnd.Column > spanStart.Column) {
+                        return false;
+                    }
                 }
 
                 Statement = stmt;
@@ -177,6 +184,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(AssignmentStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(RaiseStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
 
             public override bool Walk(FunctionDefinition node) {

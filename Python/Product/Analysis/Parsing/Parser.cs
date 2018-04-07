@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Parsing {
             ast.HasVerbatim = _verbatim;
             ast.PrivatePrefix = _privatePrefix;
             if (_token.Token != null) {
-                ast.SetLoc(0, GetEnd());
+                ast.SetLoc(0, GetEndForStatement());
             }
             if (_verbatim) {
                 AddExtraVerbatimText(ast, _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage);
@@ -646,7 +646,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, delWhiteSpace);
             }
@@ -681,13 +681,13 @@ namespace Microsoft.PythonTools.Parsing {
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, returnWhitespace);
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
         private Statement FinishSmallStmt(Statement stmt) {
             NextToken();
-            stmt.SetLoc(GetStart(), GetEnd());
+            stmt.SetLoc(GetStart(), GetEndForStatement());
             if (_verbatim) {
                 AddPreceedingWhiteSpace(stmt, _tokenWhiteSpace);
             }
@@ -1094,7 +1094,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddNamesWhiteSpace(ret, asNameWhiteSpace.ToArray());
                 AddPreceedingWhiteSpace(ret, whitespace);
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1285,7 +1285,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1409,7 +1409,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
                 AddThirdPreceedingWhiteSpace(ret, commaWhiteSpace);
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1424,7 +1424,7 @@ namespace Microsoft.PythonTools.Parsing {
             var l = ReadNameList(out commaWhiteSpace, out namesWhiteSpace);
             var names = l.ToArray();
             GlobalStatement ret = new GlobalStatement(names);
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, globalWhiteSpace);
                 AddListWhiteSpace(ret, commaWhiteSpace.ToArray());
@@ -1447,7 +1447,7 @@ namespace Microsoft.PythonTools.Parsing {
             var l = ReadNameList(out commaWhiteSpace, out namesWhiteSpace);
             var names = l.ToArray();
             NonlocalStatement ret = new NonlocalStatement(names);
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, localWhiteSpace);
                 AddListWhiteSpace(ret, commaWhiteSpace.ToArray());
@@ -1520,6 +1520,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
             }
+
             RaiseStatement ret = new RaiseStatement(type, value, traceback, cause);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, raiseWhiteSpace);
@@ -1530,7 +1531,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1551,7 +1552,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddPreceedingWhiteSpace(ret, whiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, commaWhiteSpace);
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1580,7 +1581,7 @@ namespace Microsoft.PythonTools.Parsing {
                         AddPreceedingWhiteSpace(ret, printWhiteSpace);
                         AddSecondPreceedingWhiteSpace(ret, rightShiftWhiteSpace);
                     }
-                    ret.SetLoc(start, GetEnd());
+                    ret.SetLoc(start, GetEndForStatement());
                     return ret;
                 }
             }
@@ -1615,7 +1616,7 @@ namespace Microsoft.PythonTools.Parsing {
                     AddListWhiteSpace(ret, commaWhiteSpace.ToArray());
                 }
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -1652,7 +1653,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddVerbatimImage(res, verbatimImage);
             }
 
-            res.SetLoc(GetStart(), GetEnd());
+            res.SetLoc(GetStart(), GetEndForStatement());
             return res;
         }
 
@@ -1838,7 +1839,7 @@ namespace Microsoft.PythonTools.Parsing {
             } while (MaybeEat(TokenKind.At));
 
             var res = new DecoratorStatement(decorators.ToArray());
-            res.SetLoc(decStart, GetEnd());
+            res.SetLoc(decStart, GetEndForStatement());
             return res;
         }
 
@@ -1914,7 +1915,7 @@ namespace Microsoft.PythonTools.Parsing {
             string parenWhiteSpace = _tokenWhiteSpace;
 
             var lStart = GetStart();
-            var lEnd = GetEnd();
+            var lEnd = GetEndForStatement();
             int grouping = _tokenizer.GroupingLevel;
 
             List<string> commaWhiteSpace = null;
@@ -2266,7 +2267,7 @@ namespace Microsoft.PythonTools.Parsing {
             System.Diagnostics.Debug.Assert(func == func2);
 
             func.SetBody(body);
-            func.EndIndex = GetEnd();
+            func.EndIndex = GetEndForStatement();
 
             LambdaExpression ret = new LambdaExpression(func);
             func.LambdaExpression = ret;
@@ -2345,7 +2346,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddSecondPreceedingWhiteSpace(ret, isAsync ? withWhiteSpace : null);
                 AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
             }
-            ret.SetLoc(start, body.EndIndex);
+            ret.SetLoc(start, GetEndForStatement());
             return ret;
         }
 
@@ -2401,7 +2402,7 @@ namespace Microsoft.PythonTools.Parsing {
             if ((lhs is ErrorExpression && MaybeEatNewLine(out newlineWhiteSpace)) || !Eat(TokenKind.KeywordIn)) {
                 // error handling
                 else_ = null;
-                end = header = GetEnd();
+                end = header = GetEndForStatement();
                 list = null;
                 body = null;
                 lhs = Error(newlineWhiteSpace, lhs);
@@ -2409,7 +2410,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 inWhiteSpace = _tokenWhiteSpace;
                 list = ParseTestListAsExpr();
-                header = GetEnd();
+                header = GetEndForStatement();
                 body = ParseLoopSuite();
                 else_ = null;
                 end = body.EndIndex;
@@ -2524,7 +2525,7 @@ namespace Microsoft.PythonTools.Parsing {
             var header = GetEnd();
             Statement suite = ParseSuite();
             IfStatementTest ret = new IfStatementTest(expr, suite);
-            ret.SetLoc(start, suite.EndIndex);
+            ret.SetLoc(start, GetEndForStatement());
             ret.HeaderIndex = header;
             return ret;
         }
@@ -2554,27 +2555,23 @@ namespace Microsoft.PythonTools.Parsing {
             Statement finallySuite = null;
             Statement elseSuite = null;
             TryStatement ret;
-            int end;
 
             string finallyWhiteSpace = null, elseWhiteSpace = null;
             if (MaybeEat(TokenKind.KeywordFinally)) {
                 finallyWhiteSpace = _tokenWhiteSpace;
                 finallyIndex = _lookahead.Span.End;
                 finallySuite = ParseFinallySuite(finallySuite);
-                end = finallySuite.EndIndex;
                 ret = new TryStatement(body, null, elseSuite, finallySuite);
                 ret.HeaderIndex = mid;
             } else {
                 List<TryStatementHandler> handlers = new List<TryStatementHandler>();
                 TryStatementHandler dh = null;
-                end = GetEnd();
                 while (true) {
                     if (!MaybeEat(TokenKind.KeywordExcept)) {
                         break;
                     }
                     TryStatementHandler handler = ParseTryStmtHandler();
 
-                    end = handler.EndIndex;
                     handlers.Add(handler);
 
                     if (dh != null) {
@@ -2589,7 +2586,6 @@ namespace Microsoft.PythonTools.Parsing {
                     elseWhiteSpace = _tokenWhiteSpace;
                     elseIndex = _lookahead.Span.End;
                     elseSuite = ParseSuite();
-                    end = elseSuite.EndIndex;
                 }
 
                 if (MaybeEat(TokenKind.KeywordFinally)) {
@@ -2597,7 +2593,6 @@ namespace Microsoft.PythonTools.Parsing {
                     finallyWhiteSpace = _tokenWhiteSpace;
                     finallyIndex = _lookahead.Span.End;
                     finallySuite = ParseFinallySuite(finallySuite);
-                    end = finallySuite.EndIndex;
                 }
 
                 ret = new TryStatement(body, handlers.ToArray(), elseSuite, finallySuite);
@@ -2614,7 +2609,7 @@ namespace Microsoft.PythonTools.Parsing {
                     AddThirdPreceedingWhiteSpace(ret, finallyWhiteSpace);
                 }
             }
-            ret.SetLoc(start, end);
+            ret.SetLoc(start, GetEndForStatement());
 
             return ret;
         }
@@ -3858,7 +3853,6 @@ namespace Microsoft.PythonTools.Parsing {
         private Expression FinishTupleOrGenExp() {
             string startingWhiteSpace = _tokenWhiteSpace;
             var lStart = GetStart();
-            var lEnd = GetEnd();
             int grouping = _tokenizer.GroupingLevel;
             bool hasRightParenthesis;
 
@@ -3908,10 +3902,8 @@ namespace Microsoft.PythonTools.Parsing {
                     AddErrorMissingCloseGrouping(ret);
                 }
             }
-            var rStart = GetStart();
-            var rEnd = GetEnd();
 
-            ret.SetLoc(lStart, rEnd);
+            ret.SetLoc(lStart, GetEnd());
             return ret;
         }
 
@@ -4129,9 +4121,6 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
 
-            var cStart = GetStart();
-            var cEnd = GetEnd();
-
             Expression ret;
             if (dictMembers != null || setMembers == null) {
                 SliceExpression[] exprs;
@@ -4144,7 +4133,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 ret = new SetExpression(setMembers.ToArray());
             }
-            ret.SetLoc(oStart, cEnd);
+            ret.SetLoc(oStart, GetEnd());
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, startWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, finishWhiteSpace);
@@ -4259,7 +4248,6 @@ namespace Microsoft.PythonTools.Parsing {
             string proceedingWhiteSpace = _tokenWhiteSpace;
 
             var oStart = GetStart();
-            var oEnd = GetEnd();
             int grouping = _tokenizer.GroupingLevel;
 
             Expression ret;
@@ -4307,10 +4295,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
-            var cStart = GetStart();
-            var cEnd = GetEnd();
-
-            ret.SetLoc(oStart, cEnd);
+            ret.SetLoc(oStart, GetEnd());
             return ret;
         }
 
@@ -4640,7 +4625,7 @@ namespace Microsoft.PythonTools.Parsing {
             SuiteStatement ret = new SuiteStatement(stmts);
             AddIsAltForm(ret);
             if (_token.Token != null) {
-                ret.SetLoc(0, GetEnd());
+                ret.SetLoc(0, GetEndForStatement());
             }
             return CreateAst(ret);
         }
@@ -4815,6 +4800,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         private int GetEnd() {
             Debug.Assert(_token.Token != null, "No token fetched");
+            return _token.Span.End;
+        }
+
+        private int GetEndForStatement() {
+            Debug.Assert(_token.Token != null, "No token fetched");
+            if (_lookahead.Token != null && _lookahead.Token.Kind == TokenKind.EndOfFile) {
+                return _lookahead.Span.End;
+            }
             return _token.Span.End;
         }
 

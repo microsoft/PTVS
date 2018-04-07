@@ -318,6 +318,22 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInRaise() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "raise ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+
+            u = await AddModule(s, "raise Exception from ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+
+            u = await AddModule(s, "raise Exception, x, y");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 20));
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInExcept() {
             var s = await CreateServer();
             var u = await AddModule(s, "try:\n    pass\nexcept ");
