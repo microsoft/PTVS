@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class CompletionAnalysis {
         private readonly Node _node;
-        private readonly Statement _statement;
+        private readonly Node _statement;
         private readonly ScopeStatement _scope;
         private readonly Action<FormattableString> _trace;
 
@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public GetMemberOptions Options { get; set; }
 
         public Node Node => _node;
-        public Statement Statement => _statement;
+        public Node Statement => _statement;
         public ScopeStatement Scope => _scope;
 
 
@@ -73,19 +73,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public IEnumerable<CompletionItem> GetCompletions() {
-            var res = GetCompletionsFromMembers();
-            if (res != null) {
-                return res;
-            }
-
-            bool allowKeywords = true;
+            var opts = Options;
+            bool allowKeywords = true, allowArguments = true;
             List<CompletionItem> additional = null;
 
-            res = GetCompletionsInImport() ??
+            var res = GetCompletionsFromMembers(ref opts) ??
+                GetCompletionsInImport(ref opts) ??
                 GetCompletionsInDefinition(ref allowKeywords, ref additional) ??
                 GetCompletionsInForStatement() ??
                 GetCompletionsInWithStatement() ??
-                GetCompletionsFromTopLevel(allowKeywords);
+                GetCompletionsInExceptStatement(ref allowKeywords, ref opts) ??
+                GetCompletionsFromTopLevel(allowKeywords, allowArguments, opts);
 
             if (additional != null) {
                 res = res.Concat(additional);
@@ -118,11 +116,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsFromMembers() {
+        private IEnumerable<CompletionItem> GetCompletionsFromMembers(ref GetMemberOptions opts) {
             var finder = new ExpressionFinder(Tree, GetExpressionOptions.EvaluateMembers);
             if (finder.GetExpression(Index) is Expression expr) {
                 TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
-                return Analysis.GetMembers(expr, Position, Options, null).Select(ToCompletionItem);
+                return Analysis.GetMembers(expr, Position, opts, null).Select(ToCompletionItem);
             }
             return null;
         }
@@ -158,7 +156,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Empty;
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsInImport() {
+        private IEnumerable<CompletionItem> GetCompletionsInImport(ref GetMemberOptions opts) {
             if (Statement is ImportStatement imp) {
                 foreach (var t in ZipLongest(imp.Names, imp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
@@ -176,7 +174,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                Options |= GetMemberOptions.IncludeStatementKeywords;
+                opts |= GetMemberOptions.IncludeStatementKeywords;
             } else if (Statement is FromImportStatement fimp) {
                 foreach (var t in ZipLongest(fimp.Names, fimp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
@@ -202,7 +200,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                Options |= GetMemberOptions.IncludeStatementKeywords;
+                opts |= GetMemberOptions.IncludeStatementKeywords;
             }
             return null;
         }
@@ -304,32 +302,69 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords) {
-            var opts = Options;
+        private IEnumerable<CompletionItem> GetCompletionsInExceptStatement(ref bool allowKeywords, ref GetMemberOptions opts) {
+            if (Statement is TryStatementHandler ts) {
+                // except Test as Target
+                if (ts.Target != null) {
+                    if (Index >= ts.Target.StartIndex) {
+                        return Empty;
+                    }
+                }
+
+                if (ts.Test is TupleExpression te) {
+                    foreach (var item in te.Items.MaybeEnumerate().Reverse()) {
+                        if (Index > item.EndIndex) {
+                            return Empty;
+                        } else if (Index >= item.StartIndex) {
+                            opts |= GetMemberOptions.ExceptionsOnly;
+                            allowKeywords = false;
+                            return null;
+                        }
+                    }
+                } else if (ts.Test != null) {
+                    if (Index > ts.Test.EndIndex) {
+                        return Once(AsKeywordCompletion);
+                    } else if (Index >= ts.Test.StartIndex) {
+                        opts |= GetMemberOptions.ExceptionsOnly;
+                        allowKeywords = false;
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
-                if (Statement == null) {
+                if (Statement == null || Index == Statement.StartIndex) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
+                } else {
+                    if (System.Diagnostics.Debugger.IsAttached) {
+                        System.Diagnostics.Debugger.Break();
+                    }
                 }
             }
 
             TraceMessage($"Completing all names");
             var members = Analysis.GetAllAvailableMembers(Position, opts);
 
-            var finder = new ExpressionFinder(Tree, new GetExpressionOptions { Calls = true });
-            if (finder.GetExpression(Index) is CallExpression callExpr &&
-                callExpr.GetArgumentAtIndex(Tree, Index, out _)) {
-                var argNames = Analysis.GetSignatures(callExpr.Target, Position)
-                    .SelectMany(o => o.Parameters).Select(p => p?.Name)
-                    .Where(n => !string.IsNullOrEmpty(n))
-                    .Distinct()
-                    .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
-                    .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
+            if (allowArguments) {
+                var finder = new ExpressionFinder(Tree, new GetExpressionOptions { Calls = true });
+                if (finder.GetExpression(Index) is CallExpression callExpr &&
+                    callExpr.GetArgumentAtIndex(Tree, Index, out _)) {
+                    var argNames = Analysis.GetSignatures(callExpr.Target, Position)
+                        .SelectMany(o => o.Parameters).Select(p => p?.Name)
+                        .Where(n => !string.IsNullOrEmpty(n))
+                        .Distinct()
+                        .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
+                        .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
-                argNames = argNames.MaybeEnumerate().ToArray();
-                TraceMessage($"Including {argNames.Count()} named arguments");
+                    argNames = argNames.MaybeEnumerate().ToArray();
+                    TraceMessage($"Including {argNames.Count()} named arguments");
 
-                members = members?.Concat(argNames) ?? argNames;
+                    members = members?.Concat(argNames) ?? argNames;
+                }
             }
 
             return members.Select(ToCompletionItem);

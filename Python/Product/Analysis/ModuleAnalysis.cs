@@ -655,6 +655,9 @@ namespace Microsoft.PythonTools.Analysis {
             // collect builtins
             if (!options.HasFlag(GetMemberOptions.ExcludeBuiltins)) {
                 foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
+                    if (options.Exceptions() && !IsExceptionType(variable.Key, variable.Value)) {
+                        continue;
+                    }
                     result[variable.Key] = new List<AnalysisValue>(variable.Value);
                 }
             }
@@ -664,10 +667,14 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 var scopeResult = new Dictionary<string, List<AnalysisValue>>();
                 foreach (var kvp in s.GetAllMergedVariables()) {
+                    var vars = kvp.Value.TypesNoCopy;
+                    if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
+                        continue;
+                    }
                     if (scopeResult.TryGetValue(kvp.Key, out var values)) {
-                        values.AddRange(kvp.Value.TypesNoCopy);
+                        values.AddRange(vars);
                     } else {
-                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
                     }
                     values.Add(new SyntheticDefinitionInfo(
                         kvp.Key,
@@ -683,13 +690,27 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
-            if (options.Keywords()) {
+            if (options.StatementKeywords() || options.ExpressionKeywords()) {
                 res = GetKeywordMembers(options, scope).Union(res);
             }
 
             return res;
         }
 
+
+        private bool IsExceptionType(string name, IAnalysisSet values) {
+            if (name.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                name.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0) {
+                return true;
+            }
+
+            if (_unit.State.BuiltinModule.TryGetMember("Exception", out var baseCls) &&
+                values.Any(v => v.Mro.Any(m => m.ContainsAny(baseCls)))) {
+                return true;
+            }
+
+            return false;
+        }
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             IEnumerable<string> keywords = null;

@@ -306,6 +306,33 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInDecorator() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "@dec\ndef f(): pass\n\nx = a @ b");
+
+            await AssertCompletion(s, u, new[] { "f", "x", "property", "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+            await AssertCompletion(s, u, new[] { "f", "x", "property", "abs" }, new[] { "def" }, new SourceLocation(4, 8));
+
+            u = await AddModule(s, "@");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 2));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInExcept() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "try:\n    pass\nexcept ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+
+            u = await AddModule(s, "try:\n    pass\nexcept (");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 9));
+
+            u = await AddModule(s, "try:\n    pass\nexcept Exception  as ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
+            await AssertNoCompletion(s, u, new SourceLocation(3, 22));
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionWithNewDot() {
             // LSP assumes that the text buffer is up to date with typing,
             // which means the language server must know about dot for a

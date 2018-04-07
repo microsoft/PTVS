@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetExpression(new SourceSpan(location, location))?.GetSpan(Ast);
         }
 
-        public void Get(int startIndex, int endIndex, out Node node, out Statement statement, out ScopeStatement scope) {
+        public void Get(int startIndex, int endIndex, out Node node, out Node statement, out ScopeStatement scope) {
             ExpressionWalker walker;
             if (Options.Keywords) {
                 walker = new KeywordWalker(Ast, startIndex, endIndex);
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis {
         private abstract class ExpressionWalker : PythonWalkerWithLocation {
             public ExpressionWalker(int location) : base(location) { }
             public Node Expression { get; protected set; }
-            public Statement Statement { get; protected set; }
+            public Node Statement { get; protected set; }
             public ScopeStatement Scope { get; protected set; }
         }
 
@@ -138,16 +138,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             private void ClearStmt(Statement stmt, Node body, int? headerIndex = null) {
-                if (headerIndex.HasValue && Location > headerIndex.Value + 1) {
-                    Statement = null;
-                } else if (!BeforeBody(body)) {
+                if (!BeforeBody(body, headerIndex)) {
                     Statement = null;
                 }
             }
 
-            private bool BeforeBody(Node body) {
-                if (body == null) {
+            private bool BeforeBody(Node body, int? headerIndex = null) {
+                if (body == null || body is ErrorStatement) {
                     return true;
+                }
+
+                if (headerIndex.HasValue && Location > headerIndex.Value) {
+                    return false;
                 }
 
                 if (Location >= body.StartIndex) {
@@ -173,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
 
-
+            public override bool Walk(AssignmentStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
 
@@ -309,6 +311,29 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var n in node.AsNames.MaybeEnumerate()) {
                     n?.Walk(this);
                 }
+
+                return false;
+            }
+
+            public override bool Walk(TryStatement node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                if (Location > node.StartIndex && BeforeBody(node.Body, node.HeaderIndex)) {
+                    Statement = node;
+                }
+                node.Body?.Walk(this);
+                if (node.Handlers != null) {
+                    foreach (var handler in node.Handlers) {
+                        if (Location > handler.StartIndex && BeforeBody(handler.Body, handler.HeaderIndex)) {
+                            Statement = handler;
+                        }
+                        handler.Walk(this);
+                    }
+                }
+                node.Else?.Walk(this);
+                node.Finally?.Walk(this);
 
                 return false;
             }

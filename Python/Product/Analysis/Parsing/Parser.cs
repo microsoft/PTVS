@@ -2683,6 +2683,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (!EatNoEof(TokenKind.Colon)) {
                 // improve error handling...
                 var error = ErrorStmt(_verbatim ? (_lookaheadWhiteSpace + _lookahead.Token.VerbatimImage) : null);
+                error.SetLoc(_lookahead.Span);
                 NextToken();
                 return error;
             }
@@ -3168,7 +3169,9 @@ namespace Microsoft.PythonTools.Parsing {
                     // don't eat the end of file token
                     ReportSyntaxError(_lookahead.Token, _lookahead.Span, ErrorCodes.SyntaxError, _allowIncomplete || _tokenizer.EndContinues);
                     // error node
-                    return Error(_verbatim ? "" : null);
+                    var error = Error(_verbatim ? "" : null);
+                    error.SetLoc(_lookahead.Span);
+                    return error;
                 default:
                     ReportSyntaxError(_lookahead.Token, _lookahead.Span, ErrorCodes.SyntaxError, _allowIncomplete || _tokenizer.EndContinues);
                     if (_lookahead.Token.Kind != TokenKind.NewLine) {
