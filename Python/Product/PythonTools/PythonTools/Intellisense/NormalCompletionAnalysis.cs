@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        public override Task<CompletionSet> GetCompletionsAsync(IGlyphService glyphService) {
+        public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
             IEnumerable<CompletionResult> members = null;
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Trace.WriteLine(String.Format("{0} completion set time {1} total time {2}", this, end - start, end - start1));
             }
 
-            return Task.FromResult<CompletionSet>(result);
+            return result;
         }
 
         private IEnumerable<CompletionResult> GetAvailableCompletions(PythonTextBufferInfo bufferInfo, SnapshotPoint point) {
