@@ -220,15 +220,6 @@ namespace AnalysisTests {
                 new[] { "return", "sys", "yield" }
             );
 
-            // Completions at def f(
-            await AssertCompletion(
-                s,
-                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
-                new[] { "x", "y", "z", "int", "float" },
-                new[] { "sys", "return", "yield", "class", "def", "while", "in" },
-                position: new Position { line = 4, character = 7 }
-            );
-
             // Completions in function body
             await AssertCompletion(
                 s,

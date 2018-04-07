@@ -137,8 +137,10 @@ namespace Microsoft.PythonTools.Analysis {
                 return baseWalk;
             }
 
-            private void ClearStmt(Statement stmt, Node body) {
-                if (!BeforeBody(body)) {
+            private void ClearStmt(Statement stmt, Node body, int? headerIndex = null) {
+                if (headerIndex.HasValue && Location > headerIndex.Value + 1) {
+                    Statement = null;
+                } else if (!BeforeBody(body)) {
                     Statement = null;
                 }
             }
@@ -197,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 node.ReturnAnnotation?.Walk(this);
 
-                ClearStmt(node, node.Body);
+                ClearStmt(node, node.Body, node.HeaderIndex);
                 node.Body?.Walk(this);
 
                 return false;
@@ -250,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis {
                     b.Walk(this);
                 }
 
-                ClearStmt(node, node.Body);
+                ClearStmt(node, node.Body, node.HeaderIndex);
                 node.Body?.Walk(this);
 
                 return false;
