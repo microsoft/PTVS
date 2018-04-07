@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var docs = new Dictionary<string, HashSet<string>>();
 
                 foreach (var ns in SeparateMultipleMembers(Values)) {
-                    var docString = ns.Documentation?.TrimDocumentation() ?? string.Empty;
+                    var docString = GetDocumentation(ns);
                     var typeString = GetDescription(ns);
 
                     // If first line of doc is already in the type string, then filter it out.
@@ -126,16 +126,10 @@ namespace Microsoft.PythonTools.Analysis {
 
                 foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
                     doc.Append(typeDoc.Value.Item1);
-                    if (!string.IsNullOrEmpty(typeDoc.Value.Item2)) {
-                        var cleaned = Utils.CleanDocumentation(typeDoc.Value.Item2);
-                        if (!string.IsNullOrEmpty(cleaned)) {
-                            if (cleaned.IndexOf('\n') >= 0) {
-                                doc.AppendLine(":");
-                            } else {
-                                doc.Append(": ");
-                            }
-                            doc.Append(cleaned);
-                        }
+                    var details = typeDoc.Value.Item2;
+                    if (!string.IsNullOrEmpty(details)) {
+                        doc.AppendLine(":");
+                        doc.Append(details);
                     }
                     doc.AppendLine();
                     doc.AppendLine();
@@ -145,6 +139,42 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private static string GetDocumentation(AnalysisValue ns) {
+            var doc = ns.Documentation?.TrimDocumentation() ?? string.Empty;
+            if (ns.MemberType == PythonMemberType.Module) {
+                // Module doc does not nave example/signature lines like a function
+                // so just make it flow nicely in the tooltip by removing like breaks.                   
+                return doc.Replace('\n', ' ').Replace("\r", string.Empty);
+            }
+            // Documentation can contain something like
+            //      func(a, b, c)\n\nThis function...
+            // i.e. with paragraph. We want to remove line breaks 
+            // in the text after the paragraph breaks and tooltip UI 
+            // to decide of the wrap and flow.
+            var ctr = 0;
+            var seenParagraphGap = false;
+            var result = new StringBuilder(doc.Length);
+            foreach (var c in doc) {
+                if (c == '\r') {
+                    continue;
+                }
+                if (c == '\n') {
+                    if (seenParagraphGap) {
+                        result.Append(' ');
+                    } else {
+                        ctr++;
+                        if (ctr < 3) {
+                            result.AppendLine();
+                            seenParagraphGap = ctr == 2;
+                        }
+                    }
+                } else {
+                    result.Append(c);
+                    ctr = 0;
+                }
+            }
+            return result.ToString().Trim();
+        }
         private static string GetDescription(AnalysisValue ns) {
             var d = ns?.ShortDescription;
             if (string.IsNullOrEmpty(d)) {

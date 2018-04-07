@@ -46,34 +46,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result.ToString();
         }
 
-        internal static string CleanDocumentation(string doc) {
-            // Remove excessive line breaks and remove line breaks inside 
-            // the body of documentation so text flows inside the tooltip.
-            var ctr = 0;
-            var seenParagraphGap = false;
-            var result = new StringBuilder(doc.Length);
-            foreach (var c in doc) {
-                if (c == '\r') {
-                    continue;
-                }
-                if (c == '\n') {
-                    if (seenParagraphGap) {
-                        result.Append(' ');
-                    } else {
-                        ctr++;
-                        if (ctr < 3) {
-                            result.AppendLine();
-                            seenParagraphGap = ctr == 2;
-                        }
-                    }
-                } else {
-                    result.Append(c);
-                    ctr = 0;
-                }
-            }
-            return result.ToString().Trim();
-        }
-
         internal static IAnalysisSet GetReturnTypes(IPythonFunction func, PythonAnalyzer projectState) {
             return AnalysisSet.UnionAll(func.Overloads
                 .Where(fn => fn.ReturnType != null)

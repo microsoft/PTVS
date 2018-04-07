@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (!string.IsNullOrEmpty(originalExpression)) {
                 if (originalExpression.Length > displayOptions.maxDocumentationTextLength) {
                     originalExpression = originalExpression.Substring(0, 
-                        Math.Max(3, displayOptions.maxDocumentationTextLength - 3)) + "...";
+                        Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
                 }
                 if (multiline) {
                     result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
