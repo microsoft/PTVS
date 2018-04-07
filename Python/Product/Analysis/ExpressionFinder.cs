@@ -138,19 +138,23 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             private void ClearStmt(Statement stmt, Node body) {
-                if (body != null && body.StartIndex <= _endLocation) {
+                if (!BeforeBody(body)) {
                     Statement = null;
                 }
             }
 
             private bool BeforeBody(Node body) {
+                if (body == null) {
+                    return true;
+                }
+
                 if (Location >= body.StartIndex) {
                     return false;
                 }
 
                 var ws = body.GetLeadingWhiteSpace(_ast);
                 if (string.IsNullOrEmpty(ws)) {
-                    return false;
+                    return true;
                 }
 
                 if (Location >= body.StartIndex - ws.Length) {
@@ -160,10 +164,13 @@ namespace Microsoft.PythonTools.Analysis {
                 return true;
             }
 
+            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
+            public override bool Walk(DottedName node) => Save(node, base.Walk(node), _options.ImportNames);
             public override bool Walk(CallExpression node) => Save(node, base.Walk(node), _options.Calls);
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
+
 
             public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
@@ -195,8 +202,6 @@ namespace Microsoft.PythonTools.Analysis {
 
                 return false;
             }
-
-            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
 
             public override bool Walk(Parameter node) {
                 if (base.Walk(node)) {
@@ -264,33 +269,6 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            public override bool Walk(DottedName node) {
-                if (base.Walk(node)) {
-                    if (_options.ImportNameExpression) {
-                        Expression = node;
-                        return false;
-                    }
-
-                    string totalName = null;
-                    foreach (var n in node.Names.MaybeEnumerate()) {
-                        if (n?.Name == null) {
-                            break;
-                        }
-                        if (Location >= n.StartIndex && Location <= n.EndIndex) {
-                            if (totalName == null) {
-                                Expression = n;
-                            } else {
-                                Expression = new NameExpression(totalName + n.Name);
-                                Expression.SetLoc(node.StartIndex, n.EndIndex);
-                            }
-                            break;
-                        }
-                        totalName = (totalName ?? "") + n.Name + ".";
-                    }
-                }
-                return false;
-            }
-
             public override bool Walk(ImportStatement node) {
                 if (!base.Walk(node)) {
                     return false;
@@ -298,7 +276,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 SaveStmt(node, true);
 
-                if (_options.ImportNames || _options.ImportNameExpression) {
+                if (_options.ImportNames) {
                     foreach (var n in node.Names.MaybeEnumerate()) {
                         n?.Walk(this);
                     }
@@ -319,7 +297,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 SaveStmt(node, true);
 
-                if (_options.ImportNames || _options.ImportNameExpression) {
+                if (_options.ImportNames) {
                     node.Root?.Walk(this);
                 }
 
@@ -653,7 +631,6 @@ namespace Microsoft.PythonTools.Analysis {
         public bool FunctionDefinitionName { get; set; } = false;
         public bool ImportNames { get; set; } = false;
         public bool ImportAsNames { get; set; } = false;
-        public bool ImportNameExpression { get; set; } = false;
 
         public GetExpressionOptions Clone() {
             return (GetExpressionOptions)MemberwiseClone();

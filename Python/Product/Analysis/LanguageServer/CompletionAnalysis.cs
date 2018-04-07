@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 Names = true,
                 MemberName = true,
                 NamedArgumentNames = true,
-                ImportNameExpression = true,
+                ImportNames = true,
                 ImportAsNames = true,
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
@@ -79,14 +79,43 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             bool allowKeywords = true;
+            List<CompletionItem> additional = null;
 
             res = GetCompletionsInImport() ??
-                GetCompletionsInDefinition(ref allowKeywords) ??
+                GetCompletionsInDefinition(ref allowKeywords, ref additional) ??
                 GetCompletionsInForStatement() ??
                 GetCompletionsInWithStatement() ??
                 GetCompletionsFromTopLevel(allowKeywords);
 
+            if (additional != null) {
+                res = res.Concat(additional);
+            }
+
             return res;
+        }
+
+        private static IEnumerable<CompletionItem> Once(CompletionItem item) {
+            yield return item;
+        }
+
+        private static IEnumerable<Tuple<T1, T2>> ZipLongest<T1, T2>(IEnumerable<T1> src1, IEnumerable<T2> src2, T1 default1 = default(T1), T2 default2 = default(T2)) {
+            using (var e1 = src1?.GetEnumerator())
+            using (var e2 = src2?.GetEnumerator()) {
+                bool b1 = e1?.MoveNext() ?? false, b2 = e2?.MoveNext() ?? false;
+                while (b1 && b2) {
+                    yield return Tuple.Create(e1.Current, e2.Current);
+                    b1 = e1.MoveNext();
+                    b2 = e2.MoveNext();
+                }
+                while (b1) {
+                    yield return Tuple.Create(e1.Current, default2);
+                    b1 = e1.MoveNext();
+                }
+                while (b2) {
+                    yield return Tuple.Create(default1, e2.Current);
+                    b2 = e2.MoveNext();
+                }
+            }
         }
 
         private IEnumerable<CompletionItem> GetCompletionsFromMembers() {
@@ -98,68 +127,118 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsInImport() {
-            if (Statement is ImportStatement imp) {
-                var first = imp.Names?.FirstOrDefault();
-                if (first != null && Index < first.StartIndex) {
+        private IEnumerable<CompletionItem> GetModules(IEnumerable<string> names, bool includeMembers) {
+            if (names != null && names.Any()) {
+                return Analysis.ProjectState.GetModuleMembers(Analysis.InterpreterContext, names.ToArray(), includeMembers)
+                    .Select(ToCompletionItem);
+            }
+            return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
+        }
+
+        private IEnumerable<CompletionItem> GetModulesFromNode(Node name, bool includeMembers = false) {
+            if (name is DottedName dn) {
+                if (dn.Names == null) {
                     return Empty;
                 }
 
-                if (Node is DottedName dn) {
-                    if (dn.Names == null) {
-                        return Empty;
+                var names = new List<string>();
+                foreach (var n in dn.Names) {
+                    if (Index > n.EndIndex) {
+                        names.Add(n.Name);
+                    } else {
+                        break;
                     }
-
-                    var names = new List<string>();
-                    foreach (var n in dn.Names) {
-                        if (Index > n.EndIndex) {
-                            names.Add(n.Name);
-                        } else {
-                            break;
-                        }
-                    }
-
-                    if (names.Any()) {
-                        return Analysis.ProjectState.GetModuleMembers(Analysis.InterpreterContext, names.ToArray(), false)
-                            .Select(ToCompletionItem);
-                    }
-                    return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
-                } else if (Node is NameExpression) {
-                    return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
                 }
 
-                return Empty;
+                return GetModules(names, includeMembers);
+            } else if (name is NameExpression) {
+                return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
+            }
+
+            return Empty;
+        }
+
+        private IEnumerable<CompletionItem> GetCompletionsInImport() {
+            if (Statement is ImportStatement imp) {
+                foreach (var t in ZipLongest(imp.Names, imp.AsNames).Reverse()) {
+                    if (t.Item2 != null) {
+                        if (Index >= t.Item2.StartIndex) {
+                            return Empty;
+                        }
+                    }
+                    if (t.Item1 != null) {
+                        if (Index > t.Item1.EndIndex) {
+                            return Once(AsKeywordCompletion);
+                        }
+                        if (Index >= t.Item1.StartIndex) {
+                            return GetModulesFromNode(t.Item1);
+                        }
+                    }
+                }
+
+                Options |= GetMemberOptions.IncludeStatementKeywords;
+            } else if (Statement is FromImportStatement fimp) {
+                foreach (var t in ZipLongest(fimp.Names, fimp.AsNames).Reverse()) {
+                    if (t.Item2 != null) {
+                        if (Index >= t.Item2.StartIndex) {
+                            return Empty;
+                        }
+                    }
+                    if (t.Item1 != null) {
+                        if (Index > t.Item1.EndIndex) {
+                            return Once(AsKeywordCompletion);
+                        }
+                        if (Index >= t.Item1.StartIndex) {
+                            return GetModulesFromNode(fimp.Root, true);
+                        }
+                    }
+                }
+
+                if (fimp.Root != null) {
+                    if (Index > fimp.Root.EndIndex) {
+                        return Once(ImportKeywordCompletion);
+                    } else if (Index >= fimp.Root.StartIndex) {
+                        return GetModulesFromNode(fimp.Root);
+                    }
+                }
+
+                Options |= GetMemberOptions.IncludeStatementKeywords;
             }
             return null;
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsInDefinition(ref bool allowKeywords) {
+        private IEnumerable<CompletionItem> GetCompletionsInDefinition(ref bool allowKeywords, ref List<CompletionItem> additional) {
+            // Here we work backwards through the various parts of the definitions.
+            // When we find that Index is within a part, we return either the available
+            // completions 
+
             if (Statement is FunctionDefinition fd) {
-                if (Index >= fd.HeaderIndex + 1) {
+                if (Index > fd.HeaderIndex) {
                     return null;
-                }
-                if (Index >= fd.HeaderIndex) {
-                    return Empty;
-                }
-                if (Index <= fd.NameExpression.EndIndex) {
+                } else if (Index == fd.HeaderIndex) {
                     return Empty;
                 }
 
-                foreach (var p in fd.ParametersInternal.MaybeEnumerate()) {
-                    if (Index < p.StartIndex) {
-                        break;
-                    }
-                    if (p.Annotation != null) {
-                        if (Index < p.Annotation.StartIndex) {
-                            return Empty;
+                foreach (var p in fd.ParametersInternal.MaybeEnumerate().Reverse()) {
+                    if (Index >= p.StartIndex) {
+                        if (p.Annotation != null) {
+                            if (Index < p.Annotation.StartIndex) {
+                                return Empty;
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                    if (p.DefaultValue != null) {
-                        if (Index < p.DefaultValue.StartIndex) {
-                            return Empty;
+                        if (p.DefaultValue != null) {
+                            if (Index < p.DefaultValue.StartIndex) {
+                                return Empty;
+                            }
+                            return null;
                         }
-                        return null;
+                    }
+                }
+
+                if (fd.NameExpression != null) {
+                    if (Index >= fd.NameExpression.StartIndex) {
+                        return Empty;
                     }
                 }
 
@@ -167,22 +246,32 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
 
             } else if (Statement is ClassDefinition cd) {
-                if (Index >= cd.HeaderIndex + 1) {
+                if (Index > cd.HeaderIndex) {
                     return null;
-                }
-                if (Index >= cd.HeaderIndex) {
+                } else if (Index == cd.HeaderIndex) {
                     return Empty;
                 }
 
-                if (cd.BasesInternal != null) {
-                    if (cd.BasesInternal.Length > 0 && Index >= cd.BasesInternal[0].StartIndex) {
-                        return null;
+                if (cd.BasesInternal != null && cd.BasesInternal.Length > 0 && Index >= cd.BasesInternal[0].StartIndex) {
+                    foreach (var p in cd.BasesInternal.Reverse()) {
+                        if (Index >= p.StartIndex) {
+                            if (p.Name == null && Tree.LanguageVersion.Is3x() && !cd.BasesInternal.Any(b => b.Name == "metaclass")) {
+                                additional = additional ?? new List<CompletionItem>();
+                                additional.Add(MetadataArgCompletion);
+                            }
+                            return null;
+                        }
+                    }
+                }
+
+                if (cd.NameExpression != null) {
+                    if (Index >= cd.NameExpression.StartIndex) {
+                        return Empty;
                     }
                 }
 
                 allowKeywords = false;
                 return null;
-
             }
             return null;
         }
@@ -247,13 +336,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
 
-        private CompletionItem ToCompletionItem(MemberResult m) {
+        private static readonly CompletionItem MetadataArgCompletion = ToCompletionItem("metaclass=", PythonMemberType.NamedArgument);
+        private static readonly CompletionItem AsKeywordCompletion = ToCompletionItem("as", PythonMemberType.Keyword);
+        private static readonly CompletionItem ImportKeywordCompletion = ToCompletionItem("import", PythonMemberType.Keyword);
+
+        private static CompletionItem KeywordCompletion(string keyword) => new CompletionItem {
+            label = keyword,
+            insertText = keyword,
+            kind = CompletionItemKind.Keyword,
+            _kind = PythonMemberType.Keyword.ToString().ToLowerInvariant()
+        };
+
+        private static CompletionItem ToCompletionItem(MemberResult m) {
             var res = new CompletionItem {
                 label = m.Name,
                 insertText = m.Completion,
                 documentation = m.Documentation,
                 // Place regular items first, advanced entries last
-                sortText = Char.IsLetter(m.Completion[0]) ? "1" : "2",
+                sortText = char.IsLetter(m.Completion, 0) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
@@ -261,7 +361,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return res;
         }
 
-        private CompletionItemKind ToCompletionItemKind(PythonMemberType memberType) {
+        private static CompletionItem ToCompletionItem(string text, PythonMemberType type, string label = null) {
+            return new CompletionItem {
+                label = label ?? text,
+                insertText = text,
+                // Place regular items first, advanced entries last
+                sortText = char.IsLetter(text, 0) ? "1" : "2",
+                kind = ToCompletionItemKind(type),
+                _kind = type.ToString().ToLowerInvariant()
+            };
+        }
+
+        private static CompletionItemKind ToCompletionItemKind(PythonMemberType memberType) {
             switch (memberType) {
                 case PythonMemberType.Unknown: return CompletionItemKind.None;
                 case PythonMemberType.Class: return CompletionItemKind.Class;

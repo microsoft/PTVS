@@ -249,7 +249,7 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 8));
             await AssertNoCompletion(s, u, new SourceLocation(1, 10));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 17));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 19));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 34));
@@ -261,18 +261,22 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public async Task CompletionInClassDefinition() {
             var s = await CreateServer();
-            var u = await AddModule(s, "class C(object, metaclass=MC): pass");
+            var u = await AddModule(s, "class C(object, parameter=MC): pass");
 
             await AssertNoCompletion(s, u, new SourceLocation(1, 8));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 9));
+            await AssertCompletion(s, u, new[] { "metaclass=", "object" }, new string[0], new SourceLocation(1, 9));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 15));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 29));
             await AssertNoCompletion(s, u, new SourceLocation(1, 30));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 31));
 
             u = await AddModule(s, "class D(o");
             await AssertNoCompletion(s, u, new SourceLocation(1, 8));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 9));
+
+            u = await AddModule(s, "class E(metaclass=MC,o): pass");
+            await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 22));
         }
 
         [TestMethod, Priority(0)]
@@ -291,10 +295,23 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public async Task CompletionInImport() {
             var s = await CreateServer();
-            var u = await AddModule(s, "import unittest.case");
+            var u = await AddModule(s, "import unittest.case as C, unittest\nfrom unittest.case import TestCase as TC, TestCase");
 
+            await AssertCompletion(s, u, new[] { "from", "import", "abs", "dir" }, new[] { "abc" }, new SourceLocation(1, 7));
             await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
             await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 17));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 22));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 25));
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(1, 28));
+
+            await AssertCompletion(s, u, new[] { "from", "import", "abs", "dir" }, new[] { "abc" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(2, 6));
+            await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 15));
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 20));
+            await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 27));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 36));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 39));
+            await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 44));
         }
 
         [TestMethod, Priority(0)]
