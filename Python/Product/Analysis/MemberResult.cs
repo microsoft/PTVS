@@ -85,7 +85,6 @@ namespace Microsoft.PythonTools.Analysis {
         public string Documentation {
             get {
                 var docs = new Dictionary<string, HashSet<string>>();
-                var allTypes = new HashSet<string>();
 
                 foreach (var ns in SeparateMultipleMembers(Values)) {
                     var docString = GetDocumentation(ns);
@@ -104,23 +103,10 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     if (!string.IsNullOrEmpty(typeString)) {
                         docTypes.Add(typeString);
-                        allTypes.Add(typeString);
                     }
                 }
 
                 var doc = new StringBuilder();
-                if (allTypes.Count == 0) {
-                    return "unknown type";
-                } else if (allTypes.Count == 1) {
-                    doc.AppendLine(allTypes.First());
-                    doc.AppendLine();
-                } else {
-                    var types = allTypes.OrderBy(s => s).ToList();
-                    var orStr = types.Count == 2 ? " or " : ", or ";
-                    doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
-                    doc.AppendLine();
-                }
-
                 var typeToDoc = new Dictionary<string, Tuple<string, string>>();
                 foreach (var docType in docs) {
                     if (!docType.Value.Any()) {
