@@ -363,7 +363,7 @@ def f(a = 2, b): pass
 ");
 
             await AssertSignature(s, mod, new SourceLocation(1, 3),
-                new string[] { "f(a : int)", "f(a : int = 2, b : int)", "f(x : str, y : str)" },
+                new string[] { "f(a: int)", "f(a: int=2, b: int)", "f(x: str, y: str)" },
                 new string[0]
             );
         }
