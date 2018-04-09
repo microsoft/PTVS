@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Telemetry;
 
 namespace Microsoft.CookiecutterTools.Telemetry {
@@ -57,6 +58,25 @@ namespace Microsoft.CookiecutterTools.Telemetry {
                     }
                 }
                 _session.PostEvent(telemetryEvent);
+            }
+        }
+
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
+            if (this.IsEnabled) {
+                var fault = new FaultEvent(
+                    eventName,
+                    !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Cookiecutter extension.",
+                    ex
+                );
+
+                if (dumpProcess) {
+                    fault.AddProcessDump(Process.GetCurrentProcess().Id);
+                    fault.IsIncludedInWatsonSample = true;
+                } else {
+                    fault.IsIncludedInWatsonSample = false;
+                }
+
+                _session.PostEvent(fault);
             }
         }
 

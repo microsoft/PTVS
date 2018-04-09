@@ -566,7 +566,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (!killed && _debugMode != PythonDebugMode.None) {
                             try {
                                 if (_debugMode == PythonDebugMode.PythonOnly) {
-                                    string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
+                                    string qualifierUri = string.Format("tcp://{0}@localhost:{1}?legacyUnitTest", _debugSecret, _debugPort);
                                     while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
                                         if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                             break;

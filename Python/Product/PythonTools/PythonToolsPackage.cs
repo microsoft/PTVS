@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Analysis;
@@ -33,7 +32,7 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
@@ -41,18 +40,16 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
-using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -408,6 +405,7 @@ namespace Microsoft.PythonTools {
             services.AddService(typeof(IClipboardService), new ClipboardService(), promote: true);
             services.AddService(typeof(IPythonToolsToolWindowService), this, promote: true);
             services.AddService(typeof(PythonLanguageInfo), (container, serviceType) => new PythonLanguageInfo(container), true);
+            services.AddService(typeof(IPythonToolsLogger), PythonToolsLogger.CreateService, promote: true);
             services.AddService(typeof(PythonToolsService), PythonToolsService.CreateService, promote: true);
             services.AddService(typeof(ErrorTaskProvider), ErrorTaskProvider.CreateService, promote: true);
             services.AddService(typeof(CommentTaskProvider), CommentTaskProvider.CreateService, promote: true);

@@ -350,6 +350,20 @@ namespace PythonToolsUITests {
             Assert.IsTrue(Directory.Exists(expectedC));
         }
 
+        public void ProjectRenameFolder(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var project = app.OpenProject(sln);
+
+            var folder = project.ProjectItems.AddFolder("Test\\Folder\\Name");
+            folder.Name = "Renamed";
+
+            project.Save();
+
+            // Verify that after rename, the path in .pyproj is relative
+            var projText = File.ReadAllText(project.FullName);
+            AssertUtil.Contains(projText, "Folder Include=\"Test\\Folder\\Renamed\\\"");
+        }
+
         public void AddExistingFolder(VisualStudioApp app) {
             var sln = app.CopyProjectForTest(@"TestData\AddExistingFolder.sln");
             var project = app.OpenProject(sln);

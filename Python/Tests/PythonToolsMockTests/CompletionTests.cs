@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Parsing;
@@ -447,26 +448,32 @@ f(1, 2, 3, 4,")) {
         [TestMethod, Priority(0)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
-                view.Text ="import ";
+                view.Text = "import ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "sys");
 
-                view.Text ="import sys";
+                view.Text = "import sys";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "sys");
 
-                view.Text ="import sys ";
+                view.Text = "import sys ";
                 AssertUtil.ContainsExactly(view.GetCompletions(-1), "as");
 
-                view.Text ="import sys as";
+                view.Text = "import sys as";
                 AssertUtil.ContainsExactly(view.GetCompletions(-1), "as");
 
-                view.Text ="import sys as s, ";
+                view.Text = "import sys as s, ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "sys");
 
-                view.Text ="import sys, ";
+                view.Text = "import sys, ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "datetime");
 
-                view.Text ="import sys, da";
+                view.Text = "import sys, da";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "datetime");
+
+                view.Text = "import unittest.";
+                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "case");
+
+                view.Text = "import unittest.case.";
+                AssertUtil.DoesntContain(view.GetCompletions(-1), "sys");
             }
         }
 
@@ -487,8 +494,17 @@ f(1, 2, 3, 4,")) {
                 view.Text = "from sys import";
                 AssertUtil.ContainsExactly(view.GetCompletions(-1), "import");
 
-                view.Text = "from sys import ";
-                AssertUtil.ContainsAtLeast(view.GetCompletions(-1),
+                // This is the first time we have imported sys, so it will
+                // run Python in the background to scrape it. We can wait.
+                for (int retries = 100; retries > 0; --retries) {
+                    view.Text = "from sys import ";
+                    Thread.Sleep(100);
+                    completions = view.GetCompletions(-1);
+                    if (completions.Count() > 1) {
+                        break;
+                    }
+                }
+                AssertUtil.ContainsAtLeast(completions,
                     "*",                    // Contains *
                     "settrace",             // Contains functions
                     "api_version"           // Contains data members
@@ -1110,25 +1126,21 @@ async def g():
             }
         }
 
-        private static void TestQuickInfo(PythonEditor view, int start, int end, params string[] expected) {
+        private static void TestQuickInfo(PythonEditor view, int start, int end, string expected = null) {
             var snapshot = view.CurrentSnapshot;
 
-            for (int i = start; i < end; i++) {
-                List<object> quickInfo = new List<object>();
-                ITrackingSpan span;
-                QuickInfoSource.AugmentQuickInfoWorker(
-                    quickInfo,
-                    view.Analyzer.GetQuickInfoAsync(
-                        (AnalysisEntry)view.GetAnalysisEntry(),
-                        view.View.TextView,
-                        new SnapshotPoint(snapshot, start)
-                    ).Result,
-                    out span
-                );
+            for (var i = start; i < end; i++) {
+                var quickInfo = view.Analyzer.GetQuickInfoAsync(
+                    (AnalysisEntry) view.GetAnalysisEntry(),
+                    view.View.TextView,
+                    new SnapshotPoint(snapshot, start)
+                ).Result;
 
-                Assert.AreEqual(expected.Length, quickInfo.Count);
-                for (int j = 0; j < expected.Length; j++) {
-                    Assert.AreEqual(expected[j], quickInfo[j]);
+                if (expected != null) {
+                    Assert.IsNotNull(quickInfo);
+                    Assert.AreEqual(expected, quickInfo.Text);
+                } else {
+                    Assert.IsNull(quickInfo);
                 }
             }
         }

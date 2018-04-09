@@ -371,7 +371,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
                 TraceMessage($"Completing expression {@params._expr}");
-                members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+
+                if (@params.context?._filterKind == CompletionItemKind.Module) {
+                    // HACK: Special case for child modules until #3798 is completed
+                    members = entry.Analysis.ProjectState.GetModuleMembers(entry.Analysis.InterpreterContext, @params._expr.Split('.'));
+                } else {
+                    members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+                }
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;

@@ -15,13 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -32,22 +32,22 @@ namespace Microsoft.VisualStudioTools {
         private readonly JoinableTaskFactory _factory;
         private readonly bool _needDispose;
 
-        private UIThread() {
+        internal UIThread(JoinableTaskContext joinableTaskContext) {
             try {
-                _factory = ThreadHelper.JoinableTaskFactory;
-                _context = _factory.Context;
+                _context = joinableTaskContext ?? ThreadHelper.JoinableTaskContext;
                 Trace.TraceInformation("Using TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
             } catch (NullReferenceException) {
                 _needDispose = true;
                 _context = new JoinableTaskContext();
-                _factory = new JoinableTaskFactory(_context);
                 Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
             }
+
+            _factory = _context.Factory;
         }
 
         public static void EnsureService(IServiceContainer container) {
             if (container.GetService(typeof(UIThreadBase)) == null) {
-                container.AddService(typeof(UIThreadBase), new UIThread(), true);
+                container.AddService(typeof(UIThreadBase), new UIThread(null), true);
             }
         }
 

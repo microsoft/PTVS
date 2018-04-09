@@ -34,6 +34,12 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class LanguageServerTests {
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+
         public static PythonVersion DefaultV3 {
             get {
                 var ver = PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??

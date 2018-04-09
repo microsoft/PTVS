@@ -935,14 +935,14 @@ namespace Microsoft.PythonTools.Intellisense {
             public Navigation[] children;
         }
 
-        internal class AnalyzerWarningEvent : Event {
+        public class AnalyzerWarningEvent : Event {
             public string message;
             public const string Name = "analyzerWarning";
 
             public override string name => Name;
         }
 
-        internal class UnhandledExceptionEvent : Event {
+        public class UnhandledExceptionEvent : Event {
             public string message;
             public const string Name = "unhandledException";
 
