@@ -5832,7 +5832,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "test-module.f() -> str");
-            entry.AssertDescription("fob.f", "test-module.fob.f(self : fob)\r\ndeclared in fob");
+            entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
@@ -5844,13 +5844,13 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int\r\nuseful documentation");
 
             entry.AssertDescription("with_params", "test-module.with_params(a, b, c)");
-            entry.AssertDescription("with_params_default", "test-module.with_params_default(a, b, c : int = 100)");
-            entry.AssertDescription("with_params_default_2", "test-module.with_params_default_2(a, b, c : list = [])");
-            entry.AssertDescription("with_params_default_3", "test-module.with_params_default_3(a, b, c : tuple = ())");
-            entry.AssertDescription("with_params_default_4", "test-module.with_params_default_4(a, b, c : dict = {})");
-            entry.AssertDescription("with_params_default_2a", "test-module.with_params_default_2a(a, b, c : list = [...])");
-            entry.AssertDescription("with_params_default_3a", "test-module.with_params_default_3a(a, b, c : tuple = (...))");
-            entry.AssertDescription("with_params_default_4a", "test-module.with_params_default_4a(a, b, c : dict = {...})");
+            entry.AssertDescription("with_params_default", "test-module.with_params_default(a, b, c: int=100)");
+            entry.AssertDescription("with_params_default_2", "test-module.with_params_default_2(a, b, c: list=[])");
+            entry.AssertDescription("with_params_default_3", "test-module.with_params_default_3(a, b, c: tuple=())");
+            entry.AssertDescription("with_params_default_4", "test-module.with_params_default_4(a, b, c: dict={})");
+            entry.AssertDescription("with_params_default_2a", "test-module.with_params_default_2a(a, b, c: list=[...])");
+            entry.AssertDescription("with_params_default_3a", "test-module.with_params_default_3a(a, b, c: tuple=(...))");
+            entry.AssertDescription("with_params_default_4a", "test-module.with_params_default_4a(a, b, c: dict={...})");
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
@@ -6601,7 +6601,7 @@ test1_result = test1()
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "test-module.A.fn(self : A) -> lambda: 123 -> int\ndeclared in A",
+                "test-module.A.fn(self: A) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

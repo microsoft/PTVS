@@ -388,9 +388,6 @@ class Signature(object):
         if not isinstance(doc, str):
             return
 
-        if doc.startswith('<attribute'):
-            return
-
         doc = self._get_first_function_call(doc)
         if not doc:
             return
@@ -697,7 +694,7 @@ class MemberInfo(object):
             yield '    ' + repr(self.documentation)
         if self.members:
             for mi in self.members:
-                if hasattr(mi, 'documentation') and not isinstance(mi.documentation, str):
+                if hasattr(mi, 'documentation') and mi.documentation != None and not isinstance(mi.documentation, str):
                     continue
                 if mi is not MemberInfo.NO_VALUE:
                     yield mi.as_str('    ')
