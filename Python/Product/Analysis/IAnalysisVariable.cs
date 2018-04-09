@@ -19,21 +19,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns the location of where the variable is defined.
         /// </summary>
-        LocationInfo Location {
-            get;
-        }
+        LocationInfo Location { get; }
 
-        VariableType Type {
-            get;
-        }
-
-        /// <summary>
-        /// Returns the location of the whole definition, which
-        /// is more than just the location of the identifier in
-        /// the case of classes and functions.
-        /// </summary>
-        LocationInfo DefinitionLocation {
-            get;
-        }
+        VariableType Type { get; }
     }
 }

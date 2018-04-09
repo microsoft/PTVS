@@ -145,6 +145,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _builtinModule = new BuiltinModule(fallback, this);
                 Modules[_builtinName] = new ModuleReference(_builtinModule, _builtinName);
             }
+            _builtinModule.InterpreterModule.Imported(_defaultContext);
 
             Modules.AddBuiltinModuleWrapper("sys", SysModuleInfo.Wrap);
             Modules.AddBuiltinModuleWrapper("typing", TypingModuleInfo.Wrap);

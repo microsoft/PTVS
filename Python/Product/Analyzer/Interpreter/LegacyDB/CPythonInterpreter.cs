@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
         }
 
-        private async void OnNewDatabaseAvailable(object sender, EventArgs e) {
+        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
             var factory = _factory;
             if (factory == null) {
                 // We have been disposed already, so ignore this event
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             }
         }
 
-        private async void BeginUpdateSearchPathPackages() {
+        private async Task BeginUpdateSearchPathPackagesAsync() {
             var cts = new CancellationTokenSource();
             var oldCts = Interlocked.Exchange(ref _searchPathPackagesCancellation, cts);
             try {
@@ -352,7 +352,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 _zipPackageCache = null;
             }
 
-            BeginUpdateSearchPathPackages();
+            BeginUpdateSearchPathPackagesAsync().DoNotWait();
         }
 
         public event EventHandler ModuleNamesChanged;

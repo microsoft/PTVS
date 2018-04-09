@@ -232,6 +232,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             switch (name) {
                 case "List":
                 case "Container":
+                case "Sequence":
                 case "MutableSequence":
                     realType = Types[BuiltinTypeId.List];
                     keyTypes = ClassInfo[BuiltinTypeId.Int].Instance;
@@ -317,7 +318,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 case "Tuple":
                     if (!args.SelectMany(a => a).Any(a => a.TypeId == BuiltinTypeId.Ellipsis)) {
-                        return MakeTuple(args.ToArray());
+                        return MakeTuple(args.Select(ToInstance).ToArray());
                     }
                     goto case "List";
 
@@ -372,7 +373,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         var call = new CallableProtocol(
                             p,
                             null,
-                            GetTypeList(args[0]),
+                            GetTypeList(args[0]).Select(ToInstance).ToArray(),
                             ToInstance(args.ElementAtOrDefault(1) ?? AnalysisSet.Empty)
                         );
                         np.ExtendDescription(call.GetRichDescription());
@@ -386,7 +387,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (args.Count > 0) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
-                        p.AddProtocol(new IterableProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
+                        np = new NameProtocol(p, "iterable", memberType: PythonMemberType.Class);
+                        var ip = new IterableProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance)));
+                        np.ExtendDescription(ip.GetRichDescription());
+                        p.AddProtocol(np);
+                        p.AddProtocol(ip);
                         return p;
                     }
                     break;
@@ -395,7 +400,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (args.Count > 0) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
-                        p.AddProtocol(new IteratorProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
+                        np = new NameProtocol(p, "iterator", memberType: PythonMemberType.Class);
+                        var ip = new IteratorProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance)));
+                        np.ExtendDescription(ip.GetRichDescription());
+                        p.AddProtocol(np);
+                        p.AddProtocol(ip);
                         return p;
                     }
                     break;
@@ -404,10 +413,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (args.Count > 0) {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
+                        np = new NameProtocol(p, Types[BuiltinTypeId.Generator]);
                         var yielded = ToInstance(args[0]);
                         var sent = args.Count > 1 ? ToInstance(args[1]) : AnalysisSet.Empty;
                         var returned = args.Count > 2 ? ToInstance(args[2]) : AnalysisSet.Empty;
-                        p.AddProtocol(new GeneratorProtocol(p, yielded, sent, returned));
+                        var gp = new GeneratorProtocol(p, yielded, sent, returned);
+                        np.ExtendDescription(gp.GetRichDescription());
+                        p.AddProtocol(np);
+                        p.AddProtocol(gp);
                         return p;
                     }
                     break;
@@ -489,6 +502,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Iterator": {
                         var p = new ProtocolInfo(Entry, State);
                         p.AddReference(_node, _unit);
+                        p.AddProtocol(new NameProtocol(p, name.ToLowerInvariant(), memberType: PythonMemberType.Class));
                         p.AddProtocol(name == "Iterable" ? (Protocol)new IterableProtocol(p, AnalysisSet.Empty) : new IteratorProtocol(p, AnalysisSet.Empty));
                         return p;
                     }

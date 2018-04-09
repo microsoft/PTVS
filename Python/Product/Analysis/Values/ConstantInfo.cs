@@ -75,9 +75,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     continue;
                 } else if (operation == PythonOperator.Multiply &&
                            (lhsType == BuiltinTypeId.Int || lhsType == BuiltinTypeId.Long)) {
-                    if (rhsType == BuiltinTypeId.Str || rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Unicode ||
-                        rhsType == BuiltinTypeId.Tuple || rhsType == BuiltinTypeId.List) {
+                    if (rhsType == BuiltinTypeId.Str || rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Unicode) {
                         res = res.Union(unit.State.ClassInfos[rhsType].Instance);
+                        continue;
+                    } else if (rhsType == BuiltinTypeId.Tuple || rhsType == BuiltinTypeId.List) {
+                        res = res.Union(rhs);
                         continue;
                     }
                 }

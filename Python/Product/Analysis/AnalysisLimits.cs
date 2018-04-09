@@ -135,16 +135,16 @@ namespace Microsoft.PythonTools.Analysis {
             CrossModule = 0;
             CallDepth = 3;
             DecreaseCallDepth = 30;
-            NormalArgumentTypes = 30;
-            ListArgumentTypes = 10;
-            DictArgumentTypes = 10;
-            ReturnTypes = 20;
-            YieldTypes = 20;
-            InstanceMembers = 30;
-            DictKeyTypes = 10;
-            DictValueTypes = 30;
-            IndexTypes = 10;
-            AssignedTypes = 50;
+            NormalArgumentTypes = 10;
+            ListArgumentTypes = 6;
+            DictArgumentTypes = 6;
+            ReturnTypes = 10;
+            YieldTypes = 5;
+            InstanceMembers = 10;
+            DictKeyTypes = 5;
+            DictValueTypes = 10;
+            IndexTypes = 6;
+            AssignedTypes = 30;
             UnifyCallsToNew = true;
             ProcessCustomDecorators = true;
         }

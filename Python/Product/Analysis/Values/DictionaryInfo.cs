@@ -577,15 +577,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     sealed class DictParameterVariableDef : LocatedVariableDef {
         public readonly StarArgsDictionaryInfo Dict;
+        public readonly string Name;
 
-        public DictParameterVariableDef(AnalysisUnit unit, Node location)
-            : base(unit.DeclaringModule.ProjectEntry, location) {
+        public DictParameterVariableDef(AnalysisUnit unit, Node location, string name)
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location)) {
+            Name = name;
             Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
             AddTypes(unit, Dict, false, Entry);
         }
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
-            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location), copy) {
             Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
             AddTypes(unit, Dict, false, Entry);
         }

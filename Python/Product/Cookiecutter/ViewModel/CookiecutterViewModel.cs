@@ -160,7 +160,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (ContextItems.Any()) {
                     // RefreshContextAsync catches all non critical exceptions
                     // and prints them to output window.
-                    RefreshContextAsync(SelectedTemplate).DoNotWait();
+                    RefreshContextAsync(SelectedTemplate).HandleAllExceptions(null, GetType()).DoNotWait();
                 }
 
             }

@@ -36,16 +36,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
     }
 
-    public abstract class CallbackEventArgs<T, U> : EventArgs where T : struct where U : struct {
-        private readonly TaskCompletionSource<U?> _task;
+    public abstract class CallbackEventArgs<T, U> : EventArgs where T : class where U : class {
+        private readonly TaskCompletionSource<U> _task;
 
-        internal CallbackEventArgs(TaskCompletionSource<U?> task) {
+        internal CallbackEventArgs(TaskCompletionSource<U> task) {
             _task = task;
         }
 
-        public T? @params { get; set; }
+        public T @params { get; set; }
 
-        public void SetResult(U? result) {
+        public void SetResult(U result) {
             _task.TrySetResult(result);
         }
 

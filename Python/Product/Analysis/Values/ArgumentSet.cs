@@ -15,49 +15,32 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     struct ArgumentSet {
         public readonly IAnalysisSet[] Args;
+        public readonly IAnalysisSet SequenceArgs;
+        public readonly IAnalysisSet DictArgs;
+        public readonly IReadOnlyDictionary<PythonVariable, IAnalysisSet> Closure;
 
-        public ArgumentSet(IAnalysisSet[] args) {
-            this.Args = args;
-        }
-
-        public IAnalysisSet SequenceArgs {
-            get {
-                return Args[Args.Length - 2];
-            }
-        }
-
-        public IAnalysisSet DictArgs {
-            get {
-                return Args[Args.Length - 1];
-            }
-        }
-        public int Count {
-            get {
-                return Args.Length - 2;
-            }
+        public ArgumentSet(IAnalysisSet[] args, IAnalysisSet sequenceArgs, IAnalysisSet dictArgs, IReadOnlyDictionary<PythonVariable, IAnalysisSet> closure) {
+            Args = args;
+            SequenceArgs = sequenceArgs ?? AnalysisSet.Empty;
+            DictArgs = dictArgs ?? AnalysisSet.Empty;
+            Closure = closure;
         }
 
-        public int CombinationCount {
-            get {
-                return Args.Take(Count).Where(y => y.Count >= 2).Aggregate(1, (x, y) => x * y.Count);
-            }
-        }
+        public int Count => Args.Length;
 
         public override string ToString() {
             return string.Join(", ", Args.Take(Count).Select(a => a.ToString())) +
                 (SequenceArgs.Any() ? ", *" + SequenceArgs.ToString() : "") +
                 (DictArgs.Any() ? ", **" + DictArgs.ToString() : "");
-        }
-
-        public static bool AreCompatible(ArgumentSet x, ArgumentSet y) {
-            return x.Args.Length == y.Args.Length;
         }
 
         public static ArgumentSet FromArgs(FunctionDefinition node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgs) {
@@ -75,12 +58,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             int listArgsIndex = -1;
             int dictArgsIndex = -1;
 
-            int argCount = node.ParametersInternal.Length;
-            var newArgs = new IAnalysisSet[argCount + 2];
-            for (int i = 0; i < node.ParametersInternal.Length; ++i) {
-                if (node.ParametersInternal[i].Kind == ParameterKind.List) {
+            int argCount = node.Parameters.Count;
+            var newArgs = new IAnalysisSet[argCount];
+            for (int i = 0; i < node.Parameters.Count; ++i) {
+                if (node.Parameters[i].Kind == ParameterKind.List) {
                     listArgsIndex = i;
-                } else if (node.ParametersInternal[i].Kind == ParameterKind.Dictionary) {
+                } else if (node.Parameters[i].Kind == ParameterKind.Dictionary) {
                     dictArgsIndex = i;
                 }
                 newArgs[i] = AnalysisSet.Empty;
@@ -94,7 +77,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     lastPositionFilled = i;
                 } else if (listArgsIndex >= 0) {
                     foreach (var ns in args[i]) {
-                        if (ns is StarArgsSequenceInfo sseq && i < node.ParametersInternal.Length && sseq._node == node.ParametersInternal[i]) {
+                        var sseq = ns as StarArgsSequenceInfo;
+                        if (sseq != null && i < node.Parameters.Count && sseq._node == node.Parameters[i]) {
                             seqArgs = seqArgs.Add(unit.State.ClassInfos[BuiltinTypeId.Tuple].Instance);
                         } else {
                             seqArgs = seqArgs.Add(ns);
@@ -120,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         } else if ((seq = ns as SequenceInfo) != null) {
                             for (int j = 0; j < seq.IndexTypes.Length; ++j) {
                                 int k = lastPositionFilled + j + 1;
-                                if (k < node.ParametersInternal.Length && node.ParametersInternal[k].Kind == ParameterKind.Normal) {
+                                if (k < node.Parameters.Count && node.Parameters[k].Kind == ParameterKind.Normal) {
                                     newArgs[k] = newArgs[k].Union(seq.IndexTypes[j].TypesNoCopy);
                                 } else if (listArgsIndex >= 0) {
                                     seqArgs = seqArgs.Union(seq.IndexTypes[j].TypesNoCopy);
@@ -141,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             }
 
                             for (int j = 0; j < argCount; ++j) {
-                                if (node.ParametersInternal[j].Name.Equals(paramName, StringComparison.Ordinal)) {
+                                if (node.Parameters[j].Name.Equals(paramName, StringComparison.Ordinal)) {
                                     newArgs[j] = newArgs[j].Union(kv.Value);
                                     break;
                                 }
@@ -162,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 } else {
                     bool foundParam = false;
                     for (int j = 0; j < argCount; ++j) {
-                        if (node.ParametersInternal[j].Name.Equals(name, StringComparison.Ordinal)) {
+                        if (node.Parameters[j].Name.Equals(name, StringComparison.Ordinal)) {
                             newArgs[j] = newArgs[j].Union(args[i]);
                             foundParam = true;
                             break;
@@ -178,19 +162,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
             for (int i = 0; i < argCount; ++i) {
                 newArgs[i] = ReduceArgs(newArgs[i], limits.NormalArgumentTypes);
             }
-            newArgs[argCount] = ReduceArgs(seqArgs, limits.ListArgumentTypes);
-            newArgs[argCount + 1] = ReduceArgs(dictArgs, limits.DictArgumentTypes);
 
-            return new ArgumentSet(newArgs);
+            var set = new ArgumentSet(
+                newArgs,
+                ReduceArgs(seqArgs, limits.ListArgumentTypes),
+                ReduceArgs(dictArgs, limits.DictArgumentTypes),
+                null
+            );
+
+            return set;
         }
 
         private static IAnalysisSet ReduceArgs(IAnalysisSet args, int limit) {
-            for (int j = 0; j <= UnionComparer.MAX_STRENGTH; ++j) {
-                if (args.Count > limit) {
-                    args = args.AsUnion(j);
-                } else {
-                    break;
+            while (args.Count > limit) {
+                var newArgs = args.AsStrongerUnion();
+                if (ReferenceEquals(newArgs, args)) {
+                    return args;
                 }
+                args = newArgs;
             }
             return args;
         }

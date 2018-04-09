@@ -34,9 +34,14 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         bool CanCollectPrivateInformation { get; }
 
         /// <summary>
-        /// Records event with parameters. Perameters are
+        /// Records event with parameters. Parameters are
         /// a collection of string/object pairs.
         /// </summary>
         void RecordEvent(string eventName, object parameters = null);
+
+        /// <summary>
+        /// Records a fault event.
+        /// </summary>
+        void RecordFault(string eventName, Exception ex, string description, bool dumpProcess);
     }
 }

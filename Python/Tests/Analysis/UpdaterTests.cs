@@ -32,7 +32,11 @@ namespace AnalyzerStatusTests {
             // analyzers.
             GC.Collect();
             GC.WaitForPendingFinalizers();
+            TestEnvironmentImpl.TestInitialize();
         }
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void InitializeWithoutCrashing() {

@@ -6,6 +6,7 @@ The generated files should be checked in.
 '''
 
 ASSEMBLIES = sorted([
+    "AnalysisMemoryTester",
     "AnalysisTest",
     "AnalysisTests",
     "CookiecutterTests",

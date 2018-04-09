@@ -97,6 +97,7 @@ namespace CookiecutterTests {
             _gitHubClient = new GitHubClient();
             _cutterClient = CookiecutterClientProvider.Create(null, _redirector);
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
+            CookiecutterTelemetry.Initialize(_telemetry.TelemetryService);
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);

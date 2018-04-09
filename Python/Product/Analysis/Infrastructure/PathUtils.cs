@@ -155,16 +155,12 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             bool fullPaths = true
         ) {
             var queue = new Queue<string>();
-            if (!root.EndsWithOrdinal("\\")) {
-                root += "\\";
-            }
+            root = EnsureEndSeparator(root);
             queue.Enqueue(root);
 
             while (queue.Any()) {
                 var path = queue.Dequeue();
-                if (!path.EndsWithOrdinal("\\")) {
-                    path += "\\";
-                }
+                path = EnsureEndSeparator(path);
 
                 IEnumerable<string> dirs = null;
                 try {
@@ -239,11 +235,13 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 if (!Path.IsPathRooted(dir)) {
                     dirPrefix = EnsureEndSeparator(dir);
                 }
-                
+
 
                 IEnumerable<string> files = null;
                 try {
-                    files = Directory.GetFiles(fullDir, pattern);
+                    if (Directory.Exists(fullDir)) {
+                        files = Directory.GetFiles(fullDir, pattern);
+                    }
                 } catch (UnauthorizedAccessException) {
                 } catch (IOException) {
                 }
@@ -273,9 +271,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public static bool DeleteFile(string path) {
             for (int retries = 5; retries > 0; --retries) {
                 try {
-                    File.SetAttributes(path, FileAttributes.Normal);
-                    File.Delete(path);
-                    return true;
+                    if (File.Exists(path)) {
+                        File.SetAttributes(path, FileAttributes.Normal);
+                        File.Delete(path);
+                        return true;
+                    }
                 } catch (UnauthorizedAccessException) {
                 } catch (IOException) {
                 }

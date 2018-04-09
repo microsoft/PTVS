@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
-            new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
+            new[] { new OverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs", null) };
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;
@@ -90,77 +90,35 @@ namespace Microsoft.PythonTools.Analysis {
             var values = eval.Evaluate(expr);
             var res = AnalysisSet.EmptyUnion;
             foreach (var v in values) {
-                MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
-                if (multipleMembers != null) {
-                    foreach (var member in multipleMembers.Members) {
-                        if (member.IsAlive) {
-                            res = res.Add(member);
-                        }
-                    }
-                } else if (v.IsAlive) {
-                    res = res.Add(v);
-                }
+                res = ResolveAndAdd(unit, res, v);
             }
             return res;
         }
 
-        internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
-            LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
-
-            var parse = locatedDef?.Entry?.GetCurrentParse();
-            if (parse != null && locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var tree = parse.Tree;
-                var version = (parse.Cookie as PythonTools.Intellisense.VersionCookie)?.DefaultVersion;
-                var identifierStart = locatedDef.Node.GetStart(tree);
-                var identifierEnd = locatedDef.Node.GetEnd(tree);
-
-                // For classes and functions, find the ClassDefinition or
-                // FunctionDefinition to get the full span of the definition.
-                var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
-                tree.Walk(walker);
-
-                SourceLocation definitionStart;
-                SourceLocation definitionEnd;
-                if (walker.Definition != null) {
-                    definitionStart = walker.Definition.GetStart(tree);
-                    definitionEnd = walker.Definition.GetEnd(tree);
-                } else {
-                    definitionStart = identifierStart;
-                    definitionEnd = locatedDef.Node.GetEnd(tree);
-                }
-
-                yield return new AnalysisVariable(
-                    VariableType.Definition,
-                    // Location of the identifier only
-                    new LocationInfo(
-                        locatedDef.Entry.FilePath,
-                        locatedDef.Entry.DocumentUri,
-                        identifierStart.Line,
-                        identifierStart.Column,
-                        identifierEnd.Line,
-                        identifierEnd.Column
-                    ),
-                    // Location of the full definition
-                    new LocationInfo(
-                        locatedDef.Entry.FilePath,
-                        locatedDef.Entry.DocumentUri,
-                        definitionStart.Line,
-                        definitionStart.Column,
-                        definitionEnd.Line,
-                        definitionEnd.Column
-                    ),
-                    version
-                );
+        private static IAnalysisSet ResolveAndAdd(AnalysisUnit unit, IAnalysisSet set, AnalysisValue value) {
+            if (!value.IsAlive) {
+                return set;
             }
+            if (value is MultipleMemberInfo mmi) {
+                if (mmi.Push()) {
+                    try {
+                        return mmi.Members.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                    } finally {
+                        mmi.Pop();
+                    }
+                } else {
+                    return AnalysisSet.Empty;
+                }
+            }
+            return set.Union(value.Resolve(unit));
+        }
 
+        internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             if (referenceable is VariableDef def) {
                 foreach (var type in def.TypesNoCopy.WhereNotNull()) {
                     var varType = VariableType.Value;
-                    if (type.DeclaringModule == null ||
-                        type.MemberType == PythonMemberType.Class ||
-                        type.MemberType == PythonMemberType.Function) {
-                        // For non-project values, classes, and functions, treat "Value"
-                        // as the definition.
+                    if (type.DeclaringModule == null) {
+                        // For non-project values, treat "Value" as the definition.
                         varType = VariableType.Definition;
                     }
 
@@ -446,8 +404,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             scope = scope ?? FindScope(location);
 
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+
             if (!lookup.Any()) {
-                var unit = GetNearestEnclosingAnalysisUnit(scope);
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
                     lookup = eval.EvaluateNoMemberRecursion(expr);
@@ -456,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return GetMemberResults(lookup, scope, options);
+            return GetMemberResults(lookup.Resolve(unit), scope, options);
         }
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
@@ -464,6 +423,7 @@ namespace Microsoft.PythonTools.Analysis {
             var modules = unit.State.Modules;
 
             if (modules.TryImport(moduleName, out modRef)) {
+                modRef.Module?.Imported(unit);
                 return modRef.AnalysisModule ?? AnalysisSet.Empty;
             }
 
@@ -476,6 +436,7 @@ namespace Microsoft.PythonTools.Analysis {
                 modName = modName.Remove(i);
 
                 if (modules.TryImport(modName, out modRef)) {
+                    modRef.Module?.Imported(unit);
                     break;
                 }
             }

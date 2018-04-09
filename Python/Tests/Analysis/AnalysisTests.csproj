@@ -64,6 +64,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="AnalyzerTests.cs" />
+    <Compile Include="AssemblySetup.cs" />
     <Compile Include="AstAnalysisTests.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="DocumentBufferTests.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ExpressionFinderTests.cs" />
+    <Compile Include="FunctionBodyAnalysisTests.cs" />
     <Compile Include="LanguageServerTests.cs" />
     <Compile Include="LongestCommonSequenceTests.cs" />
     <Compile Include="ModulePathTests.cs" />

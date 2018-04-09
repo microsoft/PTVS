@@ -31,19 +31,22 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
+using Ast = Microsoft.PythonTools.Parsing.Ast;
 
 namespace AnalysisTests {
     [TestClass]
     public class AstAnalysisTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
         public TestContext TestContext { get; set; }
 
-        private string _analysisLog = null;
-        private string _moduleCache = null;
+        private string _analysisLog;
+        private string _moduleCache;
+
+        public AstAnalysisTests() {
+            _moduleCache = null;
+        }
 
         [TestCleanup]
         public void Cleanup() {
@@ -58,6 +61,8 @@ namespace AnalysisTests {
                     Console.WriteLine(_moduleCache);
                 }
             }
+
+            TestEnvironmentImpl.TestCleanup();
         }
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {
@@ -456,24 +461,39 @@ R_A3 = R_A1.r_A()");
 
 
         private void AstBuiltinScrape(PythonVersion version) {
+            AstScrapedPythonModule.KeepAst = true;
             version.AssertInstalled();
             using (var analysis = CreateAnalysis(version)) {
                 try {
                     var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                     var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                    var ctxt = interp.CreateModuleContext();
 
                     var mod = interp.ImportModule(interp.BuiltinModuleName);
+                    Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
+                    mod.Imported(ctxt);
+
                     var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
                     if (File.Exists(modPath)) {
                         _moduleCache = File.ReadAllText(modPath);
                     }
-                    Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
                     var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
                     foreach (var err in errors) {
                         Console.WriteLine(err);
                     }
                     Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
+
+                    var seen = new HashSet<string>();
+                    foreach (var stmt in ((Ast.SuiteStatement)((AstScrapedPythonModule)mod).Ast.Body).Statements) {
+                        if (stmt is Ast.ClassDefinition cd) {
+                            Assert.IsTrue(seen.Add(cd.Name), $"Repeated use of {cd.Name} at index {cd.StartIndex} in {modPath}");
+                        } else if (stmt is Ast.FunctionDefinition fd) {
+                            Assert.IsTrue(seen.Add(fd.Name), $"Repeated use of {fd.Name} at index {fd.StartIndex} in {modPath}");
+                        } else if (stmt is Ast.AssignmentStatement assign && assign.Left.FirstOrDefault() is Ast.NameExpression n) {
+                            Assert.IsTrue(seen.Add(n.Name), $"Repeated use of {n.Name} at index {n.StartIndex} in {modPath}");
+                        }
+                    }
 
                     // Ensure we can get all the builtin types
                     foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
