@@ -235,6 +235,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public Interpreter interpreter;
         public string[] searchPaths;
+        public bool testEnvironment;
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.
         /// </summary>

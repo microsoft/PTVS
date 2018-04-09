@@ -69,6 +69,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
             _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>>();
+            _displayOptions = new InformationDisplayOptions {
+                trimDocumentationLines = true,
+                maxDocumentationLineLength = 200,
+                trimDocumentationText = true,
+                maxDocumentationTextLength = 4096
+            };
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -89,31 +95,28 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
 
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
-            _testEnvironment = @params.initializationOptions.interpreter.properties.ContainsKey("TestEnvironment");
-            if (_testEnvironment) {
-                // Test environment needs predictable initialization.
-                // Tests can only proceed when analysis is fully done.
-                _analyzer = CreateAnalyzer(@params.initializationOptions.interpreter).Result;
-            } else {
-                if (@params.initializationOptions.asyncStartup) {
-                    CreateAnalyzer(@params.initializationOptions.interpreter).ContinueWith(t => {
-                        if (t.IsFaulted) {
-                            _analyzerCreationTcs.TrySetException(t.Exception);
-                        } else {
-                            try {
-                                _analyzer = t.Result;
-                                OnAnalyzerCreated(@params);
-                                _analyzerCreationTcs.TrySetResult(true);
-                            } catch (Exception ex) {
-                                _analyzerCreationTcs.TrySetException(ex);
-                            }
+            _testEnvironment = @params.initializationOptions.testEnvironment;
+            // Test environment needs predictable initialization.
+            if (@params.initializationOptions.asyncStartup && !_testEnvironment) {
+                CreateAnalyzer(@params.initializationOptions.interpreter).ContinueWith(t => {
+                    if (t.IsFaulted) {
+                        _analyzerCreationTcs.TrySetException(t.Exception);
+                    } else {
+                        try {
+                            _analyzer = t.Result;
+                            OnAnalyzerCreated(@params);
+                            _analyzerCreationTcs.TrySetResult(true);
+                        } catch (Exception ex) {
+                            _analyzerCreationTcs.TrySetException(ex);
                         }
-                    }).DoNotWait();
-                } else {
-                    _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-                    _analyzerCreationTcs.TrySetResult(true);
-                }
+                    }
+                }).DoNotWait();
+            } else {
+                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+                OnAnalyzerCreated(@params);
+                _analyzerCreationTcs.TrySetResult(true);
             }
+
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
@@ -131,12 +134,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
-            _displayOptions = @params.initializationOptions.displayOptions ?? new InformationDisplayOptions {
-                trimDocumentationLines = true,
-                maxDocumentationLineLength = 200,
-                trimDocumentationText = true,
-                maxDocumentationTextLength = 4096
-            };
+            if (@params.initializationOptions.displayOptions != null) {
+                _displayOptions = @params.initializationOptions.displayOptions;
+            }
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
                 LogMessage(MessageType.Log, "Initializing for generic interpreter");
@@ -1343,11 +1343,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private string FormatParameter(ParameterResult p) {
             var res = new StringBuilder(p.Name);
             if (!string.IsNullOrEmpty(p.Type)) {
-                res.Append(" : ");
+                res.Append(": ");
                 res.Append(p.Type);
             }
             if (!string.IsNullOrEmpty(p.DefaultValue)) {
-                res.Append(" = ");
+                res.Append('=');
                 res.Append(p.DefaultValue);
             }
             return res.ToString();
