@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Commands {
                     if (argItems.Length == 3) {
                         bool.TryParse(argItems[2], out addToExistingSolution);
                     }
-                    if (argItems.Length == 2) {
+                    if (argItems.Length >= 2) {
                         initialProjectPath = PathUtils.GetAvailableFilename(
                             argItems[1],
                             argItems[0],

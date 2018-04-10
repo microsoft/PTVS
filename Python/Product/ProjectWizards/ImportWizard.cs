@@ -65,10 +65,8 @@ namespace Microsoft.PythonTools.ProjectWizards {
 
                 // Exclusive = new solution
                 // Non-exclusive = add to existing solution
-                bool exclusive;
-                string exclusiveText;
-                replacementsDictionary.TryGetValue("$exclusiveproject$", out exclusiveText);
-                if (!bool.TryParse(exclusiveText, out exclusive)) {
+                replacementsDictionary.TryGetValue("$exclusiveproject$", out string exclusiveText);
+                if (!bool.TryParse(exclusiveText, out bool exclusive)) {
                     exclusive = false;
                 }
 
@@ -76,7 +74,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 string solnName;
                 replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
                 string directory;
-                if (String.IsNullOrWhiteSpace(solnName)) {
+                if (String.IsNullOrWhiteSpace(solnName) || !exclusive) {
                     // Create directory is unchecked, destinationdirectory is the
                     // directory name the user entered plus the project name, we want
                     // to remove the project name.
