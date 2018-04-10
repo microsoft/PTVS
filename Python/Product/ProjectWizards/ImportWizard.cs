@@ -63,6 +63,15 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
                 var uiShell = (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
 
+                // Exclusive = new solution
+                // Non-exclusive = add to existing solution
+                bool exclusive;
+                string exclusiveText;
+                replacementsDictionary.TryGetValue("$exclusiveproject$", out exclusiveText);
+                if (!bool.TryParse(exclusiveText, out exclusive)) {
+                    exclusive = false;
+                }
+
                 string projName = replacementsDictionary["$projectname$"];
                 string solnName;
                 replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
@@ -79,7 +88,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
                 }
 
-                object inObj = projName + "|" + directory;
+                object inObj = projName + "|" + directory + "|" + (!exclusive).ToString();
                 var guid = GuidList.guidPythonToolsCmdSet;
                 hr = uiShell.PostExecCommand(ref guid, PkgCmdIDList.cmdidImportWizard, 0, ref inObj);
                 if (ErrorHandler.Failed(hr)) {
