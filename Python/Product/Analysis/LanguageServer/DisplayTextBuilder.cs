@@ -26,40 +26,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly RestTextConverter _textConverter = new RestTextConverter();
 
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
-            string firstLongDescription = null;
-            var multiline = false;
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
 
             foreach (var v in values) {
-                var doc = GetDocString(v);
-                firstLongDescription = firstLongDescription ?? doc;
+                if(result.Length > 0) {
+                    result.AppendLine();
+                }
 
+                var doc = GetDocString(v);
                 doc = displayOptions.trimDocumentationLines ? LimitLines(doc) : doc;
                 if (string.IsNullOrEmpty(doc)) {
                     continue;
                 }
 
                 if (documentations.Add(doc)) {
-                    if (documentations.Count > 1) {
-                        if (result.Length == 0) {
-                            // Nop
-                        } else if (result[result.Length - 1] != '\n') {
-                            result.Append(", ");
-                        } else {
-                            multiline = true;
-                        }
-                    }
-                    result.Append(doc);
+                    result.AppendLine(doc);
                 }
             }
 
-            if (documentations.Count == 1 && !string.IsNullOrEmpty(firstLongDescription)) {
-                result.Clear();
-                result.Append(firstLongDescription);
-            }
-
             var displayText = result.ToString();
+            var multiline = displayText.IndexOf('\n') >= 0;
             if (displayOptions.trimDocumentationText && displayText.Length > displayOptions.maxDocumentationTextLength) {
                 displayText = displayText.Substring(0,
                     Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";

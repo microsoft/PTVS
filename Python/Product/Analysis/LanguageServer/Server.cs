@@ -108,13 +108,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             _analyzerCreationTcs.TrySetResult(true);
                         } catch (Exception ex) {
                             _analyzerCreationTcs.TrySetException(ex);
+                            throw;
                         }
                     }
                 }).DoNotWait();
             } else {
-                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-                OnAnalyzerCreated(@params);
-                _analyzerCreationTcs.TrySetResult(true);
+                try {
+                    _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+                    OnAnalyzerCreated(@params);
+                    _analyzerCreationTcs.TrySetResult(true);
+                } catch (Exception ex) {
+                    _analyzerCreationTcs.TrySetException(ex);
+                    throw;
+                }
             }
 
             return new InitializeResult {
@@ -307,6 +313,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
             await _analyzerCreationTcs.Task;
             if (_analyzer == null) {
@@ -314,7 +321,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            await _analyzer.ReloadModulesAsync();
+            _queue.Enqueue(new AnalysisQueueWorkItem(() => _analyzer.ReloadModulesAsync().WaitAndUnwrapExceptions()), AnalysisPriority.Normal);
 
             // re-analyze all of the modules when we get a new set of modules loaded...
             foreach (var entry in _analyzer.ModulesByFilename) {
