@@ -3271,6 +3271,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[현재 환경에 이전 버전의 ptvsd({0} 버전)가 설치되어 있지만 {1} 버전이 Visual Studio에 포함되어 있습니다. 최신 기능을 가져오려면 ptvsd를 업그레이드하거나 제거하세요.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";InstallingPackageFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install '{0}' -----]D;]A;]D;]A;]]></Val>
@@ -4870,6 +4879,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";RunMypyLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Run Mypy]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mypy 실행]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RunPyLintLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run PyLint]]></Val>
@@ -5626,7 +5644,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18083.1]]></Val>
+        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5662,7 +5680,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18083.1]]></Val>
+        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
