@@ -2256,4 +2256,7 @@ Expand selection to the full expression?</value>
     <value>Run Mypy</value>
     <comment>Mypy is a product name and should not be localized</comment>
   </data>
+  <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
+    <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality</value>
+  </data>
 </root>

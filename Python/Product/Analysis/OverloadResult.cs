@@ -23,26 +23,24 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class OverloadResult : IOverloadResult {
+    public class OverloadResult : IOverloadResult2 {
         private readonly ParameterResult[] _parameters;
-        private readonly string _name;
+        private readonly string[] _returnType;
 
-        public OverloadResult(ParameterResult[] parameters, string name, string documentation = null) {
+        public OverloadResult(ParameterResult[] parameters, string name, string documentation, IEnumerable<string> returnType) {
             _parameters = parameters;
-            _name = name;
+            Name = name;
             Documentation = documentation;
+            _returnType = returnType.MaybeEnumerate().ToArray();
         }
 
-        public string Name {
-            get { return _name; }
-        }
+        public string Name { get; }
+        public virtual IReadOnlyList<string> ReturnType { get { return _returnType; } }
         public virtual string Documentation { get; }
-        public virtual ParameterResult[] Parameters {
-            get { return _parameters; }
-        }
+        public virtual ParameterResult[] Parameters { get { return _parameters; } }
 
         internal virtual OverloadResult WithNewParameters(ParameterResult[] newParameters) {
-            return new OverloadResult(newParameters, _name);
+            return new OverloadResult(newParameters, Name, Documentation, ReturnType);
         }
 
         private static string Longest(string x, string y) {
@@ -115,26 +113,18 @@ namespace Microsoft.PythonTools.Analysis {
 
                 return res;
             });
+            var returnType = overloads.SelectMany(o => o.ReturnType).Distinct();
 
-            return new OverloadResult(parameters, name, doc);
-        }
-    }
-
-    class SimpleOverloadResult : OverloadResult {
-        private readonly string _documentation;
-        public SimpleOverloadResult(ParameterResult[] parameters, string name, string documentation)
-            : base(parameters, name) {
-            _documentation = documentation;
+            return new OverloadResult(parameters, name, doc, returnType);
         }
 
-        public override string Documentation {
-            get {
-                return _documentation;
-            }
-        }
-
-        internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {
-            return new SimpleOverloadResult(newParameters, Name, _documentation);
+        public override string ToString() {
+            return "{0}({1})->[{2}]{3}".FormatInvariant(
+                Name,
+                string.Join(",", Parameters.Select(p => "{0}{1}:{2}={3}".FormatInvariant(p.Name, p.IsOptional ? "?" : "", p.Type ?? "", p.DefaultValue ?? ""))),
+                string.Join(",", ReturnType.OrderBy(k => k)),
+                string.IsNullOrEmpty(Documentation) ? "" : ("'''{0}'''".FormatInvariant(Documentation))
+            );
         }
     }
 
@@ -144,6 +134,7 @@ namespace Microsoft.PythonTools.Analysis {
         private string[] _pnames;
         private IAnalysisSet[] _ptypes;
         private string[] _pdefaults;
+        private readonly HashSet<string> _rtypes;
 
         public AccumulatedOverloadResult(string name, string documentation, int parameters) {
             _name = name;
@@ -152,6 +143,7 @@ namespace Microsoft.PythonTools.Analysis {
             _ptypes = new IAnalysisSet[parameters];
             _pdefaults = new string[parameters];
             ParameterCount = parameters;
+            _rtypes = new HashSet<string>();
         }
 
         public int ParameterCount { get; }
@@ -186,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis {
             return x.Union(y);
         }
 
-        public bool TryAddOverload(string name, string documentation, string[] names, IAnalysisSet[] types, string[] defaults) {
+        public bool TryAddOverload(string name, string documentation, string[] names, IAnalysisSet[] types, string[] defaults, IEnumerable<string> returnTypes) {
             if (names.Length != _pnames.Length || types.Length != _ptypes.Length) {
                 return false;
             }
@@ -213,6 +205,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _doc = documentation;
             }
 
+            if (returnTypes != null) {
+                _rtypes.UnionWith(returnTypes);
+            }
+
             return true;
         }
 
@@ -232,7 +228,7 @@ namespace Microsoft.PythonTools.Analysis {
                     _pdefaults[i]
                 );
             }
-            return new SimpleOverloadResult(parameters, _name, _doc);
+            return new OverloadResult(parameters, _name, _doc, _rtypes);
         }
     }
 
@@ -244,17 +240,19 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonAnalyzer _projectState;
         private readonly Func<string> _fallbackDoc;
         private string _doc;
+        private IReadOnlyList<string> _returnTypes;
         private static readonly string _calculating = "Documentation is still being calculated, please try again soon.";
 
         internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, Func<string> fallbackDoc, params ParameterResult[] extraParams)
-            : base(null, name) {
+            : base(null, name, null, null) {
             _fallbackDoc = fallbackDoc;
             _overload = overload;
             _extraParameters = extraParams;
             _removedParams = removedParams;
             _projectState = state;
+            _returnTypes = Array.Empty<string>();
 
-            CalculateDocumentation();
+            Calculate();
         }
 
         internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, params ParameterResult[] extraParams)
@@ -262,14 +260,15 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal BuiltinFunctionOverloadResult(PythonAnalyzer state, IPythonFunctionOverload overload, int removedParams, string name, Func<string> fallbackDoc, params ParameterResult[] extraParams)
-            : base(null, name) {
+            : base(null, name, null, null) {
             _overload = overload;
             _extraParameters = extraParams;
             _removedParams = removedParams;
             _projectState = state;
             _fallbackDoc = fallbackDoc;
+            _returnTypes = Array.Empty<string>();
 
-            CalculateDocumentation();
+            Calculate();
         }
 
         internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {
@@ -283,19 +282,12 @@ namespace Microsoft.PythonTools.Analysis {
             );
         }
 
-        public override string Documentation {
-            get {
-                return _doc;
-            }
-        }
+        public override string Documentation => _doc;
 
-        private void CalculateDocumentation() {
+        private void Calculate() {
             // initially fill in w/ a string saying we don't yet have the documentation
             _doc = _calculating;
-
-            // give the documentation a brief time period to complete synchrnously.
-            var task = Task.Factory.StartNew(DocCalculator);
-            task.Wait(50);
+            Task.Factory.StartNew(DocCalculator).DoNotWait();
         }
 
         private void DocCalculator() {
@@ -401,6 +393,8 @@ namespace Microsoft.PythonTools.Analysis {
 
             return new ParameterResult(name, "", typeName, isOptional, null, defaultValue);
         }
+
+        public override IReadOnlyList<string> ReturnType => _returnTypes;
     }
 
     class OverloadResultComparer : EqualityComparer<OverloadResult> {

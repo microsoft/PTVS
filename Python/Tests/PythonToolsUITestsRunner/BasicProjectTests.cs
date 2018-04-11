@@ -100,6 +100,12 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.ProjectAddFolderThroughUI));
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void ProjectRenameFolder() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.ProjectRenameFolder));
+        }
+
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingFolder() {

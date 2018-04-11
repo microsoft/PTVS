@@ -62,8 +62,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (OuterScope != null) {
                 var outerVar = OuterScope.GetVariable(location, unit, name, false);
                 if (outerVar != null && outerVar != vars) {
-                    outerVar.AddAssignment(location, unit);
-                    outerVar.AddTypes(unit, values);
+                    OuterScope.AssignVariable(name, location, unit, values);
                 }
             }
 
@@ -103,58 +102,28 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal VariableDef CreateTypedVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet types, bool addRef = true) {
-            VariableDef res, outer, immediateOuter;
+            VariableDef res;
             if (!TryGetVariable(name, out res)) {
                 // Normal CreateVariable would use AddVariable, which will put
                 // the typed one in the wrong scope.
                 res = base.AddVariable(name);
             }
-            
             if (addRef) {
                 res.AddReference(node, unit);
             }
-            PropagateIsInstanceTypes(node, unit, types, res);
+
+            var instTypes = types.GetInstanceType();
+            res.AddTypes(unit, instTypes);
 
             foreach (var scope in OuterScope.EnumerateTowardsGlobal) {
-                outer = scope.GetVariable(node, unit, name, addRef);
-                if (scope.TryGetVariable(name, out immediateOuter) && immediateOuter != res) {
-                    if (addRef && immediateOuter != outer) {
-                        res.AddReference(node, unit);
-                    }
-                    PropagateIsInstanceTypes(node, unit, types, immediateOuter);
-
-                    scope.AddLinkedVariable(name, res);
-                }
+                scope.TryPropagateVariable(node, unit, name, instTypes, res, addRef);
+                scope.AddLinkedVariable(name, res);
 
                 if (!(scope is IsInstanceScope)) {
                     break;
                 }
             }
             return res;
-        }
-
-        private void PropagateIsInstanceTypes(Node node, AnalysisUnit unit, IAnalysisSet typeSet, VariableDef variable) {
-            foreach (var typeObj in typeSet) {
-                ClassInfo classInfo;
-                BuiltinClassInfo builtinClassInfo;
-                SequenceInfo seqInfo;
-
-                if ((classInfo = typeObj as ClassInfo) != null) {
-                    variable.AddTypes(unit, classInfo.Instance, false);
-                } else if ((builtinClassInfo = typeObj as BuiltinClassInfo) != null) {
-                    variable.AddTypes(unit, builtinClassInfo.Instance, false);
-                } else if ((seqInfo = typeObj as SequenceInfo) != null) {
-                    if (seqInfo.Push()) {
-                        try {
-                            foreach (var indexVar in seqInfo.IndexTypes) {
-                                PropagateIsInstanceTypes(node, unit, indexVar.Types, variable);
-                            }
-                        } finally {
-                            seqInfo.Pop();
-                        }
-                    }
-                }
-            }
         }
 
         public override IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {

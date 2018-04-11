@@ -101,7 +101,7 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-        public IPythonParse WaitForCurrentParse(int timeout = -1) {
+        public IPythonParse WaitForCurrentParse(int timeout = Timeout.Infinite, CancellationToken token = default(CancellationToken)) {
             throw new NotImplementedException();
         }
     }

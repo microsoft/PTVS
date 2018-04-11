@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger {
         public override int Read(byte[] buffer, int offset, int count) {
             try {
                 var bytes = _networkStream.Read(buffer, offset, count);
-                CheckForDisconnect(buffer, bytes);
+                CheckForResponse(buffer, bytes);
                 return bytes;
             } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to read remaining messages.
@@ -78,25 +79,41 @@ namespace Microsoft.PythonTools.Debugger {
             return ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
         }
 
-        private void CheckForDisconnect(byte[] buffer, int count) {
-            if(Disconnected == null) {
+        private void CheckForResponse(byte[] buffer, int count) {
+            if(Disconnected == null && Initialized == null) {
                 return;
             }
 
             var text = Encoding.UTF8.GetString(buffer, 0, count);
-            try {
-                var json = JObject.Parse(text);
-                if(json["command"].Value<string>() == "disconnect") {
-                    Task.Factory.StartNew(async () => {
-                        await Task.Delay(50);
-                        Disconnected?.Invoke(this, null);
-                    });
+            var splitter = new string[]{ "\r", "\n" };
+            var jsonBlocks = text
+                .Replace("Content-Length", "\r\nContent-Length")
+                .Split(splitter, StringSplitOptions.RemoveEmptyEntries)
+                .Where(s => s.StartsWith("{") && s.EndsWith("}"));
+            foreach (var jsonBlock in jsonBlocks) {
+                try {
+                    var json = JObject.Parse(jsonBlock);
+                    if(!json.TryGetValue("command", out JToken tok)) {
+                        json.TryGetValue("event", out tok);
+                    }
+                    var name = tok.Value<string>();
+                    if (name == "disconnect") {
+                        Task.Factory.StartNew(async () => {
+                            await Task.Delay(50);
+                            Disconnected?.Invoke(this, null);
+                        });
+                    } else if (name == "initialized") {
+                        Task.Factory.StartNew(async () => {
+                            Initialized?.Invoke(this, null);
+                        });
+                    }
+                } catch (Exception) {
+                    // Ignore all parse errors
                 }
-            } catch (Exception) {
-                // Ignore any parse errors
             }
         }
 
+        public event EventHandler Initialized;
         public event EventHandler Disconnected;
     }
 }

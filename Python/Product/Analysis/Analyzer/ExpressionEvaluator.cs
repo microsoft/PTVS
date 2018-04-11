@@ -443,19 +443,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 gen.AddYieldFrom(node, ee._unit, res);
 
-                var returned = AnalysisSet.Empty;
-                if (res.Split(out IReadOnlyList<GeneratorInfo> generators, out var rest)) {
-                    foreach (var g in generators) {
-                        g.Returns.AddDependency(ee._unit);
-                        returned = returned.Union(g.Returns.Types);
-                    }
-                }
-                if (rest.Split(out IReadOnlyList<ProtocolInfo> protocols, out rest)) {
-                    foreach (var g in protocols.SelectMany(pi => pi.GetProtocols<GeneratorProtocol>())) {
-                        returned = returned.Union(g.Returns);
-                    }
-                }
-                return returned;
+                return res.GetReturnForYieldFrom(node, ee._unit);
             }
 
             return AnalysisSet.Empty;
@@ -538,15 +526,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
                 if (!string.IsNullOrEmpty(l.Name)) {
-                    foreach (var obj in Evaluate(l.Target)) {
-                        obj.SetMember(l, _unit, l.Name, values);
+                    foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
+                        obj.SetMember(l, _unit, l.Name, values.Resolve(_unit));
                     }
                 }
             } else if (left is IndexExpression) {
                 var l = (IndexExpression)left;
                 var indexObj = Evaluate(l.Index);
-                foreach (var obj in Evaluate(l.Target)) {
-                    obj.SetIndex(assignStmt, _unit, indexObj, values);
+                foreach (var obj in Evaluate(l.Target).Resolve(_unit)) {
+                    obj.SetIndex(assignStmt, _unit, indexObj, values.Resolve(_unit));
                 }
             } else if (left is SequenceExpression) {
                 // list/tuple

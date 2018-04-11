@@ -1674,10 +1674,7 @@ async def f():
         }
 
         private Task ExtractMethodTest(string input, object extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
-            Func<Span> textRange = () => {
-                return GetSelectionSpan(input, extract);
-            };
-
+            Func<Span> textRange = () => GetSelectionSpan(input, extract);
             return ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
         }
 

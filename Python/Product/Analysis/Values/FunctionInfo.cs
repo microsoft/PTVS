@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -29,131 +27,108 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class FunctionInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private Dictionary<AnalysisValue, IAnalysisSet> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
-        private readonly FunctionDefinition _functionDefinition;
         private readonly FunctionAnalysisUnit _analysisUnit;
-        private readonly ProjectEntry _projectEntry;
-        public bool IsStatic;
-        public bool IsClassMethod;
-        public bool IsProperty;
         private ReferenceDict _references;
         private readonly int _declVersion;
-        private int _callDepthLimit;
-        private int _callsSinceLimitChange;
         private string _doc;
 
-        internal CallChainSet _allCalls;
+        private readonly CallChainSet _callsWithClosure;
+        private int _callDepthLimit;
+        private int _callsSinceLimitChange;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
-            _projectEntry = declUnit.ProjectEntry;
-            _functionDefinition = node;
+            ProjectEntry = declUnit.ProjectEntry;
+            FunctionDefinition = node;
             _declVersion = declUnit.ProjectEntry.AnalysisVersion;
 
-            if (_functionDefinition.Name == "__new__") {
+            if (FunctionDefinition.Name == "__new__") {
                 IsClassMethod = true;
             }
 
             _doc = node.Body?.Documentation?.TrimDocumentation();
 
-            object value;
-            if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out value) ||
+            if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out object value) ||
                 (_callDepthLimit = (value as int?) ?? -1) < 0) {
                 _callDepthLimit = declUnit.State.Limits.CallDepth;
             }
 
-            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, _projectEntry);
-        }
-
-        public ProjectEntry ProjectEntry {
-            get {
-                return _projectEntry;
+            if (node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator) {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
+                _callsWithClosure = new CallChainSet();
+            } else {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, false);
             }
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _analysisUnit.ProjectEntry;
-            }
-        }
+        public ProjectEntry ProjectEntry { get; }
 
-        public FunctionDefinition FunctionDefinition {
-            get {
-                return _functionDefinition;
-            }
-        }
+        public override IPythonProjectEntry DeclaringModule => _analysisUnit.ProjectEntry;
 
-        public override AnalysisUnit AnalysisUnit {
-            get {
-                return _analysisUnit;
-            }
-        }
+        public FunctionDefinition FunctionDefinition { get; }
 
-        public override int DeclaringVersion {
-            get {
-                return _declVersion;
-            }
-        }
+        public override AnalysisUnit AnalysisUnit => _analysisUnit;
+
+        public override int DeclaringVersion => _declVersion;
+
+        public bool IsStatic { get; set; }
+        public bool IsClassMethod { get; set; }
+        public bool IsProperty { get; set; }
+        public bool IsClosure => _callsWithClosure != null;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);
 
-            FunctionAnalysisUnit calledUnit;
-            bool updateArguments = true;
+            if (keywordArgNames != null && keywordArgNames.Any()) {
+                _analysisUnit.AddNamedParameterReferences(unit, keywordArgNames);
+            }
 
-            if (callArgs.Count == 0 ||
-                (ProjectState.Limits.UnifyCallsToNew && Name == "__new__") ||
-                _callDepthLimit == 0) {
-                calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
-            } else if (FunctionDefinition.ReturnAnnotation != null) {
-                // TODO: Reevaluate return annotation in context of arguments
-                calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
-            } else {
-                if (_allCalls == null) {
-                    _allCalls = new CallChainSet();
-                }
+            var res = DoCall(node, unit, _analysisUnit, callArgs);
 
+            if (_callsWithClosure != null) {
                 var chain = new CallChain(node, unit, _callDepthLimit);
                 var aggregate = GetAggregate(unit);
-                if (!_allCalls.TryGetValue(aggregate, chain, _callDepthLimit, out calledUnit)) {
-                    if (unit.ForEval) {
-                        // Call expressions that weren't analyzed get the union result
-                        // of all calls to this function.
-                        var res = AnalysisSet.Empty;
-                        foreach (var call in _allCalls.Values) {
-                            res = res.Union(call.ReturnValue.GetTypesNoCopy(unit, DeclaringModule));
-                        }
-                        return res;
-                    } else {
-                        _callsSinceLimitChange += 1;
-                        if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
-                            _callDepthLimit -= 1;
-                            _callsSinceLimitChange = 0;
-                            AnalysisLog.ReduceCallDepth(this, _allCalls.Count, _callDepthLimit);
 
-                            _allCalls.Clear();
-                            chain = chain.Trim(_callDepthLimit);
-                        }
+                if (!_callsWithClosure.TryGetValue(aggregate, chain, _callDepthLimit, out var calledUnit) &&
+                    !unit.ForEval) {
+                    _callsSinceLimitChange += 1;
+                    if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
+                        _callDepthLimit -= 1;
+                        _callsSinceLimitChange = 0;
+                        AnalysisLog.ReduceCallDepth(this, _callsWithClosure.Count, _callDepthLimit);
 
-                        calledUnit = new CalledFunctionAnalysisUnit(aggregate, (FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
-                        _allCalls.Add(aggregate, chain, calledUnit);
-                        updateArguments = false;
+                        _callsWithClosure.Clear();
+                        chain = chain.Trim(_callDepthLimit);
                     }
+
+                    calledUnit = new FunctionClosureAnalysisUnit(aggregate, (FunctionAnalysisUnit)AnalysisUnit, chain);
+                    _callsWithClosure.Add(aggregate, chain, calledUnit);
+                    calledUnit.Enqueue();
                 }
+
+                res.Split(v => v.IsResolvable(), out _, out var nonLazy);
+                res = DoCall(node, unit, calledUnit, callArgs);
+                res = res.Union(nonLazy);
             }
 
-            if (updateArguments && calledUnit.UpdateParameters(callArgs)) {
-                AnalysisLog.UpdateUnit(calledUnit);
-            }
-            if (keywordArgNames != null && keywordArgNames.Any()) {
-                calledUnit.AddNamedParameterReferences(unit, keywordArgNames);
-            }
+            var context = unit.ForEval ? ResolutionContext.Complete : new ResolutionContext {
+                Caller = this,
+                CallArgs = callArgs,
+                CallSite = node
+            };
 
-            calledUnit.ReturnValue.AddDependency(unit);
+            var r = res.Resolve(unit, context, out _);
+            return r;
+        }
+
+        private IAnalysisSet DoCall(Node node, AnalysisUnit callingUnit, FunctionAnalysisUnit calledUnit, ArgumentSet callArgs) {
+            calledUnit.UpdateParameters(callArgs);
+            calledUnit.ReturnValue.AddDependency(callingUnit);
             return calledUnit.ReturnValue.Types;
         }
 
         private IVersioned GetAggregate(AnalysisUnit unit) {
             IVersioned agg;
-            var fau = unit as CalledFunctionAnalysisUnit;
+            var fau = unit as FunctionClosureAnalysisUnit;
             if (fau == null || _callDepthLimit == 1) {
                 // The caller is top-level or a normal FAU, not one with a call chain.
                 // Just aggregate the caller w/ ourselves
@@ -165,6 +140,49 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             return agg;
+        }
+
+        internal void AddParameterReference(Node node, AnalysisUnit unit, string name) {
+            var vd = (_analysisUnit.Scope as FunctionScope)?.GetParameter(name);
+            vd?.AddReference(node, unit);
+        }
+
+        public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name) {
+            var vd = (_analysisUnit.Scope as FunctionScope)?.GetParameter(name);
+            if (unit != AnalysisUnit) {
+                vd?.AddDependency(unit);
+            }
+            var res = vd?.Types ?? AnalysisSet.Empty;
+            res.Split(v => (v as ParameterInfo)?.Function == this, out _, out res);
+            return res;
+        }
+
+        public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name, ArgumentSet arguments) {
+            var parameters = FunctionDefinition.Parameters;
+            if (parameters == null || parameters.Count == 0) {
+                return ResolveParameter(unit, name);
+            }
+
+            for (int i = 0; i < parameters.Count; ++i) {
+                if (parameters[i].Name == name) {
+                    IAnalysisSet res = AnalysisSet.Empty;
+                    if (i < arguments.Count) {
+                        arguments.Args[i].Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Union(args);
+                    }
+                    if (parameters[i].IsList) {
+                        arguments.SequenceArgs.Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Add(new LazyIndexableInfo(parameters[i], args, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                    }
+                    if (parameters[i].IsDictionary) {
+                        arguments.DictArgs.Split(v => (v as ParameterInfo)?.Function != this, out var args, out _);
+                        res = res.Add(new LazyIndexableInfo(parameters[i], args, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                    }
+                    return res;
+                }
+            }
+
+            return ResolveParameter(unit, name);
         }
 
         public override string Name {
@@ -270,7 +288,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (FunctionDefinition.IsCoroutine) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "async ");
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "def ");
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullyQualifiedName);
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
                 foreach (var kv in GetParameterString()) {
@@ -376,7 +393,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
+                var start = FunctionDefinition.GetStart(FunctionDefinition.GlobalParent);
                 var end = FunctionDefinition.GetEnd(FunctionDefinition.GlobalParent);
                 return new[] {
                     new LocationInfo(
@@ -443,8 +460,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var units = new HashSet<AnalysisUnit>();
                 units.Add(AnalysisUnit);
-                if (_allCalls != null) {
-                    units.UnionWith(_allCalls.Values);
+                if (_callsWithClosure != null) {
+                    units.UnionWith(_callsWithClosure.Values);
                 }
 
                 foreach (var unit in units) {
@@ -452,18 +469,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                     var vars = FunctionDefinition.ParametersInternal.Select(p => {
                         VariableDef param;
-                        if (unit.Scope.TryGetVariable(p.Name, out param)) {
-                            return param.Types;
+                        if (unit != AnalysisUnit && unit.Scope.TryGetVariable(p.Name, out param)) {
+                            return param.Types.Resolve(unit);
+                        } else if (_analysisUnit._scope is FunctionScope fs) {
+                            return fs.GetParameter(p.Name)?.Types.Resolve(unit) ?? AnalysisSet.Empty;
                         }
-                        return null;
+                        return AnalysisSet.Empty;
                     }).ToArray();
 
                     var defaults = FunctionDefinition.ParametersInternal.Select(p => GetDefaultValue(unit.State, p, DeclaringModule.Tree)).ToArray();
 
+                    var rtypes = (unit.Scope as FunctionScope)?.ReturnValue
+                        .TypesNoCopy
+                        .Resolve(unit, new ResolutionContext {
+                            Caller = this,
+                            LazyCallArgs = new Lazy<ArgumentSet>(() => new ArgumentSet(vars, null, null, null)),
+                            ResolveFully = true
+                        }, out _)
+                        .GetShortDescriptions()
+                        .ToArray();
+
                     bool needNewSet = true;
                     foreach (var set in parameterSets) {
                         if (set.ParameterCount == names.Length) {
-                            if (set.TryAddOverload(null, null, names, vars, defaults)) {
+                            if (set.TryAddOverload(null, null, names, vars, defaults, rtypes)) {
                                 needNewSet = false;
                                 break;
                             }
@@ -473,7 +502,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (needNewSet) {
                         var set = new AccumulatedOverloadResult(FunctionDefinition.Name, Documentation, names.Length);
                         parameterSets.Add(set);
-                        set.TryAddOverload(null, null, names, vars, defaults);
+                        set.TryAddOverload(null, null, names, vars, defaults, rtypes);
                     }
                 }
 
@@ -532,7 +561,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         vars = vars.AsStrongerUnion();
                     }
                 }
-                foreach (var unit in (_allCalls?.Values).MaybeEnumerate()) {
+                foreach (var unit in (_callsWithClosure?.Values).MaybeEnumerate()) {
                     if (unit.Scope.TryGetVariable(curParam.Name, out vd)) {
                         vars = vars.Union(vd.TypesNoCopy);
                         if (vars.Count > limit) {
@@ -566,10 +595,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             varRef.AddTypes(unit, value, true, DeclaringModule);
 
             if (name == "__doc__") {
-                _doc = string.Join(Environment.NewLine, varRef.TypesNoCopy.OfType<ConstantInfo>()
+                var newDoc = varRef.TypesNoCopy.OfType<ConstantInfo>()
                     .Select(ci => (ci.Value as string) ?? (ci.Value as AsciiString)?.String)
                     .Where(s => !string.IsNullOrEmpty(s) && (_doc == null || !_doc.Contains(s)))
-                );
+                    .ToList();
+                if (newDoc.Any()) {
+                    if (!string.IsNullOrEmpty(_doc)) {
+                        newDoc.Insert(0, _doc);
+                    }
+                    _doc = string.Join(Environment.NewLine, newDoc);
+                }
             }
         }
 
@@ -647,9 +682,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var finishedScopes = new HashSet<InterpreterScope>();
             var scopeSet = new HashSet<InterpreterScope>();
             scopeSet.Add(AnalysisUnit.Scope);
-            if (_allCalls != null) {
-                scopeSet.UnionWith(_allCalls.Values.Select(au => au.Scope));
-            }
 
             int index = 0;
             foreach (var p in parameters) {
@@ -670,9 +702,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var result = new IAnalysisSet[FunctionDefinition.ParametersInternal.Length];
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
-            if (_allCalls != null) {
-                units.UnionWith(_allCalls.Values);
-            }
 
             for (int i = 0; i < result.Length; ++i) {
                 result[i] = unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH
@@ -694,13 +723,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ? AnalysisSet.CreateUnion(UnionComparer.Instances[unionStrength])
                 : AnalysisSet.Empty;
 
-            var units = new HashSet<AnalysisUnit>();
-            units.Add(AnalysisUnit);
-            if (_allCalls != null) {
-                units.UnionWith(_allCalls.Values);
+            var fau = AnalysisUnit as FunctionAnalysisUnit;
+            if (fau != null) {
+                result = result.Union(fau.ReturnValue.TypesNoCopy.Resolve(fau));
             }
-
-            result = result.UnionAll(units.OfType<FunctionAnalysisUnit>().Select(unit => unit.ReturnValue.TypesNoCopy));
 
             return result;
         }
