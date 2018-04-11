@@ -2,25 +2,19 @@
   <Target Name = "ValidateAssemblyName" >
     <Error Condition = " '$(AssemblyName)'=='' " Text = "AssemblyName property must be specified before R.Settings.NetCore.props is referenced" />
   </Target>
-
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\VsCode\</BuildOutputRoot>
+   </PropertyGroup>
 
-    <ObjDirectory Condition="'$(ObjDirectory)' == ''">$(BuildOutputRoot)obj\</ObjDirectory>
-    <BinDirectory Condition="'$(BinDirectory)' == ''">$(BuildOutputRoot)bin\</BinDirectory>
+  <Import Project="$(BuildRoot)\Build\Common.Build.Core.settings" />
 
-    <BaseIntermediateOutputPath>$(ObjDirectory)\$(AssemblyName)\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\</IntermediateOutputPath>
-
-    <BaseOutputPath>$(BinDirectory)</BaseOutputPath>
-    <OutputPath>$(BaseOutputPath)\$(Configuration)\</OutputPath>
-
+  <PropertyGroup>
     <BuildDependsOn>ValidateAssemblyName;$(BuildDependsOn)</BuildDependsOn>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
+  <!-- Compilation -->
   <PropertyGroup>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -29,20 +23,26 @@
     <DefineConstants>NETSTANDARD;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
+  <!-- Target .NET Core Runtimes -->
+  <PropertyGroup>
+    <!-- See https://docs.microsoft.com/en-us/dotnet/core/rid-catalog -->
+    <RuntimeIdentifiers>win-x86;win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <!-- Versioning -->
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
   <!-- Signing -->
   <PropertyGroup>
     <MicroBuild_DoNotStrongNameSign>true</MicroBuild_DoNotStrongNameSign>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(SignType)' == 'real' OR '$(SignType)' == 'test' ">
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);SIGN</DefineConstants>
     <SignAssembly>true</SignAssembly>
     <DelaySign>true</DelaySign>
     <AssemblyOriginatorKeyFile>$(BuildRoot)\Build\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(SignType)' != 'real' AND '$(SignType)' != 'test' ">
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-
 </Project>

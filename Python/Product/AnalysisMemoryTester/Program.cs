@@ -259,22 +259,12 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     break;
                 case "analyze":
                     Console.Write("Waiting for complete analysis... ");
+                    var start = DateTime.UtcNow;
                     if (!Console.IsOutputRedirected) {
-                        int cLine = Console.CursorTop;
-                        int cChar = Console.CursorLeft, lastChar = 0;
-                        var start = DateTime.UtcNow;
-                        analyzer.SetQueueReporting(i => {
-                            Console.SetCursorPosition(cChar, cLine);
-                            if (lastChar > cChar) {
-                                Console.Write(new string(' ', lastChar - cChar));
-                                Console.SetCursorPosition(cChar, cLine);
-                            }
-                            Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
-                            lastChar = Console.CursorLeft;
-                        }, 500);
+                        ConfigureProgressOutput(analyzer);
                     }
                     analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-                    Console.WriteLine("done!");
+                    Console.WriteLine("done in {0} with peak memory {1}MB!", DateTime.UtcNow - start, Process.GetCurrentProcess().PeakWorkingSet64 / 1024 / 1024);
                     break;
 
                 case "pause":
@@ -322,6 +312,21 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             }
         }
 
+        private static void ConfigureProgressOutput(PythonAnalyzer analyzer) {
+            int cLine = Console.CursorTop;
+            int cChar = Console.CursorLeft, lastChar = 0;
+            var start = DateTime.UtcNow;
+            analyzer.SetQueueReporting(i => {
+                Console.SetCursorPosition(cChar, cLine);
+                if (lastChar > cChar) {
+                    Console.Write(new string(' ', lastChar - cChar));
+                    Console.SetCursorPosition(cChar, cLine);
+                }
+                Console.Write($"{i} in queue; {DateTime.UtcNow - start} taken... ");
+                lastChar = Console.CursorLeft;
+            }, 50);
+        }
+
         private static IEnumerable<ModulePath> GetModules(string args) {
             var m = Regex.Match(args, "(\\*|[\\w\\.]+)\\s+(.+)");
             var modName = m.Groups[1].Value;
@@ -351,9 +356,21 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 dir = Path.Combine(Environment.CurrentDirectory, dir);
             }
 
+            if (!Directory.Exists(dir)) {
+                Console.WriteLine("Invalid directory: {0}", dir);
+                yield break;
+            }
+
             Console.WriteLine("Adding modules from {0}:{1}", dir, filter);
             foreach (var file in Directory.EnumerateFiles(dir, filter, opt)) {
-                yield return ModulePath.FromFullPath(file, PathUtils.GetParent(dir));
+                ModulePath mp;
+                try {
+                    mp = ModulePath.FromFullPath(file, PathUtils.GetParent(dir));
+                } catch (ArgumentException) {
+                    Console.WriteLine("Failed to get module name for {0}", file);
+                    continue;
+                }
+                yield return mp;
             }
         }
 

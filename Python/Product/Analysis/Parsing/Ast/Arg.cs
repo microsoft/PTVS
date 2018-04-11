@@ -14,59 +14,64 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public sealed class Arg : Node {
-        private readonly Expression _name;
-        private readonly Expression _expression;
+        private int? _endIndexIncludingWhitespace;
 
         public Arg(Expression expression) : this(null, expression) { }
 
         public Arg(Expression name, Expression expression) {
-            _name = name;
-            _expression = expression;
+            NameExpression = name;
+            Expression = expression;
         }
 
-        public string Name => (_name as NameExpression)?.Name;
-        public Expression NameExpression => _name;
-        public Expression Expression => _expression;
+        public string Name => (NameExpression as NameExpression)?.Name;
+        public Expression NameExpression { get; }
+
+        public Expression Expression { get; }
+        public int EndIndexIncludingWhitespace {
+            get => _endIndexIncludingWhitespace ?? throw new InvalidOperationException("EndIndexIncludingWhitespace has not been initialized");
+            set => _endIndexIncludingWhitespace = value;
+        }
 
         public override string ToString() {
-            return base.ToString() + ":" + _name;
+            return base.ToString() + ":" + NameExpression;
         }
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_expression != null) {
-                    _expression.Walk(walker);
+                if (Expression != null) {
+                    Expression.Walk(walker);
                 }
             }
             walker.PostWalk(this);
         }
 
         internal string GetPreceedingWhiteSpaceDefaultNull(PythonAst ast) {
-            if (_name != null) {
-                return _name.GetPreceedingWhiteSpaceDefaultNull(ast);
+            if (NameExpression != null) {
+                return NameExpression.GetPreceedingWhiteSpaceDefaultNull(ast);
             }
-            return _expression?.GetPreceedingWhiteSpaceDefaultNull(ast);
+            return Expression?.GetPreceedingWhiteSpaceDefaultNull(ast);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format)
         {
-            if (_name != null) {
+            if (NameExpression != null) {
                 if (Name == "*" || Name == "**") {
-                    _name.AppendCodeString(res, ast, format);
-                    _expression.AppendCodeString(res, ast, format);
+                    NameExpression.AppendCodeString(res, ast, format);
+                    Expression.AppendCodeString(res, ast, format);
                 } else {
                     // keyword arg
-                    _name.AppendCodeString(res, ast, format);
+                    NameExpression.AppendCodeString(res, ast, format);
                     res.Append(this.GetPreceedingWhiteSpace(ast));
                     res.Append('=');
-                    _expression.AppendCodeString(res, ast, format);
+                    Expression.AppendCodeString(res, ast, format);
                 }
             } else {
-                _expression.AppendCodeString(res, ast, format);
+                Expression.AppendCodeString(res, ast, format);
             }
         }
     }

@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         _scope.SetInScope(n.Name, new AstNestedPythonModule(
                             _interpreter,
                             n.Name,
-                            PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _scope.FilePath, n.Name, true).ToArray()
+                            PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _scope.FilePath, node.Names[i].MakeString(), true).ToArray()
                         ));
                     }
                 }

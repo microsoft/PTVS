@@ -875,9 +875,6 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
             public int startLine, startColumn, endLine, endColumn;
-            // the span of the whole definition, when applicable
-            public int? definitionStartLine, definitionStartColumn;
-            public int? definitionEndLine, definitionEndColumn;
             public int? version;
         }
 
@@ -938,14 +935,14 @@ namespace Microsoft.PythonTools.Intellisense {
             public Navigation[] children;
         }
 
-        internal class AnalyzerWarningEvent : Event {
+        public class AnalyzerWarningEvent : Event {
             public string message;
             public const string Name = "analyzerWarning";
 
             public override string name => Name;
         }
 
-        internal class UnhandledExceptionEvent : Event {
+        public class UnhandledExceptionEvent : Event {
             public string message;
             public const string Name = "unhandledException";
 

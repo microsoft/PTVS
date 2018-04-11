@@ -16,43 +16,25 @@
 
 using System;
 using System.IO;
-using Microsoft.Win32;
+using Microsoft.VisualStudio.Setup.Configuration;
 
 namespace TestUtilities {
     public static class VisualStudioPath {
-        private static string _root = GetRootPath();
+        private static Lazy<string> RootLazy { get; } = new Lazy<string>(GetVsRoot);
+        private static Lazy<string> CommonExtensionsLazy { get; } = new Lazy<string>(() => Path.Combine(Root, @"CommonExtensions\"));
+        private static Lazy<string> PrivateAssembliesLazy { get; } = new Lazy<string>(() => Path.Combine(Root, @"PrivateAssemblies\"));
+        private static Lazy<string> PublicAssembliesLazy { get; } = new Lazy<string>(() => Path.Combine(Root, @"PublicAssemblies\"));
 
-        private static string GetRootPath() {
-            string vsDir = null;
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var key = baseKey.OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\SxS\\VS7")) {
-                if (key != null) {
-                    vsDir = key.GetValue(AssemblyVersionInfo.VSVersion) as string;
-                }
-            }
+        public static string Root => RootLazy.Value;
+        public static string CommonExtensions => CommonExtensionsLazy.Value;
+        public static string PrivateAssemblies => PrivateAssembliesLazy.Value;
+        public static string PublicAssemblies => PublicAssembliesLazy.Value;
 
-            return vsDir;
-        }
-
-        public static string Root {
-            get {
-                if (!Directory.Exists(_root)) {
-                    throw new InvalidOperationException("Cannot find VS installation");
-                }
-                return _root;
-            }
-        }
-
-        public static string PublicAssemblies {
-            get {
-                return Path.Combine(Root, "Common7", "IDE", "PublicAssemblies");
-            }
-        }
-
-        public static string PrivateAssemblies {
-            get {
-                return Path.Combine(Root, "Common7", "IDE", "PrivateAssemblies");
-            }
+        private static string GetVsRoot() {
+            var configuration = (ISetupConfiguration2)new SetupConfiguration();
+            var current = (ISetupInstance2)configuration.GetInstanceForCurrentProcess();
+            var path = current.ResolvePath(current.GetProductPath());
+            return Path.GetDirectoryName(path);
         }
     }
 }

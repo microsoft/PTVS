@@ -34,7 +34,7 @@ AFTER_SITE = list(sys.path)
 import os
 def clean(path):
     if path:
-        return os.path.normcase(os.path.abspath(path).rstrip('/\\'))
+        return os.path.normcase(os.path.abspath(path).rstrip(os.sep))
     return None
 
 BEFORE_SITE = set(clean(p) for p in BEFORE_SITE)

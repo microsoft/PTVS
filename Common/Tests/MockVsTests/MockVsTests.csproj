@@ -27,8 +27,12 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Composition, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -132,7 +136,7 @@
     <Compile Include="MockOutputWindow.cs" />
     <Compile Include="MockOutputWindowPane.cs" />
     <Compile Include="MockPeekBroker.cs" />
-    <Compile Include="MockQuickInfoBroker.cs" />
+    <Compile Include="MockAsyncQuickInfoBroker.cs" />
     <Compile Include="MockSignatureHelpBroker.cs" />
     <Compile Include="MockSignatureHelpSession.cs" />
     <Compile Include="MockSmartTagBroker.cs" />

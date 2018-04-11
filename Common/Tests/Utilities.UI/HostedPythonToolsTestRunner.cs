@@ -131,7 +131,7 @@ namespace TestUtilities.UI {
                 };
             }
 
-            AssertListener.Initialize();
+            TestEnvironmentImpl.TestInitialize(30);
 
             try {
                 try {
@@ -140,9 +140,8 @@ namespace TestUtilities.UI {
                     } else {
                         method.Invoke(instance, args.ToArray());
                     }
-
-                    AssertListener.ThrowUnhandled();
                 } finally {
+                    TestEnvironmentImpl.TestCleanup();
                     foreach (var a in args) {
                         if (a == sp || a == dte) {
                             continue;

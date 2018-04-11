@@ -31,10 +31,11 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 namespace PythonToolsTests {
     [TestClass]
     public class CompletionDBTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         private string CompletionDB {
             get {

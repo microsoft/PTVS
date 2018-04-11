@@ -65,7 +65,7 @@ a[b.c[d.e],f:g].h[abs(i[j])].k[l(m[n])].o[p]
 abs(q[r])[s]
 ";
             ProximityTest(code,
-                "a[b.c[d.e], f:g].h[abs(i[j])].k",
+                "a[(b.c[d.e], f:g)].h[abs(i[j])].k",
                 "b.c[d.e]", "d.e", "f", "g", "abs(i[j])", "i[j]", "j",
                 "m[n]", "n", "p", "abs(q[r])[s]", "q[r]", "r", "s");
         }

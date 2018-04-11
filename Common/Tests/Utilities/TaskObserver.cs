@@ -64,12 +64,12 @@ namespace TestUtilities {
         }
 
         private void Summarize() { 
-            var incompleteTasks = new Queue<StackFrame[]>();
+            var incompleteTasks = new Queue<KeyValuePair<Task, StackFrame[]>>();
             var failedTasks = new Queue<KeyValuePair<StackFrame[], Exception>>();
             foreach (var kvp in _stackTraces) {
                 var task = kvp.Key;
                 if (!task.IsCompleted) {
-                    incompleteTasks.Enqueue(kvp.Value);
+                    incompleteTasks.Enqueue(kvp);
                 } else if (task.IsFaulted && task.Exception != null) {
                     var aggregateException = task.Exception.Flatten();
                     var exception = aggregateException.InnerExceptions.Count == 1
@@ -100,8 +100,15 @@ namespace TestUtilities {
                 }
 
                 while (incompleteTasks.Count > 0) {
+                    var kvp = incompleteTasks.Dequeue();
+                    var task = kvp.Key;
                     message
-                        .AppendFrames(incompleteTasks.Dequeue())
+                        .Append("Id: ")
+                        .Append(task.Id)
+                        .Append(", status: ")
+                        .Append(task.Status)
+                        .AppendLine()
+                        .AppendFrames(kvp.Value)
                         .AppendLine()
                         .AppendLine();
                 }

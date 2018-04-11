@@ -35,7 +35,6 @@ namespace AnalysisTests {
 
         static BaseAnalysisTest() {
             AnalysisLog.Reset();
-            AssertListener.Initialize();
         }
 
         public void StartAnalysisLog() {
