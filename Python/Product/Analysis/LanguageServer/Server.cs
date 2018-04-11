@@ -34,6 +34,35 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
+        /// <summary>
+        /// Implements ability to execute module reload on the analyzer thread
+        /// </summary>
+        private sealed class ReloadModulesQueueItem : IAnalyzable {
+            private readonly PythonAnalyzer _analyzer;
+            private TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>();
+            public Task Task => _tcs.Task;
+
+            public ReloadModulesQueueItem(PythonAnalyzer analyzer) {
+                _analyzer = analyzer;
+            }
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    return;
+                }
+
+                var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
+                var task = Task.Run(() => _analyzer.ReloadModulesAsync(), cancel);
+                try {
+                    task.WaitAndUnwrapExceptions();
+                    currentTcs.TrySetResult(true);
+                } catch (OperationCanceledException oce) {
+                    currentTcs.TrySetCanceled(oce.CancellationToken);
+                } catch (Exception ex) {
+                    currentTcs.TrySetException(ex);
+                }
+            }
+        }
+
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
         private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
@@ -56,6 +85,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private InformationDisplayOptions _displayOptions;
         private bool _traceLogging;
         private bool _testEnvironment;
+        private ReloadModulesQueueItem _reloadModulesQueueItem;
 
         // If null, all files must be added manually
         private string _rootDir;
@@ -140,6 +170,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
+            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
+
             if (@params.initializationOptions.displayOptions != null) {
                 _displayOptions = @params.initializationOptions.displayOptions;
             }
@@ -321,7 +353,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            _queue.Enqueue(new AnalysisQueueWorkItem(() => _analyzer.ReloadModulesAsync().WaitAndUnwrapExceptions()), AnalysisPriority.Normal);
+            // Make sure reload modules is executed on the analyzer thread.
+            var task = _reloadModulesQueueItem.Task;
+            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+            await task;
 
             // re-analyze all of the modules when we get a new set of modules loaded...
             foreach (var entry in _analyzer.ModulesByFilename) {
