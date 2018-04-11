@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
-        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(false);
         private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
 
         internal Task _loadingFromDirectory;
@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private bool _traceLogging;
         private bool _testEnvironment;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
+        private volatile int _documentChangeReentrancyCount;
 
         // If null, all files must be added manually
         private string _rootDir;
@@ -234,22 +235,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
-            _analyzerCreationTcs.Task.Wait();
-
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
             }
 
             _documentChangeProcessingComplete.Reset();
-            try {
-                var uri = @params.textDocument.uri;
-                var entry = GetEntry(uri);
-                var part = GetPart(uri);
+            _documentChangeReentrancyCount++;
 
-                TraceMessage($"Received changes for {uri}");
+            _analyzerCreationTcs.Task.Wait();
+            var uri = @params.textDocument.uri;
+            var entry = GetEntry(uri);
+            var part = GetPart(uri);
 
-                if (entry is IDocument doc) {
+            TraceMessage($"Received changes for {uri}");
+
+            if (entry is IDocument doc) {
+                try {
                     var docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
                     var fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
 
@@ -294,12 +296,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             return;
                         }
                     }
+                } finally {
+                    _documentChangeReentrancyCount--;
+                    if (_documentChangeReentrancyCount == 0) {
 
-                    TraceMessage($"Applied changes to {uri}");
-                    EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
+                        TraceMessage($"Applied changes to {uri}");
+                        EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
+
+                        _documentChangeProcessingComplete.Set();
+                    }
                 }
-            } finally {
-                _documentChangeProcessingComplete.Set();
             }
         }
 
@@ -368,12 +374,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             await _analyzerCreationTcs.Task;
             IfTestWaitForAnalysisComplete();
             // Make sure document is enqueued for processing
-            _documentChangeProcessingComplete.Wait(200, CancellationToken);
+            _documentChangeProcessingComplete.Wait(CancellationToken);
 
             var uri = @params.textDocument.uri;
-            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            var entry = GetEntry(@params.textDocument) as IPythonProjectEntry;
 
+            var doc = entry as IDocument;
+            if (doc == null) {
+                TraceMessage($"No analysis found for {uri}");
+                return new CompletionList();
+            }
+
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
+            if (_traceLogging) {
+                if (parse == null) {
+                    LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
+                } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                    LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
+                } else {
+                    LogMessage(MessageType.Log, $"Got AST for {uri}");
+                }
+            }
             TraceMessage($"Completions in {uri} at {@params.position}");
+
+            var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
+            GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
@@ -396,19 +421,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } else {
                 opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
-
-            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
-            if (_traceLogging) {
-                if (parse == null) {
-                    LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
-                } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
-                    LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
-                } else {
-                    LogMessage(MessageType.Log, $"Got AST for {uri}");
-                }
-            }
-            tree = parse?.Tree ?? tree;
-
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
@@ -425,14 +437,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
                     TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-                    members = analysis.GetMembers(expr, @params.position, opts, null);
+                    members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
                     TraceMessage($"Completing all names");
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
 
-
+            var temp = members.ToArray();
             if (@params.context?._includeAllModules ?? false) {
                 var mods = _analyzer.GetModules();
                 TraceMessage($"Including {mods?.Length ?? 0} modules");
@@ -765,7 +777,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (expectedVersion.HasValue && parse?.Cookie is VersionCookie vc) {
                 if (vc.Versions.TryGetValue(GetPart(document.uri), out var bv)) {
                     if (bv.Version != expectedVersion.Value) {
-                        throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
+                        //throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
                     }
                     tree = bv.Ast;
                 }
@@ -1127,7 +1139,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
-                Task<IAnalysisCookie> cookieTask;
                 using (GetDocumentParseCounter(doc, out var count)) {
                     if (count > 3) {
                         // Rough check to prevent unbounded queueing. If we have
@@ -1135,26 +1146,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         // version in one of the ones to come.
                         return;
                     }
-
                     TraceMessage($"Parsing document {doc.DocumentUri}");
-                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
+                    _parseQueue.Enqueue(doc, _analyzer.LanguageVersion, vc => {
+                        OnDocumentChangeProcessingComplete(doc, vc as VersionCookie, enqueueForAnalysis, priority, pending);
+                        TraceMessage($"Parsing complete for {doc.DocumentUri}");
+                    });
                 }
-
-                // The call must be fire and forget, but should not be yielding.
-                // It is called from DidChangeTextDocument which must fully finish
-                // since otherwise Complete() may come before the change is enqueued
-                // for processing and the completion list will be driven off the stale data.
-                var p = pending;
-                cookieTask.ContinueWith(t => {
-                    if (t.IsFaulted) {
-                        // Happens when file got deleted before processing
-                        p.Dispose();
-                        LogMessage(MessageType.Error, t.Exception.Message);
-                        return;
-                    }
-                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
-                }).DoNotWait();
-                pending = null;
             } finally {
                 pending?.Dispose();
             }

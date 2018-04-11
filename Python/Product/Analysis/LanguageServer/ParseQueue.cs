@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
-        public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
+        public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion, Action<IAnalysisCookie> executeAfter) {
             if (doc == null) {
                 throw new ArgumentNullException(nameof(doc));
             }
 
-            var task = new ParseTask(this, doc, languageVersion);
+            var task = new ParseTask(this, doc, languageVersion, executeAfter);
             try {
                 return _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
             } finally {
@@ -129,6 +129,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             private readonly TaskCompletionSource<IAnalysisCookie> _tcs;
             private Task<IAnalysisCookie> _previous;
+            private Action<IAnalysisCookie> _executeAfter;
 
             // State transitions:
             //  UNSTARTED -> QUEUED     when Start() called
@@ -141,10 +142,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private const int DISPOSED = 3;
             private int _state = UNSTARTED;
 
-            public ParseTask(ParseQueue queue, IDocument document, PythonLanguageVersion languageVersion) {
+            public ParseTask(ParseQueue queue, IDocument document, PythonLanguageVersion languageVersion, Action<IAnalysisCookie> executeAfter) {
                 _queue = queue;
                 _document = document;
                 _languageVersion = languageVersion;
+                _executeAfter = executeAfter ?? new Action<IAnalysisCookie>(vc => { });
 
                 _queue._parsingInProgress.Increment();
                 _parse = (_document as IPythonProjectEntry)?.BeginParse();
@@ -213,6 +215,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     if (r != null && _parse != null) {
                         _parse.Tree = r.Tree;
                         _parse.Cookie = r.Cookie;
+                        _executeAfter(r.Cookie);
                         _parse.Complete();
                     }
                     _tcs.SetResult(r?.Cookie);
