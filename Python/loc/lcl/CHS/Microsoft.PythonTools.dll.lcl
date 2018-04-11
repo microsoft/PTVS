@@ -4861,6 +4861,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";5080" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Mypy configuration file]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mypy 配置文件]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";5081" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A mypy.ini file for configuring Mypy settings]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mypy.ini 文件，用于配置 Mypy 设置]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
     </Item>
   </Item>
   <Item ItemId=";Microsoft.VisualStudio.Project.resources" ItemType="0" PsrId="211" Leaf="false">
@@ -6676,7 +6694,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18059.1]]></Val>
+        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6712,7 +6730,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18059.1]]></Val>
+        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
