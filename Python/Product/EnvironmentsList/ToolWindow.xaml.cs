@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
                 return;
             }
+            OnViewSelected(item);
             var oldSelect = _extensionsView.View.CurrentItem?.GetType();
             var newSelect = oldSelect == null ? null :
                 item.Extensions?.FirstOrDefault(ext => ext != null && ext.GetType().IsEquivalentTo(oldSelect));
@@ -444,11 +445,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             ViewCreated?.Invoke(this, new EnvironmentViewEventArgs(view));
         }
 
+        internal void OnViewSelected(EnvironmentView view) {
+            ViewSelected?.Invoke(this, new EnvironmentViewEventArgs(view));
+        }
+
         private void OnProviderCreated(CondaExtensionProvider provider) {
             CondaProviderCreated?.Invoke(this, new CondaProviderEventArgs(provider));
         }
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
+        public event EventHandler<EnvironmentViewEventArgs> ViewSelected;
 
         internal event EventHandler<CondaProviderEventArgs> CondaProviderCreated;
 

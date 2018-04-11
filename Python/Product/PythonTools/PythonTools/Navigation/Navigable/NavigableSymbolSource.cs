@@ -104,8 +104,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt, ExpressionAtPointPurpose.FindDefinition).ConfigureAwait(false);
             foreach (var variable in (result?.Variables).MaybeEnumerate()) {
-                if (variable.Type == VariableType.Definition &&
-                    !string.IsNullOrEmpty(variable.DefinitionLocation?.FilePath)) {
+                if ((variable.Type == VariableType.Definition || variable.Type == VariableType.Value) &&
+                    !string.IsNullOrEmpty(variable.Location.FilePath)) {
                     list.Add(variable);
                 }
             }

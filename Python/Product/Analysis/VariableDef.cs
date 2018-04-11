@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Analysis {
                 int total = 0;
                 var typeCounts = new Dictionary<string, int>();
                 foreach (var type in TypesNoCopy) {
-                    var str = type.ToString();
+                    var str = type.ToString() ?? "";
                     int count;
                     if (!typeCounts.TryGetValue(str, out count)) {
                         count = 0;
@@ -243,9 +243,15 @@ namespace Microsoft.PythonTools.Analysis {
                         var afterAdded = original.Add(value, out testAdded, false);
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
-                                Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
+                                if (!ObjectComparer.Instance.Equals(afterAdded, original)) {
+                                    // Double validation, as sometimes testAdded is a false positive
+                                    afterAdded = original.Add(value, out testAdded, false);
+                                    if (testAdded) {
+                                        Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency adding {value} to {original}");
+                                    }
+                                }
                             } else if (afterAdded.Count == original.Count) {
-                                Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
+                                Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency not adding {value} to {original}");
                             }
                         }
                     }
@@ -555,7 +561,7 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        public IEnumerable<EncodedLocation> References {
+        public virtual IEnumerable<EncodedLocation> References {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
@@ -569,7 +575,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public IEnumerable<EncodedLocation> Definitions {
+        public virtual IEnumerable<EncodedLocation> Definitions {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
@@ -633,48 +639,26 @@ namespace Microsoft.PythonTools.Analysis {
     /// A variable def which has a specific location where it is defined (currently just function parameters).
     /// </summary>
     class LocatedVariableDef : VariableDef {
-        private readonly ProjectEntry _entry;
-        private int _declaringVersion;
-        private Node _location;
-
-        public LocatedVariableDef(ProjectEntry entry, Node location) {
-            _entry = entry;
-            _location = location;
-            _declaringVersion = entry.AnalysisVersion;
+        public LocatedVariableDef(ProjectEntry entry, EncodedLocation location) {
+            Entry = entry;
+            Location = location;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public LocatedVariableDef(ProjectEntry entry, Node location, VariableDef copy) {
-            _entry = entry;
-            _location = location;
+        public LocatedVariableDef(ProjectEntry entry, EncodedLocation location, VariableDef copy) {
+            Entry = entry;
+            Location = location;
             _dependencies = copy._dependencies;
-            _declaringVersion = entry.AnalysisVersion;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public int DeclaringVersion {
-            get {
-                return _declaringVersion;
-            }
-            set {
-                _declaringVersion = value;
-            }
-        }
-
-        public ProjectEntry Entry {
-            get {
-                return _entry;
-            }
-        }
-
-        public Node Node {
-            get {
-                return _location;
-            }
-            set {
-                _location = value;
-            }
-        }
-
+        public int DeclaringVersion { get; set; }
+        public ProjectEntry Entry { get; }
+        public EncodedLocation Location { get; set; }
         internal override bool IsAssigned => true;
+
+        public override IEnumerable<EncodedLocation> Definitions =>
+            Enumerable.Repeat(Location, 1).Concat(base.Definitions);
     }
 
 }

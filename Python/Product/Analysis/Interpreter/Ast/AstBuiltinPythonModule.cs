@@ -29,7 +29,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return "python.{0}.exe".FormatInvariant(name);
             }
             var ext = Path.GetExtension(interpreterPath);
-            return Path.ChangeExtension(interpreterPath, name) + ext;
+            if (ext.Length > 0) { // Typically Windows, make python.exe into python.name.exe
+                return Path.ChangeExtension(interpreterPath, name) + ext;
+            }
+            return $"{interpreterPath}.{name}.exe"; // Fake the extension
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {

@@ -36,6 +36,7 @@ namespace Microsoft.CookiecutterTools.View {
     /// Interaction logic for CookiecutterContainerPage.xaml
     /// </summary>
     internal partial class CookiecutterContainerPage : Page {
+        private IServiceProvider _provider;
         private CookiecutterSearchPage _searchPage;
         private CookiecutterOptionsPage _optionsPage;
         private Action _updateCommandUI;
@@ -51,6 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string, string> executeCommand, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
+            _provider = provider;
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -126,7 +128,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void CheckForUpdateTimer_Tick(object sender, EventArgs e) {
-            AutomaticCheckForUpdates().DoNotWait();
+            AutomaticCheckForUpdates().HandleAllExceptions(_provider, GetType()).DoNotWait();
         }
 
         private async Task AutomaticCheckForUpdates() {
@@ -204,7 +206,7 @@ namespace Microsoft.CookiecutterTools.View {
             PageSequence.MoveCurrentToFirst();
             _updateCommandUI();
 
-            InitializeAsync(false, ssi).DoNotWait();
+            InitializeAsync(false, ssi).HandleAllExceptions(_provider, GetType()).DoNotWait();
         }
 
         internal bool CanDeleteSelection() {
@@ -222,7 +224,7 @@ namespace Microsoft.CookiecutterTools.View {
 
             var result = MessageBox.Show(Strings.DeleteConfirmation.FormatUI(ViewModel.SelectedTemplate.ClonedPath), Strings.ProductTitle, MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
             if (result == MessageBoxResult.Yes) {
-                ViewModel.DeleteTemplateAsync(ViewModel.SelectedTemplate).DoNotWait();
+                ViewModel.DeleteTemplateAsync(ViewModel.SelectedTemplate).HandleAllExceptions(_provider, GetType()).DoNotWait();
             }
         }
 

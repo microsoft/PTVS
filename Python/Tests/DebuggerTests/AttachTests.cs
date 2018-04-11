@@ -1354,11 +1354,16 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests35_x64 : AttachTests35 {
+    public class AttachTests35_x64 : AttachTests {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python35_x64;
             }
+        }
+
+        public override async Task AttachNewThread_PyThreadState_New()
+        {
+            // PyEval_AcquireLock deprecated in 3.2
         }
     }
 

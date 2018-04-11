@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.CookiecutterTools;
+using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
@@ -72,20 +72,25 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 // Unknown error prevented writing to the log
             }
 
-            if (allowUI) {
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add("{0}:{1}".FormatInvariant(callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
-                    }
-                }
-            }
-
             try {
                 ActivityLog.LogError(Strings.ProductTitle, message);
             } catch (InvalidOperationException) {
                 // Activity Log is unavailable.
+            }
+
+            bool alreadySeen = true;
+            var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
+            lock (_displayedMessages) {
+                if (_displayedMessages.Add(key)) {
+                    alreadySeen = false;
+                }
+            }
+
+            CookiecutterTelemetry.Current?.TelemetryService?.ReportFault(ex, null, !alreadySeen);
+
+            if (allowUI && !alreadySeen && !string.IsNullOrEmpty(logFile)) {
+                // First time we've seen this error, so let the user know
+                MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
             }
         }
 

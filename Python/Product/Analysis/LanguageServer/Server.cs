@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal readonly ParseQueue _parseQueue;
         private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
         private readonly VolatileCounter _pendingAnalysisEnqueue;
+        private readonly RestTextConverter _textConverter = new RestTextConverter();
 
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
@@ -44,15 +46,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
+        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
 
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
-        internal ClientCapabilities? _clientCaps;
+        internal ClientCapabilities _clientCaps;
         private bool _traceLogging;
+        private bool _testEnvironment;
 
         // If null, all files must be added manually
-        private Uri _rootDir;
+        private string _rootDir;
 
         public Server() {
             _queue = new AnalysisQueue();
@@ -82,11 +86,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
 
-        public async override Task<InitializeResult> Initialize(InitializeParams @params) {
-            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+        public override async Task<InitializeResult> Initialize(InitializeParams @params) {
+            _testEnvironment = @params.initializationOptions.interpreter.properties.ContainsKey("TestEnvironment");
+            if (_testEnvironment) {
+                // Test environment needs predictable initialization.
+                // Tests can only proceed when analysis is fully done.
+                _analyzer = CreateAnalyzer(@params.initializationOptions.interpreter).Result;
+            } else {
+                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            }
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.Log, "Initializing for unknown interpreter");
+                LogMessage(MessageType.Log, "Initializing for generic interpreter");
             } else {
                 LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
             }
@@ -94,9 +105,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _clientCaps = @params.capabilities;
 
             if (@params.rootUri != null) {
-                _rootDir = @params.rootUri;
+                _rootDir = @params.rootUri.ToAbsolutePath();
             } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                _rootDir = new Uri(PathUtils.NormalizePath(@params.rootPath));
+                _rootDir = PathUtils.NormalizePath(@params.rootPath);
             }
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
@@ -111,9 +122,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
-                    completionProvider = new CompletionOptions { resolveProvider = true },
                     textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
-                    hoverProvider = true
+                    completionProvider = new CompletionOptions {
+                        triggerCharacters = new[] { "." },
+                        resolveProvider = true
+                    },
+                    hoverProvider = true,
+                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
+                    // https://github.com/Microsoft/PTVS/issues/3803
+                    // definitionProvider = true,
+                    referencesProvider = true
                 }
             };
         }
@@ -145,72 +163,76 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc).DoNotWait();
+                EnqueueItem(doc);
             }
         }
 
-        public override async Task DidChangeTextDocument(DidChangeTextDocumentParams @params) {
+        public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
             }
 
-            var uri = @params.textDocument.uri;
-            var entry = GetEntry(uri);
-            int part = GetPart(uri);
+            _documentChangeProcessingComplete.Reset();
+            try {
+                var uri = @params.textDocument.uri;
+                var entry = GetEntry(uri);
+                var part = GetPart(uri);
 
-            TraceMessage($"Received changes for {uri}");
+                TraceMessage($"Received changes for {uri}");
 
-            if (entry is IDocument doc) {
-                int docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
-                int fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
+                if (entry is IDocument doc) {
+                    var docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
+                    var fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
 
-                List<DidChangeTextDocumentParams> pending;
-                if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
-                    // Expected from version hasn't been seen yet, and there are no resets in this
-                    // change, so enqueue it for later.
-                    LogMessage(MessageType.Log, $"Deferring changes for {uri} until version {fromVersion} is seen");
-                    pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
-                    lock (pending) {
-                        pending.Add(@params);
-                    }
-                    return;
-                }
-
-                int toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
-
-                doc.UpdateDocument(part, new DocumentChangeSet(
-                    fromVersion,
-                    toVersion,
-                    changes.Select(c => new DocumentChange {
-                        ReplacedSpan = c.range.GetValueOrDefault(),
-                        WholeBuffer = !c.range.HasValue,
-                        InsertedText = c.text
-                    })
-                ));
-
-                if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {
-                    DidChangeTextDocumentParams? next = null;
-                    lock (pending) {
-                        var notExpired = pending.Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion).OrderBy(p => p.textDocument.version.GetValueOrDefault()).ToArray();
-                        if (notExpired.Any()) {
-                            pending.Clear();
-                            next = notExpired.First();
-                            pending.AddRange(notExpired.Skip(1));
-                        } else {
-                            _pendingChanges.TryRemove(uri, out _);
+                    List<DidChangeTextDocumentParams> pending;
+                    if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
+                        // Expected from version hasn't been seen yet, and there are no resets in this
+                        // change, so enqueue it for later.
+                        LogMessage(MessageType.Log, $"Deferring changes for {uri} until version {fromVersion} is seen");
+                        pending = _pendingChanges.GetOrAdd(uri, _ => new List<DidChangeTextDocumentParams>());
+                        lock (pending) {
+                            pending.Add(@params);
                         }
-                    }
-                    if (next.HasValue) {
-                        await DidChangeTextDocument(next.Value);
                         return;
                     }
+
+                    var toVersion = @params.textDocument.version ?? (fromVersion + changes.Length);
+
+                    doc.UpdateDocument(part, new DocumentChangeSet(
+                        fromVersion,
+                        toVersion,
+                        changes.Select(c => new DocumentChange {
+                            ReplacedSpan = c.range.GetValueOrDefault(),
+                            WholeBuffer = !c.range.HasValue,
+                            InsertedText = c.text
+                        })
+                    ));
+
+                    if (_pendingChanges.TryGetValue(uri, out pending) && pending != null) {
+                        DidChangeTextDocumentParams? next = null;
+                        lock (pending) {
+                            var notExpired = pending.Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion).OrderBy(p => p.textDocument.version.GetValueOrDefault()).ToArray();
+                            if (notExpired.Any()) {
+                                pending.Clear();
+                                next = notExpired.First();
+                                pending.AddRange(notExpired.Skip(1));
+                            } else {
+                                _pendingChanges.TryRemove(uri, out _);
+                            }
+                        }
+                        if (next.HasValue) {
+                            DidChangeTextDocument(next.Value);
+                            return;
+                        }
+                    }
+
+                    TraceMessage($"Applied changes to {uri}");
+                    EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
                 }
-
-                TraceMessage($"Applied changes to {uri}");
-                EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true).DoNotWait();
+            } finally {
+                _documentChangeProcessingComplete.Set();
             }
-
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
@@ -232,7 +254,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         if ((entry = GetEntry(c.uri, false)) is IDocument doc) {
                             // If document version is >=0, it is loaded in memory.
                             if (doc.GetDocumentVersion(0) < 0) {
-                                EnqueueItem(doc, AnalysisPriority.Low).DoNotWait();
+                                EnqueueItem(doc, AnalysisPriority.Low);
                             }
                         }
                         break;
@@ -248,7 +270,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 doc.ResetDocument(-1, null);
 
                 // Pick up any changes on disk that we didn't know about
-                EnqueueItem(doc, AnalysisPriority.Low).DoNotWait();
+                EnqueueItem(doc, AnalysisPriority.Low);
             }
             return Task.CompletedTask;
         }
@@ -268,6 +290,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task<CompletionList> Completion(CompletionParams @params) {
+            IfTestWaitForAnalysisComplete();
+            // Make sure document is enqueued for processing
+            _documentChangeProcessingComplete.Wait(200, CancellationToken);
+
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -279,7 +305,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(new CompletionList { });
             }
 
-            var opts = (GetMemberOptions)0;
+            var opts = GetMemberOptions.None;
             if (@params.context.HasValue) {
                 var c = @params.context.Value;
                 if (c._intersection) {
@@ -295,7 +321,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
 
-            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
             if (_traceLogging) {
                 if (parse == null) {
                     LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
@@ -311,7 +337,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
                 TraceMessage($"Completing expression {@params._expr}");
-                members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+
+                if (@params.context?._filterKind == CompletionItemKind.Module) {
+                    // HACK: Special case for child modules until #3798 is completed
+                    members = entry.Analysis.ProjectState.GetModuleMembers(entry.Analysis.InterpreterContext, @params._expr.Split('.'));
+                } else {
+                    members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+                }
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
@@ -333,7 +365,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?._includeArgumentNames ?? false) {
                 var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
-                int index = tree.LocationToIndex(@params.position);
+                var index = tree.LocationToIndex(@params.position);
                 if (finder.GetExpression(@params.position) is CallExpression callExpr &&
                     callExpr.GetArgumentAtIndex(tree, index, out _)) {
                     var argNames = analysis.GetSignatures(callExpr.Target, @params.position)
@@ -374,6 +406,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            IfTestWaitForAnalysisComplete();
+
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -392,12 +426,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 overloads = analysis.GetSignatures(@params._expr, @params.position);
             } else {
                 var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
-                int index = tree.LocationToIndex(@params.position);
+                var index = tree.LocationToIndex(@params.position);
                 if (finder.GetExpression(@params.position) is CallExpression callExpr) {
                     TraceMessage($"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     overloads = analysis.GetSignatures(callExpr.Target, @params.position);
-                    if (!callExpr.GetArgumentAtIndex(tree, index, out activeParameter)) {
-                        activeParameter = -1;
+                    activeParameter = -1;
+                    if (callExpr.GetArgumentAtIndex(tree, index, out activeParameter) && activeParameter < 0) {
+                        // Returned 'true' and activeParameter == -1 means that we are after 
+                        // the trailing comma, so assume partially typed expression such as 'pow(x, y, |)
+                        activeParameter = callExpr.Args.Count;
                     }
                 } else {
                     LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
@@ -415,11 +452,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     ?.Item2 ?? -1;
             }
 
-            return Task.FromResult(new SignatureHelp {
+            activeSignature = activeSignature >= 0
+                ? activeSignature
+                : (sigs.Length > 0 ? 0 : -1);
+
+            var sh = new SignatureHelp {
                 signatures = sigs,
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
-            });
+            };
+            return Task.FromResult(sh);
         }
 
         public override Task<Reference[]> FindReferences(ReferencesParams @params) {
@@ -435,7 +477,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             int? version = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
             if (parse != null) {
                 tree = parse.Tree ?? tree;
                 if (parse.Cookie is VersionCookie vc) {
@@ -451,7 +493,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var extras = new List<Reference>();
 
             if (@params.context?.includeDeclaration ?? false) {
-                int index = tree.LocationToIndex(@params.position);
+                var index = tree.LocationToIndex(@params.position);
                 var w = new ImportedModuleNameWalker(entry.ModuleName, index);
                 tree.Walk(w);
                 ModuleReference modRef;
@@ -494,12 +536,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 filtered = filtered.Where(v => v.Type != VariableType.Value);
             }
 
-            bool includeDefinitionRange = @params.context?._includeDefinitionRanges ?? false;
-
             var res = filtered.Select(v => new Reference {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
-                _definitionRange = includeDefinitionRange ? v.DefinitionLocation?.Span : null,
                 _kind = ToReferenceKind(v.Type),
                 _version = version
             })
@@ -511,6 +550,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task<Hover> Hover(TextDocumentPositionParams @params) {
+            IfTestWaitForAnalysisComplete();
+
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -522,21 +563,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(default(Hover));
             }
 
-            int? version = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? -1);
-            if (parse != null) {
-                tree = parse.Tree ?? tree;
-                if (parse.Cookie is VersionCookie vc) {
-                    if (vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
-                        tree = bv.Ast ?? tree;
-                        if (bv.Version >= 0) {
-                            version = bv.Version;
-                        }
-                    }
-                }
-            }
+            tree = GetParseTree(entry, uri, _clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, out var version) ?? tree;
 
-            int index = tree.LocationToIndex(@params.position);
+            var index = tree.LocationToIndex(@params.position);
             var w = new ImportedModuleNameWalker(entry.ModuleName, index);
             tree.Walk(w);
             ModuleReference modRef;
@@ -548,7 +577,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             Expression expr;
-            SourceSpan exprSpan;
+            SourceSpan? exprSpan;
             Analyzer.InterpreterScope scope = null;
 
             if (!string.IsNullOrEmpty(@params._expr)) {
@@ -557,11 +586,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // This span will not be valid within the document, but it will at least
                 // have the correct length. If we have passed "_expr" then we are likely
                 // planning to ignore the returned span anyway.
-                exprSpan = expr.GetSpan(exprTree);
+                exprSpan = expr?.GetSpan(exprTree);
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
                 expr = finder.GetExpression(@params.position) as Expression;
-                exprSpan = expr.GetSpan(tree);
+                exprSpan = expr?.GetSpan(tree);
             }
             if (expr == null) {
                 LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
@@ -676,6 +705,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 } catch (Exception ex) {
                     LogMessage(MessageType.Warning, ex.ToString());
                 }
+            } else {
+                factory = new AstPythonInterpreterFactory(interpreter.properties);
             }
 
             if (factory == null) {
@@ -697,12 +728,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IEnumerable<ModulePath> GetImportNames(Uri document) {
-            var localRoot = GetLocalPath(_rootDir);
             var filePath = GetLocalPath(document);
-            ModulePath mp;
 
             if (!string.IsNullOrEmpty(filePath)) {
-                if (!string.IsNullOrEmpty(localRoot) && ModulePath.FromBasePathAndFile_NoThrow(localRoot, filePath, out mp)) {
+                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, out var mp)) {
                     yield return mp;
                 }
 
@@ -714,20 +743,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                yield return new ModulePath(Path.ChangeExtension(path, null), path, null);
+                var path = Path.Combine(document.Host, document.AbsolutePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar));
+                if (ModulePath.FromBasePathAndFile_NoThrow("", path, p => true, out var mp, out _, out _)) {
+                    yield return mp;
+                }
             }
         }
 
-        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression) {
+        private string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, bool limitLines = true) {
             string firstLongDescription = null;
-            bool multiline = false;
+            var multiline = false;
             var result = new StringBuilder();
             var descriptions = new HashSet<string>();
 
             foreach (var v in values) {
                 if (string.IsNullOrEmpty(firstLongDescription)) {
-                    firstLongDescription = v.Description;
+                    firstLongDescription = limitLines ? LimitLines(v.Description) : v.Description;
                 }
 
                 var description = LimitLines(v.ShortDescription ?? "");
@@ -769,7 +800,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return result.ToString();
+            return result.ToString().Trim();
         }
 
         internal static string LimitLines(
@@ -783,9 +814,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return str;
             }
 
-            int lineCount = 0;
+            var lineCount = 0;
             var prettyPrinted = new StringBuilder();
-            bool wasEmpty = true;
+            var wasEmpty = true;
 
             using (var reader = new StringReader(str)) {
                 for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
@@ -835,13 +866,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
 
-        public Task<IProjectEntry> LoadFileAsync(Uri documentUri) {
-            return AddFileAsync(documentUri, null);
-        }
-
-        public Task<IProjectEntry> LoadFileAsync(Uri documentUri, Uri fromSearchPath) {
-            return AddFileAsync(documentUri, fromSearchPath);
-        }
+        public Task<IProjectEntry> LoadFileAsync(Uri documentUri) => AddFileAsync(documentUri, null);
+        public Task<IProjectEntry> LoadFileAsync(Uri documentUri, Uri fromSearchPath) => AddFileAsync(documentUri, fromSearchPath);
 
         public Task<bool> UnloadFileAsync(Uri documentUri) {
             var entry = RemoveEntry(documentUri);
@@ -858,13 +884,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(false);
         }
 
-        public Task WaitForDirectoryScanAsync() {
-            var task = _loadingFromDirectory;
-            if (task == null) {
-                return Task.CompletedTask;
-            }
-            return task;
-        }
+        public Task WaitForDirectoryScanAsync() => _loadingFromDirectory ?? Task.CompletedTask;
 
         public async Task WaitForCompleteAnalysisAsync() {
             // Wait for all current parsing to complete
@@ -893,9 +913,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
         }
 
-        public void SetSearchPaths(IEnumerable<string> searchPaths) {
-            _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
-        }
+        public void SetSearchPaths(IEnumerable<string> searchPaths) => _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
 
         public event EventHandler<FileFoundEventArgs> OnFileFound;
         private void FileFound(Uri uri) {
@@ -961,7 +979,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (item is IDocument doc) {
-                EnqueueItem(doc).DoNotWait();
+                EnqueueItem(doc);
             }
 
             if (reanalyzeEntries != null) {
@@ -978,7 +996,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return true;
             }
 
-            int seen = 0;
+            var seen = 0;
             foreach (var part in doc.DocumentParts) {
                 if (!previousResult.Versions.TryGetValue(part, out var bv)) {
                     return true;
@@ -1022,48 +1040,66 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async Task EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+            var pending = _pendingAnalysisEnqueue.Incremented();
             try {
-                VersionCookie vc;
-                using (_pendingAnalysisEnqueue.Incremented()) {
-                    IAnalysisCookie cookie;
-                    using (GetDocumentParseCounter(doc, out int count)) {
-                        if (count > 3) {
-                            // Rough check to prevent unbounded queueing. If we have
-                            // multiple parses in queue, we will get the latest doc
-                            // version in one of the ones to come.
-                            return;
-                        }
-
-                        TraceMessage($"Parsing document {doc.DocumentUri}");
-                        cookie = await _parseQueue.Enqueue(doc, _analyzer.LanguageVersion).ConfigureAwait(false);
+                Task<IAnalysisCookie> cookieTask;
+                using (GetDocumentParseCounter(doc, out var count)) {
+                    if (count > 3) {
+                        // Rough check to prevent unbounded queueing. If we have
+                        // multiple parses in queue, we will get the latest doc
+                        // version in one of the ones to come.
+                        return;
                     }
 
-                    vc = cookie as VersionCookie;
-                    if (vc != null) {
-                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            ParseComplete(kv.Key, kv.Value.Version);
-                        }
-                    } else {
-                        ParseComplete(doc.DocumentUri, 0);
-                    }
-
-                    if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
-                        TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
-                        _queue.Enqueue(analyzable, priority);
-                    }
+                    TraceMessage($"Parsing document {doc.DocumentUri}");
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
                 }
 
-                // Allow the caller to complete before publishing diagnostics
-                await Task.Yield();
+                // The call must be fire and forget, but should not be yielding.
+                // It is called from DidChangeTextDocument which must fully finish
+                // since otherwise Complete() may come before the change is enqueued
+                // for processing and the completion list will be driven off the stale data.
+                var p = pending;
+                cookieTask.ContinueWith(t => {
+                    if (t.IsFaulted) {
+                        // Happens when file got deleted before processing
+                        p.Dispose();
+                        LogMessage(MessageType.Error, t.Exception.Message);
+                        return;
+                    }
+                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
+                }).DoNotWait();
+                pending = null;
+            } finally {
+                pending?.Dispose();
+            }
+        }
+
+        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
+            try {
+                if (vc != null) {
+                    foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                        ParseComplete(kv.Key, kv.Value.Version);
+                    }
+                } else {
+                    ParseComplete(doc.DocumentUri, 0);
+                }
+
+                if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
+                    TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
+                    _queue.Enqueue(analyzable, priority);
+                }
+
+                disposeWhenEnqueued?.Dispose();
+                disposeWhenEnqueued = null;
 
                 if (vc != null) {
                     var reported = _lastReportedDiagnostics.GetOrAdd(doc.DocumentUri, _ => new Dictionary<int, BufferVersion>());
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            int part = GetPart(kv.Key);
-                            BufferVersion lastVersion;
-                            if (!reported.TryGetValue(part, out lastVersion) || lastVersion.Version < kv.Value.Version) {
+                            var part = GetPart(kv.Key);
+                            if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version) {
                                 reported[part] = kv.Value;
                                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                                     uri = kv.Key,
@@ -1080,13 +1116,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 TraceMessage($"{ex}");
             } catch (Exception ex) {
                 LogMessage(MessageType.Error, ex.ToString());
+            } finally {
+                disposeWhenEnqueued?.Dispose();
             }
         }
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             if (sender is IPythonProjectEntry entry) {
                 TraceMessage($"Received new analysis for {entry.DocumentUri}");
-                int version = 0;
+                var version = 0;
                 var parse = entry.GetCurrentParse();
                 if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
@@ -1120,8 +1158,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async Task LoadFromDirectoryAsync(Uri rootDir) {
-            foreach (var file in PathUtils.EnumerateFiles(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
+        private async Task LoadFromDirectoryAsync(string rootDir) {
+            foreach (var file in PathUtils.EnumerateFiles(rootDir, recurse: false, fullPaths: true)) {
                 if (!ModulePath.IsPythonSourceFile(file)) {
                     if (ModulePath.IsPythonFile(file, true, true, true)) {
                         // TODO: Deal with scrapable files (if we need to do anything?)
@@ -1134,11 +1172,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     FileFound(entry.DocumentUri);
                 }
             }
-            foreach (var dir in PathUtils.EnumerateDirectories(GetLocalPath(rootDir), recurse: false, fullPaths: true)) {
-                if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
-                    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
-                    await LoadFromDirectoryAsync(new Uri(dir));
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir, recurse: false, fullPaths: true)) {
+                // TODO: figure out correct loading sequence and the name resolution 
+                // so files in different folders don't replace each other.
+                // See https://github.com/Microsoft/vscode-python/issues/1063
+
+                //if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
+                //    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
+
+                // Skip over virtual environments.
+                // TODO: handle pyenv that may have more compilcated structure
+                if (!Directory.Exists(Path.Combine(dir, "lib", "site-packages"))) {
+                    await LoadFromDirectoryAsync(dir);
                 }
+                //}
             }
         }
 
@@ -1148,6 +1195,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = m.Name,
                 insertText = m.Completion,
                 documentation = m.Documentation,
+                // Place regular items first, advanced entries last
+                sortText = Char.IsLetter(m.Completion[0]) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
@@ -1237,23 +1286,70 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
+            if (requested == null) {
+                return supported.Last();
+            }
+            foreach (var k in requested) {
+                if (supported.Contains(k)) {
+                    return k;
+                }
+            }
+            return MarkupKind.PlainText;
+        }
+
+        private string FormatParameter(ParameterResult p) {
+            var res = new StringBuilder(p.Name);
+            if (!string.IsNullOrEmpty(p.Type)) {
+                res.Append(" : ");
+                res.Append(p.Type);
+            }
+            if (!string.IsNullOrEmpty(p.DefaultValue)) {
+                res.Append(" = ");
+                res.Append(p.DefaultValue);
+            }
+            return res.ToString();
+        }
+
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
-            return new SignatureInformation {
-                label = overload.Name,
-                documentation = string.IsNullOrEmpty(overload.Documentation) ? (MarkupContent?)null : new MarkupContent {
-                    kind = MarkupKind.PlainText,
-                    value = overload.Documentation
-                },
-                parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
-                    label = p.Name,
-                    documentation = string.IsNullOrEmpty(p.Documentation) ? (MarkupContent?)null : new MarkupContent {
-                        kind = MarkupKind.PlainText,
-                        value = p.Documentation
-                    },
-                    _type = p.Type,
-                    _defaultValue = p.DefaultValue
-                }).ToArray()
-            };
+            var si = new SignatureInformation();
+
+            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
+                si.label = overload.Name;
+            } else {
+                si.label = "{0}({1})".FormatInvariant(
+                    overload.Name,
+                    string.Join(", ", overload.Parameters.Select(FormatParameter))
+                );
+            }
+
+            si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
+            si.parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
+                label = p.Name,
+                documentation = string.IsNullOrEmpty(p.Documentation) ? null : p.Documentation,
+                _type = p.Type,
+                _defaultValue = p.DefaultValue
+            }).ToArray();
+
+            switch (SelectBestMarkup(_clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                case MarkupKind.Markdown:
+                    var converter = new RestTextConverter();
+                    if (!string.IsNullOrEmpty(si.documentation.value)) {
+                        si.documentation.kind = MarkupKind.Markdown;
+                        si.documentation.value = converter.ToMarkdown(si.documentation.value);
+                    }
+                    foreach (var p in si.parameters) {
+                        if (!string.IsNullOrEmpty(p.documentation.value)) {
+                            p.documentation.kind = MarkupKind.Markdown;
+                            p.documentation.value = converter.ToMarkdown(p.documentation.value);
+                        }
+                    }
+                    break;
+            }
+
+            si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
+
+            return si;
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(
@@ -1273,6 +1369,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
             }
+        }
+
+        private void IfTestWaitForAnalysisComplete() {
+            if (_testEnvironment) {
+                WaitForDirectoryScanAsync().Wait();
+                WaitForCompleteAnalysisAsync().Wait();
+            }
+        }
+
+        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, int msTimeout, out int? version) {
+            version = null;
+            PythonAst tree = null;
+            var parse = entry.WaitForCurrentParse(msTimeout, CancellationToken);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(GetPart(documentUri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
+                        }
+                    }
+                }
+            }
+            return tree;
         }
 
         private sealed class ReferenceComparer : IEqualityComparer<Reference> {

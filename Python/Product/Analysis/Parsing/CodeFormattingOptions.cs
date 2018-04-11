@@ -239,6 +239,9 @@ namespace Microsoft.PythonTools.Parsing {
         public bool? SpaceBeforeLambdaColon { get; set; }
         public bool? SpaceAfterLambdaColon { get; set; }
 
+        public bool? SpaceBeforeSliceColon { get; set; }
+        public bool? SpaceAfterSliceColon { get; set; }
+
         #endregion
 
         #region Operators

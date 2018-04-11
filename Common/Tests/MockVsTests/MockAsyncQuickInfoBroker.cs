@@ -16,31 +16,25 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
-    [Export(typeof(IQuickInfoBroker))]
-    class MockQuickInfoBroker : IQuickInfoBroker {
-        public IQuickInfoSession CreateQuickInfoSession(VisualStudio.Text.Editor.ITextView textView, VisualStudio.Text.ITrackingPoint triggerPoint, bool trackMouse) {
+    [Export(typeof(IAsyncQuickInfoBroker))]
+    class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker {
+        public bool IsQuickInfoActive(ITextView textView) {
             throw new NotImplementedException();
         }
 
-        public System.Collections.ObjectModel.ReadOnlyCollection<IQuickInfoSession> GetSessions(VisualStudio.Text.Editor.ITextView textView) {
+        public Task<IAsyncQuickInfoSession> TriggerQuickInfoAsync(ITextView textView, ITrackingPoint triggerPoint = null, QuickInfoSessionOptions options = QuickInfoSessionOptions.None, CancellationToken cancellationToken = new CancellationToken()) {
             throw new NotImplementedException();
         }
 
-        public bool IsQuickInfoActive(VisualStudio.Text.Editor.ITextView textView) {
-            throw new NotImplementedException();
-        }
-
-        public IQuickInfoSession TriggerQuickInfo(VisualStudio.Text.Editor.ITextView textView, VisualStudio.Text.ITrackingPoint triggerPoint, bool trackMouse) {
-            throw new NotImplementedException();
-        }
-
-        public IQuickInfoSession TriggerQuickInfo(VisualStudio.Text.Editor.ITextView textView) {
+        public IAsyncQuickInfoSession GetSession(ITextView textView) {
             throw new NotImplementedException();
         }
     }
-#pragma warning disable 618
 }

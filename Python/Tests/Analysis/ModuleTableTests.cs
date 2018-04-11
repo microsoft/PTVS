@@ -26,6 +26,12 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class ModuleTableTests {
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+
         class MockPythonModule : IPythonModule {
             private readonly string _name;
 

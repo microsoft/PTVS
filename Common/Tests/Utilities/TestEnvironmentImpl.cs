@@ -19,13 +19,23 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestUtilities {
-    public class TestEnvironment {
-        protected static TestEnvironment Instance { get; set; }
+    public class TestEnvironmentImpl {
+        protected internal static TestEnvironmentImpl Instance { get; protected set; }
 
-        public static void TestInitialize(int secondsTimeout = 30) => Instance?.BeforeTestRun(secondsTimeout);
+        public static void TestInitialize(int secondsTimeout = 10) => Instance?.BeforeTestRun(secondsTimeout);
         public static void TestCleanup() => Instance?.AfterTestRun();
 
         private readonly AsyncLocal<TaskObserver> _taskObserver = new AsyncLocal<TaskObserver>();
+        private readonly AssemblyLoader _assemblyLoader = new AssemblyLoader();
+        private readonly string _binPath = typeof(TestEnvironmentImpl).Assembly.GetAssemblyDirectory();
+
+        public TestEnvironmentImpl AddAssemblyResolvePaths(params string[] paths) {
+            _assemblyLoader.AddPaths(paths);
+            return this;
+        }
+
+        public TestEnvironmentImpl AddVsResolvePaths() 
+            => AddAssemblyResolvePaths(_binPath, VisualStudioPath.CommonExtensions, VisualStudioPath.PrivateAssemblies, VisualStudioPath.PublicAssemblies);
 
         public bool TryAddTaskToWait(Task task) {
             var taskObserver = _taskObserver.Value;
@@ -37,6 +47,7 @@ namespace TestUtilities {
         }
         
         private void BeforeTestRun(int secondsTimeout) {
+            AssertListener.Initialize();
             if (_taskObserver.Value != null) {
                 throw new InvalidOperationException("AsyncLocal<TaskObserver> reentrancy");
             }
@@ -47,6 +58,7 @@ namespace TestUtilities {
         private void AfterTestRun() {
             try {
                 _taskObserver.Value?.WaitForObservedTask();
+                AssertListener.ThrowUnhandled();
             } finally {
                 _taskObserver.Value = null;
             }

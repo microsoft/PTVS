@@ -732,7 +732,7 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd2KCmdID.QUICKINFO:
                         controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
                         if (controller != null) {
-                            controller.TriggerQuickInfo();
+                            controller.TriggerQuickInfoAsync().DoNotWait();
                             return VSConstants.S_OK;
                         }
                         break;

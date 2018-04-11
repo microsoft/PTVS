@@ -16,8 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -39,10 +37,10 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e) {
             if (e.Key == Key.Enter) {
-                ViewModel.SearchAsync().DoNotWait();
+                ViewModel.SearchAsync().HandleAllExceptions(null, GetType()).DoNotWait();
             } else if (e.Key == Key.Escape) {
                 ViewModel.SearchTerm = string.Empty;
-                ViewModel.SearchAsync().DoNotWait();
+                ViewModel.SearchAsync().HandleAllExceptions(null, GetType()).DoNotWait();
             }
         }
 
@@ -52,7 +50,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void Search_Executed(object sender, ExecutedRoutedEventArgs e) {
-            ViewModel.SearchAsync().DoNotWait();
+            ViewModel.SearchAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -75,7 +73,7 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void LoadMore_Executed(object sender, ExecutedRoutedEventArgs e) {
             var token = (string)e.Parameter;
-            ViewModel.LoadMoreTemplatesAsync(token).DoNotWait();
+            ViewModel.LoadMoreTemplatesAsync(token).HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         private void RunSelection_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -133,7 +131,7 @@ namespace Microsoft.CookiecutterTools.View {
         private bool DoInvoke(object item) {
             var continuation = item as ContinuationViewModel;
             if (continuation != null) {
-                ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).DoNotWait();
+                ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).HandleAllExceptions(null, GetType()).DoNotWait();
                 return true;
             } else {
                 var template = item as TemplateViewModel;
@@ -162,15 +160,15 @@ namespace Microsoft.CookiecutterTools.View {
                 return;
             }
 
-            ViewModel.LoadTemplateAsync().DoNotWait();
+            ViewModel.LoadTemplateAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         public void UpdateTemplate() {
-            ViewModel.UpdateTemplateAsync().DoNotWait();
+            ViewModel.UpdateTemplateAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         internal void CheckForUpdates() {
-            ViewModel.CheckForUpdatesAsync().DoNotWait();
+            ViewModel.CheckForUpdatesAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
         private void Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {

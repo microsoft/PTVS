@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -231,11 +232,25 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Create(types.SelectMany(ns => ns.GetInstanceType()));
         }
 
+        public static bool IsUnknown(this IAnalysisSet res) {
+            return res == null ||
+                res.Count == 0 ||
+                res.All(v => v.TypeId == BuiltinTypeId.Unknown && v.MemberType == PythonMemberType.Unknown);
+        }
+
         /// <summary>
-        /// Returns true if the set contains no or only the object type
+        /// Returns true if the set contains no or only the object or unknown types
         /// </summary>
         public static bool IsObjectOrUnknown(this IAnalysisSet res) {
-            return res.Count == 0 || (res.Count == 1 && res.First().TypeId == BuiltinTypeId.Object);
+            return res.IsUnknown() || res.All(v => v.TypeId == BuiltinTypeId.Object);
+        }
+
+        /// <summary>
+        /// Returns true if the set contains no types, only the object or unknown
+        /// types, or None.
+        /// </summary>
+        public static bool IsObjectOrUnknownOrNone(this IAnalysisSet res) {
+            return res.IsObjectOrUnknown() || res.All(v => v.TypeId == BuiltinTypeId.NoneType);
         }
 
         /// <summary>
@@ -257,6 +272,60 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return res;
+        }
+
+        /// <summary>
+        /// Gets the returned value for a yield from.
+        /// </summary>
+        public static IAnalysisSet GetReturnForYieldFrom(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetReturnForYieldFrom(node, unit));
+            }
+
+            return res;
+        }
+
+        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) => Resolve(self, unit, ResolutionContext.Complete, out _);
+
+        internal static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit, ResolutionContext context, out bool changed) {
+            // The vast majority of the time, no values are resolved
+            // So we want to quickly validate and get out without allocating
+            // or changing anything.
+
+            if (!context.Push()) {
+                changed = false;
+                return self;
+            }
+            try {
+                List<AnalysisValue> removed = null;
+                IAnalysisSet added = null;
+                foreach (var ns in self) {
+                    var r = ns.Resolve(unit, context);
+                    if (!ReferenceEquals(r, ns)) {
+                        if (removed == null) {
+                            removed = new List<AnalysisValue>(self.Count);
+                        }
+                        removed.Add(ns);
+                        added = added?.Union(r) ?? r;
+                    }
+                }
+
+                if (removed == null) {
+                    changed = false;
+                    return self;
+                }
+
+                self.Split(removed.Contains, out _, out var unchanged);
+                var res = unchanged.Union(added, out changed);
+                if (changed && res.SetEquals(self)) {
+                    changed = false;
+                    return self;
+                }
+                return res;
+            } finally {
+                context.Pop();
+            }
         }
 
         class DotsLastStringComparer : IComparer<string> {

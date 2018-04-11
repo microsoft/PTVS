@@ -59,9 +59,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
                 var res = base.GetIndex(node, unit, index);
 
-                var names = index.OfType<ConstantInfo>()
-                    .Select(ci => ci.GetConstantValueAsString())
-                    .Where(s => !string.IsNullOrEmpty(s))
+                var names = index.GetConstantValueAsString()
+                    .Where(s => !string.IsNullOrEmpty(s) && ModulePath.IsImportable(s))
                     .Distinct()
                     .ToArray();
 

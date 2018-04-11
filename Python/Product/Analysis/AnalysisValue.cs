@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -312,6 +311,10 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 
+        public virtual IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
+        }
+
         internal virtual bool IsOfType(IAnalysisSet klass) {
             return false;
         }
@@ -320,6 +323,22 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return BuiltinTypeId.Unknown;
             }
+        }
+
+        /// <summary>
+        /// If required, returns the resolved version of this value. If there is nothing
+        /// to resolve, returns <c>this</c>.
+        /// </summary>
+        public IAnalysisSet Resolve(AnalysisUnit unit) {
+            return Resolve(unit, ResolutionContext.Complete);
+        }
+
+        /// <summary>
+        /// If required, returns the resolved version of this value given a specific context.
+        /// </summary>
+        /// <remarks>
+        internal virtual IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            return this;
         }
 
         #endregion
@@ -441,7 +460,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (items == null || items.All(av => ((IAnalysisSet)this).Comparer.Equals(this, av))) {
                 return this;
             }
-            return AnalysisSet.Create(items).Add(this, false);
+            return AnalysisSet.Create(items, ((IAnalysisSet)this).Comparer).Add(this, false);
         }
 
         IAnalysisSet IAnalysisSet.Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate) {
@@ -449,8 +468,7 @@ namespace Microsoft.PythonTools.Analysis {
                 wasChanged = false;
                 return this;
             }
-            wasChanged = true;
-            return AnalysisSet.Create(items).Add(this, false);
+            return AnalysisSet.Create(items, ((IAnalysisSet)this).Comparer).Add(this, out wasChanged, false);
         }
 
         IAnalysisSet IAnalysisSet.Clone() {

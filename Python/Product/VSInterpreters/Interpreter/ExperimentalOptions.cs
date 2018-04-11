@@ -20,7 +20,7 @@ using Microsoft.Win32;
 namespace Microsoft.PythonTools.Interpreter {
     static class ExperimentalOptions {
         private const string ExperimentSubkey = @"Software\Microsoft\PythonTools\Experimental";
-        internal const string NoDatabaseFactoryKey = "NoDatabaseFactory";
+        internal const string NoDatabaseFactoryKey = "NoDatabase"; // Renamed from "NoDatabaseFactory" to reset default
         internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
         internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
         internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger";
