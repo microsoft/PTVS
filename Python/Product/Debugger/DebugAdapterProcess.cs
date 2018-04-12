@@ -34,8 +34,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     sealed class DebugAdapterProcess : ITargetHostProcess, IDisposable {
-        private const int _debuggerConnectionTimeout = 5000; // 5000 ms
-        private const int _connectionCloseTimeout = 5000; // 5000 ms
+        private const int _debuggerConnectionTimeout = 20000; // 20000 seconds
 
         private Process _process;
         private readonly Guid _processGuid;
