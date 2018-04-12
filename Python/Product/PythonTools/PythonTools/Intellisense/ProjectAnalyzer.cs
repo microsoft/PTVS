@@ -256,8 +256,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
-            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
-
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
