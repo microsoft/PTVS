@@ -704,7 +704,11 @@ namespace Microsoft.PythonTools.Analysis {
                 return true;
             }
 
-            if (_unit.State.BuiltinModule.TryGetMember("Exception", out var baseCls) &&
+            if (values.OfType<ModuleInfo>().Any()) {
+                return true;
+            }
+
+            if (_unit.State.BuiltinModule.TryGetMember("BaseException", out var baseCls) &&
                 values.Any(v => v.Mro.Any(m => m.ContainsAny(baseCls)))) {
                 return true;
             }

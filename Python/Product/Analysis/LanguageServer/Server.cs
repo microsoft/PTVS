@@ -307,6 +307,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 TraceMessage($"No analysis found for {uri}");
                 return Task.FromResult(new CompletionList { });
             }
+            TraceMessage($"Got analysis for {uri} at version {entry.AnalysisVersion}");
 
             var opts = GetMemberOptions.None;
             if (@params.context.HasValue) {

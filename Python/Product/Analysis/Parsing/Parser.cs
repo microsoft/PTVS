@@ -1118,7 +1118,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         // relative_module: "."* module | "."+
         private ModuleName ParseRelativeModuleName() {
-            var start = GetStart();
+            int start = -1;
             bool isStartSetCorrectly = false;
 
             int dotCount = 0;
@@ -1155,6 +1155,11 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
+            if (!isStartSetCorrectly) {
+                start = _lookahead.Span.Start;
+                isStartSetCorrectly = true;
+            }
+
             ModuleName ret;
             if (dotCount > 0) {
                 ret = new RelativeModuleName(names, dotCount);
@@ -1174,6 +1179,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
+            Debug.Assert(isStartSetCorrectly, "Start location was not set correctly");
             ret.SetLoc(start, GetEnd());
             return ret;
         }

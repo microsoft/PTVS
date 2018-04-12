@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     if (t.Item1 != null) {
-                        if (Index > t.Item1.EndIndex) {
+                        if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {

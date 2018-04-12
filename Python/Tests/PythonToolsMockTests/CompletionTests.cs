@@ -291,8 +291,8 @@ except (ValueError, |"}) {
                         var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver);
 
                         AssertUtil.CheckCollection(completionList,
-                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit", "sys" },
-                            new[] { "Warning", "str", "int" }
+                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit", "sys", "Warning" },
+                            new[] { "str", "int" }
                         );
                     }
 
