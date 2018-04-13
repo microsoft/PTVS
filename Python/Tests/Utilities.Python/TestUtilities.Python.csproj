@@ -107,6 +107,7 @@
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="EditorTestToolset.cs" />
     <Compile Include="EnvironmentVariableSetter.cs" />
+    <Compile Include="EventTaskSources.cs" />
     <Compile Include="InterpreterWithPackageSetter.cs" />
     <Compile Include="MefExportProviders.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
