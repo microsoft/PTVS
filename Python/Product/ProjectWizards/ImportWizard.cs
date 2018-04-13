@@ -63,11 +63,18 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
                 var uiShell = (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
 
+                // Exclusive = new solution
+                // Non-exclusive = add to existing solution
+                replacementsDictionary.TryGetValue("$exclusiveproject$", out string exclusiveText);
+                if (!bool.TryParse(exclusiveText, out bool exclusive)) {
+                    exclusive = false;
+                }
+
                 string projName = replacementsDictionary["$projectname$"];
                 string solnName;
                 replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
                 string directory;
-                if (String.IsNullOrWhiteSpace(solnName)) {
+                if (String.IsNullOrWhiteSpace(solnName) || !exclusive) {
                     // Create directory is unchecked, destinationdirectory is the
                     // directory name the user entered plus the project name, we want
                     // to remove the project name.
@@ -79,7 +86,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
                 }
 
-                object inObj = projName + "|" + directory;
+                object inObj = projName + "|" + directory + "|" + (!exclusive).ToString();
                 var guid = GuidList.guidPythonToolsCmdSet;
                 hr = uiShell.PostExecCommand(ref guid, PkgCmdIDList.cmdidImportWizard, 0, ref inObj);
                 if (ErrorHandler.Failed(hr)) {
