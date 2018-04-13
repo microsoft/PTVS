@@ -206,6 +206,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public static implicit operator MarkupContent(string text) => new MarkupContent { kind = MarkupKind.PlainText, value = text };
     }
 
+    public class InformationDisplayOptions {
+        public bool trimDocumentationLines;
+        public int maxDocumentationLineLength;
+        public bool trimDocumentationText;
+        public int maxDocumentationTextLength;
+    }
 
     /// <summary>
     /// Required layout for the initializationOptions member of initializeParams
@@ -229,6 +235,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public Interpreter interpreter;
         public string[] searchPaths;
+        public bool testEnvironment;
+        /// <summary>
+        /// Controls tooltip display appearance. Different between VS and VS Code.
+        /// </summary>
+        public InformationDisplayOptions displayOptions;
+        /// <summary>
+        /// If true, analyzer will be created asynchronously. Used in VS Code.
+        /// </summary>
+        public bool asyncStartup;
     }
 
 
@@ -515,12 +530,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct SaveOptions {
+    public class SaveOptions {
         public bool includeText;
     }
 
     [Serializable]
-    public struct TextDocumentSyncOptions {
+    public class TextDocumentSyncOptions {
         /// <summary>
         /// Open and close notifications are sent to the server.
         /// </summary>
@@ -528,12 +543,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public TextDocumentSyncKind change;
         public bool willSave;
         public bool willSaveWaitUntil;
-        public SaveOptions? save;
+        public SaveOptions save;
     }
 
     [Serializable]
     public struct ServerCapabilities {
-        public TextDocumentSyncOptions? textDocumentSync;
+        public TextDocumentSyncOptions textDocumentSync;
         public bool hoverProvider;
         public CompletionOptions? completionProvider;
         public SignatureHelpOptions? signatureHelpProvider;

@@ -670,7 +670,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
-            foreach (var kv in _values.Types.GetRichDescriptions(prefix: " : ", unionPrefix: "{", unionSuffix: "}")) {
+            foreach (var kv in _values.Types.GetRichDescriptions(prefix: ": ", unionPrefix: "{", unionSuffix: "}")) {
                 yield return kv;
             }
         }

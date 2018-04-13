@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var sb = new StringBuilder();
             foreach(var s in _md) {
-                sb.AppendLine(s + " "); // Keep hard line breaks
+                sb.AppendLine(s + "  "); // Keep hard line breaks
             }
             return sb.ToString().Trim();
         }

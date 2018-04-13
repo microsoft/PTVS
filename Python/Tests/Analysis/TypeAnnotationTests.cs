@@ -249,8 +249,8 @@ n2_i = n2[i]
             analyzer.WaitForAnalysis();
 
             analyzer.AssertDescription("n", "tuple");
-            analyzer.AssertDescription("n1", "n1(x : int, y : float)");
-            analyzer.AssertDescription("n2", "n2(x : int, y : float)");
+            analyzer.AssertDescription("n1", "n1(x: int, y: float)");
+            analyzer.AssertDescription("n2", "n2(x: int, y: float)");
 
             analyzer.AssertIsInstance("n1_x", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("n1_y", BuiltinTypeId.Float);
@@ -294,7 +294,7 @@ n1 : MyNamedTuple = ...
             analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("sl", BuiltinTypeId.List);
             analyzer.AssertIsInstance("sl_0", BuiltinTypeId.Str);
-            analyzer.AssertDescription("n1", "MyNamedTuple(x : int)");
+            analyzer.AssertDescription("n1", "MyNamedTuple(x: int)");
 
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
         }

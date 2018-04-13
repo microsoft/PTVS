@@ -175,7 +175,7 @@ Overloaded = test.Overloaded
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
                 Assert.AreEqual(
-                    "class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc",
+                    "class test.Aliased:\r\nclass doc\r\n\r\nfunction Aliased(fob):\r\nfunction doc",
                     allMembers.First(x => x.Name == "Aliased").Documentation
                 );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");

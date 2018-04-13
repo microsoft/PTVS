@@ -104,6 +104,7 @@
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
+    <Compile Include="LanguageServer\DisplayTextBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
     <Compile Include="LanguageServer\ParseQueue.cs" />

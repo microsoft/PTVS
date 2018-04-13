@@ -30,5 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         IEnumerable<string> GetModuleMemberNames(IModuleContext context);
         IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null);
         void Imported(AnalysisUnit unit);
+        string Description { get; }
+        string Documentation { get; }
     }
 }
