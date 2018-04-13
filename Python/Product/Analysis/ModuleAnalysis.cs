@@ -48,6 +48,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #region Public API
+        /// <summary>
+        /// Indicate that analysis is complete
+        /// </summary>
+        public bool IsComplete => !_unit.IsInQueue;
 
         /// <summary>
         /// Evaluates the given expression in at the provided line number and returns the values

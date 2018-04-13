@@ -16,13 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -42,6 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
+        private readonly AnalysisCollection _analysisCollection = new AnalysisCollection();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
@@ -250,7 +249,7 @@ namespace Microsoft.PythonTools.Analysis {
                 string pathPrefix = PathUtils.EnsureEndSeparator(Path.GetDirectoryName(FilePath));
                 var children =
                     from pair in ProjectState.ModulesByFilename
-                    // Is the candidate child package in a subdirectory of our package?
+                        // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
                     where fileName.StartsWithOrdinal(pathPrefix, ignoreCase: true)
                     let moduleName = pair.Value.Name
@@ -276,11 +275,14 @@ namespace Microsoft.PythonTools.Analysis {
                 _unit,
                 ((ModuleScope)_unit.Scope).CloneForPublish()
             );
+            _analysisCollection.Add(Analysis);
         }
 
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;
 
         public ModuleAnalysis Analysis { get; private set; }
+
+        public ModuleAnalysis GetCompleteAnalysis() => _analysisCollection.GetCompletedAnalysis();
 
         public string FilePath { get; }
 
@@ -464,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         bool IsAnalyzed { get; }
 
-        
+
         /// <summary>
         /// Returns the project entries file path.
         /// </summary>
@@ -585,4 +587,33 @@ namespace Microsoft.PythonTools.Analysis {
         public void Complete() => throw new NotSupportedException();
     }
 
+    sealed class AnalysisCollection {
+        private readonly List<ModuleAnalysis> _list = new List<ModuleAnalysis>();
+        public ModuleAnalysis GetCompletedAnalysis() {
+            lock (_list) {
+                return Trim();
+            }
+        }
+
+        public void Add(ModuleAnalysis analysis) {
+            lock (_list) {
+                _list.Insert(0, analysis);
+                Trim();
+            }
+        }
+
+        private ModuleAnalysis Trim() {
+            // Find complete analysis, if any, and drop the older ones
+            for (var i = 0; i < _list.Count; i++) {
+                if (_list[i].IsComplete) {
+                    var next = i + 1;
+                    if (next < _list.Count) {
+                        _list.RemoveRange(next, _list.Count - next);
+                    }
+                    return _list[i];
+                }
+            }
+            return null;
+        }
+    }
 }
