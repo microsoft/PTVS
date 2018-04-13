@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Project.Web {
             config.Environment = PathUtils.MergeEnvironments(env, config.Environment);
 
             try {
-                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
+                _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
                     IsDebug = debug,
                     IsWeb = true,
                     Version = config.Interpreter?.Version.ToString() ?? ""
