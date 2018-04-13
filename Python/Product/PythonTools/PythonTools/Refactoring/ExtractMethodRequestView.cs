@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -257,16 +258,20 @@ namespace Microsoft.PythonTools.Refactoring {
         private void UpdatePreview() {
             var info = GetRequest();
             if (info != null) {
-                _previewer.GetExtractionResult(info).ContinueWith(t => {
-                    try {
-                        PreviewText = t.Result.methodBody;
-                    } catch (Exception ex) {
-                        Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                        PreviewText = Strings.ExtractMethod_FailedToGetPreview;
-                    }
-                }).DoNotWait();
+                UpdatePreviewAsync(info).DoNotWait();
             } else {
                 PreviewText = Strings.ExtractMethod_InvalidMethodName;
+            }
+        }
+
+        private async Task UpdatePreviewAsync(ExtractMethodRequest info) {
+            try {
+                var response = await _previewer.GetExtractionResult(info);
+                PreviewText = response.methodBody;
+            }
+            catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                PreviewText = Strings.ExtractMethod_FailedToGetPreview;
             }
         }
 

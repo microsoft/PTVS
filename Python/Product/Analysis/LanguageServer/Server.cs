@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
         private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
-        private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
+        private Task _analyzerCreationTask;
 
         internal Task _loadingFromDirectory;
 
@@ -126,31 +126,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.testEnvironment;
+            _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
             // Test environment needs predictable initialization.
-            if (@params.initializationOptions.asyncStartup && !_testEnvironment) {
-                CreateAnalyzer(@params.initializationOptions.interpreter).ContinueWith(t => {
-                    if (t.IsFaulted) {
-                        _analyzerCreationTcs.TrySetException(t.Exception);
-                    } else {
-                        try {
-                            _analyzer = t.Result;
-                            OnAnalyzerCreated(@params);
-                            _analyzerCreationTcs.TrySetResult(true);
-                        } catch (Exception ex) {
-                            _analyzerCreationTcs.TrySetException(ex);
-                            throw;
-                        }
-                    }
-                }).DoNotWait();
-            } else {
-                try {
-                    _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-                    OnAnalyzerCreated(@params);
-                    _analyzerCreationTcs.TrySetResult(true);
-                } catch (Exception ex) {
-                    _analyzerCreationTcs.TrySetException(ex);
-                    throw;
-                }
+            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
+                await _analyzerCreationTask;
             }
 
             return new InitializeResult {
@@ -167,6 +146,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     referencesProvider = true
                 }
             };
+        }
+
+        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
+            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            OnAnalyzerCreated(@params);
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
@@ -209,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
 
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -234,7 +218,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
-            _analyzerCreationTcs.Task.Wait();
+            _analyzerCreationTask.Wait();
 
             var changes = @params.contentChanges;
             if (changes == null) {
@@ -304,7 +288,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
 
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
@@ -333,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             var doc = GetEntry(@params.textDocument.uri) as IDocument;
 
             if (doc != null) {
@@ -347,7 +331,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
@@ -365,7 +349,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             // Make sure document is enqueued for processing
             _documentChangeProcessingComplete.Wait(200, CancellationToken);
@@ -482,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -542,7 +526,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
 
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
@@ -629,7 +613,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -705,7 +689,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -716,7 +700,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return members.Select(m => ToSymbolInformation(m)).ToArray();
+            return members.Select(ToSymbolInformation).ToArray();
         }
 
         #endregion
