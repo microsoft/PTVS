@@ -68,15 +68,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return EmptyCompletion;
             }
 
-            var simple = members.Where(m => !m.Name.StartsWith("__"));
-            if(!simple.Any()) {
-                var completed = entry.GetCompleteAnalysis();
-                if (completed != null) {
-                    // Nothing found. Try previos analysis, if any
-                    members = GetMembers(@params, tree, completed, opts);
-                }
-            }
-
             var filtered = members
                 .Where(m => context.Settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
                 .Select(m => ToCompletionItem(m, opts));

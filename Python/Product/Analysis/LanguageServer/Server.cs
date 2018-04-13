@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
-        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
         private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
 
         internal Task _loadingFromDirectory;
@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc, AnalysisPriority.High);
+                EnqueueItem(doc);
             }
         }
 
@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     if (_documentChangeReentrancyCount == 0) {
 
                         TraceMessage($"Applied changes to {uri}");
-                        EnqueueItem(doc, AnalysisPriority.High, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
+                        EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
 
                         _documentChangeProcessingComplete.Set();
                     }
@@ -919,6 +919,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
+                Task<IAnalysisCookie> cookieTask;
                 using (GetDocumentParseCounter(doc, out var count)) {
                     if (count > 3) {
                         // Rough check to prevent unbounded queueing. If we have
@@ -927,11 +928,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return;
                     }
                     TraceMessage($"Parsing document {doc.DocumentUri}");
-                    _parseQueue.Enqueue(doc, _analyzer.LanguageVersion, vc => {
-                        OnDocumentChangeProcessingComplete(doc, vc as VersionCookie, enqueueForAnalysis, priority, pending);
-                        TraceMessage($"Parsing complete for {doc.DocumentUri}");
-                    });
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
                 }
+
+                // The call must be fire and forget, but should not be yielding.
+                // It is called from DidChangeTextDocument which must fully finish
+                // since otherwise Complete() may come before the change is enqueued
+                // for processing and the completion list will be driven off the stale data.
+                var p = pending;
+                cookieTask.ContinueWith(t => {
+                    if (t.IsFaulted) {
+                        // Happens when file got deleted before processing
+                        p.Dispose();
+                        LogMessage(MessageType.Error, t.Exception.Message);
+                        return;
+                    }
+                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
+                }).DoNotWait();
+                pending = null;
             } finally {
                 pending?.Dispose();
             }

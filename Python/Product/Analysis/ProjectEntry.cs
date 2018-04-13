@@ -39,8 +39,8 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
+        private ModuleAnalysis _pendingAnalysis;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
-        private readonly AnalysisCollection _analysisCollection = new AnalysisCollection();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
@@ -271,18 +271,19 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // publish the analysis now that it's complete/running
-            Analysis = new ModuleAnalysis(
+            _pendingAnalysis = new ModuleAnalysis(
                 _unit,
                 ((ModuleScope)_unit.Scope).CloneForPublish()
             );
-            _analysisCollection.Add(Analysis);
+            _unit.Completed += (s, e) => {
+                Analysis = _pendingAnalysis;
+                _pendingAnalysis = null;
+            };
         }
 
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;
 
         public ModuleAnalysis Analysis { get; private set; }
-
-        public ModuleAnalysis GetCompleteAnalysis() => _analysisCollection.GetCompletedAnalysis();
 
         public string FilePath { get; }
 
@@ -585,35 +586,5 @@ namespace Microsoft.PythonTools.Analysis {
         public IAnalysisCookie Cookie { get; set; }
         public void Dispose() { }
         public void Complete() => throw new NotSupportedException();
-    }
-
-    sealed class AnalysisCollection {
-        private readonly List<ModuleAnalysis> _list = new List<ModuleAnalysis>();
-        public ModuleAnalysis GetCompletedAnalysis() {
-            lock (_list) {
-                return Trim();
-            }
-        }
-
-        public void Add(ModuleAnalysis analysis) {
-            lock (_list) {
-                _list.Insert(0, analysis);
-                Trim();
-            }
-        }
-
-        private ModuleAnalysis Trim() {
-            // Find complete analysis, if any, and drop the older ones
-            for (var i = 0; i < _list.Count; i++) {
-                if (_list[i].IsComplete) {
-                    var next = i + 1;
-                    if (next < _list.Count) {
-                        _list.RemoveRange(next, _list.Count - next);
-                    }
-                    return _list[i];
-                }
-            }
-            return null;
-        }
     }
 }

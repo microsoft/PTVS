@@ -63,6 +63,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Fires when analysis of this unit is complete.
+        /// </summary>
+        internal event EventHandler Completed;
+
+        /// <summary>
         /// True if this analysis unit is currently in the queue.
         /// </summary>
         internal bool IsInQueue;
@@ -154,9 +159,10 @@ namespace Microsoft.PythonTools.Analysis {
                 long endTime = _sw.ElapsedMilliseconds;
                 var thisTime = endTime - startTime;
                 _analysisTime += thisTime;
-                //if (thisTime >= 500 || (_analysisTime / _analysisCount) > 500) {
+                if (thisTime >= 500 || (_analysisTime / _analysisCount) > 500) {
                     Trace.TraceWarning("Analyzed: {0} {1} ({2} count, {3}ms total, {4}ms mean)", this, thisTime, _analysisCount, _analysisTime, (double)_analysisTime / _analysisCount);
-                //}
+                }
+                Completed?.Invoke(this, EventArgs.Empty);
             }
 #endif
         }
