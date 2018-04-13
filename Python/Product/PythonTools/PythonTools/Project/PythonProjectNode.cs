@@ -2910,8 +2910,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            public override Task<ProjectAnalyzer> GetAnalyzerAsync() {
-                return _node.GetAnalyzerAsync().ContinueWith(t => (ProjectAnalyzer)t.Result);
+            public override async Task<ProjectAnalyzer> GetAnalyzerAsync() {
+                return await _node.GetAnalyzerAsync();
             }
 
             public override string GetProperty(string name) {

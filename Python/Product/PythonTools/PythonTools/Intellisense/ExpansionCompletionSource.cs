@@ -27,21 +27,16 @@ using Microsoft.VisualStudio.TextManager.Interop;
 namespace Microsoft.PythonTools.Intellisense {
     class ExpansionCompletionSource {
         private readonly IServiceProvider _serviceProvider;
-        private Task<IReadOnlyList<CompletionResult>> _snippets;
+        private readonly Task<IEnumerable<CompletionResult>> _snippets;
 
         public ExpansionCompletionSource(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _snippets = GetAvailableSnippets();
         }
 
-        public async Task<IEnumerable<CompletionResult>> GetCompletionsAsync() {
-            if (_snippets.IsCompleted) {
-                return _snippets.Result;
-            }
-            return await _snippets;
-        }
+        public Task<IEnumerable<CompletionResult>> GetCompletionsAsync() => _snippets;
 
-        private async Task<IReadOnlyList<CompletionResult>> GetAvailableSnippets() {
+        private async Task<IEnumerable<CompletionResult>> GetAvailableSnippets() {
             var textMgr = _serviceProvider.GetService(typeof(SVsTextManager)) as IVsTextManager2;
             IVsExpansionManager vsmgr;
             IExpansionManager mgr;

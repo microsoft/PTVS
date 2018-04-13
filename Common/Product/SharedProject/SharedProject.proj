@@ -551,10 +551,6 @@
       <Link>SharedProject\UIThreadBase.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadSynchronizer.cs">
-      <Link>SharedProject\UIThreadSynchronizer.cs</Link>
-      <Visible>true</Visible>
-    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\UpdateSolutionEventsListener.cs">
       <Link>SharedProject\UpdateSolutionEventsListener.cs</Link>
       <Visible>true</Visible>
