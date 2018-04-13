@@ -239,8 +239,10 @@ z = y";
 
             var services = editorTestToolset.GetPythonEditorServices();
             using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
+                var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
                 var buffer = editorTestToolset.CreatePythonTextBuffer(input, analyzer);
                 var view = editorTestToolset.CreateTextView(buffer);
+                await analysisStartedTask;
 
                 var bi = services.GetBufferInfo(buffer);
                 var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
