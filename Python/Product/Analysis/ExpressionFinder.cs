@@ -293,6 +293,17 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 return false;
             }
+
+            public override bool Walk(NameExpression node) {
+                if (base.Walk(node)) {
+                    if (Location == node.EndIndex) {
+                        // User typed . right after the name
+                        Expression = node;
+                    }
+                    return true;
+                }
+                return false;
+            }
         }
 
         private class KeywordWalker : ExpressionWalker {

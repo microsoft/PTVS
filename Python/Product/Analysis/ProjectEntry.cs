@@ -39,7 +39,6 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
-        private ModuleAnalysis _pendingAnalysis;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
@@ -271,14 +270,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // publish the analysis now that it's complete/running
-            _pendingAnalysis = new ModuleAnalysis(
+            Analysis = new ModuleAnalysis(
                 _unit,
                 ((ModuleScope)_unit.Scope).CloneForPublish()
             );
-            _unit.Completed += (s, e) => {
-                Analysis = _pendingAnalysis;
-                _pendingAnalysis = null;
-            };
         }
 
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;

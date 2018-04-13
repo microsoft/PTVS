@@ -45,15 +45,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return EmptyCompletion;
             }
 
-            var parse = GetParse(context, token);
-            if(parse == null) {
-                _log.TraceMessage($"No parse found for {uri}");
-                return EmptyCompletion;
-            }
-            _log.TraceMessage($"Completions in {uri} at {@params.position}");
-
             var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
             context.ProjectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
+            _log.TraceMessage($"Completions in {uri} at {@params.position}");
+
+            var parse = GetParse(context, token);
+            tree = parse?.Tree ?? tree;
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
@@ -62,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var opts = GetOptions(@params.context);
-            var members = GetMembers(@params, tree, analysis, opts);
+            var members = GetMembers(@params, entry, tree, analysis, opts);
             if (members == null) {
                 _log.TraceMessage($"No members found in document {uri}");
                 return EmptyCompletion;
@@ -93,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return parse;
         }
 
-        private IEnumerable<MemberResult> GetMembers(CompletionParams @params, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
+        private IEnumerable<MemberResult> GetMembers(CompletionParams @params, ProjectEntry entry, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
@@ -101,19 +98,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 if (@params.context?._filterKind == CompletionItemKind.Module) {
                     // HACK: Special case for child modules until #3798 is completed
-                    members = analysis.ProjectState.GetModuleMembers(analysis.InterpreterContext, @params._expr.Split('.'));
+                    members = entry.Analysis.ProjectState.GetModuleMembers(entry.Analysis.InterpreterContext, @params._expr.Split('.'));
                 } else {
-                    members = analysis.GetMembers(@params._expr, @params.position, opts);
+                    members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
                 }
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
                     _log.TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-                    members = analysis.GetMembers(expr, @params.position, opts, null);
+                    members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
                     _log.TraceMessage($"Completing all names");
-                    members = analysis.GetAllAvailableMembers(@params.position, opts);
+                    members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
 
