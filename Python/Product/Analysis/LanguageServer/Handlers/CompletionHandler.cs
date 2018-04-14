@@ -19,52 +19,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    class CompletionHandler {
+    internal sealed class CompletionHandler: HandlerBase {
         private static CompletionItem[] EmptyCompletion = new CompletionItem[0];
 
-        private readonly ILogger _log;
-        private readonly PythonAnalyzer _analyzer;
-        private readonly ProjectFiles _projectFiles;
-
-        public CompletionHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ILogger log) {
-            _analyzer = analyzer;
-            _projectFiles = projectFiles;
-            _log = log;
-        }
+        public CompletionHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ClientCapabilities clientCaps, ILogger log):
+            base(analyzer, projectFiles, clientCaps, log) { }
 
         public CompletionItem[] GetCompletions(CompletionParams @params, LanguageServerSettings settings, CancellationToken token) {
-            var entry = context.Entry;
-            var uri = context.Uri;
+            var uri = @params.textDocument.uri;
 
-           var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
+           var entry = ProjectFiles.GetEntry(@params.textDocument) as ProjectEntry;
             if (!(entry is IDocument doc)) {
-                _log.TraceMessage($"No analysis found for {uri}");
+                Log.TraceMessage($"No analysis found for {uri}");
                 return EmptyCompletion;
             }
 
             var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
-            _log.TraceMessage($"Completions in {uri} at {@params.position}");
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
+            Log.TraceMessage($"Completions in {uri} at {@params.position}");
 
-            var parse = GetParse(entry, uri, settings, token);
-            tree = parse?.Tree ?? tree;
+            tree = GetParseTree(entry, uri, token, out _) ?? tree;
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
-                _log.TraceMessage($"No analysis found for {uri}");
+                Log.TraceMessage($"No analysis found for {uri}");
                 return EmptyCompletion;
             }
 
             var opts = GetOptions(@params.context);
             var members = GetMembers(@params, entry, tree, analysis, opts);
             if (members == null) {
-                _log.TraceMessage($"No members found in document {uri}");
+                Log.TraceMessage($"No members found in document {uri}");
                 return EmptyCompletion;
             }
 
@@ -74,30 +64,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
-                _log.TraceMessage($"Only returning {filterKind.Value} items");
+                Log.TraceMessage($"Only returning {filterKind.Value} items");
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
             return filtered.ToArray();
         }
 
-        private IPythonParse GetParse(ProjectEntry entry, Uri uri, LanguageServerSettings settings, CancellationToken token) {
-            var parse = entry.WaitForCurrentParse(settings.CompletionTimeout, token);
-            if (parse == null) {
-                _log.TraceMessage($"Timed out waiting for AST for {uri}");
-            } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(_projectFiles.GetPart(uri), out var bv)) {
-                _log.TraceMessage($"Got AST for {uri} at version {bv.Version}");
-            } else {
-                _log.TraceMessage($"Got AST for {uri}");
-            }
-            return parse;
-        }
-
         private IEnumerable<MemberResult> GetMembers(CompletionParams @params, ProjectEntry entry, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
-                _log.TraceMessage($"Completing expression {@params._expr}");
+                Log.TraceMessage($"Completing expression {@params._expr}");
 
                 if (@params.context?._filterKind == CompletionItemKind.Module) {
                     // HACK: Special case for child modules until #3798 is completed
@@ -109,17 +87,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
-                    _log.TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    Log.TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
-                    _log.TraceMessage($"Completing all names");
+                    Log.TraceMessage($"Completing all names");
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
 
             if (@params.context?._includeAllModules ?? false) {
-                var mods = _analyzer.GetModules();
-                _log.TraceMessage($"Including {mods?.Length ?? 0} modules");
+                var mods = Analyzer.GetModules();
+                Log.TraceMessage($"Including {mods?.Length ?? 0} modules");
                 members = members?.Concat(mods) ?? mods;
             }
 
@@ -136,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
                     argNames = argNames.MaybeEnumerate().ToArray();
-                    _log.TraceMessage($"Including {argNames.Count()} named arguments");
+                    Log.TraceMessage($"Including {argNames.Count()} named arguments");
                     members = members?.Concat(argNames) ?? argNames;
                 }
             }

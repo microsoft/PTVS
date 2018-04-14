@@ -19,24 +19,23 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class OpenedFiles {
-        private readonly ConcurrentDictionary<Uri, OpenedFile> _files = new ConcurrentDictionary<Uri, OpenedFile>();
+    internal sealed class OpenFiles {
+        private readonly ConcurrentDictionary<Uri, OpenFile> _files = new ConcurrentDictionary<Uri, OpenFile>();
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
 
-        public OpenedFiles(ProjectFiles projectFiles, ILogger log) {
+        public OpenFiles(ProjectFiles projectFiles, ILogger log) {
             _projectFiles = projectFiles;
             _log = log;
         }
-        public OpenedFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new OpenedFile(_projectFiles, _log));
+        public OpenFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new OpenFile(_projectFiles, _log));
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
     }
 
-    sealed class OpenedFile {
+    sealed class OpenFile {
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
         private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
@@ -46,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public IDictionary<int, BufferVersion> LastReportedDiagnostics { get; } = new Dictionary<int, BufferVersion>();
         public List<DidChangeTextDocumentParams> PendingChanges { get; } = new List<DidChangeTextDocumentParams>();
 
-        public OpenedFile(ProjectFiles projectFiles, ILogger log) {
+        public OpenFile(ProjectFiles projectFiles, ILogger log) {
             _projectFiles = projectFiles;
             _log = log;
         }

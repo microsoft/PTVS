@@ -23,39 +23,32 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class SignatureHelpHandler {
-        private readonly ProjectFiles _projectFiles;
-        private readonly ILogger _log;
-        private readonly ClientCapabilities _clientCaps;
-
-        public SignatureHelpHandler(ProjectFiles projectFiles, ClientCapabilities clientCaps, ILogger log) {
-            _projectFiles = projectFiles;
-            _log = log;
-            _clientCaps = clientCaps;
-        }
+    internal sealed class SignatureHelpHandler: HandlerBase {
+        public SignatureHelpHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ClientCapabilities clientCaps, ILogger log):
+            base(analyzer, projectFiles, clientCaps, log) { }
 
         public SignatureHelp GetSignatureHelp(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
-            _log.TraceMessage($"Signatures in {uri} at {@params.position}");
+            Log.TraceMessage($"Signatures in {uri} at {@params.position}");
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
-                _log.TraceMessage($"No analysis found for {uri}");
+                Log.TraceMessage($"No analysis found for {uri}");
                 return new SignatureHelp();
             }
 
             IEnumerable<IOverloadResult> overloads;
             int activeSignature = -1, activeParameter = -1;
             if (!string.IsNullOrEmpty(@params._expr)) {
-                _log.TraceMessage($"Getting signatures for {@params._expr}");
+                Log.TraceMessage($"Getting signatures for {@params._expr}");
                 overloads = analysis.GetSignatures(@params._expr, @params.position);
             } else {
                 var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
                 var index = tree.LocationToIndex(@params.position);
                 if (finder.GetExpression(@params.position) is CallExpression callExpr) {
-                    _log.TraceMessage($"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    Log.TraceMessage($"Getting signatures for {callExpr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     overloads = analysis.GetSignatures(callExpr.Target, @params.position);
                     activeParameter = -1;
                     if (callExpr.GetArgumentAtIndex(tree, index, out activeParameter) && activeParameter < 0) {
@@ -64,7 +57,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         activeParameter = callExpr.Args.Count;
                     }
                 } else {
-                    _log.TraceMessage($"No signatures found in {uri} at {@params.position}");
+                    Log.TraceMessage($"No signatures found in {uri} at {@params.position}");
                     return new SignatureHelp();
                 }
             }
@@ -94,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
             var si = new SignatureInformation();
 
-            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
+            if (ClientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
                 si.label = overload.Name;
             } else {
                 si.label = "{0}({1})".FormatInvariant(
@@ -111,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _defaultValue = p.DefaultValue
             }).ToArray();
 
-            switch (SelectBestMarkup(_clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+            switch (SelectBestMarkup(ClientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
                 case MarkupKind.Markdown:
                     var converter = new RestTextConverter();
                     if (!string.IsNullOrEmpty(si.documentation.value)) {
