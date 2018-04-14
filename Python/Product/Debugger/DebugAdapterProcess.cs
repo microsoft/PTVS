@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Debugger {
                     var socket = connection.Result;
                     if (socket != null) {
                         _debuggerConnected = true;
-                        _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
+                        _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                         _stream.Initialized += OnInitialized;
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);

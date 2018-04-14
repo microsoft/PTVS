@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Repl {
                 var remoteProcess = _process as PythonRemoteProcess;
 
                 try {
-                    _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
+                    _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
                         RemoteProcess = remoteProcess != null,
                         Version = _process.LanguageVersion.ToVersion().ToString()
                     });

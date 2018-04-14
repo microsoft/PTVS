@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // Uri does not consider #fragment for equality
         private readonly ProjectFiles _projectFiles = new ProjectFiles();
         private readonly OpenFiles _openFiles;
-        private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
+        private Task _analyzerCreationTask;
 
         internal Task _loadingFromDirectory;
 
@@ -125,31 +125,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.testEnvironment;
+            _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
             // Test environment needs predictable initialization.
-            if (@params.initializationOptions.asyncStartup && !_testEnvironment) {
-                CreateAnalyzer(@params.initializationOptions.interpreter).ContinueWith(t => {
-                    if (t.IsFaulted) {
-                        _analyzerCreationTcs.TrySetException(t.Exception);
-                    } else {
-                        try {
-                            _analyzer = t.Result;
-                            OnAnalyzerCreated(@params);
-                            _analyzerCreationTcs.TrySetResult(true);
-                        } catch (Exception ex) {
-                            _analyzerCreationTcs.TrySetException(ex);
-                            throw;
-                        }
-                    }
-                }).DoNotWait();
-            } else {
-                try {
-                    _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-                    OnAnalyzerCreated(@params);
-                    _analyzerCreationTcs.TrySetResult(true);
-                } catch (Exception ex) {
-                    _analyzerCreationTcs.TrySetException(ex);
-                    throw;
-                }
+            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
+                await _analyzerCreationTask;
             }
 
             return new InitializeResult {
@@ -165,6 +144,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     referencesProvider = true
                 }
             };
+        }
+
+        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
+            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            OnAnalyzerCreated(@params);
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
@@ -214,7 +198,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
 
             var entry = _projectFiles.GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -239,13 +223,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
-            _analyzerCreationTcs.Task.Wait();
+            _analyzerCreationTask.Wait();
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
             openedFile.DidChangeTextDocument(@params, _settings.AnalysisDelay, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
 
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
@@ -274,7 +258,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             var doc = _projectFiles.GetEntry(@params.textDocument.uri) as IDocument;
 
             if (doc != null) {
@@ -288,7 +272,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
@@ -315,7 +299,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -336,26 +320,26 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             return _signatureHelpHandler.GetSignatureHelp(@params);
         }
 
         public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             return _findReferencesHandler.FindReferences(@params, CancellationToken);
         }
 
         public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             return _hoverHandler.GetHover(@params, _displayOptions, CancellationToken);
 
         }
 
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTcs.Task;
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             return _workspaceSymbolsHandler.GetWorkspaceSymbols(@params);
         }
