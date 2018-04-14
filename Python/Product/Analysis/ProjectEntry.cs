@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis {
                 string pathPrefix = PathUtils.EnsureEndSeparator(Path.GetDirectoryName(FilePath));
                 var children =
                     from pair in ProjectState.ModulesByFilename
-                        // Is the candidate child package in a subdirectory of our package?
+                    // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
                     where fileName.StartsWithOrdinal(pathPrefix, ignoreCase: true)
                     let moduleName = pair.Value.Name
@@ -461,7 +461,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns true if the project entry has been parsed and analyzed.
         /// </summary>
         bool IsAnalyzed { get; }
-
 
         /// <summary>
         /// Returns the project entries file path.
