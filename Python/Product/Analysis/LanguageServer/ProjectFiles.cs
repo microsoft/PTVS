@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -30,8 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public IProjectEntry GetOrAddEntry(Uri documentUri, IProjectEntry entry) => _projectFiles.GetOrAdd(documentUri, entry);
         public IProjectEntry RemoveEntry(Uri documentUri) => _projectFiles.TryRemove(documentUri, out var entry) ? entry : null;
         public IEnumerable<IProjectEntry> All => _projectFiles.Values;
-
-        // public IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys.Select(k => k.AbsoluteUri);
+        public IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys.Select(k => k.AbsoluteUri);
 
         public IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
         public IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
