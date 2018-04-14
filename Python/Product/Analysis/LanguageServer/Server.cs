@@ -168,6 +168,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
+            _clientCaps = @params.capabilities;
+            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
+
             _completionHandler = new CompletionHandler(_analyzer, _projectFiles, _clientCaps, this);
             _signatureHelpHandler = new SignatureHelpHandler(_analyzer,  _projectFiles, _clientCaps, this);
             _findReferencesHandler = new FindReferencesHandler(_analyzer, _projectFiles, _clientCaps, this);
@@ -185,9 +188,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } else {
                 LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
             }
-
-            _clientCaps = @params.capabilities;
-            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
 
             if (@params.rootUri != null) {
                 _rootDir = @params.rootUri.ToAbsolutePath();
