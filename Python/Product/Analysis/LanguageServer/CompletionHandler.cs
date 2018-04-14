@@ -30,26 +30,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private readonly ILogger _log;
         private readonly PythonAnalyzer _analyzer;
+        private readonly ProjectFiles _projectFiles;
 
-        public CompletionHandler(PythonAnalyzer analyzer, ILogger log) {
+        public CompletionHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ILogger log) {
             _analyzer = analyzer;
+            _projectFiles = projectFiles;
             _log = log;
         }
 
-        public CompletionItem[] GetCompletions(CompletionParams @params, RequestContext context, CancellationToken token) {
+        public CompletionItem[] GetCompletions(CompletionParams @params, LanguageServerSettings settings, CancellationToken token) {
             var entry = context.Entry;
             var uri = context.Uri;
 
+           var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
             if (!(entry is IDocument doc)) {
                 _log.TraceMessage($"No analysis found for {uri}");
                 return EmptyCompletion;
             }
 
             var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
-            context.ProjectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
+            _projectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
             _log.TraceMessage($"Completions in {uri} at {@params.position}");
 
-            var parse = GetParse(context, token);
+            var parse = GetParse(entry, uri, settings, token);
             tree = parse?.Tree ?? tree;
 
             var analysis = entry?.Analysis;
@@ -66,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var filtered = members
-                .Where(m => context.Settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
+                .Where(m => settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
                 .Select(m => ToCompletionItem(m, opts));
 
             var filterKind = @params.context?._filterKind;
@@ -78,14 +81,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return filtered.ToArray();
         }
 
-        private IPythonParse GetParse(RequestContext context, CancellationToken token) {
-            var parse = context.Entry.WaitForCurrentParse(context.Settings.CompletionTimeout, token);
+        private IPythonParse GetParse(ProjectEntry entry, Uri uri, LanguageServerSettings settings, CancellationToken token) {
+            var parse = entry.WaitForCurrentParse(settings.CompletionTimeout, token);
             if (parse == null) {
-                _log.TraceMessage($"Timed out waiting for AST for {context.Uri}");
-            } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(context.ProjectFiles.GetPart(context.Uri), out var bv)) {
-                _log.TraceMessage($"Got AST for {context.Uri} at version {bv.Version}");
+                _log.TraceMessage($"Timed out waiting for AST for {uri}");
+            } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(_projectFiles.GetPart(uri), out var bv)) {
+                _log.TraceMessage($"Got AST for {uri} at version {bv.Version}");
             } else {
-                _log.TraceMessage($"Got AST for {context.Uri}");
+                _log.TraceMessage($"Got AST for {uri}");
             }
             return parse;
         }

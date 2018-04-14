@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnAnalyzerCreated(InitializeParams @params) {
-            _completionHandler = new CompletionHandler(_analyzer, this);
+            _completionHandler = new CompletionHandler(_analyzer, _projectFiles, this);
             _signatureHelpHandler = new SignatureHelpHandler(_projectFiles, _clientCaps, this);
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
@@ -319,16 +319,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var openFile = _openedFiles.GetDocument(uri);
             openFile.WaitForChangeProcessingComplete(CancellationToken);
 
-            var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
-
-            var rq = new RequestContext() {
-                ProjectFiles = _projectFiles,
-                Entry = entry,
-                Uri = @params.textDocument.uri,
-                Settings = _settings,
-            };
-
-            var items = _completionHandler.GetCompletions(@params, rq, CancellationToken);
+            var items = _completionHandler.GetCompletions(@params, _settings, CancellationToken);
             var res = new CompletionList { items = items };
 
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
