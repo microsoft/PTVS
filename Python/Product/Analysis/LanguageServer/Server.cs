@@ -436,6 +436,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #endregion
 
         #region Non-LSP public API
+        public IProjectEntry GetEntry(TextDocumentIdentifier document) => _projectFiles.GetEntry(document.uri);
+        public IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) => _projectFiles.GetEntry(documentUri, throwIfMissing);
+
+        public int GetPart(TextDocumentIdentifier document) => _projectFiles.GetPart(document.uri);
+        public IEnumerable<string> GetLoadedFiles() => _projectFiles.GetLoadedFiles();
 
         public Task<IProjectEntry> LoadFileAsync(Uri documentUri) => AddFileAsync(documentUri, null);
         public Task<IProjectEntry> LoadFileAsync(Uri documentUri, Uri fromSearchPath) => AddFileAsync(documentUri, fromSearchPath);
