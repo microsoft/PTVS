@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.VsCode {
                 var showAdvancedMembers = autoComplete["showAdvancedMembers"] as JValue;
                 settings.ShowAdvancedMembers = showAdvancedMembers?.Value as string == "true";
             }
-
+            settings.AnalysisDelay = 1000;
             var p = new DidChangeConfigurationParams() { settings = settings };
             return _server.DidChangeConfiguration(p);
         }

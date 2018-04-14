@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void WaitForChangeProcessingComplete(CancellationToken token) => _documentChangeProcessingComplete.Wait(token);
 
-        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, Action<IDocument> enqueueAction) {
+        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, int analysisDelay, Action<IDocument> enqueueAction) {
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
@@ -112,14 +112,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
                 if (next.HasValue) {
-                    DidChangeTextDocument(next.Value, enqueueAction);
+                    DidChangeTextDocument(next.Value, analysisDelay, enqueueAction);
                 }
             } finally {
                 _documentChangeReentrancyCount--;
                 if (_documentChangeReentrancyCount == 0) {
 
                     _log.TraceMessage($"Applied changes to {uri}");
-                    _delayedAction = new DelayedAction(() => enqueueAction(doc), 1000);
+                    if (analysisDelay > 0) {
+                        _delayedAction = new DelayedAction(() => enqueueAction(doc), analysisDelay);
+                    } else {
+                        enqueueAction(doc);
+                    }
                     _documentChangeProcessingComplete.Set();
                 }
             }
