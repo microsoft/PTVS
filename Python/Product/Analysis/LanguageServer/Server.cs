@@ -68,7 +68,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // Uri does not consider #fragment for equality
         private readonly ProjectFiles _projectFiles = new ProjectFiles();
         private readonly OpenFiles _openFiles;
-        private readonly WorkspaceSymbolsHandler _workspaceSymbolsHandler;
         private readonly TaskCompletionSource<bool> _analyzerCreationTcs = new TaskCompletionSource<bool>();
 
         internal Task _loadingFromDirectory;
@@ -81,6 +80,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SignatureHelpHandler _signatureHelpHandler;
         private FindReferencesHandler _findReferencesHandler;
         private HoverHandler _hoverHandler;
+        private WorkspaceSymbolsHandler _workspaceSymbolsHandler;
 
         private bool _traceLogging;
         private bool _testEnvironment;
@@ -172,6 +172,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _signatureHelpHandler = new SignatureHelpHandler(_analyzer,  _projectFiles, _clientCaps, this);
             _findReferencesHandler = new FindReferencesHandler(_analyzer, _projectFiles, _clientCaps, this);
             _hoverHandler = new HoverHandler(_analyzer, _projectFiles, _clientCaps, this);
+            _workspaceSymbolsHandler = new WorkspaceSymbolsHandler(_projectFiles);
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
