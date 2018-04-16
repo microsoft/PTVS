@@ -15,13 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Newtonsoft.Json.Linq;
 
@@ -54,6 +54,9 @@ namespace Microsoft.PythonTools.Debugger {
             } else {
                 endpoint = new DnsEndPoint(uri.Host, uri.Port);
             }
+
+            var logger = (IPythonToolsLogger)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
+
             Debug.WriteLine("Connecting to remote debugger at {0}", uri.ToString());
             Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(() => Task.WhenAny(
                     Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, endpoint, null),
@@ -66,6 +69,7 @@ namespace Microsoft.PythonTools.Debugger {
                     _stream.Initialized += OnInitialized;
                 } else {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
+                    logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Attach");
                 }
             } catch (AggregateException ex) {
                 Debug.WriteLine("Error waiting for debugger to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterRemoteProcess));
