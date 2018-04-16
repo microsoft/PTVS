@@ -28,6 +28,7 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
@@ -120,6 +121,8 @@ namespace Microsoft.PythonTools.Debugger {
             _process.Exited += OnExited;
             _process.Start();
 
+            var logger = (IPythonToolsLogger)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
+
             try {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
                     var socket = connection.Result;
@@ -133,6 +136,7 @@ namespace Microsoft.PythonTools.Debugger {
                     }
                 } else {
                     Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
+                    logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Launch");
                 }
             } catch (AggregateException ex) {
                 Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
