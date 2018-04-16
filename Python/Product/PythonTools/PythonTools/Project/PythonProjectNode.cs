@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                Site.GetPythonToolsService().Logger.LogEvent(PythonLogEvent.VirtualEnvironments, _validFactories.Count);
+                Site.GetPythonToolsService().Logger?.LogEvent(PythonLogEvent.VirtualEnvironments, _validFactories.Count);
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -1156,13 +1156,18 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void AnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
-            StringBuilder msg = new StringBuilder();
-            msg.AppendFormat("Exit Code: {0}", e.ExitCode);
-            msg.AppendLine();
-            msg.AppendLine(" ------ STD ERR ------ ");
-            msg.Append(e.StdErr);
-            msg.AppendLine(" ------ END STD ERR ------ ");
-            Site.GetPythonToolsService().Logger.LogEvent(
+            var logger = Site.GetPythonToolsService().Logger;
+            if (logger == null) {
+                return;
+            }
+
+            var msg = new StringBuilder()
+                .AppendFormat("Exit Code: {0}", e.ExitCode)
+                .AppendLine()
+                .AppendLine(" ------ STD ERR ------ ")
+                .Append(e.StdErr)
+                .AppendLine(" ------ END STD ERR ------ ");
+            logger.LogEvent(
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
@@ -2910,8 +2915,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            public override Task<ProjectAnalyzer> GetAnalyzerAsync() {
-                return _node.GetAnalyzerAsync().ContinueWith(t => (ProjectAnalyzer)t.Result);
+            public override async Task<ProjectAnalyzer> GetAnalyzerAsync() {
+                return await _node.GetAnalyzerAsync();
             }
 
             public override string GetProperty(string name) {

@@ -422,6 +422,9 @@ namespace Microsoft.PythonTools.Interpreter {
                                         .Where(p => p.IsValid)
                                         .OrderBy(p => p.Name)
                                         .ToList();
+                                } catch (InvalidOperationException ex) {
+                                    Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                                    Debug.WriteLine(json);
                                 } catch (Newtonsoft.Json.JsonException ex) {
                                     Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
                                     Debug.WriteLine(json);
@@ -532,6 +535,9 @@ namespace Microsoft.PythonTools.Interpreter {
                                 .Where(p => p.IsValid)
                                 .OrderBy(p => p.Name)
                                 .ToList();
+                        } catch (InvalidOperationException ex) {
+                            Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                            Debug.WriteLine(json);
                         } catch (JsonException ex) {
                             Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
                             Debug.WriteLine(json);

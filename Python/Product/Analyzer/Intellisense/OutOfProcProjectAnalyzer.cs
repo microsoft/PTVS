@@ -1820,12 +1820,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__name__";
         }
 
-        internal bool IsAnalyzing {
-            get {
-                return !_server.WaitForCompleteAnalysisAsync().Wait(0);
-            }
-        }
-
         internal Task WaitForCompleteAnalysis() => _server.WaitForCompleteAnalysisAsync();
 
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
