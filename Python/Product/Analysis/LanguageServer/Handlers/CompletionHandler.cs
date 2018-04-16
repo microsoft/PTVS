@@ -74,6 +74,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IEnumerable<MemberResult> GetMembers(CompletionParams @params, ProjectEntry entry, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
             IEnumerable<MemberResult> members = null;
             Expression expr = null;
+
+            if (string.IsNullOrEmpty(@params._expr)) {
+                // VS supplies the expression, VS Code does not.
+                var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
+                expr = finder.GetExpression(@params.position) as Expression;
+                @params._expr = expr?.ToCodeString(tree);
+            }
+
             if (!string.IsNullOrEmpty(@params._expr)) {
                 Log.TraceMessage($"Completing expression {@params._expr}");
 
@@ -84,8 +92,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
                 }
             } else {
-                var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
-                expr = finder.GetExpression(@params.position) as Expression;
                 if (expr != null) {
                     Log.TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
