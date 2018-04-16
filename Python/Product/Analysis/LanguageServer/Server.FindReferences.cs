@@ -17,30 +17,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class FindReferencesHandler: HandlerBase {
-        public FindReferencesHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ClientCapabilities clientCaps, ILogger log)
-            : base(analyzer, projectFiles, clientCaps, log) { }
-
-        public Reference[] FindReferences(ReferencesParams @params, CancellationToken token) {
+    public sealed partial class Server {
+        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
+            await _analyzerCreationTask;
+            IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
-            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
-            Log.TraceMessage($"References in {uri} at {@params.position}");
+            TraceMessage($"References in {uri} at {@params.position}");
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
-                Log.TraceMessage($"No analysis found for {uri}");
+                TraceMessage($"No analysis found for {uri}");
                 return Array.Empty<Reference>();
             }
 
-            tree = GetParseTree(entry, uri, token, out var version);
+            tree = GetParseTree(entry, uri, CancellationToken, out var version);
             var extras = new List<Reference>();
 
             if (@params.context?.includeDeclaration ?? false) {
@@ -49,7 +48,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 tree.Walk(w);
 
                 if (!string.IsNullOrEmpty(w.ImportedName) &&
-                    Analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
+                    _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
 
                     // Return a module reference
                     extras.AddRange(modRef.AnalysisModule.Locations
@@ -66,15 +65,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             IEnumerable<IAnalysisVariable> result;
             if (!string.IsNullOrEmpty(@params._expr)) {
-                Log.TraceMessage($"Getting references for {@params._expr}");
+                TraceMessage($"Getting references for {@params._expr}");
                 result = analysis.GetVariables(@params._expr, @params.position);
             } else {
                 var finder = new ExpressionFinder(tree, GetExpressionOptions.FindDefinition);
                 if (finder.GetExpression(@params.position) is Expression expr) {
-                    Log.TraceMessage($"Getting references for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    TraceMessage($"Getting references for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
-                    Log.TraceMessage($"No references found in {uri} at {@params.position}");
+                    TraceMessage($"No references found in {uri} at {@params.position}");
                     return Array.Empty<Reference>();
                 }
             }

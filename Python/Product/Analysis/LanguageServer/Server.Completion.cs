@@ -17,58 +17,65 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class CompletionHandler: HandlerBase {
-        private static CompletionItem[] EmptyCompletion = new CompletionItem[0];
+    public sealed partial class Server {
+        public override async Task<CompletionList> Completion(CompletionParams @params) {
+            await _analyzerCreationTask;
+            IfTestWaitForAnalysisComplete();
 
-        public CompletionHandler(PythonAnalyzer analyzer, ProjectFiles projectFiles, ClientCapabilities clientCaps, ILogger log):
-            base(analyzer, projectFiles, clientCaps, log) { }
-
-        public CompletionItem[] GetCompletions(CompletionParams @params, LanguageServerSettings settings, CancellationToken token) {
             var uri = @params.textDocument.uri;
+            // Make sure document is enqueued for processing
+            var openFile = _openFiles.GetDocument(uri);
+            openFile.WaitForChangeProcessingComplete(CancellationToken);
 
-           var entry = ProjectFiles.GetEntry(@params.textDocument) as ProjectEntry;
+           var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
             if (!(entry is IDocument doc)) {
-                Log.TraceMessage($"No analysis found for {uri}");
-                return EmptyCompletion;
+                TraceMessage($"No analysis found for {uri}");
+                return new CompletionList();
             }
 
             var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
-            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
-            Log.TraceMessage($"Completions in {uri} at {@params.position}");
+            _projectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
+            TraceMessage($"Completions in {uri} at {@params.position}");
 
-            tree = GetParseTree(entry, uri, token, out _) ?? tree;
+            tree = GetParseTree(entry, uri, CancellationToken, out _) ?? tree;
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
-                Log.TraceMessage($"No analysis found for {uri}");
-                return EmptyCompletion;
+                TraceMessage($"No analysis found for {uri}");
+                return new CompletionList();
             }
 
             var opts = GetOptions(@params.context);
             var members = GetMembers(@params, entry, tree, analysis, opts);
             if (members == null) {
-                Log.TraceMessage($"No members found in document {uri}");
-                return EmptyCompletion;
+                TraceMessage($"No members found in document {uri}");
+                return new CompletionList();
             }
 
             var filtered = members
-                .Where(m => settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
+                .Where(m => _settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
                 .Select(m => ToCompletionItem(m, opts));
 
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
-                Log.TraceMessage($"Only returning {filterKind.Value} items");
+                TraceMessage($"Only returning {filterKind.Value} items");
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
-            return filtered.ToArray();
+            var res = new CompletionList { items = filtered.ToArray() };
+            LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
+            return res;
+        }
+        public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
+            // TODO: Fill out missing values in item
+            return Task.FromResult(item);
         }
 
         private IEnumerable<MemberResult> GetMembers(CompletionParams @params, ProjectEntry entry, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
@@ -83,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!string.IsNullOrEmpty(@params._expr)) {
-                Log.TraceMessage($"Completing expression {@params._expr}");
+                TraceMessage($"Completing expression {@params._expr}");
 
                 if (@params.context?._filterKind == CompletionItemKind.Module) {
                     // HACK: Special case for child modules until #3798 is completed
@@ -93,17 +100,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             } else {
                 if (expr != null) {
-                    Log.TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+                    TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
                     members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
                 } else {
-                    Log.TraceMessage($"Completing all names");
+                    TraceMessage($"Completing all names");
                     members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
                 }
             }
 
             if (@params.context?._includeAllModules ?? false) {
-                var mods = Analyzer.GetModules();
-                Log.TraceMessage($"Including {mods?.Length ?? 0} modules");
+                var mods = _analyzer.GetModules();
+                TraceMessage($"Including {mods?.Length ?? 0} modules");
                 members = members?.Concat(mods) ?? mods;
             }
 
@@ -120,7 +127,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
                     argNames = argNames.MaybeEnumerate().ToArray();
-                    Log.TraceMessage($"Including {argNames.Count()} named arguments");
+                    TraceMessage($"Including {argNames.Count()} named arguments");
                     members = members?.Concat(argNames) ?? argNames;
                 }
             }

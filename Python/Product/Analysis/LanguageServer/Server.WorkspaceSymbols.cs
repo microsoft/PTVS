@@ -17,17 +17,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class WorkspaceSymbolsHandler {
-        private readonly ProjectFiles _projectFiles;
-        public WorkspaceSymbolsHandler(ProjectFiles projectFiles) {
-            _projectFiles = projectFiles;
-        }
+    public sealed partial class Server {
+        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+            await _analyzerCreationTask;
+            IfTestWaitForAnalysisComplete();
 
-        public SymbolInformation[] GetWorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 

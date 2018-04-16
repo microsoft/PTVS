@@ -28,9 +28,10 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public sealed class Server : ServerBase, ILogger, IDisposable {
+    public sealed partial class Server : ServerBase, ILogger, IDisposable {
         /// <summary>
         /// Implements ability to execute module reload on the analyzer thread
         /// </summary>
@@ -76,11 +77,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal ClientCapabilities _clientCaps;
         private InformationDisplayOptions _displayOptions;
         private LanguageServerSettings _settings = new LanguageServerSettings();
-        private CompletionHandler _completionHandler;
-        private SignatureHelpHandler _signatureHelpHandler;
-        private FindReferencesHandler _findReferencesHandler;
-        private HoverHandler _hoverHandler;
-        private WorkspaceSymbolsHandler _workspaceSymbolsHandler;
 
         private bool _traceLogging;
         private bool _testEnvironment;
@@ -114,13 +110,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _queue.Dispose();
         }
 
-        #region ILogger
         public void TraceMessage(string message) {
             if (_traceLogging) {
                 LogMessage(MessageType.Log, message.ToString());
             }
         }
-        #endregion
 
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
@@ -154,12 +148,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void OnAnalyzerCreated(InitializeParams @params) {
             _clientCaps = @params.capabilities;
             _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
-
-            _completionHandler = new CompletionHandler(_analyzer, _projectFiles, _clientCaps, this);
-            _signatureHelpHandler = new SignatureHelpHandler(_analyzer,  _projectFiles, _clientCaps, this);
-            _findReferencesHandler = new FindReferencesHandler(_analyzer, _projectFiles, _clientCaps, this);
-            _hoverHandler = new HoverHandler(_analyzer, _projectFiles, _clientCaps, this);
-            _workspaceSymbolsHandler = new WorkspaceSymbolsHandler(_projectFiles);
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
@@ -297,53 +285,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
-
-        public override async Task<CompletionList> Completion(CompletionParams @params) {
-            await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
-
-            var uri = @params.textDocument.uri;
-            // Make sure document is enqueued for processing
-            var openFile = _openFiles.GetDocument(uri);
-            openFile.WaitForChangeProcessingComplete(CancellationToken);
-
-            var items = _completionHandler.GetCompletions(@params, _settings, CancellationToken);
-            var res = new CompletionList { items = items };
-
-            LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
-            return res;
-        }
-
-        public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
-            // TODO: Fill out missing values in item
-            return Task.FromResult(item);
-        }
-
-        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
-            return _signatureHelpHandler.GetSignatureHelp(@params);
-        }
-
-        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
-            return _findReferencesHandler.FindReferences(@params, CancellationToken);
-        }
-
-        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
-            return _hoverHandler.GetHover(@params, _displayOptions, CancellationToken);
-
-        }
-
-        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
-            return _workspaceSymbolsHandler.GetWorkspaceSymbols(@params);
-        }
-
         #endregion
 
         #region Private Helpers
@@ -726,6 +667,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
                 //}
             }
+        }
+        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
+            version = null;
+            PythonAst tree = null;
+            var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
+                        }
+                    }
+                }
+            }
+            return tree;
         }
 
         private void IfTestWaitForAnalysisComplete() {
