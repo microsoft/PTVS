@@ -248,20 +248,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return TypeId == BuiltinTypeId.NoneType && ns.TypeId == BuiltinTypeId.NoneType;
                 }
 
+                var type = ProjectState.ClassInfos[BuiltinTypeId.Type];
+                if (ClassInfo == type) {
+                    // CI + BII(type) => BII(type)
+                    // BCI + BII(type) => BII(type)
+                    return ns is ClassInfo || ns is BuiltinClassInfo || ns == type.Instance;
+                } else if (ns == type.Instance) {
+                    return false;
+                }
+
                 if (TypeId == BuiltinTypeId.Function) {
                     // FI + BII(function) => BII(function)
                     return ns is FunctionInfo || ns is BuiltinFunctionInfo ||
                         (ns is BuiltinInstanceInfo && ns.TypeId == BuiltinTypeId.Function);
                 } else if (ns.TypeId == BuiltinTypeId.Function) {
-                    return false;
-                }
-
-                var type = ProjectState.ClassInfos[BuiltinTypeId.Type];
-                if (this == type.Instance) {
-                    // CI + BII(type) => BII(type)
-                    // BCI + BII(type) => BII(type)
-                    return ns is ClassInfo || ns is BuiltinClassInfo || ns == type.Instance;
-                } else if (ns == type.Instance) {
                     return false;
                 }
 
@@ -290,6 +290,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal override int UnionHashCode(int strength) {
             if (strength >= MergeStrength.ToObject) {
+                var type = ProjectState.ClassInfos[BuiltinTypeId.Type];
+                if (ClassInfo == type) {
+                    return type.UnionHashCode(strength);
+                }
                 return ProjectState.ClassInfos[BuiltinTypeId.Object].GetHashCode();
             }
             return ClassInfo.UnionHashCode(strength);
@@ -303,6 +307,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // combinations of BuiltinInstanceInfo or ConstantInfo that
                     // need to be merged.
                     return ProjectState.ClassInfos[BuiltinTypeId.NoneType].Instance;
+                }
+
+                if (ClassInfo == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
+                    return this;
                 }
 
                 var func = ProjectState.ClassInfos[BuiltinTypeId.Function];
