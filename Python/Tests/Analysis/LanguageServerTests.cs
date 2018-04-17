@@ -312,6 +312,16 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionForOverride() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "class A:\n    def i(): pass\n    def \npass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(2, 9));
+            await AssertCompletion(s, u, new[] { "def" }, new[] { "__init__" }, new SourceLocation(3, 8));
+            await AssertCompletion(s, u, new[] { "__init__" }, new[] { "def" }, new SourceLocation(3, 9), cmpKey: ci => ci.label);
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInDecorator() {
             var s = await CreateServer();
             var u = await AddModule(s, "@dec\ndef f(): pass\n\nx = a @ b");

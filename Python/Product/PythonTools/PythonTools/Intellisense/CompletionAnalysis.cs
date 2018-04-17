@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -70,9 +71,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && (text?.Value ?? token.Span.GetText()) == keyword;
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
+        internal DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
+            var insert = memberResult.Completion;
+            if (insert.IndexOf('\t') >= 0 && View.Options.IsConvertTabsToSpacesEnabled()) {
+                insert = insert.Replace("\t", new string(' ', View.Options.GetIndentSize()));
+            }
+
             return new DynamicallyVisibleCompletion(memberResult.Name, 
-                memberResult.Completion, 
+                insert,
                 () => memberResult.Documentation, 
                 () => service.GetGlyph(memberResult.MemberType.ToGlyphGroup(), StandardGlyphItem.GlyphItemPublic),
                 Enum.GetName(typeof(PythonMemberType), memberResult.MemberType)

@@ -557,25 +557,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public string[] names;
         }
 
-        public sealed class OverridesCompletionRequest : Request<OverridesCompletionResponse> {
-            public const string Command = "overrides";
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-            public int line, column;
-            public string indentation;
-
-            public override string command => Command;
-        }
-
-        public sealed class OverridesCompletionResponse : Response {
-            public Override[] overrides;
-        }
-
-        public sealed class Override {
-            public string name, doc, completion;
-        }
-
         public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
             public const string Command = "removeImports";
 

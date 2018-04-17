@@ -704,7 +704,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return true;
             }
 
-            if (values.OfType<ModuleInfo>().Any()) {
+            if (values.OfType<IModule>().Any()) {
                 return true;
             }
 

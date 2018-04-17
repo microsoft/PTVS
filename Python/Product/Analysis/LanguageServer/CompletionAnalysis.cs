@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -79,6 +80,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = GetCompletionsFromMembers(ref opts) ??
                 GetCompletionsInImport(ref opts) ??
+                GetCompletionsForOverride() ??
                 GetCompletionsInDefinition(ref allowKeywords, ref additional) ??
                 GetCompletionsInForStatement() ??
                 GetCompletionsInWithStatement() ??
@@ -202,6 +204,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 opts |= GetMemberOptions.IncludeStatementKeywords;
+            }
+            return null;
+        }
+
+        private IEnumerable<CompletionItem> GetCompletionsForOverride() {
+            if (Statement is FunctionDefinition fd && fd.Parent is ClassDefinition cd && string.IsNullOrEmpty(fd.Name)) {
+                if (fd.NameExpression == null || Index <= fd.NameExpression.StartIndex) {
+                    return null;
+                }
+                var loc = fd.GetStart(Tree);
+                return Analysis.GetOverrideable(loc)
+                    .Select(o => new CompletionItem {
+                        label = o.Name,
+                        insertText = MakeCompletionString(new string(' ', loc.Column - 1), o, cd.Name),
+                        kind = CompletionItemKind.Method
+                    });
             }
             return null;
         }
@@ -375,7 +393,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
-                if (Statement == null || Index == Statement.StartIndex) {
+                // If we get this far in a statement's first line, we can display statement keywords.
+                if (Statement == null || Tree.IndexToLocation(Index).Line == Statement.GetStart(Tree).Line) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
                 }
             }
@@ -467,6 +486,61 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 default:
                     return CompletionItemKind.None;
             }
+        }
+
+
+        private static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        private static string GetSafeParameterName(ParameterResult result, int index) {
+            if (!string.IsNullOrEmpty(result.DefaultValue)) {
+                return GetSafeArgumentName(result, index) + " = " + result.DefaultValue;
+            }
+            return GetSafeArgumentName(result, index);
+        }
+
+        private static string GetSafeArgumentName(ParameterResult result, int index) {
+            var match = ValidParameterName.Match(result.Name);
+
+            if (match.Success) {
+                return match.Value;
+            } else if (result.Name.StartsWithOrdinal("**")) {
+                return "**kwargs";
+            } else if (result.Name.StartsWithOrdinal("*")) {
+                return "*args";
+            } else {
+                return "arg" + index.ToString();
+            }
+        }
+
+        private string MakeCompletionString(string indentation, IOverloadResult result, string className) {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
+
+            sb.Append(indentation);
+            sb.Append('\t');
+
+            if (result.Parameters.Length > 0) {
+                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
+
+                if (Tree.LanguageVersion.Is3x()) {
+                    sb.AppendFormat("return super().{0}({1})",
+                        result.Name,
+                        parameterString);
+                } else if (!string.IsNullOrEmpty(className)) {
+                    sb.AppendFormat("return super({0}, {1}).{2}({3})",
+                        className,
+                        result.Parameters.First().Name,
+                        result.Name,
+                        parameterString);
+                } else {
+                    sb.Append("pass");
+                }
+            } else {
+                sb.Append("pass");
+            }
+
+            return sb.ToString();
         }
 
     }

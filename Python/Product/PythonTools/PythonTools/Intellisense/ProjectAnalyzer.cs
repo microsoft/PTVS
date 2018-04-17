@@ -1805,81 +1805,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static readonly HashSet<string> NoCompletionsAfterKeyword = new HashSet<string> {
-            "class", "for", "as"
-        };
-
-        private static CompletionAnalysis TrySpecialCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            var snapSpan = span.GetSpan(snapshot);
-            var buffer = snapshot.TextBuffer;
-            var classifier = buffer.GetPythonClassifier();
-            if (classifier == null) {
-                return null;
-            }
-
-            var parser = new ReverseExpressionParser(snapshot, buffer, span);
-            var statementRange = parser.GetStatementRange();
-            if (!statementRange.HasValue) {
-                statementRange = snapSpan.Start.GetContainingLine().Extent;
-            }
-            if (snapSpan.Start < statementRange.Value.Start) {
-                return null;
-            }
-
-            if (snapshot.IsReplBufferWithCommand()) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
-
-            var tokens = classifier.GetClassificationSpans(snapSpan);
-            if (tokens.LastOrDefault()?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false) {
-                // String completion
-                if (span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber) {
-                    return new StringLiteralCompletionList(services, session, view, span, buffer, options);
-                }
-            }
-
-            tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
-            if (tokens.Count > 0) {
-                // Check for context-sensitive intellisense
-                var lastClass = tokens[tokens.Count - 1];
-                var lastText = new Lazy<string>(() => lastClass.Span.GetText());
-
-                if (lastClass.ClassificationType == classifier.Provider.Comment) {
-                    // No completions in comments
-                    return CompletionAnalysis.EmptyCompletionContext;
-                } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
-                    lastText.Value == "@") {
-
-                    if (tokens.Count == 1) {
-                        return new DecoratorCompletionAnalysis(services, session, view, span, buffer, options);
-                    }
-                    // TODO: Handle completions automatically popping up
-                    // after '@' when it is used as a binary operator.
-                } else if (CompletionAnalysis.IsKeyword(lastClass, "def", lastText)) {
-                    return new OverrideCompletionAnalysis(services, session, view, span, buffer, options);
-                } else if (lastClass.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) && NoCompletionsAfterKeyword.Contains(lastText.Value)) {
-                    return CompletionAnalysis.EmptyCompletionContext;
-                }
-
-                // Import completions
-                var first = tokens[0];
-                var firstText = new Lazy<string>(() => first.Span.GetText());
-                if (CompletionAnalysis.IsKeyword(first, "import", firstText)) {
-                    return ImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "from", firstText)) {
-                    return FromImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "raise", firstText) || CompletionAnalysis.IsKeyword(first, "except", firstText)) {
-                    if (tokens.Count == 1 ||
-                        lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
-                        (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
-                        return new ExceptionCompletionAnalysis(services, session, view, span, buffer, options);
-                    }
-                }
-            }
-
-            return null;
-        }
-
         private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
@@ -2546,19 +2471,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(span.Start, span.End);
                 }
             }
-        }
-
-        internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletionsAsync(AnalysisEntry entry, ITextBuffer textBuffer, SourceLocation location, string indentation) {
-            var res = await SendRequestAsync(
-                new AP.OverridesCompletionRequest() {
-                    documentUri = entry.DocumentUri,
-                    column = location.Column,
-                    line = location.Line,
-                    indentation = indentation
-                }
-            ).ConfigureAwait(false);
-
-            return res;
         }
 
         internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer textBuffer, LocationTracker translator, int atVersion) {

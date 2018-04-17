@@ -1908,7 +1908,11 @@ namespace Microsoft.PythonTools.Parsing {
 
             var name = ReadName();
             var nameExpr = MakeName(name);
-            nameExpr.SetLoc(GetStart(), GetEnd());
+            if (name.HasName) {
+                nameExpr.SetLoc(GetStart(), GetEnd());
+            } else {
+                nameExpr.SetLoc(GetEnd(), GetEnd());
+            }
             string nameWhiteSpace = _tokenWhiteSpace;
 
             bool ateLeftParen = name.HasName && Eat(TokenKind.LeftParenthesis);

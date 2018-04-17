@@ -189,7 +189,15 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(FunctionDefinition node) {
                 if (!base.Walk(node)) {
-                    return false;
+                    if (!string.IsNullOrEmpty(node.Name)) {
+                        return false;
+                    }
+                    // Incomplete node, so let's check if we're in the name space
+                    var endLoc = node.GetEnd(_ast);
+                    var loc = _ast.IndexToLocation(Location);
+                    if (endLoc.Line != loc.Line || loc.Column < endLoc.Column) {
+                        return false;
+                    }
                 }
 
                 SaveStmt(node, true);
