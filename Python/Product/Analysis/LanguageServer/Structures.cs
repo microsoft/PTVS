@@ -679,7 +679,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct Hover {
+    public class Hover {
         public MarkupContent contents;
         public Range? range;
 

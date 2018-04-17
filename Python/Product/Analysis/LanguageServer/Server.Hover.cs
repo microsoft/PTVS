@@ -22,6 +22,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
+        private static Hover EmptyHover = new Hover {
+            contents = new MarkupContent { kind = MarkupKind.PlainText, value = string.Empty }
+        };
         private readonly DisplayTextBuilder _displayTextBuilder = new DisplayTextBuilder();
 
         public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
@@ -36,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return default(Hover);
+                return EmptyHover;
             }
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
@@ -70,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             if (expr == null) {
                 TraceMessage($"No hover info found in {uri} at {@params.position}");
-                return default(Hover);
+                return EmptyHover;
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
