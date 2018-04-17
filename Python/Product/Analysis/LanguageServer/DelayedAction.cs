@@ -18,8 +18,8 @@ using System;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    sealed class DelayedAction {
-        private readonly Timer _timer;
+    sealed class DelayedAction: IDisposable {
+        private Timer _timer;
         private bool _canceled;
         public DelayedAction(Action action, int timeout) {
             _timer = new Timer((s) => {
@@ -30,5 +30,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }, null, timeout, Timeout.Infinite);
         }
         public void Cancel() => _canceled = true;
+
+        public void Dispose() {
+            Cancel();
+            _timer?.Dispose();
+            _timer = null;
+        }
     }
 }

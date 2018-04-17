@@ -32,10 +32,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _log = log;
         }
         public OpenFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new OpenFile(_projectFiles, _log));
-        public void Remove(Uri uri) => _files.TryRemove(uri, out _);
+        public void Remove(Uri uri) {
+            _files.TryRemove(uri, out var entry);
+            entry?.Dispose();
+        }
     }
 
-    sealed class OpenFile {
+    sealed class OpenFile: IDisposable {
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
         private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
@@ -49,6 +52,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _projectFiles = projectFiles;
             _log = log;
         }
+
+        public void Dispose() => _delayedAction?.Dispose();
 
         public void WaitForChangeProcessingComplete(CancellationToken token) => _documentChangeProcessingComplete.Wait(token);
 
@@ -64,8 +69,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            _delayedAction?.Cancel();
-
+            _delayedAction?.Dispose();
             _documentChangeProcessingComplete.Reset();
             _documentChangeReentrancyCount++;
 
