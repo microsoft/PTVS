@@ -307,17 +307,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (Statement is RaiseStatement rs) {
                 // raise Type, Value, Traceback with Cause
                 if (rs.Cause != null) {
-                    if (Index >= rs.Cause.StartIndex) {
+                    if (Index >= rs.CauseFieldStartIndex) {
                         return null;
                     }
                 }
                 if (rs.Traceback != null) {
-                    if (Index >= rs.Traceback.StartIndex) {
+                    if (Index >= rs.TracebackFieldStartIndex) {
                         return null;
                     }
                 }
                 if (rs.Value != null) {
-                    if (Index >= rs.Value.StartIndex) {
+                    if (Index >= rs.ValueFieldStartIndex) {
                         return null;
                     }
                 }

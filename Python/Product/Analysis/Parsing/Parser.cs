@@ -1500,23 +1500,28 @@ namespace Microsoft.PythonTools.Parsing {
             Expression type = null, value = null, traceback = null, cause = null;
             bool isFromForm = false;
 
+            int? valueFieldStart = null, tracebackFieldStart = null, causeFieldStart = null;
+
             if (!NeverTestToken(PeekToken())) {
                 type = ParseExpression();
 
                 if (MaybeEat(TokenKind.Comma)) {
                     var commaStart = GetStart();
                     commaWhiteSpace = _tokenWhiteSpace;
+                    valueFieldStart = GetEnd();
                     value = ParseExpression();
                     if (_stubFile || _langVersion.Is3x()) {
                         ReportSyntaxError(commaStart, GetEnd(), "invalid syntax, only exception value is allowed in 3.x.");
                     }
                     if (MaybeEat(TokenKind.Comma)) {
                         secondCommaWhiteSpace = _tokenWhiteSpace;
+                        tracebackFieldStart = GetEnd();
                         traceback = ParseExpression();
                     }
                 } else if (MaybeEat(TokenKind.KeywordFrom)) {
                     commaWhiteSpace = _tokenWhiteSpace;
                     var fromStart = GetStart();
+                    causeFieldStart = GetEnd();
                     cause = ParseExpression();
                     isFromForm = true;
 
@@ -1528,6 +1533,15 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             RaiseStatement ret = new RaiseStatement(type, value, traceback, cause);
+            if (valueFieldStart.HasValue) {
+                ret.ValueFieldStartIndex = valueFieldStart.Value;
+            }
+            if (tracebackFieldStart.HasValue) {
+                ret.TracebackFieldStartIndex = tracebackFieldStart.Value;
+            }
+            if (causeFieldStart.HasValue) {
+                ret.CauseFieldStartIndex = causeFieldStart.Value;
+            }
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, raiseWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, commaWhiteSpace);
@@ -1687,33 +1701,13 @@ namespace Microsoft.PythonTools.Parsing {
             if (MaybeEat(TokenKind.LeftParenthesis)) {
                 leftParenWhiteSpace = _tokenWhiteSpace;
                 commaWhiteSpace = MakeWhiteSpaceList();
-                if (_stubFile || _langVersion.Is3x()) {
-                    args = FinishArgumentList(null, commaWhiteSpace, out ateTerminator);
-                    rightParenWhiteSpace = _tokenWhiteSpace;
-                } else {
-                    bool trailingComma;
-                    var trailingWS = new List<int>();
-                    List<Expression> l = ParseTestListAsExpr(null, out commaWhiteSpace, out trailingComma, trailingWS);
-                    if (l.Count == 1 && l[0] is ErrorExpression) {
-                        // error handling, classes is incomplete.
-                        return ErrorStmt(
-                            _verbatim ? (classWhiteSpace + "class" + nameWhiteSpace + name.VerbatimName + leftParenWhiteSpace + "(" + ((ErrorExpression)l[0]).VerbatimImage) : null
-                        );
-                    }
-                    args = new Arg[l.Count];
-                    for (int i = 0; i < l.Count; i++) {
-                        args[i] = new Arg(l[i]);
-                        args[i].SetLoc(l[i].StartIndex, l[i].EndIndex);
-                        args[i].EndIndexIncludingWhitespace = args[i].EndIndex;
-                        if (i < trailingWS.Count) {
-                            args[i].EndIndexIncludingWhitespace += trailingWS[i];
+                args = FinishArgumentList(null, commaWhiteSpace, out ateTerminator);
+                rightParenWhiteSpace = _tokenWhiteSpace;
+                if (!_stubFile && _langVersion.Is2x()) {
+                    foreach (var a in args) {
+                        if (a.Name != null) {
+                            ReportSyntaxError(a.StartIndex, a.EndIndex, "invalid syntax");
                         }
-                    }
-
-                    ateTerminator = Eat(TokenKind.RightParenthesis);
-                    rightParenWhiteSpace = _tokenWhiteSpace;
-                    if (trailingWS.Count < args.Length) {
-                        args[args.Length - 1].EndIndexIncludingWhitespace = GetStart();
                     }
                 }
             } else {

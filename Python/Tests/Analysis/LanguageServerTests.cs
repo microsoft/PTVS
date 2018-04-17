@@ -257,7 +257,11 @@ namespace AnalysisTests {
             var u = await AddModule(s, "class C(object, parameter=MC): pass");
 
             await AssertNoCompletion(s, u, new SourceLocation(1, 8));
-            await AssertCompletion(s, u, new[] { "metaclass=", "object" }, new string[0], new SourceLocation(1, 9));
+            if (this is LanguageServerTests_V2) {
+                await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 9));
+            } else {
+                await AssertCompletion(s, u, new[] { "metaclass=", "object" }, new string[0], new SourceLocation(1, 9));
+            }
             await AssertAnyCompletion(s, u, new SourceLocation(1, 15));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
             await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 29));
@@ -325,10 +329,12 @@ namespace AnalysisTests {
             var u = await AddModule(s, "raise ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
 
-            u = await AddModule(s, "raise Exception from ");
-            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
-            await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+            if (!(this is LanguageServerTests_V2)) {
+                u = await AddModule(s, "raise Exception from ");
+                await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+                await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+            }
 
             u = await AddModule(s, "raise Exception, x, y");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
@@ -607,9 +613,9 @@ x = 3.14
             await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
             await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
             await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
-            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g: test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g:  {Environment.NewLine}test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
 
-            await AssertHover(s, mod, new SourceLocation(16, 1), "x: int, float", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
+            await AssertHover(s, mod, new SourceLocation(16, 1), "x: float, int", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
         }
 
         [TestMethod, Priority(0)]

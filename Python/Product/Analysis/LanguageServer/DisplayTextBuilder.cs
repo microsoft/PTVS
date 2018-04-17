@@ -28,24 +28,50 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
+            var descriptions = new HashSet<string>();
 
             foreach (var v in values) {
-                if(result.Length > 0) {
-                    result.AppendLine();
-                }
-
-                var doc = GetDocString(v);
-                doc = displayOptions.trimDocumentationLines ? LimitLines(doc) : doc;
-                if (string.IsNullOrEmpty(doc)) {
+                var d = v.Description;
+                if (v.MemberType == PythonMemberType.Instance || v.MemberType == PythonMemberType.Constant) {
+                    if (!string.IsNullOrEmpty(d)) {
+                        descriptions.Add(d);
+                    }
                     continue;
                 }
 
-                if (documentations.Add(doc)) {
-                    result.AppendLine(doc);
+                var doc = v.Documentation;
+
+                if ((d?.Length ?? 0) < (doc?.Length ?? 0)) {
+                    if (displayOptions.trimDocumentationLines) {
+                        doc = LimitLines(doc);
+                    }
+                    if (!string.IsNullOrEmpty(doc)) {
+                        documentations.Add(doc);
+                    }
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(d)) {
+                    descriptions.Add(d);
                 }
             }
 
-            var displayText = result.ToString();
+            foreach (var d in descriptions.Ordered()) {
+                if (result.Length > 0) {
+                    result.Append(", ");
+                }
+                result.Append(d);
+            }
+
+            foreach (var d in documentations.Ordered()) {
+                if (result.Length > 0) {
+                    result.AppendLine();
+                }
+
+                result.AppendLine(d);
+            }
+
+            var displayText = result.ToString().TrimEnd();
             var multiline = displayText.IndexOf('\n') >= 0;
             if (displayOptions.trimDocumentationText && displayText.Length > displayOptions.maxDocumentationTextLength) {
                 displayText = displayText.Substring(0,
@@ -79,15 +105,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 contents += $"{Environment.NewLine}{Environment.NewLine}{modRef.Module.Documentation}";
             }
             return contents;
-        }
-
-        private static string GetDocString(AnalysisValue v) {
-            var doc = !string.IsNullOrEmpty(v.Documentation) ? v.Documentation : string.Empty;
-            var desc = !string.IsNullOrEmpty(v.Description) ? v.Description : string.Empty;
-            if (v.MemberType == PythonMemberType.Instance || v.MemberType == PythonMemberType.Constant) {
-                return !string.IsNullOrEmpty(desc) ? desc : doc;
-            }
-            return doc.Length > desc.Length ? doc : desc;
         }
 
         private static string LimitLines(
