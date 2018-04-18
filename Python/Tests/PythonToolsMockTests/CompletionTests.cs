@@ -708,7 +708,7 @@ lambda larg1, larg2: None";
                 TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "str");
 
                 // trailing new lines don't show up in quick info
-                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f:  \r\nfile.f()  \r\nhelpful information");
+                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f:\r\nfile.f()\r\nhelpful information");
 
                 // keywords don't show up in quick info
                 TestQuickInfo(view, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
