@@ -647,6 +647,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// list. Where <c>textEdit</c> is set on a completion, prefer that.
         /// </summary>
         public Range? _applicableSpan;
+        /// <summary>
+        /// When true, snippets are allowed in this context.
+        /// </summary>
+        public bool? _allowSnippet;
+        /// <summary>
+        /// The expression that members are being displayed for.
+        /// </summary>
+        public string _expr;
     }
 
     [Serializable]

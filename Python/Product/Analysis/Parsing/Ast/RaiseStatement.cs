@@ -33,6 +33,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public int TracebackFieldStartIndex { get; set; }
         public int CauseFieldStartIndex { get; set; }
 
+        public override int KeywordLength => 5;
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 ExceptType?.Walk(walker);

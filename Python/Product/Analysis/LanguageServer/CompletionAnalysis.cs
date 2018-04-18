@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
+                Literals = true,
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
         }
@@ -79,7 +80,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             List<CompletionItem> additional = null;
 
             var res = GetCompletionsFromMembers(ref opts) ??
-                GetCompletionsInImport(ref opts) ??
+                GetCompletionsInLiterals() ??
+                GetCompletionsInImport(ref opts, ref additional) ??
                 GetCompletionsForOverride() ??
                 GetCompletionsInDefinition(ref allowKeywords, ref additional) ??
                 GetCompletionsInForStatement() ??
@@ -128,6 +130,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
+        private IEnumerable<CompletionItem> GetCompletionsInLiterals() {
+            if (Node is ConstantExpression ce && ce.Value != null) {
+                return Empty;
+            }
+            return null;
+        }
+
         private IEnumerable<CompletionItem> GetModules(IEnumerable<string> names, bool includeMembers) {
             if (names != null && names.Any()) {
                 return Analysis.ProjectState.GetModuleMembers(Analysis.InterpreterContext, names.ToArray(), includeMembers)
@@ -151,16 +160,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
+                
                 return GetModules(names, includeMembers);
-            } else if (name is NameExpression) {
+            } else if (name == null || name is NameExpression) {
                 return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
             }
 
             return Empty;
         }
 
-        private IEnumerable<CompletionItem> GetCompletionsInImport(ref GetMemberOptions opts) {
+        private IEnumerable<CompletionItem> GetCompletionsInImport(ref GetMemberOptions opts, ref List<CompletionItem> additional) {
             if (Statement is ImportStatement imp) {
+                if (imp.Names == null || imp.Names.Count == 0) {
+                    // No names, so if we're at the end return modules
+                    if (Index > imp.KeywordEndIndex) {
+                        return GetModulesFromNode(null);
+                    }
+                }
                 foreach (var t in ZipLongest(imp.Names, imp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
                         if (Index >= t.Item2.StartIndex) {
@@ -179,6 +195,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 opts |= GetMemberOptions.IncludeStatementKeywords;
             } else if (Statement is FromImportStatement fimp) {
+                // No more completions after '*', ever!
+                if (fimp.Names?.Any(n => n?.Name == "*" && Index > n.EndIndex) ?? false) {
+                    return Empty;
+                }
+
                 foreach (var t in ZipLongest(fimp.Names, fimp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
                         if (Index >= t.Item2.StartIndex) {
@@ -186,21 +207,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     if (t.Item1 != null) {
-                        if (Index > t.Item1.EndIndex) {
+                        if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
-                            return GetModulesFromNode(fimp.Root, true);
+                            var mods = GetModulesFromNode(fimp.Root, true);
+                            if (mods.Any() && fimp.Names.Count == 1) {
+                                return Once(StarCompletion).Concat(mods);
+                            }
+                            return mods;
                         }
                     }
                 }
 
                 if (fimp.Root != null) {
-                    if (Index > fimp.Root.EndIndex) {
+                    if (Index > fimp.Root.EndIndex && fimp.Root.EndIndex > fimp.Root.StartIndex) {
                         return Once(ImportKeywordCompletion);
                     } else if (Index >= fimp.Root.StartIndex) {
                         return GetModulesFromNode(fimp.Root);
                     }
+                }
+
+                if (Index > fimp.KeywordEndIndex) {
+                    return GetModulesFromNode(null);
                 }
 
                 opts |= GetMemberOptions.IncludeStatementKeywords;
@@ -350,7 +379,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return null;
                     }
                 }
-                if (Index >= rs.StartIndex + 6) {
+                if (Index > rs.KeywordEndIndex) {
                     opts |= GetMemberOptions.ExceptionsOnly;
                     return null;
                 }
@@ -368,15 +397,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 if (ts.Test is TupleExpression te) {
-                    foreach (var item in te.Items.MaybeEnumerate().Reverse()) {
-                        if (Index > item.EndIndex) {
-                            return Empty;
-                        } else if (Index >= item.StartIndex) {
-                            opts |= GetMemberOptions.ExceptionsOnly;
-                            allowKeywords = false;
-                            return null;
-                        }
-                    }
+                    opts |= GetMemberOptions.ExceptionsOnly;
+                    allowKeywords = false;
+                    return null;
                 } else if (ts.Test != null) {
                     if (Index > ts.Test.EndIndex) {
                         return Once(AsKeywordCompletion);
@@ -393,8 +416,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
-                // If we get this far in a statement's first line, we can display statement keywords.
-                if (Statement == null || Tree.IndexToLocation(Index).Line == Statement.GetStart(Tree).Line) {
+                if (Statement == null) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
                 }
             }
@@ -429,6 +451,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private static readonly CompletionItem FromKeywordCompletion = ToCompletionItem("from", PythonMemberType.Keyword);
         private static readonly CompletionItem ImportKeywordCompletion = ToCompletionItem("import", PythonMemberType.Keyword);
         private static readonly CompletionItem WithKeywordCompletion = ToCompletionItem("with", PythonMemberType.Keyword);
+        private static readonly CompletionItem StarCompletion = ToCompletionItem("*", PythonMemberType.Keyword);
 
         private static CompletionItem KeywordCompletion(string keyword) => new CompletionItem {
             label = keyword,

@@ -23,8 +23,6 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     sealed class DisplayTextBuilder {
-        private readonly RestTextConverter _textConverter = new RestTextConverter();
-
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
@@ -79,6 +77,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 result.Clear();
                 result.Append(displayText);
+            } else if (displayOptions.trimDocumentationLines) {
+                using (var sr = new StringReader(displayText)) {
+                    result.Clear();
+                    int lines = displayOptions.maxDocumentationLineLength;
+                    for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
+                        if (--lines < 0) {
+                            result.Append("...");
+                            break;
+                        }
+                        result.AppendLine(line);
+                    }
+                    displayText = result.ToString();
+                }
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
@@ -95,7 +106,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return _textConverter.ToMarkdown(result.ToString());
+            return result.ToString();
         }
 
         public string MakeModuleHoverText(ModuleReference modRef) {

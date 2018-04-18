@@ -1881,6 +1881,32 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
+        internal async Task<U> SendLanguageServerRequestAsync<T, U>(
+            string name,
+            T requestParams,
+            U defaultValue = default(U),
+            TimeSpan? timeout = null
+        ) {
+            var r = await SendRequestAsync(new AP.LanguageServerRequest {
+                name = name,
+                body = requestParams
+            }).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(r.error)) {
+                Debug.WriteLine($"Request failed: {r.error}");
+                _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, r.error);
+                return defaultValue;
+            }
+            if (r.body is Newtonsoft.Json.Linq.JObject o) {
+                try {
+                    return o.ToObject<U>();
+                } catch (Newtonsoft.Json.JsonException e) {
+                    Debug.WriteLine($"Response failed: {e}");
+                    _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
+                }
+            }
+            return defaultValue;
+        }
+
         internal async Task<T> SendRequestAsync<T>(
             Request<T> request,
             T defaultValue = default(T),
@@ -1955,6 +1981,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, ex.ToString());
                 Debug.Fail("Unexpected error sending event");
             }
+        }
+
+        internal async Task<LS.CompletionList> GetCompletionsAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
+            return await SendLanguageServerRequestAsync<LS.CompletionParams, LS.CompletionList>(
+                "textDocument/completion",
+                new LS.CompletionParams {
+                    textDocument = new Uri(entry.DocumentUri.AbsoluteUri),
+                    position = location,
+                    context = new LS.CompletionContext {
+                        _intersection = options.Intersect()
+                    }
+                }
+            ).ConfigureAwait(false);
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {

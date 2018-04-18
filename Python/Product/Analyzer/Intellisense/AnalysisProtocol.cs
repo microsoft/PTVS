@@ -964,5 +964,21 @@ namespace Microsoft.PythonTools.Intellisense {
             public int startLine, startColumn;
             public int endLine, endColumn;
         }
+
+        public class LanguageServerRequest : Request<LanguageServerResponse> {
+            public const string Command = "languageServer";
+
+            public string name;
+            public object body;
+
+            public override string command => Command;
+        }
+
+        public class LanguageServerResponse : Response {
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public object body;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string error;
+        }
     }
 }

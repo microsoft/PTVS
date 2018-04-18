@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -108,11 +109,11 @@ namespace Microsoft.PythonTools.Analysis {
 
         private class NormalExpressionWalker : ExpressionWalker {
             private readonly int _endLocation;
-            private readonly PythonAst _ast;
             private readonly GetExpressionOptions _options;
 
             public NormalExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
-                _ast = ast;
+                Tree = ast;
+                ExtendedStatements = true;
                 _endLocation = endLocation;
                 _options = options;
             }
@@ -132,15 +133,10 @@ namespace Microsoft.PythonTools.Analysis {
                 if (stmt == null) {
                     return false;
                 }
-                if (!baseWalk) {
-                    var stmtEnd = _ast.IndexToLocation(stmt.EndIndex);
-                    var spanStart = _ast.IndexToLocation(Location);
-                    if (stmtEnd.Line != spanStart.Line || stmtEnd.Column > spanStart.Column) {
-                        return false;
-                    }
+                if (baseWalk) {
+                    Statement = stmt;
                 }
 
-                Statement = stmt;
                 return baseWalk;
             }
 
@@ -163,7 +159,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return false;
                 }
 
-                var ws = body.GetLeadingWhiteSpace(_ast);
+                var ws = body.GetLeadingWhiteSpace(Tree);
                 if (string.IsNullOrEmpty(ws)) {
                     return true;
                 }
@@ -189,15 +185,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(FunctionDefinition node) {
                 if (!base.Walk(node)) {
-                    if (!string.IsNullOrEmpty(node.Name)) {
-                        return false;
-                    }
-                    // Incomplete node, so let's check if we're in the name space
-                    var endLoc = node.GetEnd(_ast);
-                    var loc = _ast.IndexToLocation(Location);
-                    if (endLoc.Line != loc.Line || loc.Column < endLoc.Column) {
-                        return false;
-                    }
+                    return false;
                 }
 
                 SaveStmt(node, true);
@@ -292,6 +280,7 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(ImportStatement node) {
                 if (!base.Walk(node)) {
                     return false;
+                    
                 }
 
                 SaveStmt(node, true);

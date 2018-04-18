@@ -1100,16 +1100,13 @@ namespace Microsoft.PythonTools.Parsing {
 
         // module: (identifier '.')* identifier
         private ModuleName ParseModuleName() {
-            var start = GetStart();
             List<string> dotWhiteSpace;
             ModuleName ret = new ModuleName(ReadDottedName(out dotWhiteSpace));
             if (_verbatim) {
                 AddNamesWhiteSpace(ret, dotWhiteSpace.ToArray());
             }
 
-            if (ret.Names.Count > 0) {
-                start = ret.Names[0].StartIndex;
-            }
+            int start = ret.Names.FirstOrDefault()?.StartIndex ?? GetEnd();
             ret.SetLoc(start, GetEnd());
             return ret;
         }
@@ -1156,7 +1153,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             if (!isStartSetCorrectly) {
-                start = _lookahead.Span.Start;
+                start = GetEnd();
                 isStartSetCorrectly = true;
             }
 
@@ -1191,7 +1188,6 @@ namespace Microsoft.PythonTools.Parsing {
             var name = ReadName();
             if (name.HasName) {
                 var nameExpr = MakeName(name);
-                nameExpr.SetLoc(GetStart(), GetEnd());
                 l.Add(nameExpr);
 
                 if (_verbatim) {
@@ -1203,7 +1199,6 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     name = ReadName();
                     nameExpr = MakeName(name);
-                    nameExpr.SetLoc(GetStart(), GetEnd());
                     l.Add(nameExpr);
                     if (_verbatim) {
                         dotWhiteSpace.Add(_tokenWhiteSpace);
@@ -1236,24 +1231,17 @@ namespace Microsoft.PythonTools.Parsing {
 
             List<string> namesWhiteSpace = null;
             if (ateImport) {
-                if (MaybeEat(TokenKind.Multiply)) {
-                    if (_langVersion.Is3x() && ((_functions != null && _functions.Count > 0) || _classDepth > 0)) {
-                        ReportSyntaxError(start, GetEnd(), "import * only allowed at module level");
-                    }
+                List<NameExpression/*!*/> l = new List<NameExpression>();
+                List<NameExpression> las = new List<NameExpression>();
+                ParseAsNameList(l, las, out namesWhiteSpace);
 
-                    if (_verbatim) {
-                        namesWhiteSpace = new List<string>() { _tokenWhiteSpace };
-                    }
-                    names = new[] { new NameExpression("*") };
-                    names[0].SetLoc(GetStart(), GetEnd());
-                    asNames = null;
-                } else {
-                    List<NameExpression/*!*/> l = new List<NameExpression>();
-                    List<NameExpression> las = new List<NameExpression>();
-                    ParseAsNameList(l, las, out namesWhiteSpace);
+                names = l.ToArray();
+                asNames = las.ToArray();
 
-                    names = l.ToArray();
-                    asNames = las.ToArray();
+                if (_langVersion.Is3x() && ((_functions != null && _functions.Count > 0) || _classDepth > 0)) {
+                    foreach (var n in names.Where(n => n.Name == "*")) {
+                        ReportSyntaxError(n.StartIndex, n.EndIndex, "import * only allowed at module level");
+                    }
                 }
             } else {
                 names = EmptyNames;
@@ -1347,12 +1335,21 @@ namespace Microsoft.PythonTools.Parsing {
         private void ParseAsNameList(List<NameExpression/*!*/> l, List<NameExpression> las, out List<string> asNamesWhiteSpace) {
             asNamesWhiteSpace = MakeWhiteSpaceList();
 
-            var name = ReadName();
-            var nameExpr = MakeName(name);
-            nameExpr.SetLoc(GetStart(), GetEnd());
+            Name name;
+            NameExpression nameExpr;
+            string ws;
+
+            if (MaybeEat(TokenKind.Multiply)) {
+                nameExpr = new NameExpression("*");
+                ws = _tokenWhiteSpace;
+            } else {
+                name = ReadName();
+                nameExpr = MakeName(name);
+                ws = name.HasName ? _tokenWhiteSpace : "";
+            }
             l.Add(nameExpr);
             if (_verbatim) {
-                asNamesWhiteSpace.Add(name.HasName ? _tokenWhiteSpace : "");
+                asNamesWhiteSpace.Add(ws);
             }
 
             las.Add(MaybeParseAsName(asNamesWhiteSpace));
@@ -1362,12 +1359,18 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 if (PeekToken(TokenKind.RightParenthesis)) return;  // the list is allowed to end with a ,
-                name = ReadName();
-                nameExpr = MakeName(name);
-                nameExpr.SetLoc(GetStart(), GetEnd());
+
+                if (MaybeEat(TokenKind.Multiply)) {
+                    nameExpr = new NameExpression("*");
+                    ws = _tokenWhiteSpace;
+                } else {
+                    name = ReadName();
+                    nameExpr = MakeName(name);
+                    ws = name.HasName ? _tokenWhiteSpace : "";
+                }
                 l.Add(nameExpr);
                 if (_verbatim) {
-                    asNamesWhiteSpace.Add(_tokenWhiteSpace);
+                    asNamesWhiteSpace.Add(ws);
                 }
                 las.Add(MaybeParseAsName(asNamesWhiteSpace));
             }
@@ -1384,9 +1387,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (_verbatim) {
                     asNameWhiteSpace.Add(_tokenWhiteSpace);
                 }
-                var nameExpr = MakeName(res);
-                nameExpr.SetLoc(GetStart(), GetEnd());
-                return nameExpr;
+                return MakeName(res);
             }
 
             return null;
@@ -1470,7 +1471,6 @@ namespace Microsoft.PythonTools.Parsing {
             var name = ReadName();
             if (name.HasName) {
                 var nameExpr = MakeName(name);
-                nameExpr.SetLoc(GetStart(), GetEnd());
                 l.Add(nameExpr);
                 if (_verbatim) {
                     namesWhiteSpace.Add(_tokenWhiteSpace);
@@ -1481,7 +1481,6 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     name = ReadName();
                     nameExpr = MakeName(name);
-                    nameExpr.SetLoc(GetStart(), GetEnd());
                     l.Add(nameExpr);
                     if (_verbatim) {
                         namesWhiteSpace.Add(_tokenWhiteSpace);
@@ -1685,7 +1684,6 @@ namespace Microsoft.PythonTools.Parsing {
             var start = GetStart();
             var name = ReadName();
             var nameExpr = MakeName(name);
-            nameExpr.SetLoc(GetStart(), GetEnd());
             string nameWhiteSpace = _tokenWhiteSpace;
 
             if (name.RealName == null) {
@@ -1756,6 +1754,11 @@ namespace Microsoft.PythonTools.Parsing {
         private NameExpression/*!*/ MakeName(Name name) {
             var res = new NameExpression(name.RealName);
             AddVerbatimName(name, res);
+            if (name.HasName) {
+                res.SetLoc(GetStart(), GetEnd());
+            } else {
+                res.SetLoc(GetEnd(), GetEnd());
+            }
             return res;
         }
 
@@ -1908,11 +1911,6 @@ namespace Microsoft.PythonTools.Parsing {
 
             var name = ReadName();
             var nameExpr = MakeName(name);
-            if (name.HasName) {
-                nameExpr.SetLoc(GetStart(), GetEnd());
-            } else {
-                nameExpr.SetLoc(GetEnd(), GetEnd());
-            }
             string nameWhiteSpace = _tokenWhiteSpace;
 
             bool ateLeftParen = name.HasName && Eat(TokenKind.LeftParenthesis);

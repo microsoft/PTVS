@@ -158,12 +158,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.SetAnalysisOptionsRequest.Command: response = SetAnalysisOptions((AP.SetAnalysisOptionsRequest)request); break;
+                case AP.LanguageServerRequest.Command: response = await ProcessLanguageServerRequest((AP.LanguageServerRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             await done(response);
+        }
+
+        private async Task<Response> ProcessLanguageServerRequest(AP.LanguageServerRequest request) {
+            try {
+                var body = (Newtonsoft.Json.Linq.JObject)request.body;
+
+                switch (request.name) {
+                    case "textDocument/completion": return new AP.LanguageServerResponse { body = await _server.Completion(body.ToObject<LS.CompletionParams>()) };
+                }
+
+                return new AP.LanguageServerResponse { error = "Unknown command: " + request.name };
+            } catch (Exception ex) {
+                return new AP.LanguageServerResponse { error = ex.ToString() };
+            }
         }
 
         internal void ReportUnhandledException(Exception ex) {
@@ -237,6 +252,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             assembly = request.interpreter?.assembly,
                             typeName = request.interpreter?.typeName,
                             properties = request.interpreter?.properties
+                        },
+                        displayOptions = new LS.InformationDisplayOptions {
+                            maxDocumentationLineLength = 30,
+                            trimDocumentationLines = true,
+                            maxDocumentationTextLength = 4096,
+                            trimDocumentationText = true
                         }
                     },
                     capabilities = new LS.ClientCapabilities {
