@@ -243,7 +243,7 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 10));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
             await AssertNoCompletion(s, u, new SourceLocation(1, 17));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 19));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 19));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 34));
             await AssertNoCompletion(s, u, new SourceLocation(1, 35));
@@ -314,7 +314,7 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public async Task CompletionForOverride() {
             var s = await CreateServer();
-            var u = await AddModule(s, "class A:\n    def i(): pass\n    def \npass");
+            var u = await AddModule(s, "class A(object):\n    def i(): pass\n    def \npass");
 
             await AssertNoCompletion(s, u, new SourceLocation(2, 9));
             await AssertCompletion(s, u, new[] { "def" }, new[] { "__init__" }, new SourceLocation(3, 8));
@@ -380,7 +380,8 @@ class MyClass:
     def f(self): pass
 
 mc = MyClass()
-mc";
+mc
+";
             int testLine = 5;
             int testChar = 2;
 
@@ -623,7 +624,7 @@ x = 3.14
             await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
             await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
             await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
-            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g:  {Environment.NewLine}test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g:{Environment.NewLine}test-module.C.f.g(self){Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
 
             await AssertHover(s, mod, new SourceLocation(16, 1), "x: float, int", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
         }
@@ -745,30 +746,40 @@ x = 3.14
         }
 
         public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {
+            var res = await s.Completion(new CompletionParams {
+                textDocument = document,
+                position = position ?? new Position(),
+                context = context,
+                _expr = expr
+            });
+            DumpDetails(res);
+
             cmpKey = cmpKey ?? (c => c.insertText);
             AssertUtil.CheckCollection(
-                (await s.Completion(new CompletionParams {
-                    textDocument = document,
-                    position = position ?? new Position(),
-                    context = context,
-                    _expr = expr
-                })).items?.Select(cmpKey),
+                res.items?.Select(cmpKey),
                 contains,
                 excludes
             );
         }
 
+        private static void DumpDetails(CompletionList completions) {
+            var span = ((SourceSpan?)completions._applicableSpan) ?? SourceSpan.None;
+            Debug.WriteLine($"Completed {completions._expr ?? "(null)"} at {span}");
+        }
+
         private static async Task AssertAnyCompletion(Server s, TextDocumentIdentifier document, Position position) {
-            var res = (await s.Completion(new CompletionParams { textDocument = document, position = position })).items;
-            if (res == null || !res.Any()) {
+            var res = await s.Completion(new CompletionParams { textDocument = document, position = position });
+            DumpDetails(res);
+            if (res.items == null || !res.items.Any()) {
                 Assert.Fail("Completions were not returned");
             }
         }
 
         private static async Task AssertNoCompletion(Server s, TextDocumentIdentifier document, Position position) {
-            var res = (await s.Completion(new CompletionParams { textDocument = document, position = position })).items;
-            if (res != null && res.Any()) {
-                var msg = string.Join(", ", res.Select(c => c.label).Ordered());
+            var res = await s.Completion(new CompletionParams { textDocument = document, position = position });
+            DumpDetails(res);
+            if (res.items != null && res.items.Any()) {
+                var msg = string.Join(", ", res.items.Select(c => c.label).Ordered());
                 Assert.Fail("Completions were returned: " + msg);
             }
         }

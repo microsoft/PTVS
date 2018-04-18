@@ -18,71 +18,38 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ForStatement : Statement {
-        private int _headerIndex, _elseIndex;
-        private readonly Expression _left;
-        private Expression _list;
-        private Statement _body;
-        private readonly Statement _else;
-        private readonly bool _isAsync;
+        private int? _keywordEndIndex;
 
         public ForStatement(Expression left, Expression list, Statement body, Statement else_) {
-            _left = left;
-            _list = list;
-            _body = body;
-            _else = else_;
+            Left = left;
+            List = list;
+            Body = body;
+            Else = else_;
         }
 
         public ForStatement(Expression left, Expression list, Statement body, Statement else_, bool isAsync)
             : this(left, list, body, else_) {
-            _isAsync = isAsync;
+            IsAsync = isAsync;
         }
 
-        public int HeaderIndex {
-            get { return _headerIndex;  }
-            set { _headerIndex = value; }
-        }
+        public int HeaderIndex { get; set; }
+        public int ElseIndex { get; set; }
+        internal void SetKeywordEndIndex(int index) => _keywordEndIndex = index;
+        public override int KeywordEndIndex => _keywordEndIndex ?? (StartIndex + (IsAsync ? 9 : 3));
+        public override int KeywordLength => KeywordEndIndex - StartIndex;
 
-        public int ElseIndex {
-            get { return _elseIndex; }
-            set { _elseIndex = value; }
-        }
-
-        public Expression Left {
-            get { return _left; }
-        }
-
-        public Statement Body {
-            get { return _body; }
-            set { _body = value; }
-        }
-
-        public Expression List {
-            get { return _list; }
-            set { _list = value; }
-        }
-
-        public Statement Else {
-            get { return _else; }
-        }
-
-        public bool IsAsync {
-            get { return _isAsync; }
-        }
+        public Expression Left { get; }
+        public Statement Body { get; set; }
+        public Expression List { get; set; }
+        public Statement Else { get; }
+        public bool IsAsync { get; }
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_left != null) {
-                    _left.Walk(walker);
-                }
-                if (_list != null) {
-                    _list.Walk(walker);
-                }
-                if (_body != null) {
-                    _body.Walk(walker);
-                }
-                if (_else != null) {
-                    _else.Walk(walker);
-                }
+                Left?.Walk(walker);
+                List?.Walk(walker);
+                Body?.Walk(walker);
+                Else?.Walk(walker);
             }
             walker.PostWalk(this);
         }
@@ -108,16 +75,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(this.GetFourthWhiteSpace(ast));
             }
             res.Append("for");
-            _left.AppendCodeString(res, ast, format);
+            Left.AppendCodeString(res, ast, format);
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append("in");
-                _list.AppendCodeString(res, ast, format);
-                _body.AppendCodeString(res, ast, format);   // colon is handled by suite statements...
-                if (_else != null) {
+                List.AppendCodeString(res, ast, format);
+                Body.AppendCodeString(res, ast, format);   // colon is handled by suite statements...
+                if (Else != null) {
                     format.ReflowComment(res, this.GetThirdWhiteSpace(ast));
                     res.Append("else");
-                    _else.AppendCodeString(res, ast, format);
+                    Else.AppendCodeString(res, ast, format);
                 }
             }
         }

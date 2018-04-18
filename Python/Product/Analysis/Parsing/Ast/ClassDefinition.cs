@@ -38,6 +38,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _body = body;
         }
 
+        public override int KeywordLength => 5;
+
         public int HeaderIndex {
             get { return _headerIndex; }
             set { _headerIndex = value; }

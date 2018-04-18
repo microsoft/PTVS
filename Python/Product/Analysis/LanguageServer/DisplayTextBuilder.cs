@@ -69,16 +69,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 result.AppendLine(d);
             }
 
-            var displayText = result.ToString().TrimEnd();
-            var multiline = displayText.IndexOf('\n') >= 0;
-            if (displayOptions.trimDocumentationText && displayText.Length > displayOptions.maxDocumentationTextLength) {
-                displayText = displayText.Substring(0,
-                    Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
-
-                result.Clear();
-                result.Append(displayText);
+            if (displayOptions.trimDocumentationText && result.Length > displayOptions.maxDocumentationTextLength) {
+                result.Length = Math.Max(0, displayOptions.maxDocumentationTextLength - 3);
+                result.Append("...");
             } else if (displayOptions.trimDocumentationLines) {
-                using (var sr = new StringReader(displayText)) {
+                using (var sr = new StringReader(result.ToString())) {
                     result.Clear();
                     int lines = displayOptions.maxDocumentationLineLength;
                     for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
@@ -88,8 +83,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                         result.AppendLine(line);
                     }
-                    displayText = result.ToString();
                 }
+            }
+
+            while (result.Length > 0 && char.IsWhiteSpace(result[result.Length - 1])) {
+                result.Length -= 1;
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
@@ -97,7 +95,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     originalExpression = originalExpression.Substring(0, 
                         Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
                 }
-                if (multiline) {
+                if (result.ToString().IndexOf('\n') >= 0) {
                     result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
                 } else if (result.Length > 0) {
                     result.Insert(0, $"{originalExpression}: ");
@@ -106,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return result.ToString();
+            return result.ToString().TrimEnd();
         }
 
         public string MakeModuleHoverText(ModuleReference modRef) {

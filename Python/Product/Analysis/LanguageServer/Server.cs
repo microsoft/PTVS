@@ -389,8 +389,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             tree = parse?.Tree ?? tree;
 
-            Range? applicableSpan = null;
-
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, TraceMessage);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
 
@@ -407,7 +405,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList {
                 items = members.ToArray(),
-                _applicableSpan = applicableSpan
+                _applicableSpan = ctxt.Node?.GetSpan(tree),
+                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
             };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;

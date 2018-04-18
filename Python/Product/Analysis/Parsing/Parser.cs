@@ -1901,6 +1901,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             Eat(TokenKind.KeywordDef);
+            int keywordEnd = GetEnd();
 
             if (isCoroutine) {
                 afterAsyncWhitespace = _tokenWhiteSpace;
@@ -1946,6 +1947,8 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
                 ret.SetLoc(start, lEnd);
+                ret.DefIndex = start;
+                ret.SetKeywordEndIndex(keywordEnd);
                 return ret;
             }
 
@@ -1981,6 +1984,7 @@ namespace Microsoft.PythonTools.Parsing {
             // async) index.
             ret.DefIndex = start;
             ret.HeaderIndex = mid;
+            ret.SetKeywordEndIndex(keywordEnd);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, preWhitespace);
                 if (afterAsyncWhitespace != null) {
@@ -2324,6 +2328,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (!isAsync) {
                 start = GetStart();
             }
+            int keywordEnd = GetEnd();
 
             string withWhiteSpace = _tokenWhiteSpace;
             var itemWhiteSpace = MakeWhiteSpaceList();
@@ -2349,6 +2354,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
             }
             ret.SetLoc(start, GetEndForStatement());
+            ret.SetKeywordEndIndex(keywordEnd);
             return ret;
         }
 
@@ -2378,6 +2384,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (!isAsync) {
                 start = GetStart();
             }
+            int keywordEnd = GetEnd();
             string forWhiteSpace = _tokenWhiteSpace;
 
             bool trailingComma;
@@ -2440,6 +2447,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
             ret.HeaderIndex = header;
             ret.ElseIndex = elseIndex;
+            ret.SetKeywordEndIndex(keywordEnd);
             ret.SetLoc(start, end);
             return ret;
         }
@@ -2633,6 +2641,7 @@ namespace Microsoft.PythonTools.Parsing {
             string exceptWhiteSpace = _tokenWhiteSpace;
             string commaWhiteSpace = null;
             var start = GetStart();
+            var keywordEnd = GetEnd();
             Expression test1 = null, test2 = null;
             bool altForm = false;
             if (PeekToken().Kind != TokenKind.Colon) {
@@ -2660,6 +2669,7 @@ namespace Microsoft.PythonTools.Parsing {
             Statement body = ParseSuite();
             TryStatementHandler ret = new TryStatementHandler(test1, test2, body);
             ret.HeaderIndex = mid;
+            ret.KeywordEndIndex = keywordEnd;
             ret.SetLoc(start, body.EndIndex);
 
             if (_verbatim) {

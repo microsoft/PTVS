@@ -64,13 +64,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Node Node => _node;
         public Node Statement => _statement;
         public ScopeStatement Scope => _scope;
-
+        /// <summary>
+        /// The node that members were returned for, if any.
+        /// </summary>
+        public Expression ParentExpression { get; private set; }
 
         public IEnumerable<CompletionItem> GetCompletionsFromString(string expr) {
             if (string.IsNullOrEmpty(expr)) {
                 return null;
             }
-            TraceMessage($"Completing expression {expr}");
+            TraceMessage($"Completing expression '{expr}'");
             return Analysis.GetMembers(expr, Position, Options).Select(ToCompletionItem);
         }
 
@@ -125,6 +128,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var finder = new ExpressionFinder(Tree, GetExpressionOptions.EvaluateMembers);
             if (finder.GetExpression(Index) is Expression expr) {
                 TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
+                ParentExpression = expr;
                 return Analysis.GetMembers(expr, Position, opts, null).Select(ToCompletionItem);
             }
             return null;
@@ -413,10 +417,34 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
+        private static bool ShouldIncludeStatementKeywords(Node statement, int index) {
+            if (statement == null) {
+                return true;
+            }
+            // Always allow keywords in non-keyword statements
+            if (statement is ExpressionStatement) {
+                return true;
+            }
+            // Allow keywords at start of assignment, but not in subsequent names
+            if (statement is AssignmentStatement ss) {
+                var firstAssign = ss.Left?.FirstOrDefault();
+                return firstAssign == null || index <= firstAssign.EndIndex;
+            }
+            // Allow keywords when we are in another keyword
+            if (statement is Statement s && index <= s.KeywordEndIndex) {
+                return true;
+            }
+            // TryStatementHandler is 'except', but not a Statement subclass
+            if (statement is TryStatementHandler except && index <= except.KeywordEndIndex) {
+                return true;
+            }
+            return false;
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
-                if (Statement == null) {
+                if (ShouldIncludeStatementKeywords(Statement, Index)) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
                 }
             }
