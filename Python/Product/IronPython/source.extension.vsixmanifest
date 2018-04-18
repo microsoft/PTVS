@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC" Version="15.7.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <Identity Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC" Version="15.8.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python - IronPython</DisplayName>
     <Description xml:space="preserve">Provides templates and integration for IronPython-based projects.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
