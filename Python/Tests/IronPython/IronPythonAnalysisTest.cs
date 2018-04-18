@@ -209,7 +209,10 @@ def g():
 def f(sender, args): pass
 ";
             var entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="),
+                new VariableLocation(4, 22, VariableType.Reference),
+                new VariableLocation(6, 1, VariableType.Value),
+                new VariableLocation(6, 5, VariableType.Definition));
 
             text = @"
 from System import EventHandler
@@ -217,7 +220,10 @@ def f(sender, args): pass
 
 x = EventHandler(f)";
             entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="),
+                new VariableLocation(3, 1, VariableType.Value),
+                new VariableLocation(3, 5, VariableType.Definition),
+                new VariableLocation(5, 18, VariableType.Reference));
 
             // left hand side is unknown, right hand side should still have refs added
             text = @"
@@ -227,7 +233,10 @@ def f(sender, args): pass
 a.fob += EventHandler(f)
 ";
             entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("a.fob +="), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("a.fob +="),
+                new VariableLocation(3, 1, VariableType.Value),
+                new VariableLocation(3, 5, VariableType.Definition),
+                new VariableLocation(5, 23, VariableType.Reference));
         }
 
         [TestMethod, Priority(0)]

@@ -1341,6 +1341,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             if (MaybeEat(TokenKind.Multiply)) {
                 nameExpr = new NameExpression("*");
+                nameExpr.SetLoc(GetStart(), GetEnd());
                 ws = _tokenWhiteSpace;
             } else {
                 name = ReadName();
