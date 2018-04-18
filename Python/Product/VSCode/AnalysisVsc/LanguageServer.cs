@@ -17,11 +17,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Disposables;
 using Microsoft.DsTools.Core.Services;
 using Microsoft.DsTools.Core.Services.Shell;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Core.Shell;
@@ -39,6 +41,7 @@ namespace Microsoft.PythonTools.VsCode {
         private readonly DisposableBag _disposables = new DisposableBag(nameof(LanguageServer));
         private readonly Server _server = new Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
+        private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
         private ITelemetryService _telemetry;
         private JsonRpc _vscode;
@@ -137,9 +140,9 @@ namespace Microsoft.PythonTools.VsCode {
 
         private void MonitorParentProcess(Process process) {
             Task.Run(async () => {
-                while(!_sessionTokenSource.IsCancellationRequested) {
+                while (!_sessionTokenSource.IsCancellationRequested) {
                     await Task.Delay(2000);
-                    if(process.HasExited) {
+                    if (process.HasExited) {
                         _sessionTokenSource.Cancel();
                     }
                 }
@@ -212,7 +215,7 @@ namespace Microsoft.PythonTools.VsCode {
 
         [JsonRpcMethod("textDocument/signatureHelp")]
         public Task<SignatureHelp> SignatureHelp(JToken token)
-           => _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
+            => _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
 
         [JsonRpcMethod("textDocument/definition")]
         public Task<Reference[]> GotoDefinition(JToken token)

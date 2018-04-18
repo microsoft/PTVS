@@ -42,8 +42,12 @@ namespace Microsoft.PythonTools.VsCode {
 
         private static void CheckDebugMode() {
 #if WAIT_FOR_DEBUGGER
+            var start = DateTime.Now;
             while (!System.Diagnostics.Debugger.IsAttached) {
                 System.Threading.Thread.Sleep(1000);
+                if ((DateTime.Now - start).TotalMilliseconds > 15000) {
+                    break;
+                }
             }
 #endif
         }

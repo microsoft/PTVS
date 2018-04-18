@@ -34,11 +34,40 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
+        /// <summary>
+        /// Implements ability to execute module reload on the analyzer thread
+        /// </summary>
+        private sealed class ReloadModulesQueueItem : IAnalyzable {
+            private readonly PythonAnalyzer _analyzer;
+            private TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>();
+            public Task Task => _tcs.Task;
+
+            public ReloadModulesQueueItem(PythonAnalyzer analyzer) {
+                _analyzer = analyzer;
+            }
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    return;
+                }
+
+                var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
+                var task = Task.Run(() => _analyzer.ReloadModulesAsync(), cancel);
+                try {
+                    task.WaitAndUnwrapExceptions();
+                    currentTcs.TrySetResult(true);
+                } catch (OperationCanceledException oce) {
+                    currentTcs.TrySetCanceled(oce.CancellationToken);
+                } catch (Exception ex) {
+                    currentTcs.TrySetException(ex);
+                }
+            }
+        }
+
         internal readonly AnalysisQueue _queue;
         internal readonly ParseQueue _parseQueue;
         private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
         private readonly VolatileCounter _pendingAnalysisEnqueue;
-        private readonly RestTextConverter _textConverter = new RestTextConverter();
+        private readonly DisplayTextBuilder _displayTextBuilder = new DisplayTextBuilder();
 
         // Uri does not consider #fragment for equality
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles;
@@ -47,13 +76,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // For pending changes, we use alternate comparer that checks #fragment
         private readonly ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>> _pendingChanges;
         private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
+        private Task _analyzerCreationTask;
 
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
+        private InformationDisplayOptions _displayOptions;
         private bool _traceLogging;
         private bool _testEnvironment;
+        private ReloadModulesQueueItem _reloadModulesQueueItem;
 
         // If null, all files must be added manually
         private string _rootDir;
@@ -67,6 +99,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
             _pendingChanges = new ConcurrentDictionary<Uri, List<DidChangeTextDocumentParams>>(UriEqualityComparer.IncludeFragment);
             _lastReportedDiagnostics = new ConcurrentDictionary<Uri, Dictionary<int, BufferVersion>>();
+            _displayOptions = new InformationDisplayOptions {
+                trimDocumentationLines = true,
+                maxDocumentationLineLength = 200,
+                trimDocumentationText = true,
+                maxDocumentationTextLength = 4096
+            };
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -87,13 +125,39 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
 
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
-            _testEnvironment = @params.initializationOptions.interpreter.properties.ContainsKey("TestEnvironment");
-            if (_testEnvironment) {
-                // Test environment needs predictable initialization.
-                // Tests can only proceed when analysis is fully done.
-                _analyzer = CreateAnalyzer(@params.initializationOptions.interpreter).Result;
-            } else {
-                _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            _testEnvironment = @params.initializationOptions.testEnvironment;
+            _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
+            // Test environment needs predictable initialization.
+            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
+                await _analyzerCreationTask;
+            }
+
+            return new InitializeResult {
+                capabilities = new ServerCapabilities {
+                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
+                    completionProvider = new CompletionOptions {
+                        triggerCharacters = new[] { "." },
+                        resolveProvider = true
+                    },
+                    hoverProvider = true,
+                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
+                    // https://github.com/Microsoft/PTVS/issues/3803
+                    // definitionProvider = true,
+                    referencesProvider = true
+                }
+            };
+        }
+
+        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
+            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            OnAnalyzerCreated(@params);
+        }
+
+        private void OnAnalyzerCreated(InitializeParams @params) {
+            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
+
+            if (@params.initializationOptions.displayOptions != null) {
+                _displayOptions = @params.initializationOptions.displayOptions;
             }
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
@@ -119,21 +183,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
                 _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
-
-            return new InitializeResult {
-                capabilities = new ServerCapabilities {
-                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
-                    completionProvider = new CompletionOptions {
-                        triggerCharacters = new[] { "." },
-                        resolveProvider = true
-                    },
-                    hoverProvider = true,
-                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
-                    // https://github.com/Microsoft/PTVS/issues/3803
-                    // definitionProvider = true,
-                    referencesProvider = true
-                }
-            };
         }
 
         public override Task Shutdown() {
@@ -144,6 +193,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
+            await _analyzerCreationTask;
 
             var entry = GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -168,6 +218,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
+            _analyzerCreationTask.Wait();
+
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
@@ -236,6 +288,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
+            await _analyzerCreationTask;
+
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
                 switch (c.type) {
@@ -262,7 +316,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+        public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+            await _analyzerCreationTask;
             var doc = GetEntry(@params.textDocument.uri) as IDocument;
 
             if (doc != null) {
@@ -272,16 +327,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
-            return Task.CompletedTask;
         }
 
+
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+            await _analyzerCreationTask;
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
             }
 
-            await _analyzer.ReloadModulesAsync();
+            // Make sure reload modules is executed on the analyzer thread.
+            var task = _reloadModulesQueueItem.Task;
+            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+            await task;
 
             // re-analyze all of the modules when we get a new set of modules loaded...
             foreach (var entry in _analyzer.ModulesByFilename) {
@@ -289,7 +348,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override Task<CompletionList> Completion(CompletionParams @params) {
+        public override async Task<CompletionList> Completion(CompletionParams @params) {
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             // Make sure document is enqueued for processing
             _documentChangeProcessingComplete.Wait(200, CancellationToken);
@@ -302,7 +362,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new CompletionList { });
+                return new CompletionList();
             }
 
             var opts = GetMemberOptions.None;
@@ -385,7 +445,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (members == null) {
                 TraceMessage($"No members found in document {uri}");
-                return Task.FromResult(new CompletionList { });
+                return new CompletionList();
             }
 
             var filtered = members.Select(m => ToCompletionItem(m, opts));
@@ -397,7 +457,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList { items = filtered.ToArray() };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
-            return Task.FromResult(res);
+            return res;
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
@@ -405,7 +465,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(item);
         }
 
-        public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -416,7 +477,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new SignatureHelp { });
+                return new SignatureHelp();
             }
 
             IEnumerable<IOverloadResult> overloads;
@@ -438,7 +499,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                     LogMessage(MessageType.Info, $"No signatures found in {uri} at {@params.position}");
-                    return Task.FromResult(new SignatureHelp { });
+                    return new SignatureHelp();
                 }
             }
 
@@ -461,10 +522,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            return Task.FromResult(sh);
+            return sh;
         }
 
-        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
+        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
+            await _analyzerCreationTask;
+
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -473,7 +536,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(Array.Empty<Reference>());
+                return Array.Empty<Reference>();
             }
 
             int? version = null;
@@ -524,7 +587,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
                     LogMessage(MessageType.Info, $"No references found in {uri} at {@params.position}");
-                    return Task.FromResult(Array.Empty<Reference>());
+                    return Array.Empty<Reference>();
                 }
             }
 
@@ -546,10 +609,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .GroupBy(r => r, ReferenceComparer.Instance)
                 .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
                 .ToArray();
-            return Task.FromResult(res);
+            return res;
         }
 
-        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
+        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
+            await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
@@ -560,7 +624,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(default(Hover));
+                return default(Hover);
             }
 
             tree = GetParseTree(entry, uri, _clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, out var version) ?? tree;
@@ -568,12 +632,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var index = tree.LocationToIndex(@params.position);
             var w = new ImportedModuleNameWalker(entry.ModuleName, index);
             tree.Walk(w);
-            ModuleReference modRef;
             if (!string.IsNullOrEmpty(w.ImportedName) &&
-                _analyzer.Modules.TryImport(w.ImportedName, out modRef)) {
-
-                // Return module information
-                return Task.FromResult(new Hover { contents = "{0} : module".FormatUI(w.ImportedName) });
+                _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
+                var contents = _displayTextBuilder.MakeModuleHoverText(modRef);
+                if (contents != null) {
+                    return new Hover { contents = contents };
+                }
             }
 
             Expression expr;
@@ -594,7 +658,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             if (expr == null) {
                 LogMessage(MessageType.Info, $"No hover info found in {uri} at {@params.position}");
-                return Task.FromResult(default(Hover));
+                return default(Hover);
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
@@ -613,15 +677,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
 
             var res = new Hover {
-                contents = MakeHoverText(values, originalExpr),
+                contents = new MarkupContent {
+                    kind = MarkupKind.Markdown,
+                    value = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions)
+                },
                 range = exprSpan,
                 _version = version,
                 _typeNames = names
             };
-            return Task.FromResult(res);
+            return res;
         }
 
-        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+            await _analyzerCreationTask;
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -632,7 +700,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
+            return members.Select(ToSymbolInformation).ToArray();
         }
 
         #endregion
@@ -1301,11 +1369,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private string FormatParameter(ParameterResult p) {
             var res = new StringBuilder(p.Name);
             if (!string.IsNullOrEmpty(p.Type)) {
-                res.Append(" : ");
+                res.Append(": ");
                 res.Append(p.Type);
             }
             if (!string.IsNullOrEmpty(p.DefaultValue)) {
-                res.Append(" = ");
+                res.Append('=');
                 res.Append(p.DefaultValue);
             }
             return res.ToString();

@@ -25,8 +25,6 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
-        private readonly string _name;
-        private string _completion;
         private readonly Lazy<IEnumerable<AnalysisValue>> _vars;
         private readonly Lazy<PythonMemberType> _type;
 
@@ -35,23 +33,24 @@ namespace Microsoft.PythonTools.Analysis {
         private static readonly Lazy<IEnumerable<AnalysisValue>> EmptyValues =
             new Lazy<IEnumerable<AnalysisValue>>(Enumerable.Empty<AnalysisValue>);
 
+        #region Constructors
         internal MemberResult(string name, IEnumerable<AnalysisValue> vars) {
-            _name = _completion = name;
+            Name = Completion = name;
             _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
             _type = UnknownType;
             _type = new Lazy<PythonMemberType>(GetMemberType);
         }
 
         public MemberResult(string name, PythonMemberType type) {
-            _name = _completion = name;
+            Name = Completion = name;
             _type = new Lazy<PythonMemberType>(() => type);
             _vars = EmptyValues;
         }
 
         public MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
-            _name = name;
+            Name = name;
             _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
-            _completion = completion;
+            Completion = completion;
             _type = UnknownType;
             if (type != null) {
                 _type = new Lazy<PythonMemberType>(() => type.Value);
@@ -61,23 +60,121 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal MemberResult(string name, Func<IEnumerable<AnalysisValue>> vars, Func<PythonMemberType> type) {
-            _name = _completion = name;
+            Name = Completion = name;
             _vars = vars == null ? EmptyValues : new Lazy<IEnumerable<AnalysisValue>>(vars);
             _type = type == null ? UnknownType : new Lazy<PythonMemberType>(type);
         }
+        #endregion
 
         public MemberResult FilterCompletion(string completion) {
             return new MemberResult(Name, completion, Values, MemberType);
         }
 
-        public string Name {
-            get { return _name; }
+        public string Name { get; }
+        public string Completion { get; }
+
+        /// <summary>
+        /// Gets the location(s) for the member(s) if they are available.
+        /// 
+        /// New in 1.5.
+        /// </summary>
+        public IEnumerable<LocationInfo> Locations => Values.SelectMany(ns => ns.Locations);
+
+        internal IEnumerable<AnalysisValue> Values => _vars.Value;
+
+        public string Documentation {
+            get {
+                var docs = new Dictionary<string, HashSet<string>>();
+
+                foreach (var ns in SeparateMultipleMembers(Values)) {
+                    var docString = GetDocumentation(ns);
+                    var typeString = GetDescription(ns);
+
+                    // If first line of doc is already in the type string, then filter it out.
+                    // This is because some functions have signature as a first doc line and 
+                    // some do not have one. We are already showing signature as part of the type.
+                    var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
+                    if (!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
+                        docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
+                    }
+
+                    if (!docs.TryGetValue(docString, out var docTypes)) {
+                        docs[docString] = docTypes = new HashSet<string>();
+                    }
+                    if (!string.IsNullOrEmpty(typeString)) {
+                        docTypes.Add(typeString);
+                    }
+                }
+
+                var doc = new StringBuilder();
+                var typeToDoc = new Dictionary<string, Tuple<string, string>>();
+                foreach (var docType in docs) {
+                    if (!docType.Value.Any()) {
+                        continue;
+                    }
+
+                    var typeDisplay = "unknown type";
+                    var types = docType.Value.OrderBy(s => s).ToList();
+                    if (types.Count == 1) {
+                        typeDisplay = types[0];
+                    } else {
+                        var orStr = types.Count == 2 ? " or " : ", or ";
+                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
+                    }
+                    typeToDoc[string.Join(",", types)] = new Tuple<string, string>(typeDisplay, docType.Key);
+                }
+
+                foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
+                    doc.Append(typeDoc.Value.Item1);
+                    var details = typeDoc.Value.Item2;
+                    if (!string.IsNullOrEmpty(details)) {
+                        doc.AppendLine(":");
+                        doc.Append(details);
+                    }
+                    doc.AppendLine();
+                    doc.AppendLine();
+                }
+
+                return doc.ToString().Trim();
+            }
         }
 
-        public string Completion {
-            get { return _completion; }
+        private static string GetDocumentation(AnalysisValue ns) {
+            var doc = ns.Documentation?.TrimDocumentation() ?? string.Empty;
+            if (ns.MemberType == PythonMemberType.Module) {
+                // Module doc does not nave example/signature lines like a function
+                // so just make it flow nicely in the tooltip by removing like breaks.                   
+                return doc.Replace('\n', ' ').Replace("\r", string.Empty);
+            }
+            // Documentation can contain something like
+            //      func(a, b, c)\n\nThis function...
+            // i.e. with paragraph. We want to remove line breaks 
+            // in the text after the paragraph breaks and tooltip UI 
+            // to decide of the wrap and flow.
+            var ctr = 0;
+            var seenParagraphGap = false;
+            var result = new StringBuilder(doc.Length);
+            foreach (var c in doc) {
+                if (c == '\r') {
+                    continue;
+                }
+                if (c == '\n') {
+                    if (seenParagraphGap) {
+                        result.Append(' ');
+                    } else {
+                        ctr++;
+                        if (ctr < 3) {
+                            result.AppendLine();
+                            seenParagraphGap = ctr == 2;
+                        }
+                    }
+                } else {
+                    result.Append(c);
+                    ctr = 0;
+                }
+            }
+            return result.ToString().Trim();
         }
-
         private static string GetDescription(AnalysisValue ns) {
             var d = ns?.ShortDescription;
             if (string.IsNullOrEmpty(d)) {
@@ -104,77 +201,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public string Documentation {
-            get {
-                var docs = new Dictionary<string, HashSet<string>>();
-                var allTypes = new HashSet<string>();
-
-                foreach (var ns in SeparateMultipleMembers(Values)) {
-                    var docString = ns.Documentation?.TrimDocumentation();
-                    var typeString = GetDescription(ns);
-                    if (string.IsNullOrEmpty(docString)) {
-                        docString = "";
-                    }
-                    if (!docs.TryGetValue(docString, out var docTypes)) {
-                        docs[docString] = docTypes = new HashSet<string>();
-                    }
-                    if (!string.IsNullOrEmpty(typeString)) {
-                        docTypes.Add(typeString);
-                        allTypes.Add(typeString);
-                    }
-                }
-
-                var doc = new StringBuilder();
-
-                if (allTypes.Count == 0) {
-                    return "unknown type";
-                } else if (allTypes.Count == 1) {
-                    doc.AppendLine(allTypes.First());
-                    doc.AppendLine();
-                } else {
-                    var types = allTypes.OrderBy(s => s).ToList();
-                    var orStr = types.Count == 2 ? " or " : ", or ";
-                    doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
-                    doc.AppendLine();
-                }
-
-                var typeToDoc = new Dictionary<string, string>();
-                foreach (var docType in docs) {
-                    if (string.IsNullOrEmpty(docType.Key)) {
-                        continue;
-                    }
-
-                    string typeDisplay = "unknown type";
-                    var types = docType.Value.OrderBy(s => s).ToList();
-                    if (types.Count == 0) {
-                        typeDisplay = "";
-                    } else if (types.Count == 1) {
-                        if (allTypes.Count > 1) {
-                            typeDisplay = types.First();
-                        } else {
-                            typeDisplay = "";
-                        }
-                    } else {
-                        var orStr = types.Count == 2 ? " or " : ", or ";
-                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
-                    }
-                    typeToDoc[string.Join(",", types)] = typeDisplay + ": " + docType.Key;
-                }
-
-                foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
-                    doc.AppendLine(typeDoc.Value);
-                    doc.AppendLine();
-                }
-
-                return Utils.CleanDocumentation(doc.ToString());
-            }
-        }
-
         public PythonMemberType MemberType => _type.Value;
 
         private PythonMemberType GetMemberType() {
-            bool includesNone = false;
-            PythonMemberType result = PythonMemberType.Unknown;
+            var includesNone = false;
+            var result = PythonMemberType.Unknown;
 
             var allVars = Values.SelectMany(ns => {
                 var mmi = ns as MultipleMemberInfo;
@@ -225,33 +256,15 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal IEnumerable<AnalysisValue> Values => _vars.Value;
-
-        /// <summary>
-        /// Gets the location(s) for the member(s) if they are available.
-        /// 
-        /// New in 1.5.
-        /// </summary>
-        public IEnumerable<LocationInfo> Locations => Values.SelectMany(ns => ns.Locations);
-
         public override bool Equals(object obj) {
             if (!(obj is MemberResult)) {
                 return false;
             }
-
             return Name == ((MemberResult)obj).Name;
         }
 
-        public static bool operator ==(MemberResult x, MemberResult y) {
-            return x.Name == y.Name;
-        }
-
-        public static bool operator !=(MemberResult x, MemberResult y) {
-            return x.Name != y.Name;
-        }
-
-        public override int GetHashCode() {
-            return Name.GetHashCode();
-        }
+        public static bool operator ==(MemberResult x, MemberResult y) => x.Name == y.Name;
+        public static bool operator !=(MemberResult x, MemberResult y) => x.Name != y.Name;
+        public override int GetHashCode() => Name.GetHashCode();
     }
 }

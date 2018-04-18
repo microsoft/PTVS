@@ -52,12 +52,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _callDepthLimit = declUnit.State.Limits.CallDepth;
             }
 
-            if (node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator) {
+            if (!CanBeClosure(ProjectState, ProjectEntry)) {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
+            } else if ((node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator)) {
                 _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
                 _callsWithClosure = new CallChainSet();
             } else {
                 _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, false);
             }
+        }
+
+        private static bool CanBeClosure(PythonAnalyzer state, IPythonProjectEntry entry) {
+            int limit = state.Limits.CallDepth;
+            if (entry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out object o) && o is int i) {
+                limit = i;
+            }
+            return limit > 0;
         }
 
         public ProjectEntry ProjectEntry { get; }
@@ -204,11 +214,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, name);
                 if (!string.IsNullOrWhiteSpace(annotation)) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " : ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ": ");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, annotation);
                 }
                 if (!string.IsNullOrWhiteSpace(defaultValue)) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " = ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "=");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, defaultValue);
                 }
             }

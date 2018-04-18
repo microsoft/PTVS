@@ -28,14 +28,14 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     sealed class DebugAdapterProcess : ITargetHostProcess, IDisposable {
-        private const int _debuggerConnectionTimeout = 5000; // 5000 ms
-        private const int _connectionCloseTimeout = 5000; // 5000 ms
+        private const int _debuggerConnectionTimeout = 20000; // 20 seconds
 
         private Process _process;
         private readonly Guid _processGuid;
@@ -121,19 +121,23 @@ namespace Microsoft.PythonTools.Debugger {
             _process.Exited += OnExited;
             _process.Start();
 
+            var logger = (IPythonToolsLogger)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
+
             try {
                 if (connection.Wait(_debuggerConnectionTimeout)) {
                     var socket = connection.Result;
                     if (socket != null) {
                         _debuggerConnected = true;
-                        _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
+                        _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                         _stream.Initialized += OnInitialized;
+                        _stream.LegacyDebugger += OnLegacyDebugger;
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
                         }
                     }
                 } else {
                     Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
+                    logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Launch");
                 }
             } catch (AggregateException ex) {
                 Debug.WriteLine("Error waiting for debuggee to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterProcess));
@@ -149,6 +153,10 @@ namespace Microsoft.PythonTools.Debugger {
                 new PtvsdVersionRequest(),
                 PtvsdVersionHelper.VerifyPtvsdVersion,
                 PtvsdVersionHelper.VerifyPtvsdVersionError);
+        }
+
+        private void OnLegacyDebugger(object sender, EventArgs e) {
+            PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
         }
 
         private void LaunchBrowserDebugger() {

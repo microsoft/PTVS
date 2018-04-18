@@ -36,7 +36,8 @@ namespace Microsoft.PythonTools.Commands {
 
         private async void CreateProjectAndHandleErrors(
             IVsStatusbar statusBar,
-            Microsoft.PythonTools.Project.ImportWizard.ImportWizard dlg
+            Microsoft.PythonTools.Project.ImportWizard.ImportWizard dlg,
+            bool addToExistingSolution
         ) {
             try {
                 var path = await dlg.ImportSettings.CreateRequestedProjectAsync();
@@ -44,7 +45,9 @@ namespace Microsoft.PythonTools.Commands {
                     object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
                     _serviceProvider.GetDTE().Commands.Raise(
                         VSConstants.GUID_VSStandardCommandSet97.ToString("B"),
-                        (int)VSConstants.VSStd97CmdID.OpenProject,
+                        addToExistingSolution
+                            ? (int)VSConstants.VSStd97CmdID.AddExistingProject
+                            : (int)VSConstants.VSStd97CmdID.OpenProject,
                         ref pathRef,
                         ref outRef
                     );
@@ -65,13 +68,17 @@ namespace Microsoft.PythonTools.Commands {
             statusBar.SetText(Strings.StatusImportWizardStarting);
 
             string initialProjectPath = null, initialSourcePath = null;
+            bool addToExistingSolution = false;
 
             var oleArgs = args as OleMenuCmdEventArgs;
             if (oleArgs != null) {
                 string projectArgs = oleArgs.InValue as string;
                 if (projectArgs != null) {
                     var argItems = projectArgs.Split('|');
-                    if (argItems.Length == 2) {
+                    if (argItems.Length == 3) {
+                        bool.TryParse(argItems[2], out addToExistingSolution);
+                    }
+                    if (argItems.Length >= 2) {
                         initialProjectPath = PathUtils.GetAvailableFilename(
                             argItems[1],
                             argItems[0],
@@ -89,7 +96,7 @@ namespace Microsoft.PythonTools.Commands {
             );
 
             if (dlg.ShowModal() ?? false) {
-                CreateProjectAndHandleErrors(statusBar, dlg);
+                CreateProjectAndHandleErrors(statusBar, dlg, addToExistingSolution);
             } else {
                 statusBar.SetText("");
             }
