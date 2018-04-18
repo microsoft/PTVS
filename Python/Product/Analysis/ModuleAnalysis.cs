@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public sealed class ModuleAnalysis {
         private readonly AnalysisUnit _unit;
-        private readonly InterpreterScope _scope;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
@@ -44,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;
-            _scope = scope;
+            Scope = scope;
         }
 
         #region Public API
@@ -768,9 +767,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return GlobalScope.ProjectEntry.ProjectState; }
         }
 
-        internal InterpreterScope Scope {
-            get { return _scope; }
-        }
+        internal InterpreterScope Scope { get; }
 
         internal IEnumerable<MemberResult> GetMemberResults(
             IEnumerable<AnalysisValue> vars,
@@ -925,11 +922,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAstFromText(exprText, privatePrefix);
         }
 
-        public string ModuleName {
-            get {
-                return _scope.GlobalScope.Name;
-            }
-        }
+        public string ModuleName => Scope.GlobalScope.Name;
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
             var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions { PrivatePrefix = privatePrefix });

@@ -16,13 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -464,7 +462,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         bool IsAnalyzed { get; }
 
-        
         /// <summary>
         /// Returns the project entries file path.
         /// </summary>
@@ -584,5 +581,4 @@ namespace Microsoft.PythonTools.Analysis {
         public void Dispose() { }
         public void Complete() => throw new NotSupportedException();
     }
-
 }
