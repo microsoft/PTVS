@@ -352,7 +352,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
             // Make sure document is enqueued for processing
-            _documentChangeProcessingComplete.Wait(200, CancellationToken);
+            if (!_documentChangeProcessingComplete.Wait(0)) {
+                TraceMessage($"Waiting for document change processing to complete");
+                _documentChangeProcessingComplete.Wait(200, CancellationToken);
+            }
 
             var uri = @params.textDocument.uri;
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
@@ -364,6 +367,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 TraceMessage($"No analysis found for {uri}");
                 return new CompletionList();
             }
+            TraceMessage($"Got analysis for {uri} at version {entry.AnalysisVersion}");
 
             var opts = GetMemberOptions.None;
             if (@params.context.HasValue) {
@@ -371,14 +375,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (c._intersection) {
                     opts |= GetMemberOptions.IntersectMultipleResults;
                 }
-                if (c._statementKeywords ?? true) {
-                    opts |= GetMemberOptions.IncludeStatementKeywords;
-                }
-                if (c._expressionKeywords ?? true) {
-                    opts |= GetMemberOptions.IncludeExpressionKeywords;
-                }
-            } else {
-                opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
 
             var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
@@ -393,69 +389,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             tree = parse?.Tree ?? tree;
 
-            IEnumerable<MemberResult> members = null;
-            Expression expr = null;
-            if (!string.IsNullOrEmpty(@params._expr)) {
-                TraceMessage($"Completing expression {@params._expr}");
-
-                if (@params.context?._filterKind == CompletionItemKind.Module) {
-                    // HACK: Special case for child modules until #3798 is completed
-                    members = entry.Analysis.ProjectState.GetModuleMembers(entry.Analysis.InterpreterContext, @params._expr.Split('.'));
-                } else {
-                    members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
-                }
-            } else {
-                var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
-                expr = finder.GetExpression(@params.position) as Expression;
-                if (expr != null) {
-                    TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-                    members = analysis.GetMembers(expr, @params.position, opts, null);
-                } else {
-                    TraceMessage($"Completing all names");
-                    members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
-                }
-            }
-
-
-            if (@params.context?._includeAllModules ?? false) {
-                var mods = _analyzer.GetModules();
-                TraceMessage($"Including {mods?.Length ?? 0} modules");
-                members = members?.Concat(mods) ?? mods;
-            }
-
-            if (@params.context?._includeArgumentNames ?? false) {
-                var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
-                var index = tree.LocationToIndex(@params.position);
-                if (finder.GetExpression(@params.position) is CallExpression callExpr &&
-                    callExpr.GetArgumentAtIndex(tree, index, out _)) {
-                    var argNames = analysis.GetSignatures(callExpr.Target, @params.position)
-                        .SelectMany(o => o.Parameters).Select(p => p?.Name)
-                        .Where(n => !string.IsNullOrEmpty(n))
-                        .Distinct()
-                        .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
-                        .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
-
-                    if (_traceLogging) {
-                        argNames = argNames.MaybeEnumerate().ToArray();
-                        LogMessage(MessageType.Log, $"Including {argNames.Count()} named arguments");
-                    }
-                    members = members?.Concat(argNames) ?? argNames;
-                }
-            }
+            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, TraceMessage);
+            var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
 
             if (members == null) {
                 TraceMessage($"No members found in document {uri}");
                 return new CompletionList();
             }
 
-            var filtered = members.Select(m => ToCompletionItem(m, opts));
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
                 TraceMessage($"Only returning {filterKind.Value} items");
-                filtered = filtered.Where(m => m.kind == filterKind.Value);
+                members = members.Where(m => m.kind == filterKind.Value);
             }
 
-            var res = new CompletionList { items = filtered.ToArray() };
+            var res = new CompletionList {
+                items = members.ToArray(),
+                _applicableSpan = ctxt.Node?.GetSpan(tree),
+                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
+            };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;
         }
@@ -677,14 +629,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
 
             var res = new Hover {
-                contents = new MarkupContent {
-                    kind = MarkupKind.Markdown,
-                    value = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions)
-                },
+                contents = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions),
                 range = exprSpan,
                 _version = version,
                 _typeNames = names
             };
+            switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                case MarkupKind.Markdown:
+                    res.contents = new MarkupContent {
+                        kind = MarkupKind.Markdown,
+                        value = new RestTextConverter().ToMarkdown(res.contents.value)
+                    };
+                    break;
+            }
             return res;
         }
 
@@ -1257,46 +1214,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-
-        private CompletionItem ToCompletionItem(MemberResult m, GetMemberOptions opts) {
-            var res = new CompletionItem {
-                label = m.Name,
-                insertText = m.Completion,
-                documentation = m.Documentation,
-                // Place regular items first, advanced entries last
-                sortText = Char.IsLetter(m.Completion[0]) ? "1" : "2",
-                kind = ToCompletionItemKind(m.MemberType),
-                _kind = m.MemberType.ToString().ToLowerInvariant()
-            };
-
-            return res;
-        }
-
-        private CompletionItemKind ToCompletionItemKind(PythonMemberType memberType) {
-            switch (memberType) {
-                case PythonMemberType.Unknown: return CompletionItemKind.None;
-                case PythonMemberType.Class: return CompletionItemKind.Class;
-                case PythonMemberType.Instance: return CompletionItemKind.Value;
-                case PythonMemberType.Delegate: return CompletionItemKind.Class;
-                case PythonMemberType.DelegateInstance: return CompletionItemKind.Function;
-                case PythonMemberType.Enum: return CompletionItemKind.Enum;
-                case PythonMemberType.EnumInstance: return CompletionItemKind.EnumMember;
-                case PythonMemberType.Function: return CompletionItemKind.Function;
-                case PythonMemberType.Method: return CompletionItemKind.Method;
-                case PythonMemberType.Module: return CompletionItemKind.Module;
-                case PythonMemberType.Namespace: return CompletionItemKind.Module;
-                case PythonMemberType.Constant: return CompletionItemKind.Constant;
-                case PythonMemberType.Event: return CompletionItemKind.Event;
-                case PythonMemberType.Field: return CompletionItemKind.Field;
-                case PythonMemberType.Property: return CompletionItemKind.Property;
-                case PythonMemberType.Multiple: return CompletionItemKind.Value;
-                case PythonMemberType.Keyword: return CompletionItemKind.Keyword;
-                case PythonMemberType.CodeSnippet: return CompletionItemKind.Snippet;
-                case PythonMemberType.NamedArgument: return CompletionItemKind.Variable;
-                default:
-                    return CompletionItemKind.None;
-            }
-        }
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {

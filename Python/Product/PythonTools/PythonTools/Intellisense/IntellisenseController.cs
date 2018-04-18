@@ -336,7 +336,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
-                            TriggerCompletionSession(false, ch);
+                            TriggerCompletionSession(false, ch).DoNotWait();
                         }
                         break;
                     case '(':
@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ((session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
-                                TriggerCompletionSession(false, ch, commitByDefault);
+                                TriggerCompletionSession(false, ch, commitByDefault).DoNotWait();
                             }
                         }
                         break;
@@ -892,14 +892,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        internal void TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
-            DismissCompletionSession();
-
+        internal async Task TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
             session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
+            }
+
+            var oldSession = Interlocked.Exchange(ref _activeSession, session);
+            if (oldSession != null && !oldSession.IsDismissed) {
+                oldSession.Dismiss();
+            }
+
+            if (triggerChar == ' ' || triggerChar == '.') {
+                var bi = _textView.TextBuffer.TryGetInfo();
+                var bp = bi?.AnalysisEntry?.TryGetBufferParser();
+                if (bp != null) {
+                    await bp.EnsureCodeSyncedAsync(bi.Buffer);
+                }
+            }
+
+            if (session.IsStarted || session.IsDismissed) {
+                return;
             }
 
             session.Start();
@@ -921,7 +936,6 @@ namespace Microsoft.PythonTools.Intellisense {
             session.Filter();
             session.Dismissed += OnCompletionSessionDismissedOrCommitted;
             session.Committed += OnCompletionSessionDismissedOrCommitted;
-            Volatile.Write(ref _activeSession, session);
         }
 
         internal void TriggerSignatureHelp() {
@@ -975,7 +989,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool DismissCompletionSession() {
-            var session = Volatile.Read(ref _activeSession);
+            var session = Interlocked.Exchange(ref _activeSession, null);
             if (session != null && !session.IsDismissed) {
                 session.Dismiss();
                 return true;
