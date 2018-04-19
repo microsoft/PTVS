@@ -118,7 +118,7 @@
     <Compile Include="DebugAdapterProcessStream.cs" />
     <Compile Include="DebugAdapterRemoteProcess.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
-    <Compile Include="Debugger\DebugEngine\InfoBarUIEventsHandler.cs" />
+    <Compile Include="Debugger\DebugEngine\ExperimentalDebuggerInfoBar.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />
     <Compile Include="Debugger\DebugConnectionListener.cs" />
