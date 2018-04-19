@@ -26,9 +26,11 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
@@ -536,6 +538,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.E_NOTIMPL;
             }
 
+            ExperimentalDebuggerInfoBar.Instance.AddInfoBar();
+
             Debug.WriteLine("PythonEngine DestroyProgram");
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
@@ -543,6 +547,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             return (DebuggerConstants.E_PROGRAM_DESTROY_PENDING);
         }
+
+        
 
         // Gets the GUID of the DE.
         int IDebugEngine2.GetEngineId(out Guid guidEngine) {

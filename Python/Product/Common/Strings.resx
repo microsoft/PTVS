@@ -2259,4 +2259,16 @@ Expand selection to the full expression?</value>
   <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
     <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality</value>
   </data>
+  <data name="ExpDebuggerInfoBarDontShowAgainButtonText" xml:space="preserve">
+    <value>Don't Show This Again</value>
+  </data>
+  <data name="ExpDebuggerInfoBarEnableButtonText" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="ExpDebuggerInfoBarMessage" xml:space="preserve">
+    <value>Try out the preview of our new Python debugger before it becomes the default!</value>
+  </data>
+  <data name="ExpDebuggerInfoBarLearnMoreText" xml:space="preserve">
+    <value>Learn More</value>
+  </data>
 </root>
