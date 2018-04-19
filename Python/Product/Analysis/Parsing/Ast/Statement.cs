@@ -27,6 +27,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        /// <summary>
+        /// Returns the length of the keywords (including internal whitespace), such
+        /// that StartIndex + KeywordLength represents the end of leading keywords.
+        /// </summary>
+        public virtual int KeywordLength => 0;
+        /// <summary>
+        /// The index of the end of the leading keywords.
+        /// </summary>
+        public virtual int KeywordEndIndex => StartIndex + KeywordLength;
+
         internal override sealed void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             AppendCodeStringStmt(res, ast, format);
         }

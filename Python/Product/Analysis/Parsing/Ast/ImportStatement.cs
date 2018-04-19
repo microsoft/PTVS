@@ -40,6 +40,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        public override int KeywordLength => 6;
+
         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays",
             Justification = "breaking change")]
         public PythonVariable[] Variables {

@@ -91,6 +91,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Info about slow GetExpressionAtPoint events
         /// </summary>
-        GetExpressionAtPoint
+        GetExpressionAtPoint,
+        /// <summary>
+        /// Info about debugger launch or attach timeouts on slower machines
+        /// </summary>
+        DebugAdapterConnectionTimeout,
     }
 }

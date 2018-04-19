@@ -142,7 +142,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.RemoveImportsRequest.Command: response = RemoveImports((AP.RemoveImportsRequest)request); break;
                 case AP.ExtractMethodRequest.Command: response = ExtractMethod((AP.ExtractMethodRequest)request); break;
                 case AP.AnalysisStatusRequest.Command: response = AnalysisStatus(); break;
-                case AP.OverridesCompletionRequest.Command: response = GetOverrides((AP.OverridesCompletionRequest)request); break;
                 case AP.LocationNameRequest.Command: response = GetLocationName((AP.LocationNameRequest)request); break;
                 case AP.ProximityExpressionsRequest.Command: response = GetProximityExpressions((AP.ProximityExpressionsRequest)request); break;
                 case AP.AnalysisClassificationsRequest.Command: response = GetAnalysisClassifications((AP.AnalysisClassificationsRequest)request); break;
@@ -159,12 +158,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.SetAnalysisOptionsRequest.Command: response = SetAnalysisOptions((AP.SetAnalysisOptionsRequest)request); break;
+                case AP.LanguageServerRequest.Command: response = await ProcessLanguageServerRequest((AP.LanguageServerRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             await done(response);
+        }
+
+        private async Task<Response> ProcessLanguageServerRequest(AP.LanguageServerRequest request) {
+            try {
+                var body = (Newtonsoft.Json.Linq.JObject)request.body;
+
+                switch (request.name) {
+                    case "textDocument/completion": return new AP.LanguageServerResponse { body = await _server.Completion(body.ToObject<LS.CompletionParams>()) };
+                }
+
+                return new AP.LanguageServerResponse { error = "Unknown command: " + request.name };
+            } catch (Exception ex) {
+                return new AP.LanguageServerResponse { error = ex.ToString() };
+            }
         }
 
         internal void ReportUnhandledException(Exception ex) {
@@ -238,6 +252,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             assembly = request.interpreter?.assembly,
                             typeName = request.interpreter?.typeName,
                             properties = request.interpreter?.properties
+                        },
+                        displayOptions = new LS.InformationDisplayOptions {
+                            maxDocumentationLineLength = 30,
+                            trimDocumentationLines = true,
+                            maxDocumentationTextLength = 4096,
+                            trimDocumentationText = true
                         }
                     },
                     capabilities = new LS.ClientCapabilities {
@@ -1337,7 +1357,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 context = new LS.CompletionContext {
                     triggerKind = LS.CompletionTriggerKind.Invoked,
                     _filterKind = LS.CompletionItemKind.Module,
-                    _includeAllModules = getModules.package == null
+                    //_includeAllModules = getModules.package == null
                 }
             });
 
@@ -1354,9 +1374,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 textDocument = req.documentUri,
                 context = new LS.CompletionContext {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
-                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
-                    _includeArgumentNames = true
+                    //_statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    //_expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
+                    //_includeArgumentNames = true
                 },
                 _expr = req.text
             });
@@ -1623,85 +1643,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public override TextReader GetReader() {
                 return _text;
             }
-        }
-
-        private Response GetOverrides(AP.OverridesCompletionRequest request) {
-            var projectFile = GetPythonEntry(request.documentUri);
-            if (projectFile == null) {
-                return IncorrectFileType();
-            }
-
-            var analysis = projectFile.Analysis;
-            if (analysis == null) {
-                return new AP.OverridesCompletionResponse();
-            }
-
-            var location = new SourceLocation(request.line, request.column);
-
-            var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
-            var members = analysis.GetOverrideable(location).ToArray();
-
-            return new AP.OverridesCompletionResponse() {
-                overrides = members
-                    .Select(member => new AP.Override() {
-                        name = member.Name,
-                        doc = member.Documentation,
-                        completion = MakeCompletionString(request, member, cls.Name)
-                    }).ToArray()
-            };
-        }
-
-        private static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        private static string GetSafeParameterName(ParameterResult result, int index) {
-            if (!string.IsNullOrEmpty(result.DefaultValue)) {
-                return GetSafeArgumentName(result, index) + " = " + result.DefaultValue;
-            }
-            return GetSafeArgumentName(result, index);
-        }
-
-        private static string GetSafeArgumentName(ParameterResult result, int index) {
-            var match = ValidParameterName.Match(result.Name);
-
-            if (match.Success) {
-                return match.Value;
-            } else if (result.Name.StartsWithOrdinal("**")) {
-                return "**kwargs";
-            } else if (result.Name.StartsWithOrdinal("*")) {
-                return "*args";
-            } else {
-                return "arg" + index.ToString();
-            }
-        }
-
-        private string MakeCompletionString(AP.OverridesCompletionRequest request, IOverloadResult result, string className) {
-            var sb = new StringBuilder();
-
-            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
-
-            sb.Append(request.indentation);
-
-            if (result.Parameters.Length > 0) {
-                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
-
-                if (InterpreterFactory.GetLanguageVersion().Is3x()) {
-                    sb.AppendFormat("return super().{0}({1})",
-                        result.Name,
-                        parameterString);
-                } else if (!string.IsNullOrEmpty(className)) {
-                    sb.AppendFormat("return super({0}, {1}).{2}({3})",
-                        className,
-                        result.Parameters.First().Name,
-                        result.Name,
-                        parameterString);
-                } else {
-                    sb.Append("pass");
-                }
-            } else {
-                sb.Append("pass");
-            }
-
-            return sb.ToString();
         }
 
         private async Task<Response> UpdateContent(AP.FileUpdateRequest request) {
