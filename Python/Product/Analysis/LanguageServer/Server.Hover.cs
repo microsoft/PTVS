@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (doc != null) {
                     switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
                         case MarkupKind.Markdown:
-                            var contents = new MarkupContent {
+                            mc = new MarkupContent {
                                 kind = MarkupKind.Markdown,
                                 value = new RestTextConverter().ToMarkdown(doc)
                             };

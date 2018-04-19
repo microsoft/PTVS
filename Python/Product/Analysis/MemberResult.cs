@@ -93,9 +93,9 @@ namespace Microsoft.PythonTools.Analysis {
                     // If first line of doc is already in the type string, then filter it out.
                     // This is because some functions have signature as a first doc line and 
                     // some do not have one. We are already showing signature as part of the type.
-                    var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
+                    var lines = docString.Split('\n');
                     if (!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
-                        docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
+                        docString = docString.Substring(lines[0].Length).TrimStart();
                     }
 
                     if (!docs.TryGetValue(docString, out var docTypes)) {
@@ -142,9 +142,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetDocumentation(AnalysisValue ns) {
             var doc = ns.Documentation?.TrimDocumentation() ?? string.Empty;
             if (ns.MemberType == PythonMemberType.Module) {
-                // Module doc does not nave example/signature lines like a function
-                // so just make it flow nicely in the tooltip by removing like breaks.                   
-                return doc.Replace('\n', ' ').Replace("\r", string.Empty);
+                return FormatModuleDocumentation(doc);
             }
             // Documentation can contain something like
             //      func(a, b, c)\n\nThis function...
@@ -175,6 +173,34 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return result.ToString().Trim();
         }
+
+        private static string FormatModuleDocumentation(string doc) {
+            // Module doc does not nave example/signature lines like a function
+            // so just make it flow nicely in the tooltip by removing like breaks.
+            // Preserve double breaks and breaks before the indented text
+            var lines = doc.Replace("\r", string.Empty).Split('\n');
+            var sb = new StringBuilder();
+            for (var i = 0; i < lines.Length; i++) {
+                var line = lines[i];
+                if (i < lines.Length - 1) {
+                    if (line.Length == 0) {
+                        sb.AppendLine();
+                        sb.AppendLine();
+                    } else {
+                        if (lines[i + 1].Length > 0) {
+                            sb.Append(line);
+                            sb.Append(' ');
+                        } else {
+                            sb.Append(line);
+                        }
+                    }
+                } else {
+                    sb.Append(line);
+                }
+            }
+            return sb.ToString();
+        }
+
         private static string GetDescription(AnalysisValue ns) {
             var d = ns?.ShortDescription;
             if (string.IsNullOrEmpty(d)) {

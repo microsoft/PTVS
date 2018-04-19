@@ -15,18 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
+        private TaskCompletionSource<bool> _analysisCts;
+
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             await _analyzerCreationTask;
             IfTestWaitForAnalysisComplete();
@@ -35,17 +32,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // Make sure document is enqueued for processing
             var openFile = _openFiles.GetDocument(uri);
 
-            // VS Code does not supply version so we need to get one
-            ProjectEntry entry;
-            if (!@params._version.HasValue) {
-                var doc = _projectFiles.GetEntry(@params.textDocument) as IDocument;
-                @params._version = doc?.GetDocumentVersion(0);
-            }
-
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version.Value, out entry, out var tree);
+            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, CancellationToken, out _) ?? tree;
+            // Give analysis opportunity to complete
+            if (!entry.IsComplete) {
+                entry.OnNewAnalysis += OnNewAnalysis;
+                _analysisCts = new TaskCompletionSource<bool>();
+                _analysisCts.Task.Wait(300);
+            }
 
             var analysis = entry?.Analysis;
             if (analysis == null) {
@@ -54,18 +50,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var opts = GetOptions(@params.context);
-            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
-            if (_traceLogging) {
-                if (parse == null) {
-                    LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
-                } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
-                    LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
-                } else {
-                    LogMessage(MessageType.Log, $"Got AST for {uri}");
-                }
-            }
-            tree = parse?.Tree ?? tree;
-
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, this);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
 
@@ -87,9 +71,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;
         }
+
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
             return Task.FromResult(item);
+        }
+
+        private void OnNewAnalysis(object sender, EventArgs e) {
+            ((ProjectEntry)sender).OnNewAnalysis -= OnNewAnalysis;
+            _analysisCts?.SetResult(true);
         }
 
         private GetMemberOptions GetOptions(CompletionContext? context) {

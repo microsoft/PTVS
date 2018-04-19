@@ -179,12 +179,19 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void RaiseOnNewAnalysis() {
+            IsComplete = true;
+            // publish the analysis now that it's complete/running
+            Analysis = new ModuleAnalysis(
+                _unit,
+                ((ModuleScope)_unit.Scope).CloneForPublish()
+            );
             OnNewAnalysis?.Invoke(this, EventArgs.Empty);
         }
 
         public int AnalysisVersion { get; private set; }
 
         public bool IsAnalyzed => Analysis != null;
+        internal bool IsComplete { get; private set; }
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
             var parse = GetCurrentParse();
@@ -219,6 +226,7 @@ namespace Microsoft.PythonTools.Analysis {
                     parentPackage.AddChildPackage(MyScope, _unit);
                 }
             }
+            IsComplete = false; ;
 
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
@@ -229,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis {
                 value.Value.EnqueueDependents();
             }
 
-            MyScope.Scope.Children.Clear();
+            MyScope.Scope.Children = new List<InterpreterScope>();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
@@ -268,12 +276,6 @@ namespace Microsoft.PythonTools.Analysis {
             if (!enqueueOnly) {
                 ProjectState.AnalyzeQueuedEntries(cancel);
             }
-
-            // publish the analysis now that it's complete/running
-            Analysis = new ModuleAnalysis(
-                _unit,
-                ((ModuleScope)_unit.Scope).CloneForPublish()
-            );
         }
 
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;
