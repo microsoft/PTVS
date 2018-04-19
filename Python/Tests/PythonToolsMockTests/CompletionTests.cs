@@ -137,7 +137,8 @@ namespace PythonToolsMockTests {
         public void KeywordCompletions() {
             var code = "def f():\r\n     \r\n    x = abc, oar, \r\n    pass\r\n#2\r\n";
             using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35)) {
-                var completionList = view.GetCompletions(code.IndexOfEnd("#2\r\n"));
+                IEnumerable<string> completionList;
+                completionList = view.GetCompletions(code.IndexOfEnd("#2\r\n"));
 
                 // not in a function
                 AssertUtil.CheckCollection(completionList,
@@ -291,8 +292,8 @@ except (ValueError, |"}) {
                         var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver);
 
                         AssertUtil.CheckCollection(completionList,
-                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit", "sys" },
-                            new[] { "Warning", "str", "int" }
+                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit", "sys", "Warning" },
+                            new[] { "str", "int" }
                         );
                     }
 
@@ -448,8 +449,8 @@ f(1, 2, 3, 4,")) {
         [TestMethod, Priority(0)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
-                view.Text = "import ";
-                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "sys");
+                view.Text = "import  ";
+                AssertUtil.ContainsAtLeast(view.GetCompletions(-2), "sys");
 
                 view.Text = "import sys";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "sys");
@@ -480,11 +481,12 @@ f(1, 2, 3, 4,")) {
         [TestMethod, Priority(2)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
+                IEnumerable<string> completions = null;
                 view.Text = "from ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "nt", "sys");
 
                 view.Text = "from s";
-                var completions = view.GetCompletions(-1);
+                completions = view.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "sys");
                 AssertUtil.DoesntContain(completions, "nt");
 
@@ -493,6 +495,7 @@ f(1, 2, 3, 4,")) {
 
                 view.Text = "from sys import";
                 AssertUtil.ContainsExactly(view.GetCompletions(-1), "import");
+
 
                 // This is the first time we have imported sys, so it will
                 // run Python in the background to scrape it. We can wait.
@@ -604,17 +607,14 @@ f(1, 2, 3, 4,")) {
                 editor.Text = "from sys import (";
                 var completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "settrace", "api_version");
-                AssertUtil.DoesntContain(completions, "*");
 
                 editor.Text = "from nt import (\r\n    ";
                 completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
-                AssertUtil.DoesntContain(completions, "*");
 
                 editor.Text = "from nt import (getfilesystemencoding,\r\n    ";
                 completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
-                AssertUtil.DoesntContain(completions, "*");
 
                 // Need a comma for more completions
                 editor.Text = "from sys import (settrace\r\n    ";
@@ -708,7 +708,7 @@ lambda larg1, larg2: None";
                 TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "str");
 
                 // trailing new lines don't show up in quick info
-                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: file.f()\r\nhelpful information");
+                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f:\r\nfile.f()\r\nhelpful information");
 
                 // keywords don't show up in quick info
                 TestQuickInfo(view, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
@@ -935,7 +935,7 @@ def func(a):
                 var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
                 using (var view = new PythonEditor(code, filename: "file.py")) {
-                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: file.func(a)\r\n" + expected1);
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func:\r\nfile.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
                     view.Text += "func(";
@@ -955,10 +955,10 @@ def func(a):
 
                 using (var view = new PythonEditor(code, filename: "file.py")) {
                     // The long lines cause us to truncate sooner.
-                    expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+                    expected1 = string.Join(Environment.NewLine, docString).Substring(0, 4096) + Environment.NewLine + "...";
                     expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
 
-                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: file.func(a)\r\n" + expected1);
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func:\r\nfile.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
                     view.Text += "func(";
@@ -1174,17 +1174,14 @@ async def g():
                 index += snapshot.Length + 1;
             }
 
-            CompletionAnalysis context = null;
-            view.VS.InvokeSync(() => {
-                context = view.VS.GetPyService().GetCompletions(
-                    null,
-                    view.View.TextView,
-                    snapshot,
-                    snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
-                    snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
-                    new CompletionOptions()
-                );
-            });
+            var context = view.VS.Invoke(() => view.VS.GetPyService().GetCompletions(
+                null,
+                view.View.TextView,
+                snapshot,
+                snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
+                snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
+                new CompletionOptions()
+            ));
 
             Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
             var normalContext = (NormalCompletionAnalysis)context;

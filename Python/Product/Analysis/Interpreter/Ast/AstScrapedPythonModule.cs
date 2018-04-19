@@ -75,6 +75,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            if (!_scraped) {
+                Imported(moduleContext);
+            }
             lock (_members) {
                 return _members.Keys.ToArray();
             }

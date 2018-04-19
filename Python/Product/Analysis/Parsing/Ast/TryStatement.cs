@@ -16,85 +16,53 @@
 
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class TryStatement : Statement {
-        private int _headerIndex, _finallyIndex, _elseIndex;
+        private readonly TryStatementHandler[] _handlers;
+
+        public TryStatement(Statement body, TryStatementHandler[] handlers, Statement else_, Statement finally_) {
+            Body = body;
+            _handlers = handlers;
+            Else = else_;
+            Finally = finally_;
+        }
+
+        public int HeaderIndex { get; set; }
+        public int ElseIndex { get; set; }
+        public int FinallyIndex { get; set; }
+        public override int KeywordLength => 3;
+
         /// <summary>
         /// The statements under the try-block.
         /// </summary>
-        private Statement _body;
-
-        /// <summary>
-        /// Array of except (catch) blocks associated with this try. NULL if there are no except blocks.
-        /// </summary>
-        private readonly TryStatementHandler[] _handlers;
+        public Statement Body { get; }
 
         /// <summary>
         /// The body of the optional Else block for this try. NULL if there is no Else block.
         /// </summary>
-        private Statement _else;
+        public Statement Else { get; }
 
         /// <summary>
         /// The body of the optional finally associated with this try. NULL if there is no finally block.
         /// </summary>
-        private Statement _finally;
+        public Statement Finally { get; }
 
-        public TryStatement(Statement body, TryStatementHandler[] handlers, Statement else_, Statement finally_) {
-            _body = body;
-            _handlers = handlers;
-            _else = else_;
-            _finally = finally_;
-        }
-
-        public int HeaderIndex {
-            get { return _headerIndex; }
-            set { _headerIndex = value; }
-        }
-
-        public int ElseIndex {
-            get { return _elseIndex; }
-            set { _elseIndex = value; }
-        }
-
-        public int FinallyIndex {
-            get { return _finallyIndex; }
-            set { _finallyIndex = value; }
-        }
-
-        public Statement Body {
-            get { return _body; }
-        }
-
-        public Statement Else {
-            get { return _else; }
-        }
-
-        public Statement Finally {
-            get { return _finally; }
-        }
-
-        public IList<TryStatementHandler> Handlers {
-            get { return _handlers; }
-        }
+        /// <summary>
+        /// Array of except (catch) blocks associated with this try. NULL if there are no except blocks.
+        /// </summary>
+        public IList<TryStatementHandler> Handlers => _handlers;
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_body != null) {
-                    _body.Walk(walker);
+                Body?.Walk(walker);
+                foreach (TryStatementHandler handler in _handlers.MaybeEnumerate()) {
+                    handler.Walk(walker);
                 }
-                if (_handlers != null) {
-                    foreach (TryStatementHandler handler in _handlers) {
-                        handler.Walk(walker);
-                    }
-                }
-                if (_else != null) {
-                    _else.Walk(walker);
-                }
-                if (_finally != null) {
-                    _finally.Walk(walker);
-                }
+                Else?.Walk(walker);
+                Finally?.Walk(walker);
             }
             walker.PostWalk(this);
         }
@@ -102,68 +70,46 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("try");
-            _body.AppendCodeString(res, ast, format);
+            Body.AppendCodeString(res, ast, format);
 
-            if (_handlers != null) {
-                for (int i = 0; i < _handlers.Length; i++) {
-                    _handlers[i].AppendCodeString(res, ast, format);
-                }
+            foreach (var h in _handlers.MaybeEnumerate()) {
+                h.AppendCodeString(res, ast, format);
             }
 
-            if (_else != null) {
+            if (Else != null) {
                 format.ReflowComment(res, this.GetSecondWhiteSpace(ast));
                 res.Append("else");
-                _else.AppendCodeString(res, ast, format);
+                Else.AppendCodeString(res, ast, format);
             }
 
-            if (_finally != null) {
+            if (Finally != null) {
                 format.ReflowComment(res, this.GetThirdWhiteSpace(ast));
                 res.Append("finally");
-                _finally.AppendCodeString(res, ast, format);
+                Finally.AppendCodeString(res, ast, format);
             }
         }
     }
 
     // A handler corresponds to the except block.
     public class TryStatementHandler : Node {
-        private int _headerIndex;
-        private readonly Expression _test, _target;
-        private readonly Statement _body;
-
         public TryStatementHandler(Expression test, Expression target, Statement body) {
-            _test = test;
-            _target = target;
-            _body = body;
+            Test = test;
+            Target = target;
+            Body = body;
         }
 
-        public int HeaderIndex {
-            get { return _headerIndex; }
-            set { _headerIndex = value; }
-        }
+        public int HeaderIndex { get; set; }
+        public int KeywordEndIndex { get; set; }
 
-        public Expression Test {
-            get { return _test; }
-        }
-
-        public Expression Target {
-            get { return _target; }
-        }
-
-        public Statement Body {
-            get { return _body; }
-        }
+        public Expression Test { get; }
+        public Expression Target { get; }
+        public Statement Body { get; }
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_test != null) {
-                    _test.Walk(walker);
-                }
-                if (_target != null) {
-                    _target.Walk(walker);
-                }
-                if (_body != null) {
-                    _body.Walk(walker);
-                }
+                Test?.Walk(walker);
+                Target?.Walk(walker);
+                Body?.Walk(walker);
             }
             walker.PostWalk(this);
         }
@@ -171,9 +117,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("except");
-            if (_test != null) {
-                _test.AppendCodeString(res, ast, format);
-                if (_target != null) {
+            if (Test != null) {
+                Test.AppendCodeString(res, ast, format);
+                if (Target != null) {
                     res.Append(this.GetSecondWhiteSpace(ast));
                     if (this.IsAltForm(ast)) {
                         res.Append("as");
@@ -181,11 +127,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(",");
                     }
 
-                    _target.AppendCodeString(res, ast, format);
+                    Target.AppendCodeString(res, ast, format);
                 }
             }
 
-            _body.AppendCodeString(res, ast, format);
+            Body.AppendCodeString(res, ast, format);
         }
     }
 }

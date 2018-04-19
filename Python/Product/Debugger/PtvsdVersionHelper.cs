@@ -60,6 +60,10 @@ namespace Microsoft.PythonTools.Debugger {
             ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", PtvsdVersion.Version));
         }
 
+        public static void VerifyPtvsdVersionLegacy() {
+            ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", PtvsdVersion.Version));
+        }
+
         private static void ShowPtvsdVersionMessage(string message) {
             MessageBox.Show(
                 new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
