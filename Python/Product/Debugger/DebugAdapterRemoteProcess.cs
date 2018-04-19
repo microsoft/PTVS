@@ -67,6 +67,7 @@ namespace Microsoft.PythonTools.Debugger {
                     _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
                     _stream.Initialized += OnInitialized;
+                    _stream.LegacyDebugger += OnLegacyDebugger;
                 } else {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
                     logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Attach");
@@ -90,6 +91,10 @@ namespace Microsoft.PythonTools.Debugger {
                 new PtvsdVersionRequest(),
                 PtvsdVersionHelper.VerifyPtvsdVersion,
                 PtvsdVersionHelper.VerifyPtvsdVersionError);
+        }
+
+        private void OnLegacyDebugger(object sender, EventArgs e) {
+            PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
         }
 
         public IntPtr Handle => IntPtr.Zero;

@@ -130,6 +130,7 @@ namespace Microsoft.PythonTools.Debugger {
                         _debuggerConnected = true;
                         _stream = new DebugAdapterProcessStream(new NetworkStream(connection.Result, ownsSocket: true));
                         _stream.Initialized += OnInitialized;
+                        _stream.LegacyDebugger += OnLegacyDebugger;
                         if (!string.IsNullOrEmpty(_webBrowserUrl) && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
                             OnPortOpenedHandler.CreateHandler(uri.Port, null, null, ProcessExited, LaunchBrowserDebugger);
                         }
@@ -152,6 +153,10 @@ namespace Microsoft.PythonTools.Debugger {
                 new PtvsdVersionRequest(),
                 PtvsdVersionHelper.VerifyPtvsdVersion,
                 PtvsdVersionHelper.VerifyPtvsdVersionError);
+        }
+
+        private void OnLegacyDebugger(object sender, EventArgs e) {
+            PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
         }
 
         private void LaunchBrowserDebugger() {
