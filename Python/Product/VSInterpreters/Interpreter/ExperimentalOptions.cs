@@ -23,16 +23,20 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string NoDatabaseFactoryKey = "NoDatabase"; // Renamed from "NoDatabaseFactory" to reset default
         internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
         internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
-        internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger";
+        internal const string UseVsCodeDebuggerKey = "UseExperimentalDebugger"; // Renamed from "UseVsCodeDebugger" to reset default
+        internal const string DontShowUseVsCodeDebuggerInfoBarKey = "DontShowUseVsCodeDebuggerInfoBar";
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
         internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
         internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
         internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseVsCodeDebugger);
+        internal static readonly Lazy<bool> _dontShowUseVsCodeDebuggerInfoBar = new Lazy<bool>(GetDontShowUseVsCodeDebuggerInfoBar);
+        internal static bool? _dontShowUseVsCodeDebuggerInfoBarCurrent;
 
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
         public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: true);
         public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: true);
-        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: true);
+        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
+        public static bool GetDontShowUseVsCodeDebuggerInfoBar() => GetBooleanFlag(DontShowUseVsCodeDebuggerInfoBarKey, defaultVal: false);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
@@ -88,6 +92,19 @@ namespace Microsoft.PythonTools.Interpreter {
         public static bool UseVsCodeDebugger {
             get => _useVsCodeDebugger.Value;
             set => SetBooleanFlag(UseVsCodeDebuggerKey, value);
+        }
+
+        public static bool DontShowUseVsCodeDebuggerInfoBar {
+            get {
+                if (_dontShowUseVsCodeDebuggerInfoBarCurrent.HasValue) {
+                    return _dontShowUseVsCodeDebuggerInfoBarCurrent.Value;
+                }
+                return _dontShowUseVsCodeDebuggerInfoBar.Value;
+            }
+            set {
+                SetBooleanFlag(DontShowUseVsCodeDebuggerInfoBarKey, value);
+                _dontShowUseVsCodeDebuggerInfoBarCurrent = value;
+            }
         }
     }
 }

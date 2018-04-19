@@ -26,9 +26,11 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
@@ -83,6 +85,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
+        private IVsInfoBarUIElement _infoBar;
 
         private string _webBrowserUrl;
 
@@ -536,12 +539,50 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.E_NOTIMPL;
             }
 
+            if (!ExperimentalOptions.UseVsCodeDebugger && !ExperimentalOptions.DontShowUseVsCodeDebuggerInfoBar) {
+                AddInfoBar();
+            }
+
             Debug.WriteLine("PythonEngine DestroyProgram");
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
             // tell us that the process exited, and otherwise we have a race condition.
 
             return (DebuggerConstants.E_PROGRAM_DESTROY_PENDING);
+        }
+
+        private void AddInfoBar() {
+            var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
+            shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj);
+
+            var infoBarHost = (IVsInfoBarHost)infoBarHostObj;
+            var infoBarFactory = (IVsInfoBarUIFactory)ServiceProvider.GlobalProvider.GetService(typeof(SVsInfoBarUIFactory));
+
+            Action enableExperimentalDebugger = () => {
+                ExperimentalOptions.UseVsCodeDebugger = true;
+                ExperimentalOptions.DontShowUseVsCodeDebuggerInfoBar = true;
+                _infoBar.Close();
+            };
+
+            Action dontShowAgainDebugger = () => {
+                ExperimentalOptions.DontShowUseVsCodeDebuggerInfoBar = true;
+                _infoBar.Close();
+            };
+
+            var messages = new List<IVsInfoBarTextSpan>();
+            var actions = new List<InfoBarActionItem>();
+
+            messages.Add(new InfoBarTextSpan(Strings.ExpDebuggerInfoBarMessage));
+            actions.Add(new InfoBarButton(Strings.ExpDebuggerInfoBarEnableButtonText, enableExperimentalDebugger));
+            actions.Add(new InfoBarButton(Strings.ExpDebuggerInfoBarDontShowAgainButtonText, dontShowAgainDebugger));
+
+            var infoBarModel = new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true);
+            _infoBar = infoBarFactory.CreateInfoBar(infoBarModel);
+            infoBarHost.AddInfoBar(_infoBar);
+
+            var eventsHandler = new InfoBarUIEventsHandler();
+            _infoBar.Advise(eventsHandler, out uint cookie);
+            eventsHandler.AdviseCookie = cookie;
         }
 
         // Gets the GUID of the DE.

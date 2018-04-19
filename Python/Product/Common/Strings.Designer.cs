@@ -2432,6 +2432,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t Show This Again.
+        /// </summary>
+        public static string ExpDebuggerInfoBarDontShowAgainButtonText {
+            get {
+                return ResourceManager.GetString("ExpDebuggerInfoBarDontShowAgainButtonText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable.
+        /// </summary>
+        public static string ExpDebuggerInfoBarEnableButtonText {
+            get {
+                return ResourceManager.GetString("ExpDebuggerInfoBarEnableButtonText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try out the preview of our new debugger before it becomes the default!.
+        /// </summary>
+        public static string ExpDebuggerInfoBarMessage {
+            get {
+                return ResourceManager.GetString("ExpDebuggerInfoBarMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extract Method.
         /// </summary>
         public static string ExtractMethod {
