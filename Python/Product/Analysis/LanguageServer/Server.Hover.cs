@@ -49,10 +49,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             tree.Walk(w);
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var contents = _displayTextBuilder.MakeModuleHoverText(modRef);
-                if (contents != null) {
-                    return new Hover { contents = contents };
+                var doc = _displayTextBuilder.MakeModuleHoverText(modRef);
+                MarkupContent mc = null;
+                if (doc != null) {
+                    switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                        case MarkupKind.Markdown:
+                            var contents = new MarkupContent {
+                                kind = MarkupKind.Markdown,
+                                value = new RestTextConverter().ToMarkdown(doc)
+                            };
+                            break;
+                    }
                 }
+                return new Hover { contents = (mc ?? doc) ?? string.Empty };
             }
 
             Expression expr;
