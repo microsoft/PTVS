@@ -30,15 +30,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly Node _node;
         private readonly Node _statement;
         private readonly ScopeStatement _scope;
-        private readonly Action<FormattableString> _trace;
+        private readonly ILogger _log;
 
-        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, Action<FormattableString> trace) {
+        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, ILogger log) {
             Analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             Position = position;
             Index = Tree.LocationToIndex(Position);
             Options = opts;
-            _trace = trace;
+            _log = log;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
                 Names = true,
@@ -52,8 +52,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private static readonly IEnumerable<CompletionItem> Empty = Enumerable.Empty<CompletionItem>();
-
-        private void TraceMessage(FormattableString msg) => _trace?.Invoke(msg);
 
         public ModuleAnalysis Analysis { get; }
         public PythonAst Tree { get; }
@@ -73,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (string.IsNullOrEmpty(expr)) {
                 return null;
             }
-            TraceMessage($"Completing expression '{expr}'");
+            _log.TraceMessage($"Completing expression '{expr}'");
             return Analysis.GetMembers(expr, Position, Options).Select(ToCompletionItem);
         }
 
@@ -127,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IEnumerable<CompletionItem> GetCompletionsFromMembers(ref GetMemberOptions opts) {
             var finder = new ExpressionFinder(Tree, GetExpressionOptions.EvaluateMembers);
             if (finder.GetExpression(Index) is Expression expr) {
-                TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
+                _log.TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
                 ParentExpression = expr;
                 return Analysis.GetMembers(expr, Position, opts, null).Select(ToCompletionItem);
             }
@@ -449,7 +447,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            TraceMessage($"Completing all names");
+            _log.TraceMessage($"Completing all names");
             var members = Analysis.GetAllAvailableMembers(Position, opts);
 
             if (allowArguments) {
@@ -464,7 +462,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
 
                     argNames = argNames.MaybeEnumerate().ToArray();
-                    TraceMessage($"Including {argNames.Count()} named arguments");
+                    _log.TraceMessage($"Including {argNames.Count()} named arguments");
 
                     members = members?.Concat(argNames) ?? argNames;
                 }

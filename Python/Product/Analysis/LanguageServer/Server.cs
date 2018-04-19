@@ -148,6 +148,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private void OnAnalyzerCreated(InitializeParams @params) {
             _clientCaps = @params.capabilities;
             _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
+            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
+            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
@@ -168,9 +170,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
-
-            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
-            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
             if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");

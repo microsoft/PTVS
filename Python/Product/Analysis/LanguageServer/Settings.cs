@@ -21,7 +21,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private int _completionTimeout = Timeout.Infinite;
         public bool ShowAdvancedMembers { get; set; }
         public int CompletionTimeout => _completionTimeout;
-        public int AnalysisDelay { get; set; }
 
         public void SetCompletionTimeout(int? timeout)
             => _completionTimeout = timeout.HasValue ? timeout.Value : _completionTimeout;

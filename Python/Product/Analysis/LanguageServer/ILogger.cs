@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     interface ILogger {
         void TraceMessage(string message);

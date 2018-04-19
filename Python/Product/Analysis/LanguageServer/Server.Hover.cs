@@ -92,14 +92,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
 
             var res = new Hover {
-                contents = new MarkupContent {
-                    kind = MarkupKind.Markdown,
-                    value = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions)
-                },
+                contents = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions),
                 range = exprSpan,
                 _version = version,
                 _typeNames = names
             };
+            switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
+                case MarkupKind.Markdown:
+                    res.contents = new MarkupContent {
+                        kind = MarkupKind.Markdown,
+                        value = new RestTextConverter().ToMarkdown(res.contents.value)
+                    };
+                    break;
+            }
             return res;
         }
 

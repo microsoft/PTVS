@@ -17,8 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -33,14 +35,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // Make sure document is enqueued for processing
             var openFile = _openFiles.GetDocument(uri);
 
-           var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
-            if (!(entry is IDocument doc)) {
-                TraceMessage($"No analysis found for {uri}");
-                return new CompletionList();
+            // VS Code does not supply version so we need to get one
+            ProjectEntry entry;
+            if (!@params._version.HasValue) {
+                var doc = _projectFiles.GetEntry(@params.textDocument) as IDocument;
+                @params._version = doc?.GetDocumentVersion(0);
             }
 
-            var version = @params._version.HasValue ? @params._version.Value : doc.GetDocumentVersion(0);
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, version, out entry, out var tree);
+            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version.Value, out entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, CancellationToken, out _) ?? tree;
@@ -52,85 +54,42 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var opts = GetOptions(@params.context);
-            var members = GetMembers(@params, entry, tree, analysis, opts);
-            if (members == null) {
-                TraceMessage($"No members found in document {uri}");
-                return new CompletionList();
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, CancellationToken);
+            if (_traceLogging) {
+                if (parse == null) {
+                    LogMessage(MessageType.Error, $"Timed out waiting for AST for {uri}");
+                } else if (parse.Cookie is VersionCookie vc && vc.Versions.TryGetValue(GetPart(uri), out var bv)) {
+                    LogMessage(MessageType.Log, $"Got AST for {uri} at version {bv.Version}");
+                } else {
+                    LogMessage(MessageType.Log, $"Got AST for {uri}");
+                }
             }
+            tree = parse?.Tree ?? tree;
 
-            var filtered = members
-                .Where(m => _settings.ShowAdvancedMembers ? true : !m.Name.StartsWith("__"))
-                .Select(m => ToCompletionItem(m, opts));
+            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, this);
+            var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
+
+            if (!_settings.ShowAdvancedMembers) {
+                members = members.Where(m => !m.label.StartsWith("__"));
+            }
 
             var filterKind = @params.context?._filterKind;
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
                 TraceMessage($"Only returning {filterKind.Value} items");
-                filtered = filtered.Where(m => m.kind == filterKind.Value);
+                members = members.Where(m => m.kind == filterKind.Value);
             }
 
-            var res = new CompletionList { items = filtered.ToArray() };
+            var res = new CompletionList {
+                items = members.ToArray(),
+                _applicableSpan = ctxt.Node?.GetSpan(tree),
+                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
+            };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;
         }
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
             return Task.FromResult(item);
-        }
-
-        private IEnumerable<MemberResult> GetMembers(CompletionParams @params, ProjectEntry entry, PythonAst tree, ModuleAnalysis analysis, GetMemberOptions opts) {
-            IEnumerable<MemberResult> members = null;
-            Expression expr = null;
-
-            if (string.IsNullOrEmpty(@params._expr)) {
-                // VS supplies the expression, VS Code does not.
-                var finder = new ExpressionFinder(tree, GetExpressionOptions.EvaluateMembers);
-                expr = finder.GetExpression(@params.position) as Expression;
-                @params._expr = expr?.ToCodeString(tree);
-            }
-
-            if (!string.IsNullOrEmpty(@params._expr)) {
-                TraceMessage($"Completing expression {@params._expr}");
-
-                if (@params.context?._filterKind == CompletionItemKind.Module) {
-                    // HACK: Special case for child modules until #3798 is completed
-                    members = entry.Analysis.ProjectState.GetModuleMembers(entry.Analysis.InterpreterContext, @params._expr.Split('.'));
-                } else {
-                    members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
-                }
-            } else {
-                if (expr != null) {
-                    TraceMessage($"Completing expression {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-                    members = entry.Analysis.GetMembers(expr, @params.position, opts, null);
-                } else {
-                    TraceMessage($"Completing all names");
-                    members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
-                }
-            }
-
-            if (@params.context?._includeAllModules ?? false) {
-                var mods = _analyzer.GetModules();
-                TraceMessage($"Including {mods?.Length ?? 0} modules");
-                members = members?.Concat(mods) ?? mods;
-            }
-
-            if (@params.context?._includeArgumentNames ?? false) {
-                var finder = new ExpressionFinder(tree, new GetExpressionOptions { Calls = true });
-                var index = tree.LocationToIndex(@params.position);
-                if (finder.GetExpression(@params.position) is CallExpression callExpr &&
-                    callExpr.GetArgumentAtIndex(tree, index, out _)) {
-                    var argNames = analysis.GetSignatures(callExpr.Target, @params.position)
-                        .SelectMany(o => o.Parameters).Select(p => p?.Name)
-                        .Where(n => !string.IsNullOrEmpty(n))
-                        .Distinct()
-                        .Except(callExpr.Args.MaybeEnumerate().Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)))
-                        .Select(n => new MemberResult($"{n}=", PythonMemberType.NamedArgument));
-
-                    argNames = argNames.MaybeEnumerate().ToArray();
-                    TraceMessage($"Including {argNames.Count()} named arguments");
-                    members = members?.Concat(argNames) ?? argNames;
-                }
-            }
-            return members;
         }
 
         private GetMemberOptions GetOptions(CompletionContext? context) {
@@ -140,14 +99,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (c._intersection) {
                     opts |= GetMemberOptions.IntersectMultipleResults;
                 }
-                if (c._statementKeywords ?? true) {
-                    opts |= GetMemberOptions.IncludeStatementKeywords;
-                }
-                if (c._expressionKeywords ?? true) {
-                    opts |= GetMemberOptions.IncludeExpressionKeywords;
-                }
-            } else {
-                opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
             return opts;
         }
