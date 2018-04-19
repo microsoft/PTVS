@@ -724,7 +724,7 @@ namespace Microsoft.PythonTools.Language {
                                 (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
                                 '\0',
                                 true
-                            );
+                            ).DoNotWait();
                             return VSConstants.S_OK;
                         }
                         break;

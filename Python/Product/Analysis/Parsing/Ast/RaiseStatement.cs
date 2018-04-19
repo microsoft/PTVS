@@ -18,46 +18,29 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {    
     public class RaiseStatement : Statement {
-        private readonly Expression _type, _value, _traceback, _cause;
-
         public RaiseStatement(Expression exceptionType, Expression exceptionValue, Expression traceBack, Expression cause) {
-            _type = exceptionType;
-            _value = exceptionValue;
-            _traceback = traceBack;
-            _cause = cause;
+            ExceptType = exceptionType;
+            Value = exceptionValue;
+            Traceback = traceBack;
+            Cause = cause;
         }
 
-        public Expression ExceptType {
-            get {
-                return _type;
-            }
-        }
+        public Expression ExceptType { get; }
+        public Expression Value { get; }
+        public Expression Traceback { get; }
+        public Expression Cause { get; }
+        public int ValueFieldStartIndex { get; set; }
+        public int TracebackFieldStartIndex { get; set; }
+        public int CauseFieldStartIndex { get; set; }
 
-        public Expression Value {
-            get { return _value; }
-        }
-
-        public Expression Traceback {
-            get { return _traceback; }
-        }
-
-        public Expression Cause {
-            get {
-                return _cause;
-            }
-        }
+        public override int KeywordLength => 5;
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_type != null) {
-                    _type.Walk(walker);
-                }
-                if (_value != null) {
-                    _value.Walk(walker);
-                }
-                if (_traceback != null) {
-                    _traceback.Walk(walker);
-                }
+                ExceptType?.Walk(walker);
+                Value?.Walk(walker);
+                Traceback?.Walk(walker);
+                Cause?.Walk(walker);
             }
             walker.PostWalk(this);
         }
@@ -73,14 +56,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append("from");
                 Cause.AppendCodeString(res, ast, format);
             } else {
-                if (_value != null) {
+                if (Value != null) {
                     res.Append(this.GetSecondWhiteSpace(ast));
                     res.Append(',');
-                    _value.AppendCodeString(res, ast, format);
-                    if (_traceback != null) {
+                    Value.AppendCodeString(res, ast, format);
+                    if (Traceback != null) {
                         res.Append(this.GetThirdWhiteSpace(ast));
                         res.Append(',');
-                        _traceback.AppendCodeString(res, ast, format);
+                        Traceback.AppendCodeString(res, ast, format);
                     }
                 }
             }

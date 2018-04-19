@@ -276,12 +276,14 @@ namespace PythonToolsMockTests {
             bool assertIfNoCompletions = true,
             ITextSnapshot snapshot = null
         ) {
-            snapshot = snapshot ?? CurrentSnapshot;
-            if (index < 0) {
-                index += snapshot.Length + 1;
-            }
-            View.MoveCaret(new SnapshotPoint(snapshot, index));
-            VS.Invoke(() => View.MemberList());
+            VS.Invoke(() => {
+                snapshot = snapshot ?? CurrentSnapshot;
+                if (index < 0) {
+                    index += snapshot.Length + 1;
+                }
+                View.MoveCaret(new SnapshotPoint(snapshot, index));
+                View.MemberList();
+            });
             using (var sh = View.WaitForSession<ICompletionSession>(assertIfNoSession: assertIfNoCompletions)) {
                 if (sh == null) {
                     return new List<Completion>();

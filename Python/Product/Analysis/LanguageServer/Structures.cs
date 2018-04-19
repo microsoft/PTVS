@@ -641,6 +641,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public bool isIncomplete;
         public CompletionItem[] items;
+
+        /// <summary>
+        /// The range that should be replaced when committing a completion from this
+        /// list. Where <c>textEdit</c> is set on a completion, prefer that.
+        /// </summary>
+        public Range? _applicableSpan;
+        /// <summary>
+        /// When true, snippets are allowed in this context.
+        /// </summary>
+        public bool? _allowSnippet;
+        /// <summary>
+        /// The expression that members are being displayed for.
+        /// </summary>
+        public string _expr;
     }
 
     [Serializable]
