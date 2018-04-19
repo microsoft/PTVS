@@ -32,7 +32,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var uri = @params.textDocument.uri;
             // Make sure document is enqueued for processing
             var openFile = _openFiles.GetDocument(uri);
-            openFile.WaitForChangeProcessingComplete(CancellationToken);
 
            var entry = _projectFiles.GetEntry(@params.textDocument) as ProjectEntry;
             if (!(entry is IDocument doc)) {

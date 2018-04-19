@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (expectedVersion.HasValue && parse?.Cookie is VersionCookie vc) {
                 if (vc.Versions.TryGetValue(GetPart(document.uri), out var bv)) {
                     if (bv.Version != expectedVersion.Value) {
-                        throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
+                        // throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"document is at version {bv.Version}; expected {expectedVersion.Value}");
                     }
                     tree = bv.Ast;
                 }

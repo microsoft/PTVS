@@ -32,18 +32,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _log = log;
         }
         public OpenFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new OpenFile(_projectFiles, _log));
-        public void Remove(Uri uri) {
-            _files.TryRemove(uri, out var entry);
-            entry?.Dispose();
-        }
+        public void Remove(Uri uri) => _files.TryRemove(uri, out _);
     }
 
-    sealed class OpenFile: IDisposable {
+    sealed class OpenFile {
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
-        private readonly ManualResetEventSlim _documentChangeProcessingComplete = new ManualResetEventSlim(true);
-        private int _documentChangeReentrancyCount;
-        private DelayedAction _delayedAction;
 
         public IDictionary<int, BufferVersion> LastReportedDiagnostics { get; } = new Dictionary<int, BufferVersion>();
         public List<DidChangeTextDocumentParams> PendingChanges { get; } = new List<DidChangeTextDocumentParams>();
@@ -53,11 +47,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _log = log;
         }
 
-        public void Dispose() => _delayedAction?.Dispose();
-
-        public void WaitForChangeProcessingComplete(CancellationToken token) => _documentChangeProcessingComplete.Wait(token);
-
-        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, int analysisDelay, Action<IDocument> enqueueAction) {
+        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, Action<IDocument> enqueueAction) {
             var changes = @params.contentChanges;
             if (changes == null) {
                 return;
@@ -68,10 +58,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (doc == null) {
                 return;
             }
-
-            _delayedAction?.Dispose();
-            _documentChangeProcessingComplete.Reset();
-            _documentChangeReentrancyCount++;
 
             try {
                 var part = _projectFiles.GetPart(uri);
@@ -116,19 +102,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
                 if (next.HasValue) {
-                    DidChangeTextDocument(next.Value, analysisDelay, enqueueAction);
+                    DidChangeTextDocument(next.Value, null);
                 }
             } finally {
-                _documentChangeReentrancyCount--;
-                if (_documentChangeReentrancyCount == 0) {
-
+                if (enqueueAction != null) {
                     _log.TraceMessage($"Applied changes to {uri}");
-                    if (analysisDelay > 0) {
-                        _delayedAction = new DelayedAction(() => enqueueAction(doc), analysisDelay);
-                    } else {
-                        enqueueAction(doc);
-                    }
-                    _documentChangeProcessingComplete.Set();
+                    enqueueAction(doc);
                 }
             }
         }

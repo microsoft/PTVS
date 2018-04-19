@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             _analyzerCreationTask.Wait();
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
-            openedFile.DidChangeTextDocument(@params, _settings.AnalysisDelay, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
+            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
