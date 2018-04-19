@@ -2450,7 +2450,16 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Try out the preview of our new debugger before it becomes the default!.
+        ///   Looks up a localized string similar to Learn More.
+        /// </summary>
+        public static string ExpDebuggerInfoBarLearnMoreText {
+            get {
+                return ResourceManager.GetString("ExpDebuggerInfoBarLearnMoreText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try out the preview of our new Python debugger before it becomes the default!.
         /// </summary>
         public static string ExpDebuggerInfoBarMessage {
             get {

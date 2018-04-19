@@ -16,21 +16,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     internal class ExperimentalDebuggerInfoBar : IVsInfoBarUIEvents {
+        private const string _learnMoreUrl = "https://aka.ms/newpythondebugger";
         private uint _adviseCookie;
         private IVsInfoBarUIElement _infoBar;
+        private bool _infoBarShown = false;
+        private IPythonToolsLogger _logger;
 
         public static ExperimentalDebuggerInfoBar Instance { get; } = new ExperimentalDebuggerInfoBar();
 
         public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
             infoBarUIElement.Unadvise(_adviseCookie);
             _infoBar = null;
+            _logger?.LogEvent(PythonLogEvent.ExperimentalDebuggerInfoBar, "Close");
         }
 
         public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
@@ -38,7 +44,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         public void AddInfoBar() {
-            if (ExperimentalOptions.GetUseVsCodeDebugger() || !ExperimentalOptions.GetPromptVsCodeDebuggerInfoBar() || _infoBar != null) {
+            if (ExperimentalOptions.GetUseVsCodeDebugger() || !ExperimentalOptions.GetPromptVsCodeDebuggerInfoBar() || _infoBar != null || _infoBarShown) {
                 return;
             }
 
@@ -48,15 +54,26 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             var infoBarHost = (IVsInfoBarHost)infoBarHostObj;
             var infoBarFactory = (IVsInfoBarUIFactory)ServiceProvider.GlobalProvider.GetService(typeof(SVsInfoBarUIFactory));
 
+            if (_logger == null) {
+                _logger = (IPythonToolsLogger)ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
+            }
+
             Action enableExperimentalDebugger = () => {
                 ExperimentalOptions.UseVsCodeDebugger = true;
                 ExperimentalOptions.PromptVsCodeDebuggerInfoBar = false;
                 _infoBar.Close();
+                _logger?.LogEvent(PythonLogEvent.ExperimentalDebuggerInfoBar, "Enable");
             };
 
             Action dontShowAgainDebugger = () => {
                 ExperimentalOptions.PromptVsCodeDebuggerInfoBar = false;
                 _infoBar.Close();
+                _logger?.LogEvent(PythonLogEvent.ExperimentalDebuggerInfoBar, "DoNotShow");
+            };
+
+            Action learnMore = () => {
+                Process.Start(_learnMoreUrl);
+                _logger?.LogEvent(PythonLogEvent.ExperimentalDebuggerInfoBar, "LearnMore");
             };
 
             var messages = new List<IVsInfoBarTextSpan>();
@@ -65,6 +82,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             messages.Add(new InfoBarTextSpan(Strings.ExpDebuggerInfoBarMessage));
             actions.Add(new InfoBarButton(Strings.ExpDebuggerInfoBarEnableButtonText, enableExperimentalDebugger));
             actions.Add(new InfoBarButton(Strings.ExpDebuggerInfoBarDontShowAgainButtonText, dontShowAgainDebugger));
+            actions.Add(new InfoBarHyperlink(Strings.ExpDebuggerInfoBarLearnMoreText, learnMore));
 
             var infoBarModel = new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true);
             _infoBar = infoBarFactory.CreateInfoBar(infoBarModel);
@@ -72,6 +90,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             _infoBar.Advise(this, out uint cookie);
             _adviseCookie = cookie;
+            _infoBarShown = true;
+            _logger?.LogEvent(PythonLogEvent.ExperimentalDebuggerInfoBar, "Show");
         }
     }
 }

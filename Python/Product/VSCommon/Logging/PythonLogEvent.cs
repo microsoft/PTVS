@@ -96,5 +96,9 @@ namespace Microsoft.PythonTools.Logging {
         /// Info about debugger launch or attach timeouts on slower machines
         /// </summary>
         DebugAdapterConnectionTimeout,
+        /// <summary>
+        /// Info bar for experimental debugger
+        /// </summary>
+        ExperimentalDebuggerInfoBar,
     }
 }

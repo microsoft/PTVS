@@ -2266,6 +2266,9 @@ Expand selection to the full expression?</value>
     <value>Enable</value>
   </data>
   <data name="ExpDebuggerInfoBarMessage" xml:space="preserve">
-    <value>Try out the preview of our new debugger before it becomes the default!</value>
+    <value>Try out the preview of our new Python debugger before it becomes the default!</value>
+  </data>
+  <data name="ExpDebuggerInfoBarLearnMoreText" xml:space="preserve">
+    <value>Learn More</value>
   </data>
 </root>
