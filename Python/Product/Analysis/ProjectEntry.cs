@@ -173,19 +173,16 @@ namespace Microsoft.PythonTools.Analysis {
                 Parse(enqueueOnly, cancel);
             }
 
-            if (!enqueueOnly) {
-                RaiseOnNewAnalysis();
-            }
+            CompleteAnalysis(!enqueueOnly);
         }
 
-        internal void RaiseOnNewAnalysis() {
+        internal void CompleteAnalysis(bool raiseEvent) {
             IsComplete = true;
             // publish the analysis now that it's complete/running
-            Analysis = new ModuleAnalysis(
-                _unit,
-                ((ModuleScope)_unit.Scope).CloneForPublish()
-            );
-            OnNewAnalysis?.Invoke(this, EventArgs.Empty);
+            Analysis = new ModuleAnalysis(_unit, ((ModuleScope)_unit.Scope).CloneForPublish());
+            if (raiseEvent) {
+                OnNewAnalysis?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public int AnalysisVersion { get; private set; }
@@ -226,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis {
                     parentPackage.AddChildPackage(MyScope, _unit);
                 }
             }
-            IsComplete = false; ;
+            IsComplete = false;
 
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
