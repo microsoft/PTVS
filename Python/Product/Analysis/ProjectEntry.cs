@@ -173,16 +173,14 @@ namespace Microsoft.PythonTools.Analysis {
                 Parse(enqueueOnly, cancel);
             }
 
-            CompleteAnalysis(!enqueueOnly);
+            if (!enqueueOnly) {
+                RaiseOnNewAnalysis();
+            }
         }
 
-        internal void CompleteAnalysis(bool raiseEvent) {
+        internal void RaiseOnNewAnalysis() {
             IsComplete = true;
-            // publish the analysis now that it's complete/running
-            Analysis = new ModuleAnalysis(_unit, ((ModuleScope)_unit.Scope).CloneForPublish());
-            if (raiseEvent) {
-                OnNewAnalysis?.Invoke(this, EventArgs.Empty);
-            }
+            OnNewAnalysis?.Invoke(this, EventArgs.Empty);
         }
 
         public int AnalysisVersion { get; private set; }
@@ -197,6 +195,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (tree == null) {
                 return;
             }
+
+            IsComplete = false;
 
             var oldParent = MyScope.ParentPackage;
             if (FilePath != null) {
@@ -223,7 +223,6 @@ namespace Microsoft.PythonTools.Analysis {
                     parentPackage.AddChildPackage(MyScope, _unit);
                 }
             }
-            IsComplete = false;
 
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
@@ -273,6 +272,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (!enqueueOnly) {
                 ProjectState.AnalyzeQueuedEntries(cancel);
             }
+
+            // publish the analysis now that it's complete/running
+            Analysis = new ModuleAnalysis(
+                _unit,
+                ((ModuleScope)_unit.Scope).CloneForPublish()
+            );
         }
 
         public IGroupableAnalysisProject AnalysisGroup => ProjectState;
@@ -296,7 +301,6 @@ namespace Microsoft.PythonTools.Analysis {
         public Uri DocumentUri { get; }
 
         public Dictionary<object, object> Properties { get; } = new Dictionary<object, object>();
-
 
         public void RemovedFromProject() {
             lock (this) {

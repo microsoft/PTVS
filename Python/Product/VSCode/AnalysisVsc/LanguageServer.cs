@@ -164,7 +164,8 @@ namespace Microsoft.PythonTools.VsCode {
             var autoComplete = pythonSection?["autoComplete"];
             if (autoComplete != null) {
                 var showAdvancedMembers = autoComplete["showAdvancedMembers"] as JValue;
-                settings.SuppressAdvancedMembers = showAdvancedMembers == null || showAdvancedMembers?.Value as string == "false";
+                settings.SuppressAdvancedMembers = showAdvancedMembers == null || 
+                    (showAdvancedMembers.Type == JTokenType.Boolean && !showAdvancedMembers.ToObject<bool>());
             }
             var p = new DidChangeConfigurationParams() { settings = settings };
             return _server.DidChangeConfiguration(p);
