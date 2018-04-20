@@ -44,7 +44,7 @@ namespace TestUtilities.Python {
             _serviceProvider.Services[typeof(SVsSettingsManager).GUID] = settingsManager;
 
             if (useRealUIThread) {
-                _serviceProvider.AddService(typeof(UIThreadBase), new UIThread(_exportProvider.GetExportedValue<JoinableTaskContext>()));
+                _serviceProvider.AddService(typeof(UIThreadBase), new UIThread(new JoinableTaskFactory(_exportProvider.GetExportedValue<JoinableTaskContext>())));
             } else {
                 _serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             }
