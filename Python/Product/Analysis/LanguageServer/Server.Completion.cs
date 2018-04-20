@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, this);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
 
-            if (!_settings.ShowAdvancedMembers) {
+            if (_settings.SuppressAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
             }
 

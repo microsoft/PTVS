@@ -19,7 +19,7 @@ using System.Threading;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     internal sealed class LanguageServerSettings {
         private int _completionTimeout = Timeout.Infinite;
-        public bool ShowAdvancedMembers { get; set; }
+        public bool SuppressAdvancedMembers { get; set; }
         public int CompletionTimeout => _completionTimeout;
 
         public void SetCompletionTimeout(int? timeout)
