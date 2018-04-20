@@ -845,7 +845,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[指定衍生进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[指定生成的进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -866,7 +866,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[指定衍生进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[指定生成的进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1448,7 +1448,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[指定衍生进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[指定生成的进程中要设置的环境变量，格式为:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -6694,7 +6694,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
+        <Val><![CDATA[15.7.18102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6730,7 +6730,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
+        <Val><![CDATA[15.7.18102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
