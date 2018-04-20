@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal bool _hasReturn;
         private int _headerIndex;
         private int _defIndex;
+        private int? _keywordEndIndex;
 
         internal static readonly object WhitespaceAfterAsync = new object();
 
@@ -66,6 +67,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal Parameter[] ParametersInternal => _parameters;
 
         internal override int ArgCount => _parameters.Length;
+
+        internal void SetKeywordEndIndex(int index) => _keywordEndIndex = index;
+        public override int KeywordEndIndex => _keywordEndIndex ?? (DefIndex + (IsCoroutine ? 9 : 3));
+        public override int KeywordLength => KeywordEndIndex - StartIndex;
 
         public Expression ReturnAnnotation {
             get { return _returnAnnotation; }

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
@@ -39,8 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override void EnsureUnionType() {
-        }
+        protected override void EnsureUnionType() { }
 
         protected override IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit) {
             return new FixedIteratorValue(
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return UnionType;
-        }       
+        }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
             var res = AnalysisSet.Empty;
@@ -93,25 +93,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override string ToString() {
-            return Description;
-        }
-
-        public override string ShortDescription {
-            get {
-                return Description;
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            if (UnionType == this) {
+                return new[] {
+                    new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _type.Name)
+                };
             }
+            return base.GetRichDescription();
         }
-
-        public override string Description {
-            get {
-                if (UnionType == this) {
-                    return _type.Name;
-                } else {
-                    return IterableValue.MakeDescription(this, _type.Name, UnionType);
-                }
-            }
-        }
-
     }
 }

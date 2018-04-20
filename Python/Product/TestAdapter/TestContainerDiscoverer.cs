@@ -265,7 +265,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var testCaseData = await analyzer.SendExtensionCommandAsync(
                     TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
-                    string.Join(";", paths)
+                    string.Join(";", paths.Distinct(Analysis.Infrastructure.PathEqualityComparer.Instance))
                 );
 
                 if (testCaseData == null) {

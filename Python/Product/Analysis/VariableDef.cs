@@ -159,6 +159,7 @@ namespace Microsoft.PythonTools.Analysis {
         static readonly object LockedVariableDefsValue = new object();
 
         protected IAnalysisSet _emptySet = AnalysisSet.Empty;
+        private IAnalysisSet _cache;
 
         /// <summary>
         /// Marks the current VariableDef as exceeding the limit and not to be
@@ -179,7 +180,7 @@ namespace Microsoft.PythonTools.Analysis {
                 int total = 0;
                 var typeCounts = new Dictionary<string, int>();
                 foreach (var type in TypesNoCopy) {
-                    var str = type.ToString();
+                    var str = type.ToString() ?? "";
                     int count;
                     if (!typeCounts.TryGetValue(str, out count)) {
                         count = 0;
@@ -243,9 +244,15 @@ namespace Microsoft.PythonTools.Analysis {
                         var afterAdded = original.Add(value, out testAdded, false);
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
-                                Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
+                                if (!ObjectComparer.Instance.Equals(afterAdded, original)) {
+                                    // Double validation, as sometimes testAdded is a false positive
+                                    afterAdded = original.Add(value, out testAdded, false);
+                                    if (testAdded) {
+                                        Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency adding {value} to {original}");
+                                    }
+                                }
                             } else if (afterAdded.Count == original.Count) {
-                                Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
+                                Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original), $"Inconsistency not adding {value} to {original}");
                             }
                         }
                     }
@@ -257,6 +264,9 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            if (added) {
+                _cache = null;
+            }
             if (added && enqueue) {
                 EnqueueDependents(projectEntry, declaringScope);
             }
@@ -316,6 +326,10 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_dependencies.Count == 0) {
                     return false;
                 }
+                if (_cache?.Count > 0) {
+                    return true;
+                }
+
                 T oneDependency;
                 if (_dependencies.TryGetSingleValue(out oneDependency)) {
                     return oneDependency.Types.Count > 0;
@@ -338,7 +352,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public IAnalysisSet TypesNoCopy {
             get {
-                var res = _emptySet;
+                var res = _cache;
+                if (res != null) {
+                    return res;
+                }
+                res = _emptySet;
                 if (_dependencies.Count != 0) {
                     T oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
@@ -357,7 +375,7 @@ namespace Microsoft.PythonTools.Analysis {
                     ExceedsTypeLimit();
                 }
 
-                return res;
+                return _cache = res;
             }
         }
 
@@ -366,17 +384,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// resulting set will not mutate in the future even if the types in the VariableDef
         /// change in the future.
         /// </summary>
-        public IAnalysisSet Types {
-            get {
-                return TypesNoCopy.Clone();
-            }
-        }
+        public IAnalysisSet Types => TypesNoCopy;
 
-        public virtual bool IsEphemeral {
-            get {
-                return false;
-            }
-        }    
+        public virtual bool IsEphemeral => false;
 
         /// <summary>
         /// If the number of types associated with this variable exceeds a
@@ -413,6 +423,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 if (anyChanged) {
+                    _cache = null;
                     EnqueueDependents();
                     return true;
                 }
@@ -555,7 +566,7 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        public IEnumerable<EncodedLocation> References {
+        public virtual IEnumerable<EncodedLocation> References {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
@@ -569,7 +580,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public IEnumerable<EncodedLocation> Definitions {
+        public virtual IEnumerable<EncodedLocation> Definitions {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
@@ -633,48 +644,26 @@ namespace Microsoft.PythonTools.Analysis {
     /// A variable def which has a specific location where it is defined (currently just function parameters).
     /// </summary>
     class LocatedVariableDef : VariableDef {
-        private readonly ProjectEntry _entry;
-        private int _declaringVersion;
-        private Node _location;
-
-        public LocatedVariableDef(ProjectEntry entry, Node location) {
-            _entry = entry;
-            _location = location;
-            _declaringVersion = entry.AnalysisVersion;
+        public LocatedVariableDef(ProjectEntry entry, EncodedLocation location) {
+            Entry = entry;
+            Location = location;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public LocatedVariableDef(ProjectEntry entry, Node location, VariableDef copy) {
-            _entry = entry;
-            _location = location;
+        public LocatedVariableDef(ProjectEntry entry, EncodedLocation location, VariableDef copy) {
+            Entry = entry;
+            Location = location;
             _dependencies = copy._dependencies;
-            _declaringVersion = entry.AnalysisVersion;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public int DeclaringVersion {
-            get {
-                return _declaringVersion;
-            }
-            set {
-                _declaringVersion = value;
-            }
-        }
-
-        public ProjectEntry Entry {
-            get {
-                return _entry;
-            }
-        }
-
-        public Node Node {
-            get {
-                return _location;
-            }
-            set {
-                _location = value;
-            }
-        }
-
+        public int DeclaringVersion { get; set; }
+        public ProjectEntry Entry { get; }
+        public EncodedLocation Location { get; set; }
         internal override bool IsAssigned => true;
+
+        public override IEnumerable<EncodedLocation> Definitions =>
+            Enumerable.Repeat(Location, 1).Concat(base.Definitions);
     }
 
 }

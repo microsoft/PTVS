@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Ensures that if this file changes it forces a rebuild -->
+  <PropertyGroup>
+    <MSBuildAllProjects>
+        $(MSBuildAllProjects);$(MSBuildThisFileFullPath)
+    </MSBuildAllProjects>
+  </PropertyGroup>
+
+  <!-- This file is shared across desktop .NET and .NET Core builds. 
+        Please do not put Windows-specific or dekstop-specific settings
+        here (these incluse C#, C++ or VSSDK settings and targets -->
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='15.0'">15.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='14.0'">14.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    
+    <VSTargetName Condition="'$(VSTarget)' == '15.0'">2017</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '14.0'">2015</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '12.0'">2013</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
+    
+    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
+    <!--
+    The version number that will identify a specific build. This appears in
+    Programs and Features, Extension Manager, and Help About.
+    -->
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">15.8</FileVersionPrefix>
+    <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
+    <!--
+    The version number that will identify assembly compatibility.
+    -->
+    <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">15.0.0</StableVersionPrefix>
+    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).0</StableVersion>
+    
+    <!-- When true, increases build restrictions to ensure complete public releases -->
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
+
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-MM-dd`))</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Alpha'">$(FileVersionPrefix) Alpha $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Beta'">$(FileVersionPrefix) Beta $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'RC'">$(FileVersionPrefix) RC $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Rel'">$(FileVersionPrefix)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifier)' != ''">$(CustomBuildIdentifier.Trim())</CustomBuildIdentifier>
+
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+    <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
+    <TargetsPath>$(BuildRoot)Build</TargetsPath>
+
+    <PackagesPath Condition="Exists('$(BuildRoot)packages.$(VSTarget)')">$(BuildRoot)packages.$(VSTarget)\</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)packages\</PackagesPath>
+    <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
+
+    <!-- BuildOutputRoot contains all build files.
+         Rather than customizing OutputPath or IntermediateOutputPath in projects,
+         $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set. 
+    -->
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
+    <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
+
+    <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)raw\$(OutputPathSuffix)\</OutputPath>
+    <OutputPath Condition="!HasTrailingSlash($(OutputPath))">$(OutputPath)\</OutputPath>
+
+    <BinariesOutputPath Condition="'$(BinariesOutputPath)' == ''">$(BuildOutputRoot)raw\binaries\</BinariesOutputPath>
+    <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesOutputPath))">$(BinariesOutputPath)\</BinariesOutputPath>
+
+    <LayoutOutputRoot Condition="'$(LayoutOutputRoot)' == ''">$(BuildOutputRoot)layout\</LayoutOutputRoot>
+    <LayoutOutputRoot Condition="!HasTrailingSlash($(LayoutOutputRoot))">$(LayoutOutputRoot)\</LayoutOutputRoot>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) == ''">$(LayoutOutputRoot)</LayoutOutputPath>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) != ''">$(LayoutOutputRoot)$(LayoutOutputPathSuffix)\</LayoutOutputPath>
+    <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
+
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\release\</ReleaseOutputPath>
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == ''">$(BuildOutputRoot)release\</ReleaseOutputPath>
+    <ReleaseOutputPath Condition="!HasTrailingSlash($(ReleaseOutputPath))">$(ReleaseOutputPath)\</ReleaseOutputPath>
+
+    <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
+    <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
+
+    <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
+    <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
+
+    <UnsignedOutputPath Condition="'$(UnsignedOutputPath)' == ''">$(BuildOutputRoot)raw\unsigned\</UnsignedOutputPath>
+    <UnsignedOutputPath Condition="!HasTrailingSlash($(UnsignedOutputPath))">$(UnsignedOutputPath)\</UnsignedOutputPath>
+
+    <IntermediateOutputRoot Condition="'$(IntermediateOutputRoot)' == ''">$(BuildOutputRoot)raw\obj\</IntermediateOutputRoot>
+    <IntermediateOutputRoot Condition="!HasTrailingSlash($(IntermediateOutputRoot))">$(IntermediateOutputRoot)\</IntermediateOutputRoot>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
+
+    <LocOutputPath>$(BinariesOutputPath)localize\</LocOutputPath>
+
+    <OutDir>$(OutputPath)</OutDir>
+    <IntDir>$(IntermediateOutputPath)</IntDir>
+
+    <Languages Condition="$(Languages) == ''">ENU,CHS,CHT,DEU,ESN,FRA,ITA,JPN,KOR,RUS,CSY,PTB,PLK,TRK</Languages>
+
+    <!-- Allows assemblies to specify their own version -->
+    <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>
+  </PropertyGroup>
+
+</Project>

@@ -142,7 +142,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.RemoveImportsRequest.Command: response = RemoveImports((AP.RemoveImportsRequest)request); break;
                 case AP.ExtractMethodRequest.Command: response = ExtractMethod((AP.ExtractMethodRequest)request); break;
                 case AP.AnalysisStatusRequest.Command: response = AnalysisStatus(); break;
-                case AP.OverridesCompletionRequest.Command: response = GetOverrides((AP.OverridesCompletionRequest)request); break;
                 case AP.LocationNameRequest.Command: response = GetLocationName((AP.LocationNameRequest)request); break;
                 case AP.ProximityExpressionsRequest.Command: response = GetProximityExpressions((AP.ProximityExpressionsRequest)request); break;
                 case AP.AnalysisClassificationsRequest.Command: response = GetAnalysisClassifications((AP.AnalysisClassificationsRequest)request); break;
@@ -159,6 +158,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.SetAnalysisOptionsRequest.Command: response = SetAnalysisOptions((AP.SetAnalysisOptionsRequest)request); break;
+                case AP.LanguageServerRequest.Command: response = await ProcessLanguageServerRequest((AP.LanguageServerRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -167,14 +167,28 @@ namespace Microsoft.PythonTools.Intellisense {
             await done(response);
         }
 
+        private async Task<Response> ProcessLanguageServerRequest(AP.LanguageServerRequest request) {
+            try {
+                var body = (Newtonsoft.Json.Linq.JObject)request.body;
+
+                switch (request.name) {
+                    case "textDocument/completion": return new AP.LanguageServerResponse { body = await _server.Completion(body.ToObject<LS.CompletionParams>()) };
+                }
+
+                return new AP.LanguageServerResponse { error = "Unknown command: " + request.name };
+            } catch (Exception ex) {
+                return new AP.LanguageServerResponse { error = ex.ToString() };
+            }
+        }
+
         internal void ReportUnhandledException(Exception ex) {
-            SendUnhandledException(ex);
+            SendUnhandledExceptionAsync(ex).DoNotWait();
             // Allow some time for the other threads to write the event before
             // we (probably) come crashing down.
             Thread.Sleep(100);
         }
 
-        private async void SendUnhandledException(Exception ex) {
+        private async Task SendUnhandledExceptionAsync(Exception ex) {
             try {
                 Debug.Fail(ex.ToString());
                 await _connection.SendEventAsync(
@@ -238,6 +252,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             assembly = request.interpreter?.assembly,
                             typeName = request.interpreter?.typeName,
                             properties = request.interpreter?.properties
+                        },
+                        displayOptions = new LS.InformationDisplayOptions {
+                            maxDocumentationLineLength = 30,
+                            trimDocumentationLines = true,
+                            maxDocumentationTextLength = 4096,
+                            trimDocumentationText = true
                         }
                     },
                     capabilities = new LS.ClientCapabilities {
@@ -247,6 +267,23 @@ namespace Microsoft.PythonTools.Intellisense {
                             manualFileLoad = !request.analyzeAllFiles,
                             traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
+                        },
+                        textDocument = new LS.TextDocumentClientCapabilities {
+                            completion = new LS.TextDocumentClientCapabilities.CompletionCapabilities {
+                                completionItem = new LS.TextDocumentClientCapabilities.CompletionCapabilities.CompletionItemCapabilities {
+                                    documentationFormat = new[] { LS.MarkupKind.PlainText },
+                                    snippetSupport = false
+                                }
+                            },
+                            signatureHelp = new LS.TextDocumentClientCapabilities.SignatureHelpCapabilities {
+                                signatureInformation = new LS.TextDocumentClientCapabilities.SignatureHelpCapabilities.SignatureInformationCapabilities {
+                                    documentationFormat = new[] { LS.MarkupKind.PlainText },
+                                    _shortLabel = true
+                                }
+                            },
+                            hover = new LS.TextDocumentClientCapabilities.HoverCapabilities {
+                                contentFormat = new[] { LS.MarkupKind.PlainText }
+                            }
                         }
                     }
                 });
@@ -1217,8 +1254,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 position = new SourceLocation(request.line, request.column),
                 context = new LS.ReferenceContext {
                     includeDeclaration = true,
-                    _includeValues = true,
-                    _includeDefinitionRanges = true
+                    _includeValues = true
                 }
             });
 
@@ -1233,7 +1269,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private AP.AnalysisReference MakeReference(LS.Reference r) {
             var range = (SourceSpan)r.range;
 
-            var resp = new AP.AnalysisReference {
+            return new AP.AnalysisReference {
                 documentUri = r.uri,
                 file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
                 startLine = range.Start.Line,
@@ -1243,14 +1279,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 kind = GetVariableType(r._kind),
                 version = r._version
             };
-            if (r._definitionRange != null) {
-                var defRange = (SourceSpan)r._definitionRange.Value;
-                resp.definitionStartLine = defRange.Start.Line;
-                resp.definitionStartColumn = defRange.Start.Column;
-                resp.definitionEndLine = defRange.End.Line;
-                resp.definitionEndColumn = defRange.End.Column;
-            }
-            return resp;
         }
 
         private static string GetVariableType(VariableType type) {
@@ -1321,7 +1349,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task<Response> GetModules(Request request) {
             var getModules = (AP.GetModulesRequest)request;
-            var prefix = getModules.package == null ? null : (string.Join(".", getModules.package) + ".");
+            var prefix = getModules.package == null ? null : (string.Join(".", getModules.package));
 
             var modules = await _server.Completion(new LS.CompletionParams {
                 textDocument = getModules.documentUri,
@@ -1329,7 +1357,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 context = new LS.CompletionContext {
                     triggerKind = LS.CompletionTriggerKind.Invoked,
                     _filterKind = LS.CompletionItemKind.Module,
-                    _includeAllModules = true
+                    //_includeAllModules = getModules.package == null
                 }
             });
 
@@ -1346,9 +1374,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 textDocument = req.documentUri,
                 context = new LS.CompletionContext {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
-                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
-                    _includeArgumentNames = true
+                    //_statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    //_expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords),
+                    //_includeArgumentNames = true
                 },
                 _expr = req.text
             });
@@ -1434,10 +1462,6 @@ namespace Microsoft.PythonTools.Intellisense {
                                 startColumn = r.range.start.character + 1,
                                 endLine = r.range.end.line + 1,
                                 endColumn = r.range.end.character + 1,
-                                definitionStartLine = r.range.start.line + 1,
-                                definitionStartColumn = r.range.start.character + 1,
-                                definitionEndLine = r.range.end.line + 1,
-                                definitionEndColumn = r.range.end.character + 1,
                                 kind = GetVariableType(r._kind)
                             }).ToArray()
                         });
@@ -1621,85 +1645,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private Response GetOverrides(AP.OverridesCompletionRequest request) {
-            var projectFile = GetPythonEntry(request.documentUri);
-            if (projectFile == null) {
-                return IncorrectFileType();
-            }
-
-            var analysis = projectFile.Analysis;
-            if (analysis == null) {
-                return new AP.OverridesCompletionResponse();
-            }
-
-            var location = new SourceLocation(request.line, request.column);
-
-            var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
-            var members = analysis.GetOverrideable(location).ToArray();
-
-            return new AP.OverridesCompletionResponse() {
-                overrides = members
-                    .Select(member => new AP.Override() {
-                        name = member.Name,
-                        doc = member.Documentation,
-                        completion = MakeCompletionString(request, member, cls.Name)
-                    }).ToArray()
-            };
-        }
-
-        private static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        private static string GetSafeParameterName(ParameterResult result, int index) {
-            if (!string.IsNullOrEmpty(result.DefaultValue)) {
-                return GetSafeArgumentName(result, index) + " = " + result.DefaultValue;
-            }
-            return GetSafeArgumentName(result, index);
-        }
-
-        private static string GetSafeArgumentName(ParameterResult result, int index) {
-            var match = ValidParameterName.Match(result.Name);
-
-            if (match.Success) {
-                return match.Value;
-            } else if (result.Name.StartsWithOrdinal("**")) {
-                return "**kwargs";
-            } else if (result.Name.StartsWithOrdinal("*")) {
-                return "*args";
-            } else {
-                return "arg" + index.ToString();
-            }
-        }
-
-        private string MakeCompletionString(AP.OverridesCompletionRequest request, IOverloadResult result, string className) {
-            var sb = new StringBuilder();
-
-            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
-
-            sb.Append(request.indentation);
-
-            if (result.Parameters.Length > 0) {
-                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
-
-                if (InterpreterFactory.GetLanguageVersion().Is3x()) {
-                    sb.AppendFormat("return super().{0}({1})",
-                        result.Name,
-                        parameterString);
-                } else if (!string.IsNullOrEmpty(className)) {
-                    sb.AppendFormat("return super({0}, {1}).{2}({3})",
-                        className,
-                        result.Parameters.First().Name,
-                        result.Name,
-                        parameterString);
-                } else {
-                    sb.Append("pass");
-                }
-            } else {
-                sb.Append("pass");
-            }
-
-            return sb.ToString();
-        }
-
         private async Task<Response> UpdateContent(AP.FileUpdateRequest request) {
             int version = -1;
             foreach (var fileChange in request.updates) {
@@ -1721,7 +1666,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else {
                     continue;
                 }
-                await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
+                _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
                         version = version
@@ -1760,26 +1705,23 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public AP.AnalysisOptions Options { get; set; }
 
-        private async void AnalysisQueue_Complete(object sender, EventArgs e) {
-            if (_connection == null) {
-                return;
-            }
-            await _connection.SendEventAsync(new AP.AnalysisCompleteEvent()).ConfigureAwait(false);
+        private void AnalysisQueue_Complete(object sender, EventArgs e) {
+            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent()).DoNotWait();
         }
 
-        private async void OnModulesChanged(object sender, EventArgs args) {
-            await _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams { });
+        private void OnModulesChanged(object sender, EventArgs args) {
+            _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams()).DoNotWait();
         }
 
-        private async void OnFileChanged(AP.FileChangedEvent e) {
-            await _server.DidChangeWatchedFiles(new LS.DidChangeWatchedFilesParams {
+        private void OnFileChanged(AP.FileChangedEvent e) {
+            _server.DidChangeWatchedFiles(new LS.DidChangeWatchedFilesParams {
                 changes = e.changes.MaybeEnumerate().Select(c => new LS.FileEvent { uri = c.documentUri, type = c.kind }).ToArray()
-            });
+            }).DoNotWait();
         }
 
         private void OnAnalysisComplete(object sender, LS.AnalysisCompleteEventArgs e) {
             _connection.SendEventAsync(
-                new AP.FileAnalysisCompleteEvent() {
+                new AP.FileAnalysisCompleteEvent {
                     documentUri = e.uri,
                     version = e.version
                 }
@@ -1819,12 +1761,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__name__";
         }
 
-        internal bool IsAnalyzing {
-            get {
-                return !_server.WaitForCompleteAnalysisAsync().Wait(0);
-            }
-        }
-
         internal Task WaitForCompleteAnalysis() => _server.WaitForCompleteAnalysisAsync();
 
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
@@ -1854,31 +1790,31 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </remarks>
         public PythonAnalyzer Project => _server._analyzer;
 
-        private async void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
-            await _connection.SendEventAsync(
+        private void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
+            _connection.SendEventAsync(
                 new AP.DiagnosticsEvent {
                     documentUri = e.uri,
                     version = e._version ?? -1,
                     diagnostics = e.diagnostics?.ToArray()
                 }
-            );
+            ).DoNotWait();
         }
 
-        private async void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
-            await _connection.SendEventAsync(
+        private void OnParseComplete(object sender, LS.ParseCompleteEventArgs e) {
+            _connection.SendEventAsync(
                 new AP.FileParsedEvent {
                     documentUri = e.uri,
                     version = e.version
                 }
-            );
+            ).DoNotWait();
         }
 
-        private async void OnFileFound(object sender, LS.FileFoundEventArgs e) {
+        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
             // Send a notification for this file
-            await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
+            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
                 documentUri = e.uri,
                 filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            });
+            }).DoNotWait();
         }
 
 

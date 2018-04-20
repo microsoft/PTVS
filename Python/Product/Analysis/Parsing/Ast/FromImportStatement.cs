@@ -41,6 +41,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public IList<NameExpression> AsNames { get; }
         public int ImportIndex { get; }
 
+        public override int KeywordLength => 4;
+
         /// <summary>
         /// Gets the variables associated with each imported name.
         /// </summary>

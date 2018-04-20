@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis {
             Location = location;
         }
 
-        bool ICanExpire.IsAlive => (Resolver as ICanExpire)?.IsAlive ?? true;
+        public bool IsAlive => (Resolver as ICanExpire)?.IsAlive ?? true;
 
         public override int GetHashCode() {
             return (Resolver?.GetHashCode() ?? 0) ^ (Location?.GetHashCode() ?? 0);
@@ -69,8 +69,7 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEquatable<EncodedLocation> Members
 
         public bool Equals(EncodedLocation other) {
-            return Resolver == other.Resolver &&
-                Location == other.Location;
+            return Location == other.Location;
         }
 
         #endregion

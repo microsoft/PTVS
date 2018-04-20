@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Logging {
     class InMemoryLogger : IPythonToolsLogger {
         private int _installedInterpreters, _installedV2, _installedV3;
         private int _debugLaunchCount, _normalLaunchCount;
+        private int _debugAdapterLaunchTimeoutCount;
+        private int _debugAdapterAttachTimeoutCount;
         private List<PackageInfo> _seenPackages = new List<PackageInfo>();
         private List<AnalysisInfo> _analysisInfo = new List<AnalysisInfo>();
         private List<string> _analysisAbnormalities = new List<string>();
@@ -107,7 +109,17 @@ namespace Microsoft.PythonTools.Logging {
                         }
                     }
                     break;
+                case PythonLogEvent.DebugAdapterConnectionTimeout:
+                    if ((string)argument == "Launch") {
+                        _debugAdapterLaunchTimeoutCount++;
+                    } else {
+                        _debugAdapterAttachTimeoutCount++;
+                    }
+                    break;
             }
+        }
+
+        public void LogFault(Exception ex, string description, bool dumpProcess) {
         }
 
         #endregion
@@ -119,6 +131,8 @@ namespace Microsoft.PythonTools.Logging {
             res.AppendLine("    v3.x: " + _installedV3);
             res.AppendLine("Debug Launches: " + _debugLaunchCount);
             res.AppendLine("Normal Launches: " + _normalLaunchCount);
+            res.AppendLine("Debug Adapter Launch Timeouts: " + _debugAdapterLaunchTimeoutCount);
+            res.AppendLine("Debug Adapter Attach Timeouts: " + _debugAdapterAttachTimeoutCount);
             res.AppendLine();
 
             lock (_seenPackages) {

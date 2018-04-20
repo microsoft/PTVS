@@ -63,28 +63,29 @@ namespace TestUtilities.Python {
         public static MockServiceProvider CreateMockServiceProvider(
             bool suppressTaskProvider = true
         ) {
-            var serviceProvider = new MockServiceProvider();
+            var componentModel = new MockComponentModel();
+            var serviceProvider = new MockServiceProvider(componentModel);
 
-            serviceProvider.ComponentModel.AddExtension(
+            componentModel.AddExtension(
                 typeof(IErrorProviderFactory),
                 () => new MockErrorProviderFactory()
             );
-            serviceProvider.ComponentModel.AddExtension(
+            componentModel.AddExtension(
                 typeof(IContentTypeRegistryService),
                 CreateContentTypeRegistryService
             );
 
-            serviceProvider.ComponentModel.AddExtension(
+            componentModel.AddExtension(
                 typeof(IInteractiveWindowCommandsFactory),
                 () => new MockInteractiveWindowCommandsFactory()
             );
 
             var optService = new Lazy<MockInterpreterOptionsService>(() => new MockInterpreterOptionsService());
-            serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
-            serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
+            componentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
+            componentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
 
-            var editorServices = CreatePythonEditorServices(serviceProvider, serviceProvider.ComponentModel);
-            serviceProvider.ComponentModel.AddExtension(() => editorServices);
+            var editorServices = CreatePythonEditorServices(serviceProvider, componentModel);
+            componentModel.AddExtension(() => editorServices);
 
             if (suppressTaskProvider) {
                 serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);

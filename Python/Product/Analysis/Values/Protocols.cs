@@ -62,7 +62,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override PythonMemberType MemberType => PythonMemberType.Unknown;
 
+        // Do not return any default values from protocols. We call these directly and handle null.
+        public override IAnalysisSet Await(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) => null;
+        public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetDescriptor(PythonAnalyzer projectState, AnalysisValue instance, AnalysisValue context) => null;
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) => null;
         public override IAnalysisSet GetInstanceType() => null;
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() => null;
+        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) => null;
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) => null;
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             EnsureMembers();
@@ -93,13 +106,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected abstract bool Equals(Protocol other);
 
         public override bool Equals(object obj) {
-            if (obj is Protocol other && obj.GetType() == other.GetType()) {
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+            if (obj is Protocol other && GetType() == other.GetType()) {
                 return Equals(other);
             }
             return false;
         }
 
         public override int GetHashCode() => GetType().GetHashCode();
+
+        protected virtual bool UnionEquals(Protocol p) => Equals(p);
+        protected virtual Protocol UnionMergeTypes(Protocol p) => this;
+
+        internal sealed override bool UnionEquals(AnalysisValue av, int strength) => av is Protocol p && GetType() == p.GetType() && UnionEquals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
+        internal sealed override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) => av is Protocol p ? UnionMergeTypes(p) : this;
     }
 
     class NameProtocol : Protocol {
@@ -107,10 +130,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly BuiltinTypeId _typeId;
         private List<KeyValuePair<string, string>> _richDescription;
 
-        public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Object) : base(self) {
+        public NameProtocol(ProtocolInfo self, string name, string documentation = null, BuiltinTypeId typeId = BuiltinTypeId.Unknown, PythonMemberType memberType = PythonMemberType.Unknown) : base(self) {
             _name = name;
             _doc = documentation;
             _typeId = typeId;
+            MemberType = memberType;
             _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
         }
 
@@ -118,6 +142,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _name = type.Name;
             _doc = type.Documentation;
             _typeId = type.TypeId;
+            MemberType = type.MemberType;
             _richDescription = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _name) };
         }
 
@@ -132,6 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => _name;
         public override string Documentation => _doc;
         internal override BuiltinTypeId TypeId => _typeId;
+        public override PythonMemberType MemberType { get; }
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() => _richDescription;
 
         protected override bool Equals(Protocol other) => Name == other.Name;
@@ -145,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(self) {
             Name = qualname ?? "callable";
             Arguments = arguments;
-            ReturnType = returnType;
+            ReturnType = returnType.AsUnion(1);
             _overloads = new Lazy<OverloadResult[]>(GenerateOverloads);
             MemberType = memberType;
         }
@@ -161,7 +187,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private OverloadResult[] GenerateOverloads() {
             return new[] {
-                new OverloadResult(Arguments.Select(ToParameterResult).ToArray(), Name)
+                new OverloadResult(Arguments.Select(ToParameterResult).ToArray(), Name, null, ReturnType.GetShortDescriptions())
             };
         }
 
@@ -186,11 +212,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (argNumber > 1) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, $"${argNumber}");
 
-                foreach (var kv in a.GetRichDescriptions(" : ")) {
+                foreach (var kv in a.GetRichDescriptions(defaultIfEmpty: "Any")) {
                     yield return kv;
                 }
+                argNumber += 1;
             }
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
 
@@ -199,15 +225,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) {
-            if (Name != other.Name) {
-                return false;
-            }
-            if (!Arguments.Zip(((CallableProtocol)other).Arguments, (x, y) => x.SetEquals(y)).All(b => b)) {
-                return false;
-            }
-            return true;
-        }
+        protected override bool Equals(Protocol other) =>
+            Name == other.Name &&
+            other is CallableProtocol cp &&
+            Arguments.Zip(cp.Arguments, (x, y) => x.SetEquals(y)).All(b => b);
         public override int GetHashCode() => Name.GetHashCode();
     }
 
@@ -216,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected readonly IAnalysisSet _yielded;
 
         public IterableProtocol(ProtocolInfo self, IAnalysisSet yielded) : base(self) {
-            _yielded = yielded;
+            _yielded = yielded.AsUnion(1);
 
             var iterator = new ProtocolInfo(Self.DeclaringModule, Self.State);
             iterator.AddProtocol(new IteratorProtocol(iterator, _yielded));
@@ -230,8 +251,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) => _iterator;
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) => _yielded;
 
-        public override string Name => "iterable";
-
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_yielded.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
@@ -242,18 +261,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IterableProtocol)other)._yielded);
-        public override int GetHashCode() => new {
-            Type = GetType(),
-            x = ObjectComparer.Instance.GetHashCode(_yielded)
-        }.GetHashCode();
+        // Types are already checked for an exact match
+        protected override bool Equals(Protocol other) => other is IterableProtocol ip && _yielded.SetEquals(ip._yielded);
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is IterableProtocol ip) {
+                var yielded = _yielded.Union(ip._yielded, out bool changed, canMutate: false);
+                if (changed && !yielded.SetEquals(_yielded)) {
+                    return new IterableProtocol(Self, yielded);
+                }
+            }
+            return this;
+        }
     }
 
     class IteratorProtocol : Protocol {
         protected readonly IAnalysisSet _yielded;
 
         public IteratorProtocol(ProtocolInfo self, IAnalysisSet yielded) : base(self) {
-            _yielded = yielded;
+            _yielded = yielded.AsUnion(1);
         }
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
@@ -269,8 +296,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _yielded;
         }
 
-        public override string Name => "iterator";
-
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_yielded.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
@@ -281,19 +306,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => ObjectComparer.Instance.Equals(_yielded, ((IteratorProtocol)other)._yielded);
-        public override int GetHashCode() => new {
-            Type = GetType(),
-            x = ObjectComparer.Instance.GetHashCode(_yielded)
-        }.GetHashCode();
+        // Types are already checked for an exact match
+        protected override bool Equals(Protocol other) => other is IteratorProtocol ip && _yielded.SetEquals(ip._yielded);
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is IteratorProtocol ip) {
+                var yielded = _yielded.Union(ip._yielded, out bool changed);
+                if (changed) {
+                    return new IteratorProtocol(Self, yielded);
+                }
+            }
+            return this;
+        }
     }
 
     class GetItemProtocol : Protocol {
         private readonly IAnalysisSet _keyType, _valueType;
 
         public GetItemProtocol(ProtocolInfo self, IAnalysisSet keys, IAnalysisSet values) : base(self) {
-            _keyType = keys ?? self.AnalysisUnit.State.ClassInfos[BuiltinTypeId.Int].Instance;
-            _valueType = values;
+            _keyType = (keys ?? self.AnalysisUnit.State.ClassInfos[BuiltinTypeId.Int].Instance).AsUnion(1);
+            _valueType = values.AsUnion(1);
         }
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
@@ -305,7 +338,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            if (index.IsObjectOrUnknown() || index.Intersect(_keyType, UnionComparer.Instances[1]).Any()) {
+            if (index.IsObjectOrUnknown() || _keyType.ContainsAny(index)) {
                 return _valueType;
             }
             return base.GetIndex(node, unit, index);
@@ -314,35 +347,48 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Name => "container";
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            if (_valueType.Any()) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
-                if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
-                    foreach (var kv in _keyType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
-                        yield return kv;
-                    }
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                }
-                foreach (var kv in _valueType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+            if (_valueType.IsObjectOrUnknownOrNone()) {
+                yield break;
+            }
+
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+            if (_keyType.Any(k => k.TypeId != BuiltinTypeId.Int)) {
+                foreach (var kv in _keyType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
                     yield return kv;
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
             }
+            foreach (var kv in _valueType.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                yield return kv;
+            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
         }
 
         protected override bool Equals(Protocol other) =>
-            ObjectComparer.Instance.Equals(_keyType, ((GetItemProtocol)other)._keyType) &&
-            ObjectComparer.Instance.Equals(_valueType, ((GetItemProtocol)other)._valueType);
-        public override int GetHashCode() => new {
-            x = ObjectComparer.Instance.GetHashCode(_keyType),
-            y = ObjectComparer.Instance.GetHashCode(_valueType)
-        }.GetHashCode();
+            other is GetItemProtocol gip &&
+            _keyType.SetEquals(gip._keyType) &&
+            _valueType.SetEquals(gip._valueType);
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is GetItemProtocol gip) {
+                var keyType = _keyType.Union(gip._keyType, out bool changed1);
+                var valueType = _valueType.Union(gip._valueType, out bool changed2);
+                if (changed1 || changed2) {
+                    return new GetItemProtocol(Self, keyType, valueType);
+                }
+            }
+            return this;
+        }
     }
 
     class TupleProtocol : IterableProtocol {
         private readonly IAnalysisSet[] _values;
 
         public TupleProtocol(ProtocolInfo self, IEnumerable<IAnalysisSet> values) : base(self, AnalysisSet.UnionAll(values)) {
-            _values = values.ToArray();
+            _values = values.Select(s => s.AsUnion(1)).ToArray();
         }
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
@@ -388,18 +434,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        protected override bool Equals(Protocol other) => _values.Zip(((TupleProtocol)other)._values,
-            (x, y) => ObjectComparer.Instance.Equals(x, y)).All(b => b);
-        public override int GetHashCode() => _values.Aggregate(GetType().GetHashCode(), (h, s) => h + 37 * ObjectComparer.Instance.GetHashCode(s));
+        protected override bool Equals(Protocol other) => 
+            other is TupleProtocol tp &&
+            _values.Zip(tp._values, (x, y) => x.SetEquals(y)).All(b => b);
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => p is TupleProtocol tp && _values.Length == tp._values.Length;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is TupleProtocol tp) {
+                bool anyChanged = false;
+                var values = _values.Zip(tp._values, (x, y) => {
+                    var xy = x.Union(y, out bool changed);
+                    anyChanged |= changed;
+                    return xy;
+                }).ToArray();
+                if (anyChanged) {
+                    return new TupleProtocol(Self, values);
+                }
+            }
+            return this;
+        }
     }
 
     class MappingProtocol : IterableProtocol {
         private readonly IAnalysisSet _keyType, _valueType, _itemType;
 
         public MappingProtocol(ProtocolInfo self, IAnalysisSet keys, IAnalysisSet values, IAnalysisSet items) : base(self, keys) {
-            _keyType = keys;
-            _valueType = values;
-            _itemType = items;
+            _keyType = keys.AsUnion(1);
+            _valueType = values.AsUnion(1);
+            _itemType = items.AsUnion(1);
         }
 
         private IAnalysisSet MakeIterable(IAnalysisSet values) {
@@ -475,36 +539,51 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override bool Equals(Protocol other) =>
-            ObjectComparer.Instance.Equals(_keyType, ((MappingProtocol)other)._keyType) &&
-            ObjectComparer.Instance.Equals(_valueType, ((MappingProtocol)other)._valueType);
-        public override int GetHashCode() => new {
-            Type = GetType(),
-            x = ObjectComparer.Instance.GetHashCode(_keyType),
-            y = ObjectComparer.Instance.GetHashCode(_valueType)
-        }.GetHashCode();
+            other is MappingProtocol mp &&
+            _keyType.SetEquals(mp._keyType) &&
+            _valueType.SetEquals(mp._valueType);
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is MappingProtocol mp) {
+                var keyType = _keyType.Union(mp._keyType, out bool changed1);
+                var valueType = _valueType.Union(mp._valueType, out bool changed2);
+                var itemType = _itemType.Union(mp._itemType, out bool changed3);
+                if (changed1 || changed2 || changed3) {
+                    return new MappingProtocol(Self, keyType, valueType, itemType);
+                }
+            }
+            return this;
+        }
     }
 
     class GeneratorProtocol : IteratorProtocol {
-        private readonly IAnalysisSet _sent, _returned;
-
         public GeneratorProtocol(ProtocolInfo self, IAnalysisSet yields, IAnalysisSet sends, IAnalysisSet returns) : base(self, yields) {
-            _sent = sends;
-            _returned = returns;
+            Sent = sends.AsUnion(1);
+            Returned = returns.AsUnion(1);
         }
-
-        public IAnalysisSet Returns => _returned;
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             base.EnsureMembers(members);
 
-            members["send"] = MakeMethod("send", new[] { _sent }, _yielded);
+            members["send"] = MakeMethod("send", new[] { Sent }, _yielded);
             members["throw"] = MakeMethod("throw", new[] { AnalysisSet.Empty }, AnalysisSet.Empty);
         }
 
         public override string Name => "generator";
 
+        public IAnalysisSet Yielded => _yielded;
+        public IAnalysisSet Sent { get; }
+        public IAnalysisSet Returned { get; }
+
+        public override IAnalysisSet GetReturnForYieldFrom(Node node, AnalysisUnit unit) {
+            return Returned;
+        }
+
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            if (_yielded.Any() || _sent.Any() || _returned.Any()) {
+            if (_yielded.Any() || Sent.Any() || Returned.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
                 if (_yielded.Any()) {
                     foreach (var kv in _yielded.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
@@ -514,24 +593,45 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
                 }
 
-                if (_sent.Any()) {
+                if (Sent.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    foreach (var kv in Sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
                         yield return kv;
                     }
-                } else if (_returned.Any()) {
+                } else if (Returned.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[]");
                 }
 
-                if (_returned.Any()) {
+                if (Returned.Any()) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
-                    foreach (var kv in _sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                    foreach (var kv in Sent.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
                         yield return kv;
                     }
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
+        }
+
+        protected override bool Equals(Protocol other) =>
+            other is GeneratorProtocol gp &&
+            _yielded.SetEquals(gp._yielded) &&
+            Sent.SetEquals(gp.Sent) &&
+            Returned.SetEquals(gp.Returned);
+
+        // Types are already checked for an exact match
+        protected override bool UnionEquals(Protocol p) => true;
+
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is GeneratorProtocol gp) {
+                var yielded = _yielded.Union(gp._yielded, out bool changed1);
+                var sent = Sent.Union(gp.Sent, out bool changed2);
+                var returned = Returned.Union(gp.Returned, out bool changed3);
+                if (changed1 || changed2 || changed3) {
+                    return new GeneratorProtocol(Self, yielded, sent, returned);
+                }
+            }
+            return this;
         }
     }
 
@@ -570,12 +670,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
-            foreach (var kv in _values.Types.GetRichDescriptions(prefix: " : ", unionPrefix: "{", unionSuffix: "}")) {
+            foreach (var kv in _values.Types.GetRichDescriptions(prefix: ": ", unionPrefix: "{", unionSuffix: "}")) {
                 yield return kv;
             }
         }
 
         protected override bool Equals(Protocol other) => Name == other.Name;
         public override int GetHashCode() => new { Type = GetType(), Name }.GetHashCode();
+
+        protected override bool UnionEquals(Protocol p) => Equals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
+        protected override Protocol UnionMergeTypes(Protocol p) {
+            if (p is NamespaceProtocol np) {
+                np._values.MakeUnionStrongerIfMoreThan(Self.State.Limits.InstanceMembers, np._values.TypesNoCopy);
+                np._values.CopyTo(_values);
+            }
+            return this;
+        }
+    }
+
+    class InstanceProtocol : CallableProtocol {
+        public InstanceProtocol(ProtocolInfo self, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet instance) :
+            base(self, null, arguments, instance, PythonMemberType.Class) { }
+
+        public override IAnalysisSet GetInstanceType() => ReturnType;
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) => ReturnType;
+
+        protected override bool Equals(Protocol other) => ReturnType.SetEquals(((InstanceProtocol)other).ReturnType);
+        public override int GetHashCode() => GetType().GetHashCode();
+
+        protected override bool UnionEquals(Protocol p) => Equals(p);
+        internal override int UnionHashCode(int strength) => GetHashCode();
+        protected override Protocol UnionMergeTypes(Protocol p) => this;
     }
 }

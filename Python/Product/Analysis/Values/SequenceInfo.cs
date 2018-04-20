@@ -26,30 +26,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableValue {
-        private readonly ProjectEntry _declaringModule;
-        private readonly int _declaringVersion;
-        
-        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
+        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, IPythonProjectEntry entry)
             : base(indexTypes, seqType, node) {
-            _declaringModule = entry;
-            _declaringVersion = entry.AnalysisVersion;
+            DeclaringModule = entry;
+            DeclaringVersion = entry.AnalysisVersion;
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _declaringModule;
-            }
-        }
-
-        public override int DeclaringVersion {
-            get {
-                return _declaringVersion;
-            }
-        }
-
-        public override int? GetLength() {
-            return IndexTypes.Length;
-        }
+        public override IPythonProjectEntry DeclaringModule { get; }
+        public override int DeclaringVersion { get; }
+        public override int? GetLength() => IndexTypes.Length;
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             SequenceInfo seq = null;
@@ -104,7 +89,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (constIndex.Value < 0) {
                     constIndex += IndexTypes.Length;
                 }
-                if (0 <= constIndex.Value &&  constIndex.Value < IndexTypes.Length) {
+                if (0 <= constIndex.Value && constIndex.Value < IndexTypes.Length) {
                     // TODO: Warn if outside known index and no appends?
                     IndexTypes[constIndex.Value].AddDependency(unit);
                     return IndexTypes[constIndex.Value].Types;
@@ -142,21 +127,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return constIndex;
         }
 
-        public override string ShortDescription {
-            get {
-                return _type.Name;
-            }
-        }
-
-        public override string ToString() {
-            return Description;
-        }
-
-        public override string Description {
-            get {
-                return MakeDescription(_type.Name);
-            }
-        }
 
         public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
             for (int i = 0; i < IndexTypes.Length; i++) {
@@ -168,27 +138,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 );
             }
         }
+
+        protected override IAnalysisSet CreateWithNewTypes(Node node, VariableDef[] types) {
+            return new SequenceInfo(types, ClassInfo, node, DeclaringModule);
+        }
     }
 
     internal class StarArgsSequenceInfo : SequenceInfo {
-        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node, ProjectEntry entry)
+        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node, IPythonProjectEntry entry)
             : base(variableDef, builtinClassInfo, node, entry) {
         }
 
         internal void SetIndex(AnalysisUnit unit, int index, IAnalysisSet value) {
-            if (index >= IndexTypes.Length) {
-                var newTypes = new VariableDef[index + 1];
-                for (int i = 0; i < newTypes.Length; ++i) {
-                    if (i < IndexTypes.Length) {
-                        newTypes[i] = IndexTypes[i];
-                    } else {
-                        newTypes[i] = new VariableDef();
-                    }
+            var types = IndexTypes;
+            if (index < 0) {
+                index += types.Length;
+                if (index < 0) {
+                    return;
                 }
-                IndexTypes = newTypes;
             }
-            IndexTypes[index].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
-            IndexTypes[index].AddTypes(unit, value, true, DeclaringModule);
+
+            if (index >= types.Length) {
+                IndexTypes = types = types.Concat(VariableDef.Generator).Take(index + 1).ToArray();
+            }
+            types[index].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
+            types[index].AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
@@ -202,13 +176,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, value);
                 IndexTypes[0].AddTypes(unit, value, true, DeclaringModule);
-            }
-        }
-
-
-        public override string ShortDescription {
-            get {
-                return base.ShortDescription;
             }
         }
 
@@ -241,9 +208,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     sealed class ListParameterVariableDef : LocatedVariableDef {
         public readonly StarArgsSequenceInfo List;
+        public readonly string Name;
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location)
-            : base(unit.DeclaringModule.ProjectEntry, location) {
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, string name)
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location)) {
+            Name = name;
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
                 unit.State.ClassInfos[BuiltinTypeId.Tuple],
@@ -254,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
-            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            : base(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location), copy) {
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
                 unit.State.ClassInfos[BuiltinTypeId.Tuple],

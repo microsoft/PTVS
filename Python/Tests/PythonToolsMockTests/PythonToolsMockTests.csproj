@@ -117,6 +117,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AssemblySetup.cs" />
     <Compile Include="ClassifierTests.cs" />
     <Compile Include="CompletionTests.cs" />
     <Compile Include="EditorTests.cs" />

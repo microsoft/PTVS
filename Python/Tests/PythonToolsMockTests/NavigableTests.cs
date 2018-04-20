@@ -88,10 +88,10 @@ obj
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // ClassBase
-                await helper.CheckDefinitionLocations(57, 9, Location(1, 7));
+                await helper.CheckDefinitionLocations(57, 9, Location(1, 1), Location(1, 7));
                 
                 // ClassDerived
-                await helper.CheckDefinitionLocations(88, 12, Location(4, 7));
+                await helper.CheckDefinitionLocations(88, 12, Location(4, 1), Location(4, 7));
 
                 // object
                 await helper.CheckDefinitionLocations(16, 6, null);
@@ -124,9 +124,9 @@ my_func(2, param2=False)
                 await helper.CheckDefinitionLocations(100, 6, Location(1, 21));
                 
                 // my_func
-                await helper.CheckDefinitionLocations(4, 7, Location(1, 5));
-                await helper.CheckDefinitionLocations(77, 7, Location(1, 5));
-                await helper.CheckDefinitionLocations(89, 7, Location(1, 5));
+                await helper.CheckDefinitionLocations(4, 7, Location(1, 1), Location(1, 5));
+                await helper.CheckDefinitionLocations(77, 7, Location(1, 1), Location(1, 5));
+                await helper.CheckDefinitionLocations(89, 7, Location(1, 1), Location(1, 5));
             }
         }
 
@@ -183,11 +183,11 @@ print(obj._my_attr_val)
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // my_attr
-                await helper.CheckDefinitionLocations(71, 7, Location(9, 9));
-                await helper.CheckDefinitionLocations(128, 7, Location(9, 9));
-                await helper.CheckDefinitionLocations(152, 7, Location(9, 9));
-                await helper.CheckDefinitionLocations(229, 7, Location(9, 9), Location(13, 5));
-                await helper.CheckDefinitionLocations(252, 7, Location(9, 9), Location(13, 5));
+                await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(152, 7, Location(4, 5), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(229, 7, Location(4, 5), Location(8, 5), Location(9, 9), Location(13, 5));
+                await helper.CheckDefinitionLocations(252, 7, Location(4, 5), Location(8, 5), Location(9, 9), Location(13, 5));
 
                 // val
                 await helper.CheckDefinitionLocations(166, 3, Location(9, 23));

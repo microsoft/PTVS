@@ -37,7 +37,7 @@
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
-    <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
+    <!--<DefineConstants Condition="$(NoFullValidation) == ''">$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
     <DefineConstants>$(DefineConstants);DESKTOP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
@@ -75,6 +75,7 @@
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\UriEqualityComparer.cs" />
+    <Compile Include="Infrastructure\UriExtensions.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
     <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
@@ -101,14 +102,18 @@
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
+    <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
+    <Compile Include="LanguageServer\DisplayTextBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
     <Compile Include="LanguageServer\ParseQueue.cs" />
+    <Compile Include="LanguageServer\RestTextConverter.cs" />
     <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
+    <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
@@ -233,14 +238,17 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\CallChain.cs" />
     <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
+    <Compile Include="Values\ParameterInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\ProtocolInfo.cs" />
     <Compile Include="Values\Protocols.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
+    <Compile Include="Values\LazyValueInfo.cs" />
     <Compile Include="Values\TypingModuleInfo.cs" />
     <Compile Include="Values\TypingTypeInfo.cs" />
     <Compile Include="VariableDef.cs" />
@@ -373,7 +381,6 @@
     <Compile Include="Values\BuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinModule.cs" />
     <Compile Include="Values\BuiltinNamespace.cs" />
-    <Compile Include="Values\CallChain.cs" />
     <Compile Include="Values\MergeStrengths.cs" />
     <Compile Include="Values\ObjectBuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinPropertyInfo.cs" />

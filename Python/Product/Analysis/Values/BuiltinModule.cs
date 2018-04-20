@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_specializedValues != null) {
                 foreach (var value in _specializedValues) {
                     IAnalysisSet existing;
-                    if(!res.TryGetValue(value.Key, out existing)) {
+                    if (!res.TryGetValue(value.Key, out existing)) {
                         res[value.Key] = value.Value;
                     } else {
                         var newSet = existing.Union(value.Value, canMutate: false);
@@ -61,33 +62,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override string Documentation {
-            get {
-                return _type.Documentation;
-            }
-        }
+        public override string Documentation => $"{Description}{Environment.NewLine}{_type.Documentation}";
+        public override string Description => $"built-in module {_interpreterModule.Name}";
+        public override string Name => _interpreterModule.Name;
 
-        public override string Description {
-            get {
-                return "built-in module " + _interpreterModule.Name;
-            }
-        }
-
-        public override string Name {
-            get {
-                return _interpreterModule.Name;
-            }
-        }
-
-        public override IPythonType PythonType {
-            get {
-                return this.ProjectState.Types[BuiltinTypeId.Module];
-            }
-        }
-
-        public override PythonMemberType MemberType {
-            get { return _interpreterModule.MemberType; }
-        }
+        public override IPythonType PythonType => ProjectState.Types[BuiltinTypeId.Module];
+        public override PythonMemberType MemberType => _interpreterModule.MemberType;
 
         internal override BuiltinTypeId TypeId => BuiltinTypeId.Module;
 

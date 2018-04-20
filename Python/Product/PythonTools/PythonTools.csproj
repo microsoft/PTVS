@@ -151,6 +151,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Private>True</Private>
     </Reference>
@@ -483,11 +484,9 @@
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\ExceptionCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\OverrideCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
     <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
     <Compile Include="PythonTools\Options\PythonFormattingWrappingOptionsPage.cs">
@@ -548,7 +547,6 @@
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />
     <Compile Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
@@ -635,14 +633,12 @@
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\FromImportCompletionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />
-    <Compile Include="PythonTools\Intellisense\QuickInfoSource.cs" />
-    <Compile Include="PythonTools\Intellisense\QuickInfoSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\AsyncQuickInfoSource.cs" />
+    <Compile Include="PythonTools\Intellisense\AsyncQuickInfoSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ReverseExpressionParser.cs" />
     <Compile Include="PythonTools\Intellisense\SignatureAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\SignatureHelpSource.cs" />

@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -33,6 +31,7 @@ using System.Windows.Input;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -44,12 +43,13 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
+using MefV1 = System.ComponentModel.Composition;
 using Thread = System.Threading.Thread;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
     public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
         internal static CachedVsInfo CachedInfo = CreateCachedVsInfo();
-        public CompositionContainer Container;
+        private ExportProvider _container;
         private IContentTypeRegistryService _contentTypeRegistry;
         private Dictionary<Guid, Package> _packages = new Dictionary<Guid, Package>();
         internal MockVsTextManager TextManager;
@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _monSel.UnadviseSelectionEvents(_monSelCookie);
             Shell.SetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, true);
             _serviceProvider.Dispose();
-            Container.Dispose();
+            _container.Dispose();
             _shutdown = true;
             _uiEvent.Set();
             if (!UIThread.Join(TimeSpan.FromSeconds(30))) {
@@ -214,8 +214,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
 
                     TextManager = new MockVsTextManager(this);
-                    Container = CreateCompositionContainer();
-                    var serviceProvider = _serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
+                    _container = CreateCompositionContainer();
+
+                    _serviceProvider = _container.GetExportedValue<MockVsServiceProvider>();
                     UIShell = new MockVsUIShell(this);
                     _monSel = new MockVsMonitorSelection(this);
                     _uiHierarchy = new MockVsUIHierarchyWindow(this);
@@ -257,7 +258,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                         )
                     );
 
-                    foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                    foreach (var package in _container.GetExportedValues<IMockPackage>()) {
                         _loadedPackages.Add(package);
                         package.Initialize();
                     }
@@ -426,7 +427,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             LanguageServiceInfo info;
             if (CachedInfo.LangServicesByName.TryGetValue(contentType, out info)) {
                 var id = info.Attribute.LanguageServiceSid;
-                var serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
+                var serviceProvider = _container.GetExportedValue<MockVsServiceProvider>();
                 var langInfo = (IVsLanguageInfo)serviceProvider.GetService(id);
                 if (langInfo == null) {
                     throw new NotImplementedException("Unable to get IVsLanguageInfo for " + info.Attribute.LanguageName);
@@ -442,7 +443,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             // Initialize intellisense imports
-            var providers = Container.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>();
+            var providers = _container.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>();
             foreach (var provider in providers) {
                 foreach (var targetContentType in provider.Metadata.ContentTypes) {
                     if (buffer.ContentType.IsOfType(targetContentType)) {
@@ -456,7 +457,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             // tell the world we have a new view...
-            foreach (var listener in Container.GetExports<IVsTextViewCreationListener, IContentTypeMetadata>()) {
+            foreach (var listener in _container.GetExports<IVsTextViewCreationListener, IContentTypeMetadata>()) {
                 foreach (var targetContentType in listener.Metadata.ContentTypes) {
                     if (buffer.ContentType.IsOfType(targetContentType)) {
                         listener.Value.VsTextViewCreated(res);
@@ -471,8 +472,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public IContentTypeRegistryService ContentTypeRegistry {
             get {
                 if (_contentTypeRegistry == null) {
-                    _contentTypeRegistry = Container.GetExport<IContentTypeRegistryService>().Value;
-                    var contentDefinitions = Container.GetExports<ContentTypeDefinition, IContentTypeDefinitionMetadata>();
+                    _contentTypeRegistry = _container.GetExport<IContentTypeRegistryService>().Value;
+                    var contentDefinitions = _container.GetExports<ContentTypeDefinition, IContentTypeDefinitionMetadata>();
                     foreach (var contentDef in contentDefinitions) {
                         _contentTypeRegistry.AddContentType(
                             contentDef.Metadata.Name,
@@ -487,92 +488,85 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         #region Composition Container Initialization
 
-        private CompositionContainer CreateCompositionContainer() {
-            var container = new CompositionContainer(CachedInfo.Catalog);
+        private ExportProvider CreateCompositionContainer() {
+            var catalog = CachedInfo.Catalog.AddInstance(() => this);
 
-            var batch = new CompositionBatch();
-            batch.AddExportedValue(this);
-            container.Compose(batch);
-
-            return container;
+            var configuration = CompositionConfiguration.Create(catalog);
+            var runtimeConfiguration = RuntimeComposition.CreateRuntimeComposition(configuration);
+            var exportProviderFactory = runtimeConfiguration.CreateExportProviderFactory();
+            return exportProviderFactory.CreateExportProvider();
         }
 
         private static CachedVsInfo CreateCachedVsInfo() {
             var runningLoc = Path.GetDirectoryName(typeof(MockVs).Assembly.Location);
 
             // load all of the available DLLs that depend upon TestUtilities into our catalog
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-            List<Type> packageTypes = new List<Type>();
+            var assemblies = new List<Assembly>();
+            var packageTypes = new List<Type>();
 
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            try {
-                var _excludedAssemblies = new HashSet<string>(new string[] {
-                    "Microsoft.VisualStudio.Text.Internal.dll",
-                    "Microsoft.VisualStudio.Utilities.dll",
-                    "Microsoft.VisualStudio.Validation.dll",
-                    "Microsoft.VisualStudio.Workspace.dll",
-                    "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
-                }, StringComparer.OrdinalIgnoreCase);
+            var excludedAssemblies = new HashSet<string>(new string[] {
+                "Microsoft.VisualStudio.Text.Internal.dll",
+                "Microsoft.VisualStudio.Utilities.dll",
+                "Microsoft.VisualStudio.Validation.dll",
+                "Microsoft.VisualStudio.Workspace.dll",
+                "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll",
+                "TestUtilities"
+            }, StringComparer.OrdinalIgnoreCase);
 
-                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    if (_excludedAssemblies.Contains(Path.GetFileName(file))) {
-                        continue;
-                    }
-
-                    Assembly asm;
-                    try {
-                        asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
-                    } catch {
-                        continue;
-                    }
-
-                    Console.WriteLine("Including {0}", file);
-                    try {
-                        foreach (var type in asm.GetTypes()) {
-                            if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
-                                packageTypes.Add(type);
-                            }
-                        }
-                        catalogs.Add(new AssemblyCatalog(asm));
-                    } catch (TypeInitializationException tix) {
-                        Console.WriteLine(tix);
-                    } catch (ReflectionTypeLoadException tlx) {
-                        Console.WriteLine(tlx);
-                        foreach (var ex in tlx.LoaderExceptions) {
-                            Console.WriteLine(ex);
-                        }
-                    } catch (IOException iox) {
-                        Console.WriteLine(iox);
-                    }
+            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                if (excludedAssemblies.Contains(Path.GetFileName(file))) {
+                    continue;
                 }
-            } finally {
-                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
-            }
 
-            return new CachedVsInfo(
-                new AggregateCatalog(catalogs.ToArray()),
-                packageTypes
-            );
-        }
+                Assembly asm;
+                try {
+                    asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
+                } catch {
+                    continue;
+                }
 
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            Assembly asm = null;
-            var name = new AssemblyName(args.Name);
-            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
-            if (File.Exists(path)) {
-                asm = Assembly.LoadFile(path);
-            } else {
-                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
-                if (File.Exists(path)) {
-                    asm = Assembly.LoadFile(path);
+                Console.WriteLine("Including {0}", file);
+                try {
+                    foreach (var type in asm.GetTypes()) {
+                        if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
+                            packageTypes.Add(type);
+                        }
+                    }
+                    assemblies.Add(asm);
+                } catch (TypeInitializationException tix) {
+                    Console.WriteLine(tix);
+                } catch (ReflectionTypeLoadException tlx) {
+                    Console.WriteLine(tlx);
+                    foreach (var ex in tlx.LoaderExceptions) {
+                        Console.WriteLine(ex);
+                    }
+                } catch (IOException iox) {
+                    Console.WriteLine(iox);
                 }
             }
-            if (asm != null && asm.FullName != name.FullName) {
-                asm = null;
-            }
-            return asm;
-        }
 
+            var catalog = MefCatalogFactory.CreateAssembliesCatalog(
+                    "Microsoft.VisualStudio.CoreUtility",
+                    "Microsoft.VisualStudio.Text.Data",
+                    "Microsoft.VisualStudio.Text.Logic",
+                    "Microsoft.VisualStudio.Text.UI",
+                    "Microsoft.VisualStudio.Text.UI.Wpf",
+                    "Microsoft.VisualStudio.InteractiveWindow",
+                    "Microsoft.VisualStudio.VsInteractiveWindow",
+                    "Microsoft.VisualStudio.Editor",
+                    "Microsoft.VisualStudio.Language.Intellisense",
+                    "Microsoft.PythonTools",
+                    "Microsoft.PythonTools.TestAdapter",
+                    "Microsoft.PythonTools.VSInterpreters",
+                    "MockVsTests",
+                    "PythonToolsMockTests")
+                .WithCompositionService()
+                .AddType<MockTextUndoHistoryRegistry>()
+                .AddType<MockContentTypeRegistryService>()
+                .AddType<MockClassificationTypeRegistryService>();
+
+            return new CachedVsInfo(catalog, packageTypes);
+        }
         #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
@@ -582,7 +576,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 if (item == null) {
                     break;
                 }
-                System.Threading.Thread.Sleep(25);
+                Thread.Sleep(25);
             }
             return item;
         }
@@ -710,12 +704,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             get { throw new NotImplementedException(); }
         }
 
-        ICompositionService IComponentModel.DefaultCompositionService {
+        MefV1.ICompositionService IComponentModel.DefaultCompositionService {
             get { throw new NotImplementedException(); }
         }
 
-        ExportProvider IComponentModel.DefaultExportProvider {
-            get { return Container; }
+        MefV1.Hosting.ExportProvider IComponentModel.DefaultExportProvider {
+            get { return _container.AsExportProvider(); }
         }
 
         ComposablePartCatalog IComponentModel.GetCatalog(string catalogName) {
@@ -723,11 +717,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         IEnumerable<T> IComponentModel.GetExtensions<T>() {
-            return Container.GetExportedValues<T>();
+            return _container.GetExportedValues<T>();
         }
 
         T IComponentModel.GetService<T>() {
-            return Container.GetExportedValue<T>();
+            return _container.GetExportedValue<T>();
         }
 
 

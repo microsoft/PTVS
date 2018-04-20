@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         instance = instance.Union(bci.Instance);
                     } else if (ci != null) {
                         instance = instance.Union(ci.Instance);
+                    } else if (n is LazyValueInfo lv) {
+                        instance = instance.Union(LazyValueInfo.GetInstance(node, lv));
                     }
                 }
                 return instance;
@@ -68,9 +70,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private IAnalysisSet ObjectSetAttr(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length >= 3) {
-                foreach (var ii in args[0].OfType<InstanceInfo>()) {
-                    foreach (var key in args[1].GetConstantValueAsString()) {
-                        ii.SetMember(node, unit, key, args[2]);
+                foreach (var ii in args[0].Resolve(unit).OfType<InstanceInfo>()) {
+                    foreach (var key in args[1].Resolve(unit).GetConstantValueAsString()) {
+                        ii.SetMember(node, unit, key, args[2].Resolve(unit));
                     }
                 }
             }

@@ -199,13 +199,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct MarkupContent {
+    public class MarkupContent {
         public MarkupKind kind;
         public string value;
 
         public static implicit operator MarkupContent(string text) => new MarkupContent { kind = MarkupKind.PlainText, value = text };
     }
 
+    public class InformationDisplayOptions {
+        public bool trimDocumentationLines;
+        public int maxDocumentationLineLength;
+        public bool trimDocumentationText;
+        public int maxDocumentationTextLength;
+    }
 
     /// <summary>
     /// Required layout for the initializationOptions member of initializeParams
@@ -229,11 +235,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public Interpreter interpreter;
         public string[] searchPaths;
+        public bool testEnvironment;
+        /// <summary>
+        /// Controls tooltip display appearance. Different between VS and VS Code.
+        /// </summary>
+        public InformationDisplayOptions displayOptions;
+        /// <summary>
+        /// If true, analyzer will be created asynchronously. Used in VS Code.
+        /// </summary>
+        public bool asyncStartup;
     }
 
 
     [Serializable]
-    public struct WorkspaceClientCapabilities {
+    public class WorkspaceClientCapabilities {
         public bool applyEdit;
 
         public struct WorkspaceEditCapabilities { public bool documentChanges; }
@@ -273,7 +288,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct TextDocumentClientCapabilities {
+    public class TextDocumentClientCapabilities {
         [Serializable]
         public struct SynchronizationCapabilities {
             public bool dynamicRegistration;
@@ -355,6 +370,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// property.The order describes the preferred format of the client.
                 /// </summary>
                 public MarkupKind[] documentationFormat;
+
+                /// <summary>
+                /// When true, the label in the returned signature information will
+                /// only contain the function name. Otherwise, the label will contain
+                /// the full signature.
+                /// </summary>
+                public bool? _shortLabel;
             }
             public SignatureInformationCapabilities? signatureInformation;
         }
@@ -425,7 +447,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// client capabilities following the specification for extra settings.
     /// </summary>
     [Serializable]
-    public struct PythonClientCapabilities {
+    public class PythonClientCapabilities {
         /// <summary>
         /// Client expects analysis progress updates, including notifications
         /// when analysis is complete for a particular document version.
@@ -456,11 +478,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct ClientCapabilities {
-        public WorkspaceClientCapabilities? workspace;
-        public TextDocumentClientCapabilities? textDocument;
+    public class ClientCapabilities {
+        public WorkspaceClientCapabilities workspace;
+        public TextDocumentClientCapabilities textDocument;
         public object experimental;
-        public PythonClientCapabilities? python;
+        public PythonClientCapabilities python;
     }
 
 
@@ -508,12 +530,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct SaveOptions {
+    public class SaveOptions {
         public bool includeText;
     }
 
     [Serializable]
-    public struct TextDocumentSyncOptions {
+    public class TextDocumentSyncOptions {
         /// <summary>
         /// Open and close notifications are sent to the server.
         /// </summary>
@@ -521,12 +543,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public TextDocumentSyncKind change;
         public bool willSave;
         public bool willSaveWaitUntil;
-        public SaveOptions? save;
+        public SaveOptions save;
     }
 
     [Serializable]
     public struct ServerCapabilities {
-        public TextDocumentSyncOptions? textDocumentSync;
+        public TextDocumentSyncOptions textDocumentSync;
         public bool hoverProvider;
         public CompletionOptions? completionProvider;
         public SignatureHelpOptions? signatureHelpProvider;
@@ -619,6 +641,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public bool isIncomplete;
         public CompletionItem[] items;
+
+        /// <summary>
+        /// The range that should be replaced when committing a completion from this
+        /// list. Where <c>textEdit</c> is set on a completion, prefer that.
+        /// </summary>
+        public Range? _applicableSpan;
+        /// <summary>
+        /// When true, snippets are allowed in this context.
+        /// </summary>
+        public bool? _allowSnippet;
+        /// <summary>
+        /// The expression that members are being displayed for.
+        /// </summary>
+        public string _expr;
     }
 
     [Serializable]
@@ -672,26 +708,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct SignatureHelp {
+    public class SignatureHelp {
         public SignatureInformation[] signatures;
         public int activeSignature;
         public int activeParameter;
     }
 
     [Serializable]
-    public struct SignatureInformation {
+    public class SignatureInformation {
         public string label;
-        public MarkupContent? documentation;
+        public MarkupContent documentation;
         public ParameterInformation[] parameters;
+
+        public string[] _returnTypes;
     }
 
     [Serializable]
-    public struct ParameterInformation {
+    public class ParameterInformation {
         public string label;
-        public MarkupContent? documentation;
+        public MarkupContent documentation;
 
+        [NonSerialized]
         public string _type;
+        [NonSerialized]
         public string _defaultValue;
+        [NonSerialized]
         public bool? _isOptional;
     }
 
@@ -712,11 +753,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that range applies to
         /// </summary>
         public int? _version;
-        /// <summary>
-        /// The full range of the definition. For example, when 'range' points
-        /// to a function name, '_definitionRange' refers to the whole function.
-        /// </summary>
-        public Range? _definitionRange;
     }
 
     [Serializable]
@@ -793,4 +829,3 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string[] moreTriggerCharacters;
     }
 }
-

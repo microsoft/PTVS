@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis {
 #endif
         }
 
-        private static IAnalysisSet GetArg(
+        internal static IAnalysisSet GetArg(
             IAnalysisSet[] args,
             NameExpression[] keywordArgNames,
             string name,
@@ -478,7 +478,7 @@ namespace Microsoft.PythonTools.Analysis {
                 new[] { "__module__", "__name__", "__qualname__", "__doc__", "__annotations__" };
 
             foreach (var attr in assignedItems) {
-                var member = wrapped.GetMember(node, unit, attr);
+                var member = wrapped.GetMember(node, unit, attr).Resolve(unit);
                 if (member != null && member.Any()) {
                     wrapper.SetMember(node, unit, attr, member);
                 }
@@ -489,9 +489,9 @@ namespace Microsoft.PythonTools.Analysis {
                 new[] { "__dict__" };
 
             foreach (var attr in updatedItems) {
-                var member = wrapped.GetMember(node, unit, attr);
+                var member = wrapped.GetMember(node, unit, attr).Resolve(unit);
                 if (member != null && member.Any()) {
-                    var existing = wrapper.GetMember(node, unit, attr);
+                    var existing = wrapper.GetMember(node, unit, attr).Resolve(unit);
                     if (existing != null) {
                         var updateMethod = existing.GetMember(node, unit, "update");
                         if (updateMethod != null) {

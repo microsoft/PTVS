@@ -21,6 +21,9 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Composition, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -31,15 +34,23 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Setup.Configuration.Interop">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.Internal, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -87,10 +98,13 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AssemblyExtensions.cs" />
+    <Compile Include="AssemblyLoader.cs" />
     <Compile Include="AssertListener.cs" />
     <Compile Include="Ben.Demystifier\ILReader.cs" />
     <Compile Include="Ben.Demystifier\StringBuilderExtensions.cs" />
     <Compile Include="Ben.Demystifier\TypeNameHelper.cs" />
+    <Compile Include="EventTaskSource.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="IAddExistingItem.cs" />
     <Compile Include="IAddNewItem.cs" />
@@ -98,18 +112,32 @@
     <Compile Include="IOverwriteFile.cs" />
     <Compile Include="ITreeNode.cs" />
     <Compile Include="IVisualStudioInstance.cs" />
+    <Compile Include="MefCatalogFactory.cs" />
+    <Compile Include="MefFactoryGenerator.cs" />
     <Compile Include="MessageBoxButton.cs" />
     <Compile Include="Mocks\IClassificationTypeDefinitionMetadata.cs" />
+    <Compile Include="Mocks\KeyWeakReference.cs" />
     <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
     <Compile Include="Mocks\MockTextImageVersion.cs" />
+    <Compile Include="Mocks\Undo\AutoEnclose.cs" />
+    <Compile Include="Mocks\Undo\CatchOperationsFromHistoryForDelegatedPrimitive.cs" />
+    <Compile Include="Mocks\Undo\DelegatedUndoPrimitiveState.cs" />
+    <Compile Include="Mocks\Undo\MockTextUndoHistory.cs" />
+    <Compile Include="Mocks\Undo\MockTextUndoHistoryRegistry.cs" />
+    <Compile Include="Mocks\Undo\MockTextUndoPrimitive.cs" />
+    <Compile Include="Mocks\Undo\MockTextUndoTransaction.cs" />
     <Compile Include="Mocks\MockTextViewModel.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
+    <Compile Include="Mocks\Undo\NullMergeUndoTransactionPolicy.cs" />
     <Compile Include="Mocks\TextVersionWorkaround.cs" />
+    <Compile Include="Mocks\KeyWeakReferenceComparer.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
     <Compile Include="TaskObserver.cs" />
-    <Compile Include="TestEnvironment.cs" />
+    <Compile Include="TestEnvironmentImpl.cs" />
+    <Compile Include="TestMainThread.cs" />
+    <Compile Include="TestMainThreadService.cs" />
     <Compile Include="VCCompiler.cs" />
     <Compile Include="VisualStudioPath.cs" />
     <Compile Include="WebDownloadUtility.cs" />

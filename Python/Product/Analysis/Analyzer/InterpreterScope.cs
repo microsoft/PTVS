@@ -24,25 +24,26 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     abstract class InterpreterScope {
         public readonly InterpreterScope OuterScope;
-        public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
+        public readonly List<InterpreterScope> Children;
         public bool ContainsImportStar;
 
-        private readonly AnalysisValue _av;
-        private readonly Node _node;
         private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
         private readonly AnalysisDictionary<Node, NodeValue> _nodeValues;
         private readonly AnalysisDictionary<string, VariableDef> _variables;
         private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
+        private readonly List<InterpreterScope> _linkedScopes;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
-            _av = av;
-            _node = ast;
+            AnalysisValue = av;
+            Node = ast;
             OuterScope = outerScope;
 
+            Children = new List<InterpreterScope>();
             _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
             _nodeValues = new AnalysisDictionary<Node, NodeValue>();
             _variables = new AnalysisDictionary<string, VariableDef>();
             _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
+            _linkedScopes = new List<InterpreterScope>();
         }
 
         public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
@@ -50,12 +51,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         protected InterpreterScope(AnalysisValue av, InterpreterScope cloned, bool isCloned) {
             Debug.Assert(isCloned);
-            _av = av;
-            Children.AddRange(cloned.Children);
+            AnalysisValue = av;
+            Children = cloned.Children.ToList();
             _nodeScopes = cloned._nodeScopes;
             _nodeValues = cloned._nodeValues;
             _variables = cloned._variables;
             _linkedVariables = cloned._linkedVariables;
+            OriginalScope = cloned.OriginalScope;
+            _linkedScopes = cloned._linkedScopes;
         }
 
         public InterpreterScope GlobalScope {
@@ -83,6 +86,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        internal InterpreterScope OriginalScope { get; private set; }
+
         /// <summary>
         /// Gets the index in the file/buffer that the scope actually starts on.  This is the index where the colon
         /// is on for the start of the body if we're a function or class definition.
@@ -96,31 +101,27 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// the definition it's self (e.g. def fob(...) or class fob(...)).
         /// </summary>
         public virtual int GetStart(PythonAst ast) {
-            if (_node == null) {
+            if (Node == null) {
                 return 1;
             }
-            return _node.StartIndex;
+            return Node.StartIndex;
         }
 
         /// <summary>
         /// Gets the index in the file/buffer that this scope ends at.
         /// </summary>
         public virtual int GetStop(PythonAst ast) {
-            if (_node == null) {
+            if (Node == null) {
                 return int.MaxValue;
             }
-            return _node.EndIndex;
+            return Node.EndIndex;
         }
 
         public abstract string Name {
             get;
         }
 
-        public Node Node {
-            get {
-                return _node;
-            }
-        }
+        public Node Node { get; }
 
         internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables {
             get { return _variables; }
@@ -171,27 +172,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return vars.AddTypes(unit, values);
         }
 
-        public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
+        public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit) {
             VariableDef value;
             if (!TryGetVariable(name, out value)) {
-                VariableDef def;
-                switch (paramKind) {
-                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
-                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
-                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
-                }
+                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location));
                 return AddVariable(name, def);
-            } else if (!(value is LocatedVariableDef)) {
-                VariableDef def;
-                switch (paramKind) {
-                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location, value); break;
-                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location, value); break;
-                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value); break;
-                }
-                return AddVariable(name, def);
+            }
+
+            if (value is LocatedVariableDef lv) {
+                lv.Location = new EncodedLocation(unit, location);
+                lv.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             } else {
-                ((LocatedVariableDef)value).Node = location;
-                ((LocatedVariableDef)value).DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
+                var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location), value);
+                return AddVariable(name, def);
             }
             return value;
         }
@@ -206,14 +199,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            VariableDef res;
-            if (!_variables.TryGetValue(name, out res)) {
+            if (!_variables.TryGetValue(name, out var variable)) {
                 return null;
             }
+
             if (addRef) {
-                res.AddReference(node, unit);
+                variable.AddReference(node, unit);
             }
-            return res;
+            return variable;
         }
 
         public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -249,11 +242,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, node));
-            if (addRef) {
-                res.AddReference(node, unit);
+            var variable = GetVariable(node, unit, name, false);
+            if (variable is LocatedVariableDef locatedVariable) {
+                locatedVariable.Location = new EncodedLocation(unit, node);
+                locatedVariable.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
+            } else {
+                variable = AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
             }
-            return res;
+
+            if (addRef) {
+                variable.AddReference(node, unit);
+            }
+            return variable;
         }
 
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
@@ -274,6 +274,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal bool RemoveVariable(string name, out VariableDef value) {
             return _variables.TryGetValue(name, out value) && _variables.Remove(name);
+        }
+
+        internal virtual bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
+            if (!TryGetVariable(name, out var vd) || vd == ifNot) {
+                return false;
+            }
+            if (addRef) {
+                vd.AddReference(node, unit);
+            }
+            return vd.AddTypes(unit, values);
         }
 
         internal virtual void ClearVariables() {
@@ -320,11 +330,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        public AnalysisValue AnalysisValue {
-            get {
-                return _av;
-            }
-        }
+        public AnalysisValue AnalysisValue { get; }
 
         public void ClearLinkedVariables() {
             _linkedVariables.Clear();
@@ -355,6 +361,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 linkedVar.AddReference(node, unit);
             }
         }
+
+        internal void AddLinkedScope(InterpreterScope scope) {
+            lock (_linkedScopes) {
+                Debug.Assert(!_linkedScopes.Contains(scope));
+                Debug.Assert(scope.OriginalScope == null);
+                scope.OriginalScope = this;
+                _linkedScopes.Add(scope);
+            }
+        }
+
+        internal IEnumerable<InterpreterScope> GetLinkedScopes() => _linkedScopes.AsLockedEnumerable();
 
         internal bool TryGetNodeValue(Node node, NodeValueKind kind, out IAnalysisSet variable) {
             foreach (var s in EnumerateTowardsGlobal) {
@@ -426,6 +443,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         SpecializedInstance,
         Dictionary,
         TypeAnnotation,
+        ParameterInfo
     }
 
 }

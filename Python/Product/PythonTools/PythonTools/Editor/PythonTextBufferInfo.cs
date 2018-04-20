@@ -497,7 +497,7 @@ namespace Microsoft.PythonTools.Editor {
                 try {
                     int elapsed = (int)Math.Min(timer.ElapsedMilliseconds, int.MaxValue);
                     if (elapsed > 10) {
-                        Services.Python.Logger.LogEvent(Logging.PythonLogEvent.GetExpressionAtPoint, new Logging.GetExpressionAtPointInfo {
+                        Services.Python?.Logger?.LogEvent(Logging.PythonLogEvent.GetExpressionAtPoint, new Logging.GetExpressionAtPointInfo {
                             Milliseconds = elapsed,
                             PartialAstLength = span.End.Position,
                             ExpressionFound = hasResult,

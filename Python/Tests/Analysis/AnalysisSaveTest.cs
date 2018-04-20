@@ -33,10 +33,11 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 namespace AnalysisTests {
     [TestClass]
     public class AnalysisSaveTest : BaseAnalysisTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void General() {
@@ -173,7 +174,10 @@ Overloaded = test.Overloaded
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
-                Assert.AreEqual("class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual(
+                    "class test.Aliased:\r\nclass doc\r\n\r\nfunction Aliased(fob):\r\nfunction doc",
+                    allMembers.First(x => x.Name == "Aliased").Documentation
+                );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
 
                 //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
@@ -352,7 +356,7 @@ f([1, 2], 3)
                     .OfType<SequenceBuiltinInstanceInfo>()
                     .Where(s => s.TypeId == BuiltinTypeId.List)
                     .Single();
-                Assert.AreEqual("list of int", lst.ShortDescription);
+                Assert.AreEqual("list[int]", lst.ShortDescription);
             }
         }
 

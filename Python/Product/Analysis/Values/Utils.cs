@@ -46,25 +46,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result.ToString();
         }
 
-        internal static string CleanDocumentation(string doc) {
-            int ctr = 0;
-            var result = new StringBuilder(doc.Length);
-            foreach (char c in doc) {
-                if (c == '\r') {
-                    // pass
-                } else if (c == '\n') {
-                    ctr++;
-                    if (ctr < 3) {
-                        result.Append("\r\n");
-                    }
-                } else {
-                    result.Append(c);
-                    ctr = 0;
-                }
-            }
-            return result.ToString().Trim();
-        }
-
         internal static IAnalysisSet GetReturnTypes(IPythonFunction func, PythonAnalyzer projectState) {
             return AnalysisSet.UnionAll(func.Overloads
                 .Where(fn => fn.ReturnType != null)

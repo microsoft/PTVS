@@ -46,10 +46,11 @@ namespace PythonToolsTests {
         private static readonly string ErrorImportStar = Strings.ExtractMethodContainsFromImportStar;
         private static readonly string ErrorExtractFromClass = Strings.ExtractMethodStatementsFromClassDefinition;
 
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize(60);
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public async Task TestGlobalNonLocalVars() {
@@ -1674,10 +1675,7 @@ async def f():
         }
 
         private Task ExtractMethodTest(string input, object extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
-            Func<Span> textRange = () => {
-                return GetSelectionSpan(input, extract);
-            };
-
+            Func<Span> textRange = () => GetSelectionSpan(input, extract);
             return ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
         }
 
@@ -1700,11 +1698,14 @@ async def f():
 
         private async Task ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
+
+            var editorTestToolset = new EditorTestToolset().WithPythonToolsService();
+            var services = editorTestToolset.GetPythonEditorServices();
             using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
-                var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
-                var view = new MockTextView(buffer);
-                buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
+                var buffer = editorTestToolset.CreatePythonTextBuffer(input, Path.Combine(TestData.GetTempPath(), "fob.py"), analyzer);
+                var view = editorTestToolset.CreateTextView(buffer);
+                await analysisStartedTask;
 
                 var bi = services.GetBufferInfo(buffer);
                 bi.ParseImmediately = true;
@@ -1715,13 +1716,10 @@ async def f():
                 await bp.EnsureCodeSyncedAsync(bi.Buffer, true);
 
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
-
-                view.Selection.Select(
-                    new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()),
-                    false
-                );
-
-                await new Microsoft.PythonTools.Refactoring.MethodExtractor(services, view).ExtractMethod(extractInput);
+                await editorTestToolset.UIThread.InvokeTask(() => {
+                    view.Selection.Select(new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()), false);
+                    return new Microsoft.PythonTools.Refactoring.MethodExtractor(services, view).ExtractMethod(extractInput);
+                });
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);

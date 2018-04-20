@@ -31,10 +31,11 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class DatabaseTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void Invalid2xDatabase() {
@@ -169,9 +170,11 @@ namespace AnalysisTests {
 
     [TestClass]
     public class DatabaseTest27 {
-        static DatabaseTest27() {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         public virtual PythonVersion Python {
             get { return PythonPaths.Python27 ?? PythonPaths.Python27_x64; }

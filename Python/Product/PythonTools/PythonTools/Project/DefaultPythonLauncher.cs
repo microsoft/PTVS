@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private Process StartWithoutDebugger(LaunchConfiguration config) {
             try {
-                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
+                _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
                     IsDebug = false,
                     Version = config.Interpreter?.Version.ToString() ?? ""
                 });
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private void StartWithDebugger(LaunchConfiguration config) {
             try {
-                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
+                _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
                     IsDebug = true,
                     Version = config.Interpreter?.Version.ToString() ?? ""
                 });

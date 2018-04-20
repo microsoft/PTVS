@@ -487,7 +487,12 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 ProjectMgr.OnItemDeleted(this);
 
-                ItemNode.Rename(newPath);
+                var relativePath = CommonUtils.GetRelativeDirectoryPath(
+                    ProjectMgr.ProjectHome,
+                    newPath
+                );
+
+                ItemNode.Rename(relativePath);
 
                 ProjectMgr.OnItemAdded(newParent, this);
 

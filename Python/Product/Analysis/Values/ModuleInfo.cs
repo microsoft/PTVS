@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public void AddModuleReference(ModuleReference moduleRef) {
             if (moduleRef == null) {
                 Debug.Fail("moduleRef should never be null");
-                throw new ArgumentNullException("moduleRef");
+                throw new ArgumentNullException(nameof(moduleRef));
             }
             _referencedModules.Add(moduleRef);
             moduleRef.AddReference(this);
@@ -191,11 +191,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<ModuleReference> ModuleReferences {
-            get {
-                return _referencedModules;
-            }
-        }
+        public IEnumerable<ModuleReference> ModuleReferences => _referencedModules;
 
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             lock (this) {

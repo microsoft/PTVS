@@ -28,10 +28,11 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class ProcessOutputTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public void ArgumentQuoting() {

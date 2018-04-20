@@ -16,25 +16,23 @@
 
 extern alias pythontools;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using pythontools::Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
     public class CodeFormatterTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(0)]
         public async Task TestCodeFormattingSelection() {
@@ -237,11 +235,15 @@ z = y";
 
         private static async Task CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
-            var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
+            var editorTestToolset = new EditorTestToolset().WithPythonToolsService();
+
+            var services = editorTestToolset.GetPythonEditorServices();
             using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
-                var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType);
-                buffer.AddProperty(VsProjectAnalyzer._testAnalyzer, analyzer);
-                var view = new MockTextView(buffer);
+                var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
+                var buffer = editorTestToolset.CreatePythonTextBuffer(input, analyzer);
+                var view = editorTestToolset.CreateTextView(buffer);
+                await analysisStartedTask;
+
                 var bi = services.GetBufferInfo(buffer);
                 var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
                 Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null), "Failed to set analysis entry");
@@ -251,7 +253,7 @@ z = y";
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)
                 );
-                view.Selection.Select(selectionSpan, false);
+                editorTestToolset.UIThread.Invoke(() => view.Selection.Select(selectionSpan, false));
 
                 await analyzer.FormatCodeAsync(
                     selectionSpan,

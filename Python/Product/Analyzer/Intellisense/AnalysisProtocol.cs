@@ -557,25 +557,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public string[] names;
         }
 
-        public sealed class OverridesCompletionRequest : Request<OverridesCompletionResponse> {
-            public const string Command = "overrides";
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-            public int line, column;
-            public string indentation;
-
-            public override string command => Command;
-        }
-
-        public sealed class OverridesCompletionResponse : Response {
-            public Override[] overrides;
-        }
-
-        public sealed class Override {
-            public string name, doc, completion;
-        }
-
         public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
             public const string Command = "removeImports";
 
@@ -875,9 +856,6 @@ namespace Microsoft.PythonTools.Intellisense {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
             public int startLine, startColumn, endLine, endColumn;
-            // the span of the whole definition, when applicable
-            public int? definitionStartLine, definitionStartColumn;
-            public int? definitionEndLine, definitionEndColumn;
             public int? version;
         }
 
@@ -938,14 +916,14 @@ namespace Microsoft.PythonTools.Intellisense {
             public Navigation[] children;
         }
 
-        internal class AnalyzerWarningEvent : Event {
+        public class AnalyzerWarningEvent : Event {
             public string message;
             public const string Name = "analyzerWarning";
 
             public override string name => Name;
         }
 
-        internal class UnhandledExceptionEvent : Event {
+        public class UnhandledExceptionEvent : Event {
             public string message;
             public const string Name = "unhandledException";
 
@@ -985,6 +963,22 @@ namespace Microsoft.PythonTools.Intellisense {
             public int bufferVersion;
             public int startLine, startColumn;
             public int endLine, endColumn;
+        }
+
+        public class LanguageServerRequest : Request<LanguageServerResponse> {
+            public const string Command = "languageServer";
+
+            public string name;
+            public object body;
+
+            public override string command => Command;
+        }
+
+        public class LanguageServerResponse : Response {
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public object body;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string error;
         }
     }
 }

@@ -15,13 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -40,9 +40,10 @@ namespace Microsoft.VisualStudioTools {
             } else {
                 _needDispose = true;
                 _context = new JoinableTaskContext();
-                _factory = new JoinableTaskFactory(_context);
                 Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
             }
+
+            _factory = _context.Factory;
         }
 
         public void Dispose() {

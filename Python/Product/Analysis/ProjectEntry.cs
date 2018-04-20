@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -42,10 +43,8 @@ namespace Microsoft.PythonTools.Analysis {
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
+        private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
-
-        // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
-        private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
 
         internal ProjectEntry(
             PythonAnalyzer state,
@@ -144,8 +143,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public IPythonParse WaitForCurrentParse(int timeout = -1) {
-            if (!_pendingParse.Wait(timeout)) {
+        public IPythonParse WaitForCurrentParse(int timeout = Timeout.Infinite, CancellationToken token = default(CancellationToken)) {
+            if (!_pendingParse.Wait(timeout, token)) {
                 return null;
             }
             return GetCurrentParse();
@@ -247,7 +246,7 @@ namespace Microsoft.PythonTools.Analysis {
             // the children were not registered. To handle this possibility, scan analyzed packages for children of this
             // package (checked by module name first, then sanity-checked by path), and register any that match.
             if (ModulePath.IsInitPyFile(FilePath)) {
-                string pathPrefix = Path.GetDirectoryName(FilePath) + "\\";
+                string pathPrefix = PathUtils.EnsureEndSeparator(Path.GetDirectoryName(FilePath));
                 var children =
                     from pair in ProjectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
@@ -311,6 +310,18 @@ namespace Microsoft.PythonTools.Analysis {
                         state?.ClearAggregate(aggregatedInto);
                         aggregatedInto.RemovedFromProject();
                     }
+                }
+
+                while (_backReferences.TryDequeue(out var reference)) {
+                    if (reference.TryGetTarget(out var referenceDict)) {
+                        lock (referenceDict) {
+                            referenceDict.Remove(this);
+                        }
+                    }
+                }
+
+                foreach (var moduleReference in MyScope.ModuleReferences.ToList()) {
+                    MyScope.RemoveModuleReference(moduleReference);
                 }
             }
         }
@@ -432,6 +443,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _buffers[0].Reset(version, content);
                 SetCurrentParse(Tree, null, false);
             }
+        }
+
+        internal void AddBackReference(ReferenceDict referenceDict) {
+            _backReferences.Enqueue(new WeakReference<ReferenceDict>(referenceDict));
         }
     }
 
@@ -564,7 +579,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns the current tree if no parsing is currently pending, otherwise waits for the 
         /// current parse to finish and returns the up-to-date tree.
         /// </summary>
-        IPythonParse WaitForCurrentParse(int timeout = -1);
+        IPythonParse WaitForCurrentParse(int timeout = Timeout.Infinite, CancellationToken token = default(CancellationToken));
     }
 
     public interface IPythonParse : IDisposable {

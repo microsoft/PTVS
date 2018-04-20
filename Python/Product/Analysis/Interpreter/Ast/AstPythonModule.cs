@@ -29,8 +29,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly IPythonInterpreter _interpreter;
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
-        private bool _foundChildModules;
         private readonly Dictionary<string, IMember> _members;
+        private bool _foundChildModules;
+        private string _documentation = string.Empty;
 
         public static IPythonModule FromFile(
             IPythonInterpreter interpreter,
@@ -86,7 +87,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         internal AstPythonModule() {
             Name = string.Empty;
-            Documentation = string.Empty;
             FilePath = string.Empty;
             _properties = new Dictionary<object, object>();
             _childModules = new List<string>();
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         internal AstPythonModule(string moduleName, IPythonInterpreter interpreter, PythonAst ast, string filePath) {
             Name = moduleName;
-            Documentation = ast.Documentation;
+            _documentation = ast.Documentation;
             FilePath = filePath;
             DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
             Locations = new[] { new LocationInfo(filePath, DocumentUri, 1, 1) };
@@ -126,7 +126,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public string Name { get; }
-        public string Documentation { get; }
+        public string Documentation {
+            get {
+                if(_documentation == null) {
+                    _members.TryGetValue("__doc__", out var m);
+                    _documentation = (m as AstPythonStringLiteral)?.Value ?? string.Empty;
+                    if(string.IsNullOrEmpty(_documentation)) {
+                        _members.TryGetValue($"_{Name}", out m);
+                        _documentation = (m as AstNestedPythonModule)?.Documentation ?? string.Empty;
+                    }
+                }
+                return _documentation;
+            }
+        }
         public string FilePath { get; }
         public Uri DocumentUri { get; }
         public PythonMemberType MemberType => PythonMemberType.Module;
