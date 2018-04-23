@@ -246,7 +246,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearVariables() {
-            _variables = new AnalysisDictionary<string, VariableDef>();
+            _variables.Clear();
         }
 
         public virtual InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
@@ -258,9 +258,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearNodeScopes() {
-            // Do not clear the dictionary as it is needed for completion
-            // and other editor functions while analysis is still running
-            _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
+            _nodeScopes.Clear();
         }
 
         public virtual IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
@@ -282,9 +280,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearNodeValues() {
-            // Do not clear the dictionary as it is needed for completion
-            // and other editor functions while analysis is still running
-            _nodeValues = new AnalysisDictionary<Node, NodeValue>();
+            _nodeValues.Clear();
         }
 
         public virtual bool VisibleToChildren => true;
@@ -292,9 +288,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public AnalysisValue AnalysisValue { get; }
 
         public void ClearLinkedVariables() {
-            // Do not clear the dictionary as it is needed for completion
-            // and other editor functions while analysis is still running
-            _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
+            _linkedVariables.Clear();
         }
 
         internal bool AddLinkedVariable(string name, VariableDef variable) {
