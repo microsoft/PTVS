@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
+            await IfTestWaitForAnalysisCompleteAsync();
 
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return res;
         }
 
-        private SymbolKind ToSymbolKind(PythonMemberType memberType) {
+        private static SymbolKind ToSymbolKind(PythonMemberType memberType) {
             switch (memberType) {
                 case PythonMemberType.Unknown: return SymbolKind.None;
                 case PythonMemberType.Class: return SymbolKind.Class;

@@ -18,6 +18,6 @@ using System;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     interface ILogger {
-        void TraceMessage(string message);
+        void TraceMessage(IFormattable message);
     }
 }

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
             await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
+            await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);

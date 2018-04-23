@@ -104,7 +104,6 @@
     <Compile Include="Ben.Demystifier\ILReader.cs" />
     <Compile Include="Ben.Demystifier\StringBuilderExtensions.cs" />
     <Compile Include="Ben.Demystifier\TypeNameHelper.cs" />
-    <Compile Include="EventTaskSource.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="IAddExistingItem.cs" />
     <Compile Include="IAddNewItem.cs" />

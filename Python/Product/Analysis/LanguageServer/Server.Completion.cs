@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
+            await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;
             // Make sure document is enqueued for processing
@@ -91,46 +91,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
             return opts;
-        }
-
-        private CompletionItem ToCompletionItem(MemberResult m, GetMemberOptions opts) {
-            var res = new CompletionItem {
-                label = m.Name,
-                insertText = m.Completion,
-                documentation = m.Documentation,
-                // Place regular items first, advanced entries last
-                sortText = Char.IsLetter(m.Completion[0]) ? "1" : "2",
-                kind = ToCompletionItemKind(m.MemberType),
-                _kind = m.MemberType.ToString().ToLowerInvariant()
-            };
-
-            return res;
-        }
-
-        private CompletionItemKind ToCompletionItemKind(PythonMemberType memberType) {
-            switch (memberType) {
-                case PythonMemberType.Unknown: return CompletionItemKind.None;
-                case PythonMemberType.Class: return CompletionItemKind.Class;
-                case PythonMemberType.Instance: return CompletionItemKind.Value;
-                case PythonMemberType.Delegate: return CompletionItemKind.Class;
-                case PythonMemberType.DelegateInstance: return CompletionItemKind.Function;
-                case PythonMemberType.Enum: return CompletionItemKind.Enum;
-                case PythonMemberType.EnumInstance: return CompletionItemKind.EnumMember;
-                case PythonMemberType.Function: return CompletionItemKind.Function;
-                case PythonMemberType.Method: return CompletionItemKind.Method;
-                case PythonMemberType.Module: return CompletionItemKind.Module;
-                case PythonMemberType.Namespace: return CompletionItemKind.Module;
-                case PythonMemberType.Constant: return CompletionItemKind.Constant;
-                case PythonMemberType.Event: return CompletionItemKind.Event;
-                case PythonMemberType.Field: return CompletionItemKind.Field;
-                case PythonMemberType.Property: return CompletionItemKind.Property;
-                case PythonMemberType.Multiple: return CompletionItemKind.Value;
-                case PythonMemberType.Keyword: return CompletionItemKind.Keyword;
-                case PythonMemberType.CodeSnippet: return CompletionItemKind.Snippet;
-                case PythonMemberType.NamedArgument: return CompletionItemKind.Variable;
-                default:
-                    return CompletionItemKind.None;
-            }
         }
     }
 }

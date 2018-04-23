@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _queue.Dispose();
         }
 
-        public void TraceMessage(string message) {
+        public void TraceMessage(IFormattable message) {
             if (_traceLogging) {
                 LogMessage(MessageType.Log, message.ToString());
             }
@@ -685,10 +685,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
-        private void IfTestWaitForAnalysisComplete() {
+        private async Task IfTestWaitForAnalysisCompleteAsync() {
             if (_testEnvironment) {
-                WaitForDirectoryScanAsync().Wait();
-                WaitForCompleteAnalysisAsync().Wait();
+                await WaitForDirectoryScanAsync();
+                await WaitForCompleteAnalysisAsync();
             }
         }
     }
