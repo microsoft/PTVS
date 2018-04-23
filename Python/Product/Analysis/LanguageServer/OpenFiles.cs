@@ -38,9 +38,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     sealed class OpenFile {
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
+        private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
 
         public IDictionary<int, BufferVersion> LastReportedDiagnostics { get; } = new Dictionary<int, BufferVersion>();
-        public List<DidChangeTextDocumentParams> PendingChanges { get; } = new List<DidChangeTextDocumentParams>();
 
         public OpenFile(ProjectFiles projectFiles, ILogger log) {
             _projectFiles = projectFiles;
@@ -70,8 +70,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     // Expected from version hasn't been seen yet, and there are no resets in this
                     // change, so enqueue it for later.
                     _log.TraceMessage($"Deferring changes for {uri} until version {fromVersion} is seen");
-                    lock (PendingChanges) {
-                        PendingChanges.Add(@params);
+                    lock (_pendingChanges) {
+                        _pendingChanges.Add(@params);
                     }
                     return;
                 }
@@ -89,16 +89,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ));
 
                 DidChangeTextDocumentParams? next = null;
-                lock (PendingChanges) {
-                    var notExpired = PendingChanges
+                lock (_pendingChanges) {
+                    var notExpired = _pendingChanges
                         .Where(p => p.textDocument.version.GetValueOrDefault() >= toVersion)
                         .OrderBy(p => p.textDocument.version.GetValueOrDefault())
                         .ToArray();
 
-                    PendingChanges.Clear();
+                    _pendingChanges.Clear();
                     if (notExpired.Any()) {
                         next = notExpired.First();
-                        PendingChanges.AddRange(notExpired.Skip(1));
+                        _pendingChanges.AddRange(notExpired.Skip(1));
                     }
                 }
                 if (next.HasValue) {
