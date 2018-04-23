@@ -50,18 +50,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
                 var doc = _displayTextBuilder.MakeModuleHoverText(modRef);
-                MarkupContent mc = null;
-                if (doc != null) {
-                    switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
-                        case MarkupKind.Markdown:
-                            mc = new MarkupContent {
-                                kind = MarkupKind.Markdown,
-                                value = new RestTextConverter().ToMarkdown(doc)
-                            };
-                            break;
-                    }
-                }
-                return new Hover { contents = (mc ?? doc) ?? string.Empty };
+                return new Hover { contents = GetMarkupContent(doc, _clientCaps.textDocument?.hover?.contentFormat) };
             }
 
             Expression expr;
@@ -101,19 +90,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
 
             var res = new Hover {
-                contents = _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions),
+                contents = GetMarkupContent(
+                    _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions),
+                    _clientCaps.textDocument?.hover?.contentFormat),
                 range = exprSpan,
                 _version = version,
                 _typeNames = names
             };
-            switch (SelectBestMarkup(_clientCaps.textDocument?.hover?.contentFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
-                case MarkupKind.Markdown:
-                    res.contents = new MarkupContent {
-                        kind = MarkupKind.Markdown,
-                        value = new RestTextConverter().ToMarkdown(res.contents.value)
-                    };
-                    break;
-            }
             return res;
         }
 

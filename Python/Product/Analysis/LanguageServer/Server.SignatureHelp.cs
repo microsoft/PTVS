@@ -105,36 +105,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _defaultValue = p.DefaultValue
             }).ToArray();
 
-            switch (SelectBestMarkup(_clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat, MarkupKind.Markdown, MarkupKind.PlainText)) {
-                case MarkupKind.Markdown:
-                    var converter = new RestTextConverter();
-                    if (!string.IsNullOrEmpty(si.documentation.value)) {
-                        si.documentation.kind = MarkupKind.Markdown;
-                        si.documentation.value = converter.ToMarkdown(si.documentation.value);
-                    }
-                    foreach (var p in si.parameters) {
-                        if (!string.IsNullOrEmpty(p.documentation.value)) {
-                            p.documentation.kind = MarkupKind.Markdown;
-                            p.documentation.value = converter.ToMarkdown(p.documentation.value);
-                        }
-                    }
-                    break;
+            var formatSetting = _clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
+            si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
+            foreach (var p in si.parameters) {
+                p.documentation = GetMarkupContent(p.documentation.value, formatSetting);
             }
 
             si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
             return si;
-        }
-
-        private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
-            if (requested == null) {
-                return supported.Last();
-            }
-            foreach (var k in requested) {
-                if (supported.Contains(k)) {
-                    return k;
-                }
-            }
-            return MarkupKind.PlainText;
         }
 
         private string FormatParameter(ParameterResult p) {

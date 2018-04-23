@@ -17,13 +17,12 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        private TaskCompletionSource<bool> _analysisCts;
-
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
@@ -36,13 +35,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, CancellationToken, out _) ?? tree;
-            // Give analysis opportunity to complete
-            if (!entry.IsComplete) {
-                entry.OnNewAnalysis += OnNewAnalysis;
-                _analysisCts = new TaskCompletionSource<bool>();
-                _analysisCts.Task.Wait(300);
-            }
-
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
@@ -75,11 +67,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
             // TODO: Fill out missing values in item
             return Task.FromResult(item);
-        }
-
-        private void OnNewAnalysis(object sender, EventArgs e) {
-            ((ProjectEntry)sender).OnNewAnalysis -= OnNewAnalysis;
-            _analysisCts?.SetResult(true);
         }
 
         private GetMemberOptions GetOptions(CompletionContext? context) {

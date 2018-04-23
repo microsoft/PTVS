@@ -77,8 +77,8 @@ namespace Microsoft.PythonTools.Analysis {
             return u;
         }
 
-        public event EventHandler<EventArgs> OnNewParseTree;
-        public event EventHandler<EventArgs> OnNewAnalysis;
+        public event EventHandler OnNewParseTree;
+        public event EventHandler OnNewAnalysis;
 
         private readonly ManualResetEventSlim _pendingParse = new ManualResetEventSlim(true);
         private long _expectedParse;
@@ -179,14 +179,12 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void RaiseOnNewAnalysis() {
-            IsComplete = true;
             OnNewAnalysis?.Invoke(this, EventArgs.Empty);
         }
 
         public int AnalysisVersion { get; private set; }
 
         public bool IsAnalyzed => Analysis != null;
-        internal bool IsComplete { get; private set; }
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
             var parse = GetCurrentParse();
@@ -195,8 +193,6 @@ namespace Microsoft.PythonTools.Analysis {
             if (tree == null) {
                 return;
             }
-
-            IsComplete = false;
 
             var oldParent = MyScope.ParentPackage;
             if (FilePath != null) {
@@ -546,8 +542,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         ModuleAnalysis Analysis { get; }
 
-        event EventHandler<EventArgs> OnNewParseTree;
-        event EventHandler<EventArgs> OnNewAnalysis;
+        event EventHandler OnNewParseTree;
+        event EventHandler OnNewAnalysis;
 
         /// <summary>
         /// Informs the project entry that a new tree will soon be available and will be provided by

@@ -404,9 +404,10 @@ namespace Microsoft.PythonTools.Analysis {
             scope = scope ?? FindScope(location);
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var u = unit.CopyForEval();
 
             if (!lookup.Any()) {
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+                var eval = new ExpressionEvaluator(u, scope, mergeScopes: true);
                 if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
                     lookup = eval.EvaluateNoMemberRecursion(expr);
                 } else {
@@ -414,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return GetMemberResults(lookup.Resolve(unit), scope, options);
+            return GetMemberResults(lookup.Resolve(u), scope, options);
         }
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {

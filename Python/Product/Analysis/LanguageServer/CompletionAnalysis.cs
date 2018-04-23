@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public IEnumerable<CompletionItem> GetCompletions() {
-            var opts = Options;
+            var opts = Options | GetMemberOptions.ForEval;
             bool allowKeywords = true, allowArguments = true;
             List<CompletionItem> additional = null;
 

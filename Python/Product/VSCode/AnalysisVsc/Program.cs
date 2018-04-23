@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.VsCode {
                     var ui = new UIService(rpc);
                     rpc.SynchronizationContext = new SingleThreadSynchronizationContext(ui);
 
-                    services.AddService(new UIService(rpc));
+                    services.AddService(ui);
                     services.AddService(new TelemetryService(rpc));
                     var token = server.Start(services, rpc);
                     rpc.StartListening();
@@ -87,15 +87,14 @@ namespace Microsoft.PythonTools.VsCode {
                     if(_cts.IsCancellationRequested) {
                         break;
                     }
-                    if(_queue.TryDequeue(out var t)) {
+                    while(_queue.TryDequeue(out var t)) {
                         try {
                             t.Item1(t.Item2);
                         } catch(Exception ex) {
                             _ui.LogMessage($"Exception processing request: {ex.Message}", MessageType.Error);
                         }
-                    } else {
-                        _workAvailable.Reset();
                     }
+                    _workAvailable.Reset();
                 }
             }
         }

@@ -22,6 +22,7 @@ using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using System.IO;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
@@ -178,24 +179,30 @@ namespace Microsoft.PythonTools.Analysis {
             // Module doc does not nave example/signature lines like a function
             // so just make it flow nicely in the tooltip by removing like breaks.
             // Preserve double breaks and breaks before the indented text
-            var lines = doc.Replace("\r", string.Empty).Split('\n');
             var sb = new StringBuilder();
-            for (var i = 0; i < lines.Length; i++) {
-                var line = lines[i];
-                if (i < lines.Length - 1) {
-                    if (line.Length == 0) {
-                        sb.AppendLine();
-                        sb.AppendLine();
-                    } else {
-                        if (lines[i + 1].Length > 0) {
-                            sb.Append(line);
-                            sb.Append(' ');
-                        } else {
-                            sb.Append(line);
-                        }
+            using (var sr = new StringReader(doc)) {
+                while (true) {
+                    var line = sr.ReadLine();
+                    if(line == null) {
+                        break;
                     }
-                } else {
-                    sb.Append(line);
+                    var nextLine = sr.ReadLine();
+                    if (nextLine != null) {
+                        if (line.Length == 0) {
+                            sb.AppendLine();
+                            sb.AppendLine();
+                        } else {
+                            if (nextLine.Length > 0) {
+                                sb.Append(line);
+                                sb.Append(' ');
+                            } else {
+                                sb.Append(line);
+                            }
+                        }
+                    } else {
+                        sb.Append(line);
+                    }
+                    line = nextLine;
                 }
             }
             return sb.ToString();

@@ -18,7 +18,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Analysis.Infrastructure {
+namespace TestUtilities.Python {
     public sealed class EventTaskSource<T> : EventTaskSource<T, EventHandler, EventArgs> {
         public EventTaskSource(Action<T, EventHandler> subscribe, Action<T, EventHandler> unsubscribe)
             : base(subscribe, unsubscribe, a => (o, e) => a(o, e)) {

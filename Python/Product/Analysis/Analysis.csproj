@@ -65,7 +65,6 @@
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="IHasQualifiedName.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
-    <Compile Include="Infrastructure\EventTaskSource.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
     <Compile Include="Infrastructure\ITestEnvironment.cs" />
@@ -111,6 +110,7 @@
     <Compile Include="LanguageServer\Server.Completion.cs" />
     <Compile Include="LanguageServer\Server.FindReferences.cs" />
     <Compile Include="LanguageServer\Server.Hover.cs" />
+    <Compile Include="LanguageServer\Server.PrivateHelpers.cs" />
     <Compile Include="LanguageServer\Server.SignatureHelp.cs" />
     <Compile Include="LanguageServer\Server.WorkspaceSymbols.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
