@@ -77,8 +77,8 @@ namespace Microsoft.PythonTools.Analysis {
             return u;
         }
 
-        public event EventHandler OnNewParseTree;
-        public event EventHandler OnNewAnalysis;
+        public event EventHandler<EventArgs> OnNewParseTree;
+        public event EventHandler<EventArgs> OnNewAnalysis;
 
         private readonly ManualResetEventSlim _pendingParse = new ManualResetEventSlim(true);
         private long _expectedParse;
@@ -542,8 +542,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         ModuleAnalysis Analysis { get; }
 
-        event EventHandler OnNewParseTree;
-        event EventHandler OnNewAnalysis;
+        event EventHandler<EventArgs> OnNewParseTree;
+        event EventHandler<EventArgs> OnNewAnalysis;
 
         /// <summary>
         /// Informs the project entry that a new tree will soon be available and will be provided by
