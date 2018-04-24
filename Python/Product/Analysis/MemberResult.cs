@@ -145,27 +145,16 @@ namespace Microsoft.PythonTools.Analysis {
             if (ns.MemberType == PythonMemberType.Module) {
                 return FormatModuleDocumentation(doc);
             }
-            // Documentation can contain something like
-            //      func(a, b, c)\n\nThis function...
-            // i.e. with paragraph. We want to remove line breaks 
-            // in the text after the paragraph breaks and tooltip UI 
-            // to decide of the wrap and flow.
             var ctr = 0;
-            var seenParagraphGap = false;
             var result = new StringBuilder(doc.Length);
             foreach (var c in doc) {
                 if (c == '\r') {
                     continue;
                 }
                 if (c == '\n') {
-                    if (seenParagraphGap) {
-                        result.Append(' ');
-                    } else {
-                        ctr++;
-                        if (ctr < 3) {
-                            result.AppendLine();
-                            seenParagraphGap = ctr == 2;
-                        }
+                    ctr++;
+                    if (ctr < 3) {
+                        result.AppendLine();
                     }
                 } else {
                     result.Append(c);
@@ -183,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis {
             using (var sr = new StringReader(doc)) {
                 while (true) {
                     var line = sr.ReadLine();
-                    if(line == null) {
+                    if (line == null) {
                         break;
                     }
                     var nextLine = sr.ReadLine();
