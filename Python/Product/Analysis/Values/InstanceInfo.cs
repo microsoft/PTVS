@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.TypesNoCopy;
                     var key = kvp.Key;
-                    if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                    if (options.ForEval()) {
                         kvp.Value.ClearOldValues();
                     }
                     if (kvp.Value.VariableStillExists) {
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 if (baseClass != null &&
                                     baseClass.Instance._instanceAttrs != null) {
                                     foreach (var kvp in baseClass.Instance._instanceAttrs) {
-                                        if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                                        if (!options.ForEval()) {
                                             kvp.Value.ClearOldValues();
                                         }
                                         if (kvp.Value.VariableStillExists) {

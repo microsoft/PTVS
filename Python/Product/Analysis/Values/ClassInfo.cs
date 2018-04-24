@@ -423,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var result = new Dictionary<string, IAnalysisSet>(Scope.VariableCount);
 
             foreach (var v in Scope.AllVariables) {
-                if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                if (!options.ForEval()) {
                     v.Value.ClearOldValues();
                 }
                 if (v.Value.VariableStillExists) {

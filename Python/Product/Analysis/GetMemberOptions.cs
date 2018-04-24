@@ -93,5 +93,6 @@ namespace Microsoft.PythonTools.Analysis {
         public static bool StatementKeywords(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IncludeStatementKeywords);
         public static bool ExpressionKeywords(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IncludeExpressionKeywords);
         public static bool Exceptions(this GetMemberOptions self) => (self & GetMemberOptions.ExceptionsOnly) != 0;
+        public static bool ForEval(this GetMemberOptions self) => (self & GetMemberOptions.ForEval) != 0;
     }
 }
