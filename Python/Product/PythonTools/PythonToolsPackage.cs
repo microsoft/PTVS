@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools {
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
-    [ProvideFeatureFlag("Python.Analyzer.LiveLinting", true)]
+    [ProvideFeatureFlag("Python.Analyzer.LiveLinting", false)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {

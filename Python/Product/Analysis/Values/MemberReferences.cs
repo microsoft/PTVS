@@ -73,11 +73,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// A collection of references which are keyd off of project entry.
     /// </summary>
     class ReferenceDict : Dictionary<IProjectEntry, ReferenceList> {
-        public ReferenceList GetReferences(ProjectEntry project) {
+        public ReferenceList GetReferences(ProjectEntry projectEntry) {
             ReferenceList builtinRef;
             lock (this) {
-                if (!TryGetValue(project, out builtinRef) || builtinRef.Version != project.AnalysisVersion) {
-                    this[project] = builtinRef = new ReferenceList(project);
+                var isReferenced = TryGetValue(projectEntry, out builtinRef);
+                if (!isReferenced || builtinRef.Version != projectEntry.AnalysisVersion) {
+                    this[projectEntry] = builtinRef = new ReferenceList(projectEntry);
+                }
+
+                if (!isReferenced) {
+                    projectEntry.AddBackReference(this);
                 }
             }
             return builtinRef;

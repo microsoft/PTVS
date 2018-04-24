@@ -1053,7 +1053,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     HandleChar(ch);
 
-                    if (session != null && !session.IsDismissed) {
+                    if (session != null && session.IsStarted && !session.IsDismissed) {
                         session.Filter();
                     }
                 }
@@ -1099,7 +1099,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
                             int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
-                            if (session != null && !session.IsDismissed) {
+                            if (session != null && session.IsStarted && !session.IsDismissed) {
                                 session.Filter();
                             }
                             return res;

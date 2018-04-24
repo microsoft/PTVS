@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -40,10 +41,8 @@ namespace Microsoft.PythonTools.Analysis {
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
+        private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
-
-        // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
-        private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
 
         internal ProjectEntry(
             PythonAnalyzer state,
@@ -309,6 +308,18 @@ namespace Microsoft.PythonTools.Analysis {
                         aggregatedInto.RemovedFromProject();
                     }
                 }
+
+                while (_backReferences.TryDequeue(out var reference)) {
+                    if (reference.TryGetTarget(out var referenceDict)) {
+                        lock (referenceDict) {
+                            referenceDict.Remove(this);
+                        }
+                    }
+                }
+
+                foreach (var moduleReference in MyScope.ModuleReferences.ToList()) {
+                    MyScope.RemoveModuleReference(moduleReference);
+                }
             }
         }
 
@@ -429,6 +440,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _buffers[0].Reset(version, content);
                 SetCurrentParse(Tree, null, false);
             }
+        }
+
+        internal void AddBackReference(ReferenceDict referenceDict) {
+            _backReferences.Enqueue(new WeakReference<ReferenceDict>(referenceDict));
         }
     }
 
