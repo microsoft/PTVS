@@ -2344,6 +2344,9 @@
       <Item ItemId=";ExpDebuggerInfoBarDontShowAgainButtonText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Don't Show This Again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[不再顯示]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2368,6 +2371,9 @@
       <Item ItemId=";ExpDebuggerInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Try out the preview of our new Python debugger before it becomes the default!]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[在新的 Python 偵錯工具預覽版尚未成為預設偵錯工具之前，先行試用!]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
