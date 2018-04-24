@@ -220,5 +220,18 @@ namespace PythonToolsUITests {
             app.WaitForTaskListItems(typeof(SVsErrorList), 0);
             app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
+
+        /// <summary>
+        /// Make sure *.pyi files ignore the active Python version
+        /// </summary>
+        public void ErrorListEmptyForValidTypingFile(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\Typings.sln");
+            project.ProjectItems.Item("mymod.pyi").Open();
+
+            var actual = app.WaitForTaskListItems(typeof(SVsErrorList), 1);
+            Assert.AreEqual(1, actual.Count);
+            ErrorHandler.ThrowOnFailure(actual[0].Document(out var doc));
+            Assert.AreEqual("usermod.py", Path.GetFileName(doc));
+        }
     }
 }
