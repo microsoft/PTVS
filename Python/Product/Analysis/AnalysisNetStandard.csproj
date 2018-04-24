@@ -7,15 +7,19 @@
   <Import Project="..\NetStandard.settings" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
+    <None Remove="Pythia\model\model-sequence.json.gz" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
     <PackageReference Include="NewtonSoft.Json" Version="10.0.1" />
     <PackageReference Include="Python2" version="2.7.14" Condition="'$(OS)' == 'Windows_NT'" />
     <PackageReference Include="Python" version="3.6.4" Condition="'$(OS)' == 'Windows_NT'" />
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="get_search_paths.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Pythia\model\model-sequence.json.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="scrape_module.py">
