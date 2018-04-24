@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             tree.Walk(w);
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var doc = _displayTextBuilder.MakeModuleHoverText(modRef);
+                var doc = _displayTextBuilder.MakeModuleHoverText(modRef, _displayOptions);
                 return new Hover { contents = GetMarkupContent(doc, _clientCaps.textDocument?.hover?.contentFormat) };
             }
 

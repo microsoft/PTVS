@@ -107,11 +107,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return result.ToString().TrimEnd();
         }
 
-        public string MakeModuleHoverText(ModuleReference modRef) {
+        public string MakeModuleHoverText(ModuleReference modRef, InformationDisplayOptions displayOptions) {
             // Return module information
             var contents = "{0} : module".FormatUI(modRef.Name);
             if (!string.IsNullOrEmpty(modRef.Module?.Documentation)) {
-                contents += $"{Environment.NewLine}{Environment.NewLine}{modRef.Module.Documentation}";
+                var limited = displayOptions.trimDocumentationText
+                    ? LimitLines(modRef.Module.Documentation)
+                    : modRef.Module.Documentation;
+                contents += $"{Environment.NewLine}{Environment.NewLine}{limited}";
             }
             return contents;
         }

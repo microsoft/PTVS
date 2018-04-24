@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -128,12 +129,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public string Name { get; }
         public string Documentation {
             get {
-                if(_documentation == null) {
+                if (_documentation == null) {
                     _members.TryGetValue("__doc__", out var m);
                     _documentation = (m as AstPythonStringLiteral)?.Value ?? string.Empty;
-                    if(string.IsNullOrEmpty(_documentation)) {
+                    if (string.IsNullOrEmpty(_documentation)) {
                         _members.TryGetValue($"_{Name}", out m);
-                        _documentation = (m as AstNestedPythonModule)?.Documentation ?? string.Empty;
+                        _documentation = (m as AstNestedPythonModule)?.Documentation;
+                        if (string.IsNullOrEmpty(_documentation)) {
+                            _documentation = TryGetDocFromModuleInitFile(FilePath);
+                        }
                     }
                 }
                 return _documentation;
@@ -205,5 +209,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public void Imported(IModuleContext context) { }
         public void RemovedFromProject() { }
+
+        private static string TryGetDocFromModuleInitFile(string filePath) {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
+                return string.Empty;
+            }
+
+            using (var sr = new StreamReader(filePath)) {
+                string quote = null;
+                var line = sr.ReadLine();
+                if (line != null) {
+                    if (line.StartsWithOrdinal("\"\"\"")) {
+                        quote = "\"\"\"";
+                    } else if (line.StartsWithOrdinal("'''")) {
+                        quote = "'''";
+                    }
+                }
+                if (quote != null) {
+                    var sb = new StringBuilder();
+                    while (true) {
+                        line = sr.ReadLine();
+                        if (line == null || line.EndsWithOrdinal(quote)) {
+                            break;
+                        }
+                        sb.AppendLine(line);
+                    }
+                    return sb.ToString();
+                }
+            }
+            return string.Empty;
+        }
     }
 }
