@@ -869,43 +869,56 @@ x\
             }
         }
 
-        private class NotifyOnNewEntry : IPythonTextBufferInfoEventSink, IDisposable {
-            public void Dispose() {
-                WaitHandle.Dispose();
-            }
+        private class NotifyOnNewEntry : IPythonTextBufferInfoEventSink {
+            private TaskCompletionSource<AnalysisEntry> _tcs;
 
-            public AnalysisEntry Entry { get; private set; }
-            public WaitHandle WaitHandle { get; } = new AutoResetEvent(false);
+            public Task<AnalysisEntry> WaitAsync() {
+                var tcs = new TaskCompletionSource<AnalysisEntry>();
+                var actualTcs = Interlocked.CompareExchange(ref _tcs, tcs, null) ?? tcs;
+                if (actualTcs == tcs) {
+                    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    cts.Token.Register(() => actualTcs.TrySetCanceled());
+                }
+                return actualTcs.Task;
+            }
 
             public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
-                    Entry = e.AnalysisEntry;
-                    ((AutoResetEvent)WaitHandle).Reset();
+                    Console.WriteLine($"New entry in {e.AnalysisEntry?.Analyzer}");
+                    if (e.AnalysisEntry != null) {
+                        var tcs = Interlocked.Exchange(ref _tcs, null);
+                        tcs?.SetResult(e.AnalysisEntry);
+                    }
                 }
                 return Task.CompletedTask;
             }
         }
 
-        public void DefaultAnalyzerForNonProjectFile(PythonVisualStudioApp app) {
+        public async Task DefaultAnalyzerForNonProjectFile(PythonVisualStudioApp app) {
             var wnd = app.OpenDocument(TestData.GetPath("TestData", "Typings", "usermod.py"));
 
             var bi = ((ITextView)wnd.TextView).TextBuffer.TryGetInfo();
             Assert.IsNotNull(bi);
-            using (var entry = new NotifyOnNewEntry()) {
-                bi.AddSink(entry, entry);
+            var entry = new NotifyOnNewEntry();
+            bi.AddSink(entry, entry);
+            await entry.WaitAsync();
 
+            TestUtilities.UI.DefaultInterpreterSetter dis = null;
+            try {
                 foreach (var pv in PythonPaths.Versions) {
-                    using (var dis = app.SelectDefaultInterpreter(pv)) {
-                        if (dis.OriginalInterpreter == dis.CurrentDefault) {
-                            Console.WriteLine($"Remained at {pv.Version.ToVersion()}");
-                            continue;
-                        }
-                        Console.WriteLine($"Changed to {pv.Version.ToVersion()}");
-                        Assert.IsTrue(entry.WaitHandle.WaitOne(5000));
-                        entry.Entry.Analyzer.WaitForCompleteAnalysis(_ => true);
-                        Assert.AreEqual(pv.Version, entry.Entry.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion());
+                    var waitForEntry = entry.WaitAsync();
+                    if (dis == null) {
+                        dis = app.SelectDefaultInterpreter(pv);
+                    } else {
+                        dis.SetDefault(app.InterpreterService.FindInterpreter(pv.Id));
                     }
+                    Console.WriteLine($"Changed to {pv.Id}");
+                    var e = await waitForEntry;
+                    Assert.IsNotNull(e);
+                    Assert.AreEqual(pv.Id, e.Analyzer.InterpreterFactory.Configuration.Id);
                 }
+            } finally {
+                dis?.Dispose();
             }
         }
 
