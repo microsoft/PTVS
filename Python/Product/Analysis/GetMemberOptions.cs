@@ -73,24 +73,19 @@ namespace Microsoft.PythonTools.Analysis {
         /// returns type, and the 2nd member access will not continue to recurse through
         /// the hierarchy.
         /// </summary>
-        NoMemberRecursion = 0x80
+        NoMemberRecursion = 0x80,
+
+        /// <summary>
+        /// Only include members which are valid (or likely) exception types
+        /// </summary>
+        ExceptionsOnly = 0x100
     }
 
     internal static class GetMemberOptionsExtensions {
-        public static bool Intersect(this GetMemberOptions self) {
-            return (self & GetMemberOptions.IntersectMultipleResults) != 0;
-        }
-        public static bool HideAdvanced(this GetMemberOptions self) {
-            return (self & GetMemberOptions.HideAdvancedMembers) != 0;
-        }
-        public static bool Keywords(this GetMemberOptions self) {
-            return (self & GetMemberOptions.IncludeStatementKeywords  | GetMemberOptions.IncludeExpressionKeywords) != 0;
-        }
-        public static bool StatementKeywords(this GetMemberOptions self) {
-            return (self & GetMemberOptions.IncludeStatementKeywords) != 0;
-        }
-        public static bool ExpressionKeywords(this GetMemberOptions self) {
-            return (self & GetMemberOptions.IncludeExpressionKeywords) != 0;
-        }
+        public static bool Intersect(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IntersectMultipleResults);
+        public static bool HideAdvanced(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.HideAdvancedMembers);
+        public static bool StatementKeywords(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IncludeStatementKeywords);
+        public static bool ExpressionKeywords(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IncludeExpressionKeywords);
+        public static bool Exceptions(this GetMemberOptions self) => (self & GetMemberOptions.ExceptionsOnly) != 0;
     }
 }

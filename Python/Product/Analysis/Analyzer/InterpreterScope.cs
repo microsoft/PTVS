@@ -177,7 +177,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (!TryGetVariable(name, out value)) {
                 var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location));
                 return AddVariable(name, def);
-            } else if (value is LocatedVariableDef lv) {
+            }
+
+            if (value is LocatedVariableDef lv) {
                 lv.Location = new EncodedLocation(unit, location);
                 lv.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             } else {
@@ -197,14 +199,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            VariableDef res;
-            if (!_variables.TryGetValue(name, out res)) {
+            if (!_variables.TryGetValue(name, out var variable)) {
                 return null;
             }
+
             if (addRef) {
-                res.AddReference(node, unit);
+                variable.AddReference(node, unit);
             }
-            return res;
+            return variable;
         }
 
         public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -240,11 +242,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
-            if (addRef) {
-                res.AddReference(node, unit);
+            var variable = GetVariable(node, unit, name, false);
+            if (variable is LocatedVariableDef locatedVariable) {
+                locatedVariable.Location = new EncodedLocation(unit, node);
+                locatedVariable.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
+            } else {
+                variable = AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
             }
-            return res;
+
+            if (addRef) {
+                variable.AddReference(node, unit);
+            }
+            return variable;
         }
 
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
