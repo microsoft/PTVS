@@ -23,29 +23,28 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using EnvDTE;
-using analysis::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using analysis::Microsoft.PythonTools.Parsing;
+using EnvDTE;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
-using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
-using Microsoft.VisualStudio.Text.Editor;
-using System.Threading;
+using util::TestUtilities.UI;
 
 namespace PythonToolsUITests {
     public class EditorTests {
