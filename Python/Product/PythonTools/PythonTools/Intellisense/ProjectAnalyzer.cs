@@ -1004,6 +1004,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
+            if (oldEntry.Properties.ContainsKey(IntellisenseController.FollowDefaultEnvironment)) {
+                entry.Properties[IntellisenseController.FollowDefaultEnvironment] = true;
+            }
+
             var bufferParser = entry.GetOrCreateBufferParser(_services);
 
             if (oldSnapshots != null && oldSnapshots.Length > 0) {

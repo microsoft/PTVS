@@ -28,6 +28,7 @@ using System.Windows;
 using EnvDTE;
 using analysis::Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using pythontools::Microsoft.PythonTools.Intellisense;
 using analysis::Microsoft.PythonTools.Parsing;
@@ -43,6 +44,8 @@ using Microsoft.VisualStudioTools;
 using TestUtilities;
 using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
+using Microsoft.VisualStudio.Text.Editor;
+using System.Threading;
 
 namespace PythonToolsUITests {
     public class EditorTests {
@@ -862,6 +865,46 @@ x\
                 } finally {
                     wnd.Close();
                     app.Dte.Solution.Close();
+                }
+            }
+        }
+
+        private class NotifyOnNewEntry : IPythonTextBufferInfoEventSink, IDisposable {
+            public void Dispose() {
+                WaitHandle.Dispose();
+            }
+
+            public AnalysisEntry Entry { get; private set; }
+            public WaitHandle WaitHandle { get; } = new AutoResetEvent(false);
+
+            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+                if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
+                    Entry = e.AnalysisEntry;
+                    ((AutoResetEvent)WaitHandle).Reset();
+                }
+                return Task.CompletedTask;
+            }
+        }
+
+        public void DefaultAnalyzerForNonProjectFile(PythonVisualStudioApp app) {
+            var wnd = app.OpenDocument(TestData.GetPath("TestData", "Typings", "usermod.py"));
+
+            var bi = ((ITextView)wnd.TextView).TextBuffer.TryGetInfo();
+            Assert.IsNotNull(bi);
+            using (var entry = new NotifyOnNewEntry()) {
+                bi.AddSink(entry, entry);
+
+                foreach (var pv in PythonPaths.Versions) {
+                    using (var dis = app.SelectDefaultInterpreter(pv)) {
+                        if (dis.OriginalInterpreter == dis.CurrentDefault) {
+                            Console.WriteLine($"Remained at {pv.Version.ToVersion()}");
+                            continue;
+                        }
+                        Console.WriteLine($"Changed to {pv.Version.ToVersion()}");
+                        Assert.IsTrue(entry.WaitHandle.WaitOne(5000));
+                        entry.Entry.Analyzer.WaitForCompleteAnalysis(_ => true);
+                        Assert.AreEqual(pv.Version, entry.Entry.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion());
+                    }
                 }
             }
         }
