@@ -22,6 +22,7 @@ using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using System.IO;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
@@ -93,9 +94,9 @@ namespace Microsoft.PythonTools.Analysis {
                     // If first line of doc is already in the type string, then filter it out.
                     // This is because some functions have signature as a first doc line and 
                     // some do not have one. We are already showing signature as part of the type.
-                    var lines = docString.Split(new char[] { '\n' }).Where(x => x != "\r").ToArray();
+                    var lines = docString.Split('\n');
                     if (!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
-                        docString = string.Join(Environment.NewLine, lines.Skip(1).ToArray());
+                        docString = docString.Substring(lines[0].Length).TrimStart();
                     }
 
                     if (!docs.TryGetValue(docString, out var docTypes)) {
@@ -142,31 +143,18 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetDocumentation(AnalysisValue ns) {
             var doc = ns.Documentation?.TrimDocumentation() ?? string.Empty;
             if (ns.MemberType == PythonMemberType.Module) {
-                // Module doc does not nave example/signature lines like a function
-                // so just make it flow nicely in the tooltip by removing like breaks.                   
-                return doc.Replace('\n', ' ').Replace("\r", string.Empty);
+                return FormatModuleDocumentation(doc);
             }
-            // Documentation can contain something like
-            //      func(a, b, c)\n\nThis function...
-            // i.e. with paragraph. We want to remove line breaks 
-            // in the text after the paragraph breaks and tooltip UI 
-            // to decide of the wrap and flow.
             var ctr = 0;
-            var seenParagraphGap = false;
             var result = new StringBuilder(doc.Length);
             foreach (var c in doc) {
                 if (c == '\r') {
                     continue;
                 }
                 if (c == '\n') {
-                    if (seenParagraphGap) {
-                        result.Append(' ');
-                    } else {
-                        ctr++;
-                        if (ctr < 3) {
-                            result.AppendLine();
-                            seenParagraphGap = ctr == 2;
-                        }
+                    ctr++;
+                    if (ctr < 3) {
+                        result.AppendLine();
                     }
                 } else {
                     result.Append(c);
@@ -175,6 +163,40 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return result.ToString().Trim();
         }
+
+        private static string FormatModuleDocumentation(string doc) {
+            // Module doc does not nave example/signature lines like a function
+            // so just make it flow nicely in the tooltip by removing like breaks.
+            // Preserve double breaks and breaks before the indented text
+            var sb = new StringBuilder();
+            using (var sr = new StringReader(doc)) {
+                while (true) {
+                    var line = sr.ReadLine();
+                    if (line == null) {
+                        break;
+                    }
+                    var nextLine = sr.ReadLine();
+                    if (nextLine != null) {
+                        if (line.Length == 0) {
+                            sb.AppendLine();
+                            sb.AppendLine();
+                        } else {
+                            if (nextLine.Length > 0) {
+                                sb.Append(line);
+                                sb.Append(' ');
+                            } else {
+                                sb.Append(line);
+                            }
+                        }
+                    } else {
+                        sb.Append(line);
+                    }
+                    line = nextLine;
+                }
+            }
+            return sb.ToString();
+        }
+
         private static string GetDescription(AnalysisValue ns) {
             var d = ns?.ShortDescription;
             if (string.IsNullOrEmpty(d)) {
