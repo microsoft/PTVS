@@ -2371,6 +2371,9 @@
       <Item ItemId=";ExpDebuggerInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Try out the preview of our new Python debugger before it becomes the default!]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pruebe la versión preliminar del nuevo depurador Python antes de establecerlo como predeterminado.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
