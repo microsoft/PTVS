@@ -836,7 +836,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -857,7 +857,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1439,7 +1439,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1460,7 +1460,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Gibt Umgebungsvariablen an, die im erzeugten Prozess im folgenden Format festgelegt werden müssen:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
