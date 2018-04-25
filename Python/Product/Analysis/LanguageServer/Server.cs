@@ -405,13 +405,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             if (members != null && members.Count() > 0)
             {
-                //provide Pythia recommendations based on the default completion list
-                var recommendations = PythiaService.Instance.GetRecommentations(members, tree, @params, 5);
-                if (recommendations != null)
+                try
                 {
-                    LogMessage(MessageType.Info, $"Pythia made {recommendations.Count} recommendations among {members.Count()} candidates");
-                    members = members.Concat(recommendations);
+                    //provide Pythia recommendations based on the default completion list
+                    var recommendations = PythiaService.Instance.GetRecommendations(members, tree, @params, 5);
+                    if (recommendations != null)
+                    {
+                        LogMessage(MessageType.Info, $"Pythia made {recommendations.Count} recommendations among {members.Count()} candidates");
+                        members = members.Concat(recommendations);
+                    }
                 }
+                catch (Exception ex)
+                {
+                    LogMessage(MessageType.Warning, $"Pythia throws exception: " + ex.ToString());
+                }
+                
             }
             var res = new CompletionList {
                 items = members.ToArray(),

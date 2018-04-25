@@ -28,16 +28,17 @@ namespace Microsoft.PythonTools.Analysis.Pythia
             _sequenceModel = LoadModel();
         }
 
-        public List<CompletionItem> GetRecommentations(IEnumerable<CompletionItem> completionList,
+        public List<CompletionItem> GetRecommendations(IEnumerable<CompletionItem> completionList,
                 PythonAst ast, CompletionParams completionParams, int recommendataionLimit)
         {
+            
             if (completionList != null && completionList.Count() > 0 && ast != null)
             {
                 var currentPosition = ast.LocationToIndex(completionParams.position);
-                
+
                 var assignmentWalker = new AssignmentWalker();
                 ast.Walk(assignmentWalker);
-                
+
                 var expressionWalker = new ExpressionWalker(assignmentWalker.Assignments, currentPosition);
                 ast.Walk(expressionWalker);
 
@@ -51,12 +52,13 @@ namespace Microsoft.PythonTools.Analysis.Pythia
                     sequences.Push(Consts.NullSequence);
                     BuildSequences(previousMethods, sequences);
                     return ApplyModel(5, typeName, inConditional, completionList, sequences);
-                    
+
                 }
-                
-            }
+
+            }                
+           
             return null;
-            
+
         }
 
         private bool SupportType(string typeName)

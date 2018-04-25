@@ -13,21 +13,21 @@ namespace Microsoft.PythonTools.Analysis.Pythia
     /// </summary>
     public class ExpressionWalker : PythonWalker
     {
-        public List<KeyValuePair> Assignments;
-        public List<KeyValuePair> MethodInvocations;
+        private IList<KeyValuePair> Assignments;
+        private List<KeyValuePair> MethodInvocations;
 
-        public List<Tuple<int, int>> ConditionalRanges;
-        public List<Tuple<int, int>> LoopRanges;
+        private IList<Tuple<int, int>> ConditionalRanges;
+        private IList<Tuple<int, int>> LoopRanges;
 
-        public Dictionary<int, string> EndIndexTypeNameMap;
+        public IDictionary<int, string> EndIndexTypeNameMap { get; }
 
-        public int CurrentPosition;
+        private int CurrentPosition;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="assignments"></param>
-        public ExpressionWalker(List<KeyValuePair> assignments, int position)
+        public ExpressionWalker(IList<KeyValuePair> assignments, int position)
         {
             Assignments = assignments;
             MethodInvocations = new List<KeyValuePair>();

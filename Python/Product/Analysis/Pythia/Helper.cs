@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// </summary>
         /// <param name="variableName">The variable to resolve for</param>
         /// <returns>String representation of the defined variable type</returns>
-        public static string ResolveVariable(List<KeyValuePair> assignments, string variableName)
+        public static string ResolveVariable(IList<KeyValuePair> assignments, string variableName)
         {
             // Resolve from back to front, variable type is always the latest defined
             for (int i = assignments.Count - 1; i >= 0; i--)

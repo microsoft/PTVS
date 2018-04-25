@@ -15,7 +15,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// <summary>
         /// Assignment results
         /// </summary>
-        public List<KeyValuePair> Assignments;
+        public IList<KeyValuePair> Assignments { get; }
 
         /// <summary>
         /// Create new assignment walker
