@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
 
@@ -70,5 +69,6 @@ namespace Microsoft.PythonTools.Project {
         public LaunchConfiguration GetLaunchConfigurationOrThrow() => new LaunchConfiguration(GetInterpreterFactory().Configuration);
 
         public event EventHandler ProjectAnalyzerChanged { add { } remove { } }
+        public void SetOrAddPropertyAfter(string name, string value, string afterProperty) { }
     }
 }
