@@ -2371,6 +2371,9 @@
       <Item ItemId=";ExpDebuggerInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Try out the preview of our new Python debugger before it becomes the default!]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vyzkoušejte verzi Preview našeho nového ladicího programu Python, ještě než se začne používat jako výchozí funkce!]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
