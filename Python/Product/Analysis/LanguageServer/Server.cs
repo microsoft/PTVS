@@ -95,9 +95,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             _displayOptions = new InformationDisplayOptions {
                 trimDocumentationLines = true,
-                maxDocumentationLineLength = 200,
+                maxDocumentationLineLength = 100,
                 trimDocumentationText = true,
-                maxDocumentationTextLength = 4096
+                maxDocumentationTextLength = 1024,
+                maxDocumentationLines = 100
             };
         }
 

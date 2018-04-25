@@ -211,6 +211,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
         public int maxDocumentationTextLength;
+        public int maxDocumentationLines;
     }
 
     /// <summary>

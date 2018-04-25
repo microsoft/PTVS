@@ -256,8 +256,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         displayOptions = new LS.InformationDisplayOptions {
                             maxDocumentationLineLength = 30,
                             trimDocumentationLines = true,
-                            maxDocumentationTextLength = 4096,
-                            trimDocumentationText = true
+                            maxDocumentationTextLength = 1024,
+                            trimDocumentationText = true,
+                            maxDocumentationLines = 100
                         }
                     },
                     capabilities = new LS.ClientCapabilities {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -38,11 +39,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var doc = v.Documentation;
+                if (displayOptions.trimDocumentationLines) {
+                    doc = LimitLines(doc, displayOptions);
+                }
 
                 if ((d?.Length ?? 0) < (doc?.Length ?? 0)) {
-                    if (displayOptions.trimDocumentationLines) {
-                        doc = LimitLines(doc);
-                    }
                     if (!string.IsNullOrEmpty(doc)) {
                         documentations.Add(doc);
                     }
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
+            Debug.Write(result.ToString());
             return result.ToString().TrimEnd();
         }
 
@@ -112,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var contents = "{0} : module".FormatUI(modRef.Name);
             if (!string.IsNullOrEmpty(modRef.Module?.Documentation)) {
                 var limited = displayOptions.trimDocumentationText
-                    ? LimitLines(modRef.Module.Documentation)
+                    ? LimitLines(modRef.Module.Documentation, displayOptions)
                     : modRef.Module.Documentation;
                 contents += $"{Environment.NewLine}{Environment.NewLine}{limited}";
             }
@@ -121,8 +123,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private static string LimitLines(
             string str,
-            int maxLines = 30,
-            int charsPerLine = 200,
+            InformationDisplayOptions displayOptions,
             bool ellipsisAtEnd = true,
             bool stopAtFirstBlankLine = false
         ) {
@@ -135,26 +136,26 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var wasEmpty = true;
 
             using (var reader = new StringReader(str)) {
-                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
+                for (var line = reader.ReadLine(); line != null && lineCount < displayOptions.maxDocumentationLines; line = reader.ReadLine()) {
                     if (string.IsNullOrWhiteSpace(line)) {
                         if (wasEmpty) {
                             continue;
                         }
                         wasEmpty = true;
                         if (stopAtFirstBlankLine) {
-                            lineCount = maxLines;
+                            lineCount = displayOptions.maxDocumentationLines;
                             break;
                         }
                         lineCount += 1;
                         prettyPrinted.AppendLine();
                     } else {
                         wasEmpty = false;
-                        lineCount += (line.Length / charsPerLine) + 1;
+                        lineCount += (line.Length / displayOptions.maxDocumentationLineLength) + 1;
                         prettyPrinted.AppendLine(line);
                     }
                 }
             }
-            if (ellipsisAtEnd && lineCount >= maxLines) {
+            if (ellipsisAtEnd && lineCount >= displayOptions.maxDocumentationLines) {
                 prettyPrinted.AppendLine("...");
             }
             return prettyPrinted.ToString().Trim();
