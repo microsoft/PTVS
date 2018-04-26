@@ -52,6 +52,8 @@ namespace TestUtilities.Python {
             UIThread = (UIThreadBase)_serviceProvider.GetService(typeof(UIThreadBase));
         }
 
+        public T GetService<T>() => (T)_serviceProvider.GetService(typeof(T));
+
         public EditorTestToolset WithPythonToolsService() {
             _serviceProvider.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
             _serviceProvider.AddService(typeof(PythonToolsService), new PythonToolsService(_serviceProvider));
