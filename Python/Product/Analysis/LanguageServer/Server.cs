@@ -94,6 +94,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _openFiles = new OpenFiles(_projectFiles, this);
 
             _displayOptions = new InformationDisplayOptions {
+                preferredFormat = MarkupKind.PlainText,
                 trimDocumentationLines = true,
                 maxDocumentationLineLength = 100,
                 trimDocumentationText = true,

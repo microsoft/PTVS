@@ -207,6 +207,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public class InformationDisplayOptions {
+        public MarkupKind preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;

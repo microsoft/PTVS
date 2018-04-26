@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -25,6 +26,19 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     sealed class DisplayTextBuilder {
         public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
+            if (values.Count() == 1) {
+                var v = values.First();
+                switch (v.MemberType) {
+                    case PythonMemberType.Function:
+                        return MakeFunctionHoverText(values.First(), displayOptions);
+                    case PythonMemberType.Class:
+                        return MakeClassHoverText(values.First(), displayOptions);
+                }
+            }
+            return MakeOtherHoverText(values, originalExpression, displayOptions);
+        }
+
+        private static string MakeOtherHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
             var result = new StringBuilder();
             var documentations = new HashSet<string>();
             var descriptions = new HashSet<string>();
@@ -93,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (!string.IsNullOrEmpty(originalExpression)) {
                 if (displayOptions.trimDocumentationText && originalExpression.Length > displayOptions.maxDocumentationTextLength) {
-                    originalExpression = originalExpression.Substring(0, 
+                    originalExpression = originalExpression.Substring(0,
                         Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
                 }
                 if (result.ToString().IndexOf('\n') >= 0) {
@@ -111,12 +125,47 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public string MakeModuleHoverText(ModuleReference modRef, InformationDisplayOptions displayOptions) {
             // Return module information
-            var contents = "{0} : module".FormatUI(modRef.Name);
+            var contents = $"module {modRef.Name}";
             if (!string.IsNullOrEmpty(modRef.Module?.Documentation)) {
-                var limited = displayOptions.trimDocumentationText
-                    ? LimitLines(modRef.Module.Documentation, displayOptions)
-                    : modRef.Module.Documentation;
-                contents += $"{Environment.NewLine}{Environment.NewLine}{limited}";
+                var doc = LimitLines(modRef.Module.Documentation, displayOptions);
+                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
+            }
+            return contents;
+        }
+
+        private string MakeFunctionHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {
+            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
+                var doc = value.Documentation ?? value.Description;
+                var paraIndex = doc.IndexOf("\n\n");
+                paraIndex = paraIndex > 0 ? paraIndex : doc.IndexOf("\r\n\r\n");
+                if (paraIndex > 0) {
+                    var md = $"```python\n{doc.Substring(0, paraIndex)}\n```";
+                    md += $"{Environment.NewLine}{Environment.NewLine}{doc.Substring(paraIndex).Trim()}";
+                    return md;
+                }
+            }
+
+            var contents = value.Description;
+            if (!string.IsNullOrEmpty(value.Documentation)) {
+                var doc = LimitLines(value.Documentation, displayOptions);
+                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
+            }
+            return contents;
+        }
+
+        private string MakeClassHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {
+            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
+                var md = $"```python\n{value.Description}\n```";
+                if (!string.IsNullOrEmpty(value.Documentation)) {
+                    md += $"{Environment.NewLine}{Environment.NewLine}{value.Documentation}";
+                }
+                return md;
+            }
+
+            var contents = value.Description;
+            if (!string.IsNullOrEmpty(value.Documentation)) {
+                var doc = LimitLines(value.Documentation, displayOptions);
+                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
             }
             return contents;
         }
@@ -127,7 +176,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             bool ellipsisAtEnd = true,
             bool stopAtFirstBlankLine = false
         ) {
-            if (string.IsNullOrEmpty(str)) {
+            if (string.IsNullOrEmpty(str) || !displayOptions.trimDocumentationText) {
                 return str;
             }
 
