@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Pythia;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
@@ -53,6 +54,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
                 TraceMessage($"Only returning {filterKind.Value} items");
                 members = members.Where(m => m.kind == filterKind.Value);
+            }
+
+            if (members != null && members.Count() > 0) {
+                try {
+                    //provide Pythia recommendations based on the default completion list
+                    var recommendations = PythiaService.Instance.GetRecommendations(members, tree, @params, 5);
+                    if (recommendations != null) {
+                        LogMessage(MessageType.Info, $"Pythia made {recommendations.Count} recommendations among {members.Count()} candidates");
+                        members = members.Concat(recommendations);
+                    }
+                } catch (Exception ex) {
+                    LogMessage(MessageType.Warning, $"Pythia throws exception: " + ex.ToString());
+                }
+
             }
 
             var res = new CompletionList {

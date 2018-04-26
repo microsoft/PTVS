@@ -1,14 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace Microsoft.PythonTools.Analysis.Pythia
-{
-    public class UsageDataModel
-    {
+namespace Microsoft.PythonTools.Analysis.Pythia {
+    public class UsageDataModel {
         [JsonProperty("Repo")]
         public string Repo;
 
@@ -22,8 +16,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         public Dictionary<string, Dictionary<string, Invocations>> References;
     }
 
-    public class Invocations
-    {
+    public class Invocations {
         //public string MethodName { get; set; }
 
         [JsonProperty("spanStart")]

@@ -1,17 +1,28 @@
-﻿using Microsoft.PythonTools.Parsing.Ast;
-using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Pythia
-{
+namespace Microsoft.PythonTools.Analysis.Pythia {
     /// <summary>
     /// AST Walker for variable assignments
     /// </summary>
-    public class AssignmentWalker : PythonWalker
-    {
+    sealed class AssignmentWalker : PythonWalker {
         /// <summary>
         /// Assignment results
         /// </summary>
@@ -20,8 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// <summary>
         /// Create new assignment walker
         /// </summary>
-        public AssignmentWalker()
-        {
+        public AssignmentWalker() {
             Assignments = new List<KeyValuePair>();
         }
 
@@ -29,22 +39,17 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// Walk through assignment statements
         /// </summary>
         /// <param name="node"></param>
-        public override void PostWalk(AssignmentStatement node)
-        {
+        public override void PostWalk(AssignmentStatement node) {
             base.PostWalk(node);
 
             // a = "string";
             // q = a.count().bitLength()
-            if (node.Left.Count > 0)
-            {
-                if (node.Left[0] is NameExpression n)
-                {
+            if (node.Left.Count > 0) {
+                if (node.Left[0] is NameExpression n) {
                     var leftVariableName = n.Name;  // a
 
-                    if (node.Right is CallExpression c)
-                    {
-                        if (c.Target is MemberExpression m)
-                        {
+                    if (node.Right is CallExpression c) {
+                        if (c.Target is MemberExpression m) {
                             HandleMemberExpression(leftVariableName, m, string.Empty);
                         }
                     }
@@ -52,16 +57,12 @@ namespace Microsoft.PythonTools.Analysis.Pythia
             }
 
             // y = open()
-            if (node.Left.Count > 0)
-            {
-                if (node.Left[0] is NameExpression n)
-                {
+            if (node.Left.Count > 0) {
+                if (node.Left[0] is NameExpression n) {
                     var leftVariableName = n.Name;  // y
 
-                    if (node.Right is CallExpression c)
-                    {
-                        if (c.Target is NameExpression n2)
-                        {
+                    if (node.Right is CallExpression c) {
+                        if (c.Target is NameExpression n2) {
                             var functionName = n2.Name; // open
                             Assignments.Add(new KeyValuePair() { Key = leftVariableName, Value = functionName });
                         }
@@ -70,62 +71,43 @@ namespace Microsoft.PythonTools.Analysis.Pythia
             }
 
             // a = 1
-            if (node.Left.Count > 0)
-            {
-                if (node.Left[0] is NameExpression n)
-                {
+            if (node.Left.Count > 0) {
+                if (node.Left[0] is NameExpression n) {
                     var leftVariableName = n.Name;  // a
 
-                    if (node.Right is ConstantExpression c)
-                    {
-                        if (c.Value == null)
-                        {
-                            Assignments.Add(new KeyValuePair()
-                            {
+                    if (node.Right is ConstantExpression c) {
+                        if (c.Value == null) {
+                            Assignments.Add(new KeyValuePair() {
                                 Key = leftVariableName,
                                 Value = StandardVariableTypes.Null
                             });
-                        }
-                        else
-                        {
+                        } else {
                             var valStringRep = c.Value.ToString();  // 1
 
                             Assignments.Add(GetStandardVariableType(leftVariableName, valStringRep));
                         }
-                    }
-                    else if (node.Right is NameExpression n2)
-                    {
+                    } else if (node.Right is NameExpression n2) {
                         var valStringRep = n2.Name;
                         // check for assignments p = q
                         var val = Helper.ResolveVariable(Assignments, valStringRep);
-                        if (string.IsNullOrEmpty(val))
-                        {
+                        if (string.IsNullOrEmpty(val)) {
                             // p = true
                             Assignments.Add(GetStandardVariableType(leftVariableName, valStringRep));
-                        }
-                        else
-                        {
+                        } else {
                             // q = "string"
                             // p = q
-                            Assignments.Add(new KeyValuePair()
-                            {
+                            Assignments.Add(new KeyValuePair() {
                                 Key = leftVariableName,
                                 Value = val
                             });
                         }
-                    }
-                    else if (node.Right is TupleExpression t)
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+                    } else if (node.Right is TupleExpression t) {
+                        Assignments.Add(new KeyValuePair() {
                             Key = leftVariableName,
                             Value = StandardVariableTypes.Tuple
                         });
-                    }
-                    else if (node.Right is ListExpression l)
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+                    } else if (node.Right is ListExpression l) {
+                        Assignments.Add(new KeyValuePair() {
                             Key = leftVariableName,
                             Value = StandardVariableTypes.List
                         });
@@ -138,42 +120,30 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// Handle from-import assignments
         /// </summary>
         /// <param name="node"></param>
-        public override void PostWalk(FromImportStatement node)
-        {
+        public override void PostWalk(FromImportStatement node) {
             base.PostWalk(node);
 
-            if (node.Root.Names.Count() < 1)
-            {
+            if (node.Root.Names.Count() < 1) {
                 return;
             }
 
             var rootModuleName = node.Root.Names[0].Name;
 
-            for (var i = 0; i < node.Names.Count; i++)
-            {
-                if (node.AsNames != null)
-                {
-                    if (node.AsNames[i] != null)
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+            for (var i = 0; i < node.Names.Count; i++) {
+                if (node.AsNames != null) {
+                    if (node.AsNames[i] != null) {
+                        Assignments.Add(new KeyValuePair() {
                             Key = node.AsNames[i].Name,
                             Value = rootModuleName + "." + node.Names[i].Name
                         });
-                    }
-                    else
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+                    } else {
+                        Assignments.Add(new KeyValuePair() {
                             Key = node.Names[i].Name,
                             Value = rootModuleName + "." + node.Names[i].Name
                         });
                     }
-                }
-                else
-                {
-                    Assignments.Add(new KeyValuePair()
-                    {
+                } else {
+                    Assignments.Add(new KeyValuePair() {
                         Key = node.Names[i].Name,
                         Value = node.Names[i].Name
                     });
@@ -185,35 +155,26 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// Handle import assignments
         /// </summary>
         /// <param name="node"></param>
-        public override void PostWalk(ImportStatement node)
-        {
+        public override void PostWalk(ImportStatement node) {
             base.PostWalk(node);
 
             var importNames = node.Names;
             var importAsNames = node.AsNames;
-            if (importNames.Count > 0)
-            {
+            if (importNames.Count > 0) {
                 var listOfNameExpressions = importNames[0].Names;
-                if (importAsNames[0] != null)
-                {
+                if (importAsNames[0] != null) {
                     var asName = importAsNames[0].Name;
-                    if (listOfNameExpressions.Count > 0)
-                    {
+                    if (listOfNameExpressions.Count > 0) {
                         var nameExpression = listOfNameExpressions[0];
 
-                        Assignments.Add(new KeyValuePair()
-                        {
+                        Assignments.Add(new KeyValuePair() {
                             Key = asName,
                             Value = nameExpression.Name
                         });
                     }
-                }
-                else
-                {
-                    foreach (var import in importNames)
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+                } else {
+                    foreach (var import in importNames) {
+                        Assignments.Add(new KeyValuePair() {
                             Key = import.Names[0].Name,
                             Value = import.Names[0].Name
                         });
@@ -227,27 +188,21 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// with open(IDs_list) as f:
         /// </summary>
         /// <param name="node"></param>
-        public override void PostWalk(WithStatement node)
-        {
+        public override void PostWalk(WithStatement node) {
             base.PostWalk(node);
 
-            if (node.Items.Count > 0)
-            {
+            if (node.Items.Count > 0) {
                 var item = node.Items[0];
 
-                if (item.Variable is NameExpression n)
-                {
+                if (item.Variable is NameExpression n) {
                     var key = n.Name;
                     //var value = n.
 
-                    if (item.ContextManager is CallExpression c)
-                    {
+                    if (item.ContextManager is CallExpression c) {
                         //c.Target
-                        if (c.Target is NameExpression nn)
-                        {
+                        if (c.Target is NameExpression nn) {
                             var value = nn.Name;
-                            Assignments.Add(new KeyValuePair()
-                            {
+                            Assignments.Add(new KeyValuePair() {
                                 Key = key,
                                 Value = value
                             });
@@ -263,36 +218,26 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// for p in list: p becomes list.elemenet_inside
         /// </summary>
         /// <param name="node">for statement node</param>
-        public override void PostWalk(ForStatement node)
-        {
+        public override void PostWalk(ForStatement node) {
             base.PostWalk(node);
 
             var elementInsideString = "element_inside";
 
-            if (node.Left is NameExpression left)
-            {
-                if (node.List is NameExpression list)
-                {
+            if (node.Left is NameExpression left) {
+                if (node.List is NameExpression list) {
                     var resolvedName = Helper.ResolveVariable(Assignments, list.Name);
-                    if (!string.IsNullOrEmpty(resolvedName))
-                    {
-                        Assignments.Add(new KeyValuePair()
-                        {
+                    if (!string.IsNullOrEmpty(resolvedName)) {
+                        Assignments.Add(new KeyValuePair() {
                             Key = left.Name,
                             Value = resolvedName + "." + elementInsideString
                         });
                     }
-                }
-                else if (node.List is CallExpression callList)
-                {
+                } else if (node.List is CallExpression callList) {
                     var t = callList.Target;
-                    if (t is MemberExpression member)
-                    {
+                    if (t is MemberExpression member) {
                         HandleMemberExpression(left.Name, member, elementInsideString);
                     }
-                }
-                else if (node.List is MemberExpression member)
-                {
+                } else if (node.List is MemberExpression member) {
                     HandleMemberExpression(left.Name, member, elementInsideString);
                 }
             }
@@ -302,38 +247,27 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// Handle for assignments
         /// </summary>
         /// <param name="node"></param>
-        public override void PostWalk(ComprehensionFor node)
-        {
+        public override void PostWalk(ComprehensionFor node) {
             base.PostWalk(node);
 
             var key = string.Empty;
             var value = string.Empty;
-            if (node.Left is NameExpression n)
-            {
+            if (node.Left is NameExpression n) {
                 key = n.Name;
-            }
-            else
-            {
+            } else {
                 return;
             }
 
-            if (node.List is ListExpression l)
-            {
-                if (l.Items.Count > 0)
-                {
+            if (node.List is ListExpression l) {
+                if (l.Items.Count > 0) {
                     var i = l.Items[0];
-                    if (i is ConstantExpression c)
-                    {
-                        if (c.Value == null)
-                        {
-                            Assignments.Add(new KeyValuePair()
-                            {
+                    if (i is ConstantExpression c) {
+                        if (c.Value == null) {
+                            Assignments.Add(new KeyValuePair() {
                                 Key = key,
                                 Value = StandardVariableTypes.Null
                             });
-                        }
-                        else
-                        {
+                        } else {
                             var valStringRep = c.Value.ToString();  // 1
 
                             Assignments.Add(GetStandardVariableType(key, valStringRep));
@@ -349,14 +283,11 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// <param name="leftVariableName">The variable to assign for</param>
         /// <param name="m">The expression statement</param>
         /// <param name="rightHandSide">Appended member calls</param>
-        private void HandleMemberExpression(string leftVariableName, MemberExpression m, string rightHandSide)
-        {
+        private void HandleMemberExpression(string leftVariableName, MemberExpression m, string rightHandSide) {
             var functionName = m.Name; // bitLength // count
-            if (m.Target is NameExpression n2)
-            {
+            if (m.Target is NameExpression n2) {
                 var functionInvokedOnName = n2.Name; // a 
-                if (functionInvokedOnName.Equals("self"))
-                {
+                if (functionInvokedOnName.Equals("self")) {
                     return;
                 }
 
@@ -368,16 +299,11 @@ namespace Microsoft.PythonTools.Analysis.Pythia
                 Assignments.Add(new KeyValuePair() { Key = leftVariableName, Value = combineName });
 
                 return;
-            }
-            else if (m.Target is CallExpression cc)
-            {
-                if (cc.Target is MemberExpression mm)
-                {
+            } else if (m.Target is CallExpression cc) {
+                if (cc.Target is MemberExpression mm) {
                     HandleMemberExpression(leftVariableName, mm, (!string.IsNullOrEmpty(rightHandSide) ? functionName + "." + rightHandSide : functionName));
                 }
-            }
-            else if (m.Target is MemberExpression mmm)
-            {
+            } else if (m.Target is MemberExpression mmm) {
                 HandleMemberExpression(leftVariableName, mmm, (!string.IsNullOrEmpty(rightHandSide) ? functionName + "." + rightHandSide : functionName));
             }
         }
@@ -388,28 +314,22 @@ namespace Microsoft.PythonTools.Analysis.Pythia
         /// <param name="variableName">Key</param>
         /// <param name="value">Value to determine type for</param>
         /// <returns>Key to value pair for typing</returns>
-        private KeyValuePair GetStandardVariableType(string variableName, string value)
-        {
-            if (double.TryParse(value, out double val))
-            {
-                return new KeyValuePair()
-                {
+        private KeyValuePair GetStandardVariableType(string variableName, string value) {
+            if (double.TryParse(value, out double val)) {
+                return new KeyValuePair() {
                     Key = variableName,
                     Value = StandardVariableTypes.Numeric
                 };
             }
 
-            if (bool.TryParse(value, out bool val2))
-            {
-                return new KeyValuePair()
-                {
+            if (bool.TryParse(value, out bool val2)) {
+                return new KeyValuePair() {
                     Key = variableName,
                     Value = StandardVariableTypes.Boolean
                 };
             }
 
-            return new KeyValuePair()
-            {
+            return new KeyValuePair() {
                 Key = variableName,
                 Value = StandardVariableTypes.String
             };
@@ -419,8 +339,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia
     /// <summary>
     /// Key value pair for variable name to type
     /// </summary>
-    public class KeyValuePair
-    {
+    public class KeyValuePair {
         public string Key { get; set; }
         public string Value { get; set; }
 
