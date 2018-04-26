@@ -799,7 +799,7 @@ namespace Microsoft.PythonTools.Language {
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
             var entry = span.Snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry != null) {
+            if (entry == null) {
                 return;
             }
 
