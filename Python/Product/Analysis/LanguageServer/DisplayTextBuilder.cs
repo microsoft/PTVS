@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -124,10 +125,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public string MakeModuleHoverText(ModuleReference modRef, InformationDisplayOptions displayOptions) {
-            // Return module information
             var contents = $"module {modRef.Name}";
-            if (!string.IsNullOrEmpty(modRef.Module?.Documentation)) {
-                var doc = LimitLines(modRef.Module.Documentation, displayOptions);
+            var doc = modRef.Module?.Documentation;
+
+            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
+                return doc != null ? new RestTextConverter().ToMarkdown(doc) : contents;
+            }
+            if (!string.IsNullOrEmpty(doc)) {
+                doc = LimitLines(modRef.Module.Documentation, displayOptions);
                 contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
             }
             return contents;
@@ -136,6 +141,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private string MakeFunctionHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {
             if (displayOptions.preferredFormat == MarkupKind.Markdown) {
                 var doc = value.Documentation ?? value.Description;
+
                 var paraIndex = doc.IndexOf("\n\n");
                 paraIndex = paraIndex > 0 ? paraIndex : doc.IndexOf("\r\n\r\n");
                 if (paraIndex > 0) {
@@ -145,12 +151,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            var contents = value.Description;
-            if (!string.IsNullOrEmpty(value.Documentation)) {
-                var doc = LimitLines(value.Documentation, displayOptions);
-                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
-            }
-            return contents;
+            return LimitLines(string.Join(string.Empty, value.Description), displayOptions);
         }
 
         private string MakeClassHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {

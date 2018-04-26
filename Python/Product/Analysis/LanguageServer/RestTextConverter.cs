@@ -144,6 +144,7 @@ namespace Microsoft.PythonTools.Analysis {
             // make sure we drop angle brackets since otherwise
             // they will render as tags and attributes
             line = line.Replace("<", " ").Replace(">", " ").Replace("``", "`"); // Convert double backticks to single.
+            line = Cleanup(line);
             // Keep hard line breaks for the preformatted content
             _md.Add($"{ line}  ");
             return 0;
