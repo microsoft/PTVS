@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Intellisense {
             members = completions.items.Select(c => new CompletionResult(
                 c.label,
                 c.insertText ?? c.label,
-                c.documentation.value,
+                c.documentation?.value,
                 Enum.TryParse(c._kind, true, out PythonMemberType mt) ? mt : PythonMemberType.Unknown,
                 null
             ));
