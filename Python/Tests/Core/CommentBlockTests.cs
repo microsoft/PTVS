@@ -20,12 +20,19 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
     public class CommentBlockTests {
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+
         [TestMethod, Priority(0)]
         public void TestCommentCurrentLine() {
             var editorTestToolset = new EditorTestToolset();
