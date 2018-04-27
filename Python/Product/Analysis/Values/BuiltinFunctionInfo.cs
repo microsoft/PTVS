@@ -76,12 +76,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            var def = _function.IsBuiltin ? "built-in function " : "function ";
-            return GetRichDescription(def, _function, Documentation);
+            //var def = _function.IsBuiltin ? "built-in function " : "function ";
+            return GetRichDescription(string.Empty, _function);
         }
 
-        internal static IEnumerable<KeyValuePair<string, string>> GetRichDescription(string def, IPythonFunction function, string doc) {
-            bool needNewline = false;
+        internal static IEnumerable<KeyValuePair<string, string>> GetRichDescription(string def, IPythonFunction function) {
+            var needNewline = false;
             foreach (var overload in function.Overloads.OrderByDescending(o => o.GetParameters().Length)) {
                 if (needNewline) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "\r\n");
@@ -97,10 +97,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
             }
-            if (!string.IsNullOrEmpty(doc)) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, needNewline ? "\r\n" : "");
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
-            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);
         }
 
         private static string GetFullName(IPythonType type, string name) {
@@ -154,22 +151,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Documentation {
             get {
-                if (_doc == null) {
-                    _doc = Utils.StripDocumentation(_function.Documentation);
-                }
+                _doc = _doc ?? Utils.StripDocumentation(_function.Documentation);
                 return _doc;
             }
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                return _function.MemberType;
-            }
-        }
-
-        public override ILocatedMember GetLocatedMember() {
-            return _function as ILocatedMember;
-        }
+        public override PythonMemberType MemberType => _function.MemberType;
+        public override ILocatedMember GetLocatedMember() => _function as ILocatedMember;
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {

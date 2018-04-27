@@ -75,7 +75,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
-        private InformationDisplayOptions _displayOptions;
         private LanguageServerSettings _settings = new LanguageServerSettings();
 
         private bool _traceLogging;
@@ -85,6 +84,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // If null, all files must be added manually
         private string _rootDir;
 
+        public static InformationDisplayOptions DisplayOptions { get; private set; } = new InformationDisplayOptions {
+            preferredFormat = MarkupKind.PlainText,
+            trimDocumentationLines = true,
+            maxDocumentationLineLength = 100,
+            trimDocumentationText = true,
+            maxDocumentationTextLength = 1024,
+            maxDocumentationLines = 100
+        };
+
         public Server() {
             _queue = new AnalysisQueue();
             _queue.UnhandledException += Analysis_UnhandledException;
@@ -92,15 +100,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _openFiles = new OpenFiles(_projectFiles, this);
-
-            _displayOptions = new InformationDisplayOptions {
-                preferredFormat = MarkupKind.PlainText,
-                trimDocumentationLines = true,
-                maxDocumentationLineLength = 100,
-                trimDocumentationText = true,
-                maxDocumentationTextLength = 1024,
-                maxDocumentationLines = 100
-            };
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -129,9 +128,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
-                    textDocumentSync = new TextDocumentSyncOptions { openClose = true, change = TextDocumentSyncKind.Incremental },
+                    textDocumentSync = new TextDocumentSyncOptions {
+                        openClose = true,
+                        change = TextDocumentSyncKind.Incremental
+                    },
                     completionProvider = new CompletionOptions {
                         triggerCharacters = new[] { "." },
+                        
                     },
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
@@ -156,8 +159,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
             if (@params.initializationOptions.displayOptions != null) {
-                _displayOptions = @params.initializationOptions.displayOptions;
+                DisplayOptions = @params.initializationOptions.displayOptions;
             }
+            _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
 
             if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
                 LogMessage(MessageType.Log, "Initializing for generic interpreter");

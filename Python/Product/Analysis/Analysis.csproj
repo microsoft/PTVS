@@ -104,9 +104,11 @@
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
-    <Compile Include="LanguageServer\DisplayTextBuilder.cs" />
+    <Compile Include="LanguageServer\DocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\ILogger.cs" />
+    <Compile Include="LanguageServer\MarkdownDocumentationBuilder.cs" />
+    <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Server.Completion.cs" />
     <Compile Include="LanguageServer\Server.FindReferences.cs" />
     <Compile Include="LanguageServer\Server.Hover.cs" />

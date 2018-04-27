@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -43,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var opts = GetOptions(@params.context);
-            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, this);
+            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
 
             if (_settings.SuppressAdvancedMembers) {
