@@ -217,18 +217,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             using (var sr = new StreamReader(filePath)) {
                 string quote = null;
-                var line = sr.ReadLine();
-                if (line != null) {
-                    if (line.StartsWithOrdinal("\"\"\"")) {
+                while (true) {
+                    var line = sr.ReadLine();
+                    if (line == null) {
+                        break;
+                    }
+                    if (line.Length == 0 || line.StartsWithOrdinal("#")) {
+                        continue;
+                    }
+                    if (line.StartsWithOrdinal("\"\"\"") || line.StartsWithOrdinal("r\"\"\"")) {
                         quote = "\"\"\"";
-                    } else if (line.StartsWithOrdinal("'''")) {
+                    } else if (line.StartsWithOrdinal("'''") || line.StartsWithOrdinal("r'''")) {
                         quote = "'''";
                     }
+                    break;
                 }
+
                 if (quote != null) {
                     var sb = new StringBuilder();
                     while (true) {
-                        line = sr.ReadLine();
+                        var line = sr.ReadLine();
                         if (line == null || line.EndsWithOrdinal(quote)) {
                             break;
                         }

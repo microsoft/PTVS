@@ -16,31 +16,47 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    sealed class DisplayTextBuilder {
-        public string MakeHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
+    internal abstract class DocumentationBuilder {
+        private const string _ellipsis = "...";
+
+        public InformationDisplayOptions DisplayOptions { get; }
+
+        public static DocumentationBuilder Create(InformationDisplayOptions displayOptions) {
+            displayOptions = displayOptions ?? Server.DisplayOptions;
+
+            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
+                return new MarkdownDocumentationBuilder(displayOptions);
+            }
+            return new PlainTextDocumentationBuilder(displayOptions);
+        }
+
+        public DocumentationBuilder(InformationDisplayOptions displayOptions) {
+            DisplayOptions = displayOptions;
+        }
+
+        public string GetDocumentation(IEnumerable<AnalysisValue> values, string originalExpression) {
             if (values.Count() == 1) {
                 var v = values.First();
                 switch (v.MemberType) {
                     case PythonMemberType.Function:
-                        return MakeFunctionHoverText(values.First(), displayOptions);
+                        return MakeFunctionDocumentation(values.First());
                     case PythonMemberType.Class:
-                        return MakeClassHoverText(values.First(), displayOptions);
+                        return MakeClassDocumentation(values.First());
+                    case PythonMemberType.Module:
+                        return MakeModuleDocumentation(values.First());
                 }
             }
-            return MakeOtherHoverText(values, originalExpression, displayOptions);
+            return MakeGeneralDocumentation(values, originalExpression);
         }
 
-        private static string MakeOtherHoverText(IEnumerable<AnalysisValue> values, string originalExpression, InformationDisplayOptions displayOptions) {
-            var result = new StringBuilder();
+        private string MakeGeneralDocumentation(IEnumerable<AnalysisValue> values, string originalExpression) {
             var documentations = new HashSet<string>();
             var descriptions = new HashSet<string>();
 
@@ -54,15 +70,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var doc = v.Documentation;
-                if (displayOptions.trimDocumentationLines) {
-                    doc = LimitLines(doc, displayOptions);
+                if (DisplayOptions.trimDocumentationLines) {
+                    doc = LimitLines(doc);
                 }
 
                 if ((d?.Length ?? 0) < (doc?.Length ?? 0)) {
                     if (!string.IsNullOrEmpty(doc)) {
                         documentations.Add(doc);
                     }
-                    continue;
                 }
 
                 if (!string.IsNullOrEmpty(d)) {
@@ -70,31 +85,46 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
+            if(!descriptions.Any()) {
+                return string.Empty;
+            }
+
+            var result = new StringBuilder();
+            var count = 0;
             foreach (var d in descriptions.Ordered()) {
-                if (result.Length > 0) {
+                if (count > 0) {
                     result.Append(", ");
                 }
                 result.Append(d);
+                count++;
             }
+
+            if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
+                result.Insert(0, $"```python{Environment.NewLine}");
+            }
+            result.AppendLine();
+            if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
+                result.AppendLine("```");
+            }
+            result.AppendLine();
 
             foreach (var d in documentations.Ordered()) {
                 if (result.Length > 0) {
                     result.AppendLine();
                 }
-
                 result.AppendLine(d);
             }
 
-            if (displayOptions.trimDocumentationText && result.Length > displayOptions.maxDocumentationTextLength) {
-                result.Length = Math.Max(0, displayOptions.maxDocumentationTextLength - 3);
-                result.Append("...");
-            } else if (displayOptions.trimDocumentationLines) {
+            if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
+                result.Length = Math.Max(0, DisplayOptions.maxDocumentationTextLength - 3);
+                result.Append(_ellipsis);
+            } else if (DisplayOptions.trimDocumentationLines) {
                 using (var sr = new StringReader(result.ToString())) {
                     result.Clear();
-                    int lines = displayOptions.maxDocumentationLineLength;
+                    int lines = DisplayOptions.maxDocumentationLineLength;
                     for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
                         if (--lines < 0) {
-                            result.Append("...");
+                            result.Append(_ellipsis);
                             break;
                         }
                         result.AppendLine(line);
@@ -107,9 +137,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
-                if (displayOptions.trimDocumentationText && originalExpression.Length > displayOptions.maxDocumentationTextLength) {
+                if (DisplayOptions.trimDocumentationText && originalExpression.Length > DisplayOptions.maxDocumentationTextLength) {
                     originalExpression = originalExpression.Substring(0,
-                        Math.Max(3, displayOptions.maxDocumentationTextLength) - 3) + "...";
+                        Math.Max(3, DisplayOptions.maxDocumentationTextLength) - 3) + _ellipsis;
                 }
                 if (result.ToString().IndexOf('\n') >= 0) {
                     result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
@@ -120,64 +150,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            Debug.Write(result.ToString());
             return result.ToString().TrimEnd();
         }
 
-        public string MakeModuleHoverText(ModuleReference modRef, InformationDisplayOptions displayOptions) {
-            var contents = $"module {modRef.Name}";
-            var doc = modRef.Module?.Documentation;
+        public abstract string GetModuleDocumentation(ModuleReference modRef);
+        protected abstract string MakeModuleDocumentation(AnalysisValue value);
+        protected abstract string MakeFunctionDocumentation(AnalysisValue value);
+        protected abstract string MakeClassDocumentation(AnalysisValue value);
 
-            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
-                return doc != null ? new RestTextConverter().ToMarkdown(doc) : contents;
-            }
-            if (!string.IsNullOrEmpty(doc)) {
-                doc = LimitLines(modRef.Module.Documentation, displayOptions);
-                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
-            }
-            return contents;
-        }
-
-        private string MakeFunctionHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {
-            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
-                var doc = value.Documentation ?? value.Description;
-
-                var paraIndex = doc.IndexOf("\n\n");
-                paraIndex = paraIndex > 0 ? paraIndex : doc.IndexOf("\r\n\r\n");
-                if (paraIndex > 0) {
-                    var md = $"```python\n{doc.Substring(0, paraIndex)}\n```";
-                    md += $"{Environment.NewLine}{Environment.NewLine}{doc.Substring(paraIndex).Trim()}";
-                    return md;
-                }
-            }
-
-            return LimitLines(string.Join(string.Empty, value.Description), displayOptions);
-        }
-
-        private string MakeClassHoverText(AnalysisValue value, InformationDisplayOptions displayOptions) {
-            if (displayOptions.preferredFormat == MarkupKind.Markdown) {
-                var md = $"```python\n{value.Description}\n```";
-                if (!string.IsNullOrEmpty(value.Documentation)) {
-                    md += $"{Environment.NewLine}{Environment.NewLine}{value.Documentation}";
-                }
-                return md;
-            }
-
-            var contents = value.Description;
-            if (!string.IsNullOrEmpty(value.Documentation)) {
-                var doc = LimitLines(value.Documentation, displayOptions);
-                contents += $"{Environment.NewLine}{Environment.NewLine}{doc}";
-            }
-            return contents;
-        }
-
-        private static string LimitLines(
+        protected string LimitLines(
             string str,
-            InformationDisplayOptions displayOptions,
             bool ellipsisAtEnd = true,
             bool stopAtFirstBlankLine = false
         ) {
-            if (string.IsNullOrEmpty(str) || !displayOptions.trimDocumentationText) {
+            if (string.IsNullOrEmpty(str) || !DisplayOptions.trimDocumentationText) {
                 return str;
             }
 
@@ -186,27 +172,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var wasEmpty = true;
 
             using (var reader = new StringReader(str)) {
-                for (var line = reader.ReadLine(); line != null && lineCount < displayOptions.maxDocumentationLines; line = reader.ReadLine()) {
+                for (var line = reader.ReadLine(); line != null && lineCount < DisplayOptions.maxDocumentationLines; line = reader.ReadLine()) {
                     if (string.IsNullOrWhiteSpace(line)) {
                         if (wasEmpty) {
                             continue;
                         }
                         wasEmpty = true;
                         if (stopAtFirstBlankLine) {
-                            lineCount = displayOptions.maxDocumentationLines;
+                            lineCount = DisplayOptions.maxDocumentationLines;
                             break;
                         }
                         lineCount += 1;
                         prettyPrinted.AppendLine();
                     } else {
                         wasEmpty = false;
-                        lineCount += (line.Length / displayOptions.maxDocumentationLineLength) + 1;
+                        lineCount += (line.Length / DisplayOptions.maxDocumentationLineLength) + 1;
                         prettyPrinted.AppendLine(line);
                     }
                 }
             }
-            if (ellipsisAtEnd && lineCount >= displayOptions.maxDocumentationLines) {
-                prettyPrinted.AppendLine("...");
+            if (ellipsisAtEnd && lineCount >= DisplayOptions.maxDocumentationLines) {
+                prettyPrinted.AppendLine(_ellipsis);
             }
             return prettyPrinted.ToString().Trim();
         }
