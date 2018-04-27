@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            if(!descriptions.Any()) {
+            if (!descriptions.Any()) {
                 return string.Empty;
             }
 
@@ -109,10 +109,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             result.AppendLine();
 
             foreach (var d in documentations.Ordered()) {
-                if (result.Length > 0) {
-                    result.AppendLine();
-                }
-                result.AppendLine(d);
+                result.AppendLine();
+                result.AppendLine(SoftWrap(d));
             }
 
             if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
@@ -196,5 +194,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             return prettyPrinted.ToString().Trim();
         }
+
+        protected virtual string SoftWrap(string s) => s;
     }
 }

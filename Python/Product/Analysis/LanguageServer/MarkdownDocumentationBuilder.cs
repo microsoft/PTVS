@@ -14,10 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.IO;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     internal sealed class MarkdownDocumentationBuilder : DocumentationBuilder {
+        private readonly char[] _codeChars = new[] { '(', ')', '[', ']', '{', '}', '<', '>', '=' };
+
         public MarkdownDocumentationBuilder(InformationDisplayOptions displayOptions) : base(displayOptions) { }
 
         public override string GetModuleDocumentation(ModuleReference modRef) {
@@ -43,15 +48,37 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             sb.AppendLine("```python");
             sb.AppendLine(value.Description);
             sb.AppendLine("```");
-            if(!string.IsNullOrEmpty(subHeader)) {
+            if (!string.IsNullOrEmpty(subHeader)) {
                 sb.AppendLine(subHeader);
             }
             var doc = LimitLines(value.Documentation).Trim();
             doc = new RestTextConverter().ToMarkdown(doc);
             sb.AppendLine();
             sb.AppendLine();
-            sb.Append(doc);
+            sb.Append(SoftWrap(doc));
             return sb.ToString();
+        }
+
+        protected override string SoftWrap(string s) {
+            var result = new StringBuilder();
+            using (var sr = new StringReader(s)) {
+                for (var line = sr.ReadLine(); line != null;) {
+                    var nextLine = sr.ReadLine();
+                    if (!string.IsNullOrEmpty(line)
+                        && !string.IsNullOrEmpty(nextLine)
+                        && line.IndexOfAny(_codeChars) < 0
+                        && nextLine.IndexOfAny(_codeChars) < 0
+                        && !line.EndsWithOrdinal(".")
+                        && Char.IsLower(nextLine[0])) {
+                        result.Append(line);
+                        result.Append(' ');
+                    } else {
+                        result.AppendLine(line);
+                    }
+                    line = nextLine;
+                }
+            }
+            return result.ToString();
         }
     }
 }
