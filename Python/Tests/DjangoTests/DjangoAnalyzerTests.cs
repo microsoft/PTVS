@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
@@ -40,31 +41,19 @@ namespace DjangoTests {
             AssertListener.Initialize();
         }
 
-        private void TestSingleRenderVariable(string template, string value="data") {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
-
-            var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));
-            Assert.IsNotNull(vars, "No variables found for " + template);
-
-            HashSet<AnalysisValue> values;
-            Assert.IsTrue(vars.TryGetValue("content", out values), "content was missing");
-            Assert.AreEqual(1, values.Count, "expected single value");
-            Assert.AreEqual(value, values.Single().GetConstantValueAsString());
+        [TestMethod, Priority(0)]
+        public Task TestRender() {
+            return TestSingleRenderVariable("test_render.html");
         }
 
         [TestMethod, Priority(0)]
-        public void TestRender() {
-            TestSingleRenderVariable("test_render.html");
+        public Task TestRenderToResponse() {
+            return TestSingleRenderVariable("test_render_to_response.html");
         }
 
         [TestMethod, Priority(0)]
-        public void TestRenderToResponse() {
-            TestSingleRenderVariable("test_render_to_response.html");
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestCustomFilter() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+        public async Task TestCustomFilter() {
+            var proj = await AnalyzerTestAsync(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
             AssertUtil.ContainsExactly(
                 proj._filters.Keys.Except(DjangoAnalyzer._knownFilters.Keys),
@@ -91,8 +80,8 @@ namespace DjangoTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestCustomTag() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+        public async Task TestCustomTag() {
+            var proj = await AnalyzerTestAsync(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
@@ -123,8 +112,8 @@ namespace DjangoTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestListView() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+        public async Task TestListView() {
+            var proj = await AnalyzerTestAsync(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
 
             var detailsVars = proj.GetVariablesForTemplateFile(templates + "index.html");
@@ -133,8 +122,8 @@ namespace DjangoTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestDetailsView() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+        public async Task TestDetailsView() {
+            var proj = await AnalyzerTestAsync(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
 
             var detailsVars = proj.GetVariablesForTemplateFile(templates + "details.html");
@@ -145,22 +134,34 @@ namespace DjangoTests {
             Assert.IsNotNull(detailsVars, "No vars found for mymodel2_details.html");
             AssertUtil.ContainsExactly(mymodel2_detailsVars.Keys, "mymodel2");
         }
+        
+        private async Task TestSingleRenderVariable(string template, string value="data") {
+            var proj = await AnalyzerTestAsync(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
-        private DjangoAnalyzer AnalyzerTest(string path) {
-            string djangoDbPath = TestData.GetPath("TestData\\DjangoDB");
-            Assert.IsTrue(
-                PythonTypeDatabase.IsDatabaseVersionCurrent(djangoDbPath),
-                "TestData\\DjangoDB needs updating."
-            );
+            var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));
+            Assert.IsNotNull(vars, "No variables found for " + template);
 
-            var testFact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
-                new Version(2, 7),
-                TestData.GetPath("CompletionDB"),
-                djangoDbPath
-            );
+            Assert.IsTrue(vars.TryGetValue("content", out var values), "content was missing");
+            Assert.AreEqual(1, values.Count, "expected single value");
+            Assert.AreEqual(value, values.Single().GetConstantValueAsString());
+        }
 
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
+        private async Task<DjangoAnalyzer> AnalyzerTestAsync(string path) {
+            //var djangoDbPath = TestData.GetPath("TestData\\DjangoDB");
+            //Assert.IsTrue(
+            //    PythonTypeDatabase.IsDatabaseVersionCurrent(djangoDbPath),
+            //    "TestData\\DjangoDB needs updating."
+            //);
+
+            //var testFact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
+            //    new Version(2, 7),
+            //    TestData.GetPath("CompletionDB"),
+            //    djangoDbPath
+            //);
+
+            var testFact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+
+            PythonAnalyzer analyzer = await PythonAnalyzer.CreateAsync(testFact);
             DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
             djangoAnalyzer.Register(analyzer);
 
