@@ -22,7 +22,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public PlainTextDocumentationBuilder(InformationDisplayOptions displayOptions) : base(displayOptions) { }
 
         public override string GetModuleDocumentation(ModuleReference modRef) {
-            var contents = $"module {modRef.Name}";
+            var prefix = modRef.AnalysisModule?.PythonType?.IsBuiltin == true ? "built-in module " : "module ";
+            var contents = $"{prefix} {modRef.Name}";
             var doc = modRef.Module?.Documentation;
             if (!string.IsNullOrEmpty(doc)) {
                 doc = LimitLines(modRef.Module.Documentation);

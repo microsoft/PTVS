@@ -1445,7 +1445,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var m = new AP.Completion {
                     name = c.label,
                     completion = (c.label == c.insertText) ? null : c.insertText,
-                    doc = c.documentation,
+                    doc = c.documentation.value,
                     memberType = ToMemberType(c._kind, c.kind)
                 };
 
