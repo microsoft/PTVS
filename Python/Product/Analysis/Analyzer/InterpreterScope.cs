@@ -18,20 +18,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     abstract class InterpreterScope {
         public readonly InterpreterScope OuterScope;
-        public readonly List<InterpreterScope> Children;
+        private readonly List<InterpreterScope> _linkedScopes;
+
+        public List<InterpreterScope> Children;
         public bool ContainsImportStar;
 
-        private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
-        private readonly AnalysisDictionary<Node, NodeValue> _nodeValues;
-        private readonly AnalysisDictionary<string, VariableDef> _variables;
-        private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
-        private readonly List<InterpreterScope> _linkedScopes;
+        private AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
+        private AnalysisDictionary<Node, NodeValue> _nodeValues;
+        private AnalysisDictionary<string, VariableDef> _variables;
+        private AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
             AnalysisValue = av;
@@ -80,11 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        public IEnumerable<InterpreterScope> EnumerateFromGlobal {
-            get {
-                return EnumerateTowardsGlobal.Reverse();
-            }
-        }
+        public IEnumerable<InterpreterScope> EnumerateFromGlobal => EnumerateTowardsGlobal.Reverse();
 
         internal InterpreterScope OriginalScope { get; private set; }
 
@@ -92,9 +88,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Gets the index in the file/buffer that the scope actually starts on.  This is the index where the colon
         /// is on for the start of the body if we're a function or class definition.
         /// </summary>
-        public virtual int GetBodyStart(PythonAst ast) {
-            return GetStart(ast);
-        }
+        public virtual int GetBodyStart(PythonAst ast) => GetStart(ast);
 
         /// <summary>
         /// Gets the index in the file/buffer that this scope starts at.  This is the index which includes
@@ -117,37 +111,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return Node.EndIndex;
         }
 
-        public abstract string Name {
-            get;
-        }
+        public abstract string Name { get; }
 
         public Node Node { get; }
 
-        internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables {
-            get { return _variables; }
-        }
-
-        internal IEnumerable<KeyValuePair<Node, InterpreterScope>> AllNodeScopes {
-            get { return _nodeScopes; }
-        }
-
-        internal bool ContainsVariable(string name) {
-            return _variables.ContainsKey(name);
-        }
-
-        internal VariableDef GetVariable(string name) {
-            return _variables[name];
-        }
-
-        internal bool TryGetVariable(string name, out VariableDef value) {
-            return _variables.TryGetValue(name, out value);
-        }
-
-        internal int VariableCount {
-            get {
-                return _variables.Count;
-            }
-        }
+        internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables  => _variables;
+        internal IEnumerable<KeyValuePair<Node, InterpreterScope>> AllNodeScopes => _nodeScopes;
+        internal bool ContainsVariable(string name) => _variables.ContainsKey(name);
+        internal VariableDef GetVariable(string name) => _variables[name];
+        internal bool TryGetVariable(string name, out VariableDef value) => _variables.TryGetValue(name, out value);
+        internal int VariableCount => _variables.Count;
 
         /// <summary>
         /// Assigns a variable in the given scope, creating the variable if necessary, and performing
@@ -177,7 +150,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (!TryGetVariable(name, out value)) {
                 var def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, new EncodedLocation(unit, location));
                 return AddVariable(name, def);
-            } else if (value is LocatedVariableDef lv) {
+            }
+
+            if (value is LocatedVariableDef lv) {
                 lv.Location = new EncodedLocation(unit, location);
                 lv.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             } else {
@@ -197,14 +172,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            VariableDef res;
-            if (!_variables.TryGetValue(name, out res)) {
+            if (!_variables.TryGetValue(name, out var variable)) {
                 return null;
             }
+
             if (addRef) {
-                res.AddReference(node, unit);
+                variable.AddReference(node, unit);
             }
-            return res;
+            return variable;
         }
 
         public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -223,7 +198,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var val in GetMergedVariables(name)) {
                 res = res.Union(val.Types);
             }
-
             return res;
         }
 
@@ -240,11 +214,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef CreateLocatedVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
-            if (addRef) {
-                res.AddReference(node, unit);
+            var variable = GetVariable(node, unit, name, false);
+            if (variable is LocatedVariableDef locatedVariable) {
+                locatedVariable.Location = new EncodedLocation(unit, node);
+                locatedVariable.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
+            } else {
+                variable = AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
             }
-            return res;
+
+            if (addRef) {
+                variable.AddReference(node, unit);
+            }
+            return variable;
         }
 
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
@@ -255,17 +236,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return res;
         }
 
-        public virtual VariableDef AddVariable(string name, VariableDef variable = null) {
-            return _variables[name] = variable ?? new VariableDef();
-        }
+        public virtual VariableDef AddVariable(string name, VariableDef variable = null)
+            => _variables[name] = variable ?? new VariableDef();
 
-        internal virtual bool RemoveVariable(string name) {
-            return _variables.Remove(name);
-        }
+        internal virtual bool RemoveVariable(string name) => _variables.Remove(name);
 
-        internal bool RemoveVariable(string name, out VariableDef value) {
-            return _variables.TryGetValue(name, out value) && _variables.Remove(name);
-        }
+        internal bool RemoveVariable(string name, out VariableDef value)
+            => _variables.TryGetValue(name, out value) && _variables.Remove(name);
 
         internal virtual bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
             if (!TryGetVariable(name, out var vd) || vd == ifNot) {
@@ -315,11 +292,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _nodeValues.Clear();
         }
 
-        public virtual bool VisibleToChildren {
-            get {
-                return true;
-            }
-        }
+        public virtual bool VisibleToChildren => true;
 
         public AnalysisValue AnalysisValue { get; }
 

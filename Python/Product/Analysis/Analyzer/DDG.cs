@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            modRef.AddReference(_unit.DeclaringModule);
+            _unit.DeclaringModule.AddModuleReference(modRef);
 
             Debug.Assert(modRef.Module != null);
             var userMod = modRef.Module;
@@ -490,7 +490,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     continue;
                 }
 
-                modRef.AddReference(_unit.DeclaringModule);
+                _unit.DeclaringModule.AddModuleReference(modRef);
 
                 var userMod = modRef.Module;
                 Debug.Assert(userMod != null);

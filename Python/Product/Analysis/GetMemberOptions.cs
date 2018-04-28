@@ -78,7 +78,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Only include members which are valid (or likely) exception types
         /// </summary>
-        ExceptionsOnly = 0x100
+        ExceptionsOnly = 0x100,
+
+        /// <summary>
+        /// Preserves old values in types. Typically used when obtaining
+        /// members for the completion list.
+        /// </summary>
+        ForEval = 0x0200
     }
 
     internal static class GetMemberOptionsExtensions {

@@ -40,7 +40,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.TypesNoCopy;
                     var key = kvp.Key;
-                    kvp.Value.ClearOldValues();
+                    if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                        kvp.Value.ClearOldValues();
+                    }
                     if (kvp.Value.VariableStillExists) {
                         MergeTypes(res, key, types);
                     }
@@ -57,7 +59,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 if (baseClass != null &&
                                     baseClass.Instance._instanceAttrs != null) {
                                     foreach (var kvp in baseClass.Instance._instanceAttrs) {
-                                        kvp.Value.ClearOldValues();
+                                        if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                                            kvp.Value.ClearOldValues();
+                                        }
                                         if (kvp.Value.VariableStillExists) {
                                             MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
                                         }
@@ -70,7 +74,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
 
-                foreach (var classMem in _classInfo.GetAllMembers(moduleContext)) {
+                foreach (var classMem in _classInfo.GetAllMembers(moduleContext, options)) {
                     MergeTypes(res, classMem.Key, classMem.Value);
                 }
             }

@@ -15,14 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -42,10 +41,8 @@ namespace Microsoft.PythonTools.Analysis {
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
+        private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
-
-        // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
-        private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
 
         internal ProjectEntry(
             PythonAnalyzer state,
@@ -231,7 +228,7 @@ namespace Microsoft.PythonTools.Analysis {
                 value.Value.EnqueueDependents();
             }
 
-            MyScope.Scope.Children.Clear();
+            MyScope.Scope.Children = new List<InterpreterScope>();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
@@ -300,7 +297,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         public Dictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
-
         public void RemovedFromProject() {
             lock (this) {
                 AnalysisVersion = -1;
@@ -311,6 +307,18 @@ namespace Microsoft.PythonTools.Analysis {
                         state?.ClearAggregate(aggregatedInto);
                         aggregatedInto.RemovedFromProject();
                     }
+                }
+
+                while (_backReferences.TryDequeue(out var reference)) {
+                    if (reference.TryGetTarget(out var referenceDict)) {
+                        lock (referenceDict) {
+                            referenceDict.Remove(this);
+                        }
+                    }
+                }
+
+                foreach (var moduleReference in MyScope.ModuleReferences.ToList()) {
+                    MyScope.RemoveModuleReference(moduleReference);
                 }
             }
         }
@@ -433,6 +441,10 @@ namespace Microsoft.PythonTools.Analysis {
                 SetCurrentParse(Tree, null, false);
             }
         }
+
+        internal void AddBackReference(ReferenceDict referenceDict) {
+            _backReferences.Enqueue(new WeakReference<ReferenceDict>(referenceDict));
+        }
     }
 
     class InitialContentCookie : IAnalysisCookie {
@@ -464,7 +476,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         bool IsAnalyzed { get; }
 
-        
         /// <summary>
         /// Returns the project entries file path.
         /// </summary>
@@ -584,5 +595,4 @@ namespace Microsoft.PythonTools.Analysis {
         public void Dispose() { }
         public void Complete() => throw new NotSupportedException();
     }
-
 }

@@ -114,7 +114,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
             foreach (var kvp in _scope.AllVariables) {
-                kvp.Value.ClearOldValues();
+                if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                    kvp.Value.ClearOldValues();
+                }
                 if (kvp.Value._dependencies.Count > 0) {
                     var types = kvp.Value.Types;
                     if (types.Count > 0) {
@@ -179,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public void AddModuleReference(ModuleReference moduleRef) {
             if (moduleRef == null) {
                 Debug.Fail("moduleRef should never be null");
-                throw new ArgumentNullException("moduleRef");
+                throw new ArgumentNullException(nameof(moduleRef));
             }
             _referencedModules.Add(moduleRef);
             moduleRef.AddReference(this);
@@ -191,11 +193,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<ModuleReference> ModuleReferences {
-            get {
-                return _referencedModules;
-            }
-        }
+        public IEnumerable<ModuleReference> ModuleReferences => _referencedModules;
 
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             lock (this) {

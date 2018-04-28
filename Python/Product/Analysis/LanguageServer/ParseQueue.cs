@@ -32,12 +32,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const string PythonParserSource = "Python";
         private const string TaskCommentSource = "Task comment";
 
-        private readonly ConcurrentDictionary<IDocument, ParseTask> _parsing;
+        private readonly ConcurrentDictionary<Uri, ParseTask> _parsing;
         private readonly VolatileCounter _parsingInProgress;
 
         public ParseQueue() {
             _parsingInProgress = new VolatileCounter();
-            _parsing = new ConcurrentDictionary<IDocument, ParseTask>();
+            _parsing = new ConcurrentDictionary<Uri, ParseTask>();
         }
 
         public int Count => _parsingInProgress.Count;
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var task = new ParseTask(this, doc, languageVersion);
             try {
-                return _parsing.AddOrUpdate(doc, task, (d, prev) => task.ContinueAfter(prev)).Start();
+                return _parsing.AddOrUpdate(doc.DocumentUri, task, (d, prev) => task.ContinueAfter(prev)).Start();
             } finally {
                 task.DisposeIfNotStarted();
             }
@@ -235,7 +235,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         ) {
             var opts = new ParserOptions {
                 BindReferences = true,
-                IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation)
+                IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation),
+                StubFile = entry.DocumentUri.AbsolutePath.EndsWithOrdinal(".pyi", ignoreCase: true)
             };
 
             List<Diagnostic> diags = null;
