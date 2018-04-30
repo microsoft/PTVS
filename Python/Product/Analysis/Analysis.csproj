@@ -129,14 +129,6 @@
     <Compile Include="LanguageServer\Settings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
-    <Compile Include="Pythia\AssignmentWalker.cs" />
-    <Compile Include="Pythia\Consts.cs" />
-    <Compile Include="Pythia\ExpressionWalker.cs" />
-    <Compile Include="Pythia\Helper.cs" />
-    <Compile Include="Pythia\PythiaService.cs" />
-    <Compile Include="Pythia\PythiaUtil.cs" />
-    <Compile Include="Pythia\StandardVariableTypes.cs" />
-    <Compile Include="Pythia\UsageDataModel.cs" />
     <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
@@ -465,9 +457,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Pythia\model\model-sequence.json.gz" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "NamedTuple":
                 case "Generator":
                 case "ClassVar":
-                    res = new TypingTypeInfo(name);
+                    res = new TypingTypeInfo(name, _inner.GetMember(node, unit, name)?.FirstOrDefault());
                     break;
 
                 case "AbstractSet": break;
