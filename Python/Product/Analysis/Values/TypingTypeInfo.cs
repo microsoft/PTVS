@@ -153,6 +153,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Description => _innerValue?.Description ?? base.Description; 
         public override string Documentation => _innerValue?.Documentation ?? base.Documentation;
+        public override PythonMemberType MemberType => _innerValue != null ? _innerValue.MemberType : base.MemberType;
 
         public override bool Equals(object obj) {
             if (obj is TypingTypeInfo other) {
