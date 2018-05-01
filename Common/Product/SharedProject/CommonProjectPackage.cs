@@ -19,6 +19,7 @@ using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
@@ -63,7 +64,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected override void Initialize() {
             if (GetService(typeof(UIThreadBase)) == null) {
-                ((IServiceContainer)this).AddService(typeof(UIThreadBase), new UIThread(null), true);
+                ((IServiceContainer)this).AddService(typeof(UIThreadBase), new UIThread(ThreadHelper.JoinableTaskFactory), true);
             }
 
             base.Initialize();

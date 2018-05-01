@@ -39,14 +39,14 @@ namespace Microsoft.VisualStudioTools {
         private uint _componentID;
         private LibraryManager _libraryManager;
         private IOleComponentManager _compMgr;
-        private UIThread _uiThread;
+        private UIThreadBase _uiThread;
         private static readonly object _commandsLock = new object();
         private static readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
         #region Language-specific abstracts
 
         public abstract Type GetLibraryManagerType();
-        internal abstract Task<LibraryManager> CreateLibraryManagerAsync(IAsyncServiceContainer container, CancellationToken cancellationToken);
+        internal abstract LibraryManager CreateLibraryManager();
         public abstract bool IsRecognizedFile(string filename);
 
         // TODO:
@@ -100,12 +100,12 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private async Task<object> CreateLibraryManagerAsync(IAsyncServiceContainer container, CancellationToken cancellationToken, Type serviceType) {
+        private object CreateLibraryManager(IServiceContainer container, Type serviceType) {
             if (GetLibraryManagerType() != serviceType) {
                 return null;
             }
 
-            return _libraryManager = await CreateLibraryManagerAsync(container, cancellationToken);
+            return _libraryManager = CreateLibraryManager();
         }
 
         internal void RegisterCommands(Guid cmdSet, params Command[] commands) {
@@ -187,12 +187,15 @@ namespace Microsoft.VisualStudioTools {
         }
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-            if (await GetServiceAsync(typeof(UIThreadBase)) == null) {
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            _uiThread = (UIThreadBase)GetService(typeof(UIThreadBase));
+            if (_uiThread == null) {
                 _uiThread = new UIThread(JoinableTaskFactory);
                 AddService<UIThreadBase>(_uiThread, true);
             }
 
-            AddService(GetLibraryManagerType(), CreateLibraryManagerAsync, true);
+            AddService(GetLibraryManagerType(), CreateLibraryManager, true);
 
             var crinfo = new OLECRINFO {
                 cbSize = (uint) Marshal.SizeOf(typeof(OLECRINFO)),
@@ -201,33 +204,26 @@ namespace Microsoft.VisualStudioTools {
                 uIdleTimeInterval = 0
             };
 
-            await RegisterComponentAsync(crinfo, cancellationToken);
+            _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
+            ErrorHandler.ThrowOnFailure(_compMgr.FRegisterComponent(this, new[] { crinfo }, out _componentID));
+
             await base.InitializeAsync(cancellationToken, progress);
         }
 
-        protected void AddService<T>(bool promote) where T : new() 
-            => AddService(typeof(T), (c, ct, t, p) => Task.FromResult<object>(new T()), promote);
+        protected override object GetService(Type serviceType) 
+            => serviceType == typeof(UIThreadBase) ? _uiThread : base.GetService(serviceType);
 
-        protected void AddService<T>(T instance, bool promote) 
-            => AddService(typeof(T), (c, ct, t, p) => Task.FromResult<object>(instance), promote);
+        protected void AddService<T>(bool promote) where T : new()
+            => ((IServiceContainer) this).AddService(typeof(T), new T(), promote);
 
-        protected void AddService<T>(ServiceCreatorCallback callback, bool promote) 
-            => AddService(typeof(T), (c, ct, t, p) => Task.FromResult(callback(this, t)), promote);
+        protected void AddService<T>(object service, bool promote)
+            => ((IServiceContainer) this).AddService(typeof(T), service, promote);
 
-        protected void AddUIThreadService<T>(ServiceCreatorCallback callback, bool promote) 
-            => AddService(typeof(T), (c, ct, t, p) => CreateUIThreadServiceAsync(ct, t, callback), promote);
+        protected void AddService<T>(ServiceCreatorCallback callback, bool promote)
+            => ((IServiceContainer) this).AddService(typeof(T), callback, promote);
 
-        private async Task<object> CreateUIThreadServiceAsync(CancellationToken cancellationToken, Type type, ServiceCreatorCallback callback) {
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            return callback(this, type);
-        }
-
-        private async Task RegisterComponentAsync(OLECRINFO crinfo, CancellationToken cancellationToken) {
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-            _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
-            ErrorHandler.ThrowOnFailure(_compMgr.FRegisterComponent(this, new[] { crinfo }, out _componentID));
-        }
+        protected void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
+            => ((IServiceContainer) this).AddService(serviceType, callback, promote);
 
         internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url) {
             // TODO: In a future VS 2017 release, SVsWebBrowsingService will have the ability

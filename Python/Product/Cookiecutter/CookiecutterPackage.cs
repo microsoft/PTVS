@@ -87,16 +87,14 @@ namespace Microsoft.CookiecutterTools {
             Trace.WriteLine("Entering {0}.InitializeAsync()".FormatInvariant(this));
 
             await base.InitializeAsync(cancellationToken, progress);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            if (await GetServiceAsync(typeof(UIThreadBase)) == null) {
-                var uiThreadTask = Task.FromResult<object>(new UIThread(JoinableTaskFactory));
-                AddService(typeof(UIThreadBase), (c, ct, t, p) => uiThreadTask, true);
+            if (GetService(typeof(UIThreadBase)) == null) {
+                ((IServiceContainer) this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
             }
 
             CookiecutterTelemetry.Initialize();
-
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
+            
             _projectSystem = new ProjectSystemClient(DTE);
             Trace.WriteLine("Leaving {0}.InitializeAsync()".FormatInvariant(this));
         }

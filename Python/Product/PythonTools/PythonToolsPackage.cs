@@ -388,8 +388,7 @@ namespace Microsoft.PythonTools {
 
         public override Type GetLibraryManagerType() => typeof(IPythonLibraryManager);
 
-        internal override async Task<LibraryManager> CreateLibraryManagerAsync(IAsyncServiceContainer container, CancellationToken cancellationToken) {
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        internal override LibraryManager CreateLibraryManager() {
             return new PythonLibraryManager(this);
         }
 
@@ -397,25 +396,24 @@ namespace Microsoft.PythonTools {
         // Overriden Package Implementation
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-            await TaskScheduler.Default;
             Trace.WriteLine("Entering InitializeAsync() of: {0}".FormatUI(this));
-            await base.InitializeAsync(cancellationToken, progress);
-
-            AddService<ClipboardService>(promote: true);
-            AddService<IPythonToolsToolWindowService>(this, promote: true);
-            AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
-            AddService<CustomDebuggerEventHandler>((container, serviceType) => new CustomDebuggerEventHandler(this), promote: true);
-            AddUIThreadService<IPythonToolsOptionsService>(PythonToolsOptionsService.CreateService, promote: true);
-            AddUIThreadService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);
-            AddUIThreadService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
-            AddUIThreadService<ErrorTaskProvider>(ErrorTaskProvider.CreateService, promote: true);
-            AddUIThreadService<CommentTaskProvider>(CommentTaskProvider.CreateService, promote: true);
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await base.InitializeAsync(cancellationToken, progress);
+
+            AddService<ClipboardService>(true);
+            AddService<IPythonToolsToolWindowService>(this, true);
+            AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
+            AddService<CustomDebuggerEventHandler>((container, serviceType) => new CustomDebuggerEventHandler(this), promote: true);
+            AddService<IPythonToolsOptionsService>(PythonToolsOptionsService.CreateService, promote: true);
+            AddService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);
+            AddService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
+            AddService<ErrorTaskProvider>(ErrorTaskProvider.CreateService, promote: true);
+            AddService<CommentTaskProvider>(CommentTaskProvider.CreateService, promote: true);
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
-            AddService(solutionEventListener, true);
+            AddService<SolutionEventsListener>(solutionEventListener, true);
             
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
