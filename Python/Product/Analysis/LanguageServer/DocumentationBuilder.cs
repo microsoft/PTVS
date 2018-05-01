@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -57,85 +56,66 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private string MakeGeneralDocumentation(IEnumerable<AnalysisValue> values, string originalExpression) {
-            var documentations = new HashSet<string>();
-            var descriptions = new HashSet<string>();
+            var descriptions = new Dictionary<string, string>();
 
             foreach (var v in values) {
                 var d = v.Description;
-                if (v.MemberType == PythonMemberType.Instance || v.MemberType == PythonMemberType.Constant) {
-                    if (!string.IsNullOrEmpty(d)) {
-                        descriptions.Add(d);
-                    }
-                    continue;
-                }
-
-                var doc = v.Documentation;
-                if (DisplayOptions.trimDocumentationLines) {
-                    doc = LimitLines(doc);
-                }
-
-                if ((d?.Length ?? 0) < (doc?.Length ?? 0)) {
-                    if (!string.IsNullOrEmpty(doc)) {
-                        documentations.Add(doc);
-                    }
-                }
-
                 if (!string.IsNullOrEmpty(d)) {
-                    descriptions.Add(d);
+                    var doc = v.Documentation;
+                    if (DisplayOptions.trimDocumentationLines) {
+                        doc = LimitLines(doc);
+                    }
+                    descriptions[d] = doc ?? string.Empty;
                 }
             }
 
-            if (!descriptions.Any()) {
+            if (descriptions.Count == 0) {
                 return string.Empty;
             }
 
             var result = new StringBuilder();
-            var count = 0;
-            foreach (var d in descriptions.Ordered()) {
-                if (count > 0) {
-                    result.Append(", ");
+            var descPrefix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```python{Environment.NewLine}" : string.Empty;
+            var descSuffix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```{Environment.NewLine}" : string.Empty;
+            var multiline = descriptions.Count > 1;
+
+            foreach (var kvp in descriptions) {
+                var desc = kvp.Key;
+                var doc = kvp.Value;
+
+                if(result.Length > 0) {
+                    result.AppendLine();
+                    result.AppendLine();
                 }
-                result.Append(d);
-                count++;
-            }
+                result.Append(descPrefix);
+                result.AppendLine(desc);
+                result.Append(descSuffix);
 
-            var multiline = result.ToString().IndexOf('\n') >= 0;
-            var expressionPosition = 0;
-            if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
-                var languagePrefix = $"```python{Environment.NewLine}";
-                result.Insert(0, languagePrefix);
-                expressionPosition = languagePrefix.Length;
-            }
-            result.AppendLine();
-            if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
-                result.AppendLine("```");
-            }
-            result.AppendLine();
+                if (!string.IsNullOrEmpty(doc)) {
+                    result.AppendLine(SoftWrap(doc));
+                    multiline |= doc.IndexOf('\n') >= 0;
+                }
 
-            foreach (var d in documentations.Ordered()) {
-                result.AppendLine();
-                result.AppendLine(SoftWrap(d));
-            }
-
-            if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
-                result.Length = Math.Max(0, DisplayOptions.maxDocumentationTextLength - 3);
-                result.Append(_ellipsis);
-            } else if (DisplayOptions.trimDocumentationLines) {
-                using (var sr = new StringReader(result.ToString())) {
-                    result.Clear();
-                    int lines = DisplayOptions.maxDocumentationLineLength;
-                    for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
-                        if (--lines < 0) {
-                            result.Append(_ellipsis);
-                            break;
+                if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
+                    result.Length = Math.Max(0, DisplayOptions.maxDocumentationTextLength - 3);
+                    result.Append(_ellipsis);
+                    break;
+                } else if (DisplayOptions.trimDocumentationLines) {
+                    using (var sr = new StringReader(result.ToString())) {
+                        result.Clear();
+                        int lines = DisplayOptions.maxDocumentationLineLength;
+                        for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
+                            if (--lines < 0) {
+                                result.Append(_ellipsis);
+                                break;
+                            }
+                            result.AppendLine(line);
                         }
-                        result.AppendLine(line);
                     }
                 }
-            }
 
-            while (result.Length > 0 && char.IsWhiteSpace(result[result.Length - 1])) {
-                result.Length -= 1;
+                while (result.Length > 0 && char.IsWhiteSpace(result[result.Length - 1])) {
+                    result.Length -= 1;
+                }
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
@@ -144,9 +124,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         Math.Max(3, DisplayOptions.maxDocumentationTextLength) - 3) + _ellipsis;
                 }
                 if (multiline) {
-                    result.Insert(expressionPosition, $"{originalExpression}:{Environment.NewLine}");
+                    result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
                 } else if (result.Length > 0) {
-                    result.Insert(expressionPosition, $"{originalExpression}: ");
+                    result.Insert(0, $"{originalExpression}: ");
                 } else {
                     result.Append($"{originalExpression}: <unknown type>");
                 }
@@ -165,7 +145,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             bool ellipsisAtEnd = true,
             bool stopAtFirstBlankLine = false
         ) {
-            if (string.IsNullOrEmpty(str) || !DisplayOptions.trimDocumentationText) {
+            if (string.IsNullOrEmpty(str)) {
+                return string.Empty;
+            }
+
+            if(!DisplayOptions.trimDocumentationText) {
                 return str;
             }
 

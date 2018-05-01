@@ -290,6 +290,14 @@ namespace TestUtilities.Python {
             return module.Analysis.GetValuesByIndex(variable, index).Select(m => m.Description);
         }
 
+        public IEnumerable<string> GetDocumentations(string variable, int index = 0) {
+            return GetDocumentations(_entries[DefaultModule], variable, index);
+        }
+
+        public IEnumerable<string> GetDocumentations(IPythonProjectEntry module, string variable, int index = 0) {
+            return module.Analysis.GetValuesByIndex(variable, index).Select(m => m.Documentation);
+        }
+
         public IEnumerable<string> GetShortDescriptions(string variable, int index = 0) {
             return GetShortDescriptions(_entries[DefaultModule], variable, index);
         }

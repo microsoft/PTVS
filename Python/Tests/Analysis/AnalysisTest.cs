@@ -936,7 +936,7 @@ a = A()
 
             var clsA = entry.GetValue<ClassInfo>("A");
             var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "object");
 
             // Unsuccessful: cannot order X and Y
             code = @"
@@ -979,7 +979,7 @@ G.remember2buy
             entry = ProcessTextV2(code);
             clsG = entry.GetValue<ClassInfo>("G");
             var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -999,7 +999,7 @@ z = Z()
             var clsZ = entry.GetValue<ClassInfo>("Z");
             Assert.IsNotNull(clsZ);
             var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
+            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -1012,28 +1012,28 @@ z = None
             entry = ProcessTextV2(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             var clsB = entry.GetValue<ClassInfo>("B");
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "basestring", "object");
 
             entry = ProcessTextV3(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             clsB = entry.GetValue<ClassInfo>("B");
             mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "object");
         }
 
         [TestMethod, Priority(0)]
@@ -5310,12 +5310,12 @@ import imp as impp
 ";
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 state.DefaultModule = "mod1";
-                state.AssertDescription("g", "mod1.g() -> built-in module _io");
-                state.AssertDescription("f", "mod1.f() -> built-in module sys");
-                state.AssertDescription("h", "mod1.h() -> built-in module sys");
-                state.AssertDescription("i", "mod1.i() -> built-in module zlib");
-                state.AssertDescription("j", "mod1.j() -> built-in module mmap");
-                state.AssertDescription("k", "mod1.k() -> built-in module imp");
+                state.AssertDescription("g", "mod1.g() -> _io");
+                state.AssertDescription("f", "mod1.f() -> sys");
+                state.AssertDescription("h", "mod1.h() -> sys");
+                state.AssertDescription("i", "mod1.i() -> zlib");
+                state.AssertDescription("j", "mod1.j() -> mmap");
+                state.AssertDescription("k", "mod1.k() -> imp");
             });
         }
 
@@ -5825,8 +5825,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("x", BuiltinTypeId.Tuple);
             entry.AssertIsInstance("y", BuiltinTypeId.List);
             entry.AssertDescription("z", "int");
-            entry.AssertDescriptionContains("min", "built-in function min", "min(");
-            entry.AssertDescriptionContains("list.append", "built-in function list.append(");
+            entry.AssertDescriptionContains("min", "min(");
+            entry.AssertDescriptionContains("list.append", "list.append(");
             entry.AssertIsInstance("\"abc\".Length");
             entry.AssertIsInstance("c.Length");
             entry.AssertIsInstance("d", "fob");
@@ -5834,7 +5834,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
-            entry.AssertDescription("fob", "class test-module.fob(object)");
+            entry.AssertDescription("fob", "test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
@@ -5885,7 +5885,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.Contains(entry.GetCompletionDocumentation("", "d", 1).First(), "instance of fob");
+            AssertUtil.Contains(entry.GetCompletionDocumentation("", "d", 1).First(), "fob");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "int", 1).First(), "integer");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "min", 1).First(), "min(");
         }
