@@ -347,7 +347,10 @@ namespace Microsoft.PythonTools {
         }
 
         private void RaiseChanged(object state) {
-            _notifyChangeTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            try {
+                _notifyChangeTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -356,7 +359,10 @@ namespace Microsoft.PythonTools {
         }
 
         int IVsFileChangeEvents.DirectoryChanged(string pszDirectory) {
-            _notifyChangeTimer?.Change(500, Timeout.Infinite);
+            try {
+                _notifyChangeTimer?.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
             return VSConstants.S_OK;
         }
     }
