@@ -5830,7 +5830,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("\"abc\".Length");
             entry.AssertIsInstance("c.Length");
             entry.AssertIsInstance("d", "fob");
-            entry.AssertDescription("sys", "built-in module sys");
+            entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
             entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
@@ -5841,7 +5841,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("None", "None");
             entry.AssertDescription("f.func_name", "property of type str");
             entry.AssertDescription("h", "test-module.h() -> test-module.f() -> str, test-module.g()");
-            entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int\r\nuseful documentation");
+            entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int");
+            entry.AssertDocumentation("docstr_func", "useful documentation");
 
             entry.AssertDescription("with_params", "test-module.with_params(a, b, c)");
             entry.AssertDescription("with_params_default", "test-module.with_params_default(a, b, c: int=100)");
