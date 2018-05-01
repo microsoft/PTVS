@@ -25,6 +25,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
+
+    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
+    using global::DiagnosticsHub.Packaging.Interop;
+
     sealed class ProfiledProcess : IDisposable {
         private readonly string _exe, _args, _dir;
         private readonly ProcessorArchitecture _arch;
@@ -206,6 +210,31 @@ namespace Microsoft.PythonTools.Profiling {
             return perfToolsPath;
         }
 
+        public static void PackageTrace()
+        {
+            var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
+            using (var package = DhPackage.CreateLegacyPackage()) {
+                package.AddTool(ref cpuToolId);
+
+                // Contains the data to analyze
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.DWJsonFile",
+                    @"c:\users\rgesteve\downloads\Sample1.dwjson",
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // Counter data to show in swimlane
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.CountersFile",
+                    @"c:\users\rgesteve\downloads\Session.counters",
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
+                // the resources added from disk after they have been committed to the DiagSession
+                package.CommitToPath(@"c:\users\rgesteve\downloads\demo", CommitOption.CommitOption_Archive);
+            }
+        }
 
         internal void StopProfiling() {
             _process.Kill();
