@@ -2044,7 +2044,6 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNull("propertyName", propertyName);
             Utilities.ArgumentNotNull("afterProperty", afterProperty);
 
-            Utilities.ArgumentNotNull("propertyName", propertyName);
             Site.GetUIThread().MustBeCalledFromUIThread();
 
             var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
@@ -2065,8 +2064,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 var propertyGroups = from g in this.buildProject.Xml.PropertyGroups
                                      where g.Children.Where(c => c.ElementName == afterProperty).Any()
                                      select g;
-                var group = propertyGroups.Any() ? propertyGroups.First() : this.buildProject.Xml.PropertyGroups.First();
-                var newProp = group.SetProperty(propertyName, propertyValue);
+                var group = propertyGroups.LastOrDefault();
+                if (group != null) {
+                    var newProp = group.SetProperty(propertyName, propertyValue);
+                } else {
+                    this.buildProject.SetProperty(propertyName, propertyValue);
+                }
             } else {
                 this.buildProject.SetProperty(propertyName, propertyValue);
             }
