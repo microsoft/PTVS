@@ -99,8 +99,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 count++;
             }
 
+            var multiline = result.ToString().IndexOf('\n') >= 0;
+            var expressionPosition = 0;
             if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
-                result.Insert(0, $"```python{Environment.NewLine}");
+                var languagePrefix = $"```python{Environment.NewLine}";
+                result.Insert(0, languagePrefix);
+                expressionPosition = languagePrefix.Length;
             }
             result.AppendLine();
             if (DisplayOptions.preferredFormat == MarkupKind.Markdown) {
@@ -139,10 +143,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     originalExpression = originalExpression.Substring(0,
                         Math.Max(3, DisplayOptions.maxDocumentationTextLength) - 3) + _ellipsis;
                 }
-                if (result.ToString().IndexOf('\n') >= 0) {
-                    result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
+                if (multiline) {
+                    result.Insert(expressionPosition, $"{originalExpression}:{Environment.NewLine}");
                 } else if (result.Length > 0) {
-                    result.Insert(0, $"{originalExpression}: ");
+                    result.Insert(expressionPosition, $"{originalExpression}: ");
                 } else {
                     result.Append($"{originalExpression}: <unknown type>");
                 }

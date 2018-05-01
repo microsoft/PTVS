@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "class ");
+            //yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "class ");
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullyQualifiedName);
             
             if (ClassDefinition.BasesInternal.Length > 0) {
