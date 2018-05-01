@@ -1924,12 +1924,12 @@ namespace DebuggerTests {
                 new ExceptionHandlerInfo(125, 126, "struct.error", "socket.error", "os.error"),
                 new ExceptionHandlerInfo(130, 131, "struct.error", "socket.error", "os.error"),
 
-                new ExceptionHandlerInfo(133, 143, "ValueError"),
-                new ExceptionHandlerInfo(135, 141, "TypeError"),
+                new ExceptionHandlerInfo(133, 144, "ValueError"),
+                new ExceptionHandlerInfo(135, 142, "TypeError"),
                 new ExceptionHandlerInfo(137, 139, "ValueError"),
 
                 new ExceptionHandlerInfo(146, 148, "ValueError"),
-                new ExceptionHandlerInfo(150, 156, "TypeError"),
+                new ExceptionHandlerInfo(150, 157, "TypeError"),
                 new ExceptionHandlerInfo(152, 154, "ValueError"),
 
                 new ExceptionHandlerInfo(159, 160, "Exception"),
@@ -1945,12 +1945,18 @@ namespace DebuggerTests {
             var processRunInfo = CreateProcess(debugger, filename);
             var process = processRunInfo.Process;
 
-            var actual = process.GetHandledExceptionRanges(filename);
-            Assert.AreEqual(expected.Length, actual.Count);
+            var actual = process.GetHandledExceptionRanges(filename)
+                .Select(s => new ExceptionHandlerInfo(s.Item1, s.Item2, s.Item3.ToArray()))
+                .OrderBy(e => e.FirstLine)
+                .ToArray();
 
-            Assert.IsTrue(actual.All(a =>
-                expected.SingleOrDefault(e => e.FirstLine == a.Item1 && e.LastLine == a.Item2 && e.Expressions.ContainsExactly(a.Item3)) != null
-            ));
+            Assert.AreEqual(expected.Length, actual.Length);
+            for (var i = 0; i < actual.Length; i++) {
+                Assert.AreEqual(expected[i].FirstLine, actual[i].FirstLine, $"Range #{i}, First line");
+                Assert.AreEqual(expected[i].LastLine, actual[i].LastLine, $"Range #{i}, Last line");
+                Assert.AreEqual(expected[i].Expressions.Count, actual[i].Expressions.Count, $"Range #{i}, Exceptions count");
+                Assert.IsTrue(expected[i].Expressions.ContainsExactly(actual[i].Expressions), $"Range #{i}");
+            }
         }
 
         #endregion

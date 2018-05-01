@@ -23,26 +23,28 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using EnvDTE;
-using analysis::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using analysis::Microsoft.PythonTools.Parsing;
+using EnvDTE;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
-using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
+using util::TestUtilities.UI;
 
 namespace PythonToolsUITests {
     public class EditorTests {
@@ -863,6 +865,59 @@ x\
                     wnd.Close();
                     app.Dte.Solution.Close();
                 }
+            }
+        }
+
+        private class NotifyOnNewEntry : IPythonTextBufferInfoEventSink {
+            private TaskCompletionSource<AnalysisEntry> _tcs;
+
+            public Task<AnalysisEntry> WaitAsync() {
+                var tcs = new TaskCompletionSource<AnalysisEntry>();
+                var actualTcs = Interlocked.CompareExchange(ref _tcs, tcs, null) ?? tcs;
+                if (actualTcs == tcs) {
+                    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    cts.Token.Register(() => actualTcs.TrySetCanceled());
+                }
+                return actualTcs.Task;
+            }
+
+            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+                if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
+                    Console.WriteLine($"New entry in {e.AnalysisEntry?.Analyzer}");
+                    if (e.AnalysisEntry != null) {
+                        var tcs = Interlocked.Exchange(ref _tcs, null);
+                        tcs?.SetResult(e.AnalysisEntry);
+                    }
+                }
+                return Task.CompletedTask;
+            }
+        }
+
+        public async Task DefaultAnalyzerForNonProjectFile(PythonVisualStudioApp app) {
+            var wnd = app.OpenDocument(TestData.GetPath("TestData", "Typings", "usermod.py"));
+
+            var bi = ((ITextView)wnd.TextView).TextBuffer.TryGetInfo();
+            Assert.IsNotNull(bi);
+            var entry = new NotifyOnNewEntry();
+            bi.AddSink(entry, entry);
+            await entry.WaitAsync();
+
+            TestUtilities.UI.DefaultInterpreterSetter dis = null;
+            try {
+                foreach (var pv in PythonPaths.Versions) {
+                    var waitForEntry = entry.WaitAsync();
+                    if (dis == null) {
+                        dis = app.SelectDefaultInterpreter(pv);
+                    } else {
+                        dis.SetDefault(app.InterpreterService.FindInterpreter(pv.Id));
+                    }
+                    Console.WriteLine($"Changed to {pv.Id}");
+                    var e = await waitForEntry;
+                    Assert.IsNotNull(e);
+                    Assert.AreEqual(pv.Id, e.Analyzer.InterpreterFactory.Configuration.Id);
+                }
+            } finally {
+                dis?.Dispose();
             }
         }
 

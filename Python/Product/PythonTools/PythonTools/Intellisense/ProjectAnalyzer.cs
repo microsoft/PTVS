@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            Task.Run(() => _conn.ProcessMessages()).DoNotWait();
+            _conn.StartProcessing();
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
@@ -1002,6 +1002,10 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entry == null) {
                 Debug.Fail("Failed to create new entry");
                 return;
+            }
+
+            if (oldEntry.Properties.ContainsKey(IntellisenseController.FollowDefaultEnvironment)) {
+                entry.Properties[IntellisenseController.FollowDefaultEnvironment] = true;
             }
 
             var bufferParser = entry.GetOrCreateBufferParser(_services);

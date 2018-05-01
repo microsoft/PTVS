@@ -29,6 +29,7 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -294,6 +295,11 @@ namespace TestUtilities.UI {
 
         public SaveDialog SaveAs() {
             return SaveDialog.FromDte(this);
+        }
+
+        public EditorWindow OpenDocument(string filename) {
+            VsShellUtilities.OpenDocument(ServiceProvider, filename);
+            return GetDocument(filename);
         }
 
         /// <summary>
