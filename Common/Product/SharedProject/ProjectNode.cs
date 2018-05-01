@@ -2040,7 +2040,44 @@ namespace Microsoft.VisualStudioTools.Project {
             this.currentConfig = null;
         }
 
+        public virtual void SetOrAddPropertyAfter(string propertyName, string propertyValue, string afterProperty) {
+            Utilities.ArgumentNotNull("propertyName", propertyName);
+            Utilities.ArgumentNotNull("afterProperty", afterProperty);
 
+            Site.GetUIThread().MustBeCalledFromUIThread();
+
+            var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
+            propertyValue = propertyValue ?? string.Empty;
+
+            if (oldValue.Equals(propertyValue, StringComparison.Ordinal)) {
+                // Property is unchanged or unspecified, so don't set it.
+                return;
+            }
+
+            // Check out the project file.
+            if (!this.QueryEditProjectFile(false)) {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+            }
+
+            var oldProp = this.buildProject.GetProperty(propertyName);
+            if (oldProp == null || oldProp.IsImported) {
+                var propertyGroups = from g in this.buildProject.Xml.PropertyGroups
+                                     where g.Children.Where(c => c.ElementName == afterProperty).Any()
+                                     select g;
+                var group = propertyGroups.LastOrDefault();
+                if (group != null) {
+                    var newProp = group.SetProperty(propertyName, propertyValue);
+                } else {
+                    this.buildProject.SetProperty(propertyName, propertyValue);
+                }
+            } else {
+                this.buildProject.SetProperty(propertyName, propertyValue);
+            }
+            RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
+
+            // property cache will need to be updated
+            this.currentConfig = null;
+        }
 
         public virtual CompilerParameters GetProjectOptions(string config) {
             // This needs to be commented out because if you build for Debug the properties from the Debug 
