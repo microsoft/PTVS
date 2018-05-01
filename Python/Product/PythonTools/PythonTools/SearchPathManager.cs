@@ -41,10 +41,6 @@ namespace Microsoft.PythonTools {
             GC.SuppressFinalize(this);
         }
 
-        ~SearchPathManager() {
-            Dispose(false);
-        }
-
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
                 lock (_paths) {
@@ -177,18 +173,6 @@ namespace Microsoft.PythonTools {
 
             lock (_paths) {
                 return _paths.Any(p => p.Persisted == isPersisted && p.Path.Equals(absolutePath, StringComparison.OrdinalIgnoreCase));
-            }
-        }
-
-        public void Clear() {
-            bool any;
-            lock (_paths) {
-                any = _paths.Any();
-                _paths.Clear();
-            }
-
-            if (any) {
-                Changed?.Invoke(this, EventArgs.Empty);
             }
         }
 
