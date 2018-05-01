@@ -854,7 +854,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly) {
-                if (string.IsNullOrEmpty(filename)) {
+            if (string.IsNullOrEmpty(filename)) {
                 throw new ArgumentNullException(nameof(filename));
             }
 

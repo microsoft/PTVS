@@ -14,104 +14,115 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Threading.Tasks;
+using System.Windows.Input;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using TestUtilities;
 using TestUtilities.Mocks;
+using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
     public class CommentBlockTests {
+        [TestInitialize]
+        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+
+        [TestCleanup]
+        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+
         [TestMethod, Priority(0)]
         public void TestCommentCurrentLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello'
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 print 'goodbye'
-"));
+");
 
-            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
 
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"#print 'hello'
 print 'goodbye'
 ",
-                view.TextBuffer.CurrentSnapshot.GetText());
+                view.GetText());
 
-            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
 ",
-                 view.TextBuffer.CurrentSnapshot.GetText());
+                view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestUnCommentCurrentLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"#print 'hello'
-#print 'goodbye'"));
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
+#print 'goodbye'");
 
-            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
-
-            view.CommentOrUncommentBlock(false);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
+                view.CommentOrUncommentBlock(false);
+            });
 
             Assert.AreEqual(@"print 'hello'
 #print 'goodbye'", 
-                 view.TextBuffer.CurrentSnapshot.GetText());
+                 view.GetText());
 
-            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-
-            view.CommentOrUncommentBlock(false);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+                view.CommentOrUncommentBlock(false);
+            });
 
             Assert.AreEqual(@"print 'hello'
 print 'goodbye'",
-                view.TextBuffer.CurrentSnapshot.GetText());
+                view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestComment() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello'
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 print 'goodbye'
-"));
+");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
-                false
-            );
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.SelectAll();
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
 ",
-                 view.TextBuffer.CurrentSnapshot.GetText());
+                 view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestCommentEmptyLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello'
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 
 print 'goodbye'
-"));
+");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
-                false
-            );
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.SelectAll();
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"#print 'hello'
 
 #print 'goodbye'
 ",
-                 view.TextBuffer.CurrentSnapshot.GetText());
+                 view.GetText());
         }
 
         private static MockTextBuffer MockTextBuffer(string code) {
@@ -120,163 +131,146 @@ print 'goodbye'
 
         [TestMethod, Priority(0)]
         public void TestCommentWhiteSpaceLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello'
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
    
 print 'goodbye'
-"));
+");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
-                false
-            );
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.SelectAll();
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"#print 'hello'
    
 #print 'goodbye'
 ",
-                 view.TextBuffer.CurrentSnapshot.GetText());
+                 view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestCommentIndented() {
-            var view = new MockTextView(
-                MockTextBuffer(@"def f():
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
     print 'still here'
-    print 'goodbye'"));
+    print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start,
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(2).End
-                ),
-                false
-            );
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(@"    print 'hello'
+    print 'still here'");
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"def f():
     #print 'hello'
     #print 'still here'
     print 'goodbye'",
-                    view.TextBuffer.CurrentSnapshot.GetText());
+                    view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestCommentIndentedBlankLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"def f():
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
 
     print 'still here'
-    print 'goodbye'"));
+    print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start,
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(3).End
-                ),
-                false
-            );
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(@"    print 'hello'
 
-            view.CommentOrUncommentBlock(true);
+    print 'still here'");
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"def f():
     #print 'hello'
 
     #print 'still here'
     print 'goodbye'",
-                    view.TextBuffer.CurrentSnapshot.GetText());
+                    view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestCommentBlankLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print('hi')
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print('hi')
 
-print('bye')"));
+print('bye')");
 
-            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"print('hi')
 
 print('bye')",
-             view.TextBuffer.CurrentSnapshot.GetText());
+             view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestCommentIndentedWhiteSpaceLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"def f():
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
   
     print 'still here'
-    print 'goodbye'"));
+    print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start,
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(3).End
-                ),
-                false
-            );
-
-            view.CommentOrUncommentBlock(true);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(@"    print 'hello'
+  
+    print 'still here'");
+                view.CommentOrUncommentBlock(true);
+            });
 
             Assert.AreEqual(@"def f():
     #print 'hello'
   
     #print 'still here'
     print 'goodbye'",
-                    view.TextBuffer.CurrentSnapshot.GetText());
+                    view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestUnCommentIndented() {
-            var view = new MockTextView(
-                MockTextBuffer(@"def f():
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"def f():
     #print 'hello'
     #print 'still here'
-    print 'goodbye'"));
+    print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start,
-                    view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(2).End
-                ),
-                false
-            );
-
-            view.CommentOrUncommentBlock(false);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(@"    #print 'hello'
+    #print 'still here'");
+                view.CommentOrUncommentBlock(false);
+            });
 
             Assert.AreEqual(@"def f():
     print 'hello'
     print 'still here'
     print 'goodbye'",
-                    view.TextBuffer.CurrentSnapshot.GetText());
+                    view.GetText());
         }
 
         [TestMethod, Priority(0)]
         public void TestUnComment() {
-            var view = new MockTextView(
-                MockTextBuffer(@"#print 'hello'
-#print 'goodbye'"));
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
+#print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
-                false
-            );
+            editorTestToolset.UIThread.Invoke(() => {
+                view.SelectAll();
+                view.CommentOrUncommentBlock(false);
+            });
 
-            view.CommentOrUncommentBlock(false);
-
-            Assert.AreEqual(@"print 'hello'
-print 'goodbye'",
-                view.TextBuffer.CurrentSnapshot.GetText());
+            var expected = @"print 'hello'
+print 'goodbye'";
+            Assert.AreEqual(expected, view.GetText());
         }
 
         /// <summary>
@@ -284,41 +278,37 @@ print 'goodbye'",
         /// </summary>
         [TestMethod, Priority(0)]
         public void TestCommentStartOfLastLine() {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello'
-print 'goodbye'"));
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.GetText().IndexOf("print 'goodbye'"))),
-                false
-            );
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(@"print 'hello'
+");
+                view.CommentOrUncommentBlock(true);
+            });
 
-            view.CommentOrUncommentBlock(true);
-
-            Assert.AreEqual(@"#print 'hello'
-print 'goodbye'",
-                view.TextBuffer.CurrentSnapshot.GetText());
+            var expected = @"#print 'hello'
+print 'goodbye'";
+            Assert.AreEqual(expected, view.GetText());
         }
 
         [TestMethod, Priority(0)]
-        public void TestCommentAfterCodeIsNotUncommented()
-        {
-            var view = new MockTextView(
-                MockTextBuffer(@"print 'hello' #comment that should stay a comment
+        public void TestCommentAfterCodeIsNotUncommented() {
+            var editorTestToolset = new EditorTestToolset();
+            var view = editorTestToolset.CreatePythonTextView(@"print 'hello' #comment that should stay a comment
 #print 'still here' # another comment that should stay a comment
-print 'goodbye'"));
+print 'goodbye'");
 
-            view.Selection.Select(
-                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.GetText().IndexOf("print 'goodbye'"))),
-                false
-            );
-
-            view.CommentOrUncommentBlock(false);
+            editorTestToolset.UIThread.Invoke(() => {
+                view.Select(0, view.GetText().IndexOf("print 'goodbye'"));
+                view.CommentOrUncommentBlock(false);
+            });
 
             Assert.AreEqual(@"print 'hello' #comment that should stay a comment
 print 'still here' # another comment that should stay a comment
 print 'goodbye'",
-                view.TextBuffer.CurrentSnapshot.GetText());
+                view.GetText());
         }
     }
 }

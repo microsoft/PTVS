@@ -18,10 +18,12 @@ extern alias pythontools;
 using System;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Language;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -233,11 +235,13 @@ z = y";
             await CodeFormattingTest(input, new Span(0, input.Length), expected, null, options, false);
         }
 
-        private static async Task CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
+        private static async Task CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool formatSelected = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var editorTestToolset = new EditorTestToolset().WithPythonToolsService();
 
             var services = editorTestToolset.GetPythonEditorServices();
+            editorTestToolset.GetService<IPythonToolsOptionsService>().ImportFrom(options);
+
             using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
                 var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
                 var buffer = editorTestToolset.CreatePythonTextBuffer(input, analyzer);
@@ -249,18 +253,21 @@ z = y";
                 Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null), "Failed to set analysis entry");
                 entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
 
-                var selectionSpan = new SnapshotSpan(
-                    buffer.CurrentSnapshot,
-                    ExtractMethodTests.GetSelectionSpan(input, selection)
-                );
-                editorTestToolset.UIThread.Invoke(() => view.Selection.Select(selectionSpan, false));
+                if (formatSelected) {
+                    var selectionSpan = new SnapshotSpan(
+                        buffer.CurrentSnapshot,
+                        ExtractMethodTests.GetSelectionSpan(input, selection)
+                    );
 
-                await analyzer.FormatCodeAsync(
-                    selectionSpan,
-                    view,
-                    options,
-                    selectResult
-                );
+                    await editorTestToolset.UIThread.InvokeTask(async () => {
+                        view.Selection.Select(selectionSpan, false);
+                        await EditFilter.GetOrCreate(services, view).FormatSelectionAsync();
+                    });
+                } else {
+                    await editorTestToolset.UIThread.InvokeTask(async () => {
+                        await EditFilter.GetOrCreate(services, view).FormatDocumentAsync();
+                    });
+                }
 
                 Assert.AreEqual(expected, view.TextBuffer.CurrentSnapshot.GetText());
                 if (expectedSelection != null) {

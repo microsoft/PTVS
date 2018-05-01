@@ -74,5 +74,11 @@ namespace PythonToolsUITestsRunner {
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenFileIsDeleted));
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void ErrorListEmptyForValidTypingFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListEmptyForValidTypingFile));
+        }
     }
 }

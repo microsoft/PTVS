@@ -52,18 +52,20 @@ namespace TestUtilities.Python {
             UIThread = (UIThreadBase)_serviceProvider.GetService(typeof(UIThreadBase));
         }
 
+        public T GetService<T>() => (T)_serviceProvider.GetService(typeof(T));
+
         public EditorTestToolset WithPythonToolsService() {
             _serviceProvider.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
             _serviceProvider.AddService(typeof(PythonToolsService), new PythonToolsService(_serviceProvider));
             return this;
         }
 
-        public ITextBuffer CreatePythonTextBuffer(string input, VsProjectAnalyzer testAnalyzer) {
+        public ITextBuffer CreatePythonTextBuffer(string input, VsProjectAnalyzer testAnalyzer = null) {
             var filePath = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName(), "file.py");
             return CreatePythonTextBuffer(input, filePath, testAnalyzer);
         }
 
-        public ITextBuffer CreatePythonTextBuffer(string input, string filePath, VsProjectAnalyzer testAnalyzer) {
+        public ITextBuffer CreatePythonTextBuffer(string input, string filePath, VsProjectAnalyzer testAnalyzer = null) {
             var textBufferFactory = _exportProvider.GetExportedValue<ITextBufferFactoryService>();
             var textDocumentFactoryService = _exportProvider.GetExportedValue<ITextDocumentFactoryService>();
             var textContentType = _exportProvider.GetExportedValue<IContentTypeRegistryService>().GetContentType(PythonCoreConstants.ContentType);
@@ -71,7 +73,10 @@ namespace TestUtilities.Python {
             var textBuffer = textBufferFactory.CreateTextBuffer(input, textContentType);
             textDocumentFactoryService.CreateTextDocument(textBuffer, filePath);
 
-            textBuffer.Properties.AddProperty(VsProjectAnalyzer._testAnalyzer, testAnalyzer);
+            if (testAnalyzer != null) {
+                textBuffer.Properties.AddProperty(VsProjectAnalyzer._testAnalyzer, testAnalyzer);
+            }
+
             textBuffer.Properties.AddProperty(VsProjectAnalyzer._testFilename, filePath);
 
             return textBuffer;
@@ -79,6 +84,9 @@ namespace TestUtilities.Python {
 
         public PythonEditorServices GetPythonEditorServices()
             => _exportProvider.GetExportedValue<PythonEditorServices>();
+
+        public IWpfTextView CreatePythonTextView(string input) 
+            => CreateTextView(CreatePythonTextBuffer(input));
 
         public IWpfTextView CreateTextView(ITextBuffer textBuffer) 
             => UIThread.Invoke(() => CreateTextView_MainThread(textBuffer));
