@@ -219,20 +219,20 @@ namespace Microsoft.PythonTools.Profiling {
                 // Contains the data to analyze
                 package.CreateResourceFromPath(
                     "DiagnosticsHub.Resource.DWJsonFile",
-                    @"c:\users\rgesteve\downloads\Sample1.dwjson",
+                    @"c:\users\perf\downloads\Sample1.dwjson",
                     null,
                     CompressionOption.CompressionOption_Normal);
 
                 // Counter data to show in swimlane
                 package.CreateResourceFromPath(
                     "DiagnosticsHub.Resource.CountersFile",
-                    @"c:\users\rgesteve\downloads\Session.counters",
+                    @"c:\users\perf\downloads\Session.counters",
                     null,
                     CompressionOption.CompressionOption_Normal);
 
                 // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
                 // the resources added from disk after they have been committed to the DiagSession
-                package.CommitToPath(@"c:\users\rgesteve\downloads\demo", CommitOption.CommitOption_Archive);
+                package.CommitToPath(@"c:\users\perf\downloads\demo", CommitOption.CommitOption_Archive);
             }
         }
 
