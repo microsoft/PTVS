@@ -23,12 +23,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools {
-    class SearchPathManager : IVsFileChangeEvents, IDisposable {
+    sealed class SearchPathManager : IVsFileChangeEvents, IDisposable {
         private readonly IVsFileChangeEx _changeService;
         private readonly Timer _notifyChangeTimer;
         private readonly List<SearchPath> _paths = new List<SearchPath>();
-
-        public SearchPathManager() { }
 
         public SearchPathManager(IServiceProvider site) {
             _changeService = site.GetService(typeof(SVsFileChangeEx)) as IVsFileChangeEx;
@@ -36,29 +34,21 @@ namespace Microsoft.PythonTools {
         }
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            uint[] cookies;
+            lock (_paths) {
+                cookies = _paths.Select(p => p.Cookie).ToArray();
+                _paths.Clear();
+            }
 
-        protected virtual void Dispose(bool disposing) {
-            if (disposing) {
-                uint[] cookies;
-                lock (_paths) {
-                    cookies = _paths.Select(p => p.Cookie).ToArray();
-                    _paths.Clear();
-                }
+            Unwatch(cookies);
 
-                Unwatch(cookies);
-
-                var timer = _notifyChangeTimer;
-                if (timer != null) {
-                    timer.Dispose();
-                }
+            var timer = _notifyChangeTimer;
+            if (timer != null) {
+                timer.Dispose();
             }
         }
 
         public event EventHandler Changed;
-
 
         public IList<string> GetAbsoluteSearchPaths() {
             lock (_paths) {
