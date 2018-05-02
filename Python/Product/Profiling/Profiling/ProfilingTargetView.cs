@@ -84,6 +84,7 @@ namespace Microsoft.PythonTools.Profiling {
                 Project = new ProjectTargetView(template.ProjectTarget);
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
+                UseVTune = false;              // TODO -- why not allow projects?
             } else if (template.StandaloneTarget != null) {
                 Standalone = new StandaloneTargetView(serviceProvider, template.StandaloneTarget);
                 IsProjectSelected = false;
@@ -99,7 +100,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (IsValid) {
                 return new ProfilingTarget {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
-                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null
+                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
+                    UseVTune = _useVTune
                 };
             } else {
                 return null;

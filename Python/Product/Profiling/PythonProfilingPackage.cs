@@ -192,7 +192,74 @@ namespace Microsoft.PythonTools.Profiling {
             if (res && targetView.IsValid) {
                 var target = targetView.GetTarget();
                 if (target != null) {
-                    ProfileTarget(target);
+                    if (!target.UseVTune) {
+                        ProfileTarget(target);
+                    } else {
+
+                        if (!targetView.IsStandaloneSelected) {
+                            MessageBox.Show("For the moment only standalone targets are supported!");
+                            return;
+                        }
+                        var stndTarget = target.StandaloneTarget;
+#if false
+                        var pyexe = ProcessOutput.QuoteSingleArgument(stndTarget.InterpreterPath);
+
+                        if (pyexe == string.Empty) {
+                            if (stndTarget.PythonInterpreter != null) {
+                                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                                var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
+                                if (interpreter == null) { 
+                                    /* ??? */;
+                                    MessageBox.Show("Could not find interpreter in the registry");
+                                } else {
+                                    MessageBox.Show($"The Python interpreter in question is: [{interpreter}]");
+                                }
+                            }
+                        }
+#endif
+
+                        if (stndTarget.InterpreterPath == string.Empty) {
+                            MessageBox.Show($"Can't find specified python interpreter.");
+                            return;
+                        }
+
+#if true
+                        var py = ProcessOutput.QuoteSingleArgument(stndTarget.Script);
+                        string outPathDir = @"c:\users\perf\downloads\temp";
+                        string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
+                        
+                        ProcessStartInfo procInfo = new ProcessStartInfo(externalProfilerDriverExe);
+                        Process proc = new Process();
+                        proc.StartInfo = procInfo;
+                        proc.StartInfo.CreateNoWindow = false;
+                        proc.StartInfo.Arguments = $" -- ${stndTarget.InterpreterPath} {py}";
+                        proc.StartInfo.WorkingDirectory = outPathDir;
+                        proc.EnableRaisingEvents = true;
+                        proc.Exited += (object sender1, EventArgs args) =>
+                        {
+#if false
+                            if (!File.Exists(outPath)) {
+                              outPath = backupPath;
+                            }
+                            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                            dte.ItemOperations.OpenFile(outPath);
+#else
+/*
+                            if (File.Exists(outPath)) {
+                                var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                                dte.ItemOperations.OpenFile(outPath);
+                            } else {
+                                MessageBox.Show("couldn't find file where I was expecting it.");
+                            }
+                            */
+                            MessageBox.Show("Done!");
+#endif
+                        };
+                        proc.Start();
+                        //proc.WaitForExit();
+#endif
+
+                    }
                 }
             }
         }
