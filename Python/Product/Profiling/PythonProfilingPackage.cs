@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
+        private static readonly string externalProfilerDriverExe = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
 
         /// <summary>
         /// Default constructor of the package.
@@ -427,6 +428,42 @@ namespace Microsoft.PythonTools.Profiling {
             get {
                 return _profilingProcess != null;
             }
+        }
+
+        public static bool CheckForExternalProfiler() {
+            // const string exec = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
+
+            ProcessStartInfo psi = new ProcessStartInfo(externalProfilerDriverExe, "-p")
+            {
+                UseShellExecute = false,
+                // Arguments = args,
+                CreateNoWindow = true,
+#if false
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+#else
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+#endif
+            };
+
+            var process = Process.Start(psi);
+
+#if false
+            process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                Console.WriteLine("output>>" + e.Data);
+            process.BeginOutputReadLine();
+
+            process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                Console.WriteLine("error>>" + e.Data);
+            process.BeginErrorReadLine();
+#endif
+
+            process.WaitForExit();
+            bool ret = (process.ExitCode == 0);
+            process.Close();
+
+            return ret;
         }
     }
 }

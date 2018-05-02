@@ -45,6 +45,12 @@ namespace Microsoft.PythonTools.Profiling {
             set;
         }
 
+        [XmlElement()]
+        public bool UseVTune {
+            get;
+            set;
+        }
+
         internal string GetProfilingName(IServiceProvider serviceProvider, out bool save) {
             string baseName = null;
             if (ProjectTarget != null) {
@@ -86,6 +92,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (Reports != null) {
                 res.Reports = Reports.Clone();
             }
+
+            res.UseVTune = UseVTune;
 
             return res;
         }
