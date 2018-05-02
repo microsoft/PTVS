@@ -401,7 +401,7 @@ namespace Microsoft.PythonTools {
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await base.InitializeAsync(cancellationToken, progress);
 
-            AddService<ClipboardService>(true);
+            AddService<IClipboardService>(new ClipboardService(), true);
             AddService<IPythonToolsToolWindowService>(this, true);
             AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
             AddService<CustomDebuggerEventHandler>((container, serviceType) => new CustomDebuggerEventHandler(this), promote: true);

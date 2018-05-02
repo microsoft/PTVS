@@ -213,9 +213,6 @@ namespace Microsoft.VisualStudioTools {
         protected override object GetService(Type serviceType) 
             => serviceType == typeof(UIThreadBase) ? _uiThread : base.GetService(serviceType);
 
-        protected void AddService<T>(bool promote) where T : new()
-            => ((IServiceContainer) this).AddService(typeof(T), new T(), promote);
-
         protected void AddService<T>(object service, bool promote)
             => ((IServiceContainer) this).AddService(typeof(T), service, promote);
 
