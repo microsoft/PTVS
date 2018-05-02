@@ -32,6 +32,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
+
+    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
+    using global::DiagnosticsHub.Packaging.Interop;
+
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -438,24 +442,19 @@ namespace Microsoft.PythonTools.Profiling {
                 UseShellExecute = false,
                 // Arguments = args,
                 CreateNoWindow = true,
-#if false
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-#else
                 RedirectStandardOutput = false,
                 RedirectStandardError = false,
-#endif
             };
 
             var process = Process.Start(psi);
 
 #if false
             process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-                Console.WriteLine("output>>" + e.Data);
+                Console.WriteLine("[out]" + e.Data);
             process.BeginOutputReadLine();
 
             process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-                Console.WriteLine("error>>" + e.Data);
+                Console.WriteLine("[err]" + e.Data);
             process.BeginErrorReadLine();
 #endif
 
@@ -464,6 +463,32 @@ namespace Microsoft.PythonTools.Profiling {
             process.Close();
 
             return ret;
+        }
+
+        public static void PackageTrace()
+        {
+            var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
+            using (var package = DhPackage.CreateLegacyPackage()) {
+                package.AddTool(ref cpuToolId);
+
+                // Contains the data to analyze
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.DWJsonFile",
+                    @"c:\users\perf\downloads\Sample1.dwjson",
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // Counter data to show in swimlane
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.CountersFile",
+                    @"c:\users\perf\downloads\Session.counters",
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
+                // the resources added from disk after they have been committed to the DiagSession
+                package.CommitToPath(@"c:\users\perf\downloads\demo", CommitOption.CommitOption_Archive);
+            }
         }
     }
 }
