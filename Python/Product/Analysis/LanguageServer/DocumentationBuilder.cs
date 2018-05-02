@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -36,26 +37,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return new PlainTextDocumentationBuilder(displayOptions);
         }
 
-        public DocumentationBuilder(InformationDisplayOptions displayOptions) {
+        protected DocumentationBuilder(InformationDisplayOptions displayOptions) {
             DisplayOptions = displayOptions;
         }
 
         public string GetDocumentation(IEnumerable<AnalysisValue> values, string originalExpression) {
-            if (values.Count() == 1) {
-                var v = values.First();
+            var array = values.ToArray();
+            if (array.Length == 1) {
+                var v = array[0];
                 switch (v.MemberType) {
                     case PythonMemberType.Function:
-                        return MakeFunctionDocumentation(values.First());
+                        return MakeFunctionDocumentation(v);
                     case PythonMemberType.Class:
-                        return MakeClassDocumentation(values.First());
+                        return MakeClassDocumentation(v);
                     case PythonMemberType.Module:
-                        return MakeModuleDocumentation(values.First());
+                        return MakeModuleDocumentation(v);
                 }
             }
-            return MakeGeneralDocumentation(values, originalExpression);
+            return MakeGeneralDocumentation(array, originalExpression);
         }
 
-        private string MakeGeneralDocumentation(IEnumerable<AnalysisValue> values, string originalExpression) {
+        private string MakeGeneralDocumentation(AnalysisValue[] values, string originalExpression) {
             var descriptions = new Dictionary<string, string>();
 
             foreach (var v in values) {
@@ -132,13 +134,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return result.ToString().TrimEnd();
+            return result.TrimEnd().ToString();
         }
 
         public abstract string GetModuleDocumentation(ModuleReference modRef);
         protected abstract string MakeModuleDocumentation(AnalysisValue value);
         protected abstract string MakeFunctionDocumentation(AnalysisValue value);
         protected abstract string MakeClassDocumentation(AnalysisValue value);
+
 
         protected string LimitLines(
             string str,

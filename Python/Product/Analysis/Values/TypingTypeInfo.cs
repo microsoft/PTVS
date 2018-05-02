@@ -128,11 +128,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_baseName != " List") {
-                if(_innerValue == null) {
+                if (_innerValue == null) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, _baseName);
-                }
-                foreach (var kv in _innerValue.GetRichDescriptions()) {
-                    yield return kv;
+                } else {
+                    foreach (var kv in _innerValue.GetRichDescriptions()) {
+                        yield return kv;
+                    }
                 }
             }
             if (_args != null && _args.Any()) {

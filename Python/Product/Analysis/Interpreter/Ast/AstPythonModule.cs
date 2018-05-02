@@ -215,36 +215,38 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return string.Empty;
             }
 
-            using (var sr = new StreamReader(filePath)) {
-                string quote = null;
-                while (true) {
-                    var line = sr.ReadLine();
-                    if (line == null) {
-                        break;
-                    }
-                    if (line.Length == 0 || line.StartsWithOrdinal("#")) {
-                        continue;
-                    }
-                    if (line.StartsWithOrdinal("\"\"\"") || line.StartsWithOrdinal("r\"\"\"")) {
-                        quote = "\"\"\"";
-                    } else if (line.StartsWithOrdinal("'''") || line.StartsWithOrdinal("r'''")) {
-                        quote = "'''";
-                    }
-                    break;
-                }
-
-                if (quote != null) {
-                    var sb = new StringBuilder();
+            try {
+                using (var sr = new StreamReader(filePath)) {
+                    string quote = null;
                     while (true) {
                         var line = sr.ReadLine();
-                        if (line == null || line.EndsWithOrdinal(quote)) {
+                        if (line == null) {
                             break;
                         }
-                        sb.AppendLine(line);
+                        if (line.Length == 0 || line.StartsWithOrdinal("#")) {
+                            continue;
+                        }
+                        if (line.StartsWithOrdinal("\"\"\"") || line.StartsWithOrdinal("r\"\"\"")) {
+                            quote = "\"\"\"";
+                        } else if (line.StartsWithOrdinal("'''") || line.StartsWithOrdinal("r'''")) {
+                            quote = "'''";
+                        }
+                        break;
                     }
-                    return sb.ToString();
+
+                    if (quote != null) {
+                        var sb = new StringBuilder();
+                        while (true) {
+                            var line = sr.ReadLine();
+                            if (line == null || line.EndsWithOrdinal(quote)) {
+                                break;
+                            }
+                            sb.AppendLine(line);
+                        }
+                        return sb.ToString();
+                    }
                 }
-            }
+            } catch (IOException) { } catch(UnauthorizedAccessException) { }
             return string.Empty;
         }
     }

@@ -140,10 +140,6 @@ namespace Microsoft.PythonTools.Analysis {
                 return 0; // Avoid more than one empty line in a row.
             }
 
-            // Since we use HTML blocks as preformatted text
-            // make sure we drop angle brackets since otherwise
-            // they will render as tags and attributes
-            line = line.Replace("<", " ").Replace(">", " ").Replace("``", "`"); // Convert double backticks to single.
             // Keep hard line breaks for the preformatted content
             line = PreserveIndentation(Cleanup(line));
             _md.Add($"{ line}  ");
@@ -278,7 +274,7 @@ namespace Microsoft.PythonTools.Analysis {
                         break;
                 }
             }
-            return sb.ToString();
+            return sb.Replace("``", "`").ToString();
         }
     }
 }
