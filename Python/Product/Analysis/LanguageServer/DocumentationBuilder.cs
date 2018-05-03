@@ -115,9 +115,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                while (result.Length > 0 && char.IsWhiteSpace(result[result.Length - 1])) {
-                    result.Length -= 1;
-                }
+                result.TrimEnd();
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
