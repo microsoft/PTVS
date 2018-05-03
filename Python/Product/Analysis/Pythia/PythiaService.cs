@@ -39,6 +39,9 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
         }
 
         public static PythiaService Create(ILogger log) {
+            while (!System.Diagnostics.Debugger.IsAttached) {
+                System.Threading.Thread.Sleep(1000);
+            }
             try {
                 if (File.Exists(ModelPath)) {
                     return new PythiaService(log);
@@ -220,6 +223,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
         private bool SupportType(string typeName) => _sequenceModel.ContainsKey(typeName);
 
         private static string AssemblyDirectory => Path.GetDirectoryName(typeof(PythiaService).Assembly.Location);
-        private static string ModelPath => Path.Combine(AssemblyDirectory, Consts.SequenceModelPath);
+
+        private static string ModelPath => Path.Combine(AssemblyDirectory, "Pythia", "model", "model-sequence.json.gz");
     }
 }

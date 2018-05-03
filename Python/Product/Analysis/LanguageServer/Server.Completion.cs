@@ -53,13 +53,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 members = members.Where(m => m.kind == filterKind.Value);
             }
 
-            var items = members.ToArray();
-            if (items.Length > 0 && _pythia != null) {
+            if (members.Any() && _pythia != null) {
                 try {
                     //provide Pythia recommendations based on the default completion list
                     var recommendations = await _pythia.GetRecommendationsAsync(members, tree, @params, 5);
                     if (recommendations != null) {
-                        LogMessage(MessageType.Info, $"Pythia added {recommendations.Count} to {items.Length} completions.");
+                        LogMessage(MessageType.Info, $"Pythia added {recommendations.Count} completions.");
                         members = members.Concat(recommendations);
                     }
                 } catch (Exception ex) {
@@ -68,7 +67,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var res = new CompletionList {
-                items = items,
+                items = members.ToArray(),
                 _applicableSpan = ctxt.Node?.GetSpan(tree),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
             };

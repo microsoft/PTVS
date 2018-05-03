@@ -16,9 +16,6 @@
 
 namespace Microsoft.PythonTools.Analysis.Pythia {
     static class Consts {
-        public const string ModelsPath = @"Pythia\model\";
-        public const string SequenceModelPath = ModelsPath + @"model-sequence.json.gz";
-
         public const string ExtensionVersion = "1.1.0";
         public const string ModelVersion = "1.1.0";
 
