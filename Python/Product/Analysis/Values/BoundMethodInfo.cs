@@ -61,7 +61,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (Instance is InstanceInfo ii) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " of ");
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, ii.ClassInfo.FullyQualifiedName);
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
+                if (includeTypes) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
+                } else {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects");
+                }
             }
 
             if (includeTypes) {
@@ -69,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     yield return kv;
                 }
             }
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "\r\n");
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);
         }
 
         public override IEnumerable<OverloadResult> Overloads {
