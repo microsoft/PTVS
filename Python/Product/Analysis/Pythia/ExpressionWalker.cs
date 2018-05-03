@@ -143,11 +143,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                 var resolvedName = Helper.ResolveVariable(Assignments, variableName);
                 if (!string.IsNullOrEmpty(resolvedName)) {
                     var key = !string.IsNullOrEmpty(prevFunctionsCalled) ? resolvedName + "." + prevFunctionsCalled : resolvedName;
-                    MethodInvocations.Add(new KeyValuePair() {
-                        Key = key,
-                        Value = functionName,
-                        SpanStart = callTargetName.EndIndex
-                    });
+                    MethodInvocations.Add(new KeyValuePair(key, functionName, callTargetName.EndIndex));
                     var index = callTargetName.EndIndex;
                     if (!string.IsNullOrEmpty(prevFunctionsCalled)) {
                         index += prevFunctionsCalled.Length + 1;

@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                     if (node.Right is CallExpression c) {
                         if (c.Target is NameExpression n2) {
                             var functionName = n2.Name; // open
-                            Assignments.Add(new KeyValuePair() { Key = leftVariableName, Value = functionName });
+                            Assignments.Add(new KeyValuePair(leftVariableName, functionName));
                         }
                     }
                 }
@@ -77,10 +77,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
 
                     if (node.Right is ConstantExpression c) {
                         if (c.Value == null) {
-                            Assignments.Add(new KeyValuePair() {
-                                Key = leftVariableName,
-                                Value = StandardVariableTypes.Null
-                            });
+                            Assignments.Add(new KeyValuePair(leftVariableName, StandardVariableTypes.Null));
                         } else {
                             var valStringRep = c.Value.ToString();  // 1
 
@@ -96,21 +93,12 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                         } else {
                             // q = "string"
                             // p = q
-                            Assignments.Add(new KeyValuePair() {
-                                Key = leftVariableName,
-                                Value = val
-                            });
+                            Assignments.Add(new KeyValuePair(leftVariableName, val));
                         }
                     } else if (node.Right is TupleExpression t) {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = leftVariableName,
-                            Value = StandardVariableTypes.Tuple
-                        });
+                        Assignments.Add(new KeyValuePair(leftVariableName, StandardVariableTypes.Tuple));
                     } else if (node.Right is ListExpression l) {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = leftVariableName,
-                            Value = StandardVariableTypes.List
-                        });
+                        Assignments.Add(new KeyValuePair(leftVariableName, StandardVariableTypes.List));
                     }
                 }
             }
@@ -132,21 +120,12 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
             for (var i = 0; i < node.Names.Count; i++) {
                 if (node.AsNames != null) {
                     if (node.AsNames[i] != null) {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = node.AsNames[i].Name,
-                            Value = rootModuleName + "." + node.Names[i].Name
-                        });
+                        Assignments.Add(new KeyValuePair(node.AsNames[i].Name, rootModuleName + "." + node.Names[i].Name));
                     } else {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = node.Names[i].Name,
-                            Value = rootModuleName + "." + node.Names[i].Name
-                        });
+                        Assignments.Add(new KeyValuePair(node.Names[i].Name, rootModuleName + "." + node.Names[i].Name));
                     }
                 } else {
-                    Assignments.Add(new KeyValuePair() {
-                        Key = node.Names[i].Name,
-                        Value = node.Names[i].Name
-                    });
+                    Assignments.Add(new KeyValuePair(node.Names[i].Name, node.Names[i].Name));
                 }
             }
         }
@@ -167,17 +146,11 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                     if (listOfNameExpressions.Count > 0) {
                         var nameExpression = listOfNameExpressions[0];
 
-                        Assignments.Add(new KeyValuePair() {
-                            Key = asName,
-                            Value = nameExpression.Name
-                        });
+                        Assignments.Add(new KeyValuePair(asName, nameExpression.Name));
                     }
                 } else {
                     foreach (var import in importNames) {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = import.Names[0].Name,
-                            Value = import.Names[0].Name
-                        });
+                        Assignments.Add(new KeyValuePair(import.Names[0].Name, import.Names[0].Name));
                     }
                 }
             }
@@ -202,10 +175,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                         //c.Target
                         if (c.Target is NameExpression nn) {
                             var value = nn.Name;
-                            Assignments.Add(new KeyValuePair() {
-                                Key = key,
-                                Value = value
-                            });
+                            Assignments.Add(new KeyValuePair(key, value));
                         }
                     }
                 }
@@ -227,10 +197,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                 if (node.List is NameExpression list) {
                     var resolvedName = Helper.ResolveVariable(Assignments, list.Name);
                     if (!string.IsNullOrEmpty(resolvedName)) {
-                        Assignments.Add(new KeyValuePair() {
-                            Key = left.Name,
-                            Value = resolvedName + "." + elementInsideString
-                        });
+                        Assignments.Add(new KeyValuePair(left.Name, resolvedName + "." + elementInsideString));
                     }
                 } else if (node.List is CallExpression callList) {
                     var t = callList.Target;
@@ -263,13 +230,9 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                     var i = l.Items[0];
                     if (i is ConstantExpression c) {
                         if (c.Value == null) {
-                            Assignments.Add(new KeyValuePair() {
-                                Key = key,
-                                Value = StandardVariableTypes.Null
-                            });
+                            Assignments.Add(new KeyValuePair(key, StandardVariableTypes.Null));
                         } else {
                             var valStringRep = c.Value.ToString();  // 1
-
                             Assignments.Add(GetStandardVariableType(key, valStringRep));
                         }
                     }
@@ -296,7 +259,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                 functionInvokedOnName = !string.IsNullOrEmpty(resolvedName) ? resolvedName : functionInvokedOnName;
 
                 var combineName = functionInvokedOnName + "." + functionName + (!string.IsNullOrEmpty(rightHandSide) ? "." + rightHandSide : string.Empty);
-                Assignments.Add(new KeyValuePair() { Key = leftVariableName, Value = combineName });
+                Assignments.Add(new KeyValuePair(leftVariableName, combineName));
 
                 return;
             } else if (m.Target is CallExpression cc) {
@@ -316,33 +279,30 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
         /// <returns>Key to value pair for typing</returns>
         private KeyValuePair GetStandardVariableType(string variableName, string value) {
             if (double.TryParse(value, out double val)) {
-                return new KeyValuePair() {
-                    Key = variableName,
-                    Value = StandardVariableTypes.Numeric
-                };
+                return new KeyValuePair(variableName, StandardVariableTypes.Numeric);
             }
 
             if (bool.TryParse(value, out bool val2)) {
-                return new KeyValuePair() {
-                    Key = variableName,
-                    Value = StandardVariableTypes.Boolean
-                };
+                return new KeyValuePair(variableName, StandardVariableTypes.Boolean);
             }
 
-            return new KeyValuePair() {
-                Key = variableName,
-                Value = StandardVariableTypes.String
-            };
+            return new KeyValuePair(variableName, StandardVariableTypes.String);
         }
     }
 
     /// <summary>
     /// Key value pair for variable name to type
     /// </summary>
-    public class KeyValuePair {
-        public string Key { get; set; }
-        public string Value { get; set; }
+    public struct KeyValuePair {
+        public readonly string Key;
+        public readonly string Value;
+        public readonly int SpanStart;
 
-        public int SpanStart { get; set; }
+        public KeyValuePair(string key, string value): this(key, value, 0) { }
+        public KeyValuePair(string key, string value, int spanStart) {
+            Key = key;
+            Value = value;
+            SpanStart = 0;
+        }
     }
 }

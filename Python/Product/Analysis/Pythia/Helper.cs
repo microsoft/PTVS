@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Pythia {
-    public class Helper {
+    public static class Helper {
         /// <summary>
         /// Get list of solutions already parsed
         /// </summary>
