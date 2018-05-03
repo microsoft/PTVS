@@ -39,9 +39,6 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
         }
 
         public static PythiaService Create(ILogger log) {
-            while (!System.Diagnostics.Debugger.IsAttached) {
-                System.Threading.Thread.Sleep(1000);
-            }
             try {
                 if (File.Exists(ModelPath)) {
                     return new PythiaService(log);
