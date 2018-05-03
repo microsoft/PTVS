@@ -63,10 +63,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _boundMethod.SelfSet;
         }
 
-        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            //var def = _function.IsBuiltin ? "built-in method " : "method ";
-            return BuiltinFunctionInfo.GetRichDescription(string.Empty, _function);
-        }
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription()
+            => BuiltinFunctionInfo.GetRichDescription(string.Empty, _function);
 
         public IAnalysisSet ReturnTypes => _returnTypes;
         public IPythonFunction Function => _function;

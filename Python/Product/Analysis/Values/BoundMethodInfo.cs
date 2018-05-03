@@ -71,15 +71,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 bool needsNl = true;
                 var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
-
-                foreach (var kv in FunctionInfo.GetDocumentationString(Function.Documentation)) {
-                    if (needsNl) {
-                        yield return new KeyValuePair<string, string>(nlKind, "\r\n");
-                        nlKind = WellKnownRichDescriptionKinds.Misc;
-                        needsNl = false;
-                    }
-                    yield return kv;
-                }
             }
         }
 
