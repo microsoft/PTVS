@@ -18,7 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Parsing.Ast;
 using Newtonsoft.Json;
@@ -26,52 +29,55 @@ using Newtonsoft.Json;
 namespace Microsoft.PythonTools.Analysis.Pythia {
 
     internal sealed class PythiaService {
-        public static readonly PythiaService Instance = new PythiaService();
+        private readonly Task _modelLoadingTask;
+        private readonly ILogger _log;
+        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyList<string>>>> _sequenceModel;
 
-        private event EventHandler<LogMessageEventArgs> OnLogMessage;
-
-        public void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
-
-        private readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyList<string>>>> _sequenceModel;
-
-        private PythiaService() {
-            _sequenceModel = LoadModel();
+        private PythiaService(ILogger log) {
+            _log = log;
+            _modelLoadingTask = Task.Run(() => LoadModelAsync());
         }
 
-        public List<CompletionItem> GetRecommendations(IEnumerable<CompletionItem> completionList,
+        public static PythiaService Create(ILogger log) {
+            try {
+                if (File.Exists(ModelPath)) {
+                    return new PythiaService(log);
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                log.TraceMessage($"Pythia service failed to load: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<IReadOnlyList<CompletionItem>> GetRecommendationsAsync(IEnumerable<CompletionItem> completionList,
                 PythonAst ast, CompletionParams completionParams, int recommendataionLimit) {
 
-            if (completionList != null && completionList.Count() > 0 && ast != null) {
-                var currentPosition = ast.LocationToIndex(completionParams.position);
-
-                var assignmentWalker = new AssignmentWalker();
-                ast.Walk(assignmentWalker);
-
-                var expressionWalker = new ExpressionWalker(assignmentWalker.Assignments, currentPosition);
-                ast.Walk(expressionWalker);
-
-                if (expressionWalker.EndIndexTypeNameMap.ContainsKey(currentPosition - 1)) {
-                    var typeName = expressionWalker.EndIndexTypeNameMap[currentPosition - 1];
-
-                    var inConditional = expressionWalker.IsCurrentPositionInConditional();
-                    var previousMethods = expressionWalker.GetPreviousInvocations(typeName, 2);
-                    Stack<string> sequences = new Stack<string>();
-                    sequences.Push(Consts.NullSequence);
-                    BuildSequences(previousMethods, sequences);
-                    return ApplyModel(5, typeName, inConditional, completionList, sequences);
-
-                }
-
+            await _modelLoadingTask;
+            if (_sequenceModel == null || ast == null || completionList == null || !completionList.Any()) {
+                return null;
             }
 
-            return null;
+            var currentPosition = ast.LocationToIndex(completionParams.position);
+            var assignmentWalker = new AssignmentWalker();
+            ast.Walk(assignmentWalker);
 
+            var expressionWalker = new ExpressionWalker(assignmentWalker.Assignments, currentPosition);
+            ast.Walk(expressionWalker);
+
+            if (expressionWalker.EndIndexTypeNameMap.ContainsKey(currentPosition - 1)) {
+                var typeName = expressionWalker.EndIndexTypeNameMap[currentPosition - 1];
+
+                var inConditional = expressionWalker.IsCurrentPositionInConditional();
+                var previousMethods = expressionWalker.GetPreviousInvocations(typeName, 2);
+                var sequences = new Stack<string>();
+                sequences.Push(Consts.NullSequence);
+                BuildSequences(previousMethods, sequences);
+                return ApplyModel(5, typeName, inConditional, completionList, sequences);
+            }
+            return null;
         }
 
-        private bool SupportType(string typeName)
-                => _sequenceModel.ContainsKey(typeName);
-
-        public List<CompletionItem> ApplyModel(
+        private IReadOnlyList<CompletionItem> ApplyModel(
                 int recommendataionLimit, string targetTypeName, bool inIfConditional,
                 IEnumerable<CompletionItem> completionList, Stack<string> sequences) {
             Debug.WriteLine("Using Sequence Model to Recommend");
@@ -82,19 +88,15 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
 
             while (sequences.Count > 0) {
                 var seq = sequences.Pop();
-
                 if (!_sequenceModel[targetTypeName].ContainsKey(seq)) {
                     continue;
                 }
-
                 var recommendations = GetModelRecommendations(
                     _sequenceModel[targetTypeName][seq], recommendataionLimit, inIfConditional, targetTypeName, completionList);
 
                 if (recommendations.Count == 0) {
                     continue;
                 }
-
-
                 return recommendations;
             }
             return null;
@@ -121,12 +123,10 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                     }
                 }
             }
-
             return items;
         }
 
         private static CompletionItem? GetRecommendation(IEnumerable<CompletionItem> completionList, string recommendation, int rank) {
-
             foreach (var item in completionList) {
                 if (item.label == recommendation) {
                     return BuildPythiaCompletionItem(item, rank);
@@ -163,13 +163,12 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                 kind = item.kind,
                 _kind = item._kind
             };
-
             return res;
         }
 
         private static void BuildSequences(List<string> prevMethods, Stack<string> sequences) {
 
-            int count = prevMethods.Count;
+            var count = prevMethods.Count;
             if (count == 0) {
                 return;
             }
@@ -188,46 +187,39 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
 
         private Node FindPreviousNode(PythonAst ast, int position) {
             var finder = new ExpressionFinder(ast, GetExpressionOptions.Complete);
-
-            Node previousNode = finder.GetExpression(position);
-
+            var previousNode = finder.GetExpression(position);
             if (previousNode == null && position > 0) {
                 position--;
                 previousNode = finder.GetExpression(position);
             }
-
             return previousNode;
         }
 
 
-        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyList<string>>>> LoadModel() {
+        private void LoadModelAsync() {
             var watch = new Stopwatch();
-
             try {
                 watch.Start();
-
                 var serializer = new JsonSerializer();
 
-                using (var modelStream = PythiaUtil.ReadModel(Consts.SequenceModelPath))
+                using (var modelStream = new GZipStream(new FileStream(ModelPath, FileMode.Open, FileAccess.Read), CompressionMode.Decompress))
                 using (var jsonReader = new JsonTextReader(new StreamReader(modelStream))) {
                     var sequenceModel = serializer.Deserialize<IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyList<string>>>>>(jsonReader);
-
                     //PythiaTelemetry.SendLoadModel(watch.ElapsedMilliseconds);
-
-
-                    return sequenceModel;
+                    _sequenceModel = sequenceModel;
                 }
             } catch (Exception ex) {
                 //PythiaTelemetry.SendLoadModelFailure(ex);
-                LogMessage(MessageType.Error, $"Pythia Model loading failed: {ex.ToString()}");
+                _log.TraceMessage($"Pythia Model loading failed: {ex.ToString()}");
             } finally {
-                long elapsedMS = watch.ElapsedMilliseconds;
+                var elapsedMS = watch.ElapsedMilliseconds;
                 watch.Stop();
-
-                LogMessage(MessageType.Info, $"Pythia model loading took: {elapsedMS} milliseconds");
+                _log.TraceMessage($"Pythia model loaded in {elapsedMS} milliseconds");
             }
-
-            return null;
         }
+        private bool SupportType(string typeName) => _sequenceModel.ContainsKey(typeName);
+
+        private static string AssemblyDirectory => Path.GetDirectoryName(typeof(PythiaService).Assembly.Location);
+        private static string ModelPath => Path.Combine(AssemblyDirectory, Consts.SequenceModelPath);
     }
 }

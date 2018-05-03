@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Pythia;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -72,6 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private Task _analyzerCreationTask;
 
         internal Task _loadingFromDirectory;
+        private PythiaService _pythia;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
@@ -100,6 +102,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _openFiles = new OpenFiles(_projectFiles, this);
+            _pythia = PythiaService.Create(this);
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {

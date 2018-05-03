@@ -17,7 +17,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Pythia;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -54,22 +53,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 members = members.Where(m => m.kind == filterKind.Value);
             }
 
-            if (members != null && members.Count() > 0) {
+            var items = members.ToArray();
+            if (items.Length > 0 && _pythia != null) {
                 try {
                     //provide Pythia recommendations based on the default completion list
-                    var recommendations = PythiaService.Instance.GetRecommendations(members, tree, @params, 5);
+                    var recommendations = await _pythia.GetRecommendationsAsync(members, tree, @params, 5);
                     if (recommendations != null) {
-                        LogMessage(MessageType.Info, $"Pythia made {recommendations.Count} recommendations among {members.Count()} candidates");
+                        LogMessage(MessageType.Info, $"Pythia added {recommendations.Count} to {items.Length} completions.");
                         members = members.Concat(recommendations);
                     }
                 } catch (Exception ex) {
-                    LogMessage(MessageType.Warning, $"Pythia throws exception: " + ex.ToString());
+                    LogMessage(MessageType.Warning, $"Pythia exception: {ex.Message}");
                 }
-
             }
 
             var res = new CompletionList {
-                items = members.ToArray(),
+                items = items,
                 _applicableSpan = ctxt.Node?.GetSpan(tree),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
             };
