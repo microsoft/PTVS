@@ -102,7 +102,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _openFiles = new OpenFiles(_projectFiles, this);
-            _pythia = PythiaService.Create(this);
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -157,6 +156,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
+
+            if (@params.initializationOptions.pythiaEnabled) {
+                _pythia = PythiaService.Create(this);
+            }
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
