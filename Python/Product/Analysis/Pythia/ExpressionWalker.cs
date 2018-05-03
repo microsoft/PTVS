@@ -24,11 +24,11 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
     /// AST Expression walker for expression assignments
     /// </summary>
     sealed class ExpressionWalker : PythonWalker {
-        private IList<KeyValuePair> Assignments;
-        private List<KeyValuePair> MethodInvocations;
+        public IList<KeyValuePair> Assignments { get; }
+        public List<KeyValuePair> MethodInvocations { get; }
 
-        private IList<Tuple<int, int>> ConditionalRanges;
-        private IList<Tuple<int, int>> LoopRanges;
+        public IList<Tuple<int, int>> ConditionalRanges { get; }
+        public IList<Tuple<int, int>> LoopRanges { get; }
 
         public IDictionary<int, string> EndIndexTypeNameMap { get; }
 
