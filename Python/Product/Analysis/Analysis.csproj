@@ -71,6 +71,7 @@
     <Compile Include="Infrastructure\PathEqualityComparer.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\ProcessHelper.cs" />
+    <Compile Include="Infrastructure\StringBuilderExtensions.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
