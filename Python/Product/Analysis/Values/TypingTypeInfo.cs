@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public TypingTypeInfo MakeGeneric(IReadOnlyList<IAnalysisSet> args) {
-            if (_args == null) {
+            if (_args != null) {
                 return new TypingTypeInfo(_baseName, _innerValue, args);
             }
             return this;
