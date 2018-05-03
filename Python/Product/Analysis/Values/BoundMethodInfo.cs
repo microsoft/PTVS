@@ -61,11 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (Instance is InstanceInfo ii) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " of ");
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, ii.ClassInfo.FullyQualifiedName);
-                if (includeTypes) {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
-                } else {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects");
-                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
             }
 
             if (includeTypes) {
