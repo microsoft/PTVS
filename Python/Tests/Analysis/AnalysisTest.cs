@@ -3325,7 +3325,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3336,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]

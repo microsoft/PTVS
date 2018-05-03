@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Analysis.Pythia {
                 _log.TraceMessage($"Pythia model loaded in {elapsedMS} milliseconds");
             }
         }
-        private bool SupportType(string typeName) => _sequenceModel.ContainsKey(typeName);
+        private bool SupportType(string typeName) => typeName != null && _sequenceModel.ContainsKey(typeName);
 
         private static string AssemblyDirectory => Path.GetDirectoryName(typeof(PythiaService).Assembly.Location);
 
