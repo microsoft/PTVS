@@ -140,11 +140,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return 0; // Avoid more than one empty line in a row.
             }
 
-            // Since we use HTML blocks as preformatted text
-            // make sure we drop angle brackets since otherwise
-            // they will render as tags and attributes
-            line = line.Replace("<", " ").Replace(">", " ").Replace("``", "`"); // Convert double backticks to single.
             // Keep hard line breaks for the preformatted content
+            line = PreserveIndentation(Cleanup(line));
             _md.Add($"{ line}  ");
             return 0;
         }
@@ -222,17 +219,12 @@ namespace Microsoft.PythonTools.Analysis {
         private void StartPreformattedBlock() {
             // Remove previous empty line so we avoid double empties.
             TryRemovePrecedingEmptyLines();
-            // Lie about the language since we don't want preformatted text
-            // to be colorized as Python. HTML is more 'appropriate' as it does
-            // not colorize -- or + or keywords like 'from'.
-            _md.Add("```html");
             _state = State.Preformatted;
         }
 
         private void EndPreformattedBlock() {
             if (_state == State.Preformatted) {
                 TryRemovePrecedingEmptyLines();
-                _md.Add("```");
                 _state = State.Default;
             }
         }
@@ -265,5 +257,24 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private string Cleanup(string line) => line.Replace(":mod:", "module:");
+
+        private string PreserveIndentation(string line) {
+            var sb = new StringBuilder();
+            for (var j = 0; j < line.Length; j++) {
+                switch (line[j]) {
+                    case ' ':
+                        sb.Append("&nbsp;");
+                        break;
+                    case '\t':
+                        sb.Append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+                        break;
+                    default:
+                        sb.Append(line.Substring(j));
+                        j = line.Length;
+                        break;
+                }
+            }
+            return sb.Replace("``", "`").ToString();
+        }
     }
 }

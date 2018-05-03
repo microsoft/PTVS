@@ -24,21 +24,21 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class TypingTypeInfo : AnalysisValue, IHasRichDescription {
+        private readonly AnalysisValue _innerValue;
         private readonly string _baseName;
         private readonly IReadOnlyList<IAnalysisSet> _args;
 
-        public TypingTypeInfo(string baseName) {
-            _baseName = baseName;
-        }
+        public TypingTypeInfo(string baseName, AnalysisValue innerValue) : this(baseName, innerValue, Array.Empty<IAnalysisSet>()) { }
 
-        private TypingTypeInfo(string baseName, IReadOnlyList<IAnalysisSet> args) {
+        private TypingTypeInfo(string baseName, AnalysisValue innerValue, IReadOnlyList<IAnalysisSet> args) {
             _baseName = baseName;
+            _innerValue = innerValue;
             _args = args;
         }
 
         public TypingTypeInfo MakeGeneric(IReadOnlyList<IAnalysisSet> args) {
-            if (_args == null) {
-                return new TypingTypeInfo(_baseName, args);
+            if (_args != null) {
+                return new TypingTypeInfo(_baseName, _innerValue, args);
             }
             return this;
         }
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var type in ce.Args.MaybeEnumerate().Where(e => e?.Expression != null).Select(e => new TypeAnnotation(unit.State.LanguageVersion, e.Expression))) {
                         newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
                     }
-                    return new TypingTypeInfo(_baseName, newArgs);
+                    return new TypingTypeInfo(_baseName, _innerValue, newArgs);
                 });
             }
             return this;
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var type in exprs.Select(e => new TypeAnnotation(unit.State.LanguageVersion, e))) {
                         newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
                     }
-                    return new TypingTypeInfo(_baseName, newArgs);
+                    return new TypingTypeInfo(_baseName, _innerValue, newArgs);
                 });
             }
             return this;
@@ -128,7 +128,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (_baseName != " List") {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, _baseName);
+                if (_innerValue == null) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, _baseName);
+                } else {
+                    foreach (var kv in _innerValue.GetRichDescriptions()) {
+                        yield return kv;
+                    }
+                }
             }
             if (_args != null && _args.Any()) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
@@ -145,6 +151,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
         }
+
+        public override string Description => _innerValue?.Description ?? base.Description; 
+        public override string Documentation => _innerValue?.Documentation ?? base.Documentation;
+        public override PythonMemberType MemberType => _innerValue != null ? _innerValue.MemberType : base.MemberType;
 
         public override bool Equals(object obj) {
             if (obj is TypingTypeInfo other) {
@@ -189,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength == 0 || (_args != null && _args.Count == 0)) {
                 return this;
             } else {
-                return new TypingTypeInfo(_baseName, Array.Empty<IAnalysisSet>());
+                return new TypingTypeInfo(_baseName, _innerValue, Array.Empty<IAnalysisSet>());
             }
         }
     }

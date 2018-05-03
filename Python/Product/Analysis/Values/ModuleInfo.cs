@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
             foreach (var kvp in _scope.AllVariables) {
-                if ((options & GetMemberOptions.ForEval) != GetMemberOptions.ForEval) {
+                if (!options.ForEval()) {
                     kvp.Value.ClearOldValues();
                 }
                 if (kvp.Value._dependencies.Count > 0) {

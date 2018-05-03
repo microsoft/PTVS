@@ -207,10 +207,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public class InformationDisplayOptions {
+        public MarkupKind preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
         public int maxDocumentationTextLength;
+        public int maxDocumentationLines;
     }
 
     /// <summary>
@@ -662,7 +664,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string label;
         public CompletionItemKind kind;
         public string detail;
-        public string documentation;
+        public MarkupContent documentation;
         public string sortText;
         public string filterText;
         public string insertText;

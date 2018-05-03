@@ -31,13 +31,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly Node _statement;
         private readonly ScopeStatement _scope;
         private readonly ILogger _log;
+        private readonly DocumentationBuilder _textBuilder;
 
-        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, ILogger log) {
+        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, DocumentationBuilder textBuilder, ILogger log) {
             Analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             Position = position;
             Index = Tree.LocationToIndex(Position);
             Options = opts;
+            _textBuilder = textBuilder;
             _log = log;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
@@ -162,7 +164,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                
+
                 return GetModules(names, includeMembers);
             } else if (name == null || name is NameExpression) {
                 return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
@@ -486,17 +488,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _kind = PythonMemberType.Keyword.ToString().ToLowerInvariant()
         };
 
-        private static CompletionItem ToCompletionItem(MemberResult m) {
+        private CompletionItem ToCompletionItem(MemberResult m) {
+            var doc = _textBuilder.GetDocumentation(m.Values, string.Empty);
             var res = new CompletionItem {
                 label = m.Name,
                 insertText = m.Completion,
-                documentation = m.Documentation,
+                documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
+                    kind = _textBuilder.DisplayOptions.preferredFormat,
+                    value = doc
+                },
                 // Place regular items first, advanced entries last
                 sortText = char.IsLetter(m.Completion, 0) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
-
             return res;
         }
 
