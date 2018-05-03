@@ -235,7 +235,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         ) {
             var opts = new ParserOptions {
                 BindReferences = true,
-                IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation)
+                IndentationInconsistencySeverity = DiagnosticsErrorSink.GetSeverity(InconsistentIndentation),
+                StubFile = entry.DocumentUri.AbsolutePath.EndsWithOrdinal(".pyi", ignoreCase: true)
             };
 
             List<Diagnostic> diags = null;

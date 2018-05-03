@@ -30,27 +30,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return doc != null ? new RestTextConverter().ToMarkdown(LimitLines(doc)) : $"module {modRef.Name}";
         }
 
-        protected override string MakeFunctionDocumentation(AnalysisValue value) {
-            //var subHeader = value.PythonType?.IsBuiltin == true ? "[built-in function]" : string.Empty;
-            return FromDocAndDescription(value, string.Empty);
-        }
-        protected override string MakeModuleDocumentation(AnalysisValue value) {
-            //var subHeader = value.PythonType?.IsBuiltin == true ? "[built-in module]" : string.Empty;
-            return FromDocAndDescription(value, string.Empty);
-        }
-        protected override string MakeClassDocumentation(AnalysisValue value) {
-            //var subHeader = value.PythonType?.IsBuiltin == true ? "[built-in class]" : string.Empty;
-            return FromDocAndDescription(value, string.Empty);
-        }
+        protected override string MakeFunctionDocumentation(AnalysisValue value) => FromDocAndDescription(value);
+        protected override string MakeModuleDocumentation(AnalysisValue value) => FromDocAndDescription(value);
+        protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value);
 
-        private string FromDocAndDescription(AnalysisValue value, string subHeader) {
+        private string FromDocAndDescription(AnalysisValue value) {
             var sb = new StringBuilder();
             sb.AppendLine("```python");
             sb.AppendLine(value.Description);
             sb.AppendLine("```");
-            if (!string.IsNullOrEmpty(subHeader)) {
-                sb.AppendLine(subHeader);
-            }
             var doc = LimitLines(value.Documentation).Trim();
             doc = new RestTextConverter().ToMarkdown(doc);
             sb.AppendLine();

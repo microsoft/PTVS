@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.TypesNoCopy;
                     var key = kvp.Key;
-                    if (options.ForEval()) {
+                    if (!options.ForEval()) {
                         kvp.Value.ClearOldValues();
                     }
                     if (kvp.Value.VariableStillExists) {

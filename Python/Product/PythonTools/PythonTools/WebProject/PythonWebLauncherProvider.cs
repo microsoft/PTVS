@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 if (string.IsNullOrEmpty(config.ScriptArguments)) {
                     config.ScriptArguments = args;
                 } else {
-                    config.ScriptArguments = config.ScriptArguments + " " + args;
+                    config.ScriptArguments = args + " " + config.ScriptArguments;
                 }
             }
 

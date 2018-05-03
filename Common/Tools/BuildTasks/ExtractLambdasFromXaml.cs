@@ -254,7 +254,7 @@ namespace Microsoft.VisualStudioTools.BuildTasks {
             bool isPrivate = false;
             if (classModifier != null) {
                 string publicModifier = null, privateModifier = null;
-                if (typeAttributesConverter != null || typeAttributesConverter.CanConvertTo(typeof(string))) {
+                if (typeAttributesConverter != null && typeAttributesConverter.CanConvertTo(typeof(string))) {
                     try {
                         publicModifier = typeAttributesConverter.ConvertTo(TypeAttributes.Public, typeof(string)) as string;
                         privateModifier = typeAttributesConverter.ConvertTo(TypeAttributes.NotPublic, typeof(string)) as string;

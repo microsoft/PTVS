@@ -133,8 +133,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         change = TextDocumentSyncKind.Incremental
                     },
                     completionProvider = new CompletionOptions {
-                        triggerCharacters = new[] { "." },
-                        
+                        triggerCharacters = new[] { "." }
                     },
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },

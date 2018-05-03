@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return FromDocAndDescription(value, prefix);
         }
         protected override string MakeClassDocumentation(AnalysisValue value) {
-            var prefix = value.PythonType?.IsBuiltin == true ? "built-in class " : "class ";
+            var prefix = value.PythonType?.IsBuiltin == true ? "type " : "class ";
             return FromDocAndDescription(value, prefix);
         }
 
