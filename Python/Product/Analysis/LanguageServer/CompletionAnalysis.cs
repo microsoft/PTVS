@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
-                Literals = true,
+                Literals = true
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
         }
@@ -83,7 +84,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             bool allowKeywords = true, allowArguments = true;
             List<CompletionItem> additional = null;
 
-            var res = GetCompletionsFromMembers(ref opts) ??
+            var res = GetNoCompletionsInComments() ??
+                GetCompletionsFromMembers(ref opts) ??
                 GetCompletionsInLiterals() ??
                 GetCompletionsInImport(ref opts, ref additional) ??
                 GetCompletionsForOverride() ??
@@ -445,6 +447,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return true;
             }
             return false;
+        }
+
+        private IEnumerable<CompletionItem> GetNoCompletionsInComments() {
+            if (Node == null) {
+                int match = Array.BinarySearch(Tree._commentLocations, Position);
+                if (match < 0) {
+                    // If our index = -1, it means we're before the first comment
+                    if (match == -1) {
+                        return null;
+                    }
+                    // If we couldn't find an exact match for this position, get the nearest
+                    // matching comment before this point
+                    match = ~match - 1;
+                }
+                Debug.Assert(0 <= match && match < Tree._commentLocations.Length);
+
+                if (Tree._commentLocations[match].Line == Position.Line &&
+                    Tree._commentLocations[match].Column < Position.Column) {
+                    // We are inside a comment, but not right at the start
+                    return Empty;
+                }
+            }
+            return null;
         }
 
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {

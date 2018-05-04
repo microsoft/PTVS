@@ -1353,8 +1353,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
         internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return //TrySpecialCompletions(services, session, view, snapshot, span, point, options) ??
-                   GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
+            return GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
         }
 
         //internal async Task<CompletionSet> GetCompletionsAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
@@ -1987,14 +1986,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<LS.CompletionList> GetCompletionsAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
+        internal async Task<LS.CompletionList> GetCompletionsAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options, LS.CompletionTriggerKind triggerKind, string triggerChar) {
             return await SendLanguageServerRequestAsync<LS.CompletionParams, LS.CompletionList>(
                 "textDocument/completion",
                 new LS.CompletionParams {
                     textDocument = new Uri(entry.DocumentUri.AbsoluteUri),
                     position = location,
                     context = new LS.CompletionContext {
-                        _intersection = options.Intersect()
+                        _intersection = options.Intersect(),
+                        triggerKind = triggerKind,
+                        triggerCharacter = triggerChar
                     }
                 }
             ).ConfigureAwait(false);
