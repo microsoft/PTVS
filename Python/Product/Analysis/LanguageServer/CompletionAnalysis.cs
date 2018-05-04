@@ -461,11 +461,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     // matching comment before this point
                     match = ~match - 1;
                 }
-                Debug.Assert(0 <= match && match < Tree._commentLocations.Length);
+                if (match < 0 || match >= Tree._commentLocations.Length) {
+                    Debug.Fail("Failed to find nearest preceding comment in AST");
+                    return null;
+                }
 
                 if (Tree._commentLocations[match].Line == Position.Line &&
                     Tree._commentLocations[match].Column < Position.Column) {
-                    // We are inside a comment, but not right at the start
+                    // We are inside a comment
                     return Empty;
                 }
             }
