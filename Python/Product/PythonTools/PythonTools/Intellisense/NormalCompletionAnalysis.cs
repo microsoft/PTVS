@@ -200,6 +200,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true
             );
+            result.CommitByDefault = completions._commitByDefault ?? true;
 
             end = _stopwatch.ElapsedMilliseconds;
 

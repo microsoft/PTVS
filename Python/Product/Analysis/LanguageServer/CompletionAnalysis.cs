@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Options = opts;
             _textBuilder = textBuilder;
             _log = log;
+            ShouldCommitByDefault = true;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
                 Names = true,
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceLocation Position { get; }
         public int Index { get; }
         public GetMemberOptions Options { get; set; }
+        public bool ShouldCommitByDefault { get; set; }
 
         public Node Node => _node;
         public Node Statement => _statement;
@@ -95,6 +97,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (additional != null) {
                 res = res.Concat(additional);
+            }
+
+            if (ReferenceEquals(res, Empty)) {
+                return null;
             }
 
             return res;
@@ -247,6 +253,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return null;
                 }
                 var loc = fd.GetStart(Tree);
+                ShouldCommitByDefault = false;
                 return Analysis.GetOverrideable(loc)
                     .Select(o => new CompletionItem {
                         label = o.Name,
@@ -263,7 +270,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // completions 
 
             if (Statement is FunctionDefinition fd) {
-                if (Index > fd.HeaderIndex) {
+                if (fd.HeaderIndex > fd.StartIndex && Index > fd.HeaderIndex) {
                     return null;
                 } else if (Index == fd.HeaderIndex) {
                     return Empty;
@@ -296,7 +303,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
 
             } else if (Statement is ClassDefinition cd) {
-                if (Index > cd.HeaderIndex) {
+                if (cd.HeaderIndex > cd.StartIndex && Index > cd.HeaderIndex) {
                     return null;
                 } else if (Index == cd.HeaderIndex) {
                     return Empty;

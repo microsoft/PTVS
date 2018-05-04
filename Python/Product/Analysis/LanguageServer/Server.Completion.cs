@@ -41,6 +41,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetOptions(@params.context);
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
+            if (members == null) {
+                TraceMessage($"Do not trigger at {@params.position} in {uri}");
+                return new CompletionList();
+            }
 
             if (_settings.SuppressAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
@@ -55,7 +59,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var res = new CompletionList {
                 items = members.ToArray(),
                 _applicableSpan = ctxt.Node?.GetSpan(tree),
-                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
+                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
+                _commitByDefault = ctxt.ShouldCommitByDefault
             };
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;

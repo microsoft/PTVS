@@ -657,6 +657,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The expression that members are being displayed for.
         /// </summary>
         public string _expr;
+        /// <summary>
+        /// When true, completions should commit by default.
+        /// </summary>
+        public bool? _commitByDefault;
     }
 
     [Serializable]

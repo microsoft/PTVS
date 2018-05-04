@@ -1687,11 +1687,6 @@ namespace Microsoft.PythonTools.Parsing {
             var nameExpr = MakeName(name);
             string nameWhiteSpace = _tokenWhiteSpace;
 
-            if (name.RealName == null) {
-                // no name, assume there's no class.
-                return ErrorStmt(_verbatim ? (classWhiteSpace + "class") : null);
-            }
-
             bool isParenFree = false;
             string leftParenWhiteSpace = null, rightParenWhiteSpace = null;
             List<string> commaWhiteSpace = null;

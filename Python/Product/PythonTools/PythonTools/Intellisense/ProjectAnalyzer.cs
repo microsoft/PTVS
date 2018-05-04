@@ -1441,7 +1441,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (sigs != null) {
-                foreach (var sig in sigs.sigs) {
+                foreach (var sig in sigs.sigs.MaybeEnumerate()) {
                     result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
                 }
             }
