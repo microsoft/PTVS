@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
@@ -66,6 +67,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
+            } catch (IOException ex) {
+                errorMessage = ex.Message;
             } catch (NoStartupFileException ex) {
                 errorMessage = ex.Message;
             } catch (ArgumentException ex) {
