@@ -504,7 +504,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return members.Select(ToCompletionItem);
+            return members.Select(ToCompletionItem).Where(c => !string.IsNullOrEmpty(c.insertText));
         }
 
 
@@ -523,16 +523,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
 
         private CompletionItem ToCompletionItem(MemberResult m) {
+            var completion = m.Completion;
+            if (string.IsNullOrEmpty(completion)) {
+                completion = m.Name;
+            }
+            if (string.IsNullOrEmpty(completion)) {
+                return default(CompletionItem);
+            }
             var doc = _textBuilder.GetDocumentation(m.Values, string.Empty);
             var res = new CompletionItem {
                 label = m.Name,
-                insertText = m.Completion,
+                insertText = completion,
                 documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
                     kind = _textBuilder.DisplayOptions.preferredFormat,
                     value = doc
                 },
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(m.Completion, 0) ? "1" : "2",
+                sortText = char.IsLetter(completion, 0) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
