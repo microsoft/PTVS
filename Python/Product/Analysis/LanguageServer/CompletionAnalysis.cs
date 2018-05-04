@@ -41,7 +41,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Options = opts;
             _textBuilder = textBuilder;
             _log = log;
-            ShouldCommitByDefault = true;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
                 Names = true,
@@ -61,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceLocation Position { get; }
         public int Index { get; }
         public GetMemberOptions Options { get; set; }
-        public bool ShouldCommitByDefault { get; set; }
+        public bool? ShouldCommitByDefault { get; set; }
 
         public Node Node => _node;
         public Node Statement => _statement;

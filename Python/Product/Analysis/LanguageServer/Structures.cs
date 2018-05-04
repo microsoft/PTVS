@@ -658,7 +658,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public string _expr;
         /// <summary>
-        /// When true, completions should commit by default.
+        /// When true, completions should commit by default. When false, completions
+        /// should not commit. If unspecified the client may decide.
         /// </summary>
         public bool? _commitByDefault;
     }

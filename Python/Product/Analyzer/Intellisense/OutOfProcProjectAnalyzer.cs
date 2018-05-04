@@ -1330,7 +1330,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.SignaturesResponse {
-                sigs = sigs.signatures.Select(
+                sigs = sigs?.signatures?.Select(
                     s => new AP.Signature {
                         name = s.label,
                         doc = s.documentation?.value,
