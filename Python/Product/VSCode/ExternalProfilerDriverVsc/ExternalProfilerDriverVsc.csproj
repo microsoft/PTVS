@@ -1,0 +1,29 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.VsCode</AssemblyName>
+  </PropertyGroup>
+  <!-- <Import Project="..\..\NetStandard.settings" /> -->
+  <Import Project="NetStandard_temp.settings" /> <!-- TODO: Enable Netstandard.settings above once ready to sign -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+      <Compile Remove="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.2.1" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="2.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!--
+      <Import Project="..\..\NetStandard.targets" />
+  -->
+</Project>
