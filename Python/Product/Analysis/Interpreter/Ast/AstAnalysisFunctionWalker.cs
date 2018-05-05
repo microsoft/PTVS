@@ -18,10 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisFunctionWalker : PythonWalker {
+        private readonly Dictionary<string, IPythonType> _assignedExpressions = new Dictionary<string, IPythonType>();
         private readonly FunctionDefinition _target;
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
@@ -120,15 +122,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return true;
         }
 
-        public override bool Walk(ExpressionStatement node) {
+        public override bool Walk(AssignmentStatement node) {
+            var value = _scope.GetValueFromExpression(node.Right);
+            var left = node?.Left?.FirstOrDefault();
+            if (left != null) {
+                var type = _scope.GetTypeFromValue(value);
+                if (type?.TypeId != BuiltinTypeId.Unknown) {
+                    _assignedExpressions[left.ToString()] = type;
+                }
+            }
             return base.Walk(node);
         }
 
         public override bool Walk(ReturnStatement node) {
-            foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
-                _returnTypes.Add(type);
+            if(node.Expression != null &&_assignedExpressions.TryGetValue(node.Expression.ToString(), out var expType)) {
+                _returnTypes.Add(expType);
             }
-
+            var knownTypesAdded = _returnTypes.Any();
+            foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
+                if (!knownTypesAdded || type.TypeId != BuiltinTypeId.Unknown) {
+                    _returnTypes.Add(type);
+                }
+            }
             return false;
         }
     }
