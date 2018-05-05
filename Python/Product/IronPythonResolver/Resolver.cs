@@ -33,20 +33,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal static string GetPythonInstallDir() {
-            using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
-                if (ipy != null) {
-                    using (var twoSeven = ipy.OpenSubKey("2.7")) {
-                        if (twoSeven != null) {
-                            var installPath = twoSeven.OpenSubKey("InstallPath");
-                            if (installPath != null) {
-                                var res = installPath.GetValue("") as string;
-                                if (res != null) {
-                                    return res;
-                                }
-                            }
-                        }
-                    }
-                }
+            // IronPython 2.7.7 and earlier use 32-bit registry
+            var installPath = ReadInstallPathFromRegistry(RegistryView.Registry32);
+            if (!string.IsNullOrEmpty(installPath)) {
+                return installPath;
+            }
+
+            // IronPython 2.7.8 and later use 64-bit registry
+            installPath = ReadInstallPathFromRegistry(RegistryView.Registry64);
+            if (!string.IsNullOrEmpty(installPath)) {
+                return installPath;
             }
 
             var paths = Environment.GetEnvironmentVariable("PATH");
@@ -60,6 +56,19 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         // ignore
                     }
                 }
+            }
+
+            return null;
+        }
+
+        private static string ReadInstallPathFromRegistry(RegistryView view) {
+            try {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+                using (var pathKey = baseKey.OpenSubKey("SOFTWARE\\IronPython\\2.7\\InstallPath")) {
+                    return pathKey?.GetValue("") as string;
+                }
+            } catch (ArgumentException) {
+            } catch (UnauthorizedAccessException) {
             }
 
             return null;
