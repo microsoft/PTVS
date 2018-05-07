@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
         private readonly AstPythonFunctionOverload _overload;
+        private AstPythonType _selfType;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
@@ -67,20 +68,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Walk() {
-            bool classmethod, staticmethod;
-            IMember self = null;
-            GetMethodType(_target, out classmethod, out staticmethod);
-            if (!staticmethod) {
-                self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
-                if (!classmethod) {
-                    var cls = self as IPythonType;
-                    if (cls == null) {
-                        self = null;
-                    } else {
-                        self = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
-                    }
-                }
-            }
+            var klass = GetClass();
+            _selfType = _selfType ?? GetSelf(klass);
 
             if (_target.ReturnAnnotation != null) {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
@@ -92,20 +81,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            // in __new__ body can create new members that may back public properties.
-            // In order to determine return types correctly we'll supply temporary 'self'.
-            // We can't reuse __class__ since we'd be adding members to the main class
-            // while these members should not be visible to the user.
-            if (_scope.LookupNameInScopes("self", NameLookupContext.LookupOptions.Local) == null) {
-                var tempSelf = new AstPythonConstant(new AstPythonType("self"), new LocationInfo[0]);
-                _scope.SetInScope("self", tempSelf);
-            }
 
             _scope.PushScope();
-            if (self != null) {
+            if (klass != null) {
                 var p0 = _target.ParametersInternal?.FirstOrDefault();
-                if (p0 != null && !string.IsNullOrEmpty(p0.Name)) {
-                    _scope.SetInScope(p0.Name, self);
+                if (p0 != null && !string.IsNullOrEmpty(p0.Name) && p0.Name != "self") {
+                    _scope.SetInScope(p0.Name, klass);
                 }
             }
             _target.Walk(this);
@@ -134,12 +115,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var value = _scope.GetValueFromExpression(node.Right);
             var first = node.Left.FirstOrDefault();
             if (first is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
-                if (nameExp1.Name == "self") {
-                    var target = _scope.LookupNameInScopes(nameExp1.Name, NameLookupContext.LookupOptions.Nonlocal);
-                    var klass = (target as AstPythonConstant)?.Type as AstPythonType;
-                    klass?.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
+                if (_selfType != null && nameExp1.Name == "self") {
+                    _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
                 }
-            } else if(!(first is NameExpression nameExp2 && nameExp2.Name == "self")) {
+            } else if (!(first is NameExpression nameExp2 && nameExp2.Name == "self")) {
                 // Don't assign to 'self'
                 var multiple = value as AstPythonMultipleMembers;
                 value = multiple != null ? multiple.Members.First() : value;
@@ -151,10 +130,50 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ReturnStatement node) {
+            if (node.Expression is NameExpression nex && nex.Name == "self") {
+                // For self return the actual class without added private members
+                var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
+                var self = (klass as AstPythonConstant)?.Type as IPythonType;
+                if (self != null) {
+                    _returnTypes.Add(self);
+                    return false;
+                }
+            }
+
             foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
                 _returnTypes.Add(type);
             }
             return false;
+        }
+
+        private IMember GetClass() {
+            bool classmethod, staticmethod;
+            GetMethodType(_target, out classmethod, out staticmethod);
+            var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
+            if (!staticmethod && !classmethod) {
+                var cls = klass as IPythonType;
+                if (cls == null) {
+                    klass = null;
+                } else {
+                    klass = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
+                }
+            }
+            return klass;
+        }
+
+        private AstPythonType GetSelf(IMember klass) {
+            var cls = (klass as AstPythonConstant)?.Type as AstPythonType;
+            if (cls != null) {
+                var self = _scope.LookupNameInScopes("self", NameLookupContext.LookupOptions.Local);
+                if (self == null) {
+                    // Clone type since function analysis can add members that should not be
+                    // visible to the user such as private variables backing public properties.
+                    self = new AstPythonConstant(cls.Clone(), Array.Empty<LocationInfo>());
+                    _scope.SetInScope("self", self, mergeWithExisting: false);
+                }
+                return (self as AstPythonConstant)?.Type as AstPythonType;
+            }
+            return null;
         }
     }
 }
