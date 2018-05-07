@@ -50,6 +50,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Product\IronPythonResolver\Resolver.cs">
+      <Link>Resolver.cs</Link>
+    </Compile>
     <Compile Include="MockInterpreterOptionsService.cs" />
     <Compile Include="MockPythonInterpreter.cs" />
     <Compile Include="MockPythonInterpreterFactory.cs" />

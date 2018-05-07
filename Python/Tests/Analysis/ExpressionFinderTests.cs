@@ -116,14 +116,26 @@ C().fff", GetExpressionOptions.Evaluate);
 
         [TestMethod, Priority(0)]
         public void FindExpressionsForComplete() {
-            var code = Parse(@"class C(object):
+            PythonAstAndSource code;
+
+            code = Parse(@"class 
+
+pass", GetExpressionOptions.Complete);
+            AssertExpr(code, 1, 6, "class");
+            AssertNoExpr(code, 1, 7);
+
+            code = Parse(@"def 
+
+pass", GetExpressionOptions.Complete);
+            AssertExpr(code, 1, 4, "def");
+            AssertNoExpr(code, 1, 5);
+
+            code = Parse(@"class C(object):
     def f(a):
         return a
 
 b = C().f(1)
 ", GetExpressionOptions.Complete);
-            var clsCode = code.Source.Substring(0, code.Source.IndexOfEnd("return a"));
-            var funcCode = clsCode.Substring(clsCode.IndexOf("def"));
 
             AssertExpr(code, 1, 1, "class");
             AssertNoExpr(code, 1, 7);

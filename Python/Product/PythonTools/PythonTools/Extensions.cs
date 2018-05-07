@@ -142,9 +142,11 @@ namespace Microsoft.PythonTools {
             }
 
             var spanLength = position - line.Start.Position;
-            // Increase position by one to include 'fob' in: "abc.|fob"
-            if (spanLength < line.Length) {
-                spanLength += 1;
+            if (completeWord) {
+                // Increase position by one to include 'fob' in: "abc.|fob"
+                if (spanLength < line.Length) {
+                    spanLength += 1;
+                }
             }
 
             var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));

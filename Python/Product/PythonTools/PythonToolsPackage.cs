@@ -328,6 +328,9 @@ namespace Microsoft.PythonTools {
             } catch (NoInterpretersException ex) {
                 OpenNoInterpretersHelpPage(provider, ex.HelpPage);
                 return false;
+            } catch (IOException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
             return true;

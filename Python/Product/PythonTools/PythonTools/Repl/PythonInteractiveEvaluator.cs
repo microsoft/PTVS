@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (MissingInterpreterException ex) {
                     WriteError(ex.ToString());
                     return null;
-                } catch (DirectoryNotFoundException ex) {
+                } catch (IOException ex) {
                     WriteError(ex.ToString());
                     return null;
                 } catch (Exception ex) when (!ex.IsCriticalException()) {

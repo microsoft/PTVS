@@ -13,8 +13,6 @@
     <PackageReference Include="Python" version="3.6.4" Condition="'$(OS)' == 'Windows_NT'" />
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="get_search_paths.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

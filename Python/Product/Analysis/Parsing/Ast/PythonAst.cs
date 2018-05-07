@@ -29,16 +29,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly PythonLanguageVersion _langVersion;
         private readonly Statement _body;
         internal readonly NewLineLocation[] _lineLocations;
+        internal readonly SourceLocation[] _commentLocations;
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
         private string _privatePrefix;
 
-        internal PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
+        internal PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion, SourceLocation[] commentLocations) {
             if (body == null) {
                 throw new ArgumentNullException(nameof(body));
             }
             _langVersion = langVersion;
             _body = body;
             _lineLocations = lineLocations;
+            _commentLocations = commentLocations;
         }
 
         internal PythonAst(IEnumerable<PythonAst> existingAst) {
@@ -46,12 +48,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _body = new SuiteStatement(asts.Select(a => a.Body).ToArray());
             _langVersion = asts.Select(a => a._langVersion).Distinct().Single();
             var locs = new List<NewLineLocation>();
+            var comments = new List<SourceLocation>();
             int offset = 0;
             foreach (var a in asts) {
                 locs.AddRange(a._lineLocations.Select(ll => new NewLineLocation(ll.EndIndex + offset, ll.Kind)));
                 offset = locs.LastOrDefault().EndIndex;
             }
             _lineLocations = locs.ToArray();
+            offset = 0;
+            foreach (var a in asts) {
+                comments.AddRange(a._commentLocations.Select(cl => new SourceLocation(cl.Line + offset, cl.Column)));
+                offset += a._lineLocations.Length + 1;
+            }
+            _commentLocations = comments.ToArray();
         }
 
         public override string Name {
