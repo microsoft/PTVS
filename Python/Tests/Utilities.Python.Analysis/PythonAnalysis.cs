@@ -290,6 +290,14 @@ namespace TestUtilities.Python {
             return module.Analysis.GetValuesByIndex(variable, index).Select(m => m.Description);
         }
 
+        public IEnumerable<string> GetDocumentations(string variable, int index = 0) {
+            return GetDocumentations(_entries[DefaultModule], variable, index);
+        }
+
+        public IEnumerable<string> GetDocumentations(IPythonProjectEntry module, string variable, int index = 0) {
+            return module.Analysis.GetValuesByIndex(variable, index).Select(m => m.Documentation);
+        }
+
         public IEnumerable<string> GetShortDescriptions(string variable, int index = 0) {
             return GetShortDescriptions(_entries[DefaultModule], variable, index);
         }
@@ -552,6 +560,25 @@ namespace TestUtilities.Python {
         public void AssertDescriptionContains(IPythonProjectEntry module, string expr, int index, params string[] description) {
             var val = GetValue<AnalysisValue>(module, expr, index);
             AssertUtil.Contains(val?.Description, description);
+        }
+
+        public void AssertDocumentation(string expr, string documentation) {
+            AssertDocumentation(_entries[DefaultModule], expr, 0, documentation);
+        }
+
+        public void AssertDocumentation(IPythonProjectEntry module, string expr, string documentation) {
+            AssertDocumentation(module, expr, 0, documentation);
+        }
+
+        public void AssertDocumentation(string expr, int index, string documentation) {
+            AssertDocumentation(_entries[DefaultModule], expr, index, documentation);
+        }
+
+        public void AssertDocumentation(IPythonProjectEntry module, string expr, int index, string documentation) {
+            var val = GetValue<AnalysisValue>(module, expr, index);
+            if (documentation != val?.Documentation) {
+                Assert.Fail("Expected description of '{0}.{1}' was '{2}'. Actual was '{3}' or '{4}'".FormatInvariant(module.ModuleName, expr, documentation, val?.Documentation ?? string.Empty));
+            }
         }
 
         public void AssertConstantEquals(string expr, string value) {

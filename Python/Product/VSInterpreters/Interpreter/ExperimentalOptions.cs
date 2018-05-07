@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string NoDatabaseFactoryKey = "NoDatabase"; // Renamed from "NoDatabaseFactory" to reset default
         internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
         internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
-        internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger";
+        internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger"; // Named as "UseVSCDebugger" in 15.7 to disable this by default
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
         internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
         internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);

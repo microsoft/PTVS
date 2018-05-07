@@ -288,6 +288,10 @@ class Signature(object):
         if self.restype in ('return Any', 'return Unknown'):
             self.restype = 'pass'
 
+        #Special case for 'with' statement and built-ins like open() or memoryview
+        if state.module and name == '__enter__':
+            self.restype = 'return self'
+
     def __str__(self):
         return self.fullsig
 

@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet MakeList(IReadOnlyList<IAnalysisSet> types) {
-            return new TypingTypeInfo(" List").MakeGeneric(types);
+            return new TypingTypeInfo(" List", null).MakeGeneric(types);
         }
 
         public override IAnalysisSet MakeOptional(IAnalysisSet type) {

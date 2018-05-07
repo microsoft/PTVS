@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Repl {
                     WriteError(ex.ToString());
                 } catch (MissingInterpreterException ex) {
                     WriteError(ex.ToString());
-                } catch (DirectoryNotFoundException ex) {
+                } catch (IOException ex) {
                     WriteError(ex.ToString());
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     WriteError(ex.ToUnhandledExceptionMessage(GetType()));

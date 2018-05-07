@@ -136,6 +136,7 @@
     <Compile Include="ReplWindowProxy.cs" />
     <Compile Include="ReplWindowProxySettings.cs" />
     <Compile Include="PythonTestExplorer.cs" />
+    <Compile Include="WpfTextViewExtensions.cs" />
     <Compile Include="VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
