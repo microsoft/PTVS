@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private PythonAst CreateAst(Statement ret) {
-            var ast = new PythonAst(ret, _tokenizer.GetLineLocations(), _tokenizer.LanguageVersion);
+            var ast = new PythonAst(ret, _tokenizer.GetLineLocations(), _tokenizer.LanguageVersion, _tokenizer.GetCommentLocations());
             ast.HasVerbatim = _verbatim;
             ast.PrivatePrefix = _privatePrefix;
             if (_token.Token != null) {

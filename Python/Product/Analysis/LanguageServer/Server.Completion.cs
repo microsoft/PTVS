@@ -58,10 +58,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList {
                 items = members.ToArray(),
-                _applicableSpan = ctxt.Node?.GetSpan(tree),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
                 _commitByDefault = ctxt.ShouldCommitByDefault
             };
+
+            if (ctxt.Node != null) {
+                var span = ctxt.Node.GetSpan(tree);
+                if (@params.context?.triggerKind == CompletionTriggerKind.TriggerCharacter) {
+                    SourceLocation trigger = @params.position;
+                    if (span.End > trigger) {
+                        span = new SourceSpan(span.Start, trigger);
+                    }
+                }
+                if (span.End != span.Start) {
+                    res._applicableSpan = span;
+                }
+            }
+
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;
         }

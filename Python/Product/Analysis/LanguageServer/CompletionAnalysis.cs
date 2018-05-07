@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
-                Literals = true,
+                Literals = true
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
         }
@@ -83,7 +84,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             bool allowKeywords = true, allowArguments = true;
             List<CompletionItem> additional = null;
 
-            var res = GetCompletionsFromMembers(ref opts) ??
+            var res = GetNoCompletionsInComments() ??
+                GetCompletionsFromMembers(ref opts) ??
                 GetCompletionsInLiterals() ??
                 GetCompletionsInImport(ref opts, ref additional) ??
                 GetCompletionsForOverride() ??
@@ -447,6 +449,32 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return false;
         }
 
+        private IEnumerable<CompletionItem> GetNoCompletionsInComments() {
+            if (Node == null) {
+                int match = Array.BinarySearch(Tree._commentLocations, Position);
+                if (match < 0) {
+                    // If our index = -1, it means we're before the first comment
+                    if (match == -1) {
+                        return null;
+                    }
+                    // If we couldn't find an exact match for this position, get the nearest
+                    // matching comment before this point
+                    match = ~match - 1;
+                }
+                if (match < 0 || match >= Tree._commentLocations.Length) {
+                    Debug.Fail("Failed to find nearest preceding comment in AST");
+                    return null;
+                }
+
+                if (Tree._commentLocations[match].Line == Position.Line &&
+                    Tree._commentLocations[match].Column < Position.Column) {
+                    // We are inside a comment
+                    return Empty;
+                }
+            }
+            return null;
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
@@ -476,7 +504,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return members.Select(ToCompletionItem);
+            return members.Select(ToCompletionItem).Where(c => !string.IsNullOrEmpty(c.insertText));
         }
 
 
@@ -495,16 +523,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
 
         private CompletionItem ToCompletionItem(MemberResult m) {
+            var completion = m.Completion;
+            if (string.IsNullOrEmpty(completion)) {
+                completion = m.Name;
+            }
+            if (string.IsNullOrEmpty(completion)) {
+                return default(CompletionItem);
+            }
             var doc = _textBuilder.GetDocumentation(m.Values, string.Empty);
             var res = new CompletionItem {
                 label = m.Name,
-                insertText = m.Completion,
+                insertText = completion,
                 documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
                     kind = _textBuilder.DisplayOptions.preferredFormat,
                     value = doc
                 },
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(m.Completion, 0) ? "1" : "2",
+                sortText = char.IsLetter(completion, 0) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
