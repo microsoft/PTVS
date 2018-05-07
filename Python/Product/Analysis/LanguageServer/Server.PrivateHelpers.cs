@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
             if (requested == null) {
-                return supported.Last();
+                return supported.First();
             }
             foreach (var k in requested) {
                 if (supported.Contains(k)) {

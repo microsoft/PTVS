@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using System.IO;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
@@ -83,133 +84,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IEnumerable<AnalysisValue> Values => _vars.Value;
 
-        public string Documentation {
-            get {
-                var docs = new Dictionary<string, HashSet<string>>();
-
-                foreach (var ns in SeparateMultipleMembers(Values)) {
-                    var docString = GetDocumentation(ns);
-                    var typeString = GetDescription(ns);
-
-                    // If first line of doc is already in the type string, then filter it out.
-                    // This is because some functions have signature as a first doc line and 
-                    // some do not have one. We are already showing signature as part of the type.
-                    var lines = docString.Split('\n');
-                    if (!string.IsNullOrEmpty(docString) && typeString != null && lines.Length > 1 && typeString.IndexOf(lines[0].Trim()) >= 0) {
-                        docString = docString.Substring(lines[0].Length).TrimStart();
-                    }
-
-                    if (!docs.TryGetValue(docString, out var docTypes)) {
-                        docs[docString] = docTypes = new HashSet<string>();
-                    }
-                    if (!string.IsNullOrEmpty(typeString)) {
-                        docTypes.Add(typeString);
-                    }
-                }
-
-                var doc = new StringBuilder();
-                var typeToDoc = new Dictionary<string, Tuple<string, string>>();
-                foreach (var docType in docs) {
-                    if (!docType.Value.Any()) {
-                        continue;
-                    }
-
-                    var typeDisplay = "unknown type";
-                    var types = docType.Value.OrderBy(s => s).ToList();
-                    if (types.Count == 1) {
-                        typeDisplay = types[0];
-                    } else {
-                        var orStr = types.Count == 2 ? " or " : ", or ";
-                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last();
-                    }
-                    typeToDoc[string.Join(",", types)] = new Tuple<string, string>(typeDisplay, docType.Key);
-                }
-
-                foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
-                    doc.Append(typeDoc.Value.Item1);
-                    var details = typeDoc.Value.Item2;
-                    if (!string.IsNullOrEmpty(details)) {
-                        doc.AppendLine(":");
-                        doc.Append(details);
-                    }
-                    doc.AppendLine();
-                    doc.AppendLine();
-                }
-
-                return doc.ToString().Trim();
-            }
-        }
-
-        private static string GetDocumentation(AnalysisValue ns) {
-            var doc = ns.Documentation?.TrimDocumentation() ?? string.Empty;
-            if (ns.MemberType == PythonMemberType.Module) {
-                return FormatModuleDocumentation(doc);
-            }
-            var ctr = 0;
-            var result = new StringBuilder(doc.Length);
-            foreach (var c in doc) {
-                if (c == '\r') {
-                    continue;
-                }
-                if (c == '\n') {
-                    ctr++;
-                    if (ctr < 3) {
-                        result.AppendLine();
-                    }
-                } else {
-                    result.Append(c);
-                    ctr = 0;
-                }
-            }
-            return result.ToString().Trim();
-        }
-
-        private static string FormatModuleDocumentation(string doc) {
-            // Module doc does not nave example/signature lines like a function
-            // so just make it flow nicely in the tooltip by removing like breaks.
-            // Preserve double breaks and breaks before the indented text
-            var sb = new StringBuilder();
-            using (var sr = new StringReader(doc)) {
-                while (true) {
-                    var line = sr.ReadLine();
-                    if (line == null) {
-                        break;
-                    }
-                    var nextLine = sr.ReadLine();
-                    if (nextLine != null) {
-                        if (line.Length == 0) {
-                            sb.AppendLine();
-                            sb.AppendLine();
-                        } else {
-                            if (nextLine.Length > 0) {
-                                sb.Append(line);
-                                sb.Append(' ');
-                            } else {
-                                sb.Append(line);
-                            }
-                        }
-                    } else {
-                        sb.Append(line);
-                    }
-                    line = nextLine;
-                }
-            }
-            return sb.ToString();
-        }
-
-        private static string GetDescription(AnalysisValue ns) {
-            var d = ns?.ShortDescription;
-            if (string.IsNullOrEmpty(d)) {
-                return null;
-            }
-            switch (ns.MemberType) {
-                case PythonMemberType.Instance:
-                    return "instance of " + d;
-                case PythonMemberType.Constant:
-                    return "constant " + d;
-            }
-            return d;
-        }
+        public string Documentation
+            => DocumentationBuilder.Create(null).GetDocumentation(SeparateMultipleMembers(Values), string.Empty);
 
         private static IEnumerable<AnalysisValue> SeparateMultipleMembers(IEnumerable<AnalysisValue> values) {
             foreach (var v in values) {

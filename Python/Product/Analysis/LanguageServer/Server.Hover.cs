@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private static Hover EmptyHover = new Hover {
             contents = new MarkupContent { kind = MarkupKind.PlainText, value = string.Empty }
         };
-        private readonly DisplayTextBuilder _displayTextBuilder = new DisplayTextBuilder();
+        private DocumentationBuilder _displayTextBuilder;
 
         public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
             await _analyzerCreationTask;
@@ -49,8 +49,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             tree.Walk(w);
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var doc = _displayTextBuilder.MakeModuleHoverText(modRef);
-                return new Hover { contents = GetMarkupContent(doc, _clientCaps.textDocument?.hover?.contentFormat) };
+                var doc = _displayTextBuilder.GetModuleDocumentation(modRef);
+                return new Hover { contents = doc };
             }
 
             Expression expr;
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new Hover {
                 contents = GetMarkupContent(
-                    _displayTextBuilder.MakeHoverText(values, originalExpr, _displayOptions),
+                    _displayTextBuilder.GetDocumentation(values, originalExpr),
                     _clientCaps.textDocument?.hover?.contentFormat),
                 range = exprSpan,
                 _version = version,

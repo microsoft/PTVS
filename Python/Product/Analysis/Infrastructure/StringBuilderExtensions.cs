@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -16,23 +16,13 @@
 
 using System.Text;
 
-namespace Microsoft.PythonTools.Parsing.Ast {
-
-    public class EmptyStatement : Statement {
-        public EmptyStatement() {
-        }
-
-        public override int KeywordLength => 4;
-
-        public override void Walk(PythonWalker walker) {
-            if (walker.Walk(this)) {
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
+    internal static class StringBuilderExtensions {
+        public static StringBuilder TrimEnd(this StringBuilder sb) {
+            while (sb.Length > 0 && char.IsWhiteSpace(sb[sb.Length - 1])) {
+                sb.Length -= 1;
             }
-            walker.PostWalk(this);
-        }
-
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
-            res.Append("pass");
+            return sb;
         }
     }
 }
