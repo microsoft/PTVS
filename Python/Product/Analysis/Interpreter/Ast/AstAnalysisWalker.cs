@@ -75,7 +75,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             FirstPassCollectClasses();
-
             _scope.PushScope(_members);
 
             return base.Walk(node);
@@ -83,7 +82,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override void PostWalk(PythonAst node) {
             _scope.PopScope();
-
             base.PostWalk(node);
         }
 
@@ -127,7 +125,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 value = _unknownType;
             }
 
-            foreach(var expr in node.Left.OfType<ExpressionWithAnnotation>()) {
+            foreach (var expr in node.Left.OfType<ExpressionWithAnnotation>()) {
                 if (expr.Expression is NameExpression ne) {
                     var annType = _scope.GetValueFromExpression(expr.Annotation) as IPythonType;
                     if (annType != null) {
@@ -201,7 +199,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     // Ensure child modules have been loaded
                     mod.GetChildrenModules();
                     foreach (var member in mod.GetMemberNames(_scope.Context)) {
-                        var mem = mod.GetMember(_scope.Context, member) ?? 
+                        var mem = mod.GetMember(_scope.Context, member) ??
                             new AstPythonConstant(_unknownType, mod.Locations.ToArray());
                         if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
                             _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);

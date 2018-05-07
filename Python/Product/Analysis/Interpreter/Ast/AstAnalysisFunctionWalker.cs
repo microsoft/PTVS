@@ -17,13 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisFunctionWalker : PythonWalker {
-        private readonly Dictionary<string, IPythonType> _assignedExpressions = new Dictionary<string, IPythonType>();
         private readonly FunctionDefinition _target;
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
@@ -68,8 +67,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Walk() {
-            IMember self = null;
             bool classmethod, staticmethod;
+            IMember self = null;
             GetMethodType(_target, out classmethod, out staticmethod);
             if (!staticmethod) {
                 self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
@@ -91,6 +90,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 } else if (m is IPythonType type) {
                     _returnTypes.Add(type);
                 }
+            }
+
+            // in __new__ body can create new members that may back public properties.
+            // In order to determine return types correctly we'll supply temporary 'self'.
+            // We can't reuse __class__ since we'd be adding members to the main class
+            // while these members should not be visible to the user.
+            if (_scope.LookupNameInScopes("self", NameLookupContext.LookupOptions.Local) == null) {
+                var tempSelf = new AstPythonConstant(new AstPythonType("self"), new LocationInfo[0]);
+                _scope.SetInScope("self", tempSelf);
             }
 
             _scope.PushScope();
@@ -124,25 +132,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(AssignmentStatement node) {
             var value = _scope.GetValueFromExpression(node.Right);
-            var left = node?.Left?.FirstOrDefault();
-            if (left != null) {
-                var type = _scope.GetTypeFromValue(value);
-                if (type?.TypeId != BuiltinTypeId.Unknown) {
-                    _assignedExpressions[left.ToString()] = type;
+            var first = node.Left.FirstOrDefault();
+            if (first is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
+                if (nameExp1.Name == "self") {
+                    var target = _scope.LookupNameInScopes(nameExp1.Name, NameLookupContext.LookupOptions.Nonlocal);
+                    var klass = (target as AstPythonConstant)?.Type as AstPythonType;
+                    klass?.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
+                }
+            } else if(!(first is NameExpression nameExp2 && nameExp2.Name == "self")) {
+                // Don't assign to 'self'
+                var multiple = value as AstPythonMultipleMembers;
+                value = multiple != null ? multiple.Members.First() : value;
+                foreach (var ne in node.Left.OfType<NameExpression>()) {
+                    _scope.SetInScope(ne.Name, value);
                 }
             }
             return base.Walk(node);
         }
 
         public override bool Walk(ReturnStatement node) {
-            if(node.Expression != null &&_assignedExpressions.TryGetValue(node.Expression.ToString(), out var expType)) {
-                _returnTypes.Add(expType);
-            }
-            var knownTypesAdded = _returnTypes.Any();
             foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
-                if (!knownTypesAdded || type.TypeId != BuiltinTypeId.Unknown) {
-                    _returnTypes.Add(type);
-                }
+                _returnTypes.Add(type);
             }
             return false;
         }
