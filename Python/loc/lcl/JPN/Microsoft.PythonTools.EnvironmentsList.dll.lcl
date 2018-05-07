@@ -938,7 +938,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on existing packages to update or remove them.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[これらのパッケージは環境のパッケージ マネージャーを使用して管理できます。検索ボックスに入力して新しいパッケージをインストールするか、既存パッケージのボタンを使用して更新または削除します。]]></Val>
+            <Val><![CDATA[これらのパッケージは環境のパッケージ マネージドャーを使用して管理できます。検索ボックスに入力して新しいパッケージをインストールするか、既存パッケージのボタンを使用して更新または削除します。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1115,12 +1115,6 @@
   </Item>
   <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
     <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
-    <Item ItemId=";AssemblyVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.0.0.0]]></Val>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Provides a tool window for listing and managing multiple Python environments.]]></Val>
@@ -1142,12 +1136,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[Visual Studio - Python 環境の一覧]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18078.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1178,12 +1166,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[Microsoft® Visual Studio® 用 Python サポート]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18078.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
