@@ -266,7 +266,7 @@ namespace ProfilingUITests {
 
                 VerifyReport(report, true, "A.mod.func");
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -297,7 +297,7 @@ namespace ProfilingUITests {
                 }
             } finally {
                 if (session != null) {
-                    profiling.RemoveSession(session, true);
+                    app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
                 }
             }
         }
@@ -329,7 +329,7 @@ namespace ProfilingUITests {
                 }
             } finally {
                 if (session != null) {
-                    profiling.RemoveSession(session, true);
+                    app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
                 }
             }
         }
@@ -376,7 +376,7 @@ namespace ProfilingUITests {
                 // now it should no longer be dirty
                 perfSessionItem = pyPerf.WaitForItem("HelloWorld");
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -396,7 +396,7 @@ namespace ProfilingUITests {
 
                 Assert.IsTrue(!File.Exists(reportFilename));
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -464,7 +464,7 @@ namespace ProfilingUITests {
                 }
                 Assert.IsTrue(foundDiff);
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -503,7 +503,7 @@ namespace ProfilingUITests {
 
                 app.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -547,7 +547,7 @@ namespace ProfilingUITests {
 
                 Assert.IsNotNull(app.WaitForDocument(report.Filename));
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -611,7 +611,7 @@ namespace ProfilingUITests {
 
                 app.WaitForDialogDismissed();
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -681,7 +681,7 @@ namespace ProfilingUITests {
 
                 Assert.IsNotNull(report);
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -736,10 +736,12 @@ namespace ProfilingUITests {
                 }
 
             } finally {
-                profiling.RemoveSession(session, true);
-                if (session2 != null) {
-                    profiling.RemoveSession(session2, true);
-                }
+                app.InvokeOnMainThread(() => {
+                    profiling.RemoveSession(session, true);
+                    if (session2 != null) {
+                        profiling.RemoveSession(session2, true);
+                    }
+                });
             }
         }
 
@@ -797,10 +799,12 @@ namespace ProfilingUITests {
                 }
 
             } finally {
-                profiling.RemoveSession(session, true);
-                if (session2 != null) {
-                    profiling.RemoveSession(session2, true);
-                }
+                app.InvokeOnMainThread(() => {
+                    profiling.RemoveSession(session, true);
+                    if (session2 != null) {
+                        profiling.RemoveSession(session2, true);
+                    }
+                });
             }
         }
 
@@ -835,7 +839,7 @@ namespace ProfilingUITests {
                 report = session.GetReport(2);
                 VerifyReport(report, true, "Program.f", "time.sleep");
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -867,7 +871,7 @@ namespace ProfilingUITests {
 
                 VerifyReport(report, true, "Program.f", "time.sleep");
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -900,7 +904,7 @@ namespace ProfilingUITests {
 
                 VerifyReport(report, true, "ClassProfile.C.f", "time.sleep");
             } finally {
-                profiling.RemoveSession(session, false);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, false));
             }
         }
 
@@ -940,7 +944,7 @@ namespace ProfilingUITests {
 
                     VerifyReport(report, true, "OldStyleClassProfile.C.f", "time.sleep");
                 } finally {
-                    profiling.RemoveSession(session, false);
+                    app.InvokeOnMainThread(() => profiling.RemoveSession(session, false));
                 }
             }
 
@@ -977,7 +981,7 @@ namespace ProfilingUITests {
 
                 VerifyReport(report, true, "DerivedProfile.C.f", "time.sleep");
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -1341,7 +1345,7 @@ namespace ProfilingUITests {
 
                 VerifyReport(report, true, expectedFunctions);
             } finally {
-                profiling.RemoveSession(session, true);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, true));
             }
         }
 
@@ -1503,7 +1507,7 @@ namespace ProfilingUITests {
                     VerifyReport(report, false, expectedNonFunctions);
                 }
             } finally {
-                profiling.RemoveSession(session, false);
+                app.InvokeOnMainThread(() => profiling.RemoveSession(session, false));
             }
         }
 

@@ -93,11 +93,18 @@ namespace Microsoft.PythonTools.Profiling {
             base.Dispose(disposing);
         }
 
-        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
-            => toolWindowType == typeof(PerfToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id) 
+            => toolWindowType == PerfToolWindow.WindowGuid ? CreatePerfToolWindow(id) : base.CreateToolWindow(ref toolWindowType, id);
 
-        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
-            => toolWindowType == typeof(PerfToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
+        private int CreatePerfToolWindow( int id) {
+            try {
+                var type = typeof(PerfToolWindow);
+                var toolWindow = FindWindowPane(type, id, false) ?? CreateToolWindow(type, id, this);
+                return toolWindow != null ? VSConstants.S_OK : VSConstants.E_FAIL;
+            } catch (Exception ex) {
+                return Marshal.GetHRForException(ex);
+            }
+        }
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
             Trace.WriteLine("Entering InitializeAsync() of: {0}".FormatUI(this));
@@ -145,7 +152,7 @@ namespace Microsoft.PythonTools.Profiling {
         protected override object GetAutomationObject(string name) {
             if (name == "PythonProfiling") {
                 if (_profilingAutomation == null) {
-                    var pane = (PerfToolWindow)JoinableTaskFactory.Run(() => FindToolWindowAsync(typeof(PerfToolWindow), 0, true, DisposalToken));
+                    var pane = (PerfToolWindow)JoinableTaskFactory.Run(GetPerfToolWindowAsync);
                     _profilingAutomation = new AutomationProfiling(pane.Sessions);
                 }
                 return _profilingAutomation;
@@ -320,7 +327,6 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             process.ProcessExited += (sender, args) => {
-                var dte = (EnvDTE.DTE)session._serviceProvider.GetService(typeof(EnvDTE.DTE));
                 _profilingProcess = null;
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
@@ -333,7 +339,8 @@ namespace Microsoft.PythonTools.Profiling {
                             Thread.Sleep(100);
                         }
                     }
-                    dte.ItemOperations.OpenFile(outPath);
+
+                    ((PythonProfilingPackage)session._serviceProvider).OpenFileAsync(outPath).DoNotWait();
                 }
             };
 
@@ -343,6 +350,12 @@ namespace Microsoft.PythonTools.Profiling {
             _profilingProcess = process;
             _stopCommand.Enabled = true;
             _startCommand.Enabled = false;
+        }
+
+        private async Task OpenFileAsync(string outPath) {
+            await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
+            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+            dte.ItemOperations.OpenFile(outPath);
         }
 
         /// <summary>
@@ -363,8 +376,24 @@ namespace Microsoft.PythonTools.Profiling {
                 throw new InvalidOperationException();
             }
 
+            var windowPane = await GetPerfToolWindowAsync();
+
+            if (!(windowPane is PerfToolWindow pane)) {
+                throw new InvalidOperationException();
+            }
+
+            if (!(pane.Frame is IVsWindowFrame frame)) {
+                throw new InvalidOperationException();
+            }
+
+            ErrorHandler.ThrowOnFailure(frame.Show());
+            return pane;
+        }
+
+        private async Task<WindowPane> GetPerfToolWindowAsync() {
             await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
-            return await ShowToolWindowAsync(typeof(PerfToolWindow), 0, true, DisposalToken) as PerfToolWindow;
+            var type = typeof(PerfToolWindow);
+            return FindWindowPane(type, 0, false) ?? CreateToolWindow(type, 0, this);
         }
 
         private async Task AddPerformanceSessionAsync() {
