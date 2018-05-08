@@ -113,19 +113,29 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(AssignmentStatement node) {
             var value = _scope.GetValueFromExpression(node.Right);
-            var first = node.Left.FirstOrDefault();
-            if (first is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
+            var lhs = node.Left.FirstOrDefault();
+            if (lhs is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
                 if (_selfType != null && nameExp1.Name == "self") {
                     _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
                 }
-            } else if (!(first is NameExpression nameExp2 && nameExp2.Name == "self")) {
+            } else if (!(lhs is NameExpression nameExp2 && nameExp2.Name == "self")) {
                 // Don't assign to 'self'
-                var multiple = value as AstPythonMultipleMembers;
-                value = multiple != null ? multiple.Members.First() : value;
                 foreach (var ne in node.Left.OfType<NameExpression>()) {
                     _scope.SetInScope(ne.Name, value);
                 }
+                if (lhs is TupleExpression tex && value is TupleExpression valTex) {
+                    var returnedExpressions = valTex.Items.ToArray();
+                    var names = tex.Items.OfType<NameExpression>().Select(x => x.Name).ToArray();
+                    for (var i = 0; i < Math.Min(names.Length, returnedExpressions.Length); i++) {
+                        var v = _scope.GetValueFromExpression(returnedExpressions[i]);
+                        _scope.SetInScope(names[i], v);
+                    }
+                }
             }
+            return base.Walk(node);
+        }
+
+        public override bool Walk(IfStatement node) {
             return base.Walk(node);
         }
 
