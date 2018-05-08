@@ -102,8 +102,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_overload.Documentation == null) {
                 var docNode = (node.Body as SuiteStatement)?.Statements.FirstOrDefault();
                 var ce = (docNode as ExpressionStatement)?.Expression as ConstantExpression;
-                var doc = ce?.Value as string;
-                if (doc != null) {
+                if (ce?.Value is string doc) {
                     _overload.SetDocumentation(doc);
                 }
             }
@@ -191,7 +190,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _returnTypes.Add(type);
                 }
             }
-            return _target.Name == "__new__"; // We want to evaluate all code so all private variables in __new__ get defined
+            return true; // We want to evaluate all code so all private variables in __new__ get defined
         }
 
         private IMember GetClass() {
