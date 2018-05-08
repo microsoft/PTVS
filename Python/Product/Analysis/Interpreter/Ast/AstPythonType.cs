@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return _mro;
                     }
                     if (Bases == null) {
-                        Debug.Fail("Accessing Mro before SetBases has been called");
+                        //Debug.Fail("Accessing Mro before SetBases has been called");
                         return new IPythonType[] { this };
                     }
                     _mro = new IPythonType[] { this };
