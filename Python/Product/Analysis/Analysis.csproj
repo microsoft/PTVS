@@ -54,9 +54,6 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Newtonsoft.Json">
-        <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AggregateProjectEntry.cs" />
@@ -129,13 +126,6 @@
     <Compile Include="LanguageServer\Settings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
-    <Compile Include="Pythia\AssignmentWalker.cs" />
-    <Compile Include="Pythia\Consts.cs" />
-    <Compile Include="Pythia\ExpressionWalker.cs" />
-    <Compile Include="Pythia\Helper.cs" />
-    <Compile Include="Pythia\PythiaService.cs" />
-    <Compile Include="Pythia\StandardVariableTypes.cs" />
-    <Compile Include="Pythia\UsageDataModel.cs" />
     <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
@@ -461,12 +451,6 @@
     </Content>
     <Content Include="regenerate.py" />
     <Content Include="scrape_module.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Pythia\model\model-sequence.json.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
