@@ -349,6 +349,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return ee.ProjectState.GetAnalysisValueFromObjects(ee.ProjectState.GetTypeFromObject(n.Value)).GetInstanceType();
             }
 
+            // Members of class derived from Enum are Enums
+            if(ee.Scope is ClassScope cs) {
+                var baseEnum = cs.Class.Bases
+                    .OfType<MultipleMemberInfo>()
+                    .FirstOrDefault(mmi => mmi.Members.OfType<BuiltinClassInfo>().Any(x => x.Name == "Enum"));
+                if(baseEnum != null) {
+                    return baseEnum;
+                }
+            }
+
             return ee.ProjectState.GetConstant(n.Value);
         }
 
