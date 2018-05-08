@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule self,
             string filePath,
             Uri documentUri,
-            bool includeLocationInfo, 
+            bool includeLocationInfo,
             IPythonModule builtinModule = null,
             AnalysisLogWriter log = null
         ) {
@@ -462,8 +462,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (expr is DictionaryExpression || expr is DictionaryComprehension) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Dict);
             }
-            if (expr is TupleExpression) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
+            if (expr is TupleExpression tex) {
+                var types = tex.Items
+                    .Where(t => t is NameExpression)
+                    .OfType<NameExpression>()
+                    .Select(ne => (GetInScope(ne.Name) as AstPythonConstant)?.Type)
+                    .Where(x => x != null)
+                    .ToArray();
+                return types.Length > 0 ? new AstPythonTuple(tex.NodeName, types) : Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
             }
             if (expr is SetExpression || expr is SetComprehension) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Set);
@@ -493,7 +499,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
-            if(value == null && _scopes.Count == 0) {
+            if (value == null && _scopes.Count == 0) {
                 return;
             }
             var s = _scopes.Peek();

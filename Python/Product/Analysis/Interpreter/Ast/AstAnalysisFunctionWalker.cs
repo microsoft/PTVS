@@ -118,42 +118,80 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (_selfType != null && nameExp1.Name == "self") {
                     _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
                 }
-            } else if (!(lhs is NameExpression nameExp2 && nameExp2.Name == "self")) {
-                // Don't assign to 'self'
-                foreach (var ne in node.Left.OfType<NameExpression>()) {
-                    _scope.SetInScope(ne.Name, value);
-                }
-                if (lhs is TupleExpression tex && value is TupleExpression valTex) {
+                return true;
+            }
+
+            if (lhs is NameExpression nameExp2 && nameExp2.Name == "self") {
+                return true; // Don't assign to 'self'
+            }
+
+            // Basic assignment
+            foreach (var ne in node.Left.OfType<NameExpression>()) {
+                _scope.SetInScope(ne.Name, value);
+            }
+
+            // Tuple = Tuple. Transfer values.
+            if (lhs is TupleExpression tex) {
+                if (value is TupleExpression valTex) {
                     var returnedExpressions = valTex.Items.ToArray();
                     var names = tex.Items.OfType<NameExpression>().Select(x => x.Name).ToArray();
                     for (var i = 0; i < Math.Min(names.Length, returnedExpressions.Length); i++) {
                         var v = _scope.GetValueFromExpression(returnedExpressions[i]);
                         _scope.SetInScope(names[i], v);
                     }
+                    return true;
+                }
+
+                // Tuple = 'tuple value' (such as from callable). Transfer values.
+                if (value is AstPythonConstant c && c.Type is AstPythonTuple tuple) {
+                    var types = tuple.Types.ToArray();
+                    var names = tex.Items.OfType<NameExpression>().Select(x => x.Name).ToArray();
+                    for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
+                        _scope.SetInScope(names[i], new AstPythonConstant(types[i]));
+                    }
+                    return true;
                 }
             }
+
             return base.Walk(node);
         }
 
         public override bool Walk(IfStatement node) {
+            // Handle basic check such as
+            // if isinstance(value, type):
+            //    return value
+            // by assigning type to the value unless clause is raising exception.
+            var ce = node.Tests.FirstOrDefault()?.Test as CallExpression;
+            if (ce?.Target is NameExpression ne && ne?.Name == "isinstance" && ce.Args.Count == 2) {
+                var name = (ce.Args[0].Expression as NameExpression)?.Name;
+                var typeName = (ce.Args[1].Expression as NameExpression)?.Name;
+                if (name != null && typeName != null) {
+                    var typeId = BuiltinTypeIdFromName(typeName);
+                    if (typeId != BuiltinTypeId.Unknown) {
+                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(typeName, typeId)));
+                    }
+                }
+            }
             return base.Walk(node);
         }
 
         public override bool Walk(ReturnStatement node) {
+            var typesAdded = false;
             if (node.Expression is NameExpression nex && nex.Name == "self") {
                 // For self return the actual class without added private members
-                var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
-                var self = (klass as AstPythonConstant)?.Type as IPythonType;
-                if (self != null) {
-                    _returnTypes.Add(self);
-                    return false;
+                var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Nonlocal);
+                if (klass != null) {
+                    _returnTypes.Add(klass as IPythonType);
+                    typesAdded = true;
                 }
             }
 
-            foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
-                _returnTypes.Add(type);
+            if (!typesAdded) {
+                foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
+                    _returnTypes.Add(type);
+                }
             }
-            return false;
+            return _target.Name == "__new__"; // We want to evaluate all code so all private variables in __new__ get defined
         }
 
         private IMember GetClass() {
@@ -184,6 +222,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return (self as AstPythonConstant)?.Type as AstPythonType;
             }
             return null;
+        }
+
+        private static BuiltinTypeId BuiltinTypeIdFromName(string name) {
+            switch (name) {
+                case "int": return BuiltinTypeId.Int;
+                case "long": return BuiltinTypeId.Long;
+                case "bool": return BuiltinTypeId.Bool;
+                case "float": return BuiltinTypeId.Float;
+                case "str": return BuiltinTypeId.Str;
+            }
+            return BuiltinTypeId.Unknown;
         }
     }
 }
