@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -261,7 +262,7 @@ namespace TestRunnerInterop {
                 Console.WriteLine(ex);
                 CloseCurrentInstance();
                 if (!allowRetry) {
-                    throw;
+                    ExceptionDispatchInfo.Capture(ex).Throw();
                 }
             } catch (COMException ex) {
                 Console.WriteLine(ex);
@@ -270,12 +271,15 @@ namespace TestRunnerInterop {
                     throw new TimeoutException($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}", ex);
                 }
                 if (!allowRetry) {
-                    throw;
+                    ExceptionDispatchInfo.Capture(ex).Throw();
                 }
             } catch (ThreadAbortException ex) {
                 Console.WriteLine(ex);
                 CloseCurrentInstance(hard: true);
-                throw;
+                ExceptionDispatchInfo.Capture(ex).Throw();
+            } catch (Exception ex) {
+                CloseCurrentInstance();
+                ExceptionDispatchInfo.Capture(ex).Throw();
             } finally {
                 if (cts != null) {
                     cts.Cancel();
