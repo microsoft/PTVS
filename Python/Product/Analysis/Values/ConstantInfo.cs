@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = AnalysisSet.Empty;
             var lhsType = lhs.TypeId;
 
-            foreach(var ns in rhs) {
+            foreach (var ns in rhs) {
                 var rhsType = ns.TypeId;
 
                 // First handle string operations
@@ -82,11 +82,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         res = res.Union(rhs);
                         continue;
                     }
+                } else if (operation.IsComparison()) {
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Bool]);
+                    continue;
                 }
 
                 // These specializations change rhsType before type promotion
                 // rules are applied.
-                if ((operation == PythonOperator.TrueDivide || 
+                if ((operation == PythonOperator.TrueDivide ||
                     (operation == PythonOperator.Divide && unit.State.LanguageVersion.Is3x())) &&
                     (lhsType == BuiltinTypeId.Int || lhsType == BuiltinTypeId.Long) &&
                     (rhsType == BuiltinTypeId.Int || rhsType == BuiltinTypeId.Long)) {
@@ -94,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 // Type promotion rules are applied 
-                if (lhsType <= BuiltinTypeId.NoneType || lhsType > BuiltinTypeId.Complex || 
+                if (lhsType <= BuiltinTypeId.NoneType || lhsType > BuiltinTypeId.Complex ||
                     rhsType <= BuiltinTypeId.NoneType || rhsType > BuiltinTypeId.Complex) {
                     // Non-numeric types require the reverse operation
                     res = res.Union(ns.ReverseBinaryOperation(node, unit, operation, lhs));
