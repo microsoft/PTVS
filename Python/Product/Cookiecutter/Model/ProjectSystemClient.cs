@@ -111,7 +111,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private EnvDTE.Project FindProject(string projectUniqueName) {
-            var dte = CookiecutterPackage.Instance.DTE;
+            var dte = _dte;
             var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (var proj in dte.ActiveSolutionProjects) {
                 var p = proj as EnvDTE.Project;

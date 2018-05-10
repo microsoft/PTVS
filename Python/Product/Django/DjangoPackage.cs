@@ -129,16 +129,6 @@ namespace Microsoft.PythonTools.Django {
 
         #endregion
 
-        internal new object GetService(Type serviceType) {
-            return base.GetService(serviceType);
-        }
-
-        public EnvDTE.DTE DTE {
-            get {
-                return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-            }
-        }
-
         internal static DjangoProject GetProject(IServiceProvider serviceProvider, string filename) {
             IVsHierarchy hierarchy;
             IVsRunningDocumentTable rdt = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;

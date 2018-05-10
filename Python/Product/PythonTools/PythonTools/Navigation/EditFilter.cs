@@ -28,8 +28,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -37,7 +35,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
@@ -892,8 +889,8 @@ namespace Microsoft.PythonTools.Language {
                             }
                             return VSConstants.S_OK;
                         default:
-                            lock (PythonToolsPackage.CommandsLock) {
-                                foreach (var command in PythonToolsPackage.Commands.Keys) {
+                            lock (CommonPackage.CommandsLock) {
+                                foreach (var command in CommonPackage.Commands.Keys) {
                                     if (command.CommandId == prgCmds[i].cmdID) {
                                         int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
                                         if (res != null) {

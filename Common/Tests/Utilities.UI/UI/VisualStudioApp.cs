@@ -784,11 +784,7 @@ namespace TestUtilities.UI {
             return res.ToString();
         }
 
-        public DTE Dte {
-            get {
-                return _dte;
-            }
-        }
+        public DTE Dte => _dte;
 
         public void WaitForMode(dbgDebugMode mode) {
             for (int i = 0; i < 60 && Dte.Debugger.CurrentMode != mode; i++) {

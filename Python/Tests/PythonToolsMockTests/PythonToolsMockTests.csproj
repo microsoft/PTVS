@@ -102,6 +102,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.Threading" />
   </ItemGroup>
   <Choose>
     <When Condition="$(VSTarget) == '15.0'">
