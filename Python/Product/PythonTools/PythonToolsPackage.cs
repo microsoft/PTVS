@@ -313,13 +313,25 @@ namespace Microsoft.PythonTools {
 
                 if (saveDirtyFiles) {
                     var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    if (rdt != null) {
+                    var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+                    if (rdt != null && rdt4 != null) {
+                        // The save operation may move the file, so adjust filename
+                        // to the new location if necessary.
+                        var launchFileCookie = rdt4.GetDocumentCookie(filename);
+
                         // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
                         // when VS settings include prompt for save on build
                         var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
                         var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
                         if (hr == VSConstants.E_ABORT) {
                             return false;
+                        }
+
+                        if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
+                            var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
+                            if (!string.IsNullOrEmpty(launchFileMoniker)) {
+                                filename = launchFileMoniker;
+                            }
                         }
                     }
                 }
@@ -341,6 +353,9 @@ namespace Microsoft.PythonTools {
                 return false;
             } catch (NoInterpretersException ex) {
                 OpenNoInterpretersHelpPage(provider, ex.HelpPage);
+                return false;
+            } catch (NoStartupFileException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             } catch (IOException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
