@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
@@ -54,6 +55,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
                 TraceMessage($"Only returning {filterKind.Value} items");
                 members = members.Where(m => m.kind == filterKind.Value);
+            }
+
+            if (members.Any() && _pythia != null) {
+                try {
+                    //provide Pythia recommendations based on the default completion list
+                    var recommendations = await _pythia.GetRecommendationsAsync(members, tree, @params, 5);
+                    if (recommendations != null) {
+                        LogMessage(MessageType.Info, $"Pythia added {recommendations.Count} completions.");
+                        members = members.Concat(recommendations);
+                    }
+                } catch (Exception ex) {
+                    LogMessage(MessageType.Warning, $"Pythia exception: {ex.Message}");
+                }
             }
 
             var res = new CompletionList {

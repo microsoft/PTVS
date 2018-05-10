@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Pythia;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -72,6 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private Task _analyzerCreationTask;
 
         internal Task _loadingFromDirectory;
+        private PythiaService _pythia;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
@@ -154,6 +156,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
+
+            if (@params.initializationOptions.pythiaEnabled) {
+                _pythia = PythiaService.Create(this);
+            }
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
@@ -433,7 +439,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
             }
             if (uri.IsFile) {
-                return uri.LocalPath;
+                return uri.ToAbsolutePath();
             }
             var scheme = uri.Scheme;
             var path = uri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);

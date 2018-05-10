@@ -246,6 +246,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// If true, analyzer will be created asynchronously. Used in VS Code.
         /// </summary>
         public bool asyncStartup;
+        /// <summary>
+        /// Enables Pythia-based intellisense
+        /// </summary>
+        public bool pythiaEnabled;
     }
 
 

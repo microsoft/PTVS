@@ -68,19 +68,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var kv in FunctionInfo.GetReturnTypeString(Function.GetReturnValue)) {
                     yield return kv;
                 }
-
-                bool needsNl = true;
-                var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
-
-                foreach (var kv in FunctionInfo.GetDocumentationString(Function.Documentation)) {
-                    if (needsNl) {
-                        yield return new KeyValuePair<string, string>(nlKind, "\r\n");
-                        nlKind = WellKnownRichDescriptionKinds.Misc;
-                        needsNl = false;
-                    }
-                    yield return kv;
-                }
             }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);
         }
 
         public override IEnumerable<OverloadResult> Overloads {
