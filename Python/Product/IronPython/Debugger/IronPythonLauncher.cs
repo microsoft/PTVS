@@ -108,6 +108,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                         // so Dispose() can free it.
                         var clsidList = dti.Info.pClsidList;
                         dti.Info.pClsidList = IntPtr.Zero;
+                        dti.Info.dwClsidCount = 0;
                         try {
                             dti.Launch();
                         } finally {
