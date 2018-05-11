@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Profiling {
         public ProfilingSessionEditorFactory(PythonProfilingPackage package) {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering {0} constructor", this.ToString()));
 
-            this._editorPackage = package;
+            _editorPackage = package;
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             // Create the Document (editor)
-            var perfWin = _editorPackage.ShowPerformanceExplorer();
+            var perfWin = _editorPackage.JoinableTaskFactory.Run(() => _editorPackage.ShowPerformanceExplorerAsync());
 
             ProfilingTarget target;
             try {

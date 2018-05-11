@@ -23,6 +23,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Analysis;
@@ -47,9 +50,12 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
+using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -62,7 +68,7 @@ namespace Microsoft.PythonTools {
     /// IVsPackage interface and uses the registration attributes defined in the framework to 
     /// register itself and its components with the shell.
     /// </summary>    
-    [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
     // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
 
@@ -95,7 +101,6 @@ namespace Microsoft.PythonTools {
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
     #region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
-
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "ArithmeticError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "AssertionError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "AttributeError", BreakByDefault = false)]
@@ -190,7 +195,7 @@ namespace Microsoft.PythonTools {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 
 #if DEBUG
-            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
+            TaskScheduler.UnobservedTaskException += (sender, e) => {
                 if (!e.Observed) {
                     var str = e.Exception.ToString();
                     if (str.Contains("Python")) {
@@ -209,7 +214,16 @@ namespace Microsoft.PythonTools {
 #endif
         }
 
+        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
+            => toolWindowType == typeof(InterpreterListToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
+
+        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
+            => toolWindowType == typeof(InterpreterListToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
+
         protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
+            // We can't move initialization of PythonInteractiveWindow into AsyncToolWindowFactory 
+            // because Package.ShowToolWindow doesn't call IVsAsyncToolWindowFactory.CreateToolWindow
+            // which makes it impossible to fully override tool window creation
             if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
                 var pyService = this.GetPythonToolsService();
                 var category = SelectableReplEvaluator.GetSettingsCategory(id.ToString());
@@ -299,13 +313,25 @@ namespace Microsoft.PythonTools {
 
                 if (saveDirtyFiles) {
                     var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    if (rdt != null) {
+                    var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+                    if (rdt != null && rdt4 != null) {
+                        // The save operation may move the file, so adjust filename
+                        // to the new location if necessary.
+                        var launchFileCookie = rdt4.GetDocumentCookie(filename);
+
                         // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
                         // when VS settings include prompt for save on build
                         var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
                         var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
                         if (hr == VSConstants.E_ABORT) {
                             return false;
+                        }
+
+                        if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
+                            var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
+                            if (!string.IsNullOrEmpty(launchFileMoniker)) {
+                                filename = launchFileMoniker;
+                            }
                         }
                     }
                 }
@@ -328,6 +354,9 @@ namespace Microsoft.PythonTools {
             } catch (NoInterpretersException ex) {
                 OpenNoInterpretersHelpPage(provider, ex.HelpPage);
                 return false;
+            } catch (NoStartupFileException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             } catch (IOException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
@@ -336,28 +365,20 @@ namespace Microsoft.PythonTools {
             return true;
         }
 
-
-        ToolWindowPane IPythonToolsToolWindowService.GetWindowPane(Type windowType, bool create) {
-            return FindWindowPane(windowType, 0, create) as ToolWindowPane;
+        async Task<ToolWindowPane> IPythonToolsToolWindowService.GetWindowPaneAsync(Type windowType, bool create) {
+            await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
+            return await FindWindowPaneAsync(windowType, 0, create, DisposalToken) as ToolWindowPane;
         }
 
-        void IPythonToolsToolWindowService.ShowWindowPane(Type windowType, bool focus) {
-            var window = FindWindowPane(windowType, 0, true) as ToolWindowPane;
-            if (window != null) {
-                var frame = window.Frame as IVsWindowFrame;
-                if (frame != null) {
-                    ErrorHandler.ThrowOnFailure(frame.Show());
-                }
-                if (focus) {
-                    var content = window.Content as System.Windows.UIElement;
-                    if (content != null) {
-                        content.Focus();
-                    }
-                }
+        async Task IPythonToolsToolWindowService.ShowWindowPaneAsync(Type windowType, bool focus) {
+            await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
+            var toolWindow = await ShowToolWindowAsync(windowType, 0, true, DisposalToken);
+            if (focus && toolWindow.Content is System.Windows.UIElement content) {
+                content.Focus();
             }
         }
 
-        internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
+        internal static void OpenNoInterpretersHelpPage(IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.html"));
         }
 
@@ -383,56 +404,46 @@ namespace Microsoft.PythonTools {
             return ModulePath.IsPythonSourceFile(filename);
         }
 
-        public override Type GetLibraryManagerType() {
-            return typeof(IPythonLibraryManager);
-        }
+        public override Type GetLibraryManagerType() => typeof(IPythonLibraryManager);
 
-        internal override LibraryManager CreateLibraryManager(CommonPackage package) {
-            return new PythonLibraryManager((PythonToolsPackage)package);
+        internal override LibraryManager CreateLibraryManager() {
+            return new PythonLibraryManager(this);
         }
 
         /////////////////////////////////////////////////////////////////////////////
         // Overriden Package Implementation
 
-        /// <summary>
-        /// Initialization of the package; this method is called right after the package is sited, so this is the place
-        /// where you can put all the initilaization code that rely on services provided by VisualStudio.
-        /// </summary>
-        protected override void Initialize() {
-            Trace.WriteLine("Entering Initialize() of: {0}".FormatUI(this));
-            base.Initialize();
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+            Trace.WriteLine("Entering InitializeAsync() of: {0}".FormatUI(this));
 
-            var services = (IServiceContainer)this;
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await base.InitializeAsync(cancellationToken, progress);
 
-            services.AddService(typeof(IPythonToolsOptionsService), PythonToolsOptionsService.CreateService, promote: true);
-            services.AddService(typeof(IClipboardService), new ClipboardService(), promote: true);
-            services.AddService(typeof(IPythonToolsToolWindowService), this, promote: true);
-            services.AddService(typeof(PythonLanguageInfo), (container, serviceType) => new PythonLanguageInfo(container), true);
-            services.AddService(typeof(IPythonToolsLogger), PythonToolsLogger.CreateService, promote: true);
-            services.AddService(typeof(PythonToolsService), PythonToolsService.CreateService, promote: true);
-            services.AddService(typeof(ErrorTaskProvider), ErrorTaskProvider.CreateService, promote: true);
-            services.AddService(typeof(CommentTaskProvider), CommentTaskProvider.CreateService, promote: true);
+            AddService<IClipboardService>(new ClipboardService(), true);
+            AddService<IPythonToolsToolWindowService>(this, true);
+            AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
+            AddService<CustomDebuggerEventHandler>((container, serviceType) => new CustomDebuggerEventHandler(this), promote: true);
+            AddService<IPythonToolsOptionsService>(PythonToolsOptionsService.CreateService, promote: true);
+            AddService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);
+            AddService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
+            AddService<ErrorTaskProvider>(ErrorTaskProvider.CreateService, promote: true);
+            AddService<CommentTaskProvider>(CommentTaskProvider.CreateService, promote: true);
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
-
-            services.AddService(typeof(SolutionEventsListener), solutionEventListener, promote: true);
-
-            // Register custom debug event service
-            var customDebuggerEventHandler = new CustomDebuggerEventHandler(this);
-            services.AddService(customDebuggerEventHandler.GetType(), customDebuggerEventHandler, promote: true);
-
+            AddService<SolutionEventsListener>(solutionEventListener, true);
+            
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(new Command[] { 
+            RegisterCommands(GuidList.guidPythonToolsCmdSet,
                 new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow),
-                new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment),
-                new OpenDebugReplCommand(this), 
-                new ExecuteInReplCommand(this), 
-                new SendToReplCommand(this), 
-                new FillParagraphCommand(this), 
+                new OpenReplCommand(this, PythonConstants.OpenInteractiveForEnvironment),
+                new OpenDebugReplCommand(this),
+                new ExecuteInReplCommand(this),
+                new SendToReplCommand(this),
+                new FillParagraphCommand(this),
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
                 new RemoveImportsCommand(this, false),
@@ -446,9 +457,7 @@ namespace Microsoft.PythonTools {
                 new AzureExplorerAttachDebuggerCommand(this),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
                 new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport),
-                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts),
-            }, GuidList.guidPythonToolsCmdSet);
-
+                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;

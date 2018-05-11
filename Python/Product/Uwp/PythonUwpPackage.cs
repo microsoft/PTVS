@@ -19,10 +19,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.PythonTools.Uwp.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Uwp {
     /// <summary>
@@ -37,7 +39,7 @@ namespace Microsoft.PythonTools.Uwp {
     /// </summary>
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 
     // This attribute is needed to let the shell know that this package exposes some menus.
     [Guid(GuidList.guidUwpPkgString)]
@@ -48,7 +50,7 @@ namespace Microsoft.PythonTools.Uwp {
     [Description("Python - UWP support")] // TODO: Localization (this may not be needed)
     [ProvideProjectFactory(typeof(PythonUwpProjectFactory), null, null, null, null, ".\\NullPath", LanguageVsTemplate = "Python")]
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
-    public sealed class PythonUwpPackage : Package {
+    public sealed class PythonUwpPackage : AsyncPackage {
         internal static PythonUwpPackage Instance;
 
         /// <summary>
@@ -67,13 +69,12 @@ namespace Microsoft.PythonTools.Uwp {
         // Overridden Package Implementation
         #region Package Members
 
-        /// <summary>
-        /// Initialization of the package; this method is called right after the package is sited, so this is the place
-        /// where you can put all the initialization code that rely on services provided by VisualStudio.
-        /// </summary>
-        protected override void Initialize() {
-            Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
-            base.Initialize();
+        /// <inheritdoc />
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+            Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering InitializeAsync() of: {0}", ToString()));
+
+            await base.InitializeAsync(cancellationToken, progress);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             RegisterProjectFactory(new PythonUwpProjectFactory(this));
         }

@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -44,12 +45,13 @@ namespace Microsoft.PythonTools.Django.Project {
         IDjangoProject,
         IVsFilterAddProjectItemDlg
     {
-        internal DjangoPackage _package;
         private IVsProject _innerProject;
         private IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
+
+        private readonly IServiceProvider _serviceProvider;
         private readonly List<OleMenuCommand> _commands = new List<OleMenuCommand>();
         private bool _disposed;
 
@@ -60,7 +62,8 @@ namespace Microsoft.PythonTools.Django.Project {
         private static ImageList _images;
 #endif
 
-        public DjangoProject() {
+        public DjangoProject(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
         }
 
         public void Dispose() {
@@ -274,7 +277,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// </summary>
         /// <returns></returns>
         private IEnumerable<VSITEMSELECTION> GetSelectedItems() {
-            IVsMonitorSelection monitorSelection = _package.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
+            IVsMonitorSelection monitorSelection = _serviceProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
 
             IntPtr hierarchyPtr = IntPtr.Zero;
             IntPtr selectionContainer = IntPtr.Zero;
@@ -585,7 +588,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// <param name="groupGuid">The GUID of the menu group.</param>
         /// <param name="points">The location at which to show the menu.</param>
         internal int ShowContextMenu(int menuId, Guid menuGroup, POINTS points) {
-            IVsUIShell shell = _package.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            IVsUIShell shell = _serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
             Debug.Assert(shell != null, "Could not get the UI shell from the project");
             if (shell == null) {
@@ -608,8 +611,8 @@ namespace Microsoft.PythonTools.Django.Project {
             _innerVsHierarchy = inner as IVsHierarchy;
 
             // Ensure we have a service provider as this is required for menu items to work
-            if (this.serviceProvider == null)
-                this.serviceProvider = (System.IServiceProvider)this._package;
+            if (serviceProvider == null)
+                serviceProvider = _serviceProvider;
 
             // Now let the base implementation set the inner object
             base.SetInnerProject(innerIUnknown);
@@ -821,7 +824,8 @@ namespace Microsoft.PythonTools.Django.Project {
                 dlgOwner = IntPtr.Zero;
             }
 
-            var fullTemplate = ((EnvDTE80.Solution2)_package.DTE.Solution).GetProjectItemTemplate(
+            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+            var fullTemplate = ((EnvDTE80.Solution2)dte.Solution).GetProjectItemTemplate(
                 "AzureCSWebRole.zip",
                 PythonConstants.LanguageName
             );
