@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(AssignmentStatement node) {
             var valueType = _eval.Evaluate(node.Right);
-            
+
             // For self assignments (e.g. "fob = fob"), include values from 
             // outer scopes, otherwise such assignments will always be unknown
             // because we use the unassigned variable for the RHS.
@@ -213,6 +213,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(ExpressionStatement node) {
             _eval.Evaluate(node.Expression);
+
+            // The variable is technically unassigned. However, other engines do show completion
+            // on annotated, but not assigned variables. See https://github.com/Microsoft/PTVS/issues/3608
+            // Pylint does not flag 'name' as unassigned in
+            //
+            //  class Employee(NamedTuple):
+            //      name: str
+            //      id: int = 3
+            //
+            //  employee = Employee('Guido')
+            //  print(employee.name)
+            //
+            if (node.Expression is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null && annoExpr.Expression is NameExpression ne) {
+                var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
+                if (annoType?.Any() == true) {
+                    _eval.AssignTo(node, annoExpr.Expression, annoType);
+                }
+            }
             return false;
         }
 
