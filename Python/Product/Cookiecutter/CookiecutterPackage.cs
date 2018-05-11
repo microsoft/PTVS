@@ -265,6 +265,10 @@ namespace Microsoft.CookiecutterTools {
             var templateUri = args[2].Trim('"');
             var projectFolder = Path.Combine(targetFolder, projectName);
 
+            // Erase the "project creation failed" message from the status bar.
+            var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+            statusBar.SetText(string.Empty);
+
             NewCookiecutterSessionAsync(new CookiecutterSessionStartInfo(projectName, projectFolder, templateUri)).DoNotWait();
 
             return VSConstants.S_OK;
