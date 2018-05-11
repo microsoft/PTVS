@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     originalExpression = originalExpression.Substring(0,
                         Math.Max(3, DisplayOptions.maxDocumentationTextLength) - 3) + _ellipsis;
                 }
-                if (multiline) {
+                if (multiline || descPrefix.Length > 0) {
                     result.Insert(0, $"{originalExpression}:{Environment.NewLine}");
                 } else if (result.Length > 0) {
                     result.Insert(0, $"{originalExpression}: ");
