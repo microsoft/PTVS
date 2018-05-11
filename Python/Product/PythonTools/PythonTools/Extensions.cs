@@ -819,7 +819,7 @@ namespace Microsoft.PythonTools {
 
         internal static void ShowWindowPane(this IServiceProvider serviceProvider, Type windowPane, bool focus) {
             var toolWindowService = (IPythonToolsToolWindowService)serviceProvider.GetService(typeof(IPythonToolsToolWindowService));
-            toolWindowService.ShowWindowPane(windowPane, focus);
+            toolWindowService.ShowWindowPaneAsync(windowPane, focus).DoNotWait();
         }
 
         public static string BrowseForDirectory(this IServiceProvider provider, IntPtr owner, string initialDirectory = null) {

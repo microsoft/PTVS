@@ -24,12 +24,8 @@ namespace Microsoft.PythonTools.Options {
         private const string _optionsKey = "Options";
         private readonly WritableSettingsStore _settingsStore;
 
-        public static object CreateService(IServiceContainer container, Type serviceType) {
-            if (serviceType.IsEquivalentTo(typeof(IPythonToolsOptionsService))) {
-                return new PythonToolsOptionsService(container);
-            }
-            return null;
-        }
+        public static object CreateService(IServiceContainer container, Type serviceType) 
+            => serviceType.IsEquivalentTo(typeof(IPythonToolsOptionsService)) ? new PythonToolsOptionsService(container) : null;
 
         private PythonToolsOptionsService(IServiceProvider serviceProvider) {
             var settingsManager = SettingsManagerCreator.GetSettingsManager(serviceProvider);
