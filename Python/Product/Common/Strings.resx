@@ -2244,7 +2244,7 @@ Expand selection to the full expression?</value>
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
   </data>
   <data name="ImportPtvsdFailedMessage" xml:space="preserve">
-    <value>Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger</value>
+    <value>Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger</value>
   </data>
   <data name="ImportPtvsdFailedTitle" xml:space="preserve">
     <value>ImportError: ptvsd not found</value>
