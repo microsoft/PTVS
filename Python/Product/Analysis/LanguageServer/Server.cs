@@ -120,10 +120,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
-            while (!System.Diagnostics.Debugger.IsAttached) {
-                System.Threading.Thread.Sleep(1000);
-            }
-
             _testEnvironment = @params.initializationOptions.testEnvironment;
             _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
             // Test environment needs predictable initialization.
@@ -473,7 +469,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
             var first = aliases.FirstOrDefault();
 
-            var modules = ModulePath.ResolvePotentialModuleNames(Path.GetFileNameWithoutExtension(path), path, first, true);
             var pyItem = _analyzer.AddModule(first, path, documentUri, cookie);
             item = pyItem;
             foreach (var a in aliases.Skip(1)) {
