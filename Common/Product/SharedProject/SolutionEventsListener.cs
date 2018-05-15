@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudioTools {
 
         public SolutionEventsListener(IServiceProvider serviceProvider) {
             if (serviceProvider == null) {
-                throw new ArgumentNullException("serviceProvider");
+                throw new ArgumentNullException(nameof(serviceProvider));
             }
 
             _solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,21 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Flavor;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Django.Project {
-    [Guid(DjangoProjectGuid)]
-    public class DjangoProjectFactory : FlavoredProjectFactoryBase {
-        internal const string DjangoProjectGuid = "5F0BE9CA-D677-4A4D-8806-6076C0FAAD37";
-        private readonly DjangoPackage _package;
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    internal static class CancellationTokenUtilities {
+        public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task) 
+            => task.ContinueWith(UnregisterCancellationToken, registration, default(CancellationToken), TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-        public DjangoProjectFactory(DjangoPackage package) {
-            _package = package;
-        }
-
-        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) 
-            => new DjangoProject(_package);
+        private static void UnregisterCancellationToken(Task task, object state) => ((CancellationTokenRegistration)state).Dispose();
     }
 }

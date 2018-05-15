@@ -40,73 +40,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _snapshot = snapshot;
         }
 
-        internal bool GetPrecedingExpression(out string parentExpression, out SnapshotSpan expressionExtent) {
-            parentExpression = string.Empty;
-            expressionExtent = default(SnapshotSpan);
-
-            // We never want normal completions on space
-            if (Session.GetTriggerCharacter() == ' ' && !Session.IsCompleteWordMode()) {
-                return false;
-            }
-
-            var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
-            if (bi == null) {
-                return false;
-            }
-            var span = Span.GetSpan(_snapshot);
-            var expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.EvaluateMembers);
-            if (expr != null) {
-                parentExpression = expr.Value.GetText() ?? "";
-                expressionExtent = new SnapshotSpan(expr.Value.Start, span.End);
-                return true;
-            }
-
-            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Complete);
-            if (expr != null) {
-                expressionExtent = expr.Value;
-                return true;
-            }
-
-            var tok = bi.GetTokenAtPoint(span.End);
-            if (tok == null) {
-                expressionExtent = span;
-                return true;
-            }
-
-            switch (tok.Value.Category) {
-                case TokenCategory.Comment:
-                    return false;
-                case TokenCategory.Delimiter:
-                case TokenCategory.Grouping:
-                case TokenCategory.Operator:
-                case TokenCategory.WhiteSpace:
-                    // Expect top-level completions after these
-                    expressionExtent = span;
-                    return true;
-                //case TokenCategory.BuiltinIdentifier:
-                case TokenCategory.Keyword:
-                    // Expect filtered top-level completions here
-                    // (but the return value is no different)
-                    expressionExtent = span;
-                    return true;
-                case TokenCategory.Identifier:
-                    // When preceded by a delimiter, grouping, or operator
-                    var tok2 = bi.GetTokensInReverseFromPoint(span.End).Where(t => t.Category != TokenCategory.WhiteSpace && t.Category != TokenCategory.Comment).Take(2).ToArray();
-                    if (tok2.Length == 2 && tok2[0].Category == tok.Value.Category) {
-                        switch (tok2[1].Category) {
-                            case TokenCategory.Delimiter:
-                            case TokenCategory.Grouping:
-                            case TokenCategory.Operator:
-                                expressionExtent = span;
-                                return true;
-                        }
-                    }
-                    break;
-            }
-
-            return false;
-        }
-
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
@@ -132,7 +65,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysis
             );
 
-            var completions = analyzer.WaitForRequest(analyzer.GetCompletionsAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetMembers");
+            var triggerChar = Session.GetTriggerCharacter();
+            var completions = analyzer.WaitForRequest(analyzer.GetCompletionsAsync(
+                analysis,
+                location,
+                _options.MemberOptions,
+                triggerChar == '\0' ? Analysis.LanguageServer.CompletionTriggerKind.Invoked : Analysis.LanguageServer.CompletionTriggerKind.TriggerCharacter,
+                triggerChar == '\0' ? null : triggerChar.ToString()
+            ), "GetCompletions.GetMembers");
 
             if (completions.items == null) {
                 return null;
@@ -200,6 +140,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true
             );
+            result.CommitByDefault = completions._commitByDefault ?? true;
 
             end = _stopwatch.ElapsedMilliseconds;
 

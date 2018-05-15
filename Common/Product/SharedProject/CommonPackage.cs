@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -30,19 +32,21 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
-    public abstract class CommonPackage : Package, IOleComponent {
+    public abstract class CommonPackage : AsyncPackage, IOleComponent {
         private uint _componentID;
         private LibraryManager _libraryManager;
         private IOleComponentManager _compMgr;
+        private UIThreadBase _uiThread;
         private static readonly object _commandsLock = new object();
         private static readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
         #region Language-specific abstracts
 
         public abstract Type GetLibraryManagerType();
-        internal abstract LibraryManager CreateLibraryManager(CommonPackage package);
+        internal abstract LibraryManager CreateLibraryManager();
         public abstract bool IsRecognizedFile(string filename);
 
         // TODO:
@@ -76,28 +80,18 @@ namespace Microsoft.VisualStudioTools {
         }
 
         
-        internal static Dictionary<Command, MenuCommand> Commands {
-            get {
-                return _commands;
-            }
-        }
-
-        internal static object CommandsLock {
-            get {
-                return _commandsLock;
-            }
-        }
+        internal static Dictionary<Command, MenuCommand> Commands => _commands;
+        internal static object CommandsLock => _commandsLock;
 
         protected override void Dispose(bool disposing) {
+            _uiThread.MustBeCalledFromUIThreadOrThrow();
             try {
                 if (_componentID != 0) {
-                    IOleComponentManager mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
-                    if (mgr != null) {
-                        mgr.FRevokeComponent(_componentID);
-                    }
+                    _compMgr.FRevokeComponent(_componentID);
                     _componentID = 0;
                 }
-                if (null != _libraryManager) {
+
+                if (_libraryManager != null) {
                     _libraryManager.Dispose();
                     _libraryManager = null;
                 }
@@ -106,16 +100,17 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private object CreateService(IServiceContainer container, Type serviceType) {
-            if (GetLibraryManagerType() == serviceType) {
-                return _libraryManager = CreateLibraryManager(this);
+        private object CreateLibraryManager(IServiceContainer container, Type serviceType) {
+            if (GetLibraryManagerType() != serviceType) {
+                return null;
             }
-            return null;
+
+            return _libraryManager = CreateLibraryManager();
         }
 
-        internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
+        internal void RegisterCommands(Guid cmdSet, params Command[] commands) {
+            _uiThread.MustBeCalledFromUIThreadOrThrow();
+            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs) {
                 lock (_commandsLock) {
                     foreach (var command in commands) {
                         var beforeQueryStatus = command.BeforeQueryStatus;
@@ -140,26 +135,23 @@ namespace Microsoft.VisualStudioTools {
             if (monitorSelection == null) {
                 return null;
             }
-            object curDocument;
-            if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out curDocument))) {
+
+            if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out var curDocument))) {
                 // TODO: Report error
                 return null;
             }
 
-            IVsWindowFrame frame = curDocument as IVsWindowFrame;
-            if (frame == null) {
+            if (!(curDocument is IVsWindowFrame frame)) {
                 // TODO: Report error
                 return null;
             }
 
-            object docView = null;
-            if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView))) {
+            if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out var docView))) {
                 // TODO: Report error
                 return null;
             }
 #if DEV11_OR_LATER
-            if (docView is IVsDifferenceCodeWindow) {
-                var diffWindow = (IVsDifferenceCodeWindow)docView;
+            if (docView is IVsDifferenceCodeWindow diffWindow) {
                 switch (diffWindow.DifferenceViewer.ActiveViewType) {
                     case VisualStudio.Text.Differencing.DifferenceViewType.InlineView:
                         return diffWindow.DifferenceViewer.InlineView;
@@ -167,13 +159,13 @@ namespace Microsoft.VisualStudioTools {
                         return diffWindow.DifferenceViewer.LeftView;
                     case VisualStudio.Text.Differencing.DifferenceViewType.RightView:
                         return diffWindow.DifferenceViewer.RightView;
+                    default:
+                        return null;
                 }
-                return null;
             }
 #endif
-            if (docView is IVsCodeWindow) {
-                IVsTextView textView;
-                if (ErrorHandler.Failed(((IVsCodeWindow)docView).GetPrimaryView(out textView))) {
+            if (docView is IVsCodeWindow window) {
+                if (ErrorHandler.Failed(window.GetPrimaryView(out var textView))) {
                     // TODO: Report error
                     return null;
                 }
@@ -188,28 +180,47 @@ namespace Microsoft.VisualStudioTools {
 
         internal static CommonProjectNode GetStartupProject(System.IServiceProvider serviceProvider) {
             var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
-            IVsHierarchy hierarchy;
-            if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out hierarchy)) && hierarchy != null) {
+            if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out var hierarchy)) && hierarchy != null) {
                 return hierarchy.GetProject()?.GetCommonProject();
             }
             return null;
         }
 
-        protected override void Initialize() {
-            var container = (IServiceContainer)this;
-            UIThread.EnsureService(this);
-            container.AddService(GetLibraryManagerType(), CreateService, true);
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
-            OLECRINFO[] crinfo = new OLECRINFO[1];
-            crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
-            crinfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime;
-            crinfo[0].grfcadvf = (uint)_OLECADVF.olecadvfModal | (uint)_OLECADVF.olecadvfRedrawOff | (uint)_OLECADVF.olecadvfWarningsOff;
-            crinfo[0].uIdleTimeInterval = 0;
-            ErrorHandler.ThrowOnFailure(componentManager.FRegisterComponent(this, crinfo, out _componentID));
+            _uiThread = (UIThreadBase)GetService(typeof(UIThreadBase));
+            if (_uiThread == null) {
+                _uiThread = new UIThread(JoinableTaskFactory);
+                AddService<UIThreadBase>(_uiThread, true);
+            }
 
-            base.Initialize();
+            AddService(GetLibraryManagerType(), CreateLibraryManager, true);
+
+            var crinfo = new OLECRINFO {
+                cbSize = (uint) Marshal.SizeOf(typeof(OLECRINFO)),
+                grfcrf = (uint) _OLECRF.olecrfNeedIdleTime,
+                grfcadvf = (uint) _OLECADVF.olecadvfModal | (uint) _OLECADVF.olecadvfRedrawOff | (uint) _OLECADVF.olecadvfWarningsOff,
+                uIdleTimeInterval = 0
+            };
+
+            _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
+            ErrorHandler.ThrowOnFailure(_compMgr.FRegisterComponent(this, new[] { crinfo }, out _componentID));
+
+            await base.InitializeAsync(cancellationToken, progress);
         }
+
+        protected override object GetService(Type serviceType) 
+            => serviceType == typeof(UIThreadBase) ? _uiThread : base.GetService(serviceType);
+
+        protected void AddService<T>(object service, bool promote)
+            => ((IServiceContainer) this).AddService(typeof(T), service, promote);
+
+        protected void AddService<T>(ServiceCreatorCallback callback, bool promote)
+            => ((IServiceContainer) this).AddService(typeof(T), callback, promote);
+
+        protected void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
+            => ((IServiceContainer) this).AddService(serviceType, callback, promote);
 
         internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url) {
             // TODO: In a future VS 2017 release, SVsWebBrowsingService will have the ability
@@ -259,70 +270,47 @@ namespace Microsoft.VisualStudioTools {
 
         #region IOleComponent Members
 
-        public int FContinueMessageLoop(uint uReason, IntPtr pvLoopData, MSG[] pMsgPeeked) {
-            return 1;
-        }
+        public int FContinueMessageLoop(uint uReason, IntPtr pvLoopData, MSG[] pMsgPeeked) => 1;
 
-        public virtual int FDoIdle(uint grfidlef) {
-            if (null != _libraryManager) {
-                _libraryManager.OnIdle(_compMgr);
+        public int FDoIdle(uint grfidlef) {
+            var componentManager = _compMgr;
+            if (componentManager == null) {
+                return 0;
             }
 
-            var onIdle = OnIdle;
-            if (onIdle != null) {
-                onIdle(this, new ComponentManagerEventArgs(_compMgr));
-            }
-
+            _libraryManager?.OnIdle(componentManager);
+            OnIdle?.Invoke(this, new ComponentManagerEventArgs(componentManager));
             return 0;
         }
 
         internal event EventHandler<ComponentManagerEventArgs> OnIdle;
 
-        public int FPreTranslateMessage(MSG[] pMsg) {
-            return 0;
-        }
+        public int FPreTranslateMessage(MSG[] pMsg) => 0;
 
-        public int FQueryTerminate(int fPromptUser) {
-            return 1;
-        }
+        public int FQueryTerminate(int fPromptUser) => 1;
 
-        public int FReserved1(uint dwReserved, uint message, IntPtr wParam, IntPtr lParam) {
-            return 1;
-        }
+        public int FReserved1(uint dwReserved, uint message, IntPtr wParam, IntPtr lParam) => 1;
 
-        public IntPtr HwndGetWindow(uint dwWhich, uint dwReserved) {
-            return IntPtr.Zero;
-        }
+        public IntPtr HwndGetWindow(uint dwWhich, uint dwReserved) => IntPtr.Zero;
 
-        public void OnActivationChange(IOleComponent pic, int fSameComponent, OLECRINFO[] pcrinfo, int fHostIsActivating, OLECHOSTINFO[] pchostinfo, uint dwReserved) {
-        }
+        public void OnActivationChange(IOleComponent pic, int fSameComponent, OLECRINFO[] pcrinfo, int fHostIsActivating, OLECHOSTINFO[] pchostinfo, uint dwReserved) {}
 
-        public void OnAppActivate(int fActive, uint dwOtherThreadID) {
-        }
+        public void OnAppActivate(int fActive, uint dwOtherThreadID) {}
 
-        public void OnEnterState(uint uStateID, int fEnter) {
-        }
+        public void OnEnterState(uint uStateID, int fEnter) {}
 
-        public void OnLoseActivation() {
-        }
+        public void OnLoseActivation() {}
 
-        public void Terminate() {
-        }
+        public void Terminate() {}
 
         #endregion
     }
 
-    class ComponentManagerEventArgs : EventArgs {
-        private readonly IOleComponentManager _compMgr;
-
+    internal sealed class ComponentManagerEventArgs : EventArgs {
         public ComponentManagerEventArgs(IOleComponentManager compMgr) {
-            _compMgr = compMgr;
+            ComponentManager = compMgr;
         }
 
-        public IOleComponentManager ComponentManager {
-            get {
-                return _compMgr;
-            }
-        }
+        public IOleComponentManager ComponentManager { get; }
     }
 }

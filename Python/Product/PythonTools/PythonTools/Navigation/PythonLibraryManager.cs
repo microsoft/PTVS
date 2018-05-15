@@ -43,13 +43,10 @@ namespace Microsoft.PythonTools.Navigation {
     /// </summary>
     [Guid(PythonConstants.LibraryManagerGuid)]
     internal class PythonLibraryManager : LibraryManager, IPythonLibraryManager {
-        private readonly PythonToolsPackage/*!*/ _package;
-
         private readonly Dictionary<PythonProjectNode, AnalysisCompleteHandler> _handlers;
 
-        public PythonLibraryManager(PythonToolsPackage/*!*/ package)
+        public PythonLibraryManager(CommonPackage/*!*/ package)
             : base(package) {
-            _package = package;
             _handlers = new Dictionary<PythonProjectNode, AnalysisCompleteHandler>();
         }
 

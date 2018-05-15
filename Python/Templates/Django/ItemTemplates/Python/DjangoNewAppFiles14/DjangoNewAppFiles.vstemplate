@@ -12,6 +12,6 @@
     <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\models.py">models.py</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\tests.py">tests.py</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\views.py">views.py</ProjectItem>
-    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\templates\index.html">DjangoTemplate.html</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\templates\$fileinputname$\index.html">DjangoTemplate.html</ProjectItem>
   </TemplateContent>
 </VSTemplate>
