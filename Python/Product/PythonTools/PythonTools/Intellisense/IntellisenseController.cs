@@ -408,8 +408,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         break;
                     default:
+                        // Note: Don't call CompletionSets property if session is dismissed to avoid NRE
                         if (Tokenizer.IsIdentifierStartChar(ch) &&
-                            ((session?.CompletionSets.Count ?? 0) == 0)) {
+                            ((session?.IsDismissed ?? false ? 0 : session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
                                 TriggerCompletionSession(false, ch, commitByDefault).DoNotWait();
