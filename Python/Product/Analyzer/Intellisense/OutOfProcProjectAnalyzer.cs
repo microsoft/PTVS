@@ -993,7 +993,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(FromImportStatement node) {
-                var name = node.Root.MakeString();
+                var name = PythonAnalyzer.ResolveRelativeFromImport(_entry, node);
                 if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
                     Imports.Add(MakeUnresolvedImport(name, node.Root));
                 }

@@ -33,14 +33,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns true if the provided version of Python can only import
         /// packages containing an <c>__init__.py</c> file.
         /// </summary>
-        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion) 
+        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion)
             => languageVersion < new Version(3, 3);
 
         /// <summary>
         /// Returns true if the provided version of Python can only import
         /// packages containing an <c>__init__.py</c> file.
         /// </summary>
-        public static bool PythonVersionRequiresInitPyFiles(PythonLanguageVersion languageVersion) 
+        public static bool PythonVersionRequiresInitPyFiles(PythonLanguageVersion languageVersion)
             => languageVersion < PythonLanguageVersion.V33;
 
         /// <summary>

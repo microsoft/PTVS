@@ -283,19 +283,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(FromImportStatement node) {
-            var modName = node.Root.MakeString();
-            IReadOnlyList<string> bits = null;
-            ModuleReference modRef = null;
-            bool result;
+            var modName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, node);
 
-            if (modName.StartsWithOrdinal(".")) {
-                var effectivePath = GetEffectivePath(modName, node.Names.FirstOrDefault()?.Name);
-                result = ProjectState.Modules.TryImportByPath(effectivePath, out modRef);
-            } else {
-                result = TryImportModule(modName, node.ForceAbsolute, out modRef, out bits);
-            }
-
-            if (!result) {
+            if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
                 _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
                 return false;
             }
