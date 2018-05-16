@@ -18,7 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -145,7 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(AssignmentStatement node) {
             var valueType = _eval.Evaluate(node.Right);
-            
+
             // For self assignments (e.g. "fob = fob"), include values from 
             // outer scopes, otherwise such assignments will always be unknown
             // because we use the unassigned variable for the RHS.
@@ -282,8 +284,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
+            IReadOnlyList<string> bits = null;
+            ModuleReference modRef = null;
+            bool result;
 
-            if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
+            if (modName.StartsWithOrdinal(".")) {
+                var effectivePath = GetEffectivePath(modName, node.Names.FirstOrDefault()?.Name);
+                result = ProjectState.Modules.TryImportByPath(effectivePath, out modRef);
+            } else {
+                result = TryImportModule(modName, node.ForceAbsolute, out modRef, out bits);
+            }
+
+            if (!result) {
                 _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
                 return false;
             }
@@ -705,6 +717,46 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 _eval.Evaluate(node.Globals);
             }
             return false;
+        }
+
+        private string GetEffectivePath(string relativeCandidate, string target) {
+            // Check if it is indeed relative
+            if (string.IsNullOrEmpty(relativeCandidate) || relativeCandidate[0] != '.' || string.IsNullOrEmpty(target)) {
+                return relativeCandidate;
+            }
+
+            // Get this module path
+            var currentModulePath = _unit.DeclaringModule?.Locations.FirstOrDefault()?.FilePath;
+            if (string.IsNullOrEmpty(currentModulePath)) {
+                return relativeCandidate;
+            }
+
+            var moduleDir = Path.GetDirectoryName(currentModulePath);
+            var sb = new StringBuilder();
+            // Calculate root
+            var i = 0;
+            for (; i < relativeCandidate.Length && relativeCandidate[i] == '.'; i++) {
+            }
+
+            if ((i & 1) == 0) {
+                // Even number of dots
+                for (var j = 0; j < i / 2; j++) {
+                    sb.Append(@"\..");
+                }
+            }
+
+            var parts = $"{relativeCandidate.Substring(i)}.{target}".Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var p in parts) {
+                if (sb.Length > 0) {
+                    sb.Append('\\');
+                }
+                sb.Append(p);
+            }
+
+            var relativePath = sb.ToString();
+            var normalized = Path.GetFullPath(Path.Combine(moduleDir, relativePath));
+            normalized = Path.ChangeExtension(normalized, "py");
+            return normalized;
         }
     }
 }

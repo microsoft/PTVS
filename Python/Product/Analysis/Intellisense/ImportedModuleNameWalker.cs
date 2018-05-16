@@ -15,7 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -56,6 +58,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(FromImportStatement node) {
             if (node.Root.StartIndex <= Location && Location <= node.Root.EndIndex) {
+                //var modules = ModulePath.ResolvePotentialModuleNames(Path.GetFileNameWithoutExtension(path), path, first, true);
                 SetName(node.Root);
             }
             return false;
