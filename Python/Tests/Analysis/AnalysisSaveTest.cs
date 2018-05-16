@@ -116,7 +116,7 @@ Aliased = test.Aliased
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("list_of_int", pos), "list of int");
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str");
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "int");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "type int");
 
                 var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
                 Assert.AreEqual(1, result.Length);
@@ -175,7 +175,7 @@ Overloaded = test.Overloaded
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
                 Assert.AreEqual(
-                    "test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",
+                    "class test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",
                     allMembers.First(x => x.Name == "Aliased").Documentation
                 );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");

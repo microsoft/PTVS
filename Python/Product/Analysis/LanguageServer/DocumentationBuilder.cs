@@ -59,16 +59,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private string MakeGeneralDocumentation(AnalysisValue[] values, string originalExpression) {
             var descriptions = new Dictionary<string, string>();
+            var haveDocs = false;
+            var multiline = false;
+            var descPrefix = string.Empty;
 
             foreach (var v in values) {
                 var d = v.Description;
-                if (!string.IsNullOrEmpty(d)) {
-                    var doc = v.Documentation;
+                string doc = null;
+                if (!string.IsNullOrEmpty(d) && v.PythonType?.IsBuiltin != true) {
+                    doc = v.Documentation;
                     if (DisplayOptions.trimDocumentationLines) {
                         doc = LimitLines(doc);
                     }
-                    descriptions[d] = doc ?? string.Empty;
                 }
+                haveDocs |= !string.IsNullOrEmpty(doc);
+                multiline |= d.IndexOf('\n') >= 0;
+                descriptions[d] = doc ?? string.Empty;
             }
 
             if (descriptions.Count == 0) {
@@ -76,46 +82,51 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var result = new StringBuilder();
-            var descPrefix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```python{Environment.NewLine}" : string.Empty;
-            var descSuffix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```{Environment.NewLine}" : string.Empty;
-            var multiline = descriptions.Count > 1;
+            if (!haveDocs && !multiline) {
+                // No documentation, simply description, just concatenate
+                result.Append(string.Join(", ", descriptions.Keys));
+            } else {
+                descPrefix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```python{Environment.NewLine}" : string.Empty;
+                var descSuffix = DisplayOptions.preferredFormat == MarkupKind.Markdown ? $"```{Environment.NewLine}" : string.Empty;
+                multiline = descriptions.Count > 1;
 
-            foreach (var kvp in descriptions) {
-                var desc = kvp.Key;
-                var doc = kvp.Value;
+                foreach (var kvp in descriptions) {
+                    var desc = kvp.Key;
+                    var doc = kvp.Value;
 
-                if(result.Length > 0) {
-                    result.AppendLine();
-                    result.AppendLine();
-                }
-                result.Append(descPrefix);
-                result.AppendLine(desc);
-                result.Append(descSuffix);
+                    if (result.Length > 0) {
+                        result.AppendLine();
+                        result.AppendLine();
+                    }
+                    result.Append(descPrefix);
+                    result.AppendLine(desc);
+                    result.Append(descSuffix);
 
-                if (!string.IsNullOrEmpty(doc)) {
-                    result.AppendLine(SoftWrap(doc));
-                    multiline |= doc.IndexOf('\n') >= 0;
-                }
+                    if (!string.IsNullOrEmpty(doc)) {
+                        result.AppendLine(SoftWrap(doc));
+                        multiline |= doc.IndexOf('\n') >= 0;
+                    }
 
-                if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
-                    result.Length = Math.Max(0, DisplayOptions.maxDocumentationTextLength - 3);
-                    result.Append(_ellipsis);
-                    break;
-                } else if (DisplayOptions.trimDocumentationLines) {
-                    using (var sr = new StringReader(result.ToString())) {
-                        result.Clear();
-                        int lines = DisplayOptions.maxDocumentationLineLength;
-                        for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
-                            if (--lines < 0) {
-                                result.Append(_ellipsis);
-                                break;
+                    if (DisplayOptions.trimDocumentationText && result.Length > DisplayOptions.maxDocumentationTextLength) {
+                        result.Length = Math.Max(0, DisplayOptions.maxDocumentationTextLength - 3);
+                        result.Append(_ellipsis);
+                        break;
+                    } else if (DisplayOptions.trimDocumentationLines) {
+                        using (var sr = new StringReader(result.ToString())) {
+                            result.Clear();
+                            int lines = DisplayOptions.maxDocumentationLineLength;
+                            for (var line = sr.ReadLine(); line != null; line = sr.ReadLine()) {
+                                if (--lines < 0) {
+                                    result.Append(_ellipsis);
+                                    break;
+                                }
+                                result.AppendLine(line);
                             }
-                            result.AppendLine(line);
                         }
                     }
-                }
 
-                result.TrimEnd();
+                    result.TrimEnd();
+                }
             }
 
             if (!string.IsNullOrEmpty(originalExpression)) {
