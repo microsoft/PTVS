@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 isTemporaryFile = true;
                 analyzer = await services.Site.FindAnalyzerAsync(textView);
                 if (analyzer == null) {
-                    analyzer = await services.Python.GetSharedAnalyzerAsync();
+                    analyzer = await services.Python?.GetSharedAnalyzerAsync();
                     followDefaultEnvironment = true;
                 }
             }
