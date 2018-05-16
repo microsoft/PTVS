@@ -335,8 +335,8 @@ baz_Fob = baz.Fob
 ";
                 newPs.NewModule("fez", code);
 
-                newPs.Analyzer.AssertDescription("oar_Fob", "fob.Fob");
-                newPs.Analyzer.AssertDescription("baz_Fob", "fob.Fob");
+                newPs.Analyzer.AssertDescription("oar_Fob", "class fob.Fob");
+                newPs.Analyzer.AssertDescription("baz_Fob", "class fob.Fob");
             }
         }
 

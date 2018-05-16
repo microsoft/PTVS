@@ -66,15 +66,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var v in values) {
                 var d = v.Description;
                 string doc = null;
-                if (!string.IsNullOrEmpty(d) && v.PythonType?.IsBuiltin != true) {
-                    doc = v.Documentation;
-                    if (DisplayOptions.trimDocumentationLines) {
-                        doc = LimitLines(doc);
+                if (!string.IsNullOrEmpty(d)) {
+                    if (v.PythonType?.IsBuiltin != true) {
+                        doc = v.Documentation;
+                        if (DisplayOptions.trimDocumentationLines) {
+                            doc = LimitLines(doc);
+                        }
+                        haveDocs |= !string.IsNullOrEmpty(doc);
                     }
+                    multiline |= d.IndexOf('\n') >= 0;
+                    descriptions[d] = doc ?? string.Empty;
                 }
-                haveDocs |= !string.IsNullOrEmpty(doc);
-                multiline |= d.IndexOf('\n') >= 0;
-                descriptions[d] = doc ?? string.Empty;
             }
 
             if (descriptions.Count == 0) {
