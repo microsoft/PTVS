@@ -741,16 +741,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if ((i & 1) == 0) {
                 // Even number of dots
                 for (var j = 0; j < i / 2; j++) {
-                    sb.Append(@"\..");
+                    sb.Append(@"..\");
                 }
             }
 
             var parts = $"{relativeCandidate.Substring(i)}.{target}".Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var p in parts) {
-                if (sb.Length > 0) {
+            for (var j = 0; j < parts.Length; j++) {
+                if (j > 0) {
                     sb.Append('\\');
                 }
-                sb.Append(p);
+                sb.Append(parts[j]);
             }
 
             var relativePath = sb.ToString();

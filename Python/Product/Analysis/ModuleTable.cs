@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </returns>
         public bool TryImportByPath(string path, out ModuleReference res) {
             res = null;
-            var result = _modules.FirstOrDefault(x => x.Value.Module.FilePath == path);
+            var result = _modules.FirstOrDefault(x => x.Value.Module?.FilePath == path);
             if(string.IsNullOrEmpty(result.Key)) {
                 return false;
             }
