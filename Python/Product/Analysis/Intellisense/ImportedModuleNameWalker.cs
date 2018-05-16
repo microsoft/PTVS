@@ -14,52 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
     class ImportedModuleNameWalker : PythonWalkerWithLocation {
-        private readonly string[] _module;
+        private readonly string _moduleName;
+        private readonly string _moduleFilePath;
 
-        public ImportedModuleNameWalker(string module, int location) : base(location) {
-            _module = module?.Split('.') ?? Array.Empty<string>();
+        public ImportedModuleNameWalker(IPythonProjectEntry entry, int location) : 
+            this(entry.ModuleName, entry.FilePath, location) {
+        }
+        public ImportedModuleNameWalker(string moduleName, string moduleFilePath, int location) : base(location) {
+            _moduleName = moduleName;
+            _moduleFilePath = moduleFilePath;
         }
 
-        public string ImportedName { get; private set; } = null;
-
-        private bool SetName(RelativeModuleName importName) {
-            if (importName == null ||
-                (importName.DotCount - 1) > _module.Length ||
-                importName.Names?.Any() != true) {
-                return false;
-            }
-
-            var names = _module
-                .Take(_module.Length - (importName.DotCount - 1))
-                .Concat(importName.Names.Select(n => n.Name))
-                .ToList();
-
-            ImportedName = string.Join(".", names);
-
-            return true;
-        }
-
-        private void SetName(DottedName importNames) {
-            if (SetName(importNames as RelativeModuleName)) {
-                return;
-            }
-
-            ImportedName = importNames.MakeString();
-        }
+        public string ImportedName { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
             if (node.Root.StartIndex <= Location && Location <= node.Root.EndIndex) {
-                //var modules = ModulePath.ResolvePotentialModuleNames(Path.GetFileNameWithoutExtension(path), path, first, true);
-                SetName(node.Root);
+                ImportedName = PythonAnalyzer.ResolveRelativeFromImport(_moduleName, _moduleFilePath, node);
             }
             return false;
         }
@@ -67,11 +43,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(ImportStatement node) {
             foreach (var n in node.Names.MaybeEnumerate()) {
                 if (n.StartIndex <= Location && Location <= n.EndIndex) {
-                    SetName(n);
+                    ImportedName = n.MakeString();
                     break;
                 }
             }
-
             return false;
         }
     }

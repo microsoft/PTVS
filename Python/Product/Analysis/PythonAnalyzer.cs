@@ -1003,20 +1003,26 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
-        internal static string ResolveRelativeFromImport(IPythonProjectEntry entry, FromImportStatement node) {
+        internal static string ResolveRelativeFromImport(IPythonProjectEntry entry, FromImportStatement node)
+            => ResolveRelativeFromImport(entry.ModuleName, entry.FilePath, node);
+
+        internal static string ResolveRelativeFromImport(string moduleName, string moduleFilePath, FromImportStatement node) {
+            // from x import y => import x.y
+            // from ..x import y.z => import ..x.y.z
+
             var name = node.Root.MakeString();
             if (name.StartsWithOrdinal(".")) {
+                // from .x import target
                 var target = node.Names.FirstOrDefault()?.Name;
                 if (!string.IsNullOrEmpty(target)) {
-                    name = $"{name}.{target}";
-                    var names = ResolvePotentialModuleNames(entry, name, node.ForceAbsolute);
-                    name = names.Any() ? names.First() : name;
+                    name = name.All(c => c == '.') ? $"{name}{target}" : $"{name}.{target}";
+                    var names = ModulePath.ResolvePotentialModuleNames(moduleName, moduleFilePath, name, node.ForceAbsolute).ToArray();
+                    name = names.Length > 0 ? names[0] : name;
                 }
             }
             return name;
         }
-
-    internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
+        internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
             Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
 
             SortAggregates(aggregating);

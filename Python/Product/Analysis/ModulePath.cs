@@ -899,27 +899,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Handle relative module names
             if (relativeModuleName.FirstOrDefault() == '.') {
-                if (string.IsNullOrEmpty(importingFrom)) {
-                    // No source to import relative to.
-                    yield break;
-                }
-
-                var prefix = importingFrom.Split('.');
-
-                if (relativeModuleName.All(c => c == '.')) {
-                    // The whole name is dots, so there's nothing to concatenate.
-                    yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
-                } else {
-                    // Assume trailing dots are not part of the import
-                    var suffix = relativeModuleName.TrimEnd('.').Split('.');
-                    var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
-                    if (dotCount < prefix.Length) {
-                        // If we have as many dots as prefix parts, the entire
-                        // name will disappear. Despite what PEP 328 says, in
-                        // reality this means the import will fail.
-                        yield return string.Join(".", prefix.Take(prefix.Length - dotCount).Concat(suffix.Skip(dotCount)));
-                    }
-                }
+                yield return GetModuleFullName(importingFrom, relativeModuleName);
                 yield break;
             }
 
@@ -950,6 +930,19 @@ namespace Microsoft.PythonTools.Analysis {
             if (!absoluteImports) {
                 yield return relativeModuleName;
             }
+        }
+
+        private static string GetModuleFullName(string originatingModule, string relativePath) {
+            // Check if it is indeed relative
+            if (string.IsNullOrEmpty(relativePath) || relativePath[0] != '.') {
+                return relativePath;
+            }
+
+            var bits = originatingModule.Split('.').Skip(1).ToArray();
+            var root = bits.Length > 1 ? string.Join(".", bits.Take(bits.Length - 1)) : string.Empty;
+            var subPath = relativePath.Substring(relativePath.StartsWithOrdinal("..") ? 2 : 1);
+
+            return string.IsNullOrEmpty(root) ? subPath : $"{root}{subPath}";
         }
     }
 }

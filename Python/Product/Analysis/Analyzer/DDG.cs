@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -707,46 +704,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 _eval.Evaluate(node.Globals);
             }
             return false;
-        }
-
-        private string GetEffectivePath(string relativeCandidate, string target) {
-            // Check if it is indeed relative
-            if (string.IsNullOrEmpty(relativeCandidate) || relativeCandidate[0] != '.' || string.IsNullOrEmpty(target)) {
-                return relativeCandidate;
-            }
-
-            // Get this module path
-            var currentModulePath = _unit.DeclaringModule?.Locations.FirstOrDefault()?.FilePath;
-            if (string.IsNullOrEmpty(currentModulePath)) {
-                return relativeCandidate;
-            }
-
-            var moduleDir = Path.GetDirectoryName(currentModulePath);
-            var sb = new StringBuilder();
-            // Calculate root
-            var i = 0;
-            for (; i < relativeCandidate.Length && relativeCandidate[i] == '.'; i++) {
-            }
-
-            if ((i & 1) == 0) {
-                // Even number of dots
-                for (var j = 0; j < i / 2; j++) {
-                    sb.Append(@"..\");
-                }
-            }
-
-            var parts = $"{relativeCandidate.Substring(i)}.{target}".Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-            for (var j = 0; j < parts.Length; j++) {
-                if (j > 0) {
-                    sb.Append('\\');
-                }
-                sb.Append(parts[j]);
-            }
-
-            var relativePath = sb.ToString();
-            var normalized = Path.GetFullPath(Path.Combine(moduleDir, relativePath));
-            normalized = Path.ChangeExtension(normalized, "py");
-            return normalized;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
 
             var index = tree.LocationToIndex(@params.position);
-            var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+            var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
