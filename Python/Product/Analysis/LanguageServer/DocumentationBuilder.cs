@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var d = v.Description;
                 string doc = null;
                 if (!string.IsNullOrEmpty(d)) {
-                    if (v.PythonType?.IsBuiltin != true) {
+                    if (!IsBasicType(v.PythonType)) {
                         doc = v.Documentation;
                         if (DisplayOptions.trimDocumentationLines) {
                             doc = LimitLines(doc);
@@ -153,7 +153,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         protected abstract string MakeFunctionDocumentation(AnalysisValue value);
         protected abstract string MakeClassDocumentation(AnalysisValue value);
 
-
         protected string LimitLines(
             string str,
             bool ellipsisAtEnd = true,
@@ -198,5 +197,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         protected virtual string SoftWrap(string s) => s;
+
+        private static bool IsBasicType(IPythonType type) {
+            if (type == null || !type.IsBuiltin) {
+                return false;
+            }
+
+            switch(type.TypeId) {
+                case BuiltinTypeId.Bool:
+                case BuiltinTypeId.Bytes:
+                case BuiltinTypeId.Complex:
+                case BuiltinTypeId.Dict:
+                case BuiltinTypeId.Float:
+                case BuiltinTypeId.Int:
+                case BuiltinTypeId.Str:
+                case BuiltinTypeId.Unicode:
+                    return true;
+            }
+            return false;
+        }
     }
 }
