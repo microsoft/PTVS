@@ -3425,8 +3425,8 @@ class cls(cls):
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
-                "The most base type",
-                "cls"
+                "cls",
+                "type object"
             );
         }
 
