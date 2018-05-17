@@ -3325,7 +3325,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects ");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3336,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects ");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]
@@ -3426,7 +3426,7 @@ class cls(cls):
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
                 "cls",
-                "type object"
+                "object"
             );
         }
 
@@ -5833,7 +5833,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
@@ -5855,7 +5855,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...");
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects...");
             entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
