@@ -1353,45 +1353,22 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
         internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
+            var buffer = snapshot.TextBuffer;
+            var classifier = buffer.GetPythonClassifier();
+            if (classifier != null) {
+                var snapSpan = span.GetSpan(snapshot);
+                var tokens = classifier.GetClassificationSpans(snapSpan);
+                if (tokens.LastOrDefault()?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false) {
+                    // String completion
+                    if (span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber) {
+                        return new StringLiteralCompletionList(services, session, view, span, buffer, options);
+                    }
+                }
+            }
+
+            return GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) 
+                ?? GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
         }
-
-        //internal async Task<CompletionSet> GetCompletionsAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
-        //    var bi = snapshot.TextBuffer.TryGetInfo();
-        //    if (bi == null) {
-        //        return null;
-        //    }
-
-        //    Debug.Assert(bi.AnalysisEntry == entry);
-
-        //    var pt = point.GetPoint(bi.LastSentSnapshot).ToSourceLocation();
-
-        //    AP.CompletionsResponse comp;
-        //    using (new DebugTimer("CompletionRequest", CompletionAnalysis.TooMuchTime)) {
-        //        comp = await SendRequestAsync(
-        //            new AP.CompletionsRequest {
-        //                documentUri = entry.DocumentUri,
-        //                line = pt.Line,
-        //                column = pt.Column,
-        //                options = options.MemberOptions
-        //            }
-        //        ).ConfigureAwait(false);
-        //    }
-
-        //    if ((comp?.completions?.Length ?? 0) == 0) {
-        //        return null;
-        //    }
-
-        //    var result = new FuzzyCompletionSet(
-        //        "Python",
-        //        "Python",
-        //        span,
-        //        members.Select(m => PythonCompletion(glyphService, m)),
-        //        _options,
-        //        CompletionComparer.UnderscoresLast,
-        //        matchInsertionText: true
-        //    );
-        //}
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
@@ -1808,9 +1785,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            var span = applicableSpan.GetSpan(snapshot);
+        private static CompletionAnalysis GetStringLiteralCompletionCompletion(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
+            var buffer = snapshot.TextBuffer;
+            var classifier = buffer.GetPythonClassifier();
+            if (classifier == null) {
+                return null;
+            }
 
+            var snapSpan = span.GetSpan(snapshot);
+            var tokens = classifier.GetClassificationSpans(snapSpan);
+            var lastToken = tokens.LastOrDefault();
+            if (lastToken == null || !lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                return null;
+            }
+
+            // String completion
+            return span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber
+                ? new StringLiteralCompletionList(services, session, view, span, buffer, options)
+                : null;
+        }
+
+        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
                 // Cannot complete a word immediately after a space
                 session.ClearCompleteWordMode();
