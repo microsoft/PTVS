@@ -6809,6 +6809,8 @@ def f():
                 new { Code="from .hij import A", Index=9, Expected="abc.deg.hij", Base="abc.deg" },
                 new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg" },
                 new { Code="from ..hij import A", Index=10, Expected="abc.deg.hij", Base="abc.deg.HIJ" },
+                new { Code="from .. import deg", Index=10, Expected="abc.deg", Base="abc" },
+                new { Code="from . import A", Index=10, Expected="abc.deg", Base="abc.deg" },
             }) {
                 var entry = ProcessTextV3(item.Code);
                 var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);

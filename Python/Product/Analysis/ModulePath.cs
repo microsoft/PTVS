@@ -938,11 +938,30 @@ namespace Microsoft.PythonTools.Analysis {
                 return relativePath;
             }
 
-            var bits = originatingModule.Split('.').Skip(1).ToArray();
-            var root = bits.Length > 1 ? string.Join(".", bits.Take(bits.Length - 1)) : string.Empty;
-            var subPath = relativePath.Substring(relativePath.StartsWithOrdinal("..") ? 2 : 1);
+            // Calculate depth
+            var up = 0;
+            for(var i = 0; i < relativePath.Length; i++) {
+                var ch = relativePath[i];
+                var next = i < relativePath.Length - 1 ? relativePath[i + 1] : '\0';
+                if(ch != '.') {
+                    break;
+                }
+                if(ch == '.' && next == '.') {
+                    up++;
+                    i++;
+                    continue;
+                }
+            }
 
-            return string.IsNullOrEmpty(root) ? subPath : $"{root}{subPath}";
+            var bits = originatingModule.Split('.').Skip(1).ToArray();
+            if(up > bits.Length) {
+                return relativePath; // too far up
+            }
+
+            var root = up > 0 ? string.Join(".", bits.Take(bits.Length - up)) : string.Empty;
+            var subPath = relativePath.Substring(2*up).Trim('.');
+
+            return string.IsNullOrEmpty(root) ? subPath : $"{root}.{subPath}";
         }
     }
 }

@@ -280,6 +280,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(FromImportStatement node) {
+            var originalModName = node.Root.MakeString();
             var modName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, node);
 
             if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
@@ -325,8 +326,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
-                    fullImpName[fullImpName.Length - 1] = impName;
-                    AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
+                    if (originalModName != modName) {
+                        if (bits == null || bits.Count == 0) {
+                            // Resolved to full name of the module
+                            AssignImportedModule(nameNode, modRef, null, newName ?? impName);
+                        } else {
+                            AssignImportedMember(nameNode, userMod, bits.ToArray(), newName ?? impName);
+                        }
+                    } else {
+                        fullImpName[fullImpName.Length - 1] = impName;
+                        AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
+                    }
                 }
             }
 
