@@ -1006,7 +1006,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal static string ResolveRelativeFromImport(IPythonProjectEntry entry, FromImportStatement node)
             => ResolveRelativeFromImport(entry.ModuleName, entry.FilePath, node);
 
-        internal static string ResolveRelativeFromImport(string moduleName, string moduleFilePath, FromImportStatement node) {
+        internal static string ResolveRelativeFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
             // from x import y => import x.y
             // from ..x import y.z => import ..x.y.z
 
@@ -1016,7 +1016,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var target = node.Names.FirstOrDefault()?.Name;
                 if (!string.IsNullOrEmpty(target)) {
                     name = name.All(c => c == '.') ? $"{name}{target}" : $"{name}.{target}";
-                    var names = ModulePath.ResolvePotentialModuleNames(moduleName, moduleFilePath, name, node.ForceAbsolute).ToArray();
+                    var names = ModulePath.ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, name, node.ForceAbsolute).ToArray();
                     name = names.Length > 0 ? names[0] : name;
                 }
             }

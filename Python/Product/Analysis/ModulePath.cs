@@ -939,27 +939,26 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // Calculate depth
-            var up = 0;
-            for(var i = 0; i < relativePath.Length; i++) {
+            var up = 1; // for . we still need to go one up.
+            for (var i = 0; i < relativePath.Length; i++) {
                 var ch = relativePath[i];
                 var next = i < relativePath.Length - 1 ? relativePath[i + 1] : '\0';
-                if(ch != '.') {
+                if (ch != '.') {
                     break;
                 }
-                if(ch == '.' && next == '.') {
+                if (ch == '.' && next == '.') {
                     up++;
                     i++;
-                    continue;
                 }
             }
 
-            var bits = originatingModule.Split('.').Skip(1).ToArray();
-            if(up > bits.Length) {
+            var bits = originatingModule.Split('.');
+            if (up > bits.Length) {
                 return relativePath; // too far up
             }
 
-            var root = up > 0 ? string.Join(".", bits.Take(bits.Length - up)) : string.Empty;
-            var subPath = relativePath.Substring(2*up).Trim('.');
+            var root = string.Join(".", bits.Take(bits.Length - up));
+            var subPath = relativePath.Trim('.');
 
             return string.IsNullOrEmpty(root) ? subPath : $"{root}.{subPath}";
         }

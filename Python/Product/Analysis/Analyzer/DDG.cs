@@ -280,10 +280,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(FromImportStatement node) {
-            var originalModName = node.Root.MakeString();
-            var modName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, node);
+            var modName = node.Root.MakeString();
 
-            if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
+            if (!TryImportModule(modName, node, out var modRef, out var bits)) {
                 _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
                 return false;
             }
@@ -326,7 +325,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
-                    if (originalModName != modName) {
+                    if (modRef.Name != modName) {
                         if (bits == null || bits.Count == 0) {
                             // Resolved to full name of the module
                             AssignImportedModule(nameNode, modRef, null, newName ?? impName);
@@ -343,7 +342,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return false;
         }
 
-        private bool TryImportModule(string modName, bool forceAbsolute, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
+        private bool TryImportModule(string modName, Statement node, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
             moduleRef = null;
             remainingParts = null;
 
@@ -354,7 +353,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            var candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
+            string[] candidates = null;
+            if (node is FromImportStatement fromImport) {
+                var resolvedName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, fromImport);
+                if (resolvedName != modName) {
+                    candidates = new[] { resolvedName };
+                } else {
+                    candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, fromImport.ForceAbsolute).ToArray();
+                }
+            } else if (node is ImportStatement importNode) {
+                candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, importNode.ForceAbsolute).ToArray();
+            } else {
+                throw new ArgumentException(nameof(node), "Must be import or from-import node");
+            }
+
             foreach (var name in candidates) {
                 if (ProjectState.Modules.TryImport(name, out moduleRef)) {
                     return true;
@@ -494,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // Ensure a variable exists, even if the import fails
                 Scope.CreateVariable(nameNode, _unit, saveName);
 
-                if (!TryImportModule(importing, node.ForceAbsolute, out var modRef, out var bits)) {
+                if (!TryImportModule(importing, node, out var modRef, out var bits)) {
                     _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);
                     continue;
                 }

@@ -20,22 +20,22 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
     class ImportedModuleNameWalker : PythonWalkerWithLocation {
-        private readonly string _moduleName;
-        private readonly string _moduleFilePath;
+        private readonly string _importingFromModuleName;
+        private readonly string _importingFromFilePath;
 
         public ImportedModuleNameWalker(IPythonProjectEntry entry, int location) : 
             this(entry.ModuleName, entry.FilePath, location) {
         }
-        public ImportedModuleNameWalker(string moduleName, string moduleFilePath, int location) : base(location) {
-            _moduleName = moduleName;
-            _moduleFilePath = moduleFilePath;
+        public ImportedModuleNameWalker(string importingFromModuleName, string importingFromFilePath, int location) : base(location) {
+            _importingFromModuleName = importingFromModuleName;
+            _importingFromFilePath = importingFromFilePath;
         }
 
         public string ImportedName { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
-            if (node.Root.StartIndex <= Location && Location <= node.Root.EndIndex) {
-                ImportedName = PythonAnalyzer.ResolveRelativeFromImport(_moduleName, _moduleFilePath, node);
+            if (node.StartIndex <= Location && Location <= node.EndIndex) {
+                ImportedName = PythonAnalyzer.ResolveRelativeFromImport(_importingFromModuleName, _importingFromFilePath, node);
             }
             return false;
         }
