@@ -499,7 +499,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(item);
         }
         private void AddParentModules(string module, string path) {
-            if (ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion)) {
+            if (ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion) ||
+                string.IsNullOrEmpty(_rootDir)) {
                 return;
             }
 
