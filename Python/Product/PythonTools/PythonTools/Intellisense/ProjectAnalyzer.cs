@@ -1352,23 +1352,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            var buffer = snapshot.TextBuffer;
-            var classifier = buffer.GetPythonClassifier();
-            if (classifier != null) {
-                var snapSpan = span.GetSpan(snapshot);
-                var tokens = classifier.GetClassificationSpans(snapSpan);
-                if (tokens.LastOrDefault()?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false) {
-                    // String completion
-                    if (span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber) {
-                        return new StringLiteralCompletionList(services, session, view, span, buffer, options);
-                    }
-                }
-            }
-
-            return GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) 
-                ?? GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
-        }
+        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) 
+            => GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) ??
+               GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
