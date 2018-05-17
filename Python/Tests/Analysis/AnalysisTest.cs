@@ -936,7 +936,7 @@ a = A()
 
             var clsA = entry.GetValue<ClassInfo>("A");
             var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "object");
 
             // Unsuccessful: cannot order X and Y
             code = @"
@@ -979,7 +979,7 @@ G.remember2buy
             entry = ProcessTextV2(code);
             clsG = entry.GetValue<ClassInfo>("G");
             var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -999,7 +999,7 @@ z = Z()
             var clsZ = entry.GetValue<ClassInfo>("Z");
             Assert.IsNotNull(clsZ);
             var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
+            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -1012,28 +1012,28 @@ z = None
             entry = ProcessTextV2(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             var clsB = entry.GetValue<ClassInfo>("B");
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "basestring", "object");
 
             entry = ProcessTextV3(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             clsB = entry.GetValue<ClassInfo>("B");
             mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "object");
         }
 
         [TestMethod, Priority(0)]
