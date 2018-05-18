@@ -6589,7 +6589,8 @@ test1_result = test1()
 
                 // Despite what PEP 328 says, this relative import never succeeds.
                 AssertUtil.ContainsExactly(
-                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "...package", absoluteImport)
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "...package", absoluteImport),
+                    "package"
                 );
             }
         }

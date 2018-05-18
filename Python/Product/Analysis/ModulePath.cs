@@ -938,20 +938,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return relativePath;
             }
 
-            // Calculate depth
-            var up = 1; // for . we still need to go one up.
-            for (var i = 0; i < relativePath.Length; i++) {
-                var ch = relativePath[i];
-                var next = i < relativePath.Length - 1 ? relativePath[i + 1] : '\0';
-                if (ch != '.') {
-                    break;
-                }
-                if (ch == '.' && next == '.') {
-                    up++;
-                    i++;
-                }
-            }
-
+            var up = relativePath.TakeWhile(ch => ch == '.').Count();
             var bits = originatingModule.Split('.');
             if (up > bits.Length) {
                 return relativePath; // too far up
@@ -960,7 +947,9 @@ namespace Microsoft.PythonTools.Analysis {
             var root = string.Join(".", bits.Take(bits.Length - up));
             var subPath = relativePath.Trim('.');
 
-            return string.IsNullOrEmpty(root) ? subPath : $"{root}.{subPath}";
+            return string.IsNullOrEmpty(root)
+                ? subPath
+                : string.IsNullOrEmpty(subPath) ? root : $"{root}.{subPath}";
         }
     }
 }
