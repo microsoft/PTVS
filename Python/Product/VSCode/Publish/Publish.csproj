@@ -51,7 +51,6 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <CallTarget Targets="PackPlatformSpecificFolders" />
-    <CallTarget Targets="PackNetcoreDependentFolder" />
   </Target>
   <Target Name="PackPlatformSpecificFolders">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
@@ -64,11 +63,7 @@
     <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
     <Exec Command="rmdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" />
   </Target>
-  <Target Name="PackNetcoreDependentFolder">
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-  </Target>
   <ItemGroup>
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
