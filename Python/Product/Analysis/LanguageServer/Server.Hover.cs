@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
 
             var index = tree.LocationToIndex(@params.position);
-            var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+            var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
             if (!string.IsNullOrEmpty(w.ImportedName) &&
                 _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
@@ -57,18 +57,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             SourceSpan? exprSpan;
             Analyzer.InterpreterScope scope = null;
 
-            if (!string.IsNullOrEmpty(@params._expr)) {
-                TraceMessage($"Getting hover for {@params._expr}");
-                expr = analysis.GetExpressionForText(@params._expr, @params.position, out scope, out var exprTree);
-                // This span will not be valid within the document, but it will at least
-                // have the correct length. If we have passed "_expr" then we are likely
-                // planning to ignore the returned span anyway.
-                exprSpan = expr?.GetSpan(exprTree);
-            } else {
-                var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
-                expr = finder.GetExpression(@params.position) as Expression;
-                exprSpan = expr?.GetSpan(tree);
-            }
+            var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
+            expr = finder.GetExpression(@params.position) as Expression;
+            exprSpan = expr?.GetSpan(tree);
+
             if (expr == null) {
                 TraceMessage($"No hover info found in {uri} at {@params.position}");
                 return EmptyHover;

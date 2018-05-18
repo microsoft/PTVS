@@ -993,7 +993,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(FromImportStatement node) {
-                var name = node.Root.MakeString();
+                var name = PythonAnalyzer.ResolveRelativeFromImport(_entry, node);
                 if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
                     Imports.Add(MakeUnresolvedImport(name, node.Root));
                 }
@@ -1330,7 +1330,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.SignaturesResponse {
-                sigs = sigs.signatures.Select(
+                sigs = sigs?.signatures?.Select(
                     s => new AP.Signature {
                         name = s.label,
                         doc = s.documentation?.value,
@@ -1421,7 +1421,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                     startLine = s.location.range.start.line + 1,
                                     startColumn = s.location.range.start.character + 1,
                                     endLine = s.location.range.end.line + 1,
-                                    endColumn = s.location.range.end.character + 1
+                                    endColumn = s.location.range.end.character + 1,
+                                    kind = "definition",
                                 }
                             }
                         }

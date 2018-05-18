@@ -56,8 +56,11 @@ namespace Microsoft.PythonTools.Analysis {
             DocumentUri = documentUri ?? MakeDocumentUri(filePath);
             FilePath = filePath;
             Cookie = cookie;
+
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(null, MyScope.Scope);
+            Analysis = new ModuleAnalysis(_unit, ((ModuleScope)_unit.Scope));
+
             _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
                 _buffers[0].Reset(c.Version, c.Content);
@@ -183,7 +186,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public int AnalysisVersion { get; private set; }
 
-        public bool IsAnalyzed => Analysis != null;
+        public bool IsAnalyzed => AnalysisVersion == 0;
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
             var parse = GetCurrentParse();

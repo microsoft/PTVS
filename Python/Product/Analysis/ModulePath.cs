@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
     struct ModulePath {
@@ -32,9 +33,15 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns true if the provided version of Python can only import
         /// packages containing an <c>__init__.py</c> file.
         /// </summary>
-        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion) {
-            return languageVersion < new Version(3, 3);
-        }
+        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion)
+            => languageVersion < new Version(3, 3);
+
+        /// <summary>
+        /// Returns true if the provided version of Python can only import
+        /// packages containing an <c>__init__.py</c> file.
+        /// </summary>
+        public static bool PythonVersionRequiresInitPyFiles(PythonLanguageVersion languageVersion)
+            => languageVersion < PythonLanguageVersion.V33;
 
         /// <summary>
         /// The name by which the module can be imported in Python code.
@@ -664,17 +671,21 @@ namespace Microsoft.PythonTools.Analysis {
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
+            PythonLanguageVersion? languageVersion,
             out ModulePath modulePath
         ) {
-            return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
+            var isPackage = languageVersion.HasValue && PythonVersionRequiresInitPyFiles(languageVersion.Value) ? (Func<string, bool>)null : s => true;
+            return FromBasePathAndName_NoThrow(basePath, moduleName, isPackage, null, out modulePath, out _, out _, out _);
         }
 
         internal static bool FromBasePathAndFile_NoThrow(
             string basePath,
             string sourceFile,
+            PythonLanguageVersion? languageVersion,
             out ModulePath modulePath
         ) {
-            return FromBasePathAndFile_NoThrow(basePath, sourceFile, null, out modulePath, out _, out _);
+            var isPackage = languageVersion.HasValue && PythonVersionRequiresInitPyFiles(languageVersion.Value) ? (Func<string, bool>)null : s => true;
+            return FromBasePathAndFile_NoThrow(basePath, sourceFile, isPackage, out modulePath, out _, out _);
         }
 
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
@@ -845,6 +856,100 @@ namespace Microsoft.PythonTools.Analysis {
                 yield return sb.ToString();
                 sb.Append('.');
             }
+        }
+
+        /// <summary>
+        /// Returns a sequence of candidate absolute module names for the given
+        /// modules.
+        /// </summary>
+        /// <param name="importingFromModuleName">
+        /// The module that is importing the module.
+        /// </param>
+        /// <param name="importingFromFilePath">
+        /// The path to the file that is importing the module.
+        /// </param>
+        /// <param name="relativeModuleName">
+        /// A dotted name identifying the path to the module.
+        /// </param>
+        /// <returns>
+        /// A sequence of strings representing the absolute names of the module
+        /// in order of precedence.
+        /// </returns>
+        internal static IEnumerable<string> ResolvePotentialModuleNames(
+            string importingFromModuleName,
+            string importingFromFilePath,
+            string relativeModuleName,
+            bool absoluteImports
+        ) {
+            string importingFrom = null;
+            if (!string.IsNullOrEmpty(importingFromModuleName)) {
+                importingFrom = importingFromModuleName;
+                if (!string.IsNullOrEmpty(importingFromFilePath) && IsInitPyFile(importingFromFilePath)) {
+                    if (string.IsNullOrEmpty(importingFrom)) {
+                        importingFrom = "__init__";
+                    } else {
+                        importingFrom += ".__init__";
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(relativeModuleName)) {
+                yield break;
+            }
+
+            // Handle relative module names
+            if (relativeModuleName.FirstOrDefault() == '.') {
+                yield return GetModuleFullName(importingFrom, relativeModuleName);
+                yield break;
+            }
+
+            // The two possible names that can be imported here are:
+            // * relativeModuleName
+            // * importingFrom.relativeModuleName
+            // and the order they are returned depends on whether
+            // absolute_import is enabled or not.
+
+            // Assume trailing dots are not part of the import
+            relativeModuleName = relativeModuleName.TrimEnd('.');
+
+            // With absolute_import, we treat the name as complete first.
+            if (absoluteImports) {
+                yield return relativeModuleName;
+            }
+
+            if (!string.IsNullOrEmpty(importingFrom)) {
+                var prefix = importingFrom.Split('.');
+
+                if (prefix.Length > 1) {
+                    var adjacentModuleName = string.Join(".", prefix.Take(prefix.Length - 1)) + "." + relativeModuleName;
+                    yield return adjacentModuleName;
+                }
+            }
+
+            // Without absolute_import, we treat the name as complete last.
+            if (!absoluteImports) {
+                yield return relativeModuleName;
+            }
+        }
+
+        private static string GetModuleFullName(string originatingModule, string relativePath) {
+            // Check if it is indeed relative
+            if (string.IsNullOrEmpty(relativePath) || relativePath[0] != '.') {
+                return relativePath;
+            }
+
+            var up = relativePath.TakeWhile(ch => ch == '.').Count();
+            var bits = originatingModule.Split('.');
+            if (up > bits.Length) {
+                return relativePath; // too far up
+            }
+
+            var root = string.Join(".", bits.Take(bits.Length - up));
+            var subPath = relativePath.Trim('.');
+
+            return string.IsNullOrEmpty(root)
+                ? subPath
+                : string.IsNullOrEmpty(subPath) ? root : $"{root}.{subPath}";
         }
     }
 }

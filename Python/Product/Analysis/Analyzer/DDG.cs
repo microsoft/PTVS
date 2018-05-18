@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -145,7 +144,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(AssignmentStatement node) {
             var valueType = _eval.Evaluate(node.Right);
-            
+
             // For self assignments (e.g. "fob = fob"), include values from 
             // outer scopes, otherwise such assignments will always be unknown
             // because we use the unassigned variable for the RHS.
@@ -283,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
 
-            if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
+            if (!TryImportModule(modName, node, out var modRef, out var bits)) {
                 _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
                 return false;
             }
@@ -326,15 +325,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
-                    fullImpName[fullImpName.Length - 1] = impName;
-                    AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
+                    if (modRef.Name != modName) {
+                        if (bits == null || bits.Count == 0) {
+                            // Resolved to full name of the module
+                            AssignImportedModule(nameNode, modRef, null, newName ?? impName);
+                        } else {
+                            AssignImportedMember(nameNode, userMod, bits.ToArray(), newName ?? impName);
+                        }
+                    } else {
+                        fullImpName[fullImpName.Length - 1] = impName;
+                        AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
+                    }
                 }
             }
 
             return false;
         }
 
-        private bool TryImportModule(string modName, bool forceAbsolute, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
+        private bool TryImportModule(string modName, Statement node, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
             moduleRef = null;
             remainingParts = null;
 
@@ -345,7 +353,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            var candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
+            string[] candidates = null;
+            if (node is FromImportStatement fromImport) {
+                var resolvedName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, fromImport);
+                if (resolvedName != modName) {
+                    candidates = new[] { resolvedName };
+                } else {
+                    candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, fromImport.ForceAbsolute).ToArray();
+                }
+            } else if (node is ImportStatement importNode) {
+                candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, importNode.ForceAbsolute).ToArray();
+            } else {
+                throw new ArgumentException(nameof(node), "Must be import or from-import node");
+            }
+
             foreach (var name in candidates) {
                 if (ProjectState.Modules.TryImport(name, out moduleRef)) {
                     return true;
@@ -485,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // Ensure a variable exists, even if the import fails
                 Scope.CreateVariable(nameNode, _unit, saveName);
 
-                if (!TryImportModule(importing, node.ForceAbsolute, out var modRef, out var bits)) {
+                if (!TryImportModule(importing, node, out var modRef, out var bits)) {
                     _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);
                     continue;
                 }

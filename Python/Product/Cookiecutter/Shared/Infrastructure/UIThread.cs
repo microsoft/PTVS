@@ -15,35 +15,23 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     class UIThread : UIThreadBase {
-        private readonly TaskScheduler _scheduler;
-        private readonly TaskFactory _factory;
-        private readonly Thread _uiThread;
-
-        private UIThread() {
-            _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            _factory = new TaskFactory(_scheduler);
-            _uiThread = Thread.CurrentThread;
+        private readonly JoinableTaskFactory _joinableTaskFactory;
+        private readonly JoinableTaskContext _joinableTaskContext;
+        
+        public UIThread(JoinableTaskFactory joinableTaskFactory) {
+            _joinableTaskFactory = joinableTaskFactory;
+            _joinableTaskContext = joinableTaskFactory.Context;
         }
 
-        public static void EnsureService(IServiceContainer container) {
-            if (container.GetService(typeof(UIThreadBase)) == null) {
-                container.AddService(typeof(UIThreadBase), new UIThread(), true);
-            }
-        }
-
-        public override bool InvokeRequired {
-            get {
-                return Thread.CurrentThread != _uiThread;
-            }
-        }
+        public override bool InvokeRequired => !_joinableTaskContext.IsOnMainThread;
 
         public override void MustBeCalledFromUIThreadOrThrow() {
             if (InvokeRequired) {
@@ -60,10 +48,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
         public override void Invoke(Action action) {
-            if (InvokeRequired) {
-                _factory.StartNew(action).GetAwaiter().GetResult();
-            } else {
+            if (_joinableTaskContext.IsOnMainThread) {
                 action();
+            } else {
+                _joinableTaskFactory.Run(async () => {
+                    await _joinableTaskFactory.SwitchToMainThreadAsync();
+                    action();
+                });
             }
         }
 
@@ -76,11 +67,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// synchronously.
         /// </remarks>
         public override T Invoke<T>(Func<T> func) {
-            if (InvokeRequired) {
-                return _factory.StartNew(func).GetAwaiter().GetResult();
-            } else {
+            if (_joinableTaskContext.IsOnMainThread) {
                 return func();
             }
+
+            return _joinableTaskFactory.Run(async () => {
+                await _joinableTaskFactory.SwitchToMainThreadAsync();
+                return func();
+            });
+
         }
 
         /// <summary>
@@ -91,14 +86,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
         public override Task InvokeAsync(Action action) {
-            var tcs = new TaskCompletionSource<object>();
-            if (InvokeRequired) {
-                return _factory.StartNew(action);
-            } else {
+            if (_joinableTaskContext.IsOnMainThread) {
                 // Action is run synchronously, but we still return the task.
-                InvokeAsyncHelper(action, tcs);
+                return Wrap(action);
             }
-            return tcs.Task;
+
+            return _joinableTaskFactory.RunAsync(async () => {
+                await _joinableTaskFactory.SwitchToMainThreadAsync();
+                action();
+            }).Task;
         }
 
         /// <summary>
@@ -110,14 +106,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// synchronously.
         /// </remarks>
         public override Task<T> InvokeAsync<T>(Func<T> func) {
-            var tcs = new TaskCompletionSource<T>();
-            if (InvokeRequired) {
-                return _factory.StartNew(func);
-            } else {
+            if (_joinableTaskContext.IsOnMainThread) {
                 // Function is run synchronously, but we still return the task.
-                InvokeAsyncHelper(func, tcs);
+                return Wrap(func);
             }
-            return tcs.Task;
+
+            return _joinableTaskFactory.RunAsync(async () => {
+                await _joinableTaskFactory.SwitchToMainThreadAsync();
+                return func();
+            }).Task;
         }
 
         /// <summary>
@@ -128,15 +125,22 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
         public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
-            var tcs = new TaskCompletionSource<object>();
-            if (InvokeRequired) {
-                return _factory.StartNew(action, cancellationToken);
-            } else {
-                // Action is run synchronously, but we still return the task.
-                cancellationToken.ThrowIfCancellationRequested();
-                InvokeAsyncHelper(action, tcs);
+            if (!cancellationToken.CanBeCanceled) {
+                // ReSharper disable once MethodSupportsCancellation
+                return InvokeAsync(action);
             }
-            return tcs.Task;
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_joinableTaskContext.IsOnMainThread) {
+                // Action is run synchronously, but we still return the task.
+                return Wrap(action);
+            }
+
+            return RunAsyncOnMainThread<object>(_joinableTaskFactory, () => {
+                action();
+                return null;
+            }, cancellationToken);
         }
 
         /// <summary>
@@ -148,15 +152,19 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// synchronously.
         /// </remarks>
         public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
-            var tcs = new TaskCompletionSource<T>();
-            if (InvokeRequired) {
-                return _factory.StartNew(func, cancellationToken);
-            } else {
-                // Function is run synchronously, but we still return the task.
-                cancellationToken.ThrowIfCancellationRequested();
-                InvokeAsyncHelper(func, tcs);
+            if (!cancellationToken.CanBeCanceled) {
+                // ReSharper disable once MethodSupportsCancellation
+                return InvokeAsync(func);
             }
-            return tcs.Task;
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_joinableTaskContext.IsOnMainThread) {
+                // Action is run synchronously, but we still return the task.
+                return Wrap(func);
+            }
+
+            return RunAsyncOnMainThread(_joinableTaskFactory, func, cancellationToken);
         }
         
         /// <summary>
@@ -169,14 +177,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// synchronously.
         /// </remarks>
         public override Task InvokeTask(Func<Task> func) {
-            var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
-                InvokeAsync(() => InvokeTaskHelper(func, tcs));
-            } else {
-                // Function is run synchronously, but we still return the task.
-                InvokeTaskHelper(func, tcs);
+                return _joinableTaskFactory.RunAsync(async () => {
+                    await _joinableTaskFactory.SwitchToMainThreadAsync();
+                    await func();
+                }).Task;
             }
-            return tcs.Task;
+
+            // Function is run synchronously, but we still return the task.
+            return func();
         }
 
         /// <summary>
@@ -189,70 +198,56 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// synchronously.
         /// </remarks>
         public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
-            var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
-                InvokeAsync(() => InvokeTaskHelper(func, tcs));
-            } else {
-                // Function is run synchronously, but we still return the task.
-                InvokeTaskHelper(func, tcs);
+                return _joinableTaskFactory.RunAsync(async () => {
+                    await _joinableTaskFactory.SwitchToMainThreadAsync();
+                    return await func();
+                }).Task;
             }
-            return tcs.Task;
+
+            // Function is run synchronously, but we still return the task.
+            return func();
         }
 
         #region Helper Functions
 
-        internal static void InvokeAsyncHelper(Action action, TaskCompletionSource<object> tcs) {
+        private static Task Wrap(Action action) {
             try {
                 action();
-                tcs.TrySetResult(null);
-            } catch (OperationCanceledException) {
-                tcs.TrySetCanceled();
+                return Task.CompletedTask;
+            } catch (OperationCanceledException oce) {
+                return Task.FromCanceled(oce.CancellationToken);
             } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                tcs.TrySetException(ex);
+                return Task.FromException(ex);
             }
         }
 
-        internal static void InvokeAsyncHelper<T>(Func<T> func, TaskCompletionSource<T> tcs) {
+        private static Task<T> Wrap<T>(Func<T> func) {
             try {
-                tcs.TrySetResult(func());
-            } catch (OperationCanceledException) {
-                tcs.TrySetCanceled();
+                return Task.FromResult(func());
+            } catch (OperationCanceledException oce) {
+                return Task.FromCanceled<T>(oce.CancellationToken);
             } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                tcs.TrySetException(ex);
+                return Task.FromException<T>(ex);
             }
         }
 
-        internal static async void InvokeTaskHelper(Func<Task> func, TaskCompletionSource<object> tcs) {
-            try {
-                await func();
-                tcs.TrySetResult(null);
-            } catch (OperationCanceledException) {
-                tcs.TrySetCanceled();
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                tcs.TrySetException(ex);
-            }
-        }
+        private static Task<T> RunAsyncOnMainThread<T>(JoinableTaskFactory joinableTaskFactory, Func<T> func, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<T>();
+            tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(tcs.Task);
 
-        internal static async void InvokeTaskHelper<T>(Func<Task<T>> func, TaskCompletionSource<T> tcs) {
-            try {
-                tcs.TrySetResult(await func());
-            } catch (OperationCanceledException) {
-                tcs.TrySetCanceled();
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
+            joinableTaskFactory.RunAsync(async () => {
+                try {
+                    await joinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                    tcs.TrySetResult(func());
+                } catch (OperationCanceledException oce) {
+                    tcs.TrySetCanceled(oce.CancellationToken);
+                } catch (Exception ex) {
+                    tcs.TrySetException(ex);
                 }
-                tcs.TrySetException(ex);
-            }
+            });
+
+            return tcs.Task;
         }
 
         #endregion

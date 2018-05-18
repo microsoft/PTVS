@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterRegistryService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     sealed class InterpreterRegistryService : IInterpreterRegistryService, IDisposable {
-        private Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] _providers;
+        private Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] _providers;
         private readonly object _suppressInterpretersChangedLock = new object();
         IPythonInterpreterFactory _noInterpretersValue;
         private int _suppressInterpretersChanged;
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
         [ImportingConstructor]
-        public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
+        public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
             _loggers = loggers;
         }
@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     .ThenBy(fact => fact.Configuration.Version);
             }
 
-            private IPythonInterpreterFactoryProvider GetFactoryProvider(Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>> lazy) {
+            private IPythonInterpreterFactoryProvider GetFactoryProvider(Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>> lazy) {
                 try {
                     return lazy.Value;
                 } catch (CompositionException ce) {
@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         // Used for testing.
-        internal Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] SetProviders(Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers) {
+        internal Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] SetProviders(Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers) {
             var oldProviders = _providers;
             _providers = providers;
             foreach (var p in oldProviders) {
@@ -329,11 +329,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private IEnumerable<KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> GetProvidersAndMetadata() {
+        private IEnumerable<KeyValuePair<IPythonInterpreterFactoryProvider, IDictionary<string, object>>> GetProvidersAndMetadata() {
             for (int i = 0; i < _providers.Length; i++) {
                 IPythonInterpreterFactoryProvider value = LoadFactory(i);
                 if (value != null) {
-                    yield return new KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(value, _providers[i].Metadata);
+                    yield return new KeyValuePair<IPythonInterpreterFactoryProvider, IDictionary<string, object>>(value, _providers[i].Metadata);
                 }
             }
         }

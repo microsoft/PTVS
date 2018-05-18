@@ -21,12 +21,13 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
-    [Guid(WindowGuid)]
+    [Guid(WindowGuidString)]
     class PerfToolWindow : ToolWindowPane {
-        internal const string WindowGuid = "328AF5EC-350F-4A96-B847-90F38B18E9BF";
+        internal const string WindowGuidString = "328AF5EC-350F-4A96-B847-90F38B18E9BF";
+        internal static Guid WindowGuid = new Guid(WindowGuidString);
         private SessionsNode _sessions;
 
-        public PerfToolWindow() {
+        public PerfToolWindow(IServiceProvider services) : base(services) {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
             Caption = Strings.PerformanceToolWindowTitle;
         }
@@ -58,10 +59,6 @@ namespace Microsoft.PythonTools.Profiling {
             ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdPerfToolbar));
         }
 
-        public SessionsNode Sessions {
-            get {
-                return _sessions;
-            }
-        }
+        public SessionsNode Sessions => _sessions;
     }
 }

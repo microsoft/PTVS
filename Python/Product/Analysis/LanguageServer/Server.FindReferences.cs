@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?.includeDeclaration ?? false) {
                 var index = tree.LocationToIndex(@params.position);
-                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+                var w = new ImportedModuleNameWalker(entry, index);
                 tree.Walk(w);
 
                 if (!string.IsNullOrEmpty(w.ImportedName) &&

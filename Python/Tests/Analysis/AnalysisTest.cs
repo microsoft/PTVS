@@ -936,7 +936,7 @@ a = A()
 
             var clsA = entry.GetValue<ClassInfo>("A");
             var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "object");
 
             // Unsuccessful: cannot order X and Y
             code = @"
@@ -979,7 +979,7 @@ G.remember2buy
             entry = ProcessTextV2(code);
             clsG = entry.GetValue<ClassInfo>("G");
             var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
+            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -999,7 +999,7 @@ z = Z()
             var clsZ = entry.GetValue<ClassInfo>("Z");
             Assert.IsNotNull(clsZ);
             var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
+            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -1012,28 +1012,28 @@ z = None
             entry = ProcessTextV2(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             var clsB = entry.GetValue<ClassInfo>("B");
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "basestring", "object");
 
             entry = ProcessTextV3(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
+            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
 
             clsB = entry.GetValue<ClassInfo>("B");
             mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
+            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
+            AssertUtil.ContainsExactly(mroC, "C", "str", "object");
         }
 
         [TestMethod, Priority(0)]
@@ -3325,7 +3325,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects ");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3336,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects ");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]
@@ -3425,8 +3425,8 @@ class cls(cls):
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
-                "The most base type",
-                "cls"
+                "cls",
+                "object"
             );
         }
 
@@ -5833,7 +5833,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
@@ -5855,7 +5855,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...");
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects...");
             entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
@@ -6589,7 +6589,8 @@ test1_result = test1()
 
                 // Despite what PEP 328 says, this relative import never succeeds.
                 AssertUtil.ContainsExactly(
-                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "...package", absoluteImport)
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "...package", absoluteImport),
+                    "package"
                 );
             }
         }
@@ -6805,13 +6806,15 @@ def f():
                 new { Code="import abc", Index=10, Expected="abc", Base="" },
                 new { Code="import deg, abc as A", Index=12, Expected="abc", Base="" },
                 new { Code="from abc import A", Index=6, Expected="abc", Base="" },
-                new { Code="from .deg import A", Index=9, Expected="abc.deg", Base="abc" },
-                new { Code="from .hij import A", Index=9, Expected="abc.deg.hij", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="abc.deg.hij", Base="abc.deg.HIJ" },
+                new { Code="from .deg import A", Index=9, Expected="deg.A", Base="abc" },
+                new { Code="from .hij import A", Index=9, Expected="abc.hij.A", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="hij.A", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.hij.A", Base="abc.deg.HIJ" },
+                new { Code="from .. import deg", Index=10, Expected="deg", Base="abc.deg" },
+                new { Code="from . import A", Index=10, Expected="abc.A", Base="abc.deg" },
             }) {
                 var entry = ProcessTextV3(item.Code);
-                var walker = new ImportedModuleNameWalker(item.Base, item.Index);
+                var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);
                 entry.Modules[entry.DefaultModule].Tree.Walk(walker);
 
                 Assert.AreEqual(item.Expected, walker.ImportedName);

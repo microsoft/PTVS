@@ -136,6 +136,26 @@ namespace Microsoft.PythonTools.Analysis {
             return res != null && res.Module != null;
         }
 
+        /// <summary>
+        /// Gets a reference to a module.
+        /// </summary>
+        /// <param name="name">The full import name of the module.</param>
+        /// <param name="res">The module reference object.</param>
+        /// <returns>
+        /// True if the module is available. This means that <c>res.Module</c>
+        /// is not null. If this function returns false, <paramref name="res"/>
+        /// may be valid and should not be replaced, but it is an unresolved
+        /// reference.
+        /// </returns>
+        public bool TryImportByPath(string path, out ModuleReference res) {
+            res = null;
+            var result = _modules.FirstOrDefault(x => x.Value.Module?.FilePath == path);
+            if(string.IsNullOrEmpty(result.Key)) {
+                return false;
+            }
+            return TryImport(result.Key, out res);
+        }
+
         public bool TryRemove(string name, out ModuleReference res) {
             return _modules.TryRemove(name, out res);
         }

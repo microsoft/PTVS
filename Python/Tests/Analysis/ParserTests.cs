@@ -1995,8 +1995,8 @@ namespace AnalysisTests {
                 ParseErrors(
                     "FromImportStmtV2.py",
                     version,
-                    new ErrorInfo("import * only allowed at module level", 14, 2, 5, 31, 2, 22),
-                    new ErrorInfo("import * only allowed at module level", 49, 5, 5, 66, 5, 22)
+                    new ErrorInfo("import * only allowed at module level", 30, 2, 21, 31, 2, 22),
+                    new ErrorInfo("import * only allowed at module level", 65, 5, 21, 66, 5, 22)
                 );
             }
         }
@@ -2972,6 +2972,35 @@ namespace AnalysisTests {
             }
             Assert.Fail($"Unexpected expression {tree}");
             return null;
+        }
+
+        [TestMethod, Priority(0)]
+        public void CommentLocations() {
+            var parser = Parser.CreateParser(new StringReader(@"# line 1
+
+# line 3
+pass
+  # line 4"), PythonLanguageVersion.V36);
+            var tree = parser.ParseFile();
+
+            AssertUtil.AreEqual(tree._commentLocations,
+                new SourceLocation(1, 1),
+                new SourceLocation(3, 1),
+                new SourceLocation(5, 3)
+            );
+
+            parser = Parser.CreateParser(new StringReader(@"# line 1
+"), PythonLanguageVersion.V36);
+            var tree1 = parser.ParseFile();
+            parser = Parser.CreateParser(new StringReader(@"# line 3
+pass
+  # line 4"), PythonLanguageVersion.V36);
+            tree = new PythonAst(new[] { tree1, parser.ParseFile() });
+            AssertUtil.AreEqual(tree._commentLocations,
+                new SourceLocation(1, 1),
+                new SourceLocation(3, 1),
+                new SourceLocation(5, 3)
+            );
         }
 
         #endregion

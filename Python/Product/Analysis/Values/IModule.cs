@@ -32,5 +32,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         void Imported(AnalysisUnit unit);
         string Description { get; }
         string Documentation { get; }
+        string FilePath { get; }
     }
 }

@@ -96,5 +96,17 @@ namespace Microsoft.PythonTools.Parsing {
             }
             return "";
         }
+        internal static bool IsComparison(this PythonOperator self) {
+            return self == PythonOperator.LessThan ||
+                    self == PythonOperator.LessThanOrEqual ||
+                    self == PythonOperator.GreaterThan ||
+                    self == PythonOperator.GreaterThanOrEqual ||
+                    self == PythonOperator.Equal ||
+                    self == PythonOperator.NotEqual ||
+                    self == PythonOperator.In ||
+                    self == PythonOperator.NotIn ||
+                    self == PythonOperator.IsNot ||
+                    self == PythonOperator.Is;
+        }
     }
 }

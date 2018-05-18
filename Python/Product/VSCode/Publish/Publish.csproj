@@ -52,7 +52,6 @@
   <Target Name="AfterBuild">
     <CallTarget Targets="PackPlatformSpecificFolders" />
     <CallTarget Targets="PackNetcoreDependentFolder" />
-    <CallTarget Targets="Sha512" />
   </Target>
   <Target Name="PackPlatformSpecificFolders">
     <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
@@ -126,7 +125,7 @@
       </Code>
     </Task>
   </UsingTask>
-  <Target Name="Sha512">
+  <Target Name="Sha512" AfterTargets="SignFiles">
     <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)\analysisEngineHashes.ts" />
   </Target>
 </Project>

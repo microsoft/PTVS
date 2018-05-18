@@ -22,6 +22,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public EmptyStatement() {
         }
 
+        public override int KeywordLength => 4;
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
             }

@@ -175,7 +175,7 @@ Overloaded = test.Overloaded
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
                 Assert.AreEqual(
-                    "test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",
+                    "class test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",
                     allMembers.First(x => x.Name == "Aliased").Documentation
                 );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
@@ -335,8 +335,8 @@ baz_Fob = baz.Fob
 ";
                 newPs.NewModule("fez", code);
 
-                newPs.Analyzer.AssertDescription("oar_Fob", "fob.Fob");
-                newPs.Analyzer.AssertDescription("baz_Fob", "fob.Fob");
+                newPs.Analyzer.AssertDescription("oar_Fob", "class fob.Fob");
+                newPs.Analyzer.AssertDescription("baz_Fob", "class fob.Fob");
             }
         }
 

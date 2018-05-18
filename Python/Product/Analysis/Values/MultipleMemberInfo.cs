@@ -44,21 +44,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _members = members;
         }
 
-        public AnalysisValue[] Members {
-            get {
-                return _members;
-            }
-        }
+        public AnalysisValue[] Members => _members;
 
-        public override PythonMemberType MemberType {
-            get { return PythonMemberType.Multiple; }
-        }
-
-        public override IEnumerable<OverloadResult> Overloads {
-            get {
-                return _members.SelectMany(m => m.Overloads).Distinct(OverloadResultComparer.Instance);
-            }
-        }
+        public override PythonMemberType MemberType => PythonMemberType.Multiple;
+        public override IEnumerable<OverloadResult> Overloads
+            => _members.SelectMany(m => m.Overloads).Distinct(OverloadResultComparer.Instance);
 
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             var res = AnalysisSet.Empty;
@@ -236,11 +226,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<LocationInfo> Locations {
-            get {
-                return _members.SelectMany(m => m.Locations);
-            }
-        }
+        public string FilePath => string.Empty;
+        public override IEnumerable<LocationInfo> Locations => _members.SelectMany(m => m.Locations);
 
         IModule IModule.GetChildPackage(IModuleContext context, string name) {
             var children = new List<AnalysisValue>();
