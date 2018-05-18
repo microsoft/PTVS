@@ -2201,11 +2201,11 @@ namespace Microsoft.PythonTools.Project {
                     .DoNotWait();
             } else {
                 // Open the install UI
-                InterpreterList.InterpreterListToolWindow.OpenAt(
+                InterpreterList.InterpreterListToolWindow.OpenAtAsync(
                     Site,
                     selectedInterpreterFactory,
                     typeof(EnvironmentsList.PipExtensionProvider)
-                );
+                ).DoNotWait();
             }
             return VSConstants.S_OK;
         }
@@ -2645,11 +2645,11 @@ namespace Microsoft.PythonTools.Project {
 #endregion
 
         private int ExecCreateCondaEnv() {
-            InterpreterList.InterpreterListToolWindow.OpenAt(
+            InterpreterList.InterpreterListToolWindow.OpenAtAsync(
                 Site,
                 EnvironmentsList.EnvironmentView.CondaEnvironmentViewId,
                 typeof(EnvironmentsList.CondaExtensionProvider)
-            );
+            ).DoNotWait();
             return VSConstants.S_OK;
         }
 

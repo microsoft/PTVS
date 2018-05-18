@@ -84,14 +84,16 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool CanTranslateFrom(int version) {
-            var ver = _snapshots.LastOrDefault()?.Version;
-            if (ver == null || version < ver.VersionNumber) {
-                return false;
+            lock (_lineCache) {
+                var ver = _snapshots.LastOrDefault()?.Version;
+                if (ver == null || version < ver.VersionNumber) {
+                    return false;
+                }
+                while (ver.Next != null && ver.VersionNumber < version) {
+                    ver = ver.Next;
+                }
+                return ver.VersionNumber == version;
             }
-            while (ver.Next != null && ver.VersionNumber < version) {
-                ver = ver.Next;
-            }
-            return ver.VersionNumber == version;
         }
 
         private static IEnumerable<NewLineLocation> LinesToLineEnds(IEnumerable<ITextSnapshotLine> lines) {
@@ -150,12 +152,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal NewLineLocation[] GetLineLocations(int version) {
-            var ver = _snapshots.Peek().Version;
-            NewLineLocation[] initial;
-
             lock (_lineCache) {
+                var ver = _snapshots.Peek().Version;
+
                 // Precalculated for this version
-                if (_lineCache.TryGetValue(version, out initial)) {
+                if (_lineCache.TryGetValue(version, out NewLineLocation[] initial)) {
                     return initial;
                 }
 
@@ -186,7 +187,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var appliedVersions = new List<ITextVersion>();
 #endif
                 List<NewLineLocation> asLengths = null;
-                while (ver.Changes != null && ver.VersionNumber < version) {
+                while (ver?.Changes != null && ver?.VersionNumber < version) {
 #if DEBUG
                     appliedVersions.Add(ver);
 #endif
@@ -314,8 +315,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return Translate(loc, fromSnapshot.Version.VersionNumber, toVersion);
         }
 
+        private ITextVersion GetTextVersion() {
+            lock (_lineCache) {
+                return _snapshots.Peek().Version;
+            }
+        }
+
         public SourceLocation Translate(SourceLocation loc, int fromVersion, int toVersion) {
-            var snapVer = _snapshots.Peek().Version;
+            var snapVer = GetTextVersion();
             var fromVer = snapVer;
             while (fromVer.Next != null && fromVer.VersionNumber < fromVersion) {
                 fromVer = fromVer.Next;

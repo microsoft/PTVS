@@ -50,7 +50,7 @@ namespace Microsoft.CookiecutterTools {
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
-        public CookiecutterToolWindow() {
+        public CookiecutterToolWindow(IServiceProvider serviceProvider) : base(serviceProvider) {
             BitmapImageMoniker = ImageMonikers.Cookiecutter;
             Caption = Strings.ToolWindowCaption;
             ToolBar = new CommandID(PackageGuids.guidCookiecutterCmdSet, PackageIds.WindowToolBarId);
@@ -124,9 +124,8 @@ namespace Microsoft.CookiecutterTools {
                 feedUrl = UrlConstants.DefaultRecommendedFeed;
             }
 
-            object commonIdeFolderPath;
             var shell = (IVsShell)GetService(typeof(SVsShell));
-            ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out commonIdeFolderPath));
+            ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out var commonIdeFolderPath));
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
             var projectSystemClient = new ProjectSystemClient((EnvDTE80.DTE2)GetService(typeof(EnvDTE.DTE)));

@@ -194,6 +194,9 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 try {
                     return Parse(s);
+                } catch (ArgumentException) {
+                    Debug.Fail("Invalid search path: " + (s ?? "<null>"));
+                    return null;
                 } catch (FormatException) {
                     Debug.Fail("Invalid format for search path: " + s);
                     return null;
@@ -219,8 +222,10 @@ namespace Microsoft.PythonTools.Analysis {
                     while ((line = file.ReadLine()) != null) {
                         try {
                             result.Add(Parse(line));
+                        } catch (ArgumentException) {
+                            Debug.Fail("Invalid search path: " + (line ?? "<null>"));
                         } catch (FormatException) {
-                            Debug.Fail("Invalid format: " + line);
+                            Debug.Fail("Invalid format for search path: " + line);
                         }
                     }
                 }

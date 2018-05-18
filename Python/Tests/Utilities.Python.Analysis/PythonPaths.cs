@@ -19,11 +19,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
 
 namespace TestUtilities {
     public class PythonPaths {
@@ -61,51 +61,28 @@ namespace TestUtilities {
 
         private static PythonVersion GetIronPythonVersion(bool x64) {
             var exeName = x64 ? "ipy64.exe" : "ipy.exe";
-            
-            using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
-                if (ipy != null) {
-                    using (var twoSeven = ipy.OpenSubKey("2.7")) {
-                        if (twoSeven != null) {
-                            var installPath = twoSeven.OpenSubKey("InstallPath");
-                            if (installPath != null) {
-                                var res = installPath.GetValue("") as string;
-                                if (res != null) {
-                                    // IronPython changed to Any CPU for ipy.exe and ipy32.exe for 32-bit in 2.7.8
-                                    if (File.Exists(Path.Combine(res, "ipy32.exe"))) {
-                                        exeName = x64 ? "ipy.exe" : "ipy32.exe";
-                                    }
 
-                                    return new PythonVersion(
-                                        new InterpreterConfiguration(
-                                            x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
-                                            string.Format("IronPython {0} 2.7", x64 ? "64-bit" : "32-bit"),
-                                            res,
-                                            Path.Combine(res, exeName),
-                                            arch: x64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
-                                            version: new Version(2, 7),
-                                            pathVar: "IRONPYTHONPATH"
-                                        ),
-                                        ironPython: true
-                                    );
-                                }
-                            }
-                        }
-                    }
+            var installPath = IronPythonResolver.GetPythonInstallDir();
+            if (Directory.Exists(installPath)) {
+                // IronPython changed to Any CPU for ipy.exe and ipy32.exe for 32-bit in 2.7.8
+                if (File.Exists(Path.Combine(installPath, "ipy32.exe"))) {
+                    exeName = x64 ? "ipy.exe" : "ipy32.exe";
                 }
+
+                return new PythonVersion(
+                    new InterpreterConfiguration(
+                        x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
+                        string.Format("IronPython {0} 2.7", x64 ? "64-bit" : "32-bit"),
+                        installPath,
+                        Path.Combine(installPath, exeName),
+                        arch: x64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
+                        version: new Version(2, 7),
+                        pathVar: "IRONPYTHONPATH"
+                    ),
+                    ironPython: true
+                );
             }
 
-            var ver = new PythonVersion(new InterpreterConfiguration(
-                "IronPython|2.7-32",
-                "IronPython 32-bit 2.7",
-                "C:\\Program Files (x86)\\IronPython 2.7\\",
-                "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
-                arch: InterpreterArchitecture.x86,
-                version: new Version(2, 7),
-                pathVar: "IRONPYTHONPATH"
-            ), ironPython: true);
-            if (File.Exists(ver.InterpreterPath)) {
-                return ver;
-            }
             return null;
         }
 
