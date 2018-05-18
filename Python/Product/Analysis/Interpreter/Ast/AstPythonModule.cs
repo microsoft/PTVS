@@ -218,8 +218,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             try {
                 using (var sr = new StreamReader(filePath)) {
                     string quote = null;
+                    string line;
                     while (true) {
-                        var line = sr.ReadLine();
+                        line = sr.ReadLine().Trim();
                         if (line == null) {
                             break;
                         }
@@ -235,9 +236,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
 
                     if (quote != null) {
+                        // Check if it is a single-liner
+                        if(line.EndsWithOrdinal(quote)) {
+                            return line.Substring(quote.Length, line.Length - 2 * quote.Length).Trim();
+                        }
                         var sb = new StringBuilder();
                         while (true) {
-                            var line = sr.ReadLine();
+                            line = sr.ReadLine();
                             if (line == null || line.EndsWithOrdinal(quote)) {
                                 break;
                             }
