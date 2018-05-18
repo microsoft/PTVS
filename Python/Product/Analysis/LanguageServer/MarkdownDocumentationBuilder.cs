@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         protected override string MakeFunctionDocumentation(AnalysisValue value) => FromDocAndDescription(value);
         protected override string MakeModuleDocumentation(AnalysisValue value) => FromDocAndDescription(value);
         protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value);
+        protected override string MakeConstantDocumentation(AnalysisValue value) => $"```python\n{value.Description}\n```";
 
         private string FromDocAndDescription(AnalysisValue value) {
             var sb = new StringBuilder();

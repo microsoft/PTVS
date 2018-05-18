@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return FromDocAndDescription(value, prefix);
         }
         protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value, string.Empty);
+        protected override string MakeConstantDocumentation(AnalysisValue value) =>  value.Description;
 
         private string FromDocAndDescription(AnalysisValue value, string prefix) {
             var sb = new StringBuilder();
