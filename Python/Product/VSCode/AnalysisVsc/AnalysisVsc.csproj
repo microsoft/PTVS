@@ -12,7 +12,7 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
-        <Content Include="python-analysis-vscode.nuspec">
+        <Content Include="Python-Analysis-VSCode.nuspec">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
