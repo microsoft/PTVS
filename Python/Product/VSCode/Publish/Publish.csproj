@@ -19,8 +19,8 @@
   </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
-    <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
-    <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
+    <ProjectReference Include="../../Analysis\AnalysisNetStandard.csproj" />
+    <ProjectReference Include="../AnalysisVsc/AnalysisVsc.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
@@ -29,8 +29,8 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- .NET Core publishing -->
   <PropertyGroup>
-    <AnalysisEngineName>python-analysis</AnalysisEngineName>
-    <NugetPackageName>$(AnalysisEngineName)-vscode</NugetPackageName>
+    <AnalysisEngineName>Python-Analysis</AnalysisEngineName>
+    <NugetPackageName>$(AnalysisEngineName)-VSCode</NugetPackageName>
     <DotNetPublish>true</DotNetPublish>
   </PropertyGroup>
   <ItemGroup>
@@ -51,18 +51,17 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <CallTarget Targets="PackPlatformSpecificFolders" />
-    <CallTarget Targets="PackNetcoreDependentFolder" />
-    <CallTarget Targets="Sha512" />
   </Target>
   <Target Name="PackPlatformSpecificFolders">
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
+    <Exec Command="dotnet publish --no-restore ../AnalysisVsc/AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
+    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <!-- Copy nuspec to platform folders -->
-    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
+    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
+    <Exec Command="mkdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" ContinueOnError="true" />
+    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)/$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)/$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)/$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
     <Exec Command="rmdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" />
   </Target>
   <Target Name="PackNetcoreDependentFolder">
@@ -97,7 +96,7 @@
       <Using Namespace="System.Security.Cryptography" />
       <Code Type="Fragment" Language="cs">
         <![CDATA[
-                  var prefix = "python-analysis-vscode";
+                  var prefix = "Python-Analysis-VSCode";
 
                   using (var sha = SHA512.Create())              
                   using (var tsFile = new StreamWriter(OutputFile.ItemSpec, false)) {
@@ -126,7 +125,7 @@
       </Code>
     </Task>
   </UsingTask>
-  <Target Name="Sha512">
-    <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)\analysisEngineHashes.ts" />
+  <Target Name="Sha512" AfterTargets="SignFiles">
+    <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)/analysisEngineHashes.ts" />
   </Target>
 </Project>
