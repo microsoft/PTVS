@@ -23,6 +23,8 @@ using static System.FormattableString;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitHubClient : IGitHubClient {
+        private const string UserAgent = "PythonToolsForVisualStudio/" + AssemblyVersionInfo.Version;
+
         // throws WebException (for example, with 403 forbidden) and JsonException
         public async Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl) {
             if (requestUrl == null) {
@@ -78,7 +80,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private static WebClient CreateClient() {
             var wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            wc.Headers.Add(HttpRequestHeader.UserAgent, "PTVS");
+            wc.Headers.Add(HttpRequestHeader.UserAgent, UserAgent);
             return wc;
         }
 
