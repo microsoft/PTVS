@@ -223,42 +223,29 @@ namespace Microsoft.PythonTools.Profiling {
                             return;
                         }
 
-#if true
                         var py = ProcessOutput.QuoteSingleArgument(stndTarget.Script);
-                        string outPathDir = @"c:\users\perf\downloads\temp";
+                        string outPathDir = Path.GetTempPath();
                         string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
-                        
+
                         ProcessStartInfo procInfo = new ProcessStartInfo(externalProfilerDriverExe);
                         Process proc = new Process();
                         proc.StartInfo = procInfo;
                         proc.StartInfo.CreateNoWindow = false;
-                        proc.StartInfo.Arguments = $" -- ${stndTarget.InterpreterPath} {py}";
+                        proc.StartInfo.Arguments = $" -d {outPathDir} -- {stndTarget.InterpreterPath} {py}";
                         proc.StartInfo.WorkingDirectory = outPathDir;
                         proc.EnableRaisingEvents = true;
                         proc.Exited += (object sender1, EventArgs args) =>
                         {
-#if false
-                            if (!File.Exists(outPath)) {
-                              outPath = backupPath;
-                            }
-                            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-                            dte.ItemOperations.OpenFile(outPath);
-#else
-/*
-                            if (File.Exists(outPath)) {
-                                var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-                                dte.ItemOperations.OpenFile(outPath);
+                            if (!File.Exists(Path.Combine(outPathDir, "Sample.dwjson"))) {
+                                MessageBox.Show($"Something happened, cannot find output file");
                             } else {
-                                MessageBox.Show("couldn't find file where I was expecting it.");
+                              PackageTrace(outPathDir);
+                              var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                              dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
                             }
-                            */
-                            MessageBox.Show("Done!");
-#endif
                         };
                         proc.Start();
                         //proc.WaitForExit();
-#endif
-
                     }
                 }
             }
@@ -532,12 +519,13 @@ namespace Microsoft.PythonTools.Profiling {
             return ret;
         }
 
-        public static void PackageTrace()
+        public static void PackageTrace(string dirname)
         {
             var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
             using (var package = DhPackage.CreateLegacyPackage()) {
                 package.AddTool(ref cpuToolId);
 
+#if false
                 // Contains the data to analyze
                 package.CreateResourceFromPath(
                     "DiagnosticsHub.Resource.DWJsonFile",
@@ -555,6 +543,25 @@ namespace Microsoft.PythonTools.Profiling {
                 // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
                 // the resources added from disk after they have been committed to the DiagSession
                 package.CommitToPath(@"c:\users\perf\downloads\demo", CommitOption.CommitOption_Archive);
+#else
+                // Contains the data to analyze
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.DWJsonFile",
+                    Path.Combine(dirname, "Sample.dwjson"),
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // Counter data to show in swimlane
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.CountersFile",
+                    Path.Combine(dirname, "Session.counters"),
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
+                // the resources added from disk after they have been committed to the DiagSession
+                package.CommitToPath(Path.Combine(dirname, "trace"), CommitOption.CommitOption_Archive);
+#endif
             }
         }
     }
