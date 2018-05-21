@@ -19,6 +19,7 @@ using System.Net;
 using System.Threading.Tasks;
 using static System.FormattableString;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitHubClient : IGitHubClient {
@@ -76,6 +77,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         private static WebClient CreateClient() {
             var wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
             wc.Headers.Add(HttpRequestHeader.UserAgent, "PTVS");
             return wc;
         }
