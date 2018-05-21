@@ -16,10 +16,10 @@
 
 using System;
 using System.Net;
-using System.Threading.Tasks;
-using static System.FormattableString;
-using Newtonsoft.Json;
 using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using static System.FormattableString;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitHubClient : IGitHubClient {
