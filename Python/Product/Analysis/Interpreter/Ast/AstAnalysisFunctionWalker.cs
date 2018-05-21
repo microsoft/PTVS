@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
         private readonly AstPythonFunctionOverload _overload;
-        private AstPythonType _selfType;
+        private AstPythonType _classType;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public void Walk() {
             var klass = GetClass();
-            _selfType = _selfType ?? GetSelf(klass);
+            _classType = _classType ?? GetClassType(klass);
 
             if (_target.ReturnAnnotation != null) {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
@@ -112,46 +112,49 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(AssignmentStatement node) {
             var value = _scope.GetValueFromExpression(node.Right);
-            var lhs = node.Left.FirstOrDefault();
-            if (lhs is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
-                if (_selfType != null && nameExp1.Name == "self") {
-                    _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
-                }
-                return true;
-            }
-
-            if (lhs is NameExpression nameExp2 && nameExp2.Name == "self") {
-                return true; // Don't assign to 'self'
-            }
-
-            // Basic assignment
-            foreach (var ne in node.Left.OfType<NameExpression>()) {
-                _scope.SetInScope(ne.Name, value);
-            }
-
-            // Tuple = Tuple. Transfer values.
-            if (lhs is TupleExpression tex) {
-                if (value is TupleExpression valTex) {
-                    var returnedExpressions = valTex.Items.ToArray();
-                    var names = tex.Items.OfType<NameExpression>().Select(x => x.Name).ToArray();
-                    for (var i = 0; i < Math.Min(names.Length, returnedExpressions.Length); i++) {
-                        var v = _scope.GetValueFromExpression(returnedExpressions[i]);
-                        _scope.SetInScope(names[i], v);
+            foreach (var lhs in node.Left) {
+                if (lhs is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
+                    if (_classType != null && nameExp1.Name == "self") {
+                        _classType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
                     }
-                    return true;
+                    continue;
                 }
 
-                // Tuple = 'tuple value' (such as from callable). Transfer values.
-                if (value is AstPythonConstant c && c.Type is AstPythonTuple tuple) {
-                    var types = tuple.Types.ToArray();
-                    var names = tex.Items.OfType<NameExpression>().Select(x => x.Name).ToArray();
-                    for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
-                        _scope.SetInScope(names[i], new AstPythonConstant(types[i]));
+                if (lhs is NameExpression nameExp2 && nameExp2.Name == "self") {
+                    continue; // Don't assign to 'self'
+                }
+
+                // Basic assignment
+                foreach (var ne in node.Left.OfType<NameExpression>()) {
+                    _scope.SetInScope(ne.Name, value);
+                }
+
+                // Tuple = Tuple. Transfer values.
+                if (lhs is TupleExpression tex) {
+                    if (value is TupleExpression valTex) {
+                        var returnedExpressions = valTex.Items.ToArray();
+                        var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
+                        for (var i = 0; i < Math.Min(names.Length, returnedExpressions.Length); i++) {
+                            if (returnedExpressions[i] != null) {
+                                var v = _scope.GetValueFromExpression(returnedExpressions[i]);
+                                _scope.SetInScope(names[i], v);
+                            }
+                        }
+                        continue;
                     }
-                    return true;
+
+                    // Tuple = 'tuple value' (such as from callable). Transfer values.
+                    if (value is AstPythonConstant c && c.Type is AstPythonTuple tuple) {
+                        var types = tuple.Types.ToArray();
+                        var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
+                        for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
+                            if (names[i] != null) {
+                                _scope.SetInScope(names[i], new AstPythonConstant(types[i]));
+                            }
+                        }
+                    }
                 }
             }
-
             return base.Walk(node);
         }
 
@@ -208,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return klass;
         }
 
-        private AstPythonType GetSelf(IMember klass) {
+        private AstPythonType GetClassType(IMember klass) {
             var cls = (klass as AstPythonConstant)?.Type as AstPythonType;
             if (cls != null) {
                 var self = _scope.LookupNameInScopes("self", NameLookupContext.LookupOptions.Local);

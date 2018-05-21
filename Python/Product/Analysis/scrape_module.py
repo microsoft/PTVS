@@ -392,13 +392,12 @@ class Signature(object):
         if not isinstance(doc, str):
             return
         
-        firstLine = doc.splitlines(1)[0]
-        try:
-            index = firstLine.index('->')
-        except Exception:
+        first_line = doc.parttion('\n')[0].strip()
+        if not '->' in first_line:
             return
 
-        typeName = firstLine[index + 2:].strip()
+        index = firstLine.index('->')
+        typeName = first_line[index + 2:].strip()
         if typeName.startswith('str'):
             return "return ''"
         if typeName.startswith('float'):
@@ -413,12 +412,8 @@ class Signature(object):
             return "return dict()"
         if typeName.startswith('('):
             return "return tuple()"
-        try:
-            index = firstLine.index('Return a string')
-            if index >= 0:
-                return "return ''"
-        except Exception:
-            pass
+        if 'Return a string' in first_line:
+            return "return ''"
         return
 
     def _init_argspec_fromdocstring(self, defaults, doc=None, override_name=None):
