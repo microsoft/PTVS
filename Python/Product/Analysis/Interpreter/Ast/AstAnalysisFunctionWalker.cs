@@ -168,9 +168,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 var name = (ce.Args[0].Expression as NameExpression)?.Name;
                 var typeName = (ce.Args[1].Expression as NameExpression)?.Name;
                 if (name != null && typeName != null) {
-                    var m = _scope.LookupNameInScopes(typeName, NameLookupContext.LookupOptions.Global);
-                    if (m is IPythonType t && t.IsBuiltin) {
-                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(t.Name, t.TypeId)));
+                    var typeId = typeName.GetTypeId();
+                    if (typeId != BuiltinTypeId.Unknown) {
+                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(typeName, typeId)));
                     }
                 }
             }
