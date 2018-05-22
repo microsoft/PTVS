@@ -995,7 +995,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private InterpreterScope FindScope(SourceLocation location) => FindScope(Scope, _unit.Tree, location);
+        private InterpreterScope FindScope(SourceLocation location) 
+            => _unit.Tree != null ? FindScope(Scope, _unit.Tree, location) : null;
 
         private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {
             var function = scope.Node as FunctionDefinition;
