@@ -388,14 +388,11 @@ void Thread(void*)
         PyObject *pValue;
 
         pValue = PyObject_CallObject(g_pFunc, 0);
-        if (pValue != NULL) {
-            //printf(""Result of call: %ld\n"", PyInt_AsLong(pValue));
-            Py_DECREF(pValue);
-        }
-        else {
+        if (!pValue) {
             PyErr_Print();
             return;
         }
+        Py_DECREF(pValue);
         PyGILState_Release(state);
 
         Sleep(1000);
@@ -409,10 +406,8 @@ void main()
     Py_SetPythonHome($PYTHON_HOME);
     Py_Initialize();
     PyEval_InitThreads();
-    pName = CREATE_STRING(""gilstate_attach"");
 
-    pModule = PyImport_Import(pName);
-    Py_DECREF(pName);
+    pModule = PyImport_ImportModule(""gilstate_attach"");
 
     if (pModule != NULL) {
         g_pFunc = PyObject_GetAttrString(pModule, ""test"");
@@ -441,13 +436,13 @@ void main()
     }
     Py_Finalize();
     return;
-}".Replace("CREATE_STRING", CreateString);
+}";
             var exe = CompileCode(hostCode);
 
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe), "gilstate_attach.py"), @"def test():
     import sys
-    print('\n'.join(sys.path))
-    for i in range(10):
+    print(sys.gettrace() or ""(no trace function)"")
+    for i in range(1):
         print(i)
 
     return 0");
@@ -462,11 +457,14 @@ void main()
                     var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
+                    var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput, debugLog: DebugLog);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             Console.WriteLine("Process loaded");
                             attached.SetResult(true);
+                        };
+                        proc.DebuggerOutput += (sender, args) => {
+                            Console.WriteLine(args.Output ?? "");
                         };
                         await proc.StartListeningAsync();
 
@@ -477,7 +475,7 @@ void main()
                             bpHit.SetResult(true);
                         };
 
-                        var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
+                        var bp = proc.AddBreakpoint("gilstate_attach.py", 2);
                         await bp.AddAsync(TimeoutToken());
 
                         await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
@@ -1230,7 +1228,9 @@ int main(int argc, char* argv[]) {
                     ? (VCCompiler.VC10_X64 ?? VCCompiler.VC12_X64 ?? VCCompiler.VC11_X64)
                     : (VCCompiler.VC10_X86 ?? VCCompiler.VC12_X86 ?? VCCompiler.VC11_X86);
             } else {
-                vc = Version.Isx64 ? VCCompiler.VC14_X64 : VCCompiler.VC14_X86;
+                vc = Version.Isx64
+                    ? (VCCompiler.VC15_X64 ?? VCCompiler.VC14_X64)
+                    : (VCCompiler.VC15_X86 ?? VCCompiler.VC14_X86);
             }
 
             if (vc == null) {

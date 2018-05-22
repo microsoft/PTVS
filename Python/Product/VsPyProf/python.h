@@ -284,7 +284,6 @@ public:
        to the current stack top. */
     PyObject **f_stacktop;
     PyObject *f_trace;          /* Trace function */
-    PyObject *f_exc_type, *f_exc_value, *f_exc_traceback;
 };
 
 #define CO_MAXBLOCKS 20
@@ -296,6 +295,7 @@ typedef struct {
 
 class PyFrameObject25_33 : public PyFrameObject {
 public:
+    PyObject * f_exc_type, *f_exc_value, *f_exc_traceback;
     PyThreadState* f_tstate;
     int f_lasti;                /* Last instruction if called */
     /* As of 2.3 f_lineno is only valid when tracing is active (i.e. when
@@ -311,8 +311,9 @@ public:
     }
 };
 
-class PyFrameObject34_37 : public PyFrameObject {
+class PyFrameObject34_36 : public PyFrameObject {
 public:
+    PyObject * f_exc_type, *f_exc_value, *f_exc_traceback;
     /* Borrowed reference to a generator, or NULL */
     PyObject *f_gen;
 
@@ -326,7 +327,28 @@ public:
     PyObject *f_localsplus[1];    /* locals+stack, dynamically sized */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion >= 4 && minorVersion <= 7;
+        return majorVersion == 3 && minorVersion >= 4 && minorVersion <= 6;
+    }
+};
+
+class PyFrameObject37 : public PyFrameObject {
+public:
+    char f_trace_lines;         /* Emit per-line trace events? */
+    char f_trace_opcodes;       /* Emit per-opcode trace events? */
+    /* Borrowed reference to a generator, or NULL */
+    PyObject *f_gen;
+
+    int f_lasti;                /* Last instruction if called */
+    /* As of 2.3 f_lineno is only valid when tracing is active (i.e. when
+       f_trace is set) -- at other times use PyCode_Addr2Line instead. */
+    int f_lineno;               /* Current line number */
+    int f_iblock;       /* index in f_blockstack */
+    char f_executing;           /* whether the frame is still executing */
+    PyTryBlock f_blockstack[CO_MAXBLOCKS]; /* for try and loop blocks */
+    PyObject *f_localsplus[1];    /* locals+stack, dynamically sized */
+
+    static bool IsFor(int majorVersion, int minorVersion) {
+        return majorVersion == 3 && minorVersion >= 7;
     }
 };
 
@@ -568,7 +590,7 @@ public:
     }
 };
 
-class PyThreadState_34_37_Base : public PyThreadState {
+class PyThreadState_34_36 : public PyThreadState {
 public:
     PyThreadState *prev;
     PyThreadState *next;
@@ -604,10 +626,7 @@ public:
     int gilstate_counter;
 
     PyObject *async_exc; /* Asynchronous exception to raise */
-};
 
-class PyThreadState_34_36 : public PyThreadState_34_37_Base {
-public:
     long thread_id; /* Thread id where this tstate was created */
     /* XXX signal handlers should also be here */
 
@@ -620,10 +639,50 @@ public:
     }
 };
 
-class PyThreadState_37 : public PyThreadState_34_37_Base {
+struct _PyErr_StackItem {
+    PyObject *exc_type, *exc_value, *exc_traceback;
+    struct _PyErr_StackItem *previous_item;
+};
+
+class PyThreadState_37 : public PyThreadState {
 public:
+    PyThreadState * prev;
+    PyThreadState *next;
+    PyInterpreterState *interp;
+
+    PyFrameObject *frame;
+    int recursion_depth;
+    char overflowed; /* The stack has overflowed. Allow 50 more calls
+                     to handle the runtime error. */
+    char recursion_critical; /* The current calls must not cause
+                             a stack overflow. */
+                             /* 'tracing' keeps track of the execution depth when tracing/profiling.
+                             This is to prevent the actual trace/profile code from being recorded in
+                             the trace/profile. */
+    int stackcheck_counter;
+
+    int tracing;
+    int use_tracing;
+
+    Py_tracefunc c_profilefunc;
+    Py_tracefunc c_tracefunc;
+    PyObject *c_profileobj;
+    PyObject *c_traceobj;
+
+    PyObject *curexc_type;
+    PyObject *curexc_value;
+    PyObject *curexc_traceback;
+
+    _PyErr_StackItem exc_state;
+    _PyErr_StackItem *exc_info;
+
+    PyObject *dict;  /* Stores per-thread state */
+
+    int gilstate_counter;
+
+    PyObject *async_exc; /* Asynchronous exception to raise */
+
     unsigned long thread_id; /* Thread id where this tstate was created */
-    /* XXX signal handlers should also be here */
 
     static bool IsFor(int majorVersion, int minorVersion) {
         return majorVersion == 3 && minorVersion >= 7;

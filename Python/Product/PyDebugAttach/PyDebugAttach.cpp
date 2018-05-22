@@ -36,6 +36,7 @@ typedef PyInterpreterState* (PyInterpreterState_Head)();
 typedef PyThreadState* (PyInterpreterState_ThreadHead)(PyInterpreterState* interp);
 typedef PyThreadState* (PyThreadState_Next)(PyThreadState *tstate);
 typedef PyThreadState* (PyThreadState_Swap)(PyThreadState *tstate);
+typedef PyThreadState* (_PyThreadState_UncheckedGet)();
 typedef PyObject* (PyDict_New)();
 typedef PyObject* (PyModule_New)(const char *name);
 typedef PyObject* (PyModule_GetDict)(PyObject *module);
@@ -123,6 +124,7 @@ public:
     InterpreterInfo(HMODULE module, bool debug) :
         Interpreter(module),
         CurrentThread(nullptr),
+        CurrentThreadGetter(nullptr),
         NewThreadFunction(nullptr),
         PyGILState_Ensure(nullptr),
         Version(PythonVersion_Unknown),
@@ -141,6 +143,7 @@ public:
 
     PyObjectHolder* NewThreadFunction;
     PyThreadState** CurrentThread;
+    _PyThreadState_UncheckedGet *CurrentThreadGetter;
 
     HMODULE Interpreter;
     PyGILState_EnsureFunc* PyGILState_Ensure;
@@ -180,13 +183,16 @@ public:
     }
 
     bool EnsureCurrentThread() {
-        if (CurrentThread == nullptr) {
-            auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(
-                Interpreter, "_PyThreadState_Current");
-            CurrentThread = curPythonThread;
+        if (CurrentThread == nullptr && CurrentThreadGetter == nullptr) {
+            CurrentThreadGetter = (_PyThreadState_UncheckedGet*)GetProcAddress(Interpreter, "_PyThreadState_UncheckedGet");
+            CurrentThread = (PyThreadState**)(void*)GetProcAddress(Interpreter, "_PyThreadState_Current");
         }
 
-        return CurrentThread != nullptr;
+        return CurrentThread != nullptr || CurrentThreadGetter != nullptr;
+    }
+
+    PyThreadState *GetCurrentThread() {
+        return CurrentThreadGetter ? CurrentThreadGetter() : *CurrentThread;
     }
 
 private:
@@ -654,7 +660,7 @@ ConnectionInfo GetConnectionInfo() {
     char* pBuf;
 
     wchar_t fullMappingName[1024];
-    _snwprintf_s(fullMappingName, _countof(fullMappingName), L"PythonDebuggerMemory%d", GetCurrentProcessId());
+    _snwprintf_s(fullMappingName, sizeof(fullMappingName) / sizeof(fullMappingName[0]), L"PythonDebuggerMemory%d", GetCurrentProcessId());
 
     hMapFile = OpenFileMapping(
         FILE_MAP_ALL_ACCESS,   // read/write access
@@ -807,7 +813,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         // found initialized Python runtime, gather and check the APIs we need for a successful attach...
         auto addPendingCall = (Py_AddPendingCall*)GetProcAddress(module, "Py_AddPendingCall");
-        auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(module, "_PyThreadState_Current");
         auto interpHead = (PyInterpreterState_Head*)GetProcAddress(module, "PyInterpreterState_Head");
         auto gilEnsure = (PyGILState_Ensure*)GetProcAddress(module, "PyGILState_Ensure");
         auto gilRelease = (PyGILState_Release*)GetProcAddress(module, "PyGILState_Release");
@@ -843,7 +848,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             strFromString = (PyString_FromString*)GetProcAddress(module, "PyString_FromString");
             intFromSizeT = (PyInt_FromSize_t*)GetProcAddress(module, "PyInt_FromSize_t");
         }
-        auto intervalCheck = (int*)GetProcAddress(module, "_Py_CheckInterval");
         auto errOccurred = (PyErr_Occurred*)GetProcAddress(module, "PyErr_Occurred");
         auto pyErrFetch = (PyErr_Fetch*)GetProcAddress(module, "PyErr_Fetch");
         auto pyErrRestore = (PyErr_Restore*)GetProcAddress(module, "PyErr_Restore");
@@ -852,8 +856,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto pyGetAttr = (PyObject_GetAttrString*)GetProcAddress(module, "PyObject_GetAttrString");
         auto pySetAttr = (PyObject_SetAttrString*)GetProcAddress(module, "PyObject_SetAttrString");
         auto pyNone = (PyObject*)GetProcAddress(module, "_Py_NoneStruct");
-        auto getSwitchInterval = (_PyEval_GetSwitchInterval*)GetProcAddress(module, "_PyEval_GetSwitchInterval");
-        auto setSwitchInterval = (_PyEval_SetSwitchInterval*)GetProcAddress(module, "_PyEval_SetSwitchInterval");
+
         auto boolFromLong = (PyBool_FromLong*)GetProcAddress(module, "PyBool_FromLong");
         auto getThreadTls = (PyThread_get_key_value*)GetProcAddress(module, "PyThread_get_key_value");
         auto setThreadTls = (PyThread_set_key_value*)GetProcAddress(module, "PyThread_set_key_value");
@@ -863,12 +866,22 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto pyUnicodeAsWideChar = (PyUnicode_AsWideChar*)GetProcAddress(module,
             version < PythonVersion_33 ? "PyUnicodeUCS2_AsWideChar" : "PyUnicode_AsWideChar");
 
-        if (addPendingCall == nullptr || curPythonThread == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
+        // Either _PyThreadState_Current or _PyThreadState_UncheckedGet are required
+        auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(module, "_PyThreadState_Current");
+        auto getPythonThread = (_PyThreadState_UncheckedGet*)GetProcAddress(module, "_PyThreadState_UncheckedGet");
+
+        // Either _Py_CheckInterval or _PyEval_[GS]etSwitchInterval are useful, but not required
+        auto intervalCheck = (int*)GetProcAddress(module, "_Py_CheckInterval");
+        auto getSwitchInterval = (_PyEval_GetSwitchInterval*)GetProcAddress(module, "_PyEval_GetSwitchInterval");
+        auto setSwitchInterval = (_PyEval_SetSwitchInterval*)GetProcAddress(module, "_PyEval_SetSwitchInterval");
+
+        if (addPendingCall == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
             initThreads == nullptr || releaseLock == nullptr || threadsInited == nullptr || threadNext == nullptr || threadSwap == nullptr ||
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || pyObjectRepr == nullptr || pyUnicodeAsWideChar == nullptr) {
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || pyObjectRepr == nullptr || pyUnicodeAsWideChar == nullptr ||
+            (curPythonThread == nullptr && getPythonThread == nullptr)) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -957,7 +970,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
                 if (!threadsInited()) {
-                    if (*curPythonThread == nullptr) {
+                    auto curPyThread = getPythonThread ? getPythonThread() : *curPythonThread;
+                    
+                    if (curPyThread == nullptr) {
                         // no threads are currently running, it is safe to initialize multi threading.
                         PyGILState_STATE gilState;
                         if (version >= PythonVersion_34) {
@@ -1081,7 +1096,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
             auto repr = PyObjectHolder(isDebug, pyObjectRepr(value));
             wchar_t reprText[0x1000] = {};
-            pyUnicodeAsWideChar(repr.ToPython(), reprText, _countof(reprText) - 1);
+            pyUnicodeAsWideChar(repr.ToPython(), reprText, sizeof(reprText) / sizeof(reprText[0]) - 1);
             fputws(reprText, stderr);
 
             connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
@@ -1115,7 +1130,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         unordered_set<PyThreadState*> seenThreads;
         {
             // find what index is holding onto the thread state...
-            auto curPyThread = *curPythonThread;
+            auto curPyThread = getPythonThread ? getPythonThread() : *curPythonThread;
             int threadStateIndex = -1;
             for (int i = 0; i < 100000; i++) {
                 void* value = getThreadTls(i);
@@ -1319,7 +1334,7 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
 
     auto call = curInterpreter->GetCall();
     if (call != nullptr && curInterpreter->EnsureCurrentThread()) {
-        auto curThread = *curInterpreter->CurrentThread;
+        auto curThread = curInterpreter->GetCurrentThread();
 
         bool isDebug = new_thread->_isDebug;
 
@@ -1462,7 +1477,7 @@ PyGILState_STATE MyGilEnsureGeneral(DWORD interpreterId) {
 
     if (res == PyGILState_UNLOCKED) {
         if (curInterpreter->EnsureCurrentThread()) {
-            auto thread = *curInterpreter->CurrentThread;
+            auto thread = curInterpreter->GetCurrentThread();
 
             if (thread != nullptr && curInterpreter->EnsureSetTrace()) {
                 SetInitialTraceFunc(interpreterId, thread);
