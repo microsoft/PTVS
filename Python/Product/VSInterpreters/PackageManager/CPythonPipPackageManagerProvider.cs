@@ -22,22 +22,23 @@ using Microsoft.PythonTools.Infrastructure;
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPackageManagerProvider))]
     sealed class CPythonPipPackageManagerProvider : IPackageManagerProvider {
-        class PipCommandsV2 : PipPackageManagerCommands {
+        class PipCommandsV26 : PipPackageManagerCommands {
             public override IEnumerable<string> Base() => new[] { "-c", ProcessOutput.QuoteSingleArgument("import pip; pip.main()") };
             public override IEnumerable<string> Prepare() => new[] { PythonToolsInstallPath.GetFile("pip_downloader.py", typeof(PipPackageManager).Assembly) };
         }
 
-        class PipCommandsV3 : PipPackageManagerCommands {
+        class PipCommandsV27AndLater : PipPackageManagerCommands {
             public override IEnumerable<string> Prepare() => new[] { PythonToolsInstallPath.GetFile("pip_downloader.py", typeof(PipPackageManager).Assembly) };
         }
 
-        private static readonly PipPackageManagerCommands CommandsV2 = new PipCommandsV2();
-        private static readonly PipPackageManagerCommands CommandsV3 = new PipCommandsV3();
+        private static readonly PipPackageManagerCommands CommandsV26 = new PipCommandsV26();
+        private static readonly PipPackageManagerCommands CommandsV27AndLater = new PipCommandsV27AndLater();
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
             try {
-                pm = new PipPackageManager(factory, factory.Configuration.Version.Major >= 3 ? CommandsV3 : CommandsV2, 1000);
+                var cmds = factory.Configuration.Version >= new Version(2, 6) ? CommandsV27AndLater : CommandsV26;
+                pm = new PipPackageManager(factory, cmds, 1000);
             } catch (NotSupportedException) {
             }
             
