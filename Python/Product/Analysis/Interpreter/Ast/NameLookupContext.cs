@@ -499,6 +499,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
+            Debug.Assert(_scopes.Count > 0);
             if (value == null && _scopes.Count == 0) {
                 return;
             }
