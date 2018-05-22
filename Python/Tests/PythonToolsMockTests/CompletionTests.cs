@@ -1168,30 +1168,6 @@ async def g():
             }
         }
 
-        private static void TestMemberCompletion(PythonEditor view, int index, string expectedExpression) {
-            var snapshot = view.CurrentSnapshot;
-            if (index < 0) {
-                index += snapshot.Length + 1;
-            }
-
-            var context = view.VS.Invoke(() => view.VS.GetPyService().GetCompletions(
-                null,
-                view.View.TextView,
-                snapshot,
-                snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
-                snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
-                new CompletionOptions()
-            ));
-
-            Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
-            var normalContext = (NormalCompletionAnalysis)context;
-
-            string text;
-            SnapshotSpan statementExtent;
-            Assert.IsTrue(normalContext.GetPrecedingExpression(out text, out statementExtent));
-            Assert.AreEqual(expectedExpression, text);
-        }
-
         private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
             var snapshot = view.CurrentSnapshot;
 

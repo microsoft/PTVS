@@ -440,7 +440,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (nameNode.Name == "*") {
                         _scope.ContainsImportStar = true;
                     } else {
-                        var v = CreateVariableInDeclaredScope(nameNode, isLocated: true);
+                        var v = CreateVariableInDeclaredScope(nameNode, isLocated: false);
                         v.AddReference(nameNode, _curUnit);
                     }
                 }
@@ -486,7 +486,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 if (name != null) {
-                    CreateVariableInDeclaredScope(name, isLocated: true);
+                    CreateVariableInDeclaredScope(name, isLocated: false);
                 }
             }
 

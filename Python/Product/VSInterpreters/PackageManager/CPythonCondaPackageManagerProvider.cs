@@ -38,11 +38,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             if (ExperimentalOptions.UseCondaPackageManager) {
-                if (!Directory.Exists(Path.Combine(factory.Configuration.PrefixPath, "conda-meta"))) {
+                var prefixPath = factory.Configuration.PrefixPath;
+                if (string.IsNullOrEmpty(prefixPath) ||
+                    !Directory.Exists(Path.Combine(prefixPath, "conda-meta"))) {
                     yield break;
                 }
 
-                var condaPath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath);
+                var condaPath = CondaUtils.GetCondaExecutablePath(prefixPath);
                 if (string.IsNullOrEmpty(condaPath)) {
                     // conda.bat is no longer present in a conda 4.4 environment,
                     // so find a global conda.exe to use.

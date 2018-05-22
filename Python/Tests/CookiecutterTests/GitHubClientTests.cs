@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,21 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Flavor;
+using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Model;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
-namespace Microsoft.PythonTools.Django.Project {
-    [Guid(DjangoProjectGuid)]
-    public class DjangoProjectFactory : FlavoredProjectFactoryBase {
-        internal const string DjangoProjectGuid = "5F0BE9CA-D677-4A4D-8806-6076C0FAAD37";
-        private readonly DjangoPackage _package;
-
-        public DjangoProjectFactory(DjangoPackage package) {
-            _package = package;
+namespace CookiecutterTests {
+    [TestClass]
+    public class GitHubClientTests {
+       [TestMethod]
+        public async Task CheckEncoding() {
+            // Use a repository with a description in Chinese to check UTF-8 decoding
+            var client = new GitHubClient();
+            var details = await client.GetRepositoryDetails("chenyinxin", "cookiecutter-bitadmin-core");
+            AssertUtil.Contains(details.Description, "BitAdminCore是基于net core的管理应用快速开发框架");
         }
-
-        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) 
-            => new DjangoProject(_package);
     }
 }

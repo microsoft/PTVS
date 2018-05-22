@@ -624,6 +624,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         public async Task SearchAsync(string autoSelectTemplateUri = null) {
+            // Clear errors when a new search is performed
+            ResetStatus(resetUpdateStatus: false);
+
             _templateRefreshCancelTokenSource?.Cancel();
             _templateRefreshCancelTokenSource = new CancellationTokenSource();
             try {
@@ -977,12 +980,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        private void ResetStatus() {
+        private void ResetStatus(bool resetUpdateStatus = true) {
             CloningStatus = OperationStatus.NotStarted;
             LoadingStatus = OperationStatus.NotStarted;
             CreatingStatus = OperationStatus.NotStarted;
-            CheckingUpdateStatus = OperationStatus.NotStarted;
-            UpdatingStatus = OperationStatus.NotStarted;
+            if (resetUpdateStatus) {
+                UpdatingStatus = OperationStatus.NotStarted;
+                CheckingUpdateStatus = OperationStatus.NotStarted;
+            }
         }
 
         public void Home() {

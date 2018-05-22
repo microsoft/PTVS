@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private PythonAst CreateAst(Statement ret) {
-            var ast = new PythonAst(ret, _tokenizer.GetLineLocations(), _tokenizer.LanguageVersion);
+            var ast = new PythonAst(ret, _tokenizer.GetLineLocations(), _tokenizer.LanguageVersion, _tokenizer.GetCommentLocations());
             ast.HasVerbatim = _verbatim;
             ast.PrivatePrefix = _privatePrefix;
             if (_token.Token != null) {
@@ -1686,11 +1686,6 @@ namespace Microsoft.PythonTools.Parsing {
             var name = ReadName();
             var nameExpr = MakeName(name);
             string nameWhiteSpace = _tokenWhiteSpace;
-
-            if (name.RealName == null) {
-                // no name, assume there's no class.
-                return ErrorStmt(_verbatim ? (classWhiteSpace + "class") : null);
-            }
 
             bool isParenFree = false;
             string leftParenWhiteSpace = null, rightParenWhiteSpace = null;

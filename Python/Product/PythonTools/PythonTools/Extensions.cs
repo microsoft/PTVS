@@ -142,9 +142,11 @@ namespace Microsoft.PythonTools {
             }
 
             var spanLength = position - line.Start.Position;
-            // Increase position by one to include 'fob' in: "abc.|fob"
-            if (spanLength < line.Length) {
-                spanLength += 1;
+            if (completeWord) {
+                // Increase position by one to include 'fob' in: "abc.|fob"
+                if (spanLength < line.Length) {
+                    spanLength += 1;
+                }
             }
 
             var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
@@ -817,7 +819,7 @@ namespace Microsoft.PythonTools {
 
         internal static void ShowWindowPane(this IServiceProvider serviceProvider, Type windowPane, bool focus) {
             var toolWindowService = (IPythonToolsToolWindowService)serviceProvider.GetService(typeof(IPythonToolsToolWindowService));
-            toolWindowService.ShowWindowPane(windowPane, focus);
+            toolWindowService.ShowWindowPaneAsync(windowPane, focus).DoNotWait();
         }
 
         public static string BrowseForDirectory(this IServiceProvider provider, IntPtr owner, string initialDirectory = null) {
