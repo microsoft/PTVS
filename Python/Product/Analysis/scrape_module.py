@@ -392,11 +392,11 @@ class Signature(object):
         if not isinstance(doc, str):
             return
         
-        first_line = doc.parttion('\n')[0].strip()
+        first_line = doc.partition('\n')[0].strip()
         if not '->' in first_line:
             return
 
-        index = firstLine.index('->')
+        index = first_line.index('->')
         typeName = first_line[index + 2:].strip()
         if typeName.startswith('str'):
             return "return ''"
