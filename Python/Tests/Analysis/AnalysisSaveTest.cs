@@ -18,14 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -116,7 +114,7 @@ Aliased = test.Aliased
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("list_of_int", pos), "list of int");
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str");
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "int");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "type int");
 
                 var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
                 Assert.AreEqual(1, result.Length);
