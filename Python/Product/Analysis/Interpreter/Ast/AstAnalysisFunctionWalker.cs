@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
         private readonly AstPythonFunctionOverload _overload;
-        private AstPythonType _classType;
+        private AstPythonType _selfType;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
@@ -68,8 +68,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Walk() {
-            var klass = GetClass();
-            _classType = _classType ?? GetClassType(klass);
+            var self = GetClass();
+            _selfType = _selfType ?? GetClassType(self);
 
             if (_target.ReturnAnnotation != null) {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
@@ -83,10 +83,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
 
             _scope.PushScope();
-            if (klass != null) {
+            if (self != null) {
                 var p0 = _target.ParametersInternal?.FirstOrDefault();
                 if (p0 != null && !string.IsNullOrEmpty(p0.Name) && p0.Name != "self") {
-                    _scope.SetInScope(p0.Name, klass);
+                    _scope.SetInScope(p0.Name, self);
                 }
             }
             _target.Walk(this);
@@ -114,8 +114,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var value = _scope.GetValueFromExpression(node.Right);
             foreach (var lhs in node.Left) {
                 if (lhs is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
-                    if (_classType != null && nameExp1.Name == "self") {
-                        _classType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
+                    if (_selfType != null && nameExp1.Name == "self") {
+                        _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
                     }
                     continue;
                 }
@@ -168,9 +168,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 var name = (ce.Args[0].Expression as NameExpression)?.Name;
                 var typeName = (ce.Args[1].Expression as NameExpression)?.Name;
                 if (name != null && typeName != null) {
-                    var typeId = BuiltinTypeIdFromName(typeName);
-                    if (typeId != BuiltinTypeId.Unknown) {
-                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(typeName, typeId)));
+                    var m = _scope.LookupNameInScopes(typeName, NameLookupContext.LookupOptions.Global);
+                    if (m is IPythonType t && t.IsBuiltin) {
+                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(t.Name, t.TypeId)));
                     }
                 }
             }
@@ -178,20 +178,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ReturnStatement node) {
-            var typesAdded = false;
             if (node.Expression is NameExpression nex && nex.Name == "self") {
                 // For self return the actual class without added private members
                 var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Nonlocal);
-                if (klass != null) {
-                    _returnTypes.Add(klass as IPythonType);
-                    typesAdded = true;
+                if (klass is IPythonType t) {
+                    _returnTypes.Add(t);
+                    return true;
                 }
             }
 
-            if (!typesAdded) {
-                foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
-                    _returnTypes.Add(type);
-                }
+            foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
+                _returnTypes.Add(type);
             }
             return true; // We want to evaluate all code so all private variables in __new__ get defined
         }
@@ -224,17 +221,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return (self as AstPythonConstant)?.Type as AstPythonType;
             }
             return null;
-        }
-
-        private static BuiltinTypeId BuiltinTypeIdFromName(string name) {
-            switch (name) {
-                case "int": return BuiltinTypeId.Int;
-                case "long": return BuiltinTypeId.Long;
-                case "bool": return BuiltinTypeId.Bool;
-                case "float": return BuiltinTypeId.Float;
-                case "str": return BuiltinTypeId.Str;
-            }
-            return BuiltinTypeId.Unknown;
         }
     }
 }
