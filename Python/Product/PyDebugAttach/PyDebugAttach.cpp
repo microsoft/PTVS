@@ -124,6 +124,7 @@ public:
     InterpreterInfo(HMODULE module, bool debug) :
         Interpreter(module),
         CurrentThread(nullptr),
+        CurrentThreadGetter(nullptr),
         NewThreadFunction(nullptr),
         PyGILState_Ensure(nullptr),
         Version(PythonVersion_Unknown),
@@ -142,6 +143,7 @@ public:
 
     PyObjectHolder* NewThreadFunction;
     PyThreadState** CurrentThread;
+    _PyThreadState_UncheckedGet *CurrentThreadGetter;
 
     HMODULE Interpreter;
     PyGILState_EnsureFunc* PyGILState_Ensure;
@@ -181,13 +183,16 @@ public:
     }
 
     bool EnsureCurrentThread() {
-        if (CurrentThread == nullptr) {
-            auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(
-                Interpreter, "_PyThreadState_Current");
-            CurrentThread = curPythonThread;
+        if (CurrentThread == nullptr && CurrentThreadGetter == nullptr) {
+            CurrentThreadGetter = (_PyThreadState_UncheckedGet*)GetProcAddress(Interpreter, "_PyThreadState_UncheckedGet");
+            CurrentThread = (PyThreadState**)(void*)GetProcAddress(Interpreter, "_PyThreadState_Current");
         }
 
-        return CurrentThread != nullptr;
+        return CurrentThread != nullptr || CurrentThreadGetter != nullptr;
+    }
+
+    PyThreadState *GetCurrentThread() {
+        return CurrentThreadGetter ? CurrentThreadGetter() : *CurrentThread;
     }
 
 private:
@@ -1329,7 +1334,7 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
 
     auto call = curInterpreter->GetCall();
     if (call != nullptr && curInterpreter->EnsureCurrentThread()) {
-        auto curThread = *curInterpreter->CurrentThread;
+        auto curThread = curInterpreter->GetCurrentThread();
 
         bool isDebug = new_thread->_isDebug;
 
@@ -1472,7 +1477,7 @@ PyGILState_STATE MyGilEnsureGeneral(DWORD interpreterId) {
 
     if (res == PyGILState_UNLOCKED) {
         if (curInterpreter->EnsureCurrentThread()) {
-            auto thread = *curInterpreter->CurrentThread;
+            auto thread = curInterpreter->GetCurrentThread();
 
             if (thread != nullptr && curInterpreter->EnsureSetTrace()) {
                 SetInitialTraceFunc(interpreterId, thread);
