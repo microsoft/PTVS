@@ -252,6 +252,9 @@ Continue?</value>
   <data name="SearchPathContainerProperties" xml:space="preserve">
     <value>Search Paths Properties</value>
   </data>
+  <data name="CustomCommandCanceled" xml:space="preserve">
+    <value>Command {0} has been canceled</value>
+  </data>
   <data name="ErrorRunningCustomCommand" xml:space="preserve">
     <value>An error occurred while running {0}.
 
