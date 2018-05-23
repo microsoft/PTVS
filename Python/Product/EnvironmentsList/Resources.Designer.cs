@@ -1023,7 +1023,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Due to security issues, pip may no longer work on this version of Python..
+        ///   Looks up a localized string similar to Due to new security restrictions, installing from the internet may not work on this version of Python..
         /// </summary>
         public static string PipExtensionSecurityWarning {
             get {

@@ -423,7 +423,7 @@ The folder will be deleted from disk. This operation cannot be undone.</value>
     <value>Clear search filter</value>
   </data>
   <data name="PipExtensionSecurityWarning" xml:space="preserve">
-    <value>Due to security issues, pip may no longer work on this version of Python.</value>
+    <value>Due to new security restrictions, installing from the internet may not work on this version of Python.</value>
   </data>
   <data name="PipExtensionSecurityLearnMore" xml:space="preserve">
     <value>Learn more</value>
