@@ -1014,6 +1014,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Learn more.
+        /// </summary>
+        public static string PipExtensionSecurityLearnMore {
+            get {
+                return ResourceManager.GetString("PipExtensionSecurityLearnMore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Due to security issues, pip may no longer work on this version of Python..
+        /// </summary>
+        public static string PipExtensionSecurityWarning {
+            get {
+                return ResourceManager.GetString("PipExtensionSecurityWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (unknown).
         /// </summary>
         public static string PipPackageUnknownPackageSpec {
