@@ -69,19 +69,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        internal AstPythonType Clone() {
-            lock (_members) {
-                var locations = Locations.Any() ? Locations.ToArray() : Array.Empty<LocationInfo>();
-                var clone = new AstPythonType(_name, new Dictionary<string, IMember>(_members), locations);
-                if (_mro != null && _mro.Count > 0) {
-                    var array = new IPythonType[_mro.Count];
-                    _mro.CopyTo(array, 0);
-                    clone._mro = array;
-                }
-                return clone;
-            }
-        }
-
         internal void SetBases(IPythonInterpreter interpreter, IEnumerable<IPythonType> bases) {
             if (Bases != null) {
                 throw new InvalidOperationException("cannot set Bases multiple times");
