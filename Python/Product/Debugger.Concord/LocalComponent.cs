@@ -23,6 +23,7 @@ using System.Runtime.Serialization;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
+using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
@@ -78,9 +79,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var objName = ver < PythonLanguageVersion.V35 ? "pythonrun.obj" :
                 ver < PythonLanguageVersion.V37 ? "pylifecycle.obj" :
                 null;
-            var varName = ver < PythonLanguageVersion.V37 ? "initialized" : "_Py_Initialized";
             try {
-                return pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>(varName, objName).Read() != 0;
+                return pyrtInfo.GetRuntimeState()?.initialized.Read()
+                    ?? pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("initialized", objName).Read() != 0;
             } catch (ArgumentException) {
                 return false;
             }
@@ -189,14 +190,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     pyrtInfo.DLLs.Python = moduleInstance;
                     for (int i = 0; i < 2; ++i) {
                         if (moduleInstance.HasSymbols()) {
-                            // TODO: Evaluate if this is still necessary
-                            //if (IsModuleCompiledWithPGO(moduleInstance)) {
-                            //    pyrtInfo.DLLs.Python = null;
-                            //    var pgoWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPGO, moduleInstance.Name, null);
-                            //    pgoWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
-                            //    return;
-                            //}
-
                             if (process.LivePart == null) {
                                 // If debugging crash dumps, runtime can be created as soon as Python symbols are resolved.
                                 CreatePythonRuntimeInstance(process);
@@ -259,14 +252,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     if (traceHelper != null) {
                         traceHelper.OnCTypesLoaded(nativeModuleInstance);
                     }
-                // TODO: Evaluate if this is still necessary
-                //} else if (PythonDLLs.GetPythonLanguageVersion(nativeModuleInstance) != PythonLanguageVersion.None) {
-                //    if (IsModuleCompiledWithPGO(moduleInstance)) {
-                //        pyrtInfo.DLLs.Python = null;
-                //        var pgoWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPGO, moduleInstance.Name, null);
-                //        pgoWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
-                //        return;
-                //    }
                 }
             }
             
@@ -282,41 +267,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
             }
         }
-
-        // TODO: Evaluate if this is still necessary
-        // For PGO-enabled binaries, their symbol information is unreliable, often in dangerous ways (e.g. FuncDebugStart/End is basically garbage
-        // for split functions, and locals can be messed up), so we do not support Python built with PGO (currently only 2.7.3 and below).
-        //private static bool IsModuleCompiledWithPGO(DkmModuleInstance moduleInstance) {
-        //    using (var moduleSym = moduleInstance.GetSymbols()) {
-        //        var compSyms = moduleSym.Object.GetSymbols(SymTagEnum.SymTagCompiland, null);
-        //        try {
-        //            foreach (var compSym in compSyms) {
-        //                var blockSyms = compSym.Object.GetSymbols(SymTagEnum.SymTagBlock, null);
-        //                try {
-        //                    foreach (var blockSym in blockSyms) {
-        //                        using (var parentSym = ComPtr.Create(blockSym.Object.lexicalParent)) {
-        //                            uint blockStart = blockSym.Object.relativeVirtualAddress;
-        //                            uint funcStart = parentSym.Object.relativeVirtualAddress;
-        //                            uint funcEnd = funcStart + (uint)parentSym.Object.length;
-        //                            if (blockStart < funcStart || blockStart >= funcEnd) {
-        //                                return true;
-        //                            }
-        //                        }
-        //                    }
-        //                } finally {
-        //                    foreach (var blockSym in blockSyms) {
-        //                        blockSym.Dispose();
-        //                    }
-        //                }
-        //            }
-        //        } finally {
-        //            foreach (var funcSym in compSyms) {
-        //                funcSym.Dispose();
-        //            }
-        //        }
-        //    }
-        //    return false;
-        //}
 
         unsafe void IDkmRuntimeInstanceLoadNotification.OnRuntimeInstanceLoad(DkmRuntimeInstance runtimeInstance, DkmEventDescriptor eventDescriptor) {
             if (runtimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid) {
