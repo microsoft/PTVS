@@ -37,7 +37,10 @@ namespace Microsoft.PythonTools.Interpreter {
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
             try {
-                var cmds = factory.Configuration.Version >= new Version(2, 6) ? CommandsV27AndLater : CommandsV26;
+                // 'python -m pip', causes this error on Python 2.6: pip is a package and cannot be directly executed
+                // We have to use 'python -m pip' on pip v10, because pip.main() no longer exists
+                // pip v10 is not supported on Python 2.6, so pip.main() is fine there
+                var cmds = factory.Configuration.Version > new Version(2, 6) ? CommandsV27AndLater : CommandsV26;
                 pm = new PipPackageManager(factory, cmds, 1000);
             } catch (NotSupportedException) {
             }
