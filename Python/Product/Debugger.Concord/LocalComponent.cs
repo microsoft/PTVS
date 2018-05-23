@@ -171,7 +171,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var moduleInstance = process.GetNativeRuntimeInstance().GetNativeModuleInstances().Single(mi => mi.UniqueId == ModuleInstanceId);
 
                 if (pyrtInfo.DLLs.CTypes == null && PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
-                    moduleInstance.TryLoadSymbols();
+                    if (!moduleInstance.HasSymbols()) {
+                        moduleInstance.TryLoadSymbols();
+                    }
                     if (moduleInstance.HasSymbols()) {
                         pyrtInfo.DLLs.CTypes = moduleInstance;
 
@@ -204,13 +206,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                             return;
                         }
 
-                        moduleInstance.TryLoadSymbols();
+                        if (!moduleInstance.HasSymbols()) {
+                            moduleInstance.TryLoadSymbols();
+                        }
                     }
 
                     var symWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
                     symWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
                 } else if (PythonDLLs.DebuggerHelperNames.Contains(moduleInstance.Name)) {
-                    moduleInstance.TryLoadSymbols();
+                    if (!moduleInstance.HasSymbols()) {
+                        moduleInstance.TryLoadSymbols();
+                    }
 
                     // When the module is reported is loaded, it is not necessarily fully initialized yet - it is possible to get into a state
                     // where its import table is not processed yet. If we register TraceFunc and it gets called by Python when in that state,
