@@ -237,7 +237,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
                     if (quote != null) {
                         // Check if it is a single-liner
-                        if(line.EndsWithOrdinal(quote)) {
+                        if(line.EndsWithOrdinal(quote) && line.IndexOf(quote) < line.LastIndexOf(quote)) {
                             return line.Substring(quote.Length, line.Length - 2 * quote.Length).Trim();
                         }
                         var sb = new StringBuilder();
