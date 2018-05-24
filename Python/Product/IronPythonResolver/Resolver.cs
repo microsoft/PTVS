@@ -37,15 +37,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return null;
         }
 
-        private Assembly domain_TypeResolve(object sender, ResolveEventArgs args) {
-            return domain_AssemblyResolve(sender, args);
-        }
-
         internal static void Initialize(string[] args) {
             if (args.Length > 0 && Directory.Exists(args[0])) {
                 var resolver = new IronPythonResolver(args[0]);
                 AppDomain.CurrentDomain.AssemblyResolve += resolver.domain_AssemblyResolve;
-                AppDomain.CurrentDomain.TypeResolve += resolver.domain_TypeResolve;
             }
         }
 
