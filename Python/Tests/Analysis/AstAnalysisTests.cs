@@ -309,6 +309,42 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstLibraryMembers_Datetime() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    entry.AddModule("test-module", "import datetime");
+                    entry.WaitForAnalysis();
+
+                    var dtClass = entry.GetTypes("datetime.datetime").FirstOrDefault(t => t.MemberType == PythonMemberType.Class && t.Name == "datetime");
+                    Assert.IsNotNull(dtClass);
+
+                    var dayProperty = dtClass.GetMember(entry.ModuleContext, "day");
+                    Assert.IsNotNull(dayProperty);
+                    Assert.AreEqual(PythonMemberType.Property, dayProperty.MemberType);
+
+                    var prop = dayProperty as AstPythonProperty;
+                    Assert.IsTrue(prop.IsReadOnly);
+                    Assert.AreEqual(BuiltinTypeId.Int, prop.Type.TypeId);
+
+                    var nowMethod = dtClass.GetMember(entry.ModuleContext, "now");
+                    Assert.IsNotNull(nowMethod);
+                    Assert.AreEqual(PythonMemberType.Method, nowMethod.MemberType);
+
+                    var func = nowMethod as AstPythonFunction;
+                    Assert.IsTrue(func.IsClassMethod);
+
+                    Assert.AreEqual(1, func.Overloads.Count);
+                    var overload = func.Overloads[0];
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("datetime", overload.ReturnType[0].Name);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {
