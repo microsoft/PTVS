@@ -643,9 +643,12 @@ datetime.datetime.now().day
                 await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             }
             await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
-            if (Default.Version >= Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30) {
-                await AssertHover(s, mod, new SourceLocation(2, 28), "datetime.datetime.now().day: int*", new[] { "int" }, new SourceSpan(2, 1, 2, 28));
-            }
+
+            var text = Default.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30
+                ? "datetime.datetime.now().day: None*"
+                : "datetime.datetime.now().day: int*";
+            var types = Default.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30 ? null : new[] { "int" };
+            await AssertHover(s, mod, new SourceLocation(2, 28), text, types, new SourceSpan(2, 1, 2, 28));
         }
 
         [TestMethod, Priority(0)]

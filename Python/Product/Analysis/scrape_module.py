@@ -398,6 +398,16 @@ class Signature(object):
 
         index = first_line.index('->')
         typeName = first_line[index + 2:].strip()
+        
+        if typeName.startswith('new'):
+            typeName = typeName[3:].strip();
+        elif typeName.startswith('Return a'):
+            typeName = typeName[8:].strip();
+        elif typeName.startswith('Return'):
+            typeName = typeName[6:].strip();
+        elif typeName.startswith('Current'):
+            typeName = typeName[7:].strip();
+
         if typeName.startswith('str'):
             return "return ''"
         if typeName.startswith('float'):
@@ -412,7 +422,21 @@ class Signature(object):
             return "return dict()"
         if typeName.startswith('('):
             return "return tuple()"
-        if 'Return a string' in first_line:
+        if typeName.startswith('date'):
+            return "return datetime(1, 1, 1)"
+        if typeName.startswith('time'):
+            return "return datetime(1, 1)"
+        if typeName.startswith('unicode'):
+            return "return unicode('')"
+        if typeName.startswith('index'):
+            return "return 1"
+        if typeName.startswith('bool'):
+            return "return True"
+        if typeName.startswith('true') or typeName.startswith('True'):
+            return "return True"
+        if typeName.startswith('false') or typeName.startswith('False'):
+            return "return False"
+        if typeName.startswith('path'):
             return "return ''"
         return
 
