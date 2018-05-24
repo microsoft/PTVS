@@ -1120,6 +1120,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Command {0} has been canceled.
+        /// </summary>
+        public static string CustomCommandCanceled {
+            get {
+                return ResourceManager.GetString("CustomCommandCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing -m {0} {1}.
         /// </summary>
         public static string CustomCommandExecutingModule {

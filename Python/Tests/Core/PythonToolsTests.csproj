@@ -140,6 +140,7 @@
     <Compile Include="PythonProjectTests.cs" />
     <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
+    <Compile Include="TaskExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">

@@ -23,16 +23,48 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Infrastructure {
     static class TaskExtensions {
         /// <summary>
-        /// Suppresses warnings about unawaited tasks and ensures that unhandled
-        /// errors will cause the process to terminate.
+        /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
+        /// <remarks>
+        /// <see cref="OperationCanceledException"/> is always ignored.
+        /// </remarks>
         public static void DoNotWait(this Task task) {
-            if (TestEnvironment.Current == null || !TestEnvironment.Current.TryAddTaskToWait(task)) {
-                DoNotWaitImpl(task);
+            if (task.IsCompleted) {
+                ReThrowTaskException(task);
+                return;
+            }
+
+            if (TestEnvironment.Current != null && TestEnvironment.Current.TryAddTaskToWait(task)) {
+                return;
+            }
+
+            var synchronizationContext = SynchronizationContext.Current;
+            if (synchronizationContext != null && synchronizationContext.GetType() != typeof (SynchronizationContext)) {
+                task.ContinueWith(DoNotWaitSynchronizationContextContinuation, synchronizationContext, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            } else {
+                task.ContinueWith(DoNotWaitThreadContinuation, TaskContinuationOptions.ExecuteSynchronously);
             }
         }
 
-        private static async void DoNotWaitImpl(Task task) => await task;
+        private static void ReThrowTaskException(object state) {
+            var task = (Task)state;
+            if (task.IsFaulted && task.Exception != null) {
+                var exception = task.Exception.InnerException;
+                ExceptionDispatchInfo.Capture(exception).Throw();
+            }
+        }
+
+        private static void DoNotWaitThreadContinuation(Task task) {
+            if (task.IsFaulted && task.Exception != null) {
+                var exception = task.Exception.InnerException;
+                ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
+            }
+        }
+
+        private static void DoNotWaitSynchronizationContextContinuation(Task task, object state) {
+            var context = (SynchronizationContext) state;
+            context.Post(ReThrowTaskException, task);
+        }
 
         /// <summary>
         /// Waits for a task to complete. If an exception occurs, the exception
