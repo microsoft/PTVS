@@ -21,15 +21,32 @@ using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     internal class IronPythonResolver {
+        private readonly string _installDir;
+
+        public IronPythonResolver(string installDir) {
+            _installDir = installDir;
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001")]
-        public static Assembly domain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            var pythonInstallDir = GetPythonInstallDir();
+        public Assembly domain_AssemblyResolve(object sender, ResolveEventArgs args) {
             var asmName = new AssemblyName(args.Name);
-            var asmPath = Path.Combine(pythonInstallDir, asmName.Name + ".dll");
+            var asmPath = Path.Combine(_installDir, asmName.Name + ".dll");
             if (File.Exists(asmPath)) {
                 return Assembly.LoadFile(asmPath);
             }
             return null;
+        }
+
+        private Assembly domain_TypeResolve(object sender, ResolveEventArgs args) {
+            return domain_AssemblyResolve(sender, args);
+        }
+
+        internal static void Initialize(string[] args) {
+            if (args.Length > 0 && Directory.Exists(args[0])) {
+                var resolver = new IronPythonResolver(args[0]);
+                AppDomain.CurrentDomain.AssemblyResolve += resolver.domain_AssemblyResolve;
+                AppDomain.CurrentDomain.TypeResolve += resolver.domain_TypeResolve;
+            }
         }
 
         internal static string GetPythonInstallDir() {

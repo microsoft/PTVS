@@ -386,7 +386,7 @@ R_A3 = R_A1.r_A()");
             if (!Path.IsPathRooted(path)) {
                 path = TestData.GetPath(Path.Combine("TestData", "AstAnalysis", path));
             }
-            return AstPythonModule.FromFile(interpreter, path, version);
+            return PythonModuleLoader.FromFile(interpreter, path, version);
         }
 
         [TestMethod, Priority(0)]

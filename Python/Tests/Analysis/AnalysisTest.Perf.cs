@@ -18,17 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.Scripting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace AnalysisTests {
@@ -289,39 +285,6 @@ import System
             Trace.TraceInformation("Analyze: {0} ms", start4 - start3);
             return projectState;
         }
-
-        internal sealed class FileTextContentProvider : TextContentProvider {
-            private readonly FileStreamContentProvider _provider;
-
-            public FileTextContentProvider(FileStreamContentProvider fileStreamContentProvider) {
-                _provider = fileStreamContentProvider;
-            }
-
-            public override SourceCodeReader GetReader() {
-                return new SourceCodeReader(new StreamReader(_provider.GetStream(), Encoding.ASCII), Encoding.ASCII);
-            }
-        }
-
-        internal sealed class FileStreamContentProvider : StreamContentProvider {
-            private readonly string _path;
-
-            internal string Path {
-                get { return _path; }
-            }
-
-            #region Construction
-
-            internal FileStreamContentProvider(string path) {
-                _path = path;
-            }
-
-            #endregion
-
-            public override Stream GetStream() {
-                return new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
-        }
-
 
         private static void CollectFiles(string dir, List<string> files, ISet<string> excludeDirectories = null) {
             foreach (string file in Directory.GetFiles(dir)) {
