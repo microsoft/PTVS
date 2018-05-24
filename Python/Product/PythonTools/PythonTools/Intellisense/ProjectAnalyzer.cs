@@ -2524,13 +2524,13 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
-
+            
             if (analysis?.Entry != null) {
-                var location = analysis.Location;
+                var line = point.GetContainingLine();
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
-                    column = location.Column,
-                    line = location.Line,
+                    column = point.Position - line.Start + 1,
+                    line = line.LineNumber + 1,
                     documentUri = analysis.Entry.DocumentUri
                 };
 

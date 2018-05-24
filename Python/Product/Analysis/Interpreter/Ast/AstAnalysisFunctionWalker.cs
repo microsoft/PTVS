@@ -68,8 +68,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Walk() {
-            var self = GetClass();
-            _selfType = _selfType ?? GetClassType(self);
+            var self = GetSelf();
+            _selfType = (self as AstPythonConstant)?.Type as AstPythonType;
 
             if (_target.ReturnAnnotation != null) {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
@@ -81,11 +81,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-
             _scope.PushScope();
             if (self != null) {
                 var p0 = _target.ParametersInternal?.FirstOrDefault();
-                if (p0 != null && !string.IsNullOrEmpty(p0.Name) && p0.Name != "self") {
+                if (p0 != null && !string.IsNullOrEmpty(p0.Name)) {
                     _scope.SetInScope(p0.Name, self);
                 }
             }
@@ -178,49 +177,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ReturnStatement node) {
-            if (node.Expression is NameExpression nex && nex.Name == "self") {
-                // For self return the actual class without added private members
-                var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Nonlocal);
-                if (klass is IPythonType t) {
-                    _returnTypes.Add(t);
-                    return true;
-                }
-            }
-
             foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
                 _returnTypes.Add(type);
             }
             return true; // We want to evaluate all code so all private variables in __new__ get defined
         }
 
-        private IMember GetClass() {
+        private IMember GetSelf() {
             bool classmethod, staticmethod;
             GetMethodType(_target, out classmethod, out staticmethod);
-            var klass = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
+            var self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
             if (!staticmethod && !classmethod) {
-                var cls = klass as IPythonType;
+                var cls = self as IPythonType;
                 if (cls == null) {
-                    klass = null;
+                    self = null;
                 } else {
-                    klass = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
+                    self = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
                 }
             }
-            return klass;
-        }
-
-        private AstPythonType GetClassType(IMember klass) {
-            var cls = (klass as AstPythonConstant)?.Type as AstPythonType;
-            if (cls != null) {
-                var self = _scope.LookupNameInScopes("self", NameLookupContext.LookupOptions.Local);
-                if (self == null) {
-                    // Clone type since function analysis can add members that should not be
-                    // visible to the user such as private variables backing public properties.
-                    self = new AstPythonConstant(cls.Clone(), Array.Empty<LocationInfo>());
-                    _scope.SetInScope("self", self, mergeWithExisting: false);
-                }
-                return (self as AstPythonConstant)?.Type as AstPythonType;
-            }
-            return null;
+            return self;
         }
     }
 }

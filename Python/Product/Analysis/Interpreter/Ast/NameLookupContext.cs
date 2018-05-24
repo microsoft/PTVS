@@ -464,11 +464,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
             if (expr is TupleExpression tex) {
                 var types = tex.Items
-                    .Where(t => t is NameExpression)
-                    .OfType<NameExpression>()
-                    .Select(ne => (GetInScope(ne.Name) as AstPythonConstant)?.Type)
-                    .Where(x => x != null)
-                    .ToArray();
+                    .Select(x => {
+                        IPythonType t = null;
+                        if (x is NameExpression ne) {
+                            t = (GetInScope(ne.Name) as AstPythonConstant)?.Type;
+                        }
+                        return t ?? Interpreter.GetBuiltinType(BuiltinTypeId.Unknown);
+                    }).ToArray();
                 return types.Length > 0 ? new AstPythonTuple(tex.NodeName, types) : Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
             }
             if (expr is SetExpression || expr is SetComprehension) {
