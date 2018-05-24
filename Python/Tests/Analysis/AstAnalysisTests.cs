@@ -345,6 +345,39 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstComparisonTypeInference() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    var code = @"
+class BankAccount(object):
+    def __init__(self, initial_balance=0):
+        self.balance = initial_balance
+    def withdraw(self, amount):
+        self.balance -= amount
+    def overdrawn(self):
+        return self.balance < 0
+";
+                    entry.AddModule("test-module", code);
+                    entry.WaitForAnalysis();
+
+                    var moduleEntry = entry.Modules.First().Value;
+
+                    var varDef = moduleEntry.Analysis.Scope.AllVariables.First(x => x.Key == "BankAccount").Value;
+                    var clsInfo = varDef.Types.First(x => x is ClassInfo).First() as ClassInfo;
+                    var overdrawn = clsInfo.Scope.GetVariable("overdrawn").Types.First() as FunctionInfo;
+
+                    Assert.AreEqual(1, overdrawn.Overloads.Count());
+                    var overload = overdrawn.Overloads.First();
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("bool", overload.ReturnType[0]);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {
