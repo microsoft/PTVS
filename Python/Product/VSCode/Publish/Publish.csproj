@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
   <PropertyGroup>
@@ -37,13 +37,7 @@
     <TargetOS Include="win-x86" />
     <TargetOS Include="win-x64" />
     <TargetOS Include="osx-x64" />
-    <TargetOS Include="centos-x64" />
-    <TargetOS Include="debian-x64" />
-    <TargetOS Include="ubuntu-x64" />
-    <TargetOS Include="fedora-x64" />
-    <TargetOS Include="opensuse-x64" />
-    <TargetOS Include="ol-x64" />
-    <TargetOS Include="rhel-x64" />
+    <TargetOS Include="linux-x64" />
   </ItemGroup>
   <ItemGroup>
     <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />
@@ -68,17 +62,10 @@
     <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-centos-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-debian-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-ubuntu-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-fedora-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-opensuse-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-ol-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-rhel-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg" />
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="@(NugetPackages)">
