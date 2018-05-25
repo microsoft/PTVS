@@ -326,8 +326,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public string FilePath => ProjectEntry.FilePath;
-
         public override IEnumerable<LocationInfo> Locations 
              => new[] { new LocationInfo(ProjectEntry.FilePath, ProjectEntry.DocumentUri, 1, 1) };
 

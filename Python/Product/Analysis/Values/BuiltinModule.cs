@@ -61,8 +61,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation => _type.Documentation;
         public override string Description => _interpreterModule.Name;
         public override string Name => _interpreterModule.Name;
-        public string FilePath => string.Empty;
-
         public override IPythonType PythonType => ProjectState.Types[BuiltinTypeId.Module];
         public override PythonMemberType MemberType => _interpreterModule.MemberType;
 

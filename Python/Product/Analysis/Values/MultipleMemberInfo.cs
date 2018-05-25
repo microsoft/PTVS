@@ -226,7 +226,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public string FilePath => string.Empty;
         public override IEnumerable<LocationInfo> Locations => _members.SelectMany(m => m.Locations);
 
         IModule IModule.GetChildPackage(IModuleContext context, string name) {

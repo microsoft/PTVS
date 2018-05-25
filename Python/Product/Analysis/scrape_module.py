@@ -417,8 +417,6 @@ class Signature(object):
             return "return True"
         if 'Return a string' in first_line:
             return "return ''"
-        if 'Return a string' in first_line:
-            return "return ''"
         return
 
     def _init_argspec_fromdocstring(self, defaults, doc=None, override_name=None):
