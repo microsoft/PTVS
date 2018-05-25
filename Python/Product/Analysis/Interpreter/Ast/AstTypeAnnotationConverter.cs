@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -27,9 +28,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
         }
 
+        /// <summary>
+        /// Soft-casts a member to a type, extracting the type from
+        /// a multi-member object if possible.
+        /// </summary>
+        private static IPythonType AsIPythonType(IMember m) {
+            if (m is IPythonMultipleMembers mm) {
+                return new AstPythonMultipleTypes(mm.Members.OfType<IPythonType>()).Trim();
+            }
+            return m as IPythonType;
+        }
+
         public override IPythonType Finalize(IPythonType type) {
             if (type is ModuleType) {
                 return null;
+            }
+
+            var n = GetName(type);
+            if (!string.IsNullOrEmpty(n)) {
+                return AsIPythonType(_scope.LookupNameInScopes(n));
             }
 
             return type;
@@ -49,8 +66,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override IPythonType GetTypeMember(IPythonType baseType, string member) {
-            return baseType.GetMember(_scope.Context, member) as IPythonType;
+            return AsIPythonType(baseType.GetMember(_scope.Context, member));
         }
+
+        public override IPythonType MakeNameType(string name) => new NameType(name);
+        public override string GetName(IPythonType type) => (type as NameType)?.Name;
 
         public override IPythonType MakeUnion(IReadOnlyList<IPythonType> types) {
             return new UnionType(types);
@@ -59,6 +79,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override IReadOnlyList<IPythonType> GetUnionTypes(IPythonType unionType) {
             return (unionType as UnionType)?.Types ??
                    (unionType as IPythonMultipleMembers)?.Members.OfType<IPythonType>().ToArray();
+        }
+
+        public override IPythonType MakeGeneric(IPythonType baseType, IReadOnlyList<IPythonType> args) {
+            if (args == null || args.Count == 0 || baseType == null || baseType.DeclaringModule?.Name != "typing") {
+                return baseType;
+            }
+
+            switch (baseType.Name) {
+                case "Tuple":
+                    return MakeSequenceType(BuiltinTypeId.Tuple, args);
+                case "List":
+                    return MakeSequenceType(BuiltinTypeId.List, args);
+                case "Set":
+                    return MakeSequenceType(BuiltinTypeId.Set, args);
+                // TODO: Other types
+                default:
+                    Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);
+                    break;
+            }
+
+            return baseType;
+        }
+
+        private IPythonType MakeSequenceType(BuiltinTypeId typeId, IReadOnlyList<IPythonType> types) {
+            var res = _scope.Interpreter.GetBuiltinType(typeId);
+            if (types.Count > 0) {
+                res = new AstPythonSequence(res, _scope.Module, types.Select(Finalize));
+            }
+            return res;
         }
 
         private class ModuleType : IPythonType {
@@ -103,6 +152,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             );
 
             public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => Types.SelectMany(t => t.GetMemberNames(moduleContext));
+        }
+
+        private class NameType : IPythonType {
+            public NameType(string name) {
+                Name = name;
+            }
+
+            public IPythonModule DeclaringModule => null;
+
+            public string Name { get; }
+            public string Documentation => null;
+            public BuiltinTypeId TypeId => BuiltinTypeId.Unknown;
+            public IList<IPythonType> Mro => null;
+            public bool IsBuiltin => true;
+            public PythonMemberType MemberType => PythonMemberType.Unknown;
+            public IPythonFunction GetConstructors() => null;
+
+            public IMember GetMember(IModuleContext context, string name) => null;
+            public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => null;
         }
     }
 }

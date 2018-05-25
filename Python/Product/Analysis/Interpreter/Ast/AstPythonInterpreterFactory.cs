@@ -14,6 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+// Setting this variable will enable the typeshed package to override
+// imports. However, this generally makes completions worse, so it's
+// turned off for now.
+#define USE_TYPESHED
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -41,6 +46,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private AnalysisLogWriter _log;
         // Available for tests to override
         internal static bool LogToConsole = false;
+
+#if USE_TYPESHED
+        private IReadOnlyList<string> _typeShedPaths;
+#endif
 
 #if DEBUG
         const int LogCacheSize = 1;
@@ -140,7 +149,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
+#if USE_TYPESHED
+                _typeShedPaths = null;
+#endif
             }
+
 
             if (File.Exists(_searchPathCachePath)) {
                 PathUtils.DeleteFile(_searchPathCachePath);
@@ -441,6 +454,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             public int Timeout { get; set; } = 5000;
             public IPythonModule BuiltinModule { get; set; }
             public Func<string, Task<ModulePath?>> FindModuleInUserSearchPathAsync { get; set; }
+            public bool IncludeTypeShed { get; set; }
         }
 
         public TryImportModuleResult TryImportModule(
@@ -589,10 +603,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        protected virtual async Task<ModulePath?> FindModuleInSearchPathAsync(string name) {
+        protected async Task<ModulePath?> FindModuleInSearchPathAsync(string name) {
             var searchPaths = await GetSearchPathsAsync().ConfigureAwait(false);
             var packages = await GetImportableModulesAsync().ConfigureAwait(false);
+            return FindModuleInSearchPath(searchPaths, packages, name);
+        }
 
+        protected virtual ModulePath? FindModuleInSearchPath(IReadOnlyList<string> searchPaths, IReadOnlyDictionary<string, string> packages, string name) {
             _log?.Log(TraceLevel.Verbose, "FindModule", name, "system", string.Join(", ", searchPaths));
 
             if (searchPaths == null) {
@@ -643,32 +660,65 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var mp = mmp.Value;
 
-#if USE_TYPESHED
-            lock (_typeShedPathsLock) {
-                if (_typeShedPaths == null) {
-                    var typeshed = FindModuleInSearchPath(_factory.GetSearchPaths(), _factory.GetImportableModules(), "typeshed");
-                    if (typeshed.HasValue) {
-                        _typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile)).ToArray();
-                    } else {
-                        _typeShedPaths = Array.Empty<string>();
-                    }
-                }
-                if (_typeShedPaths.Any()) {
-                    var mtsp = FindModuleInSearchPath(_typeShedPaths, null, mp.FullName);
-                    if (mtsp.HasValue) {
-                        mp = mtsp.Value;
-                    }
-                }
-            }
-#endif
+            IPythonModule module;
 
             if (mp.IsCompiled) {
                 _log?.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, FastRelativePath(mp.SourceFile));
-                return new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
+                module = new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
+            } else {
+                _log?.Log(TraceLevel.Verbose, "Import", mp.FullName, FastRelativePath(mp.SourceFile));
+                module = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
             }
 
-            _log?.Log(TraceLevel.Verbose, "Import", mp.FullName, FastRelativePath(mp.SourceFile));
-            return PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
+            // Also searcd type shed if it's available, and if we are not a blacklisted module
+            if (context.IncludeTypeShed && module.Name != "typing") {
+                var typeShedPaths = await GetTypeShedPaths();
+                if (typeShedPaths.Any()) {
+                    var mtsp = FindModuleInSearchPath(typeShedPaths, null, mp.FullName);
+                    if (mtsp.HasValue) {
+                        mp = mtsp.Value;
+
+                        _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
+                        var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
+
+                        if (tsModule != null) {
+                            module = AstPythonMultipleModules.Combine(module, tsModule);
+                        }
+                    }
+                }
+            }
+
+            return module;
+        }
+
+        private async Task<IReadOnlyList<string>> GetTypeShedPaths() {
+            var typeShedPaths = _typeShedPaths;
+            if (typeShedPaths != null) {
+                return typeShedPaths;
+            }
+            lock (_searchPathsLock) {
+                typeShedPaths = _typeShedPaths;
+                if (typeShedPaths != null) {
+                    return typeShedPaths;
+                }
+            }
+
+            var typeshed = await FindModuleInSearchPathAsync("typeshed");
+            if (typeshed.HasValue) {
+                typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile), LanguageVersion.ToVersion()).ToArray();
+            } else {
+                typeShedPaths = Array.Empty<string>();
+            }
+
+            lock (_searchPathsLock) {
+                if (_typeShedPaths == null) {
+                    _typeShedPaths = typeShedPaths;
+                } else {
+                    typeShedPaths = _typeShedPaths;
+                }
+            }
+
+            return typeShedPaths;
         }
 
         private static IEnumerable<string> GetTypeShedPaths(string path, Version version) {

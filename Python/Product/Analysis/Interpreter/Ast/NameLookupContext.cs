@@ -471,7 +471,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         return t ?? Interpreter.GetBuiltinType(BuiltinTypeId.Unknown);
                     }).ToArray();
-                return types.Length > 0 ? new AstPythonTuple(tex.NodeName, types) : Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
+                var res = Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
+                if (types.Length > 0) {
+                    res = new AstPythonSequence(res, Module, types);
+                }
+                return res;
             }
             if (expr is SetExpression || expr is SetComprehension) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Set);

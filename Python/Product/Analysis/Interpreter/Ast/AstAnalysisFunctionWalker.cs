@@ -143,8 +143,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
 
                     // Tuple = 'tuple value' (such as from callable). Transfer values.
-                    if (value is AstPythonConstant c && c.Type is AstPythonTuple tuple) {
-                        var types = tuple.Types.ToArray();
+                    if (value is AstPythonConstant c && c.Type is AstPythonSequence seq) {
+                        var types = seq.IndexTypes.ToArray();
                         var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
                         for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
                             if (names[i] != null) {

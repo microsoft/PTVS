@@ -54,6 +54,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
         }
 
+        internal AstPythonFunction(IPythonFunction original) {
+            DeclaringModule = original.DeclaringModule;
+            DeclaringType = original.DeclaringType;
+            Name = original.Name;
+            _doc = (original as AstPythonFunction)?._doc ?? original.Documentation;
+            IsClassMethod = original.IsClassMethod;
+            IsStatic = original.IsStatic;
+            _overloads = original.Overloads.ToList();
+            Locations = (original as AstPythonFunction)?.Locations ?? (original as ILocatedMember)?.Locations ?? Array.Empty<LocationInfo>();
+        }
+
         internal void AddOverload(IPythonFunctionOverload overload) {
             _overloads.Add(overload);
         }

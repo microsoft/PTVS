@@ -749,5 +749,34 @@ y = g()");
             }
         }
         #endregion
+
+        #region Type Shed tests
+
+        private static PythonVersion VersionWithTypeShed =>
+            PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "typeshed")));
+
+        [TestMethod, Priority(0)]
+        public void TypeShedElementTree() {
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
+
+e = ET.Element()
+e2 = e.makeelement()
+iterfind = e.iterfind
+l = iterfind()");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertHasParameters("ET.Element", "tag", "attrib", "**extra");
+                    analysis.AssertHasParameters("e.makeelement", "tag", "attrib");
+                    analysis.AssertHasParameters("iterfind", "path", "namespaces");
+                    analysis.AssertIsInstance("l", BuiltinTypeId.List);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        #endregion
     }
 }
