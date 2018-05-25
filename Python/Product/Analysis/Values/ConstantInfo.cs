@@ -83,7 +83,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         continue;
                     }
                 } else if (operation.IsComparison()) {
-                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Bool]);
+                    // This is simplified check to make analysis assume boolean type
+                    // over the comparison operator. This is not always correct and
+                    // may break if class redefines comparison operators differently.
+                    res = res.Union(unit.State.ClassInfos[BuiltinTypeId.Bool].Instance);
                     continue;
                 }
 
