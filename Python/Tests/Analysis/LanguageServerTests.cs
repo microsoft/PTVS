@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -632,7 +633,7 @@ x = 3.14
         [TestMethod, Priority(0)]
         public async Task HoverSpanCheck() {
             var s = await CreateServer();
-                var mod = await AddModule(s, @"import datetime
+            var mod = await AddModule(s, @"import datetime
 datetime.datetime.now().day
 ");
 
@@ -644,7 +645,7 @@ datetime.datetime.now().day
             }
             await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
 
-            var text = Default.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30
+            var text = Default.Version.Is2x()
                 ? "datetime.datetime.now().day: None*"
                 : "datetime.datetime.now().day: int*";
             var types = Default.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30 ? null : new[] { "int" };
