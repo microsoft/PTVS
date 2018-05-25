@@ -638,7 +638,7 @@ datetime.datetime.now().day
 ");
 
             await AssertHover(s, mod, new SourceLocation(2, 1), "built-in module datetime*", new[] { "datetime" }, new SourceSpan(2, 1, 2, 9));
-            if (Default.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30) {
+            if (Default.Version.Is2x()) {
                 await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             } else {
                 await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
