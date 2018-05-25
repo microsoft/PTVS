@@ -252,6 +252,9 @@ Continue?</value>
   <data name="SearchPathContainerProperties" xml:space="preserve">
     <value>Search Paths Properties</value>
   </data>
+  <data name="CustomCommandCanceled" xml:space="preserve">
+    <value>Command {0} has been canceled</value>
+  </data>
   <data name="ErrorRunningCustomCommand" xml:space="preserve">
     <value>An error occurred while running {0}.
 
@@ -1315,6 +1318,10 @@ modified from these scripts.</value>
   </data>
   <data name="MisconfiguredEnvironment" xml:space="preserve">
     <value>Operation cannot be started because the environment is not configured.</value>
+    <comment>Used as exception text</comment>
+  </data>
+  <data name="MisconfiguredPip" xml:space="preserve">
+    <value>Operation cannot be started because pip is not installed in the environment at '{0}'.</value>
     <comment>Used as exception text</comment>
   </data>
   <data name="ExecutingCommandFailed" xml:space="preserve">
