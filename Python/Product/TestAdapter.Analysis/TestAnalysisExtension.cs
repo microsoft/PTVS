@@ -254,7 +254,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public IEnumerable<TestCaseInfo> GetTestCasesFromAst(string path) {
             IPythonModule module;
             try {
-                module = AstPythonModule.FromFile(_analyzer.Interpreter, path, _analyzer.LanguageVersion);
+                module = PythonModuleLoader.FromFile(_analyzer.Interpreter, path, _analyzer.LanguageVersion);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 return Enumerable.Empty<TestCaseInfo>();
             }

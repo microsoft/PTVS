@@ -24,10 +24,10 @@ using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -40,13 +40,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
         IDisposable
     {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
-        private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
+        private readonly ConcurrentDictionary<string, IPythonModule> _modules = new ConcurrentDictionary<string, IPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
         private readonly HashSet<ProjectReference> _projectReferenceSet = new HashSet<ProjectReference>();
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
         private readonly IPythonInterpreterFactory _factory;
+        private readonly IronPythonBuiltinModule _builtinModule;
         private PythonTypeDatabase _typeDb;
 #if DEBUG
         private int _id;
@@ -57,8 +58,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter {0} created from {1}", _id, factory.GetType().FullName));
-            Debug.WriteLine(new StackTrace(true).ToString());
+            try {
+                Debug.WriteLine(new StackTrace(true).ToString());
+            } catch (System.Security.SecurityException) {
+            }
 #endif
+
+            _factory = factory;
 
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
@@ -72,9 +78,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             var mod = Remote.ImportBuiltinModule("__builtin__");
             var newMod = new IronPythonBuiltinModule(this, mod, "__builtin__");
-            _modules[newMod.Name] = newMod;
+            _modules[newMod.Name] = _builtinModule = newMod;
 
-            _factory = factory;
             if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
                 _typeDb = withDb.GetCurrentDatabase().CloneWithNewBuiltins(newMod);
                 withDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
@@ -112,9 +117,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
                                    Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
 
             setup.PrivateBinPathProbe = "";
-
+            if (Directory.Exists(_factory.Configuration.PrefixPath)) {
+                setup.AppDomainInitializer = IronPythonResolver.Initialize;
+                setup.AppDomainInitializerArguments = new[] { _factory.Configuration.PrefixPath };
+            }
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
-            domain.AssemblyResolve += IronPythonResolver.domain_AssemblyResolve;
 
             remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
                 typeof(RemoteInterpreterProxy).Assembly.FullName,
@@ -165,6 +172,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void LoadModules() {
+            if (!string.IsNullOrEmpty(_factory.Configuration.PrefixPath)) {
+                var dlls = PathUtils.GetAbsoluteDirectoryPath(_factory.Configuration.PrefixPath, "DLLs");
+                if (Directory.Exists(dlls)) {
+                    foreach (var dll in PathUtils.EnumerateFiles(dlls, "*.dll", recurse: false)) {
+                        try {
+                            var assem = Remote.LoadAssemblyFromFileWithPath(dll);
+                            if (assem != null) {
+                                Remote.AddAssembly(assem);
+                            }
+                        } catch (Exception ex) {
+                            Debug.Fail(ex.ToString());
+                        }
+                    }
+                }
+            }
+
             foreach (string modName in Remote.GetBuiltinModuleNames()) {
                 try {
                     var mod = Remote.ImportBuiltinModule(modName);
@@ -378,7 +401,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public event EventHandler ModuleNamesChanged;
 
-        public IronPythonModule GetModule(string name) {
+        public IPythonModule GetModule(string name) {
             return _modules[name];
         }
 
@@ -387,37 +410,66 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return null;
             }
 
-            // clr module needs to be an IronPythonModule, not a CPythonModule, so we can track when it's imported
-            // and make clr completions available.
-            if (_typeDb != null && name != "clr") {
-                var res = _typeDb.GetModule(name);
-                if (res != null) {
-                    return res;
-                }
+            if (name == _builtinModule?.Name) {
+                return _builtinModule;
             }
 
-            IronPythonModule mod;
+            IPythonModule mod;
+
             if (_modules.TryGetValue(name, out mod)) {
                 return mod;
             }
 
             var handle = Remote.LookupNamespace(name);
             if (!handle.IsNull) {
-                return MakeObject(handle) as IPythonModule;
+                mod = MakeObject(handle) as IPythonModule;
+                if (mod != null) {
+                    return _modules.GetOrAdd(name, mod);
+                }
+            }
+
+            if (_typeDb != null) {
+                var res = _typeDb.GetModule(name);
+                if (res != null) {
+                    return res;
+                }
+            } else if (_factory is AstPythonInterpreterFactory apf) {
+                var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
+                    Interpreter = this,
+                    BuiltinModule = _builtinModule,
+                    ModuleCache = _modules
+                };
+                for (int retries = 5; retries > 0; --retries) {
+                    switch (apf.TryImportModule(name, out mod, ctxt)) {
+                        case AstPythonInterpreterFactory.TryImportModuleResult.Success:
+                            if (mod == null) {
+                                _modules.TryRemove(name, out _);
+                                break;
+                            }
+                            return mod;
+                        case AstPythonInterpreterFactory.TryImportModuleResult.ModuleNotFound:
+                            retries = 0;
+                            _modules.TryRemove(name, out _);
+                            break;
+                        case AstPythonInterpreterFactory.TryImportModuleResult.NotSupported:
+                            retries = 0;
+                            break;
+                        case AstPythonInterpreterFactory.TryImportModuleResult.NeedRetry:
+                        case AstPythonInterpreterFactory.TryImportModuleResult.Timeout:
+                            break;
+                    }
+                }
             }
 
             var nameParts = name.Split('.');
-            IPythonModule pythonMod;
-            if (nameParts.Length > 1 && (pythonMod = ImportModule(nameParts[0])) != null) {
-                for (int i = 1; i < nameParts.Length && pythonMod != null; ++i) {
-                    pythonMod = pythonMod.GetMember(IronPythonModuleContext.ShowClrInstance, nameParts[i]) as IPythonModule;
-                }
-                if (pythonMod != null) {
-                    return pythonMod;
+            mod = null;
+            if (nameParts.Length > 1 && (mod = ImportModule(nameParts[0])) != null) {
+                for (int i = 1; i < nameParts.Length && mod != null; ++i) {
+                    mod = mod.GetMember(IronPythonModuleContext.ShowClrInstance, nameParts[i]) as IPythonModule;
                 }
             }
 
-            return null;
+            return _modules.GetOrAdd(name, mod);
         }
 
         public IModuleContext CreateModuleContext() {
