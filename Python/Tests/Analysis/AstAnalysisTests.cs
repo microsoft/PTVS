@@ -309,6 +309,75 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstLibraryMembers_Datetime() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    entry.AddModule("test-module", "import datetime");
+                    entry.WaitForAnalysis();
+
+                    var dtClass = entry.GetTypes("datetime.datetime").FirstOrDefault(t => t.MemberType == PythonMemberType.Class && t.Name == "datetime");
+                    Assert.IsNotNull(dtClass);
+
+                    var dayProperty = dtClass.GetMember(entry.ModuleContext, "day");
+                    Assert.IsNotNull(dayProperty);
+                    Assert.AreEqual(PythonMemberType.Property, dayProperty.MemberType);
+
+                    var prop = dayProperty as AstPythonProperty;
+                    Assert.IsTrue(prop.IsReadOnly);
+                    Assert.AreEqual(BuiltinTypeId.Int, prop.Type.TypeId);
+
+                    var nowMethod = dtClass.GetMember(entry.ModuleContext, "now");
+                    Assert.IsNotNull(nowMethod);
+                    Assert.AreEqual(PythonMemberType.Method, nowMethod.MemberType);
+
+                    var func = nowMethod as AstPythonFunction;
+                    Assert.IsTrue(func.IsClassMethod);
+
+                    Assert.AreEqual(1, func.Overloads.Count);
+                    var overload = func.Overloads[0];
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("datetime", overload.ReturnType[0].Name);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstComparisonTypeInference() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    var code = @"
+class BankAccount(object):
+    def __init__(self, initial_balance=0):
+        self.balance = initial_balance
+    def withdraw(self, amount):
+        self.balance -= amount
+    def overdrawn(self):
+        return self.balance < 0
+";
+                    entry.AddModule("test-module", code);
+                    entry.WaitForAnalysis();
+
+                    var moduleEntry = entry.Modules.First().Value;
+
+                    var varDef = moduleEntry.Analysis.Scope.AllVariables.First(x => x.Key == "BankAccount").Value;
+                    var clsInfo = varDef.Types.First(x => x is ClassInfo).First() as ClassInfo;
+                    var overdrawn = clsInfo.Scope.GetVariable("overdrawn").Types.First() as FunctionInfo;
+
+                    Assert.AreEqual(1, overdrawn.Overloads.Count());
+                    var overload = overdrawn.Overloads.First();
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("bool", overload.ReturnType[0]);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {

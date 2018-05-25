@@ -25,8 +25,8 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class NameLookupContext {
-        private readonly Stack<Dictionary<string, IMember>> _scopes;
+    sealed class NameLookupContext {
+        private readonly Stack<Dictionary<string, IMember>> _scopes = new Stack<Dictionary<string, IMember>>();
         private readonly Lazy<IPythonModule> _builtinModule;
         private readonly AnalysisLogWriter _log;
 
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule self,
             string filePath,
             Uri documentUri,
-            bool includeLocationInfo, 
+            bool includeLocationInfo,
             IPythonModule builtinModule = null,
             AnalysisLogWriter log = null
         ) {
@@ -56,7 +56,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _unknownType = Interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
                 new FallbackBuiltinPythonType(new FallbackBuiltinModule(Ast.LanguageVersion), BuiltinTypeId.Unknown);
 
-            _scopes = new Stack<Dictionary<string, IMember>>();
             _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);
             _log = log;
         }
@@ -168,9 +167,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public IMember GetValueFromExpression(Expression expr) {
-            return GetValueFromExpression(expr, DefaultLookupOptions);
-        }
+        public IMember GetValueFromExpression(Expression expr) => GetValueFromExpression(expr, DefaultLookupOptions);
 
         public IMember GetValueFromExpression(Expression expr, LookupOptions options) {
             if (expr is ParenthesisExpression parExpr) {
@@ -268,8 +265,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Bool), GetLoc(expr));
                 }
 
-                // When in doubt, assume that the type after the op is the same as the LHS
-                return GetValueFromExpression(binop.Left);
+                // Try LHS, then, if unknown, try RHS. Example: y = 1 when y is not declared by the walker yet.
+                var value = GetValueFromExpression(binop.Left);
+                return IsUnknown(value) ? GetValueFromExpression(binop.Right) : value;
             }
 
             return null;
@@ -464,8 +462,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (expr is DictionaryExpression || expr is DictionaryComprehension) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Dict);
             }
-            if (expr is TupleExpression) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
+            if (expr is TupleExpression tex) {
+                var types = tex.Items
+                    .Select(x => {
+                        IPythonType t = null;
+                        if (x is NameExpression ne) {
+                            t = (GetInScope(ne.Name) as AstPythonConstant)?.Type;
+                        }
+                        return t ?? Interpreter.GetBuiltinType(BuiltinTypeId.Unknown);
+                    }).ToArray();
+                return types.Length > 0 ? new AstPythonTuple(tex.NodeName, types) : Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
             }
             if (expr is SetExpression || expr is SetComprehension) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Set);
@@ -495,6 +501,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
+            Debug.Assert(_scopes.Count > 0);
+            if (value == null && _scopes.Count == 0) {
+                return;
+            }
             var s = _scopes.Peek();
             if (value == null) {
                 s.Remove(name);

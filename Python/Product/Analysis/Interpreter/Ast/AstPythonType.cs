@@ -30,13 +30,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
 
-        public AstPythonType(string name) {
-            _members = new Dictionary<string, IMember>();
-            _name = name ?? throw new ArgumentNullException(nameof(name));
-            DeclaringModule = NoDeclModule;
-            _mro = Array.Empty<IPythonType>();
-            Locations = Array.Empty<LocationInfo>();
-        }
+        public AstPythonType(string name): this(name, new Dictionary<string, IMember>(), Array.Empty<LocationInfo>()) { }
 
         public AstPythonType(
             PythonAst ast,
@@ -54,12 +48,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             StartIndex = def?.StartIndex ?? 0;
         }
 
+        private AstPythonType(string name, Dictionary<string, IMember> members, IEnumerable<LocationInfo> locations) {
+            _name = name ?? throw new ArgumentNullException(nameof(name));
+            _members = members;
+            _mro = Array.Empty<IPythonType>();
+            DeclaringModule = NoDeclModule;
+            Locations = locations;
+        }
+
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {
             lock (_members) {
                 foreach (var kv in members) {
                     if (!overwrite) {
-                        IMember existing;
-                        if (_members.TryGetValue(kv.Key, out existing)) {
+                        if (_members.TryGetValue(kv.Key, out var existing)) {
                             continue;
                         }
                     }
@@ -88,7 +89,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return _mro;
                     }
                     if (Bases == null) {
-                        Debug.Fail("Accessing Mro before SetBases has been called");
+                        //Debug.Fail("Accessing Mro before SetBases has been called");
                         return new IPythonType[] { this };
                     }
                     _mro = new IPythonType[] { this };
@@ -164,7 +165,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
         public string Documentation { get; }
-        public IPythonModule DeclaringModule {get;}
+        public IPythonModule DeclaringModule { get; }
         public IReadOnlyList<IPythonType> Bases { get; private set; }
         public virtual bool IsBuiltin => false;
         public PythonMemberType MemberType => PythonMemberType.Class;

@@ -58,6 +58,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public virtual IMember GetMember(IModuleContext context, string name) {
             IMember m;
+            if (!_scraped) {
+                Imported(context);
+            }
             lock (_members) {
                 _members.TryGetValue(name, out m);
             }
