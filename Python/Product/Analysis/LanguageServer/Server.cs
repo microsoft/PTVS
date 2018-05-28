@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _testEnvironment = @params.initializationOptions.testEnvironment;
             _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
             // Test environment needs predictable initialization.
-            if (!@params.initializationOptions.asyncStartup) {
+            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
                 await _analyzerCreationTask;
             }
 
