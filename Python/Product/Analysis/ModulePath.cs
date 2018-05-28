@@ -94,12 +94,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if the module is a binary file.
         /// </summary>
         /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
-        public bool IsCompiled {
-            get {
-                return PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
-
+        public bool IsCompiled => IsCompiledModule(SourceFile);
+ 
         /// <summary>
         /// True if the module is a native extension module.
         /// </summary>
@@ -137,6 +133,7 @@ namespace Microsoft.PythonTools.Analysis {
             LibraryPath = libraryPath;
         }
 
+        private static readonly string[] CompiledModuleExtensions = new[] { ".pyd", ".pyc", ".pyo", ".so", ".dyLib" };
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[iw]?$",
@@ -145,8 +142,11 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dyLib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.(((\w|_|-)+?\.)?pyd|py[co]|so|dyLib)$",
-            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+        private static bool IsCompiledModule(string name) {
+            var ext = Path.GetExtension(PathUtils.GetFileName(name)).ToLowerInvariant();
+            return CompiledModuleExtensions.Any(x => x == ext);
+        }
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
             string libPath,
@@ -469,7 +469,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     var nameMatch = PythonFileRegex.Match(name);
                     if (allowCompiled && (nameMatch == null || !nameMatch.Success)) {
-                        nameMatch = PythonCompiledRegex.Match(name);
+                        return IsCompiledModule(name);
                     }
                     return nameMatch != null && nameMatch.Success;
                 } catch (RegexMatchTimeoutException) {

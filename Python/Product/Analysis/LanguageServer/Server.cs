@@ -690,10 +690,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
-        private async Task IfTestWaitForAnalysisCompleteAsync() {
+        private void IfTestWaitForAnalysisComplete(int timeout = 10000) {
             if (_testEnvironment) {
-                await WaitForDirectoryScanAsync();
-                await WaitForCompleteAnalysisAsync();
+                WaitForDirectoryScanAsync().Wait(timeout);
+                WaitForCompleteAnalysisAsync().Wait(timeout);
             }
         }
     }
