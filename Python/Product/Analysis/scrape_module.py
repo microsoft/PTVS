@@ -449,7 +449,7 @@ class Signature(object):
         i = 0
         while True:
             i += 1
-            n = name + '_' + int(i)
+            n = name + '_' + str(i)
             if n not in seen_names:
                 seen_names.add(n)
                 return n
