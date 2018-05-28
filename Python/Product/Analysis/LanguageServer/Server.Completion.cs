@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
@@ -23,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
+            IfTestWaitForAnalysisComplete();
 
             var uri = @params.textDocument.uri;
             // Make sure document is enqueued for processing
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 members = members.Where(m => m.kind == filterKind.Value);
             }
 
-            var res = new CompletionList {
+             var res = new CompletionList {
                 items = members.ToArray(),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
                 _commitByDefault = ctxt.ShouldCommitByDefault
@@ -81,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
-            // TODO: Fill out missing values in item
+             // TODO: Fill out missing values in item
             return Task.FromResult(item);
         }
 
