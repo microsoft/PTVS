@@ -29,16 +29,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly RemoteInterpreter _remoteInterpreter;
 
         public RemoteInterpreterProxy() {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
-            AppDomain.CurrentDomain.TypeResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             _remoteInterpreter = new RemoteInterpreter();
         }
-
-        System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            Debug.WriteLine("AssemblyResolve");
-            return null;
-        }
-
 
         internal IEnumerable<string> GetBuiltinModuleNames() {
             return _remoteInterpreter.GetBuiltinModuleNames();

@@ -83,22 +83,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             AddAssembly(LoadAssemblyInfo(typeof(string).Assembly));
             AddAssembly(LoadAssemblyInfo(typeof(Debug).Assembly));
-            
-            string installDir = GetPythonInstallDir();
-            if (installDir != null) {
-                var dllDir = Path.Combine(installDir, "DLLs");
-                if (Directory.Exists(dllDir)) {
-                    foreach (var assm in Directory.GetFiles(dllDir)) {
-                        try {
-                            var asm = Assembly.LoadFile(Path.Combine(dllDir, assm));
-                            _engine.Runtime.LoadAssembly(asm);
-
-                            AddAssembly(LoadAssemblyInfo(asm));
-                        } catch {
-                        }
-                    }
-                }
-            }
 
             LoadAssemblies();
         }
@@ -173,44 +157,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         /// </summary>
         private static void LoadAssemblies() {
             GC.KeepAlive(typeof(IronPython.Modules.ArrayModule)); // IronPython.Modules
-        }
-       
-
-        internal static string GetPythonInstallDir() {
-            using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
-                if (ipy != null) {
-                    using (var twoSeven = ipy.OpenSubKey("2.7")) {
-                        if (twoSeven != null) {
-                            var installPath = twoSeven.OpenSubKey("InstallPath");
-                            if (installPath != null) {
-                                var res = installPath.GetValue("") as string;
-                                if (res != null) {
-                                    return res;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            var paths = Environment.GetEnvironmentVariable("PATH");
-            if (paths != null) {
-                foreach (string dir in paths.Split(Path.PathSeparator)) {
-                    try {
-                        if (IronPythonExistsIn(dir)) {
-                            return dir;
-                        }
-                    } catch {
-                        // ignore
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static bool IronPythonExistsIn(string/*!*/ dir) {
-            return File.Exists(Path.Combine(dir, "ipy.exe"));
         }
 
         public ScriptEngine Engine {
@@ -342,6 +288,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void AddAssembly(KeyValuePair<Assembly, TopNamespaceTracker> assembly) {
+            _engine.Runtime.LoadAssembly(assembly.Key);
             _namespaceTracker.LoadAssembly(assembly.Key);
         }
 
@@ -354,6 +301,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private bool AddAssembly(Assembly asm) {
             if (asm != null && !_namespaceTracker.PackageAssemblies.Contains(asm)) {
+                _engine.Runtime.LoadAssembly(asm);
                 return _namespaceTracker.LoadAssembly(asm);
             }
             return false;

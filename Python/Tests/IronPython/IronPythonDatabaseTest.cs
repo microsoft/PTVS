@@ -22,7 +22,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Mocks;
-using TestUtilities.Python;
 
 namespace IronPythonTests {
     [TestClass]
@@ -32,7 +31,7 @@ namespace IronPythonTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str

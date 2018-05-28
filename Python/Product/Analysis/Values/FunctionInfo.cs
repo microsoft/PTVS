@@ -453,8 +453,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_functionAttrs != null && _functionAttrs.TryGetValue("__wrapped__", out VariableDef wrapped)) {
-                    foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
-                        yield return o;
+                    if (this.Push()) {
+                        try {
+                            foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
+                                yield return o;
+                            }
+                        } finally {
+                            this.Pop();
+                        }
                     }
                 }
 

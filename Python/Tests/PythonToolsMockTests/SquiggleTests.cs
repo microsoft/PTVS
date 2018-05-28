@@ -18,19 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using IronPython.Hosting;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -39,7 +33,6 @@ namespace PythonToolsMockTests {
     [TestClass]
     public class SquiggleTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
-        public static ScriptEngine PythonEngine = Python.CreateEngine();
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
