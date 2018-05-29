@@ -20,6 +20,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.AnacondaInstallLauncher {
     class Program {
@@ -135,35 +136,29 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         void WaitForUninstall(bool requireWait) {
             try {
-                WaitForProcess(DateTime.UtcNow.AddMinutes(30), requireWait);
+                WaitForProcess(requireWait);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.ToString());
             }
         }
 
-        bool KeepWaiting {
-            get {
-                if (_cancel) {
-                    return false;
-                }
-
-                if (!Directory.Exists(_targetDir)) {
-                    Console.Error.WriteLine("Target directory is not present");
-                    return false;
-                }
-                try {
-                    if (!Directory.EnumerateFileSystemEntries(_targetDir).Any()) {
-                        Console.Error.WriteLine("Target directory is empty");
-                        return false;
-                    }
-                } catch (Exception ex) {
-                    Console.Error.WriteLine("Error reading target directory");
-                    Console.Error.WriteLine(ex.ToString());
-                    return false;
-                }
-
-                return true;
+        bool IsDirectoryPresent() {
+            if (!Directory.Exists(_targetDir)) {
+                Console.Error.WriteLine("Target directory is not present");
+                return false;
             }
+            try {
+                if (!Directory.EnumerateFileSystemEntries(_targetDir).Any()) {
+                    Console.Error.WriteLine("Target directory is empty");
+                    return false;
+                }
+            } catch (Exception ex) {
+                Console.Error.WriteLine("Error reading target directory");
+                Console.Error.WriteLine(ex.ToString());
+                return false;
+            }
+
+            return true;
         }
 
         Process[] GetProcesses() {
@@ -173,38 +168,23 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 .ToArray();
         }
 
-        void WaitForProcess(DateTime stopAt, bool requireProcess) {
-            if (!KeepWaiting) {
+        void WaitForProcess(bool requireProcess) {
+            if (!IsDirectoryPresent()) {
                 return;
             }
 
             var procs = GetProcesses();
             int retries = 30;
-            while (requireProcess && procs.Length == 0 && retries-- > 0) {
+            while (requireProcess && procs.Length == 0 && retries-- > 0 && !_cancel) {
                 Thread.Sleep(1000);
                 procs = GetProcesses();
             }
             Console.Error.WriteLine("Waiting for {0} processes named {1}", procs.Length, string.Join(", ", procs.Select(p => p.ProcessName)));
 
-            bool any = true;
-            while (any && KeepWaiting) {
-                if (DateTime.UtcNow >= _stopAt) {
-                    Console.Error.WriteLine("Timeout has expired");
-                    break;
-                }
+            var tasks = procs.Select(p => Task.Run(() => p.WaitForExit())).ToArray();
+            var task = Task.WhenAll(tasks);
 
-                Thread.Sleep(1000);
-                any = false;
-                foreach (var p in procs) {
-                    try {
-                        if (!p.HasExited) {
-                            any = true;
-                        }
-                    } catch (Exception ex) {
-                        Console.Error.WriteLine("Error {0} waiting for process: {1}", ex.GetType().Name, ex.Message);
-                    }
-                }
-            }
+            while (!_cancel && IsDirectoryPresent() && !task.Wait(1000)) { }
 
             Console.Error.WriteLine("Finished waiting");
         }
