@@ -110,6 +110,9 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         int DoInstall() {
             WaitForUninstall(false);
+            if (_cancel) {
+                return ERROR_INSTALL_CANCEL;
+            }
 
             var p = Run(_installer, string.Format(CultureInfo.InvariantCulture, "/InstallationType=AllUsers /RegisterPython=0 /S /D={0}", _targetDir));
             p.WaitForExit();
