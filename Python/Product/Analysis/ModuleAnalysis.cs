@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Analysis {
             var errorWalker = new ErrorWalker();
             expr.Walk(errorWalker);
             if (errorWalker.HasError) {
-                return null;
+                return Enumerable.Empty<MemberResult>();
             }
 
             // Special handling for `__import__('module.name')`
