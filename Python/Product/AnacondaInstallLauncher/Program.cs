@@ -23,13 +23,16 @@ using System.Threading;
 
 namespace Microsoft.PythonTools.AnacondaInstallLauncher {
     class Program {
+        private const int ERROR_INVALID_PARAMETER = 87;
+        private const int ERROR_INSTALL_CANCEL = 15608;
+
         static int PrintUsage() {
             var name = Path.GetFileName(typeof(Program).Assembly.Location);
             var spaces = new string(' ', name.Length);
             Console.Error.WriteLine("{0} install [installer] [target directory]", name);
             Console.Error.WriteLine("{0} uninstall [uninstaller] [target directory]", spaces);
             Console.Error.WriteLine();
-            return 1;
+            return ERROR_INVALID_PARAMETER;
         }
 
         static int Main(string[] args) {
@@ -49,12 +52,18 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
             }
 #endif
 
+            Console.CancelKeyPress += (_, e) => {
+                Console.Error.WriteLine("Cancelling wait");
+                p.Cancel();
+            };
+
             return p.Go();
         }
 
         private readonly bool _install;
         private readonly string _installer, _targetDir;
         private DateTime _stopAt;
+        private bool _cancel;
 
         private Program(string command, string installer, string targetDir) {
             _targetDir = Path.GetFullPath(targetDir);
@@ -81,34 +90,49 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
             }
         }
 
+        void Cancel() => _cancel = true;
+
+        Process Run(string filename, string arguments) {
+            var psi = new ProcessStartInfo(filename, arguments) {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            Console.Error.WriteLine("Starting:{0}  Filename: {1}{0}  Argument: {2}", Environment.NewLine, psi.FileName, psi.Arguments);
+            var p = Process.Start(psi);
+
+            p.OutputDataReceived += (_, e) => { if (e.Data != null) Console.Write(e.Data); };
+            p.ErrorDataReceived += (_, e) => { if (e.Data != null) Console.Error.Write(e.Data); };
+
+            return p;
+        }
+
         int DoInstall() {
             WaitForUninstall(false);
 
-            var psi = new ProcessStartInfo(
-                _installer,
-                string.Format(CultureInfo.InvariantCulture, "/InstallationType=AllUsers /RegisterPython=0 /S /D={0}", _targetDir)
-            );
-            Console.Error.WriteLine("Starting:{0}  Filename: {1}{0}  Argument: {2}", Environment.NewLine, psi.FileName, psi.Arguments);
-            var p = Process.Start(psi);
+            var p = Run(_installer, string.Format(CultureInfo.InvariantCulture, "/InstallationType=AllUsers /RegisterPython=0 /S /D={0}", _targetDir));
             p.WaitForExit();
-            Console.Error.WriteLine("Process exited: {0}", p.ExitCode);
             return p.ExitCode;
         }
 
         int DoUninstall() {
-            var psi = new ProcessStartInfo(_installer, "/S");
-            Console.Error.WriteLine("Starting:{0}  Filename: {1}{0}  Argument: {2}", Environment.NewLine, psi.FileName, psi.Arguments);
-            var p = Process.Start(psi);
+            var p = Run(_installer, "/S");
 
-            p.WaitForExit(30000);
+            if (p.WaitForExit(30000)) {
+                Console.Error.WriteLine("Process exited: {0}", p.ExitCode);
+            } else {
+                Console.Error.WriteLine("Process has not exited");
+            }
 
             WaitForUninstall(true);
-            return 0;
+
+            return _cancel ? ERROR_INSTALL_CANCEL : p.ExitCode;
         }
 
         void WaitForUninstall(bool requireWait) {
             try {
-                _stopAt = DateTime.UtcNow.AddMinutes(20);
+                _stopAt = DateTime.UtcNow.AddMinutes(30);
                 WaitForProcess("Un_A", requireWait);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.ToString());
@@ -117,6 +141,10 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         bool KeepWaiting {
             get {
+                if (_cancel) {
+                    return false;
+                }
+
                 if (!Directory.Exists(_targetDir)) {
                     Console.Error.WriteLine("Target directory is not present");
                     return false;
