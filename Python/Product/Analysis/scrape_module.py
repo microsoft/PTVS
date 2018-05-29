@@ -279,6 +279,7 @@ class Signature(object):
         self.restype = (
             self._init_restype_fromsignature() or
             self._init_restype_fromknown(scope_alias) or
+            self._init_restype_fromdocstring() or
             'pass'
         )
 
@@ -287,6 +288,10 @@ class Signature(object):
 
         if self.restype in ('return Any', 'return Unknown'):
             self.restype = 'pass'
+
+        #Special case for 'with' statement and built-ins like open() or memoryview
+        if state.module and name == '__enter__':
+            self.restype = 'return self'
 
     def __str__(self):
         return self.fullsig
@@ -381,6 +386,38 @@ class Signature(object):
         if isinstance(restype, list):
             return "return " + "; return ".join(restype)
         return "return " + restype
+
+    def _init_restype_fromdocstring(self):
+        doc = getattr(self.callable, '__doc__', None)
+        if not isinstance(doc, str):
+            return
+        
+        first_line = doc.partition('\n')[0].strip()
+        if not '->' in first_line:
+            return
+
+        index = first_line.index('->')
+        typeName = first_line[index + 2:].strip()
+        
+        if typeName.startswith('str'):
+            return "return ''"
+        if typeName.startswith('float'):
+            return "return 1.0"
+        if typeName.startswith('int'):
+            return "return 1"
+        if typeName.startswith('long'):
+            return "return 1L"
+        if typeName.startswith('list'):
+            return "return list()"
+        if typeName.startswith('dict'):
+            return "return dict()"
+        if typeName.startswith('('):
+            return "return tuple()"
+        if typeName.startswith('bool'):
+            return "return True"
+        if 'Return a string' in first_line:
+            return "return ''"
+        return
 
     def _init_argspec_fromdocstring(self, defaults, doc=None, override_name=None):
         if not doc:

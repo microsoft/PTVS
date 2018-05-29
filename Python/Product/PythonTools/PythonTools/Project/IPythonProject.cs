@@ -16,7 +16,6 @@
 
 using System;
 using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
 
@@ -43,6 +42,7 @@ namespace Microsoft.PythonTools.Project {
         /// <param name="name"></param>
         /// <param name="value"></param>
         void SetProperty(string name, string value);
+        void SetOrAddPropertyAfter(string name, string value, string afterProperty);
 
         /// <summary>
         /// Gets the working directory that the program should be launched in.  This is either

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,13 +32,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly Node _statement;
         private readonly ScopeStatement _scope;
         private readonly ILogger _log;
+        private readonly DocumentationBuilder _textBuilder;
 
-        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, ILogger log) {
+        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, DocumentationBuilder textBuilder, ILogger log) {
             Analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             Position = position;
             Index = Tree.LocationToIndex(Position);
             Options = opts;
+            _textBuilder = textBuilder;
             _log = log;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
@@ -46,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
-                Literals = true,
+                Literals = true
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
         }
@@ -58,6 +61,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceLocation Position { get; }
         public int Index { get; }
         public GetMemberOptions Options { get; set; }
+        public bool? ShouldCommitByDefault { get; set; }
 
         public Node Node => _node;
         public Node Statement => _statement;
@@ -80,7 +84,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             bool allowKeywords = true, allowArguments = true;
             List<CompletionItem> additional = null;
 
-            var res = GetCompletionsFromMembers(ref opts) ??
+            var res = GetNoCompletionsInComments() ??
+                GetCompletionsFromMembers(ref opts) ??
                 GetCompletionsInLiterals() ??
                 GetCompletionsInImport(ref opts, ref additional) ??
                 GetCompletionsForOverride() ??
@@ -93,6 +98,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (additional != null) {
                 res = res.Concat(additional);
+            }
+
+            if (ReferenceEquals(res, Empty)) {
+                return null;
             }
 
             return res;
@@ -162,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
 
-                
+
                 return GetModules(names, includeMembers);
             } else if (name == null || name is NameExpression) {
                 return Analysis.ProjectState.GetModules().Select(ToCompletionItem);
@@ -245,6 +254,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return null;
                 }
                 var loc = fd.GetStart(Tree);
+                ShouldCommitByDefault = false;
                 return Analysis.GetOverrideable(loc)
                     .Select(o => new CompletionItem {
                         label = o.Name,
@@ -261,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // completions 
 
             if (Statement is FunctionDefinition fd) {
-                if (Index > fd.HeaderIndex) {
+                if (fd.HeaderIndex > fd.StartIndex && Index > fd.HeaderIndex) {
                     return null;
                 } else if (Index == fd.HeaderIndex) {
                     return Empty;
@@ -294,7 +304,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
 
             } else if (Statement is ClassDefinition cd) {
-                if (Index > cd.HeaderIndex) {
+                if (cd.HeaderIndex > cd.StartIndex && Index > cd.HeaderIndex) {
                     return null;
                 } else if (Index == cd.HeaderIndex) {
                     return Empty;
@@ -439,6 +449,32 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return false;
         }
 
+        private IEnumerable<CompletionItem> GetNoCompletionsInComments() {
+            if (Node == null) {
+                int match = Array.BinarySearch(Tree._commentLocations, Position);
+                if (match < 0) {
+                    // If our index = -1, it means we're before the first comment
+                    if (match == -1) {
+                        return null;
+                    }
+                    // If we couldn't find an exact match for this position, get the nearest
+                    // matching comment before this point
+                    match = ~match - 1;
+                }
+                if (match < 0 || match >= Tree._commentLocations.Length) {
+                    Debug.Fail("Failed to find nearest preceding comment in AST");
+                    return null;
+                }
+
+                if (Tree._commentLocations[match].Line == Position.Line &&
+                    Tree._commentLocations[match].Column < Position.Column) {
+                    // We are inside a comment
+                    return Empty;
+                }
+            }
+            return null;
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
@@ -468,7 +504,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return members.Select(ToCompletionItem);
+            return members.Select(ToCompletionItem).Where(c => !string.IsNullOrEmpty(c.insertText));
         }
 
 
@@ -486,17 +522,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _kind = PythonMemberType.Keyword.ToString().ToLowerInvariant()
         };
 
-        private static CompletionItem ToCompletionItem(MemberResult m) {
+        private CompletionItem ToCompletionItem(MemberResult m) {
+            var completion = m.Completion;
+            if (string.IsNullOrEmpty(completion)) {
+                completion = m.Name;
+            }
+            if (string.IsNullOrEmpty(completion)) {
+                return default(CompletionItem);
+            }
+            var doc = _textBuilder.GetDocumentation(m.Values, string.Empty);
             var res = new CompletionItem {
                 label = m.Name,
-                insertText = m.Completion,
-                documentation = m.Documentation,
+                insertText = completion,
+                documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
+                    kind = _textBuilder.DisplayOptions.preferredFormat,
+                    value = doc
+                },
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(m.Completion, 0) ? "1" : "2",
+                sortText = char.IsLetter(completion, 0) ? "1" : "2",
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
-
             return res;
         }
 

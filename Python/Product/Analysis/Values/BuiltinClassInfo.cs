@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -38,17 +37,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _doc = null;
         }
 
-        public override IPythonType PythonType {
-            get { return _type; }
-        }
-
+        public override IPythonType PythonType => _type;
         internal override bool IsOfType(IAnalysisSet klass) {
             return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Type]);
         }
 
-        internal override BuiltinTypeId TypeId {
-            get { return _type.TypeId; }
-        }
+        internal override BuiltinTypeId TypeId => _type.TypeId;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             // TODO: More Type propagation
@@ -113,15 +107,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public BuiltinInstanceInfo Instance {
-            get {
-                return _inst ?? (_inst = MakeInstance());
-            }
-        }
-
-        public override IAnalysisSet GetInstanceType() {
-            return Instance;
-        }
+        public BuiltinInstanceInfo Instance => _inst ?? (_inst = MakeInstance());
+        public override IAnalysisSet GetInstanceType() => Instance;
 
         protected virtual BuiltinInstanceInfo MakeInstance() {
             if (_type.TypeId == BuiltinTypeId.Int || _type.TypeId == BuiltinTypeId.Long || _type.TypeId == BuiltinTypeId.Float || _type.TypeId == BuiltinTypeId.Complex) {
@@ -145,15 +132,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var ctors = _type.GetConstructors();
 
                 if (ctors != null) {
-                    return ctors.Overloads.Select(ctor => new BuiltinFunctionOverloadResult(ProjectState, ctor, 1, _type.Name, GetDoc));
+                    return ctors.Overloads.Select(ctor => new BuiltinFunctionOverloadResult(ProjectState, ctor, 1, _type.Name, () => Documentation));
                 }
                 return new OverloadResult[0];
             }
-        }
-
-        // can't create delegate to property...
-        private string GetDoc() {
-            return Documentation;
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
@@ -257,12 +239,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, _type.IsBuiltin ? "type " : "class ");
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
-
-            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "\r\n");
-            var doc = Documentation;
-            if (!string.IsNullOrEmpty(doc)) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
-            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);
         }
 
         private string FullName {
@@ -289,15 +266,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                return _type.MemberType;
-            }
-        }
-
-        public override string ToString() {
-            return "Class " + _type.Name;
-        }
+        public override PythonMemberType MemberType => _type.MemberType;
+        public override string ToString() => "Class " + _type.Name;
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {
@@ -360,17 +330,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal override IEnumerable<LocationInfo> References {
-            get {
-                if (_references != null) {
-                    return _references.AllReferences;
-                }
-                return new LocationInfo[0];
-            }
-        }
-
-        public override ILocatedMember GetLocatedMember() {
-            return _type as ILocatedMember;
-        }
+        internal override IEnumerable<LocationInfo> References => _references?.AllReferences ?? new LocationInfo[0];
+        public override ILocatedMember GetLocatedMember() => _type as ILocatedMember;
     }
 }

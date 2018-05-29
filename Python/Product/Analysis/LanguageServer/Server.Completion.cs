@@ -17,8 +17,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -42,8 +40,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var opts = GetOptions(@params.context);
-            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, this);
+            var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this);
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
+            if (members == null) {
+                TraceMessage($"Do not trigger at {@params.position} in {uri}");
+                return new CompletionList();
+            }
 
             if (_settings.SuppressAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
@@ -57,9 +59,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var res = new CompletionList {
                 items = members.ToArray(),
-                _applicableSpan = ctxt.Node?.GetSpan(tree),
-                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional)
+                _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
+                _commitByDefault = ctxt.ShouldCommitByDefault
             };
+
+            if (ctxt.Node != null) {
+                var span = ctxt.Node.GetSpan(tree);
+                if (@params.context?.triggerKind == CompletionTriggerKind.TriggerCharacter) {
+                    SourceLocation trigger = @params.position;
+                    if (span.End > trigger) {
+                        span = new SourceSpan(span.Start, trigger);
+                    }
+                }
+                if (span.End != span.Start) {
+                    res._applicableSpan = span;
+                }
+            }
+
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
             return res;
         }

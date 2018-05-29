@@ -88,7 +88,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
                 }
 
                 if ((major == 2 && (minor >= 4 && minor <= 7)) ||
-                    (major == 3 && (minor >= 0 && minor <= 6))) {
+                    (major == 3 && (minor >= 0 && minor <= 7))) {
                         return new VsPyProf(pythonModule,
                             major,
                             minor,
@@ -217,6 +217,9 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
                 RegisterName(func, ((PyCodeObject36*)codeObj)->co_name, &moduleName);
                 lineno = ((PyCodeObject36*)codeObj)->co_firstlineno;
+            } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
+                RegisterName(func, ((PyCodeObject37*)codeObj)->co_name, &moduleName);
+                lineno = ((PyCodeObject37*)codeObj)->co_firstlineno;
             }
 
             // give the profiler the line number of this function
@@ -265,8 +268,10 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
                 PyObject* self = nullptr;
                 if (PyFrameObject25_33::IsFor(MajorVersion, MinorVersion)) {
                     self = ((PyFrameObject25_33*)frameObj)->f_localsplus[0];
-                } else if (PyFrameObject34_37::IsFor(MajorVersion, MinorVersion)) {
-                    self = ((PyFrameObject34_37*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject34_36::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject34_36*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject37::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject37*)frameObj)->f_localsplus[0];
                 }
                 return GetClassNameFromSelf(self, codeObj);
             }
@@ -296,6 +301,8 @@ wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
             nameObj = ((PyCodeObject33_35*)codeObj)->co_name;
         } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
             nameObj = ((PyCodeObject36*)codeObj)->co_name;
+        } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
+            nameObj = ((PyCodeObject37*)codeObj)->co_name;
         }
         GetNameAscii(nameObj, codeName);
 

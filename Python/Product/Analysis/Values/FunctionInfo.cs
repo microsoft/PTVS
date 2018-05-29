@@ -311,18 +311,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             bool hasNl = false;
             var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
-            foreach (var kv in GetDocumentationString(Documentation)) {
-                if (!hasNl) {
-                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
-                    nlKind = WellKnownRichDescriptionKinds.Misc;
-                    hasNl = true;
-                }
-                yield return kv;
-            }
             hasNl = false;
             foreach (var kv in GetQualifiedLocationString()) {
                 if (!hasNl) {
-                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                    yield return new KeyValuePair<string, string>(nlKind, Environment.NewLine);
                     hasNl = true;
                 }
                 yield return kv;
@@ -461,8 +453,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_functionAttrs != null && _functionAttrs.TryGetValue("__wrapped__", out VariableDef wrapped)) {
-                    foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
-                        yield return o;
+                    if (this.Push()) {
+                        try {
+                            foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
+                                yield return o;
+                            }
+                        } finally {
+                            this.Pop();
+                        }
                     }
                 }
 

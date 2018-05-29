@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Parsing {
         private Severity _indentationInconsistencySeverity;
         private bool _endContinues, _printFunction, _unicodeLiterals, _withStatement;
         private List<NewLineLocation> _newLineLocations;
+        private List<SourceLocation> _commentLocations;
         private SourceLocation _initialLocation;
         private TextReader _reader;
         private char[] _buffer;
@@ -215,6 +216,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             _newLineLocations = new List<NewLineLocation>();
+            _commentLocations = new List<SourceLocation>();
             _tokenEnd = -1;
             _multiEolns = !_disableLineFeedLineSeparator;
             _initialLocation = initialLocation;
@@ -488,6 +490,7 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
 
                     case '#':
+                        _commentLocations.Add(CurrentPosition.AddColumns(-1));
                         if ((_options & (TokenizerOptions.VerbatimCommentsAndLineJoins | TokenizerOptions.Verbatim)) != 0) {
                             var commentRes = ReadSingleLineComment(out ch);
                             if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) == 0) {
@@ -2015,6 +2018,7 @@ namespace Microsoft.PythonTools.Parsing {
                         sb.Append('\f');
                         break;
                     case '#':
+                        _commentLocations.Add(CurrentPosition.AddColumns(-1));
                         if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                             BufferBack();
                             MarkTokenEnd();
@@ -2231,9 +2235,8 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 
-        internal NewLineLocation[] GetLineLocations() {
-            return _newLineLocations.ToArray();
-        }
+        internal NewLineLocation[] GetLineLocations() => _newLineLocations.ToArray();
+        internal SourceLocation[] GetCommentLocations() => _commentLocations.ToArray();
 
         [Serializable]
         class IncompleteString : IEquatable<IncompleteString> {

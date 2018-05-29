@@ -45,9 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _fromFunction = true;
         }
 
-        public override IPythonType PythonType {
-            get { return _type; }
-        }
+        public override IPythonType PythonType => _type;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes.GetInstanceType();
@@ -65,22 +63,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _boundMethod.SelfSet;
         }
 
-        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            var def = _function.IsBuiltin ? "built-in method " : "method ";
-            return BuiltinFunctionInfo.GetRichDescription(def, _function, Documentation);
-        }
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription()
+            => BuiltinFunctionInfo.GetRichDescription(string.Empty, _function);
 
-        public IAnalysisSet ReturnTypes {
-            get {
-                return _returnTypes;
-            }
-        }
-
-        public IPythonFunction Function {
-            get {
-                return _function;
-            }
-        }
+        public IAnalysisSet ReturnTypes => _returnTypes;
+        public IPythonFunction Function => _function;
 
         public override IEnumerable<OverloadResult> Overloads {
             get {
@@ -112,16 +99,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                return _memberType;
-            }
-        }
-
-        public override string Name { get { return _function.Name; } }
-
-        public override ILocatedMember GetLocatedMember() {
-            return _function as ILocatedMember;
-        }
+        public override PythonMemberType MemberType => _memberType;
+        public override string Name => _function.Name;
+        public override ILocatedMember GetLocatedMember() => _function as ILocatedMember;
     }
 }

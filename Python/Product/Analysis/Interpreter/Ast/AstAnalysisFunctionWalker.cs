@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -26,6 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
         private readonly AstPythonFunctionOverload _overload;
+        private AstPythonType _selfType;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
@@ -66,20 +68,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Walk() {
-            IMember self = null;
-            bool classmethod, staticmethod;
-            GetMethodType(_target, out classmethod, out staticmethod);
-            if (!staticmethod) {
-                self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
-                if (!classmethod) {
-                    var cls = self as IPythonType;
-                    if (cls == null) {
-                        self = null;
-                    } else {
-                        self = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
-                    }
-                }
-            }
+            var self = GetSelf();
+            _selfType = (self as AstPythonConstant)?.Type as AstPythonType;
 
             if (_target.ReturnAnnotation != null) {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
@@ -111,8 +101,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_overload.Documentation == null) {
                 var docNode = (node.Body as SuiteStatement)?.Statements.FirstOrDefault();
                 var ce = (docNode as ExpressionStatement)?.Expression as ConstantExpression;
-                var doc = ce?.Value as string;
-                if (doc != null) {
+                if (ce?.Value is string doc) {
                     _overload.SetDocumentation(doc);
                 }
             }
@@ -120,7 +109,70 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return true;
         }
 
-        public override bool Walk(ExpressionStatement node) {
+        public override bool Walk(AssignmentStatement node) {
+            var value = _scope.GetValueFromExpression(node.Right);
+            foreach (var lhs in node.Left) {
+                if (lhs is MemberExpression memberExp && memberExp.Target is NameExpression nameExp1) {
+                    if (_selfType != null && nameExp1.Name == "self") {
+                        _selfType.AddMembers(new[] { new KeyValuePair<string, IMember>(memberExp.Name, value) }, true);
+                    }
+                    continue;
+                }
+
+                if (lhs is NameExpression nameExp2 && nameExp2.Name == "self") {
+                    continue; // Don't assign to 'self'
+                }
+
+                // Basic assignment
+                foreach (var ne in node.Left.OfType<NameExpression>()) {
+                    _scope.SetInScope(ne.Name, value);
+                }
+
+                // Tuple = Tuple. Transfer values.
+                if (lhs is TupleExpression tex) {
+                    if (value is TupleExpression valTex) {
+                        var returnedExpressions = valTex.Items.ToArray();
+                        var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
+                        for (var i = 0; i < Math.Min(names.Length, returnedExpressions.Length); i++) {
+                            if (returnedExpressions[i] != null) {
+                                var v = _scope.GetValueFromExpression(returnedExpressions[i]);
+                                _scope.SetInScope(names[i], v);
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Tuple = 'tuple value' (such as from callable). Transfer values.
+                    if (value is AstPythonConstant c && c.Type is AstPythonTuple tuple) {
+                        var types = tuple.Types.ToArray();
+                        var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
+                        for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
+                            if (names[i] != null) {
+                                _scope.SetInScope(names[i], new AstPythonConstant(types[i]));
+                            }
+                        }
+                    }
+                }
+            }
+            return base.Walk(node);
+        }
+
+        public override bool Walk(IfStatement node) {
+            // Handle basic check such as
+            // if isinstance(value, type):
+            //    return value
+            // by assigning type to the value unless clause is raising exception.
+            var ce = node.Tests.FirstOrDefault()?.Test as CallExpression;
+            if (ce?.Target is NameExpression ne && ne?.Name == "isinstance" && ce.Args.Count == 2) {
+                var name = (ce.Args[0].Expression as NameExpression)?.Name;
+                var typeName = (ce.Args[1].Expression as NameExpression)?.Name;
+                if (name != null && typeName != null) {
+                    var typeId = typeName.GetTypeId();
+                    if (typeId != BuiltinTypeId.Unknown) {
+                        _scope.SetInScope(name, new AstPythonConstant(new AstPythonBuiltinType(typeName, typeId)));
+                    }
+                }
+            }
             return base.Walk(node);
         }
 
@@ -128,8 +180,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
                 _returnTypes.Add(type);
             }
+            return true; // We want to evaluate all code so all private variables in __new__ get defined
+        }
 
-            return false;
+        private IMember GetSelf() {
+            bool classmethod, staticmethod;
+            GetMethodType(_target, out classmethod, out staticmethod);
+            var self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
+            if (!staticmethod && !classmethod) {
+                var cls = self as IPythonType;
+                if (cls == null) {
+                    self = null;
+                } else {
+                    self = new AstPythonConstant(cls, ((cls as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
+                }
+            }
+            return self;
         }
     }
 }

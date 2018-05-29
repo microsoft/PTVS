@@ -18,14 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -105,9 +103,9 @@ Aliased = test.Aliased
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("abc", pos), BuiltinTypeId.Int);
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cf", pos), BuiltinTypeId.Int);
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cg", pos), BuiltinTypeId.Int);
-                Assert.AreEqual("function f1(x = 42)", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
+                Assert.AreEqual("f1(x = 42)", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
                 Assert.AreEqual("bound method x", newMod.Analysis.GetValuesByIndex("dx", pos).First().Description);
-                Assert.AreEqual("function test.C.g(self)", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
+                Assert.AreEqual("test.C.g(self)", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
                 var unionMembers = new List<AnalysisValue>(newMod.Analysis.GetValuesByIndex("union", pos));
                 Assert.AreEqual(unionMembers.Count, 2);
                 AssertUtil.ContainsExactly(unionMembers.Select(x => x.PythonType.Name), "X", "Y");
@@ -175,7 +173,7 @@ Overloaded = test.Overloaded
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
                 Assert.AreEqual(
-                    "class test.Aliased:\r\nclass doc\r\n\r\nfunction Aliased(fob):\r\nfunction doc",
+                    "class test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",
                     allMembers.First(x => x.Name == "Aliased").Documentation
                 );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
@@ -183,7 +181,8 @@ Overloaded = test.Overloaded
                 //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
                 // help 2 should be first because it has more parameters
                 //Assert.AreEqual("function Overloaded(a, b)\r\nhelp 2\r\n\r\nfunction Overloaded(a)\r\nhelp 1", doc.Documentation);
-                AssertUtil.ContainsExactly(newPs.Analyzer.GetDescriptions("test.Overloaded"), "function Overloaded(a, b)\r\nhelp 2", "function Overloaded(a)\r\nhelp 1");
+                AssertUtil.ContainsExactly(newPs.Analyzer.GetDescriptions("test.Overloaded"), "Overloaded(a, b)", "Overloaded(a)");
+                AssertUtil.ContainsExactly(newPs.Analyzer.GetDocumentations("test.Overloaded"), "help 2", "help 1");
             }
         }
 

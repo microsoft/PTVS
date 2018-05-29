@@ -88,16 +88,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
             var si = new SignatureInformation();
 
-            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
-                si.label = overload.Name;
-            } else {
-                si.label = "{0}({1})".FormatInvariant(
-                    overload.Name,
-                    string.Join(", ", overload.Parameters.Select(FormatParameter))
-                );
-            }
-
-            si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
             si.parameters = overload.Parameters.MaybeEnumerate().Select(p => new ParameterInformation {
                 label = p.Name,
                 documentation = string.IsNullOrEmpty(p.Documentation) ? null : p.Documentation,
@@ -105,17 +95,59 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _defaultValue = p.DefaultValue
             }).ToArray();
 
+            si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
+
+            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
+                si.label = overload.Name;
+            } else {
+                var doc = overload.Documentation;
+                // Some function contain signature in the documentation. Example: print.
+                // We want to use that signature in VS Code since it contains all arguments.
+                if (si.parameters.Length == 0 && !string.IsNullOrEmpty(doc) && doc.StartsWithOrdinal($"{overload.Name}(")) {
+                    return GetSignatureFromDoc(doc);
+                }
+                si.label = "{0}({1})".FormatInvariant(
+                    overload.Name,
+                    string.Join(", ", overload.Parameters.Select(FormatParameter))
+                );
+            }
+
+            si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
             var formatSetting = _clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
             si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
             foreach (var p in si.parameters) {
                 p.documentation = GetMarkupContent(p.documentation.value, formatSetting);
             }
 
-            si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
             return si;
         }
 
-        private string FormatParameter(ParameterResult p) {
+        private static SignatureInformation GetSignatureFromDoc(string doc) {
+            var si = new SignatureInformation();
+            var firstLineBreak = doc.IndexOfAny(new[] { '\r', '\n' });
+            si.label = firstLineBreak > 0 ? doc.Substring(0, firstLineBreak) : doc;
+            si.documentation = doc.Substring(si.label.Length).TrimStart();
+            si.parameters = GetParametersFromDoc(si.label);
+            return si;
+        }
+
+        private static ParameterInformation[] GetParametersFromDoc(string doc) {
+            var openBrace = doc.IndexOf('(');
+            var closeBrace = doc.LastIndexOf(')');
+
+            if (openBrace > 0 && closeBrace > 0) {
+                var args = doc.Substring(openBrace + 1, closeBrace - openBrace - 1).Split(',');
+
+                return args.Select(a => {
+                    var i = a.IndexOf('=');
+                    return new ParameterInformation {
+                        label = i > 0 ? a.Substring(0, i).Trim() : a.Trim(),
+                    };
+                }).ToArray();
+            }
+            return Array.Empty<ParameterInformation>();
+        }
+        private static string FormatParameter(ParameterResult p) {
             var res = new StringBuilder(p.Name);
             if (!string.IsNullOrEmpty(p.Type)) {
                 res.Append(": ");

@@ -207,10 +207,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public class InformationDisplayOptions {
+        public MarkupKind preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
         public int maxDocumentationTextLength;
+        public int maxDocumentationLines;
     }
 
     /// <summary>
@@ -655,6 +657,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The expression that members are being displayed for.
         /// </summary>
         public string _expr;
+        /// <summary>
+        /// When true, completions should commit by default. When false, completions
+        /// should not commit. If unspecified the client may decide.
+        /// </summary>
+        public bool? _commitByDefault;
     }
 
     [Serializable]
@@ -662,7 +669,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string label;
         public CompletionItemKind kind;
         public string detail;
-        public string documentation;
+        public MarkupContent documentation;
         public string sortText;
         public string filterText;
         public string insertText;

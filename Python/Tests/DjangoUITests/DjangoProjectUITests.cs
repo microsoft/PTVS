@@ -31,7 +31,7 @@ using PythonConstants = Microsoft.PythonTools.PythonConstants;
 
 namespace DjangoUITests {
     public class DjangoProjectUITests {
-        public void NewDjangoProject(VisualStudioApp app) {
+        public void NewDjangoProject(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -46,7 +46,7 @@ namespace DjangoUITests {
             Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
         }
 
-        public void NewDjangoProjectSafeProjectName(VisualStudioApp app) {
+        public void NewDjangoProjectSafeProjectName(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -108,7 +108,7 @@ namespace DjangoUITests {
             }
         }
 
-        public void DjangoCommandsNonDjangoApp(VisualStudioApp app) {
+        public void DjangoCommandsNonDjangoApp(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.PythonApplicationTemplate,
@@ -134,7 +134,7 @@ namespace DjangoUITests {
             }
         }
 
-        public void StartNewApp(PythonVisualStudioApp app) {
+        public void StartNewApp(PythonVisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -161,6 +161,10 @@ namespace DjangoUITests {
             Assert.IsNotNull(appFolder.ProjectItems.Item("views.py"));
             Assert.IsNotNull(appFolder.ProjectItems.Item("__init__.py"));
 
+            var templatesFolder = appFolder.ProjectItems.Item("templates");
+            var templatesAppFolder = templatesFolder.ProjectItems.Item("Fob");
+            Assert.IsNotNull(templatesAppFolder.ProjectItems.Item("index.html"));
+
             app.SolutionExplorerTreeView.SelectProject(project);
             app.Dte.ExecuteCommand("Project.DjangoCheckDjango17");
 
@@ -168,8 +172,9 @@ namespace DjangoUITests {
                 Assert.IsNotNull(console);
                 console.WaitForTextEnd("The interactive Python process has exited.", ">");
 
-                Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("Executing manage.py check"));
-                Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("System check identified no issues (0 silenced)."));
+                var consoleText = console.TextView.TextSnapshot.GetText();
+                AssertUtil.Contains(consoleText, "Executing manage.py check");
+                AssertUtil.Contains(consoleText, "System check identified no issues (0 silenced).");
             }
 
             app.SolutionExplorerTreeView.SelectProject(project);
@@ -186,7 +191,7 @@ namespace DjangoUITests {
             Assert.IsNotNull(project.ProjectItems.Item("NewPage.html"));
         }
 
-        public void StartNewAppDuplicateName(VisualStudioApp app) {
+        public void StartNewAppDuplicateName(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -218,7 +223,7 @@ namespace DjangoUITests {
             using (var dlg = AutomationDialog.WaitForDialog(app)) { }
         }
 
-        public void StartNewAppSameAsProjectName(VisualStudioApp app) {
+        public void StartNewAppSameAsProjectName(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -235,7 +240,7 @@ namespace DjangoUITests {
             using (var dlg = AutomationDialog.WaitForDialog(app)) { }
         }
 
-        public void DebugProjectProperties(VisualStudioApp app) {
+        public void DebugProjectProperties(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -266,7 +271,7 @@ namespace DjangoUITests {
             dbgProps.AssertMatchesProject(project.GetPythonProject());
         }
 
-        public void DjangoProjectWithSubdirectory(VisualStudioApp app) {
+        public void DjangoProjectWithSubdirectory(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             var sln = app.CopyProjectForTest(@"TestData\DjangoProjectWithSubDirectory.sln");
             var slnDir = PathUtils.GetParent(sln);
             var project = app.OpenProject(sln);

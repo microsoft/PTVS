@@ -256,8 +256,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         displayOptions = new LS.InformationDisplayOptions {
                             maxDocumentationLineLength = 30,
                             trimDocumentationLines = true,
-                            maxDocumentationTextLength = 4096,
-                            trimDocumentationText = true
+                            maxDocumentationTextLength = 1024,
+                            trimDocumentationText = true,
+                            maxDocumentationLines = 100
                         }
                     },
                     capabilities = new LS.ClientCapabilities {
@@ -1329,7 +1330,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.SignaturesResponse {
-                sigs = sigs.signatures.Select(
+                sigs = sigs?.signatures?.Select(
                     s => new AP.Signature {
                         name = s.label,
                         doc = s.documentation?.value,
@@ -1420,7 +1421,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                     startLine = s.location.range.start.line + 1,
                                     startColumn = s.location.range.start.character + 1,
                                     endLine = s.location.range.end.line + 1,
-                                    endColumn = s.location.range.end.character + 1
+                                    endColumn = s.location.range.end.character + 1,
+                                    kind = "definition",
                                 }
                             }
                         }
@@ -1444,7 +1446,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var m = new AP.Completion {
                     name = c.label,
                     completion = (c.label == c.insertText) ? null : c.insertText,
-                    doc = c.documentation,
+                    doc = c.documentation?.value,
                     memberType = ToMemberType(c._kind, c.kind)
                 };
 

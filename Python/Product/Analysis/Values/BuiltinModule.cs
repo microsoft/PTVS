@@ -62,8 +62,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override string Documentation => $"{Description}{Environment.NewLine}{_type.Documentation}";
-        public override string Description => $"built-in module {_interpreterModule.Name}";
+        public override string Documentation => _type.Documentation;
+        public override string Description => _interpreterModule.Name;
         public override string Name => _interpreterModule.Name;
 
         public override IPythonType PythonType => ProjectState.Types[BuiltinTypeId.Module];
