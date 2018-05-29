@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
+            await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;
             // Make sure document is enqueued for processing
