@@ -52,6 +52,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return MakeClassDocumentation(v);
                     case PythonMemberType.Module:
                         return MakeModuleDocumentation(v);
+                    case PythonMemberType.Constant:
+                        return MakeConstantDocumentation(v);
                 }
             }
             return MakeGeneralDocumentation(array, originalExpression);
@@ -152,6 +154,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         protected abstract string MakeModuleDocumentation(AnalysisValue value);
         protected abstract string MakeFunctionDocumentation(AnalysisValue value);
         protected abstract string MakeClassDocumentation(AnalysisValue value);
+        protected abstract string MakeConstantDocumentation(AnalysisValue value);
 
         protected string LimitLines(
             string str,
