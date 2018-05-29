@@ -228,17 +228,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
-            if (outOfProc) {
-                _conn = StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            } else {
-                _conn = StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            }
+            _conn = outOfProc 
+                ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess) 
+                : StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
 
             if (!string.IsNullOrEmpty(_conn.LogFilename)) {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            _conn.StartProcessing();
+            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait();
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
