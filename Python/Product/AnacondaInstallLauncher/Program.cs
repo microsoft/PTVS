@@ -135,8 +135,7 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         void WaitForUninstall(bool requireWait) {
             try {
-                _stopAt = DateTime.UtcNow.AddMinutes(30);
-                WaitForProcess("Un_A", requireWait);
+                WaitForProcess(DateTime.UtcNow.AddMinutes(30), requireWait);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.ToString());
             }
@@ -163,30 +162,37 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                     return false;
                 }
 
-                if (DateTime.UtcNow >= _stopAt) {
-                    Console.Error.WriteLine("Timeout has expired");
-                    return false;
-                }
-
                 return true;
             }
         }
 
-        void WaitForProcess(string name, bool requireProcess) {
+        Process[] GetProcesses() {
+            return Process.GetProcesses()
+                .Where(p => p.ProcessName.StartsWith("Un_") &&
+                    p.MainModule.FileVersionInfo.FileDescription.IndexOf("Anaconda", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToArray();
+        }
+
+        void WaitForProcess(DateTime stopAt, bool requireProcess) {
             if (!KeepWaiting) {
                 return;
             }
 
-            var procs = Process.GetProcessesByName(name) ?? new Process[0];
+            var procs = GetProcesses();
             int retries = 30;
             while (requireProcess && procs.Length == 0 && retries-- > 0) {
                 Thread.Sleep(1000);
-                procs = Process.GetProcessesByName(name) ?? new Process[0];
+                procs = GetProcesses();
             }
-            Console.Error.WriteLine("Waiting for {0} processes named {1}", procs.Length, name);
+            Console.Error.WriteLine("Waiting for {0} processes named {1}", procs.Length, string.Join(", ", procs.Select(p => p.ProcessName)));
 
             bool any = true;
             while (any && KeepWaiting) {
+                if (DateTime.UtcNow >= _stopAt) {
+                    Console.Error.WriteLine("Timeout has expired");
+                    break;
+                }
+
                 Thread.Sleep(1000);
                 any = false;
                 foreach (var p in procs) {
