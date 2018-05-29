@@ -63,7 +63,6 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         private readonly bool _install;
         private readonly string _installer, _targetDir;
-        private DateTime _stopAt;
         private bool _cancel;
 
         private Program(string command, string installer, string targetDir) {
@@ -73,7 +72,6 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 Console.Error.WriteLine($"Did not find {_installer}");
                 throw new FileNotFoundException(_installer);
             }
-            _stopAt = DateTime.UtcNow.AddMinutes(20);
             _install = command.Equals("install", StringComparison.OrdinalIgnoreCase);
         }
 
