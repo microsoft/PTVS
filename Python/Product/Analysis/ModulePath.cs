@@ -143,10 +143,8 @@ namespace Microsoft.PythonTools.Analysis {
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dyLib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-        private static bool IsCompiledModule(string name) {
-            var ext = Path.GetExtension(PathUtils.GetFileName(name)).ToLowerInvariant();
-            return CompiledModuleExtensions.Any(x => x == ext);
-        }
+        private static bool IsCompiledModule(string path)
+            => CompiledModuleExtensions.Any(x => path.EndsWithOrdinal(x, ignoreCase: true));
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
             string libPath,
