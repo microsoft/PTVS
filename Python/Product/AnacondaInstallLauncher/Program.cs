@@ -113,7 +113,10 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 return ERROR_INSTALL_CANCEL;
             }
 
-            var p = Run(_installer, string.Format(CultureInfo.InvariantCulture, "/InstallationType=AllUsers /RegisterPython=0 /S /D={0}", _targetDir));
+            var p = Run(_installer,
+                // We do not quote the target directory here, because the Anaconda installer requires it to be unquoted
+                // (also last on the command line - everything after "/D=" is treated as a directory)
+                string.Format(CultureInfo.InvariantCulture, "/InstallationType=AllUsers /RegisterPython=0 /S /D={0}", _targetDir));
             p.WaitForExit();
             return p.ExitCode;
         }
@@ -161,9 +164,16 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
 
         Process[] GetProcesses() {
             return Process.GetProcesses()
-                .Where(p => p.ProcessName.StartsWith("Un_") &&
-                    p.MainModule.FileVersionInfo.FileDescription.IndexOf("Anaconda", StringComparison.OrdinalIgnoreCase) >= 0)
-                .ToArray();
+                .Where(p => {
+                    string n, d;
+                    try {
+                        n = p.ProcessName;
+                        d = p.MainModule.FileVersionInfo.FileDescription;
+                    } catch {
+                        return false;
+                    }
+                    return n.StartsWith("Un_") && d.IndexOf("Anaconda", StringComparison.OrdinalIgnoreCase) >= 0;
+                }).ToArray();
         }
 
         void WaitForProcess(bool requireProcess) {
@@ -177,7 +187,8 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 Thread.Sleep(1000);
                 procs = GetProcesses();
             }
-            Console.Error.WriteLine("Waiting for {0} processes named {1}", procs.Length, string.Join(", ", procs.Select(p => p.ProcessName)));
+            Console.Error.WriteLine("Waiting for {0} processes named {1}", procs.Length,
+                string.Join(", ", procs.Select(p => { try { return p.ProcessName; } catch { return "<exited>"; } })));
 
             var tasks = procs.Select(p => Task.Run(() => p.WaitForExit())).ToArray();
             var task = Task.WhenAll(tasks);
