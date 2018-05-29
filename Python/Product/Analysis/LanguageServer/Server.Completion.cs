@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 members = members.Where(m => m.kind == filterKind.Value);
             }
 
-             var res = new CompletionList {
+            var res = new CompletionList {
                 items = members.ToArray(),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
                 _commitByDefault = ctxt.ShouldCommitByDefault
