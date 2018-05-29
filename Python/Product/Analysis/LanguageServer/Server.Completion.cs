@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
-             // TODO: Fill out missing values in item
+            // TODO: Fill out missing values in item
             return Task.FromResult(item);
         }
 
