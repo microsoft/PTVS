@@ -465,7 +465,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     var nameMatch = PythonFileRegex.Match(name);
                     if (allowCompiled && (nameMatch == null || !nameMatch.Success)) {
-                        return PythonCompiledRegex.IsMatch(name);
+                        nameMatch = PythonCompiledRegex.Match(name);
                     }
                     return nameMatch != null && nameMatch.Success;
                 } catch (RegexMatchTimeoutException) {
