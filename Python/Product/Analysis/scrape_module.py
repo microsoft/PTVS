@@ -79,6 +79,8 @@ STATICMETHOD_TYPES = ()
 CLASSMETHOD_TYPES = type(float.fromhex),
 PROPERTY_TYPES = type(int.real), type(property.fget)
 
+INVALID_ARGNAMES = set(keyword.kwlist) | set(('None', 'True', 'False'))
+
 # These full names are known to be lies. When we encounter
 # them while scraping a module, assume that we need to write
 # out the full type rather than including them by reference.
@@ -339,7 +341,7 @@ class Signature(object):
             return
 
         argn = []
-        seen_names = set(keyword.kwlist)
+        seen_names = set(INVALID_ARGNAMES)
         defaults = list(defaults)
         for a in args.args:
             if defaults:
@@ -356,6 +358,9 @@ class Signature(object):
             argn.append('*' + args.varargs)
         if getattr(args, 'varkw', None):
             argn.append('**' + args.varkw)
+
+        if argn and argn[-1] in ('*', '**'):
+            argn[-1] += self._make_unique_name('_', seen_names)
 
         return self.name + '(' + ', '.join(argn) + ')'
 
@@ -406,7 +411,10 @@ class Signature(object):
         if typeName.startswith('int'):
             return "return 1"
         if typeName.startswith('long'):
-            return "return 1L"
+            if sys.version_info[0] < 3:
+                return "return 1L"
+            else:
+                return "return 1"
         if typeName.startswith('list'):
             return "return list()"
         if typeName.startswith('dict'):
@@ -507,7 +515,7 @@ class Signature(object):
 
     def _parse_format_arg(self, name, args, defaults):
         defaults = list(defaults)
-        seen_names = set(keyword.kwlist)
+        seen_names = set(INVALID_ARGNAMES)
         parts = [name or '<function>', '(']
         any_default = False
 
@@ -540,6 +548,8 @@ class Signature(object):
             parts.append(', ')
         if parts[-1] == ', ':
             parts.pop()
+        if parts and parts[-1] in ('*', '**'):
+            parts[-1] += self._make_unique_name('_', seen_names)
         parts.append(')')
 
         return ''.join(parts)

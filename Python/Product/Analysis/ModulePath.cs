@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dyLib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.(((\w|_|-)+?\.)?pyd|py[co]|so|dyLib)$",
+        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|py[co]|so|dylib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(

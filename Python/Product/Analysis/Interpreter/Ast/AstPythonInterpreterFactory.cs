@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-// Setting this variable will enable the typeshed package to override
-// imports. However, this generally makes completions worse, so it's
-// turned off for now.
-#define USE_TYPESHED
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -47,9 +42,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         // Available for tests to override
         internal static bool LogToConsole = false;
 
-#if USE_TYPESHED
         private IReadOnlyList<string> _typeShedPaths;
-#endif
 
 #if DEBUG
         const int LogCacheSize = 1;
@@ -149,9 +142,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
-#if USE_TYPESHED
                 _typeShedPaths = null;
-#endif
             }
 
 
@@ -677,12 +668,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     var mtsp = FindModuleInSearchPath(typeShedPaths, null, mp.FullName);
                     if (mtsp.HasValue) {
                         mp = mtsp.Value;
+                        if (mp.IsCompiled) {
+                            Debug.Fail("Unsupported native module in typeshed");
+                        } else {
+                            _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
+                            var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
 
-                        _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
-                        var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
-
-                        if (tsModule != null) {
-                            module = AstPythonMultipleModules.Combine(module, tsModule);
+                            if (tsModule != null) {
+                                module = AstPythonMultipleModules.Combine(module, tsModule);
+                            }
                         }
                     }
                 }
@@ -692,25 +686,32 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private async Task<IReadOnlyList<string>> GetTypeShedPaths() {
+            // First check
             var typeShedPaths = _typeShedPaths;
             if (typeShedPaths != null) {
                 return typeShedPaths;
             }
             lock (_searchPathsLock) {
-                typeShedPaths = _typeShedPaths;
-                if (typeShedPaths != null) {
-                    return typeShedPaths;
+                // Second check after locking
+                if (_typeShedPaths != null) {
+                    return _typeShedPaths;
                 }
             }
 
             var typeshed = await FindModuleInSearchPathAsync("typeshed");
-            if (typeshed.HasValue) {
-                typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile), LanguageVersion.ToVersion()).ToArray();
-            } else {
-                typeShedPaths = Array.Empty<string>();
-            }
 
             lock (_searchPathsLock) {
+                // Third check after searching and locking
+                if (_typeShedPaths != null) {
+                    return _typeShedPaths;
+                }
+                
+                if (typeshed.HasValue) {
+                    typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile), LanguageVersion.ToVersion()).ToArray();
+                } else {
+                    typeShedPaths = Array.Empty<string>();
+                }
+
                 if (_typeShedPaths == null) {
                     _typeShedPaths = typeShedPaths;
                 } else {
