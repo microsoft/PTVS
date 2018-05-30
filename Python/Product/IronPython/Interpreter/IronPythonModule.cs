@@ -48,7 +48,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public void Imported(IModuleContext context) {
             if (Name == "clr") {
                 ((IronPythonModuleContext)context).ShowClr = true;
-            } else if (Name == "wpf") {
+            } else if (Name == "_wpf") {
                 AddWpfReferences();
             }
         }

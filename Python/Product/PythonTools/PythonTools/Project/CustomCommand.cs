@@ -679,6 +679,9 @@ namespace Microsoft.PythonTools.Project {
                         // We really close the backend, rather than resetting.
                         pyEvaluator.Dispose();
                     }
+                } catch (OperationCanceledException) {
+                    // Swallow OperationCanceledException, it is normal for async operation to be cancelled
+                    ActivityLog.LogInformation(Strings.ProductTitle, Strings.CustomCommandCanceled.FormatUI(_label));
                 } catch (Exception ex) {
                     ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                     var outWindow = OutputWindowRedirector.GetGeneral(project.Site);

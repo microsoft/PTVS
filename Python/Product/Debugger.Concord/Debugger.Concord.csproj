@@ -120,6 +120,7 @@
     <Compile Include="Proxies\DataProxy.cs" />
     <Compile Include="ExpressionEvaluator.cs" />
     <Compile Include="LocalStackWalkingComponent.cs" />
+    <Compile Include="Proxies\Structs\PyRuntimeState.cs" />
     <Compile Include="Proxies\Structs\PyDictObject27.cs" />
     <Compile Include="Proxies\Structs\PyDictObject36.cs" />
     <Compile Include="Proxies\Structs\PyDictObject33.cs" />

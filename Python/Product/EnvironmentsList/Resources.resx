@@ -422,6 +422,12 @@ The folder will be deleted from disk. This operation cannot be undone.</value>
   <data name="PipExtensionClearSearchToolTip" xml:space="preserve">
     <value>Clear search filter</value>
   </data>
+  <data name="PipExtensionSecurityWarning" xml:space="preserve">
+    <value>Due to new security restrictions, installing from the internet may not work on this version of Python.</value>
+  </data>
+  <data name="PipExtensionSecurityLearnMore" xml:space="preserve">
+    <value>Learn more</value>
+  </data>
   <data name="PipExtensionInstallPipToolTip" xml:space="preserve">
     <value>Install the setuptools and pip packages from PyPI. These packages are required to use this panel.</value>
   </data>

@@ -168,6 +168,9 @@
         <CommandBinding Command="{x:Static l:PipExtension.UpgradePackage}"
                         CanExecute="UpgradePackage_CanExecute"
                         Executed="UpgradePackage_Executed" />
+        <CommandBinding Command="{x:Static l:PipExtension.PipSecurityLearnMore}"
+                        CanExecute="PipSecurityLearnMore_CanExecute"
+                        Executed="PipSecurityLearnMore_Executed" />
         <CommandBinding Command="ApplicationCommands.Delete"
                         CanExecute="Delete_CanExecute"
                         Executed="Delete_Executed" />
@@ -175,6 +178,7 @@
     
     <Grid x:Name="Subcontext">
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
@@ -263,15 +267,37 @@
 
         <TextBox x:Name="SearchQueryText" Style="{StaticResource SearchBox}" />
 
-        <ProgressBar Grid.Row="1"
+        <Grid Grid.Row="1" 
+              Style="{StaticResource InfoPanel}"
+              Visibility="{Binding ShowSecurityWarning,Converter={StaticResource Visibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                Margin="6"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Text="{x:Static l:Resources.PipExtensionSecurityWarning}"/>
+            <Button Style="{StaticResource NavigationButton}"
+                Grid.Column="1"
+                Margin="3"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Command="{x:Static l:PipExtension.PipSecurityLearnMore}"
+                Content="{x:Static l:Resources.PipExtensionSecurityLearnMore}"/>
+        </Grid>
+
+        <ProgressBar Grid.Row="2"
                      IsIndeterminate="True"
                      HorizontalAlignment="Stretch"
                      Height="3"
                      Focusable="False"
                      Visibility="{Binding IsListRefreshing,Converter={StaticResource VisibilityOrHidden}}" />
-        
-        <Button Grid.Row="2"
-                Style="{StaticResource NavigationButton}"
+
+        <Button Style="{StaticResource NavigationButton}"
+                Grid.Row="3"
                 Margin="3"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
@@ -285,7 +311,7 @@
                       CanContentScroll="False"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
-                      Grid.Row="3"
+                      Grid.Row="4"
                       BorderThickness="0">
             <StackPanel Orientation="Vertical">
                 <StackPanel.Resources>

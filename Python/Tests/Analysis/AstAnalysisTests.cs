@@ -455,7 +455,7 @@ class BankAccount(object):
             if (!Path.IsPathRooted(path)) {
                 path = TestData.GetPath(Path.Combine("TestData", "AstAnalysis", path));
             }
-            return AstPythonModule.FromFile(interpreter, path, version);
+            return PythonModuleLoader.FromFile(interpreter, path, version);
         }
 
         [TestMethod, Priority(0)]

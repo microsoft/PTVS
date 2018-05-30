@@ -1120,6 +1120,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Command {0} has been canceled.
+        /// </summary>
+        public static string CustomCommandCanceled {
+            get {
+                return ResourceManager.GetString("CustomCommandCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing -m {0} {1}.
         /// </summary>
         public static string CustomCommandExecutingModule {
@@ -2920,7 +2929,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please &apos;pip install ptvsd --pre&apos; in your Python environment to use the experimental debugger.
+        ///   Looks up a localized string similar to Please run &apos;pip install --upgrade ptvsd --pre&apos; in your Python environment to use the experimental debugger.
         /// </summary>
         public static string ImportPtvsdFailedMessage {
             get {
@@ -3506,6 +3515,15 @@ namespace Microsoft.PythonTools {
         public static string MisconfiguredEnvironment {
             get {
                 return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation cannot be started because pip is not installed in the environment at &apos;{0}&apos;..
+        /// </summary>
+        public static string MisconfiguredPip {
+            get {
+                return ResourceManager.GetString("MisconfiguredPip", resourceCulture);
             }
         }
         

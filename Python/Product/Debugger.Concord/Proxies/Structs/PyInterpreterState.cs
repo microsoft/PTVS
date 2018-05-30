@@ -63,7 +63,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public readonly PointerProxy<PyInterpreterState> Proxy;
 
             public InterpHeadHolder(DkmProcess process) {
-                Proxy = process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariable<PointerProxy<PyInterpreterState>>("interp_head");
+                var pyrtInfo = process.GetPythonRuntimeInfo();
+                Proxy = pyrtInfo.GetRuntimeState()?.interpreters.head
+                    ?? pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyInterpreterState>>("interp_head");
             }
         }
 
