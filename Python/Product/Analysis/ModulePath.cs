@@ -147,13 +147,10 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonStubRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyi$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dyLib)$",
+        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dylib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-
-        private static bool IsCompiledModule(string name) {
-            var ext = Path.GetExtension(PathUtils.GetFileName(name)).ToLowerInvariant();
-            return CompiledModuleExtensions.Any(x => x == ext);
-        }
+        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|py[co]|so|dylib)$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
             string libPath,

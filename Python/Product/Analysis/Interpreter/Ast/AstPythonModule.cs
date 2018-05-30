@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return sb.ToString();
                     }
                 }
-            } catch (IOException) { } catch(UnauthorizedAccessException) { }
+            } catch (IOException) { } catch (UnauthorizedAccessException) { }
             return string.Empty;
         }
     }
