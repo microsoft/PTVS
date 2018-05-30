@@ -101,27 +101,19 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if the module is a binary file.
         /// </summary>
         /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
-        public bool IsCompiled => IsCompiledModule(SourceFile);
+        public bool IsCompiled => PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
  
         /// <summary>
         /// True if the module is a native extension module.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public bool IsNativeExtension {
-            get {
-                return PythonBinaryRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
+        public bool IsNativeExtension => PythonBinaryRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
         /// True if the module is a stub file.
         /// </summary>
         /// <remarks>New in 3.2</remarks>
-        public bool IsStub {
-            get {
-                return PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
+        public bool IsStub => PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
         /// Creates a new ModulePath item.
@@ -473,7 +465,7 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     var nameMatch = PythonFileRegex.Match(name);
                     if (allowCompiled && (nameMatch == null || !nameMatch.Success)) {
-                        return IsCompiledModule(name);
+                        return PythonCompiledRegex.IsMatch(name);
                     }
                     return nameMatch != null && nameMatch.Success;
                 } catch (RegexMatchTimeoutException) {
