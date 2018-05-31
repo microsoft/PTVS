@@ -100,6 +100,16 @@ LIES_ABOUT_MODULE = frozenset([
     "numpy.nditer",
 ])
 
+# These type names cause conflicts with their values, so
+# we need to forcibly rename them.
+SYS_INFO_TYPES = {
+    "float_info",
+    "hash_info",
+    "int_info",
+    "thread_info",
+    "version_info",
+}
+
 VALUE_REPR_FIX = {
     float('inf'): "float('inf')",
     float('-inf'): "float('-inf')",
@@ -661,20 +671,7 @@ class MemberInfo(object):
                 self.literal = type_name
             else:
                 self.scope_name = self.type_name = type_name
-                try:
-                    bases = getattr(value, '__bases__', ())
-                except Exception:
-                    pass
-                else:
-                    self.bases = []
-                    self.need_imports = list(self.need_imports)
-                    for ni, t in (self._get_typename(b, module) for b in bases):
-                        if not t:
-                            continue
-                        if t == type_name and module in ni:
-                            continue
-                        self.bases.append(t)
-                        self.need_imports.extend(ni)
+                self._collect_bases(value, module, self.type_name)
 
         elif safe_callable(value):
             dec = ()
@@ -689,6 +686,7 @@ class MemberInfo(object):
                 self.signature = Signature(name, value, scope, scope_alias=scope_alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
+                self._collect_bases(value_type, module, self.type_name)
             if isinstance(value, float) and repr(value) == 'nan':
                 self.literal = "float('nan')"
             try:
@@ -697,6 +695,22 @@ class MemberInfo(object):
                 pass
         elif not self.literal:
             self.literal = 'None'
+
+    def _collect_bases(self, value_type, module, type_name):
+        try:
+            bases = getattr(value_type, '__bases__', ())
+        except Exception:
+            pass
+        else:
+            self.bases = []
+            self.need_imports = list(self.need_imports)
+            for ni, t in (self._get_typename(b, module) for b in bases):
+                if not t:
+                    continue
+                if t == type_name and module in ni:
+                    continue
+                self.bases.append(t)
+                self.need_imports.extend(ni)
 
     @classmethod
     def _get_typename(cls, value_type, in_module):
@@ -713,11 +727,13 @@ class MemberInfo(object):
                     return (module,), type_name
 
                 fullname = module + '.' + type_name
+
                 if fullname in LIES_ABOUT_MODULE:
                     # Treat the type as if it came from the current module
                     return (in_module,), type_name
 
                 return (module,), fullname
+
             return (), type_name
         except Exception:
             warnings.warn('could not get type of ' + repr(value_type), InspectWarning)
@@ -861,6 +877,12 @@ class ScrapeState(object):
 
     def collect_top_level_members(self):
         self._collect_members(self.module, self.members, MODULE_MEMBER_SUBSTITUTE, None)
+
+        if self.module_name == 'sys':
+            sysinfo = [m for m in self.members if m.type_name in SYS_INFO_TYPES]
+            for m in sysinfo:
+                self.members.append(MemberInfo(m.name, None, literal="__" + m.name + "()"))
+                m.name = m.scope_name = m.type_name = '__' + m.type_name
 
         m_names = set(m.name for m in self.members)
         undeclared = []

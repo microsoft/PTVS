@@ -245,19 +245,30 @@ namespace Microsoft.PythonTools.Analysis {
             }
             Contract.EndContractBlock();
 
+            var pyEntry = entry as IPythonProjectEntry;
+            IPythonProjectEntry[] importers = null;
+            if (!string.IsNullOrEmpty(pyEntry?.ModuleName)) {
+                importers = GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
+            }
+
+
             if (!string.IsNullOrEmpty(entry.FilePath) && _modulesByFilename.TryRemove(entry.FilePath, out var moduleInfo)) {
                 lock (_modulesWithUnresolvedImportsLock) {
                     _modulesWithUnresolvedImports.Remove(moduleInfo);
                 }
             }
 
-            if (entry is IPythonProjectEntry pyEntry && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                Modules.TryRemove(pyEntry.ModuleName, out var _);
-            }
-
             entry.RemovedFromProject();
             ClearDiagnostics(entry);
+
+            if (!string.IsNullOrEmpty(pyEntry?.ModuleName)) {
+                Modules.TryRemove(pyEntry.ModuleName, out var _);
+                foreach (var e in importers.MaybeEnumerate()) {
+                    e.Analyze(CancellationToken.None, enqueueOnly: true);
+                }
+            }
         }
+
 #if DESKTOP
         /// <summary>
         /// Adds a XAML file to be analyzed.  
@@ -272,6 +283,7 @@ namespace Microsoft.PythonTools.Analysis {
             return entry;
         }
 #endif
+
         /// <summary>
         /// Returns a sequence of project entries that import the specified
         /// module. The sequence will be empty if the module is unknown.

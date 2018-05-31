@@ -777,6 +777,24 @@ l = iterfind()");
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void TypeShedSysExcInfo() {
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import sys
+
+e1, e2, e3 = sys.exc_info()");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertIsInstance("e1", "BaseException", "Type", "Unknown");
+                    analysis.AssertIsInstance("e2", "BaseException", "Type", "Unknown");
+                    analysis.AssertIsInstance("e3", "BaseException", "Type", "Unknown");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
         #endregion
     }
 }

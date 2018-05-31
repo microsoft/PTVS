@@ -231,6 +231,8 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.Scope.Children = new List<InterpreterScope>();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
+            MyScope.Scope.ClearLinkedVariables();
+            MyScope.Scope.ClearVariables();
             MyScope.ClearUnresolvedModules();
             _unit.State.ClearDiagnostics(this);
 

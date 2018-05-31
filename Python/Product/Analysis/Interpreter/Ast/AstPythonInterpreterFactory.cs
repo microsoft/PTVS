@@ -539,7 +539,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 sentinalValue.Dispose();
             }
 
-            return TryImportModuleResult.Success;
+            // Also search type shed if it's available, and if we are not a blacklisted module
+            if (module != null && context.IncludeTypeShed && module.Name != "typing") {
+                var typeShedPaths = GetTypeShedPaths(importTimeout);
+                if (typeShedPaths?.Any() == true) {
+                    var mtsp = FindModuleInSearchPath(typeShedPaths, null, module.Name);
+                    if (mtsp.HasValue) {
+                        var mp = mtsp.Value;
+                        if (mp.IsCompiled) {
+                            Debug.Fail("Unsupported native module in typeshed");
+                        } else {
+                            _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
+                            var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
+
+                            if (tsModule != null) {
+                                module = AstPythonMultipleModules.Combine(module, tsModule);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return module == null ? TryImportModuleResult.ModuleNotFound : TryImportModuleResult.Success;
         }
 
         private IPythonModule ImportFromCache(string name) {
@@ -661,31 +682,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 module = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
             }
 
-            // Also searcd type shed if it's available, and if we are not a blacklisted module
-            if (context.IncludeTypeShed && module.Name != "typing") {
-                var typeShedPaths = await GetTypeShedPaths();
-                if (typeShedPaths.Any()) {
-                    var mtsp = FindModuleInSearchPath(typeShedPaths, null, mp.FullName);
-                    if (mtsp.HasValue) {
-                        mp = mtsp.Value;
-                        if (mp.IsCompiled) {
-                            Debug.Fail("Unsupported native module in typeshed");
-                        } else {
-                            _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
-                            var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
-
-                            if (tsModule != null) {
-                                module = AstPythonMultipleModules.Combine(module, tsModule);
-                            }
-                        }
-                    }
-                }
-            }
-
             return module;
         }
 
-        private async Task<IReadOnlyList<string>> GetTypeShedPaths() {
+        private IReadOnlyList<string> GetTypeShedPaths(int timeout) {
             // First check
             var typeShedPaths = _typeShedPaths;
             if (typeShedPaths != null) {
@@ -698,10 +698,23 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
+            try {
+                var importTask = GetTypeShedPathsAsync();
+                return importTask.Wait(timeout) ? importTask.Result : null;
+            } catch (Exception ex) {
+                _log?.Log(TraceLevel.Error, "GetTypeShedPaths", ex.ToString());
+            }
+            return null;
+        }
+
+        private async Task<IReadOnlyList<string>> GetTypeShedPathsAsync() {
+            // Assume caller has already done the quick checks
+
+            IReadOnlyList<string> typeShedPaths;
             var typeshed = await FindModuleInSearchPathAsync("typeshed");
 
             lock (_searchPathsLock) {
-                // Third check after searching and locking
+                // Final check after searching and locking
                 if (_typeShedPaths != null) {
                     return _typeShedPaths;
                 }

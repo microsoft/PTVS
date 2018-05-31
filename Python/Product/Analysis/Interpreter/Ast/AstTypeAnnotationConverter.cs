@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override IPythonType Finalize(IPythonType type) {
-            if (type is ModuleType) {
+            if (type == null || type is ModuleType) {
                 return null;
             }
 
@@ -82,7 +82,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override IPythonType MakeGeneric(IPythonType baseType, IReadOnlyList<IPythonType> args) {
-            if (args == null || args.Count == 0 || baseType == null || baseType.DeclaringModule?.Name != "typing") {
+            if (args == null || args.Count == 0 || baseType == null) {
+                return baseType;
+            }
+            if (baseType.DeclaringModule?.Name != "typing" && !(baseType is NameType) && !(baseType is UnionType) && !(baseType is ModuleType)) {
                 return baseType;
             }
 
@@ -93,6 +96,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return MakeSequenceType(BuiltinTypeId.List, args);
                 case "Set":
                     return MakeSequenceType(BuiltinTypeId.Set, args);
+                case "Optional":
+                    return Finalize(args.FirstOrDefault()) ?? _scope._unknownType;
                 // TODO: Other types
                 default:
                     Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);
