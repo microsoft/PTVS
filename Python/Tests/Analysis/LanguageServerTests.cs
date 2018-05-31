@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -389,8 +390,8 @@ mc
 
             // Completion after "mc " should normally be blank
             await AssertCompletion(s, mod,
-                new string [0],
-                new string [0],
+                new string[0],
+                new string[0],
                 position: new Position { line = testLine, character = testChar + 1 }
             );
 
@@ -617,16 +618,36 @@ x = 3.14
 
             await AssertHover(s, mod, new SourceLocation(1, 1), "int", new[] { "int" }, new SourceSpan(1, 1, 1, 4));
             await AssertHover(s, mod, new SourceLocation(2, 1), "str", new[] { "str" }, new SourceSpan(2, 1, 2, 6));
-            await AssertHover(s, mod, new SourceLocation(3, 1), "f: test-module.f()", new[] { "test-module.f" }, new SourceSpan(3, 1, 3, 2));
-            await AssertHover(s, mod, new SourceLocation(4, 6), "f: test-module.f()", new[] { "test-module.f" }, new SourceSpan(4, 5, 4, 6));
+            await AssertHover(s, mod, new SourceLocation(3, 1), "built-in function test-module.f()", new[] { "test-module.f" }, new SourceSpan(3, 1, 3, 2));
+            await AssertHover(s, mod, new SourceLocation(4, 6), "built-in function test-module.f()", new[] { "test-module.f" }, new SourceSpan(4, 5, 4, 6));
 
-            await AssertHover(s, mod, new SourceLocation(12, 1), "C: class test-module.C", new[] { "test-module.C" }, new SourceSpan(12, 1, 12, 2));
+            await AssertHover(s, mod, new SourceLocation(12, 1), "class test-module.C", new[] { "test-module.C" }, new SourceSpan(12, 1, 12, 2));
             await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
             await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
             await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
-            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g:{Environment.NewLine}test-module.C.f.g(self){Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+            await AssertHover(s, mod, new SourceLocation(14, 1), $"built-in function test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
 
-            await AssertHover(s, mod, new SourceLocation(16, 1), "x: float, int", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
+            await AssertHover(s, mod, new SourceLocation(16, 1), "x: int, float", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task HoverSpanCheck() {
+            var s = await CreateServer();
+            var mod = await AddModule(s, @"import datetime
+datetime.datetime.now().day
+");
+
+            await AssertHover(s, mod, new SourceLocation(2, 1), "built-in module datetime*", new[] { "datetime" }, new SourceSpan(2, 1, 2, 9));
+            if (this is LanguageServerTests_V2) {
+                await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+            } else {
+                await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+            }
+            await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
+
+            if (!(this is LanguageServerTests_V2)) {
+                await AssertHover(s, mod, new SourceLocation(2, 28), "datetime.datetime.now().day: int*", new[] { "int" }, new SourceSpan(2, 1, 2, 28));
+            }
         }
 
         [TestMethod, Priority(0)]

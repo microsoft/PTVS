@@ -106,11 +106,17 @@ namespace Microsoft.PythonTools.Project {
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
             bool success = false;
             try {
+                var ui = new VsPackageManagerUI(_project.Site);
+                if (!pm.IsReady) {
+                    await pm.PrepareAsync(ui, CancellationToken.None);
+                }
                 success = await pm.InstallAsync(
                     PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
-                    new VsPackageManagerUI(_project.Site),
+                    ui,
                     CancellationToken.None
                 );
+            } catch (InvalidOperationException ex) {
+                WriteOutput(ex.Message);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 WriteOutput(ex.Message);
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));

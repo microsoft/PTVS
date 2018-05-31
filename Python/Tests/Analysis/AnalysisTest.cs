@@ -32,7 +32,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -936,7 +935,7 @@ a = A()
 
             var clsA = entry.GetValue<ClassInfo>("A");
             var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
 
             // Unsuccessful: cannot order X and Y
             code = @"
@@ -979,7 +978,7 @@ G.remember2buy
             entry = ProcessTextV2(code);
             clsG = entry.GetValue<ClassInfo>("G");
             var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "object");
+            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -999,7 +998,7 @@ z = Z()
             var clsZ = entry.GetValue<ClassInfo>("Z");
             Assert.IsNotNull(clsZ);
             var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "object");
+            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -1012,28 +1011,28 @@ z = None
             entry = ProcessTextV2(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
 
             var clsB = entry.GetValue<ClassInfo>("B");
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "str", "basestring", "object");
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
 
             entry = ProcessTextV3(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
 
             clsB = entry.GetValue<ClassInfo>("B");
             mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "str", "object");
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
         }
 
         [TestMethod, Priority(0)]
@@ -3325,7 +3324,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3335,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]
@@ -3425,8 +3424,8 @@ class cls(cls):
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
-                "The most base type",
-                "cls"
+                "cls",
+                "object"
             );
         }
 
@@ -5833,8 +5832,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
-            entry.AssertDescription("fob", "test-module.fob(object)");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects");
+            entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
@@ -5855,7 +5854,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...\r\nsome help");
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects...");
+            entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
         [TestMethod, Priority(0)]

@@ -69,7 +69,7 @@ def profile(file, globals_obj, locals_obj, profdll):
     pyprofdll.InitProfiler.argtypes = [ctypes.c_void_p]
     pyprofdll.InitProfiler.restype = ctypes.c_void_p
 
-    profiler = pyprofdll.CreateProfiler(sys.dllhandle)
+    profiler = pyprofdll.CreateProfiler(ctypes.c_void_p(sys.dllhandle))
     if not profiler:
         raise NotImplementedError("Profiling is currently not supported for " + sys.version)
     handle = None

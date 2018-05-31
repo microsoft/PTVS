@@ -27,12 +27,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override string GetModuleDocumentation(ModuleReference modRef) {
             var doc = modRef.Module?.Documentation;
-            return doc != null ? new RestTextConverter().ToMarkdown(LimitLines(doc)) : $"module {modRef.Name}";
+            return doc != null 
+                ? new RestTextConverter().ToMarkdown($"module {modRef.Name}{Environment.NewLine}{Environment.NewLine}{LimitLines(doc)}") 
+                : $"module {modRef.Name}";
         }
 
         protected override string MakeFunctionDocumentation(AnalysisValue value) => FromDocAndDescription(value);
         protected override string MakeModuleDocumentation(AnalysisValue value) => FromDocAndDescription(value);
         protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value);
+        protected override string MakeConstantDocumentation(AnalysisValue value) => $"```python\n{value.Description}\n```";
 
         private string FromDocAndDescription(AnalysisValue value) {
             var sb = new StringBuilder();

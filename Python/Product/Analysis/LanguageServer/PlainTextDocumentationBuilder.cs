@@ -40,10 +40,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var prefix = value.PythonType?.IsBuiltin == true ? "built-in function " : "function ";
             return FromDocAndDescription(value, prefix);
         }
-        protected override string MakeClassDocumentation(AnalysisValue value) {
-            var prefix = value.PythonType?.IsBuiltin == true ? "type " : "class ";
-            return FromDocAndDescription(value, prefix);
-        }
+        protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value, string.Empty);
+        protected override string MakeConstantDocumentation(AnalysisValue value) => value.Description;
 
         private string FromDocAndDescription(AnalysisValue value, string prefix) {
             var sb = new StringBuilder();

@@ -248,13 +248,6 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         /// <summary>
-        /// Starts the processing of incoming messages using Task.Run.
-        /// </summary>
-        public void StartProcessing() {
-            Task.Run(() => ProcessMessages());
-        }
-
-        /// <summary>
         /// Returns a task which will process incoming messages.  This can be started on another thread or
         /// in whatever form of synchronization context you like.  StartProcessing is a convenience helper
         /// for starting this running asynchronously using Task.Run.

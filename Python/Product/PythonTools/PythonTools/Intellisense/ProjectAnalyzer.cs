@@ -228,17 +228,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
-            if (outOfProc) {
-                _conn = StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            } else {
-                _conn = StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            }
+            _conn = outOfProc 
+                ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess) 
+                : StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
 
             if (!string.IsNullOrEmpty(_conn.LogFilename)) {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            _conn.StartProcessing();
+            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait();
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
@@ -1352,46 +1350,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
-        }
-
-        //internal async Task<CompletionSet> GetCompletionsAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
-        //    var bi = snapshot.TextBuffer.TryGetInfo();
-        //    if (bi == null) {
-        //        return null;
-        //    }
-
-        //    Debug.Assert(bi.AnalysisEntry == entry);
-
-        //    var pt = point.GetPoint(bi.LastSentSnapshot).ToSourceLocation();
-
-        //    AP.CompletionsResponse comp;
-        //    using (new DebugTimer("CompletionRequest", CompletionAnalysis.TooMuchTime)) {
-        //        comp = await SendRequestAsync(
-        //            new AP.CompletionsRequest {
-        //                documentUri = entry.DocumentUri,
-        //                line = pt.Line,
-        //                column = pt.Column,
-        //                options = options.MemberOptions
-        //            }
-        //        ).ConfigureAwait(false);
-        //    }
-
-        //    if ((comp?.completions?.Length ?? 0) == 0) {
-        //        return null;
-        //    }
-
-        //    var result = new FuzzyCompletionSet(
-        //        "Python",
-        //        "Python",
-        //        span,
-        //        members.Select(m => PythonCompletion(glyphService, m)),
-        //        _options,
-        //        CompletionComparer.UnderscoresLast,
-        //        matchInsertionText: true
-        //    );
-        //}
+        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) 
+            => GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) ??
+               GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
@@ -1808,9 +1769,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            var span = applicableSpan.GetSpan(snapshot);
+        private static CompletionAnalysis GetStringLiteralCompletionCompletion(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
+            var buffer = snapshot.TextBuffer;
+            var classifier = buffer.GetPythonClassifier();
+            if (classifier == null) {
+                return null;
+            }
 
+            var snapSpan = span.GetSpan(snapshot);
+            var tokens = classifier.GetClassificationSpans(snapSpan);
+            var lastToken = tokens.LastOrDefault();
+            if (lastToken == null || !lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                return null;
+            }
+
+            // String completion
+            return span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber
+                ? new StringLiteralCompletionList(services, session, view, span, buffer, options)
+                : null;
+        }
+
+        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
                 // Cannot complete a word immediately after a space
                 session.ClearCompleteWordMode();
@@ -2543,13 +2522,13 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
-
+            
             if (analysis?.Entry != null) {
-                var location = analysis.Location;
+                var line = point.GetContainingLine();
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
-                    column = location.Column,
-                    line = location.Line,
+                    column = point.Position - line.Start + 1,
+                    line = line.LineNumber + 1,
                     documentUri = analysis.Entry.DocumentUri
                 };
 
