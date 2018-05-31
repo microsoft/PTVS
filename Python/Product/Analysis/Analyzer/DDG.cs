@@ -212,6 +212,23 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(ExpressionStatement node) {
             _eval.Evaluate(node.Expression);
+
+            if (node.Expression is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null) {
+                // The variable is technically unassigned. However, other engines do show completion
+                // on annotated, but not assigned variables. See https://github.com/Microsoft/PTVS/issues/3608
+                // Pylint does not flag 'name' as unassigned in
+                //
+                //  class Employee(NamedTuple):
+                //      name: str
+                //      id: int = 3
+                //
+                //  employee = Employee('Guido')
+                //  print(employee.name)
+                var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
+                if (annoType?.Any() == true) {
+                    _eval.AssignTo(node, annoExpr.Expression, annoType);
+                }
+            }
             return false;
         }
 
