@@ -6968,6 +6968,28 @@ y = mcc()
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("P"), "abspath", "dirname");
         }
 
+        [TestMethod, Priority(0)]
+        public void UnassignedClassMembers() {
+            var code = @"
+from typing import NamedTuple
+
+class Employee(NamedTuple):
+    name: str
+    id: int = 3
+
+e = Employee('Guido')
+";
+            var version = PythonPaths.Versions.LastOrDefault(v => v.IsCPython && File.Exists(v.InterpreterPath));
+            version.AssertInstalled();
+            var entry = CreateAnalyzer(new Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory(
+                version.Configuration,
+                new InterpreterFactoryCreationOptions { DatabasePath = TestData.GetTempPath(), WatchFileSystem = false }
+            ));
+            entry.AddModule("test-module", code);
+            entry.WaitForAnalysis();
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("e"), "name", "id");
+        }
+
         #endregion
 
         #region Helpers
