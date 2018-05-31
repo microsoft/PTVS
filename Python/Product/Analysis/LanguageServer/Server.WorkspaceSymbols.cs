@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             await _analyzerCreationTask;
-            IfTestWaitForAnalysisComplete();
+            await IfTestWaitForAnalysisCompleteAsync();
 
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
