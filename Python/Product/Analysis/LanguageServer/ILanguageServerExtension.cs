@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -22,5 +23,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// Called when the extension is registered for a language server.
         /// </summary>
         void Register(Server server);
+
+        /// <summary>
+        /// The name of the extension. Used to look up the current instance
+        /// when processing extension command messages. If null or empty,
+        /// the extension cannot be sent messages and may be garbage collected
+        /// if it does not hook any events in its <see cref="Register(Server)"/>
+        /// method.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Called when an extension command arrives for this extension.
+        /// </summary>
+        Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties);
     }
 }

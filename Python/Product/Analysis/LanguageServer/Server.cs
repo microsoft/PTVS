@@ -81,6 +81,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private bool _testEnvironment;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
 
+        private readonly Dictionary<string, ILanguageServerExtension> _extensions;
+
         // If null, all files must be added manually
         private string _rootDir;
 
@@ -100,6 +102,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _openFiles = new OpenFiles(_projectFiles, this);
+            _extensions = new Dictionary<string, ILanguageServerExtension>();
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -152,10 +155,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public async Task LoadExtension(PythonAnalysisExtensionParams extension) {
             var ext = ActivateObject<ILanguageServerExtension>(extension.assembly, extension.typeName, extension.properties);
-            ext?.Register(this);
+            if (ext != null) {
+                var n = ext.Name;
+                ext.Register(this);
+                if (!string.IsNullOrEmpty(n)) {
+                    lock (_extensions) {
+                        _extensions.TryGetValue(n, out var previous);
+                        _extensions[n] = ext;
+                        (previous as IDisposable)?.Dispose();
+                    }
+                }
+            }
         }
 
+        public async Task<ExtensionCommandResult> ExtensionCommand(ExtensionCommandParams @params) {
+            if (string.IsNullOrEmpty(@params.extensionName)) {
+                throw new ArgumentNullException(nameof(@params.extensionName));
+            }
 
+            ILanguageServerExtension ext;
+            lock (_extensions) {
+                if (!_extensions.TryGetValue(@params.extensionName, out ext)) {
+                    throw new LanguageServerException(LanguageServerException.UnknownExtension, "No extension loaded with name: " + @params.extensionName);
+                }
+            }
+
+            return new ExtensionCommandResult {
+                properties = ext?.ExecuteCommand(@params.command, @params.properties)
+            };
+        }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");

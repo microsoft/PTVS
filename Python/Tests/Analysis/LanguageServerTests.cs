@@ -60,6 +60,7 @@ namespace AnalysisTests {
         }
 
         protected virtual PythonVersion Default => DefaultV3;
+        protected virtual BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Unicode;
 
         public Task<Server> CreateServer() {
             return CreateServer((Uri)null, Default);
@@ -456,11 +457,9 @@ mc
 
         public class TestCompletionHook : ILanguageServerExtension {
             public TestCompletionHook() { }
-
-            public void Register(Server server) {
-                server.PostProcessCompletion += Server_PostProcessCompletion;
-            }
-
+            public string Name => null;
+            public Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties) => null;
+            public void Register(Server server) => server.PostProcessCompletion += Server_PostProcessCompletion;
             private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
                 Assert.IsNotNull(e.Tree);
                 Assert.IsNotNull(e.Analysis);
@@ -792,6 +791,83 @@ datetime.datetime.now().day
             );
         }
 
+        private class GetAllExtension : ILanguageServerExtension {
+            private BuiltinTypeId _typeId;
+            private Server _server;
+
+            public GetAllExtension(Dictionary<string, object> properties) {
+                if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
+                    throw new ArgumentException("typeid was not valid");
+                }
+            }
+
+            public void Register(Server server) => _server = server;
+
+            public string Name => "getall";
+
+            public Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties) {
+                if (properties == null) {
+                    return null;
+                }
+
+                // Very bad code, but good for testing. Copy/paste at your own risk!
+                var entry = _server.GetEntry(new Uri((string)properties["uri"])) as IPythonProjectEntry;
+                var location = new SourceLocation((int)properties["line"], (int)properties["column"]);
+
+                if (command == _typeId.ToString()) {
+                    var res = new List<string>();
+                    foreach (var m in entry.Analysis.GetAllAvailableMembers(location)) {
+                        if (m.Values.Any(v => v.MemberType == PythonMemberType.Constant && v.TypeId == _typeId)) {
+                            res.Add(m.Name);
+                        }
+                    }
+                    return new Dictionary<string, object> { ["names"] = res };
+                }
+                return null;
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ExtensionCommand() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 1\ny = 2\nz = 'abc'");
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtension).Assembly.FullName,
+                typeName = typeof(GetAllExtension).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId.Int.ToString() }
+            });
+
+            List<string> res;
+            var cmd = new ExtensionCommandParams {
+                extensionName = "getall",
+                command = "Int",
+                properties = new Dictionary<string, object> { ["uri"] = u.AbsoluteUri, ["line"] = 1, ["column"] = 1 }
+            };
+
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsExactly(res, "x", "y");
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtension).Assembly.FullName,
+                typeName = typeof(GetAllExtension).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId_Str.ToString() }
+            });
+
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsExactly(res, "z", "__doc__", "__name__", "__file__");
+            cmd.command = "Int";
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+        }
+
+
         private static IEnumerable<string> GetDiagnostics(Dictionary<Uri, PublishDiagnosticsEventArgs> events, Uri uri) {
             return events[uri].diagnostics
                 .OrderBy(d => (SourceLocation)d.range.start)
@@ -898,5 +974,7 @@ datetime.datetime.now().day
     [TestClass]
     public class LanguageServerTests_V2 : LanguageServerTests {
         protected override PythonVersion Default => DefaultV2;
+        protected override BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Bytes;
+
     }
 }

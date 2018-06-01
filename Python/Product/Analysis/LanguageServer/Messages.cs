@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const int UnknownDocument = 1;
         public const int UnsupportedDocumentType = 2;
         public const int MismatchedVersion = 3;
+        public const int UnknownExtension = 4;
 
         public int Code => (int)Data["Code"];
 
@@ -338,7 +339,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public class PythonAnalysisExtensionParams {
         public string assembly;
         public string typeName;
+        public Dictionary<string, object> properties;
+    }
+
+    [Serializable]
+    public class ExtensionCommandParams {
         public string extensionName;
+        public string command;
+        public Dictionary<string, object> properties;
+    }
+
+    [Serializable]
+    public class ExtensionCommandResult {
         public Dictionary<string, object> properties;
     }
 
