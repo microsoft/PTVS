@@ -14,23 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Projects;
 
-namespace Microsoft.PythonTools.Projects {
-    /// <summary>
-    /// Provides an extension which registers against a given analyzer.
-    /// </summary>
-    public interface IAnalysisExtension {
+namespace Microsoft.PythonTools.Analysis.LanguageServer {
+    public interface ILanguageServerExtension {
         /// <summary>
-        /// Called when the extension is registered for an analyzer.
+        /// Called when the extension is registered for a language server.
         /// </summary>
-        /// <param name="analyzer"></param>
-        void Register(PythonAnalyzer analyzer);
-
-        /// <summary>
-        /// Handles an extension command.  The extension receives the command body and
-        /// returns a response.
-        /// </summary>
-        string HandleCommand(string commandId, string body);
+        void Register(Server server);
     }
 }

@@ -108,6 +108,8 @@
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\DocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
+    <Compile Include="LanguageServer\Hooks.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtension.cs" />
     <Compile Include="LanguageServer\ILogger.cs" />
     <Compile Include="LanguageServer\MarkdownDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />

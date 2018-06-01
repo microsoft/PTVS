@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis.LanguageServer.Hooks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -451,6 +452,37 @@ mc
                 contains: new string[0],
                 excludes: new[] { "value" }
             );
+        }
+
+        public class TestCompletionHook : ILanguageServerExtension {
+            public TestCompletionHook() { }
+
+            public void Register(Server server) {
+                server.PostProcessCompletion += Server_PostProcessCompletion;
+            }
+
+            private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
+                Assert.IsNotNull(e.Tree);
+                Assert.IsNotNull(e.Analysis);
+                for (int i = 0; i < e.CompletionList.items.Length; ++i) {
+                    e.CompletionList.items[i].insertText = "*" + e.CompletionList.items[i].insertText;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionHook() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 123\nx.");
+
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new string[0], new Position { line = 1, character = 2 });
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(TestCompletionHook).Assembly.FullName,
+                typeName = typeof(TestCompletionHook).FullName
+            });
+
+            await AssertCompletion(s, u, new[] { "*real", "*imag" }, new[] { "real" }, new Position { line = 1, character = 2 });
         }
 
         [TestMethod, Priority(0)]

@@ -14,23 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis;
+using System;
+using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Projects {
-    /// <summary>
-    /// Provides an extension which registers against a given analyzer.
-    /// </summary>
-    public interface IAnalysisExtension {
-        /// <summary>
-        /// Called when the extension is registered for an analyzer.
-        /// </summary>
-        /// <param name="analyzer"></param>
-        void Register(PythonAnalyzer analyzer);
-
-        /// <summary>
-        /// Handles an extension command.  The extension receives the command body and
-        /// returns a response.
-        /// </summary>
-        string HandleCommand(string commandId, string body);
+namespace Microsoft.PythonTools.Analysis.LanguageServer.Hooks {
+    public sealed class CompletionEventArgs : EventArgs {
+        public ModuleAnalysis Analysis;
+        public PythonAst Tree;
+        public SourceLocation Location;
+        public CompletionList CompletionList;
     }
 }

@@ -77,6 +77,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             LogMessage(MessageType.Info, $"Found {res.items.Length} completions for {uri} at {@params.position} after filtering");
+
+            var evt = PostProcessCompletion;
+            if (evt != null) {
+                var e = new Hooks.CompletionEventArgs { Analysis = analysis, Tree = tree, Location = @params.position, CompletionList = res };
+                evt(this, e);
+                res = e.CompletionList;
+                res.items = res.items ?? Array.Empty<CompletionItem>();
+                LogMessage(MessageType.Info, $"Found {res.items.Length} completions after hooks");
+            }
+
             return res;
         }
 
@@ -95,5 +105,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             return opts;
         }
+
+        public event EventHandler<Hooks.CompletionEventArgs> PostProcessCompletion;
     }
 }

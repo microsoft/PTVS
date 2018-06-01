@@ -334,6 +334,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
+    public class PythonAnalysisExtensionParams {
+        public string assembly;
+        public string typeName;
+        public string extensionName;
+        public Dictionary<string, object> properties;
+    }
+
     public sealed class FileFoundEventArgs : EventArgs {
         public Uri uri { get; set; }
     }

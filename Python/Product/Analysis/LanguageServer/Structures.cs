@@ -636,7 +636,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionList {
+    public class CompletionList {
         /// <summary>
         /// This list is not complete. Further typing should result in recomputing
         /// this list.
