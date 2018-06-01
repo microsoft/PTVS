@@ -200,7 +200,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 ModuleCache = _modules,
                 BuiltinModule = _builtinModule,
                 FindModuleInUserSearchPathAsync = FindModuleInUserSearchPathAsync,
-                IncludeTypeShed = true
+                IncludeTypeStubPackages = _analyzer.Limits.UseTypeStubPackages,
+                MergeTypeStubPackages = !_analyzer.Limits.UseTypeStubPackagesExclusively
             };
 
             for (int retries = 5; retries > 0; --retries) {

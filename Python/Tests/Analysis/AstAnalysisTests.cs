@@ -778,6 +778,43 @@ l = iterfind()");
         }
 
         [TestMethod, Priority(0)]
+        public void TypeShedChildModules() {
+            string[] expected;
+
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    expected = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    Assert.AreNotEqual(0, expected.Length);
+                    AssertUtil.ContainsAtLeast(expected, "parse", "request");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    var mods = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    AssertUtil.ArrayEquals(expected, mods);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void TypeShedSysExcInfo() {
             using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
                 try {

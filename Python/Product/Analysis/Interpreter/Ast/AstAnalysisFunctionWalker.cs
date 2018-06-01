@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         var types = seq.IndexTypes.ToArray();
                         var names = tex.Items.Select(x => (x as NameExpression)?.Name).ToArray();
                         for (var i = 0; i < Math.Min(names.Length, types.Length); i++) {
-                            if (names[i] != null) {
+                            if (names[i] != null && types[i] != null) {
                                 _scope.SetInScope(names[i], new AstPythonConstant(types[i]));
                             }
                         }

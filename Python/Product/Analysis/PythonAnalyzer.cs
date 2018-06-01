@@ -688,15 +688,21 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (module != null) {
-                List<MemberResult> result = new List<MemberResult>();
+                var result = new Dictionary<string, List<IAnalysisSet>>();
                 if (includeMembers) {
                     foreach (var keyValue in module.GetAllMembers(moduleContext)) {
-                        result.Add(new MemberResult(keyValue.Key, keyValue.Value));
+                        if (!result.TryGetValue(keyValue.Key, out var results)) {
+                            result[keyValue.Key] = results = new List<IAnalysisSet>();
+                        }
+                        results.Add(keyValue.Value);
                     }
-                    return result.ToArray();
+                    return MemberDictToMemberResult(result);
                 } else {
                     foreach (var child in module.GetChildrenPackages(moduleContext)) {
-                        result.Add(new MemberResult(child.Key, child.Key, new[] { child.Value }, PythonMemberType.Module));
+                        if (!result.TryGetValue(child.Key, out var results)) {
+                            result[child.Key] = results = new List<IAnalysisSet>();
+                        }
+                        results.Add(child.Value);
                     }
                     foreach (var keyValue in module.GetAllMembers(moduleContext)) {
                         bool anyModules = false;
@@ -707,14 +713,22 @@ namespace Microsoft.PythonTools.Analysis {
                             }
                         }
                         if (anyModules) {
-                            result.Add(new MemberResult(keyValue.Key, keyValue.Value));
+                            if (!result.TryGetValue(keyValue.Key, out var results)) {
+                                result[keyValue.Key] = results = new List<IAnalysisSet>();
+                            }
+                            results.Add(keyValue.Value);
                         }
                     }
-                    return result.ToArray();
+                    return MemberDictToMemberResult(result);
                 }
             }
             return new MemberResult[0];
         }
+
+        private static MemberResult[] MemberDictToMemberResult(Dictionary<string, List<IAnalysisSet>> results) {
+            return results.Select(r => new MemberResult(r.Key, r.Value.SelectMany())).ToArray();
+        }
+
 
         /// <summary>
         /// Gets the list of directories which should be analyzed.

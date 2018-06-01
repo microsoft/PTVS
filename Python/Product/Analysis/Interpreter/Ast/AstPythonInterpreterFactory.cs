@@ -445,7 +445,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             public int Timeout { get; set; } = 5000;
             public IPythonModule BuiltinModule { get; set; }
             public Func<string, Task<ModulePath?>> FindModuleInUserSearchPathAsync { get; set; }
-            public bool IncludeTypeShed { get; set; }
+            public bool IncludeTypeStubPackages { get; set; }
+            public bool MergeTypeStubPackages { get; set; }
         }
 
         public TryImportModuleResult TryImportModule(
@@ -539,8 +540,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 sentinalValue.Dispose();
             }
 
-            // Also search type shed if it's available, and if we are not a blacklisted module
-            if (module != null && context.IncludeTypeShed && module.Name != "typing") {
+            // Also search for type stub packages if enabled and we are not a blacklisted module
+            if (module != null && context.IncludeTypeStubPackages && module.Name != "typing") {
+                // Note that this currently only looks in the typeshed package, as type stub
+                // packages are not yet standardised so we don't know where to look.
+                // The details will be in PEP 561.
                 var typeShedPaths = GetTypeShedPaths(importTimeout);
                 if (typeShedPaths?.Any() == true) {
                     var mtsp = FindModuleInSearchPath(typeShedPaths, null, module.Name);
@@ -553,7 +557,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                             var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
 
                             if (tsModule != null) {
-                                module = AstPythonMultipleModules.Combine(module, tsModule);
+                                if (context.MergeTypeStubPackages) {
+                                    module = AstPythonMultipleModules.Combine(module, tsModule);
+                                } else {
+                                    module = tsModule;
+                                }
                             }
                         }
                     }
