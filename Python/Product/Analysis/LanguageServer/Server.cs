@@ -120,6 +120,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
+            while (!System.Diagnostics.Debugger.IsAttached) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
             _testEnvironment = @params.initializationOptions.testEnvironment;
             _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
             // Test environment needs predictable initialization.

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -47,10 +48,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var index = tree.LocationToIndex(@params.position);
             var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
-            if (!string.IsNullOrEmpty(w.ImportedName) &&
-                _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var doc = _displayTextBuilder.GetModuleDocumentation(modRef);
-                return new Hover { contents = doc };
+
+            if (string.IsNullOrEmpty(w.ImportedMember) && w.ImportedModules.Any()) {
+                var sb = new StringBuilder();
+                foreach (var n in w.ImportedModules) {
+                    if (_analyzer.Modules.TryImport(n, out var modRef)) {
+                        if (sb.Length > 0) {
+                            sb.AppendLine();
+                            sb.AppendLine();
+                        }
+                        sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
+                    }
+                }
+                return new Hover { contents = sb.ToString() };
             }
 
             Expression expr;

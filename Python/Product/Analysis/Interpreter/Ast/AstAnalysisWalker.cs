@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         Scope.SetInScope(n.Name, new AstNestedPythonModule(
                             _interpreter,
                             n.Name,
-                            ModulePath.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, node.Names[i].MakeString(), true).ToArray()
+                            ModuleResolver.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, node.Names[i].MakeString(), true).ToArray()
                         ));
                     }
                 }
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var mod = new AstNestedPythonModule(
                 _interpreter,
                 modName,
-                ModulePath.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, modName, true).ToArray()
+                ModuleResolver.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, modName, true).ToArray()
             );
 
             foreach (var name in GetImportNames(node.Names, node.AsNames)) {

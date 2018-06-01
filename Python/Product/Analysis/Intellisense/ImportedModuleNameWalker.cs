@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -31,11 +33,20 @@ namespace Microsoft.PythonTools.Intellisense {
             _importingFromFilePath = importingFromFilePath;
         }
 
-        public string ImportedName { get; private set; }
+        public IEnumerable<string> ImportedModules { get; private set; }
+        public string ImportedMember { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
             if (node.StartIndex <= Location && Location <= node.EndIndex) {
-                ImportedName = PythonAnalyzer.ResolveRelativeFromImport(_importingFromModuleName, _importingFromFilePath, node);
+                // Determine if location is over imported parts such as 
+                // over 'a' in 'from . import a, b, c' or over 'x' in 'from a import x'
+                // and store module names and imported parts
+                ImportedModules = ModuleResolver.ResolveRelativeFromImport(_importingFromModuleName, _importingFromFilePath, node);
+                ImportedMember = node.Names
+                    .Where(n => n.StartIndex <= Location && Location <= n.EndIndex)
+                    .Select(n => n.Name)
+                    .Except(ImportedModules)
+                    .FirstOrDefault();
             }
             return false;
         }
@@ -43,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(ImportStatement node) {
             foreach (var n in node.Names.MaybeEnumerate()) {
                 if (n.StartIndex <= Location && Location <= n.EndIndex) {
-                    ImportedName = n.MakeString();
+                    ImportedModules = new[] { n.MakeString() };
                     break;
                 }
             }

@@ -47,19 +47,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var w = new ImportedModuleNameWalker(entry, index);
                 tree.Walk(w);
 
-                if (!string.IsNullOrEmpty(w.ImportedName) &&
-                    _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-
-                    // Return a module reference
-                    extras.AddRange(modRef.AnalysisModule.Locations
-                        .Select(l => new Reference {
-                            uri = l.DocumentUri,
-                            range = l.Span,
-                            _version = version,
-                            _kind = ReferenceKind.Definition
-                        })
-                        .ToArray()
-                    );
+                foreach (var n in w.ImportedModules) {
+                    if(_analyzer.Modules.TryImport(n, out var modRef)) {
+                        // Return a module reference
+                        extras.AddRange(modRef.AnalysisModule.Locations
+                            .Select(l => new Reference {
+                                uri = l.DocumentUri,
+                                range = l.Span,
+                                _version = version,
+                                _kind = ReferenceKind.Definition
+                            })
+                            .ToArray());
+                    }
                 }
             }
 

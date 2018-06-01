@@ -127,6 +127,7 @@
     <Compile Include="LanguageServer\Settings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
+    <Compile Include="ModuleResolver.cs" />
     <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />

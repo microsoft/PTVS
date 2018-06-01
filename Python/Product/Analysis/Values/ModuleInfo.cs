@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal void AddUnresolvedModule(string relativeModuleName, bool absoluteImports) {
-            _unresolvedModules.UnionWith(PythonAnalyzer.ResolvePotentialModuleNames(_projectEntry, relativeModuleName, absoluteImports));
+            _unresolvedModules.UnionWith(ModuleResolver.ResolvePotentialModuleNames(_projectEntry, relativeModuleName, absoluteImports));
             _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, true);
         }
 

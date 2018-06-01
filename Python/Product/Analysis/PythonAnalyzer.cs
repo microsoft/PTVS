@@ -345,35 +345,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// </returns>
         public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
             ModuleReference moduleRef;
-            return ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
+            return ModuleResolver.ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
                 .Any(m => Modules.TryImport(m, out moduleRef));
-        }
-
-        /// <summary>
-        /// Returns a sequence of candidate absolute module names for the given
-        /// modules.
-        /// </summary>
-        /// <param name="importingFrom">
-        /// The project entry that is importing the module.
-        /// </param>
-        /// <param name="relativeModuleName">
-        /// A dotted name identifying the path to the module.
-        /// </param>
-        /// <returns>
-        /// A sequence of strings representing the absolute names of the module
-        /// in order of precedence.
-        /// </returns>
-        internal static IEnumerable<string> ResolvePotentialModuleNames(
-            IPythonProjectEntry importingFrom,
-            string relativeModuleName,
-            bool absoluteImports
-        ) {
-            return ModulePath.ResolvePotentialModuleNames(
-                importingFrom?.ModuleName,
-                importingFrom?.FilePath,
-                relativeModuleName,
-                absoluteImports
-            );
         }
 
         /// <summary>
@@ -1003,25 +976,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
-        internal static string ResolveRelativeFromImport(IPythonProjectEntry entry, FromImportStatement node)
-            => ResolveRelativeFromImport(entry.ModuleName, entry.FilePath, node);
-
-        internal static string ResolveRelativeFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
-            // from x import y => import x.y
-            // from ..x import y.z => import ..x.y.z
-
-            var name = node.Root.MakeString();
-            if (name.StartsWithOrdinal(".")) {
-                // from .x import target
-                var target = node.Names.FirstOrDefault()?.Name;
-                if (!string.IsNullOrEmpty(target)) {
-                    name = name.All(c => c == '.') ? $"{name}{target}" : $"{name}.{target}";
-                    var names = ModulePath.ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, name, node.ForceAbsolute).ToArray();
-                    name = names.Length > 0 ? names[0] : name;
-                }
-            }
-            return name;
-        }
         internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
             Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
 

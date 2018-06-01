@@ -299,11 +299,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
 
-            if (!TryImportModule(modName, node, out var modRef, out var bits)) {
-                _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
-                return false;
-            }
+            TryImportModules(modName, node,
+                (modRef, bits) => ResolvedModule(node, modRef, bits),
+                name => _unit.DeclaringModule.AddUnresolvedModule(name, node.ForceAbsolute));
+            return false;
 
+        }
+
+        private void ResolvedModule(FromImportStatement node, ModuleReference modRef, IReadOnlyList<string> bits) {
             _unit.DeclaringModule.AddModuleReference(modRef);
 
             Debug.Assert(modRef.Module != null);
@@ -342,6 +345,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
+                    var modName = node.Root.MakeString();
                     if (modRef.Name != modName) {
                         if (bits == null || bits.Count == 0) {
                             // Resolved to full name of the module
@@ -355,42 +359,32 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
             }
-
-            return false;
         }
 
-        private bool TryImportModule(string modName, Statement node, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
-            moduleRef = null;
-            remainingParts = null;
+        private void TryImportModules(string modName, Statement node, Action<ModuleReference, IReadOnlyList<string>> resolved, Action<string> unresolved) {
 
             if (ProjectState.Limits.CrossModule > 0 &&
                 ProjectState.ModulesByFilename.Count > ProjectState.Limits.CrossModule) {
                 // too many modules loaded, disable cross module analysis by blocking
                 // scripts from seeing other modules.
-                return false;
+                return;
             }
 
-            string[] candidates = null;
+            IEnumerable<string> candidates = null;
             if (node is FromImportStatement fromImport) {
-                var resolvedName = PythonAnalyzer.ResolveRelativeFromImport(_unit.ProjectEntry, fromImport);
-                if (resolvedName != modName) {
-                    candidates = new[] { resolvedName };
-                } else {
-                    candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, fromImport.ForceAbsolute).ToArray();
-                }
+                candidates = ModuleResolver.ResolveRelativeFromImport(_unit.ProjectEntry, fromImport);
             } else if (node is ImportStatement importNode) {
-                candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, importNode.ForceAbsolute).ToArray();
+                candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, importNode.ForceAbsolute).ToArray();
             } else {
                 throw new ArgumentException(nameof(node), "Must be import or from-import node");
             }
 
             foreach (var name in candidates) {
-                if (ProjectState.Modules.TryImport(name, out moduleRef)) {
-                    return true;
+                if (ProjectState.Modules.TryImport(name, out var moduleRef)) {
+                    resolved(moduleRef, null);
+                    continue;
                 }
-            }
 
-            foreach (var name in candidates) {
                 moduleRef = null;
                 foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {
@@ -398,26 +392,30 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         if (part.Length < name.Length) {
                             moduleRef.Module?.Imported(_unit);
                         }
-                    } else if (moduleRef != null) {
+                        resolved(moduleRef, null);
+                        continue;
+                    }
+
+                    if (moduleRef != null) {
                         Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
                         if (moduleRef.Name.Length + 1 < name.Length) {
-                            remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
+                            var remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
+                            resolved(moduleRef, remainingParts);
+                        } else {
+                            resolved(moduleRef, null);
                         }
-                        return true;
-                    } else {
-                        break;
+                        continue;
                     }
+                    unresolved(name);
                 }
             }
-
-            return moduleRef?.Module != null;
         }
 
         internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
             var result = new List<AnalysisValue>();
             foreach (var b in bases) {
                 foreach (var curType in b) {
-                    BuiltinClassInfo klass = curType as BuiltinClassInfo;
+                    var klass = curType as BuiltinClassInfo;
                     if (klass != null) {
                         var value = klass.GetMember(node, unit, name);
                         if (value != null) {
@@ -487,8 +485,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(ImportStatement node) {
-            int len = Math.Min(node.Names.Count, node.AsNames.Count);
-            for (int i = 0; i < len; i++) {
+            var len = Math.Min(node.Names.Count, node.AsNames.Count);
+            for (var i = 0; i < len; i++) {
                 var curName = node.Names[i];
                 var asName = node.AsNames[i];
 
@@ -523,21 +521,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // Ensure a variable exists, even if the import fails
                 Scope.CreateVariable(nameNode, _unit, saveName);
 
-                if (!TryImportModule(importing, node, out var modRef, out var bits)) {
-                    _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);
-                    continue;
-                }
+                TryImportModules(importing, node,
+                    (modRef, bits) => {
+                        _unit.DeclaringModule.AddModuleReference(modRef);
 
-                _unit.DeclaringModule.AddModuleReference(modRef);
+                        var userMod = modRef.Module;
+                        Debug.Assert(userMod != null);
 
-                var userMod = modRef.Module;
-                Debug.Assert(userMod != null);
-
-                if (userMod != null) {
-                    userMod.Imported(_unit);
-
-                    AssignImportedModule(nameNode, modRef, bits, saveName);
-                }
+                        if (userMod != null) {
+                            userMod.Imported(_unit);
+                            AssignImportedModule(nameNode, modRef, bits, saveName);
+                        }
+                    }, 
+                    name => _unit.DeclaringModule.AddUnresolvedModule(name, node.ForceAbsolute)
+                );
             }
             return true;
         }
