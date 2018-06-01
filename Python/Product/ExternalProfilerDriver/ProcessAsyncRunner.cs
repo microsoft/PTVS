@@ -84,7 +84,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             CancellationTokenSource cts = new CancellationTokenSource();
             var progress = new Progress<ProcessProgressDataload>();
             progress.ProgressChanged += (s, e) => {
-                //Console.SetCursorPosition(Console.CursorTop + 2, 0);
                 Console.WriteLine($"From process: {e.Message}");
             };
 

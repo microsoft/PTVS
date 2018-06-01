@@ -87,11 +87,11 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 id = y,
                 begin = new LongInt(0, 0), // should build these according to mfdd (i.e., argument x)
                 end = new LongInt(0, 10000), // not sure why 2500 is the smallest number than seems to work
-                baseX = new LongInt(0, (y - 1) * 1000),
+                @base = new LongInt(0, (y - 1) * 1000),
                 size = new LongInt(0, 300),
                 ranges = x.Value.Select(xx => new FunctionSpec(xx.Key, xx.Value.Base, xx.Value.Size)).ToList()
             });
-            var modBase = mods.ToDictionary(x => x.name, x => x.baseX);
+            var modBase = mods.ToDictionary(x => x.name, x => x.@base);
 
             AddressTranslator tr = new AddressTranslator(modBase, mfdd);
 

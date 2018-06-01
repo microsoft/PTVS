@@ -63,12 +63,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     class FunctionSpec {
         public string name { get; set; }
         [JsonProperty("base")]
-        public LongInt baseX { get; set; }
+        public LongInt @base { get; set; }
         public LongInt size { get; set; }
 
         public FunctionSpec(string _name, long _base, long _size) {
             name = _name;
-            baseX = new LongInt(0, _base);
+            @base = new LongInt(0, _base);
             size = new LongInt(0, _size);
         }
     }
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public LongInt begin { get; set; }
         public LongInt end { get; set; }
         [JsonProperty("base")]
-        public LongInt baseX { get; set; }
+        public LongInt @base { get; set; }
         public LongInt size { get; set; }
         public IList<FunctionSpec> ranges { get; set; }
 

@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
         public static string VTunePath()
         {
-
             string envvarval = "dummyval";
             if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows ||
                  RuntimeEnvironment.OperatingSystemPlatform == Platform.Linux) {
@@ -44,7 +43,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 throw new Exception("Only Linux and Windows are supported at this time");
             }
 
-#if false
             string fname = "";
             if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows) {
                 fname = Path.Combine("bin32", _vtuneExeBasename + ".exe");
@@ -59,8 +57,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             } else {
                 throw new Exception($"Could not find {fname}, please check you have installed VTune");
             }
-#endif
-            return "";
         }
 
         private readonly string _path;             // vtune path
@@ -72,11 +68,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public string BaseOutDir { get { return _baseOutDir; } }
         public string ResultDir { get { return _resultDir; } }
 
-#if false
-        private VTuneCollectSpec CollectSpec { get; set; }
-        private IEnumerable<VTuneReportSpec> ReportSpecs { get; set; }
-#endif
-
         /// <summary>
         /// A reference to an invocation of VTune that has as base ("user data") directory <paramref name="baseOutDir"/>
         /// </summary>
@@ -87,70 +78,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             _baseOutDir = baseOutDir;
             _path = vtunePath;
         }
-
-#if false
-        public string CollectCL()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string Report()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Start()
-        {
-            EnsureBaseDir();
-            Console.WriteLine("Should be executing....");
-        }
-
-        private void EnsureBaseDir()
-        {
-            string possible = BaseOutDir;
-            if (Directory.Exists(possible)) return;
-
-            string filename = Path.GetFileNameWithoutExtension(possible);
-            string date = DateTime.Now.ToString("yyyyMMdd");
-            string candidatedirname = Path.Combine(Path.GetTempPath(), filename + "_" + date + ".vt");
-
-            int count = 1;
-            while (Directory.Exists(candidatedirname))
-            {
-                candidatedirname = Path.Combine(Path.GetTempPath(), filename + "_" + date + "(" + count + ").vt");
-                count++;
-            }
-            Directory.CreateDirectory(candidatedirname);
-            _baseOutDir = candidatedirname;
-        }
-
-        public void AddCollectorSpec(VTuneCollectSpec collector)
-        {
-            CollectSpec = collector;
-        }
-
-        private static string NextResultDirInDir(string basedir)
-        {
-            if (!Directory.Exists(basedir))
-            {
-                throw new ArgumentException($"Expected directory {basedir} does not exist");
-            }
-
-            int latest = 0;
-            IEnumerable<string> previous = Directory.GetDirectories(basedir, "r*hs");
-            if (previous.Count() != 0)
-            {
-                latest = previous
-                           .Select(x => { var n = new FileInfo(x).Name; return n.Substring(1, n.Length - 3); })
-                           .Select(x => Int32.Parse(x))
-                           .Max();
-                latest += 1;
-            }
-
-            var latestReportName = "r" + latest.ToString("D3") + "hs"; // what happens if there's none?
-            return latestReportName;
-        }
-#endif
 
         public static string FreshDirectory(string baseName = "results") {
             string date = DateTime.Now.ToString("yyyyMMdd");
