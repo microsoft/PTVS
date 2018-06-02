@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            if (!_variables.TryGetValue(name, out var variable)) {
+            if (!_variables.TryGetValue(name, out var variable) || !variable.VariableStillExists) {
                 return null;
             }
 
