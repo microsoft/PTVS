@@ -388,8 +388,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         moduleRef = mref;
                         if (part.Length < name.Length) {
                             moduleRef.Module?.Imported(_unit);
+                        } else {
+                            resolved(moduleRef, null);
                         }
-                        resolved(moduleRef, null);
                         continue;
                     }
 
@@ -517,7 +518,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 // Ensure a variable exists, even if the import fails
-                var variable = Scope.CreateVariable(nameNode, _unit, saveName);
+                Scope.CreateVariable(nameNode, _unit, saveName);
 
                 TryImportModules(importing, node,
                     (modRef, bits) => {
