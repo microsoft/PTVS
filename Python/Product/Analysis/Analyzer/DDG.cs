@@ -347,12 +347,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     userMod.Imported(_unit);
                     var modName = node.Root.MakeString();
                     if (modRef.Name != modName) {
-                        if (bits == null || bits.Count == 0) {
-                            // Resolved to full name of the module
-                            AssignImportedModule(nameNode, modRef, null, newName ?? impName);
-                        } else {
-                            AssignImportedMember(nameNode, userMod, bits.ToArray(), newName ?? impName);
-                        }
+                        AssignImportedModule(nameNode, modRef, bits, newName ?? impName);
                     } else {
                         fullImpName[fullImpName.Length - 1] = impName;
                         AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
@@ -380,14 +375,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             foreach (var name in candidates) {
-                if (ProjectState.Modules.TryImport(name, out var moduleRef)) {
-                    resolved(moduleRef, null);
+                if (ProjectState.Modules.TryImport(name, out var originalModRef)) {
+                    // Complete name is resolved, such as a.b
+                    resolved(originalModRef, null);
                     continue;
                 }
 
-                moduleRef = null;
+                ModuleReference moduleRef = null;
                 foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {
+                        // First part is module
                         moduleRef = mref;
                         if (part.Length < name.Length) {
                             moduleRef.Module?.Imported(_unit);
@@ -397,11 +394,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
 
                     if (moduleRef != null) {
+                        // Part not resolved, most probably member (such as path in os.path).
                         Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
                         if (moduleRef.Name.Length + 1 < name.Length) {
                             var remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
                             resolved(moduleRef, remainingParts);
-                        } else {
+                         } else {
                             resolved(moduleRef, null);
                         }
                         continue;
@@ -519,7 +517,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 // Ensure a variable exists, even if the import fails
-                Scope.CreateVariable(nameNode, _unit, saveName);
+                var variable = Scope.CreateVariable(nameNode, _unit, saveName);
 
                 TryImportModules(importing, node,
                     (modRef, bits) => {
@@ -532,7 +530,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             userMod.Imported(_unit);
                             AssignImportedModule(nameNode, modRef, bits, saveName);
                         }
-                    }, 
+                    },
                     name => _unit.DeclaringModule.AddUnresolvedModule(name, node.ForceAbsolute)
                 );
             }

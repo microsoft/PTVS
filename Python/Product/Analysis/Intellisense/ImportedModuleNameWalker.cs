@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _importingFromFilePath = importingFromFilePath;
         }
 
-        public IEnumerable<string> ImportedModules { get; private set; }
+        public IEnumerable<string> ImportedModules { get; private set; } = Enumerable.Empty<string>();
         public string ImportedMember { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
