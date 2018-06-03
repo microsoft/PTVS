@@ -41,16 +41,21 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns></returns>
         internal static IEnumerable<string> ResolveRelativeFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
             var root = node.Root.MakeString();
-            IEnumerable<string> names = null;
-
+ 
             if (!string.IsNullOrEmpty(root) && root.StartsWith(".")) {
                 var prefix = root.All(c => c == '.') ? root : $"{root}.";
-                names = node.Names.Where(n => !string.IsNullOrEmpty(n.Name)).Select(n => n.Name);
-                if(!names.Any()) {
+
+                var names = node.Names.Where(n => !string.IsNullOrEmpty(n.Name)).Select(n => n.Name);
+                if (!names.Any()) {
                     return Enumerable.Empty<string>();
                 }
-                return names.SelectMany(n => ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, $"{prefix}{n}", node.ForceAbsolute));
-            }
+
+                var resolved =  names.SelectMany(n => ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, $"{prefix}{n}", node.ForceAbsolute)).ToArray();
+                if (resolved.Length == 1 && resolved[0].Length > 2 && resolved[0].EndsWithOrdinal(".*")) {
+                    resolved[0] = resolved[0].Substring(0, resolved[0].Length-2);
+                }
+                return resolved;
+        }
             return new[] { root };
         }
 
