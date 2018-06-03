@@ -164,8 +164,9 @@ namespace Microsoft.PythonTools.Analysis {
         internal virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             DeclaringModule.Scope.ClearLinkedVariables();
 
+            // Remove stale variables
             var toRemove = DeclaringModule.Scope.AllVariables
-                .Where(v => !v.Value.VariableStillExists).ToList();
+                .Where(v => !v.Value.VariableStillExists && !v.Value.IsAssigned).ToList();
 
             ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
