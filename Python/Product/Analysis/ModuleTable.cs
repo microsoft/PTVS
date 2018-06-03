@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool TryImport(string name, out ModuleReference res) {
             var firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)), name);
+                _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)), name);
                 firstImport = true;
             }
             if (res != null && res.Module == null) {
@@ -133,11 +133,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (firstImport && res != null && res.Module != null && _analyzer != null) {
                 _analyzer.DoDelayedSpecialization(name);
             }
-            if (res != null && res.Module != null) {
-                _modules[name] = res;
-                return true;
-            }
-            return false;
+            return res != null && res.Module != null;
         }
         public bool TryRemove(string name, out ModuleReference res) => _modules.TryRemove(name, out res);
 
