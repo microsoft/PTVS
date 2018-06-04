@@ -106,6 +106,13 @@ namespace Microsoft.PythonTools.Debugger {
                         Task.Factory.StartNew(async () => {
                             Initialized?.Invoke(this, null);
                         });
+                    } else if (name.StartsWith("legacy")) {
+                        if (_legacyDebuggerEventCount == 0) {
+                            Task.Factory.StartNew(async () => {
+                                LegacyDebugger?.Invoke(this, null);
+                            });
+                        }
+                        _legacyDebuggerEventCount++;
                     }
                 } catch (Exception) {
                     // Ignore all parse errors
@@ -115,5 +122,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public event EventHandler Initialized;
         public event EventHandler Disconnected;
+        public event EventHandler LegacyDebugger;
+        private int _legacyDebuggerEventCount;
     }
 }

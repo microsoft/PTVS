@@ -179,5 +179,11 @@ namespace PythonToolsUITestsRunner {
         public void ImportPresentThenAddThenRemoveReference() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresentThenAddThenRemoveReference));
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void DefaultAnalyzerForNonProjectFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.DefaultAnalyzerForNonProjectFile));
+        }
     }
 }

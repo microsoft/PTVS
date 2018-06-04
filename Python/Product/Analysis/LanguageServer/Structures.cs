@@ -207,10 +207,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public class InformationDisplayOptions {
+        public MarkupKind preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
         public int maxDocumentationTextLength;
+        public int maxDocumentationLines;
     }
 
     /// <summary>
@@ -641,6 +643,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public bool isIncomplete;
         public CompletionItem[] items;
+
+        /// <summary>
+        /// The range that should be replaced when committing a completion from this
+        /// list. Where <c>textEdit</c> is set on a completion, prefer that.
+        /// </summary>
+        public Range? _applicableSpan;
+        /// <summary>
+        /// When true, snippets are allowed in this context.
+        /// </summary>
+        public bool? _allowSnippet;
+        /// <summary>
+        /// The expression that members are being displayed for.
+        /// </summary>
+        public string _expr;
+        /// <summary>
+        /// When true, completions should commit by default. When false, completions
+        /// should not commit. If unspecified the client may decide.
+        /// </summary>
+        public bool? _commitByDefault;
     }
 
     [Serializable]
@@ -648,7 +669,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string label;
         public CompletionItemKind kind;
         public string detail;
-        public string documentation;
+        public MarkupContent documentation;
         public string sortText;
         public string filterText;
         public string insertText;
@@ -679,7 +700,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct Hover {
+    public class Hover {
         public MarkupContent contents;
         public Range? range;
 

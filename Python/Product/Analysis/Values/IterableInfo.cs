@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             if (strength < MergeStrength.IgnoreIterableNode) {
                 var si = ns as IterableValue;
-                if (si != null && !_node.Equals(_node)) {
+                if (si != null && !_node.Equals(si)) {
                     // If nodes are not equal, iterables cannot be merged.
                     return false;
                 }

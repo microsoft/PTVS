@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -28,24 +29,35 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyObject>> curexc_type;
             public StructField<PointerProxy<PyObject>> curexc_value;
             public StructField<PointerProxy<PyObject>> curexc_traceback;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy<PyObject>> exc_type;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy<PyObject>> exc_value;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy<PyObject>> exc_traceback;
+
+            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
+            public StructField<PyErr_StackItem> exc_state;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
+            public StructField<PointerProxy<PyErr_StackItem>> exc_info;
+
             public StructField<Int32Proxy> thread_id;
         }
 
         private readonly Fields _fields;
+        private readonly PythonLanguageVersion _languageVersion;
 
-        public PyThreadState(DkmProcess process, ulong address)
+        public PyThreadState(DkmProcess process, ulong address, PythonLanguageVersion languageVersion)
             : base(process, address) {
+            _languageVersion = languageVersion;
             InitializeStruct(this, out _fields);
         }
 
-        public static PyThreadState TryCreate(DkmProcess process, ulong address) {
+        public static PyThreadState TryCreate(DkmProcess process, ulong address, PythonLanguageVersion languageVersion) {
             if (address == 0) {
                 return null;
             }
-            return new PyThreadState(process, address);
+            return new PyThreadState(process, address, languageVersion);
         }
 
         public PointerProxy<PyThreadState> next {
@@ -76,17 +88,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.curexc_traceback); }
         }
 
-        public PointerProxy<PyObject> exc_type {
-            get { return GetFieldProxy(_fields.exc_type); }
-        }
+        public PointerProxy<PyObject> exc_type => _languageVersion < PythonLanguageVersion.V37
+            ? GetFieldProxy(_fields.exc_type)
+            : GetFieldProxy(_fields.exc_state).exc_type;
 
-        public PointerProxy<PyObject> exc_value {
-            get { return GetFieldProxy(_fields.exc_value); }
-        }
+        public PointerProxy<PyObject> exc_value => _languageVersion < PythonLanguageVersion.V37
+            ? GetFieldProxy(_fields.exc_value)
+            : GetFieldProxy(_fields.exc_state).exc_value;
 
-        public PointerProxy<PyObject> exc_traceback {
-            get { return GetFieldProxy(_fields.exc_traceback); }
-        }
+        public PointerProxy<PyObject> exc_traceback => _languageVersion < PythonLanguageVersion.V37
+            ? GetFieldProxy(_fields.exc_traceback)
+            : GetFieldProxy(_fields.exc_state).exc_traceback;
+
 
         public Int32Proxy thread_id {
             get { return GetFieldProxy(_fields.thread_id); }
@@ -95,5 +108,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process) {
             return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
         }
+
+        
     }
+
+    [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
+    class PyErr_StackItem : StructProxy {
+        private class Fields {
+            public StructField<PointerProxy<PyObject>> exc_type, exc_value, exc_traceback;
+        }
+
+        private readonly Fields _fields;
+
+        public PyErr_StackItem(DkmProcess process, ulong address)
+            : base(process, address) {
+            InitializeStruct(this, out _fields);
+        }
+
+        public PointerProxy<PyObject> exc_type => GetFieldProxy(_fields.exc_type);
+        public PointerProxy<PyObject> exc_value => GetFieldProxy(_fields.exc_value);
+        public PointerProxy<PyObject> exc_traceback => GetFieldProxy(_fields.exc_traceback);
+    }
+
 }

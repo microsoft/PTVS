@@ -249,7 +249,7 @@ namespace IpcJsonTests {
                 arguments.Add("-r");
                 arguments.Add(portNum.ToString());
                 var proc = ProcessOutput.Run(
-                    PythonPaths.Python27.InterpreterPath,
+                    (PythonPaths.Python27 ?? PythonPaths.Python27_x64).InterpreterPath,
                     arguments,
                     workingDir,
                     env,
@@ -305,7 +305,7 @@ namespace IpcJsonTests {
                 requestHandler,
                 TestDataProtocol.RegisteredTypes
             );
-            _server.StartProcessing();
+            Task.Run(_server.ProcessMessages).DoNotWait();
         }
 
         private int StartClient() {
@@ -329,7 +329,7 @@ namespace IpcJsonTests {
             var socket = ((Socket)ar.AsyncState).EndAccept(ar);
             var stream = new NetworkStream(socket, ownsSocket: true);
             _client = new Connection(stream, true, stream, true, null, TestDataProtocol.RegisteredTypes);
-            _client.StartProcessing();
+            Task.Run(_client.ProcessMessages).DoNotWait();
             _connected.Set();
         }
     }

@@ -15,18 +15,50 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     public static class TaskExtensions {
         /// <summary>
-        /// Suppresses warnings about unawaited tasks and ensures that unhandled
-        /// errors will cause the process to terminate.
+        /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
-        public static async void DoNotWait(this Task task) {
-            await task;
+        /// <remarks>
+        /// <see cref="OperationCanceledException"/> is always ignored.
+        /// </remarks>
+        public static void DoNotWait(this Task task) {
+            if (task.IsCompleted) {
+                ReThrowTaskException(task);
+                return;
+            }
+
+            var synchronizationContext = SynchronizationContext.Current;
+            if (synchronizationContext != null && synchronizationContext.GetType() != typeof (SynchronizationContext)) {
+                task.ContinueWith(DoNotWaitSynchronizationContextContinuation, synchronizationContext, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            } else {
+                task.ContinueWith(DoNotWaitThreadContinuation, TaskContinuationOptions.ExecuteSynchronously);
+            }
+        }
+
+        private static void ReThrowTaskException(object state) {
+            var task = (Task)state;
+            if (task.IsFaulted && task.Exception != null) {
+                var exception = task.Exception.InnerException;
+                ExceptionDispatchInfo.Capture(exception).Throw();
+            }
+        }
+
+        private static void DoNotWaitThreadContinuation(Task task) {
+            if (task.IsFaulted && task.Exception != null) {
+                var exception = task.Exception.InnerException;
+                ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
+            }
+        }
+
+        private static void DoNotWaitSynchronizationContextContinuation(Task task, object state) {
+            var context = (SynchronizationContext) state;
+            context.Post(ReThrowTaskException, task);
         }
 
         public static T WaitOrDefault<T>(this Task<T> task, int milliseconds) {

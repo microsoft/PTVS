@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis {
             Location = location;
         }
 
-        bool ICanExpire.IsAlive => (Resolver as ICanExpire)?.IsAlive ?? true;
+        public bool IsAlive => (Resolver as ICanExpire)?.IsAlive ?? true;
 
         public override int GetHashCode() {
             return (Resolver?.GetHashCode() ?? 0) ^ (Location?.GetHashCode() ?? 0);

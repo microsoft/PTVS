@@ -43,15 +43,9 @@ namespace Microsoft.PythonTools.Analysis {
             return _references.Value.Add(module);
         }
 
-        public bool RemoveReference(ModuleInfo module) {
-            return _references.IsValueCreated && _references.Value.Remove(module);
-        }
+        public bool RemoveReference(ModuleInfo module) => _references.IsValueCreated && _references.Value.Remove(module);
 
-        public bool HasReferences {
-            get {
-                return _references.IsValueCreated && _references.Value.Any();
-            }
-        }
+        public bool HasReferences => _references.IsValueCreated && _references.Value.Any();
 
         public IEnumerable<ModuleInfo> References {
             get {

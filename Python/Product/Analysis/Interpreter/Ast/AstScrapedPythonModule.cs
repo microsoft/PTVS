@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 #endif
         {
         private readonly string _filePath;
-        private string _documentation;
         protected readonly Dictionary<string, IMember> _members;
         private bool _scraped;
 
@@ -48,11 +47,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public string Documentation {
             get {
-                if (_documentation == null) {
-                    var m = GetMember(null, "__doc__") as AstPythonStringLiteral;
-                    _documentation = m != null ? m.Value : string.Empty;
-                }
-                return _documentation;
+                var m = GetMember(null, "__doc__") as AstPythonStringLiteral;
+                return m != null ? m.Value : string.Empty;
             }
         }
 
@@ -62,6 +58,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public virtual IMember GetMember(IModuleContext context, string name) {
             IMember m;
+            if (!_scraped) {
+                Imported(context);
+            }
             lock (_members) {
                 _members.TryGetValue(name, out m);
             }
@@ -75,6 +74,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            if (!_scraped) {
+                Imported(moduleContext);
+            }
             lock (_members) {
                 return _members.Keys.ToArray();
             }

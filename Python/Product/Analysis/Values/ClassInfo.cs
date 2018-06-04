@@ -155,12 +155,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
             }
-
-            var doc = Documentation;
-            if (!string.IsNullOrWhiteSpace(doc)) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "\r\n");
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
-            }
         }
 
         public string FullyQualifiedName {
@@ -423,7 +417,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var result = new Dictionary<string, IAnalysisSet>(Scope.VariableCount);
 
             foreach (var v in Scope.AllVariables) {
-                v.Value.ClearOldValues();
+                if (!options.ForEval()) {
+                    v.Value.ClearOldValues();
+                }
                 if (v.Value.VariableStillExists) {
                     result[v.Key] = v.Value.Types;
                 }

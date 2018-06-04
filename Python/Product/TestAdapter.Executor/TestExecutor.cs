@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     "TestExecutor"
                 );
                 _connection.EventReceived += ConnectionReceivedEvent;
-                _connection.StartProcessing();
+                Task.Run(_connection.ProcessMessages).DoNotWait();
                 _connected.Set();
             }
 

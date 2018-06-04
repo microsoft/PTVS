@@ -159,7 +159,7 @@ namespace PythonToolsUITests {
             ).ToList();
             var provider = new MockPythonInterpreterFactoryProvider("Test Provider", factories.ToArray());
             ((InterpreterRegistryService)interpreters).SetProviders(new[] {
-                new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
+                new Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>(
                     () => provider,
                     new Dictionary<string, object>() {
                         { "InterpreterFactoryId", "Mock" }
@@ -242,7 +242,7 @@ namespace PythonToolsUITests {
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 var oldDefault = service.DefaultInterpreter;
                 var oldProviders = ((InterpreterRegistryService)interpreters).SetProviders(new[] {
-                    new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
+                    new Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>(
                         () => mockProvider,
                         new Dictionary<string, object>() {
                             { "InterpreterFactoryId", "Mock" }

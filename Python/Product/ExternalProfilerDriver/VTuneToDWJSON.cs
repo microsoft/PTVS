@@ -24,7 +24,6 @@ using System.Text;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
-
     public class BaseSizeTuple {
         public long Base { get; set; }
         public long Size { get; set; }
@@ -52,7 +51,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         /// </summary>
         /// <param name="filename">The filename with the callstack report</param>
         public static double CSReportToDWJson(string filename, string outfname) {
-
             if (!File.Exists(filename)) {
                 throw new ArgumentException($"Specified file {filename} does not exist!");
             }
@@ -67,8 +65,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             var modFunDictionary = samples.SelectMany(sm => sm.AllSamples())
                                           .Select(p => new { Module = p.Module, Function = p.Function })
                                           .GroupBy(t => t.Module)
-                                          .Select(g => new { Module = g.Key, Functions = g.Select(gg => gg.Function).Distinct() })
-                                    ;
+                                          .Select(g => new { Module = g.Key, Functions = g.Select(gg => gg.Function).Distinct() });
 
             // Create a two-level dictionary module -> (function -> (base, size))
             var mfdd = modFunDictionary.Select(x => new {
@@ -113,33 +110,28 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 }
             }
 
-            ProcessSpec proc = new ProcessSpec {
-                name = "python36.dll",
-                id = 1234,
-                begin = new LongInt(0, 1000),
-                //end = new LongInt(0,8000),
-                end = duration,
-                isTarget = true,
-                isUser = true,
-                moduleIDs = Enumerable.Range(1, int.MaxValue).Take(mods.Count()).ToList()
-            };
-            List<ProcessSpec> processes = new List<ProcessSpec>(); // TODO -- is there a literal for this?
-            processes.Add(proc);
-
             ThreadSpec thread = new ThreadSpec() {
                 id = 1,
                 begin = new LongInt(0, 2000),
                 end = new LongInt(0, 3000),
-                //stacks = chains.ToList()
                 stacks = chains
             };
-            List<ThreadSpec> threads = new List<ThreadSpec>();
-            threads.Add(thread);
-            proc.threads = threads;
+
+            ProcessSpec proc = new ProcessSpec {
+                name = "python36.dll",
+                id = 1,
+                begin = new LongInt(0, 1000),
+                //end = new LongInt(0, 8000),
+                end = duration,
+                isTarget = true,
+                isUser = true,
+                moduleIDs = Enumerable.Range(1, int.MaxValue).Take(mods.Count()).ToList(),
+                threads = new List<ThreadSpec> { thread }
+            };
+            var processes = new List<ProcessSpec>() { proc };
 
             var trace = new Trace {
-                totalTimeRange = new TimeSpec
-                {
+                totalTimeRange = new TimeSpec {
                     begin = new LongInt(0, 0),
                     //duration = new LongInt(0, (int)(total * 1000))
                     //duration = new LongInt(0, 10000)
@@ -157,9 +149,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             };
 
             string json = JsonConvert.SerializeObject(trace, Formatting.Indented);
-            StreamWriter writer = File.CreateText(outfname);
-            writer.WriteLine(json);
-            writer.Close();
+            File.WriteAllText(outfname, json);
 
             return total;
         }
@@ -174,7 +164,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
 
         public static void CPUReportToDWJson(string filename, string outfname, double timeTotal = 0.0) {
-            
             if (!File.Exists(filename)) {
                 throw new ArgumentException($"Cannot find specified CPU utilization report {filename}");
             }

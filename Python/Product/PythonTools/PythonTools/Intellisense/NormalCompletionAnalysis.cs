@@ -40,78 +40,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _snapshot = snapshot;
         }
 
-        internal bool GetPrecedingExpression(out string parentExpression, out SnapshotSpan expressionExtent) {
-            parentExpression = string.Empty;
-            expressionExtent = default(SnapshotSpan);
-
-            // We never want normal completions on space
-            if (Session.GetTriggerCharacter() == ' ' && !Session.IsCompleteWordMode()) {
-                return false;
-            }
-
-            var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
-            if (bi == null) {
-                return false;
-            }
-            var span = Span.GetSpan(_snapshot);
-            var expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.EvaluateMembers);
-            if (expr != null) {
-                parentExpression = expr.Value.GetText() ?? "";
-                expressionExtent = new SnapshotSpan(expr.Value.Start, span.End);
-                return true;
-            }
-
-            expr = bi.GetExpressionAtPoint(span, GetExpressionOptions.Complete);
-            if (expr != null) {
-                expressionExtent = expr.Value;
-                return true;
-            }
-
-            var tok = bi.GetTokenAtPoint(span.End);
-            if (tok == null) {
-                expressionExtent = span;
-                return true;
-            }
-
-            switch (tok.Value.Category) {
-                case TokenCategory.Comment:
-                    return false;
-                case TokenCategory.Delimiter:
-                case TokenCategory.Grouping:
-                case TokenCategory.Operator:
-                case TokenCategory.WhiteSpace:
-                    // Expect top-level completions after these
-                    expressionExtent = span;
-                    return true;
-                //case TokenCategory.BuiltinIdentifier:
-                case TokenCategory.Keyword:
-                    // Expect filtered top-level completions here
-                    // (but the return value is no different)
-                    expressionExtent = span;
-                    return true;
-                case TokenCategory.Identifier:
-                    // When preceded by a delimiter, grouping, or operator
-                    var tok2 = bi.GetTokensInReverseFromPoint(span.End).Where(t => t.Category != TokenCategory.WhiteSpace && t.Category != TokenCategory.Comment).Take(2).ToArray();
-                    if (tok2.Length == 2 && tok2[0].Category == tok.Value.Category) {
-                        switch (tok2[1].Category) {
-                            case TokenCategory.Delimiter:
-                            case TokenCategory.Grouping:
-                            case TokenCategory.Operator:
-                                expressionExtent = span;
-                                return true;
-                        }
-                    }
-                    break;
-            }
-
-            return false;
-        }
-
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
-
-            IEnumerable<CompletionResult> members = null;
-            IEnumerable<CompletionResult> replMembers = null;
 
             var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
             var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
@@ -124,68 +54,62 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            string text;
-            SnapshotSpan statementRange;
-            if (!GetPrecedingExpression(out text, out statementRange)) {
+            IEnumerable<CompletionResult> members = null;
+
+            var span = Span.GetSpan(bufferInfo.CurrentSnapshot);
+            var point = span.Start;
+
+            var location = VsProjectAnalyzer.TranslateIndex(
+                point.Position,
+                point.Snapshot,
+                analysis
+            );
+
+            var triggerChar = Session.GetTriggerCharacter();
+            var completions = analyzer.WaitForRequest(analyzer.GetCompletionsAsync(
+                analysis,
+                location,
+                _options.MemberOptions,
+                triggerChar == '\0' ? Analysis.LanguageServer.CompletionTriggerKind.Invoked : Analysis.LanguageServer.CompletionTriggerKind.TriggerCharacter,
+                triggerChar == '\0' ? null : triggerChar.ToString()
+            ), "GetCompletions.GetMembers");
+
+            if (completions.items == null) {
                 return null;
             }
 
-            if (string.IsNullOrEmpty(text)) {
-                var expansionCompletionsTask = pyReplEval == null ? EditorServices.Python?.GetExpansionCompletionsAsync() : null;
+            members = completions.items.Select(c => new CompletionResult(
+                c.label,
+                c.insertText ?? c.label,
+                c.documentation?.value,
+                Enum.TryParse(c._kind, true, out PythonMemberType mt) ? mt : PythonMemberType.Unknown,
+                null
+            ));
 
-                if (analysis != null) {
-                    members = GetAvailableCompletions(bufferInfo, statementRange.Start);
-                }
-
-                if (pyReplEval != null) {
-                    replMembers = pyReplEval.GetMemberNames(string.Empty);
-                }
-
-                if (expansionCompletionsTask != null) {
-                    var expansions = analyzer.WaitForRequest(expansionCompletionsTask, "GetCompletions.GetExpansionCompletions", null, 5);
-                    if (expansions != null) {
-                        // Expansions should come first, so that they replace our keyword
-                        // completions with the more detailed snippets.
-                        if (members != null) {
-                            members = expansions.Union(members, CompletionComparer.MemberEquality);
-                        } else {
-                            members = expansions;
-                        }
+            if (pyReplEval?.Analyzer != null && (string.IsNullOrEmpty(completions._expr) || pyReplEval.Analyzer.ShouldEvaluateForCompletion(completions._expr))) {
+                var replMembers = pyReplEval.GetMemberNames(completions._expr ?? "");
+                if (replMembers != null) {
+                    if (members != null) {
+                        members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                    } else {
+                        members = replMembers;
                     }
-                }
-            } else {
-                Task<IEnumerable<CompletionResult>> analyzerTask = null;
-
-                if (pyReplEval == null || !pyReplEval.LiveCompletionsOnly) {
-                    lock (analyzer) {
-                        var location = VsProjectAnalyzer.TranslateIndex(
-                            statementRange.Start.Position,
-                            statementRange.Snapshot,
-                            analysis
-                        );
-
-                        // Start the task and wait for it below - this allows a bit more time
-                        // when there is a REPL attached, so we are more likely to get results.
-                        analyzerTask = analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions);
-                    }
-                }
-
-                if (pyReplEval?.Analyzer != null && pyReplEval.Analyzer.ShouldEvaluateForCompletion(text)) {
-                    replMembers = pyReplEval.GetMemberNames(text);
-                }
-
-                if (analyzerTask != null) {
-                    members = analyzer.WaitForRequest(analyzerTask, "GetCompletions.GetMembers");
                 }
             }
 
-            if (replMembers != null) {
-                if (members != null) {
-                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
-                } else {
-                    members = replMembers;
+            if (pyReplEval == null && (completions._allowSnippet ?? false)) {
+                var expansions = analyzer.WaitForRequest(EditorServices.Python?.GetExpansionCompletionsAsync(), "GetCompletions.GetExpansions", null, 5);
+                if (expansions != null) {
+                    // Expansions should come first, so that they replace our keyword
+                    // completions with the more detailed snippets.
+                    if (members != null) {
+                        members = expansions.Union(members, CompletionComparer.MemberEquality);
+                    } else {
+                        members = expansions;
+                    }
                 }
             }
+
 
             var end = _stopwatch.ElapsedMilliseconds;
 
@@ -216,6 +140,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true
             );
+            result.CommitByDefault = completions._commitByDefault ?? true;
 
             end = _stopwatch.ElapsedMilliseconds;
 
@@ -224,25 +149,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return result;
-        }
-
-        private IEnumerable<CompletionResult> GetAvailableCompletions(PythonTextBufferInfo bufferInfo, SnapshotPoint point) {
-            var analysis = bufferInfo.AnalysisEntry;
-            if (analysis == null) {
-                return Enumerable.Empty<CompletionResult>();
-            }
-
-            var analyzer = analysis.Analyzer;
-
-            lock (analyzer) {
-                var location = VsProjectAnalyzer.TranslateIndex(
-                    point.Position,
-                    point.Snapshot,
-                    analysis
-                );
-                return analyzer.WaitForRequest(analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
-                    .MaybeEnumerate();
-            }
         }
     }
 }

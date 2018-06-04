@@ -252,6 +252,9 @@ Continue?</value>
   <data name="SearchPathContainerProperties" xml:space="preserve">
     <value>Search Paths Properties</value>
   </data>
+  <data name="CustomCommandCanceled" xml:space="preserve">
+    <value>Command {0} has been canceled</value>
+  </data>
   <data name="ErrorRunningCustomCommand" xml:space="preserve">
     <value>An error occurred while running {0}.
 
@@ -1317,6 +1320,10 @@ modified from these scripts.</value>
     <value>Operation cannot be started because the environment is not configured.</value>
     <comment>Used as exception text</comment>
   </data>
+  <data name="MisconfiguredPip" xml:space="preserve">
+    <value>Operation cannot be started because pip is not installed in the environment at '{0}'.</value>
+    <comment>Used as exception text</comment>
+  </data>
   <data name="ExecutingCommandFailed" xml:space="preserve">
     <value>----- Failed to run '{0}' -----
 
@@ -2244,7 +2251,7 @@ Expand selection to the full expression?</value>
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
   </data>
   <data name="ImportPtvsdFailedMessage" xml:space="preserve">
-    <value>Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger</value>
+    <value>Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger</value>
   </data>
   <data name="ImportPtvsdFailedTitle" xml:space="preserve">
     <value>ImportError: ptvsd not found</value>

@@ -49,14 +49,13 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private readonly Dictionary<EnvironmentView, string> _cachedScriptPaths;
 
-        public InterpreterListToolWindow() {
+        public InterpreterListToolWindow(IServiceProvider services) : base(services) {
+            _site = services;
             _cachedScriptPaths = new Dictionary<EnvironmentView, string>();
         }
 
         protected override void OnCreate() {
             base.OnCreate();
-
-            _site = (IServiceProvider)this;
 
             _pyService = _site.GetPythonToolsService();
             _uiThread = _site.GetUIThread();
@@ -162,6 +161,8 @@ namespace Microsoft.PythonTools.InterpreterList {
                     view.Factory.Configuration,
                     false
                 ));
+            } catch (DirectoryNotFoundException) {
+                path = null;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 view.Dispatcher.BeginInvoke((Action)(() => ex.ReportUnhandledException(_site, GetType())), DispatcherPriority.ApplicationIdle);
                 path = null;
@@ -563,11 +564,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             PythonToolsPackage.OpenWebBrowser(_site, (string)e.Parameter);
         }
 
-        internal static void OpenAt(IServiceProvider site, string viewId, Type extension) {
-            var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
-                ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
-            var envs = wnd?.Content as ToolWindow;
-            if (envs == null) {
+        internal static async System.Threading.Tasks.Task OpenAtAsync(IServiceProvider site, string viewId, Type extension) {
+            var service = (IPythonToolsToolWindowService) site?.GetService(typeof(IPythonToolsToolWindowService));
+            if (service == null) {
+                Debug.Fail("Failed to get environment list window");
+                return;
+            }
+
+            var wnd = await service.GetWindowPaneAsync(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
+            if (!(wnd?.Content is ToolWindow envs)) {
                 Debug.Fail("Failed to get environment list window");
                 return;
             }
@@ -577,11 +582,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             SelectEnvAndExt(envs, viewId, extension, 3);
         }
 
-        internal static void OpenAt(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
-            var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
-                ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
-            var envs = wnd?.Content as ToolWindow;
-            if (envs == null) {
+        internal static async System.Threading.Tasks.Task OpenAtAsync(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
+            var service = (IPythonToolsToolWindowService) site?.GetService(typeof(IPythonToolsToolWindowService));
+            if (service == null) {
+                Debug.Fail("Failed to get environment list window");
+                return;
+            }
+
+            var wnd = await service.GetWindowPaneAsync(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
+            if (!(wnd?.Content is ToolWindow envs)) {
                 Debug.Fail("Failed to get environment list window");
                 return;
             }

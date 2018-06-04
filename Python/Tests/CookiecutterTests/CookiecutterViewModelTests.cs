@@ -95,14 +95,14 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CheckForUpdates() {
-            _vm.CreatingStatus = OperationStatus.Succeeded;
-
             PopulateInstalledSource();
 
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner2/template3", true);
 
             await _vm.SearchAsync();
+
+            _vm.CreatingStatus = OperationStatus.Succeeded;
 
             await _vm.CheckForUpdatesAsync();
             Assert.AreEqual(OperationStatus.Succeeded, _vm.CheckingUpdateStatus);
@@ -118,6 +118,25 @@ namespace CookiecutterTests {
 
             var t3 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template3");
             Assert.IsTrue(t3.IsUpdateAvailable);
+        }
+
+        [TestMethod]
+        public async Task SearchClearsStatus() {
+            _vm.CloningStatus = OperationStatus.Failed;
+            _vm.LoadingStatus = OperationStatus.Failed;
+            _vm.CreatingStatus = OperationStatus.Failed;
+            _vm.CheckingUpdateStatus = OperationStatus.Succeeded;
+            _vm.UpdatingStatus = OperationStatus.Succeeded;
+
+            await _vm.SearchAsync();
+
+            // Search should clear operation status, except for update
+            // which happen in the background / on a timer.
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.LoadingStatus);
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CreatingStatus);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CheckingUpdateStatus);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.UpdatingStatus);
         }
 
         [TestMethod]

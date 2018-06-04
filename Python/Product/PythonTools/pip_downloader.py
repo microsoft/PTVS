@@ -149,9 +149,11 @@ def install_from_ensurepip(ensurepip):
     # We can bootstrap with ensurepip, but then have to upgrade to the latest
     ensurepip.bootstrap(upgrade=True, default_pip=True)
 
-    subprocess.check_call(
-        EXECUTABLE + ["-m", "pip", "install", "-U", "pip", "setuptools", "wheel"]
-    )
+    # Latest version doesn't work on IronPython, so don't upgrade
+    if sys.platform != 'cli':
+        subprocess.check_call(
+            EXECUTABLE + ["-m", "pip", "install", "-U", "pip", "setuptools", "wheel"]
+        )
 
     print('\nInstallation Complete')
     sys.stdout.flush()
@@ -189,6 +191,10 @@ def main():
             'https://go.microsoft.com/fwlink/?LinkId=317602',
             'https://go.microsoft.com/fwlink/?LinkId=313647',
         )
+        return
+
+    if MAJOR_VERSION == (2, 6):
+        install_from_pip('https://go.microsoft.com/fwlink/?linkid=874551')
         return
 
     if MAJOR_VERSION == (3, 1):

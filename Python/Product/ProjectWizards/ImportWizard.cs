@@ -37,10 +37,6 @@ namespace Microsoft.PythonTools.ProjectWizards {
         public void ProjectItemFinishedGenerating(EnvDTE.ProjectItem projectItem) { }
         public void RunFinished() { }
 
-        private static async void DoNotWait(Task task) {
-            await task;
-        }
-
         public void RunStarted(object automationObject, Dictionary<string, string> replacementsDictionary, WizardRunKind runKind, object[] customParams) {
             try {
                 Directory.Delete(replacementsDictionary["$destinationdirectory$"]);
