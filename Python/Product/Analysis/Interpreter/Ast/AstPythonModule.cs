@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     string quote = null;
                     string line;
                     while (true) {
-                        line = sr.ReadLine().Trim();
+                        line = sr.ReadLine()?.Trim();
                         if (line == null) {
                             break;
                         }
