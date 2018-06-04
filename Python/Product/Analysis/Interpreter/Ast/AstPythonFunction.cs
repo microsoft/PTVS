@@ -58,11 +58,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DeclaringModule = original.DeclaringModule;
             DeclaringType = original.DeclaringType;
             Name = original.Name;
-            _doc = (original as AstPythonFunction)?._doc ?? original.Documentation;
+            // Copy the null if _doc isn't set in the original; otherwise calculate the docs
+            _doc = (original is AstPythonFunction apf) ? apf._doc : original.Documentation;
             IsClassMethod = original.IsClassMethod;
             IsStatic = original.IsStatic;
             _overloads = original.Overloads.ToList();
-            Locations = (original as AstPythonFunction)?.Locations ?? (original as ILocatedMember)?.Locations ?? Array.Empty<LocationInfo>();
+            Locations = (original as ILocatedMember)?.Locations ?? Array.Empty<LocationInfo>();
         }
 
         internal void AddOverload(IPythonFunctionOverload overload) {
