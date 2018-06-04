@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
+
     sealed class ProfiledProcess : IDisposable {
         private readonly string _exe, _args, _dir;
         private readonly ProcessorArchitecture _arch;
@@ -205,7 +206,6 @@ namespace Microsoft.PythonTools.Profiling {
             perfToolsPath = Path.Combine(shFolder, perfToolsPath);
             return perfToolsPath;
         }
-
 
         internal void StopProfiling() {
             _process.Kill();

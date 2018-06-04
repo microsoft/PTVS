@@ -32,6 +32,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
+
+    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
+    using global::DiagnosticsHub.Packaging.Interop;
+
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -66,6 +70,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
+        private static readonly string externalProfilerDriverExe = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
 
         /// <summary>
         /// Default constructor of the package.
@@ -187,7 +192,61 @@ namespace Microsoft.PythonTools.Profiling {
             if (res && targetView.IsValid) {
                 var target = targetView.GetTarget();
                 if (target != null) {
-                    ProfileTarget(target);
+                    if (!target.UseVTune) {
+                        ProfileTarget(target);
+                    } else {
+
+                        if (!targetView.IsStandaloneSelected) {
+                            MessageBox.Show("For the moment only standalone targets are supported!");
+                            return;
+                        }
+                        var stndTarget = target.StandaloneTarget;
+#if false
+                        var pyexe = ProcessOutput.QuoteSingleArgument(stndTarget.InterpreterPath);
+
+                        if (pyexe == string.Empty) {
+                            if (stndTarget.PythonInterpreter != null) {
+                                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                                var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
+                                if (interpreter == null) { 
+                                    /* ??? */;
+                                    MessageBox.Show("Could not find interpreter in the registry");
+                                } else {
+                                    MessageBox.Show($"The Python interpreter in question is: [{interpreter}]");
+                                }
+                            }
+                        }
+#endif
+
+                        if (stndTarget.InterpreterPath == string.Empty) {
+                            MessageBox.Show($"Can't find specified python interpreter.");
+                            return;
+                        }
+
+                        var py = ProcessOutput.QuoteSingleArgument(stndTarget.Script);
+                        string outPathDir = Path.GetTempPath();
+                        string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
+
+                        ProcessStartInfo procInfo = new ProcessStartInfo(externalProfilerDriverExe);
+                        Process proc = new Process();
+                        proc.StartInfo = procInfo;
+                        proc.StartInfo.CreateNoWindow = false;
+                        proc.StartInfo.Arguments = $" -d {outPathDir} -- {stndTarget.InterpreterPath} {py}";
+                        proc.StartInfo.WorkingDirectory = outPathDir;
+                        proc.EnableRaisingEvents = true;
+                        proc.Exited += (object sender1, EventArgs args) =>
+                        {
+                            if (!File.Exists(Path.Combine(outPathDir, "Sample.dwjson"))) {
+                                MessageBox.Show($"Something happened, cannot find output file");
+                            } else {
+                              PackageTrace(outPathDir);
+                              var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                              dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
+                            }
+                        };
+                        proc.Start();
+                        //proc.WaitForExit();
+                    }
                 }
             }
         }
@@ -426,6 +485,53 @@ namespace Microsoft.PythonTools.Profiling {
         public bool IsProfiling {
             get {
                 return _profilingProcess != null;
+            }
+        }
+
+        public static bool CheckForExternalProfiler() {
+            // const string exec = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
+
+            ProcessStartInfo psi = new ProcessStartInfo(externalProfilerDriverExe, "-p")
+            {
+                UseShellExecute = false,
+                // Arguments = args,
+                CreateNoWindow = true,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+            };
+
+            var process = Process.Start(psi);
+
+            process.WaitForExit();
+            bool ret = (process.ExitCode == 0);
+            process.Close();
+
+            return ret;
+        }
+
+        public static void PackageTrace(string dirname)
+        {
+            var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
+            using (var package = DhPackage.CreateLegacyPackage()) {
+                package.AddTool(ref cpuToolId);
+
+                // Contains the data to analyze
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.DWJsonFile",
+                    Path.Combine(dirname, "Sample.dwjson"),
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // Counter data to show in swimlane
+                package.CreateResourceFromPath(
+                    "DiagnosticsHub.Resource.CountersFile",
+                    Path.Combine(dirname, "Session.counters"),
+                    null,
+                    CompressionOption.CompressionOption_Normal);
+
+                // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
+                // the resources added from disk after they have been committed to the DiagSession
+                package.CommitToPath(Path.Combine(dirname, "trace"), CommitOption.CommitOption_Archive);
             }
         }
     }
