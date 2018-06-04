@@ -59,6 +59,8 @@
 
     <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />
+
+    <ProjectFile Include="AnacondaInstallLauncher\AnacondaInstallLauncher.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

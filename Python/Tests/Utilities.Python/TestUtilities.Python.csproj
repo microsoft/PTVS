@@ -129,12 +129,14 @@
     <Compile Include="PythonProjectGenerator.cs" />
     <Compile Include="PythonProjectProcessor.cs" />
     <Compile Include="PythonTestDefinitions.cs" />
+    <Compile Include="PythonToolsOptionsImporter.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
     <Compile Include="ReplWindowProxy.cs" />
     <Compile Include="ReplWindowProxySettings.cs" />
     <Compile Include="PythonTestExplorer.cs" />
+    <Compile Include="WpfTextViewExtensions.cs" />
     <Compile Include="VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -2201,11 +2201,11 @@ namespace Microsoft.PythonTools.Project {
                     .DoNotWait();
             } else {
                 // Open the install UI
-                InterpreterList.InterpreterListToolWindow.OpenAt(
+                InterpreterList.InterpreterListToolWindow.OpenAtAsync(
                     Site,
                     selectedInterpreterFactory,
                     typeof(EnvironmentsList.PipExtensionProvider)
-                );
+                ).DoNotWait();
             }
             return VSConstants.S_OK;
         }
@@ -2230,6 +2230,15 @@ namespace Microsoft.PythonTools.Project {
                 return VSConstants.S_OK;
             }
 
+            InstallRequirementsAsync(pm, args, requirementsPath, selectedInterpreterFactory)
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
+
+            return VSConstants.S_OK;
+        }
+
+        private async Task InstallRequirementsAsync(IPackageManager pm, Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
             var name = "-r " + ProcessOutput.QuoteSingleArgument(requirementsPath);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
@@ -2237,19 +2246,23 @@ namespace Microsoft.PythonTools.Project {
                     requirementsPath,
                     Site.GetPythonToolsService().GeneralOptions.ElevatePip
                 )) {
-                    return VSConstants.S_OK;
+                    return;
                 }
             }
 
-            pm.InstallAsync(
-                PackageSpec.FromArguments(name),
-                new VsPackageManagerUI(Site),
-                CancellationToken.None
-            ).SilenceException<OperationCanceledException>()
-             .HandleAllExceptions(Site, GetType())
-             .DoNotWait();
-
-            return VSConstants.S_OK;
+            var ui = new VsPackageManagerUI(Site);
+            try {
+                if (!pm.IsReady) {
+                    await pm.PrepareAsync(ui, CancellationToken.None);
+                }
+                await pm.InstallAsync(
+                    PackageSpec.FromArguments(name),
+                    ui,
+                    CancellationToken.None
+                );
+            } catch (InvalidOperationException ex) {
+                ui.OnErrorTextReceived(pm, ex.Message);
+            }
         }
 
         private bool ShouldInstallRequirementsTxt(
@@ -2645,11 +2658,11 @@ namespace Microsoft.PythonTools.Project {
 #endregion
 
         private int ExecCreateCondaEnv() {
-            InterpreterList.InterpreterListToolWindow.OpenAt(
+            InterpreterList.InterpreterListToolWindow.OpenAtAsync(
                 Site,
                 EnvironmentsList.EnvironmentView.CondaEnvironmentViewId,
                 typeof(EnvironmentsList.CondaExtensionProvider)
-            );
+            ).DoNotWait();
             return VSConstants.S_OK;
         }
 

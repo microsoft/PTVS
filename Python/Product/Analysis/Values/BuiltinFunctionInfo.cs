@@ -23,7 +23,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription {
-        private IPythonFunction _function;
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
         private readonly Lazy<IAnalysisSet> _returnTypes;
@@ -32,56 +31,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public BuiltinFunctionInfo(IPythonFunction function, PythonAnalyzer projectState)
             : base(projectState.Types[BuiltinTypeId.BuiltinFunction], projectState) {
 
-            _function = function;
+            Function = function;
             _returnTypes = new Lazy<IAnalysisSet>(() => Utils.GetReturnTypes(function, projectState).GetInstanceType());
         }
 
-        public override IPythonType PythonType {
-            get { return _type; }
-        }
+        public override IPythonType PythonType => _type;
 
         internal override bool IsOfType(IAnalysisSet klass) {
             return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Function]) ||
                 klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.BuiltinFunction]);
         }
 
-        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return _returnTypes.Value;
-        }
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) 
+            => _returnTypes.Value;
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
-            if (_function.IsClassMethod) {
+            if (Function.IsClassMethod) {
                 instance = context;
             }
 
-            if (_function.IsStatic || instance.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.NoneType])) {
+            if (Function.IsStatic || instance.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.NoneType])) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {
-                _method = new BuiltinMethodInfo(_function, PythonMemberType.Method, ProjectState);
+                _method = new BuiltinMethodInfo(Function, PythonMemberType.Method, ProjectState);
             }
 
             return _method.GetDescriptor(node, instance, context, unit);
         }
 
-        public IPythonFunction Function {
-            get {
-                return _function;
-            }
-        }
+        public IPythonFunction Function { get; }
+        public override string Name => Function.Name;
 
-        public override string Name {
-            get {
-                return _function.Name;
-            }
-        }
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription()
+            => GetRichDescription(string.Empty, Function);
 
-        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
-            var def = _function.IsBuiltin ? "built-in function " : "function ";
-            return GetRichDescription(def, _function, Documentation);
-        }
-
-        internal static IEnumerable<KeyValuePair<string, string>> GetRichDescription(string def, IPythonFunction function, string doc) {
-            bool needNewline = false;
+        internal static IEnumerable<KeyValuePair<string, string>> GetRichDescription(string def, IPythonFunction function) {
+            var needNewline = false;
             foreach (var overload in function.Overloads.OrderByDescending(o => o.GetParameters().Length)) {
                 if (needNewline) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "\r\n");
@@ -97,10 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
             }
-            if (!string.IsNullOrEmpty(doc)) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, needNewline ? "\r\n" : "");
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
-            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);
         }
 
         private static string GetFullName(IPythonType type, string name) {
@@ -141,10 +123,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_overloads == null) {
-                    var overloads = _function.Overloads;
+                    var overloads = Function.Overloads;
                     var result = new OverloadResult[overloads.Count];
                     for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0, () => Description);
+                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, Function.Name, overloads[i], 0, () => Description);
                     }
                     _overloads = new ReadOnlyCollection<OverloadResult>(result);
                 }
@@ -154,22 +136,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Documentation {
             get {
-                if (_doc == null) {
-                    _doc = Utils.StripDocumentation(_function.Documentation);
-                }
+                _doc = _doc ?? Utils.StripDocumentation(Function.Documentation);
                 return _doc;
             }
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                return _function.MemberType;
-            }
-        }
-
-        public override ILocatedMember GetLocatedMember() {
-            return _function as ILocatedMember;
-        }
+        public override PythonMemberType MemberType => Function.MemberType;
+        public override ILocatedMember GetLocatedMember() => Function as ILocatedMember;
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {

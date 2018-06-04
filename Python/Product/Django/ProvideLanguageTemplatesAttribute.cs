@@ -57,7 +57,6 @@ namespace Microsoft.PythonTools.Django {
                 projectKey.SetValue(null, _description);
                 projectKey.SetValue(_package, _languageGuid);
                 projectKey.SetValue("Language(VsTemplate)", _languageName);
-                //projectKey.SetValue("Package", _package);
                 projectKey.SetValue("ShowOnlySpecifiedTemplates(VsTemplate)", 0);
                 projectKey.SetValue("TemplateGroupIDs(VsTemplate)", _templateGroup);
 

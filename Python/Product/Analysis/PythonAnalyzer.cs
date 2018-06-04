@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
 #endif
         internal ConstantInfo _noneInst;
-        private readonly Deque<AnalysisUnit> _queue;
         private Action<int> _reportQueueSize;
         private int _reportQueueInterval;
         internal readonly IModuleContext _defaultContext;
@@ -125,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             Limits = AnalysisLimits.GetDefaultLimits();
 
-            _queue = new Deque<AnalysisUnit>();
+            Queue = new Deque<AnalysisUnit>();
 
             _defaultContext = _interpreter.CreateModuleContext();
 
@@ -156,11 +155,6 @@ namespace Microsoft.PythonTools.Analysis {
                 _nullKey,
                 () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], null, PythonMemberType.Constant)
             );
-
-            DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
-                ClassInfos[BuiltinTypeId.Object],
-                ClassInfos[BuiltinTypeId.Type]
-            });
 
             AddBuiltInSpecializations();
         }
@@ -247,21 +241,22 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public void RemoveModule(IProjectEntry entry) {
             if (entry == null) {
-                throw new ArgumentNullException("entry");
+                throw new ArgumentNullException(nameof(entry));
             }
             Contract.EndContractBlock();
 
-            ModuleInfo removed;
-            if (!string.IsNullOrEmpty(entry.FilePath)) {
-                _modulesByFilename.TryRemove(entry.FilePath, out removed);
+            if (!string.IsNullOrEmpty(entry.FilePath) && _modulesByFilename.TryRemove(entry.FilePath, out var moduleInfo)) {
+                lock (_modulesWithUnresolvedImportsLock) {
+                    _modulesWithUnresolvedImports.Remove(moduleInfo);
+                }
             }
 
-            var pyEntry = entry as IPythonProjectEntry;
-            if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                ModuleReference modRef;
-                Modules.TryRemove(pyEntry.ModuleName, out modRef);
+            if (entry is IPythonProjectEntry pyEntry && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
+                Modules.TryRemove(pyEntry.ModuleName, out var _);
             }
+
             entry.RemovedFromProject();
+            ClearDiagnostics(entry);
         }
 #if DESKTOP
         /// <summary>
@@ -808,16 +803,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal IAnalysisSet DoNotUnionInMro {
-            get;
-            private set;
-        }
-
-        internal Deque<AnalysisUnit> Queue {
-            get {
-                return _queue;
-            }
-        }
+        internal Deque<AnalysisUnit> Queue { get; }
 
         /// <summary>
         /// Returns the cached value for the provided key, creating it with

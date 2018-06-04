@@ -39,9 +39,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             StringBuilder result = new StringBuilder(doc.Length);
             foreach (string line in doc.Split('\n')) {
                 if (result.Length > 0) {
-                    result.Append("\r\n");
+                    result.AppendLine();
                 }
-                result.Append(line.Trim());
+                result.Append(line.TrimEnd());
             }
             return result.ToString();
         }

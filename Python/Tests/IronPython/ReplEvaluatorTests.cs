@@ -15,19 +15,13 @@
 // permissions and limitations under the License.
 
 using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.IronPythonTools.Interpreter;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Classification;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace IronPythonTests {

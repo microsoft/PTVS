@@ -228,17 +228,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
-            if (outOfProc) {
-                _conn = StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            } else {
-                _conn = StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
-            }
+            _conn = outOfProc 
+                ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess) 
+                : StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
 
             if (!string.IsNullOrEmpty(_conn.LogFilename)) {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            Task.Run(() => _conn.ProcessMessages()).DoNotWait();
+            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait();
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
@@ -1004,6 +1002,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
+            if (oldEntry.Properties.ContainsKey(IntellisenseController.FollowDefaultEnvironment)) {
+                entry.Properties[IntellisenseController.FollowDefaultEnvironment] = true;
+            }
+
             var bufferParser = entry.GetOrCreateBufferParser(_services);
 
             if (oldSnapshots != null && oldSnapshots.Length > 0) {
@@ -1348,10 +1350,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return TrySpecialCompletions(services, session, view, snapshot, span, point, options) ??
-                   GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
-        }
+        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) 
+            => GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) ??
+               GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
@@ -1400,7 +1401,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (sigs != null) {
-                foreach (var sig in sigs.sigs) {
+                foreach (var sig in sigs.sigs.MaybeEnumerate()) {
                     result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
                 }
             }
@@ -1768,84 +1769,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static readonly HashSet<string> NoCompletionsAfterKeyword = new HashSet<string> {
-            "class", "for", "as"
-        };
-
-        private static CompletionAnalysis TrySpecialCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            var snapSpan = span.GetSpan(snapshot);
+        private static CompletionAnalysis GetStringLiteralCompletionCompletion(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
             var buffer = snapshot.TextBuffer;
             var classifier = buffer.GetPythonClassifier();
             if (classifier == null) {
                 return null;
             }
 
-            var parser = new ReverseExpressionParser(snapshot, buffer, span);
-            var statementRange = parser.GetStatementRange();
-            if (!statementRange.HasValue) {
-                statementRange = snapSpan.Start.GetContainingLine().Extent;
-            }
-            if (snapSpan.Start < statementRange.Value.Start) {
+            var snapSpan = span.GetSpan(snapshot);
+            var tokens = classifier.GetClassificationSpans(snapSpan);
+            var lastToken = tokens.LastOrDefault();
+            if (lastToken == null || !lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
                 return null;
             }
 
-            if (snapshot.IsReplBufferWithCommand()) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
-
-            var tokens = classifier.GetClassificationSpans(snapSpan);
-            if (tokens.LastOrDefault()?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false) {
-                // String completion
-                if (span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber) {
-                    return new StringLiteralCompletionList(services, session, view, span, buffer, options);
-                }
-            }
-
-            tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
-            if (tokens.Count > 0) {
-                // Check for context-sensitive intellisense
-                var lastClass = tokens[tokens.Count - 1];
-                var lastText = new Lazy<string>(() => lastClass.Span.GetText());
-
-                if (lastClass.ClassificationType == classifier.Provider.Comment) {
-                    // No completions in comments
-                    return CompletionAnalysis.EmptyCompletionContext;
-                } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
-                    lastText.Value == "@") {
-
-                    if (tokens.Count == 1) {
-                        return new DecoratorCompletionAnalysis(services, session, view, span, buffer, options);
-                    }
-                    // TODO: Handle completions automatically popping up
-                    // after '@' when it is used as a binary operator.
-                } else if (CompletionAnalysis.IsKeyword(lastClass, "def", lastText)) {
-                    return new OverrideCompletionAnalysis(services, session, view, span, buffer, options);
-                } else if (lastClass.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) && NoCompletionsAfterKeyword.Contains(lastText.Value)) {
-                    return CompletionAnalysis.EmptyCompletionContext;
-                }
-
-                // Import completions
-                var first = tokens[0];
-                var firstText = new Lazy<string>(() => first.Span.GetText());
-                if (CompletionAnalysis.IsKeyword(first, "import", firstText)) {
-                    return ImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "from", firstText)) {
-                    return FromImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "raise", firstText) || CompletionAnalysis.IsKeyword(first, "except", firstText)) {
-                    if (tokens.Count == 1 ||
-                        lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
-                        (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
-                        return new ExceptionCompletionAnalysis(services, session, view, span, buffer, options);
-                    }
-                }
-            }
-
-            return null;
+            // String completion
+            return span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber
+                ? new StringLiteralCompletionList(services, session, view, span, buffer, options)
+                : null;
         }
 
         private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            var span = applicableSpan.GetSpan(snapshot);
-
             if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
                 // Cannot complete a word immediately after a space
                 session.ClearCompleteWordMode();
@@ -1918,6 +1862,32 @@ namespace Microsoft.PythonTools.Intellisense {
         internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
 
         #endregion
+
+        internal async Task<U> SendLanguageServerRequestAsync<T, U>(
+            string name,
+            T requestParams,
+            U defaultValue = default(U),
+            TimeSpan? timeout = null
+        ) {
+            var r = await SendRequestAsync(new AP.LanguageServerRequest {
+                name = name,
+                body = requestParams
+            }).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(r.error)) {
+                Debug.WriteLine($"Request failed: {r.error}");
+                _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, r.error);
+                return defaultValue;
+            }
+            if (r.body is Newtonsoft.Json.Linq.JObject o) {
+                try {
+                    return o.ToObject<U>();
+                } catch (Newtonsoft.Json.JsonException e) {
+                    Debug.WriteLine($"Response failed: {e}");
+                    _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
+                }
+            }
+            return defaultValue;
+        }
 
         internal async Task<T> SendRequestAsync<T>(
             Request<T> request,
@@ -1993,6 +1963,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, ex.ToString());
                 Debug.Fail("Unexpected error sending event");
             }
+        }
+
+        internal async Task<LS.CompletionList> GetCompletionsAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options, LS.CompletionTriggerKind triggerKind, string triggerChar) {
+            return await SendLanguageServerRequestAsync<LS.CompletionParams, LS.CompletionList>(
+                "textDocument/completion",
+                new LS.CompletionParams {
+                    textDocument = new Uri(entry.DocumentUri.AbsoluteUri),
+                    position = location,
+                    context = new LS.CompletionContext {
+                        _intersection = options.Intersect(),
+                        triggerKind = triggerKind,
+                        triggerCharacter = triggerChar
+                    }
+                }
+            ).ConfigureAwait(false);
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
@@ -2511,19 +2496,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletionsAsync(AnalysisEntry entry, ITextBuffer textBuffer, SourceLocation location, string indentation) {
-            var res = await SendRequestAsync(
-                new AP.OverridesCompletionRequest() {
-                    documentUri = entry.DocumentUri,
-                    column = location.Column,
-                    line = location.Line,
-                    indentation = indentation
-                }
-            ).ConfigureAwait(false);
-
-            return res;
-        }
-
         internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer textBuffer, LocationTracker translator, int atVersion) {
             if (translator == null) {
                 throw new ArgumentNullException(nameof(translator));
@@ -2550,13 +2522,13 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
-
+            
             if (analysis?.Entry != null) {
-                var location = analysis.Location;
+                var line = point.GetContainingLine();
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
-                    column = location.Column,
-                    line = location.Line,
+                    column = point.Position - line.Start + 1,
+                    line = line.LineNumber + 1,
                     documentUri = analysis.Entry.DocumentUri
                 };
 

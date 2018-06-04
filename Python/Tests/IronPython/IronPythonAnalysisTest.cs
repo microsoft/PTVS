@@ -23,7 +23,6 @@ using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
 using AnalysisTests;
-using IronPython.Runtime;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
@@ -209,7 +208,10 @@ def g():
 def f(sender, args): pass
 ";
             var entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="),
+                new VariableLocation(4, 22, VariableType.Reference),
+                new VariableLocation(6, 1, VariableType.Value),
+                new VariableLocation(6, 5, VariableType.Definition));
 
             text = @"
 from System import EventHandler
@@ -217,7 +219,10 @@ def f(sender, args): pass
 
 x = EventHandler(f)";
             entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="),
+                new VariableLocation(3, 1, VariableType.Value),
+                new VariableLocation(3, 5, VariableType.Definition),
+                new VariableLocation(5, 18, VariableType.Reference));
 
             // left hand side is unknown, right hand side should still have refs added
             text = @"
@@ -227,7 +232,10 @@ def f(sender, args): pass
 a.fob += EventHandler(f)
 ";
             entry = ProcessText(text);
-            entry.AssertReferences("f", text.IndexOf("a.fob +="), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("a.fob +="),
+                new VariableLocation(3, 1, VariableType.Value),
+                new VariableLocation(3, 5, VariableType.Definition),
+                new VariableLocation(5, 23, VariableType.Reference));
         }
 
         [TestMethod, Priority(0)]
@@ -400,7 +408,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.ContainsExactly(entry.GetDescriptions("System", 1), "built-in module System");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("System", 1), "System");
             AssertUtil.ContainsExactly(entry.GetDescriptions("System.String.Length", 1), "property of type int");
             AssertUtil.ContainsExactly(entry.GetDescriptions("System.Environment.CurrentDirectory", 1), "str");
             AssertUtil.ContainsExactly(entry.GetDescriptions("e", 1), "ArrayList");
@@ -411,7 +419,7 @@ def g():
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("\"abc\".Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("c.Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 0), "field of type StringSplitOptions");
-            AssertUtil.ContainsExactly(entry.GetDescriptions("g", 1), "def test-module.g() -> built-in module System");    // return info could be better
+            AssertUtil.ContainsExactly(entry.GetDescriptions("g", 1), "test-module.g() -> System");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 
@@ -443,7 +451,7 @@ w = Window()
 w.Activate
 ");
 
-            var result = entry.GetValue<AnalysisValue>("w.Activate", 1);
+            var result = entry.GetValue<AnalysisValue>("w.Activate", 0);
             Console.WriteLine("Docstring was: <{0}>", result.Documentation);
             Assert.IsFalse(string.IsNullOrWhiteSpace(result.Documentation));
         }
@@ -501,17 +509,5 @@ from System.Windows.Media import Colors
                 pyEntry.Analyze(CancellationToken.None);
             }
         }
-
-        private static string[] GetMembers(object obj, bool showClr) {
-            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
-            int len = dir.__len__();
-            string[] result = new string[len];
-            for (int i = 0; i < len; i++) {
-                Assert.IsTrue(dir[i] is string);
-                result[i] = dir[i] as string;
-            }
-            return result;
-        }
-
     }
 }

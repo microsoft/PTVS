@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -217,32 +218,153 @@ namespace AnalysisTests {
 
             await AssertCompletion(
                 s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                context: new CompletionContext {
-                    _statementKeywords = false,
-                    _expressionKeywords = false
-                },
-                contains: new[] { "x", "y", "z", "pi", "int", "float" },
-                excludes: new[] { "sys", "class", "def", "while", "in" }
+                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
+                new[] { "x", "y", "z", "int", "float", "class", "def", "while", "in" },
+                new[] { "return", "sys", "yield" }
             );
 
+            // Completions in function body
             await AssertCompletion(
                 s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                context: new CompletionContext {
-                    _statementKeywords = true,
-                    _expressionKeywords = false
-                },
-                contains: new[] { "x", "y", "z", "pi", "int", "float", "class", "def", "while" },
-                excludes: new[] { "sys", "in" }
+                GetDocument(@"TestData\AstAnalysis\TopLevelCompletions.py"),
+                new[] { "x", "y", "z", "int", "float", "class", "def", "while", "in", "return", "yield" },
+                new[] { "sys" },
+                position: new Position { line = 5, character = 5 }
             );
+        }
 
-            await AssertCompletion(
-                s,
-                GetDocument(@"TestData\AstAnalysis\Values.py"),
-                new[] { "x", "y", "z", "pi", "int", "float", "class", "def", "while", "in" },
-                new[] { "sys" }
-            );
+        [TestMethod, Priority(0)]
+        public async Task CompletionInFunctionDefinition() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "def f(a, b:int, c=2, d:float=None): pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 7));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 10));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 17));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 19));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 29));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 34));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 35));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
+
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInClassDefinition() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "class C(object, parameter=MC): pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            if (this is LanguageServerTests_V2) {
+                await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 9));
+            } else {
+                await AssertCompletion(s, u, new[] { "metaclass=", "object" }, new string[0], new SourceLocation(1, 9));
+            }
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 15));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 29));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 30));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 31));
+
+            u = await AddModule(s, "class D(o");
+            await AssertNoCompletion(s, u, new SourceLocation(1, 8));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 9));
+
+            u = await AddModule(s, "class E(metaclass=MC,o): pass");
+            await AssertCompletion(s, u, new[] { "object" }, new[] { "metaclass=" }, new SourceLocation(1, 22));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInStatements() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "for f in l: pass\nwith x as y: pass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 10));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 12));
+            await AssertAnyCompletion(s, u, new SourceLocation(2, 6));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 11));
+            await AssertAnyCompletion(s, u, new SourceLocation(2, 13));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInImport() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "import unittest.case as C, unittest\nfrom unittest.case import TestCase as TC, TestCase");
+
+            await AssertCompletion(s, u, new[] { "from", "import", "abs", "dir" }, new[] { "abc" }, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 17));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 22));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 25));
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(1, 28));
+
+            await AssertCompletion(s, u, new[] { "from", "import", "abs", "dir" }, new[] { "abc" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(2, 6));
+            await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 15));
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 20));
+            await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 27));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 36));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 39));
+            await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 44));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionForOverride() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "class A(object):\n    def i(): pass\n    def \npass");
+
+            await AssertNoCompletion(s, u, new SourceLocation(2, 9));
+            await AssertCompletion(s, u, new[] { "def" }, new[] { "__init__" }, new SourceLocation(3, 8));
+            await AssertCompletion(s, u, new[] { "__init__" }, new[] { "def" }, new SourceLocation(3, 9), cmpKey: ci => ci.label);
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInDecorator() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "@dec\ndef f(): pass\n\nx = a @ b");
+
+            await AssertCompletion(s, u, new[] { "f", "x", "property", "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+            await AssertCompletion(s, u, new[] { "f", "x", "property", "abs" }, new[] { "def" }, new SourceLocation(4, 8));
+
+            u = await AddModule(s, "@");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 2));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInRaise() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "raise ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+
+            if (!(this is LanguageServerTests_V2)) {
+                u = await AddModule(s, "raise Exception from ");
+                await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+                await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+            }
+
+            u = await AddModule(s, "raise Exception, x, y");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 20));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionInExcept() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "try:\n    pass\nexcept ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+
+            u = await AddModule(s, "try:\n    pass\nexcept (");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 9));
+
+            u = await AddModule(s, "try:\n    pass\nexcept Exception  as ");
+            await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
+            await AssertNoCompletion(s, u, new SourceLocation(3, 22));
         }
 
         [TestMethod, Priority(0)]
@@ -259,7 +381,8 @@ class MyClass:
     def f(self): pass
 
 mc = MyClass()
-mc";
+mc
+";
             int testLine = 5;
             int testChar = 2;
 
@@ -267,8 +390,8 @@ mc";
 
             // Completion after "mc " should normally be blank
             await AssertCompletion(s, mod,
-                new string [0],
-                new string [0],
+                new string[0],
+                new string[0],
                 position: new Position { line = testLine, character = testChar + 1 }
             );
 
@@ -495,16 +618,36 @@ x = 3.14
 
             await AssertHover(s, mod, new SourceLocation(1, 1), "int", new[] { "int" }, new SourceSpan(1, 1, 1, 4));
             await AssertHover(s, mod, new SourceLocation(2, 1), "str", new[] { "str" }, new SourceSpan(2, 1, 2, 6));
-            await AssertHover(s, mod, new SourceLocation(3, 1), "f: test-module.f()", new[] { "test-module.f" }, new SourceSpan(3, 1, 3, 2));
-            await AssertHover(s, mod, new SourceLocation(4, 6), "f: test-module.f()", new[] { "test-module.f" }, new SourceSpan(4, 5, 4, 6));
+            await AssertHover(s, mod, new SourceLocation(3, 1), "built-in function test-module.f()", new[] { "test-module.f" }, new SourceSpan(3, 1, 3, 2));
+            await AssertHover(s, mod, new SourceLocation(4, 6), "built-in function test-module.f()", new[] { "test-module.f" }, new SourceSpan(4, 5, 4, 6));
 
-            await AssertHover(s, mod, new SourceLocation(12, 1), "C: class test-module.C", new[] { "test-module.C" }, new SourceSpan(12, 1, 12, 2));
+            await AssertHover(s, mod, new SourceLocation(12, 1), "class test-module.C", new[] { "test-module.C" }, new SourceSpan(12, 1, 12, 2));
             await AssertHover(s, mod, new SourceLocation(13, 1), "c: C", new[] { "test-module.C" }, new SourceSpan(13, 1, 13, 2));
             await AssertHover(s, mod, new SourceLocation(14, 7), "c: C", new[] { "test-module.C" }, new SourceSpan(14, 7, 14, 8));
             await AssertHover(s, mod, new SourceLocation(14, 9), "c.f: method f of test-module.C objects*", new[] { "test-module.C.f" }, new SourceSpan(14, 7, 14, 10));
-            await AssertHover(s, mod, new SourceLocation(14, 1), $"c_g: test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
+            await AssertHover(s, mod, new SourceLocation(14, 1), $"built-in function test-module.C.f.g(self)  {Environment.NewLine}declared in C.f", new[] { "test-module.C.f.g" }, new SourceSpan(14, 1, 14, 4));
 
             await AssertHover(s, mod, new SourceLocation(16, 1), "x: int, float", new[] { "int", "float" }, new SourceSpan(16, 1, 16, 2));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task HoverSpanCheck() {
+            var s = await CreateServer();
+            var mod = await AddModule(s, @"import datetime
+datetime.datetime.now().day
+");
+
+            await AssertHover(s, mod, new SourceLocation(2, 1), "built-in module datetime*", new[] { "datetime" }, new SourceSpan(2, 1, 2, 9));
+            if (this is LanguageServerTests_V2) {
+                await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+            } else {
+                await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+            }
+            await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
+
+            if (!(this is LanguageServerTests_V2)) {
+                await AssertHover(s, mod, new SourceLocation(2, 28), "datetime.datetime.now().day: int*", new[] { "int" }, new SourceSpan(2, 1, 2, 28));
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -624,17 +767,42 @@ x = 3.14
         }
 
         public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {
+            var res = await s.Completion(new CompletionParams {
+                textDocument = document,
+                position = position ?? new Position(),
+                context = context,
+                _expr = expr
+            });
+            DumpDetails(res);
+
             cmpKey = cmpKey ?? (c => c.insertText);
             AssertUtil.CheckCollection(
-                (await s.Completion(new CompletionParams {
-                    textDocument = document,
-                    position = position ?? new Position(),
-                    context = context,
-                    _expr = expr
-                })).items?.Select(cmpKey),
+                res.items?.Select(cmpKey),
                 contains,
                 excludes
             );
+        }
+
+        private static void DumpDetails(CompletionList completions) {
+            var span = ((SourceSpan?)completions._applicableSpan) ?? SourceSpan.None;
+            Debug.WriteLine($"Completed {completions._expr ?? "(null)"} at {span}");
+        }
+
+        private static async Task AssertAnyCompletion(Server s, TextDocumentIdentifier document, Position position) {
+            var res = await s.Completion(new CompletionParams { textDocument = document, position = position });
+            DumpDetails(res);
+            if (res.items == null || !res.items.Any()) {
+                Assert.Fail("Completions were not returned");
+            }
+        }
+
+        private static async Task AssertNoCompletion(Server s, TextDocumentIdentifier document, Position position) {
+            var res = await s.Completion(new CompletionParams { textDocument = document, position = position });
+            DumpDetails(res);
+            if (res.items != null && res.items.Any()) {
+                var msg = string.Join(", ", res.items.Select(c => c.label).Ordered());
+                Assert.Fail("Completions were returned: " + msg);
+            }
         }
 
         public static async Task AssertSignature(Server s, TextDocumentIdentifier document, SourceLocation position, IEnumerable<string> contains, IEnumerable<string> excludes, string expr = null) {

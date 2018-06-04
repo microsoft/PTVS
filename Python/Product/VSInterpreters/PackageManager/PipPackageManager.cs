@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!IsReady) {
                 await UpdateIsReadyAsync(false, cancellationToken);
                 if (!IsReady) {
-                    throw new InvalidOperationException(Strings.MisconfiguredEnvironment);
+                    throw new InvalidOperationException(Strings.MisconfiguredPip.FormatUI(_factory?.Configuration?.PrefixPath ?? "<null>"));
                 }
             }
         }

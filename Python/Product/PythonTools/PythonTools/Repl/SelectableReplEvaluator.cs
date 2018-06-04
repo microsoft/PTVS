@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Repl {
                 _window.WriteErrorLine(Strings.NoInterpretersAvailable);
             } catch (MissingInterpreterException ex) {
                 _window.WriteErrorLine(ex.Message);
-            } catch (DirectoryNotFoundException ex) {
+            } catch (IOException ex) {
                 _window.WriteErrorLine(ex.Message);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 _window.WriteErrorLine(ex.ToUnhandledExceptionMessage(GetType()));

@@ -52,12 +52,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _callDepthLimit = declUnit.State.Limits.CallDepth;
             }
 
-            if (node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator) {
+            if (!CanBeClosure(ProjectState, ProjectEntry)) {
+                _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
+            } else if ((node.Parameters.Any() && node.ContainsNestedFreeVariables || node.IsGenerator)) {
                 _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, true);
                 _callsWithClosure = new CallChainSet();
             } else {
                 _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, ProjectEntry, false);
             }
+        }
+
+        private static bool CanBeClosure(PythonAnalyzer state, IPythonProjectEntry entry) {
+            int limit = state.Limits.CallDepth;
+            if (entry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out object o) && o is int i) {
+                limit = i;
+            }
+            return limit > 0;
         }
 
         public ProjectEntry ProjectEntry { get; }
@@ -301,18 +311,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             bool hasNl = false;
             var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
-            foreach (var kv in GetDocumentationString(Documentation)) {
-                if (!hasNl) {
-                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
-                    nlKind = WellKnownRichDescriptionKinds.Misc;
-                    hasNl = true;
-                }
-                yield return kv;
-            }
             hasNl = false;
             foreach (var kv in GetQualifiedLocationString()) {
                 if (!hasNl) {
-                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                    yield return new KeyValuePair<string, string>(nlKind, Environment.NewLine);
                     hasNl = true;
                 }
                 yield return kv;
@@ -451,8 +453,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_functionAttrs != null && _functionAttrs.TryGetValue("__wrapped__", out VariableDef wrapped)) {
-                    foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
-                        yield return o;
+                    if (this.Push()) {
+                        try {
+                            foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
+                                yield return o;
+                            }
+                        } finally {
+                            this.Pop();
+                        }
                     }
                 }
 

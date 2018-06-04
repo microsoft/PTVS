@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public override bool Equals(object obj) {
             ModuleId other = obj as ModuleId;
-            if (null == obj) {
+            if (other == null) {
                 return false;
             }
             if (!_ownerHierarchy.Equals(other._ownerHierarchy)) {

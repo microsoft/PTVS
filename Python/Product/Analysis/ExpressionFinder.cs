@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -31,6 +32,11 @@ namespace Microsoft.PythonTools.Analysis {
             Ast = parser.ParseTopExpression();
             Ast.Body.SetLoc(0, expression.Length);
             Options = options.Clone();
+        }
+
+        public static Node GetNode(PythonAst ast, SourceLocation location, GetExpressionOptions options) {
+            var finder = new ExpressionFinder(ast, options);
+            return finder.GetExpression(location);
         }
 
         public PythonAst Ast { get; }
@@ -52,13 +58,16 @@ namespace Microsoft.PythonTools.Analysis {
             return GetExpression(new SourceSpan(location, location))?.GetSpan(Ast);
         }
 
-        public Node GetExpression(int startIndex, int endIndex) {
+        public void Get(int startIndex, int endIndex, out Node node, out Node statement, out ScopeStatement scope) {
             ExpressionWalker walker;
             if (Options.Keywords) {
                 walker = new KeywordWalker(Ast, startIndex, endIndex);
                 Ast.Walk(walker);
                 if (walker.Expression != null) {
-                    return walker.Expression;
+                    node = walker.Expression;
+                    statement = walker.Statement;
+                    scope = walker.Scope;
+                    return;
                 }
             }
             if (Options.MemberTarget) {
@@ -67,7 +76,14 @@ namespace Microsoft.PythonTools.Analysis {
                 walker = new NormalExpressionWalker(Ast, startIndex, endIndex, Options);
             }
             Ast.Walk(walker);
-            return walker.Expression;
+            node = walker.Expression;
+            statement = walker.Statement;
+            scope = walker.Scope;
+        }
+
+        public Node GetExpression(int startIndex, int endIndex) {
+            Get(startIndex, endIndex, out var expression, out _, out _);
+            return expression;
         }
 
         public Node GetExpression(SourceSpan range) {
@@ -87,15 +103,17 @@ namespace Microsoft.PythonTools.Analysis {
         private abstract class ExpressionWalker : PythonWalkerWithLocation {
             public ExpressionWalker(int location) : base(location) { }
             public Node Expression { get; protected set; }
+            public Node Statement { get; protected set; }
+            public ScopeStatement Scope { get; protected set; }
         }
 
         private class NormalExpressionWalker : ExpressionWalker {
             private readonly int _endLocation;
-            private readonly PythonAst _ast;
             private readonly GetExpressionOptions _options;
 
             public NormalExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
-                _ast = ast;
+                Tree = ast;
+                ExtendedStatements = true;
                 _endLocation = endLocation;
                 _options = options;
             }
@@ -111,14 +129,39 @@ namespace Microsoft.PythonTools.Analysis {
                 return baseWalk;
             }
 
-            private bool BeforeBody(Node body) {
+            private bool SaveStmt(Statement stmt, bool baseWalk) {
+                if (stmt == null) {
+                    return false;
+                }
+                if (baseWalk) {
+                    Statement = stmt;
+                }
+
+                return baseWalk;
+            }
+
+            private void ClearStmt(Statement stmt, Node body, int? headerIndex = null) {
+                if (!BeforeBody(body, headerIndex)) {
+                    Statement = null;
+                }
+            }
+
+            private bool BeforeBody(Node body, int? headerIndex = null) {
+                if (body == null || body is ErrorStatement) {
+                    return true;
+                }
+
+                if (headerIndex.HasValue && Location > headerIndex.Value) {
+                    return false;
+                }
+
                 if (Location >= body.StartIndex) {
                     return false;
                 }
 
-                var ws = body.GetLeadingWhiteSpace(_ast);
+                var ws = body.GetLeadingWhiteSpace(Tree);
                 if (string.IsNullOrEmpty(ws)) {
-                    return false;
+                    return true;
                 }
 
                 if (Location >= body.StartIndex - ws.Length) {
@@ -128,32 +171,45 @@ namespace Microsoft.PythonTools.Analysis {
                 return true;
             }
 
+            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
+            public override bool Walk(DottedName node) => Save(node, base.Walk(node), _options.ImportNames);
             public override bool Walk(CallExpression node) => Save(node, base.Walk(node), _options.Calls);
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
 
+            public override bool Walk(AssignmentStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(RaiseStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
+
             public override bool Walk(FunctionDefinition node) {
-                if (base.Walk(node)) {
-                    if (_options.FunctionDefinition && BeforeBody(node.Body)) {
-                        Expression = node;
-                    }
-
-                    if (_options.FunctionDefinitionName) {
-                        node.NameExpression?.Walk(this);
-                    }
-
-                    node.Decorators?.Walk(this);
-                    foreach (var p in node.ParametersInternal.MaybeEnumerate()) {
-                        p?.Walk(this);
-                    }
-                    node.ReturnAnnotation?.Walk(this);
-                    node.Body?.Walk(this);
+                if (!base.Walk(node)) {
+                    return false;
                 }
+
+                SaveStmt(node, true);
+                Scope = node;
+
+                if (_options.FunctionDefinition && BeforeBody(node.Body)) {
+                    Expression = node;
+                }
+
+                if (_options.FunctionDefinitionName) {
+                    node.NameExpression?.Walk(this);
+                }
+
+                node.Decorators?.Walk(this);
+                foreach (var p in node.ParametersInternal.MaybeEnumerate()) {
+                    p?.Walk(this);
+                }
+                node.ReturnAnnotation?.Walk(this);
+
+                ClearStmt(node, node.Body, node.HeaderIndex);
+                node.Body?.Walk(this);
+
                 return false;
             }
-
-            public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
 
             public override bool Walk(Parameter node) {
                 if (base.Walk(node)) {
@@ -187,6 +243,9 @@ namespace Microsoft.PythonTools.Analysis {
                     return false;
                 }
 
+                SaveStmt(node, true);
+                Scope = node;
+
                 if (_options.ClassDefinition && BeforeBody(node.Body)) {
                     Expression = node;
                 }
@@ -198,6 +257,8 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var b in node.BasesInternal.MaybeEnumerate()) {
                     b.Walk(this);
                 }
+
+                ClearStmt(node, node.Body, node.HeaderIndex);
                 node.Body?.Walk(this);
 
                 return false;
@@ -216,32 +277,13 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            public override bool Walk(DottedName node) {
-                if (base.Walk(node)) {
-                    string totalName = null;
-                    foreach (var n in node.Names.MaybeEnumerate()) {
-                        if (n?.Name == null) {
-                            break;
-                        }
-                        if (Location >= n.StartIndex && Location <= n.EndIndex) {
-                            if (totalName == null) {
-                                Expression = n;
-                            } else {
-                                Expression = new NameExpression(totalName + n.Name);
-                                Expression.SetLoc(node.StartIndex, n.EndIndex);
-                            }
-                            break;
-                        }
-                        totalName = (totalName ?? "") + n.Name + ".";
-                    }
-                }
-                return false;
-            }
-
             public override bool Walk(ImportStatement node) {
                 if (!base.Walk(node)) {
                     return false;
+                    
                 }
+
+                SaveStmt(node, true);
 
                 if (_options.ImportNames) {
                     foreach (var n in node.Names.MaybeEnumerate()) {
@@ -254,13 +296,15 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
 
-                return true;
+                return false;
             }
 
             public override bool Walk(FromImportStatement node) {
                 if (!base.Walk(node)) {
                     return false;
                 }
+
+                SaveStmt(node, true);
 
                 if (_options.ImportNames) {
                     node.Root?.Walk(this);
@@ -273,7 +317,30 @@ namespace Microsoft.PythonTools.Analysis {
                     n?.Walk(this);
                 }
 
-                return true;
+                return false;
+            }
+
+            public override bool Walk(TryStatement node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                if (Location > node.StartIndex && BeforeBody(node.Body, node.HeaderIndex)) {
+                    Statement = node;
+                }
+                node.Body?.Walk(this);
+                if (node.Handlers != null) {
+                    foreach (var handler in node.Handlers) {
+                        if (Location > handler.StartIndex && BeforeBody(handler.Body, handler.HeaderIndex)) {
+                            Statement = handler;
+                        }
+                        handler.Walk(this);
+                    }
+                }
+                node.Else?.Walk(this);
+                node.Finally?.Walk(this);
+
+                return false;
             }
         }
 

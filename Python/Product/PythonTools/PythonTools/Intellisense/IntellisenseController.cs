@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
 
         public static readonly object SuppressErrorLists = new object();
+        public static readonly object FollowDefaultEnvironment = new object();
 
         /// <summary>
         /// Attaches events for invoking Statement completion 
@@ -69,6 +70,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _editOps = _services.EditOperationsFactory.GetEditorOperations(textView);
             _incSearch = _services.IncrementalSearch.GetIncrementalSearch(textView);
             _textView.MouseHover += TextViewMouseHover;
+            _services.Python.InterpreterOptionsService.DefaultInterpreterChanged += InterpreterOptionsService_DefaultInterpreterChanged;
             if (textView.TextBuffer.IsPythonContent()) {
                 try {
                     _expansionClient = new ExpansionClient(textView, _services);
@@ -90,6 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
+            _services.Python.InterpreterOptionsService.DefaultInterpreterChanged -= InterpreterOptionsService_DefaultInterpreterChanged;
             // Do not disconnect subject buffers here - VS will handle that for us
         }
 
@@ -170,7 +173,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ProjectAnalyzer analyzer;
             var services = bufferInfo.Services;
 
-            bool isTemporaryFile = false;
+            bool isTemporaryFile = false, followDefaultEnvironment = false;
             analyzer = await services.Site.FindAnalyzerAsync(bufferInfo);
             if (analyzer == null) {
                 // there's no analyzer for this file, but we can analyze it against either
@@ -180,7 +183,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 isTemporaryFile = true;
                 analyzer = await services.Site.FindAnalyzerAsync(textView);
                 if (analyzer == null) {
-                    analyzer = await services.Python.GetSharedAnalyzerAsync();
+                    var pytoolsSvc = services.Python;
+                    if (pytoolsSvc != null) {
+                        analyzer = await pytoolsSvc.GetSharedAnalyzerAsync();
+                    }
+                    followDefaultEnvironment = true;
                 }
             }
 
@@ -190,7 +197,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bool suppressErrorList = textView.Properties.ContainsProperty(SuppressErrorLists);
-            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
+            var entry = await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
+            if (entry != null && followDefaultEnvironment) {
+                entry.Properties[FollowDefaultEnvironment] = true;
+            }
+            return entry;
         }
 
         private async Task ConnectSubjectBufferAsync(PythonTextBufferInfo buffer) {
@@ -241,6 +252,41 @@ namespace Microsoft.PythonTools.Intellisense {
             bi?.RemoveSink(this);
             bi?.AnalysisEntry?.TryGetBufferParser()?.RemoveBuffer(subjectBuffer);
         }
+
+        private void InterpreterOptionsService_DefaultInterpreterChanged(object sender, EventArgs e) {
+            DefaultInterpreterChanged().HandleAllExceptions(_services.Site, GetType()).DoNotWait();
+        }
+
+        private async Task DefaultInterpreterChanged() {
+            VsProjectAnalyzer analyzer = null;
+
+            foreach (var bi in PythonTextBufferInfo.GetAllFromView(_textView)) {
+                var currentEntry = bi.AnalysisEntry;
+                if (currentEntry != null && currentEntry.Properties.ContainsKey(FollowDefaultEnvironment)) {
+                    var oldAnalyzer = currentEntry.Analyzer;
+
+                    if (analyzer == null) {
+                        analyzer = await _services.Python.GetSharedAnalyzerAsync();
+                    }
+
+                    if (analyzer == oldAnalyzer) {
+                        continue;
+                    }
+
+                    if (bi.TrySetAnalysisEntry(null, currentEntry) != null) {
+                        continue;
+                    }
+                    if (oldAnalyzer.RemoveUser()) {
+                        oldAnalyzer.Dispose();
+                    }
+
+                    var newEntry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, true, bi.Buffer.Properties.ContainsProperty(SuppressErrorLists));
+                    newEntry.Properties[FollowDefaultEnvironment] = true;
+                    bi.TrySetAnalysisEntry(newEntry, null);
+                }
+            }
+        }
+
 
         public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.AnalyzerExpired) {
@@ -336,7 +382,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
-                            TriggerCompletionSession(false, ch);
+                            TriggerCompletionSession(false, ch).DoNotWait();
                         }
                         break;
                     case '(':
@@ -365,11 +411,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         break;
                     default:
+                        // Note: Don't call CompletionSets property if session is dismissed to avoid NRE
                         if (Tokenizer.IsIdentifierStartChar(ch) &&
-                            ((session?.CompletionSets.Count ?? 0) == 0)) {
+                            ((session?.IsDismissed ?? false ? 0 : session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
-                                TriggerCompletionSession(false, ch, commitByDefault);
+                                TriggerCompletionSession(false, ch, commitByDefault).DoNotWait();
                             }
                         }
                         break;
@@ -892,14 +939,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        internal void TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
-            DismissCompletionSession();
-
+        internal async Task TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
             session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
+            }
+
+            var oldSession = Interlocked.Exchange(ref _activeSession, session);
+            if (oldSession != null && !oldSession.IsDismissed) {
+                oldSession.Dismiss();
+            }
+
+            if (triggerChar == ' ' || triggerChar == '.') {
+                var bi = _textView.TextBuffer.TryGetInfo();
+                var bp = bi?.AnalysisEntry?.TryGetBufferParser();
+                if (bp != null) {
+                    await bp.EnsureCodeSyncedAsync(bi.Buffer);
+                }
+            }
+
+            if (session.IsStarted || session.IsDismissed) {
+                return;
             }
 
             session.Start();
@@ -921,7 +983,6 @@ namespace Microsoft.PythonTools.Intellisense {
             session.Filter();
             session.Dismissed += OnCompletionSessionDismissedOrCommitted;
             session.Committed += OnCompletionSessionDismissedOrCommitted;
-            Volatile.Write(ref _activeSession, session);
         }
 
         internal void TriggerSignatureHelp() {
@@ -975,7 +1036,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool DismissCompletionSession() {
-            var session = Volatile.Read(ref _activeSession);
+            var session = Interlocked.Exchange(ref _activeSession, null);
             if (session != null && !session.IsDismissed) {
                 session.Dismiss();
                 return true;
@@ -1039,7 +1100,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     HandleChar(ch);
 
-                    if (session != null && !session.IsDismissed) {
+                    if (session != null && session.IsStarted && !session.IsDismissed) {
                         session.Filter();
                     }
                 }
@@ -1085,7 +1146,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
                             int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
-                            if (session != null && !session.IsDismissed) {
+                            if (session != null && session.IsStarted && !session.IsDismissed) {
                                 session.Filter();
                             }
                             return res;

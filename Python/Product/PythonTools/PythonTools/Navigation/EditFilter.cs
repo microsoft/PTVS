@@ -28,8 +28,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -37,11 +35,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using IServiceProvider = System.IServiceProvider;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Language {
     /// <summary>
@@ -77,7 +75,7 @@ namespace Microsoft.PythonTools.Language {
 
             BraceMatcher.WatchBraceHighlights(_editorServices, textView);
 
-            if (_next == null) {
+            if (_next == null && vsTextView != null) {
                 ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
             }
         }
@@ -702,19 +700,10 @@ namespace Microsoft.PythonTools.Language {
                         break;
 
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
-                        pyPoint = _textView.GetPythonCaret();
-                        if (pyPoint != null) {
-                            FormatCode(new SnapshotSpan(pyPoint.Value.Snapshot, 0, pyPoint.Value.Snapshot.Length), false);
-                        }
+                        FormatDocumentAsync().DoNotWait();
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.FORMATSELECTION:
-                        foreach (var span in _textView.BufferGraph.MapDownToFirstMatch(
-                            _textView.Selection.StreamSelectionSpan.SnapshotSpan,
-                            SpanTrackingMode.EdgeInclusive,
-                            EditorExtensions.IsPythonContent
-                        )) {
-                            FormatCode(span, true);
-                        }
+                        FormatSelectionAsync().DoNotWait();
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
@@ -724,7 +713,7 @@ namespace Microsoft.PythonTools.Language {
                                 (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
                                 '\0',
                                 true
-                            );
+                            ).DoNotWait();
                             return VSConstants.S_OK;
                         }
                         break;
@@ -797,9 +786,23 @@ namespace Microsoft.PythonTools.Language {
             new Refactoring.MethodExtractor(_editorServices, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
         }
 
-        private async void FormatCode(SnapshotSpan span, bool selectResult) {
+        internal async Task FormatDocumentAsync() {
+            var pyPoint = _textView.GetPythonCaret();
+            if (pyPoint != null) {
+                await FormatCodeAsync(new SnapshotSpan(pyPoint.Value.Snapshot, 0, pyPoint.Value.Snapshot.Length), false);
+            }
+        }
+
+        internal async Task FormatSelectionAsync() {
+            var snapshotSpan = _textView.Selection.StreamSelectionSpan.SnapshotSpan;
+            foreach (var span in _textView.BufferGraph.MapDownToFirstMatch(snapshotSpan, SpanTrackingMode.EdgeInclusive, EditorExtensions.IsPythonContent)) {
+                await FormatCodeAsync(span, true);
+            }
+        }
+
+        private async Task FormatCodeAsync(SnapshotSpan span, bool selectResult) {
             var entry = span.Snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry != null) {
+            if (entry == null) {
                 return;
             }
 
@@ -886,8 +889,8 @@ namespace Microsoft.PythonTools.Language {
                             }
                             return VSConstants.S_OK;
                         default:
-                            lock (PythonToolsPackage.CommandsLock) {
-                                foreach (var command in PythonToolsPackage.Commands.Keys) {
+                            lock (CommonPackage.CommandsLock) {
+                                foreach (var command in CommonPackage.Commands.Keys) {
                                     if (command.CommandId == prgCmds[i].cmdID) {
                                         int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
                                         if (res != null) {

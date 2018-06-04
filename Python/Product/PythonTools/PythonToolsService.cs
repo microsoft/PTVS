@@ -212,6 +212,11 @@ namespace Microsoft.PythonTools {
                 return result;
             }
 
+            if (string.IsNullOrEmpty(id)) {
+                return null;
+            }
+
+            factory = factory ?? InterpreterRegistryService.FindInterpreter(id);
             result = await CreateAnalyzerAsync(factory);
             var realResult = _analyzers.GetOrAdd(id, result);
             if (realResult != result && result.RemoveUser()) {

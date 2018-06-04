@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             if (package.IsNativeExtension || package.IsCompiled) {
                 db.LoadExtensionModule(package);
             } else {
-                db.AddModule(package.FullName, AstPythonModule.FromFile(
+                db.AddModule(package.FullName, PythonModuleLoader.FromFile(
                     this,
                     package.SourceFile,
                     _factory.GetLanguageVersion(),
@@ -319,7 +319,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 if (sourceStream == null) {
                     return null;
                 }
-                return AstPythonModule.FromStream(
+                return PythonModuleLoader.FromStream(
                     this,
                     sourceStream,
                     PathUtils.GetAbsoluteFilePath(zipFile, name.SourceFile),

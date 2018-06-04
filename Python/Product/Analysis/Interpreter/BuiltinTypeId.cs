@@ -192,5 +192,51 @@ namespace Microsoft.PythonTools.Interpreter {
             return name;
         }
 
+        public static BuiltinTypeId GetTypeId(this string name) {
+            switch (name) {
+                case "int": return BuiltinTypeId.Int;
+                case "long": return BuiltinTypeId.Long;
+                case "bool": return BuiltinTypeId.Bool;
+                case "float": return BuiltinTypeId.Float;
+                case "str": return BuiltinTypeId.Str;
+                case "complex": return BuiltinTypeId.Complex;
+                case "dict": return BuiltinTypeId.Dict;
+                case "list": return BuiltinTypeId.List;
+                case "object": return BuiltinTypeId.Object;
+
+                case "set": return BuiltinTypeId.Set;
+                case "unicode": return BuiltinTypeId.Unicode;
+                case "bytes": return BuiltinTypeId.Bytes;
+                case "tuple": return BuiltinTypeId.Tuple;
+                case "type": return BuiltinTypeId.Type;
+                case "frozenset": return BuiltinTypeId.FrozenSet;
+
+                case "builtin_function": return BuiltinTypeId.BuiltinFunction;
+                case "builtin_method_descriptor": return BuiltinTypeId.BuiltinMethodDescriptor;
+                case "dict_keys": return BuiltinTypeId.DictKeys;
+                case "dict_values": return BuiltinTypeId.DictValues;
+                case "dict_items": return BuiltinTypeId.DictItems;
+
+                case "function": return BuiltinTypeId.Function;
+                case "generator": return BuiltinTypeId.Generator;
+                case "NoneType": return BuiltinTypeId.NoneType;
+                case "ellipsis": return BuiltinTypeId.Ellipsis;
+                case "module_type": return BuiltinTypeId.Module;
+
+                case "list_iterator": return BuiltinTypeId.ListIterator;
+                case "tuple_iterator": return BuiltinTypeId.TupleIterator;
+                case "set_iterator": return BuiltinTypeId.SetIterator;
+                case "str_iterator": return BuiltinTypeId.StrIterator;
+                case "unicode_iterator": return BuiltinTypeId.UnicodeIterator;
+                case "bytes_iterator": return BuiltinTypeId.BytesIterator;
+                case "callable_iterator": return BuiltinTypeId.CallableIterator;
+
+                case "property": return BuiltinTypeId.Property;
+                case "classmethod": return BuiltinTypeId.ClassMethod;
+                case "staticmethod": return BuiltinTypeId.StaticMethod;
+            }
+            return BuiltinTypeId.Unknown;
+        }
+
     }
 }

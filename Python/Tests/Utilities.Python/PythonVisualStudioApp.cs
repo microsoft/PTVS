@@ -80,6 +80,8 @@ namespace TestUtilities.UI.Python {
             });
         }
 
+        public void InvokeOnMainThread(Action action) => ServiceProvider.GetUIThread().Invoke(action);
+
         protected override void Dispose(bool disposing) {
             if (!IsDisposed) {
                 try {

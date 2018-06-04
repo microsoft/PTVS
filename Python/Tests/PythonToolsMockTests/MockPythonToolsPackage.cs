@@ -50,7 +50,6 @@ namespace PythonToolsMockTests {
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
             
-            
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), (sp, t) => new MockPythonToolsOptionsService());
             _serviceContainer.AddService(typeof(IClipboardService), (sp, t) => new MockClipboardService());
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), (sp, t) => new MockErrorProviderFactory(), true);
@@ -59,8 +58,7 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
             _serviceContainer.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
             _serviceContainer.AddService(typeof(SolutionEventsListener), (sp, t) => new SolutionEventsListener(sp), true);
-
-            UIThread.EnsureService(_serviceContainer);
+            _serviceContainer.AddService(typeof(UIThreadBase), new UIThread(null), true);
 
             _serviceContainer.AddService(typeof(IPythonLibraryManager), (object)null);
 

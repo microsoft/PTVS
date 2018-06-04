@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand UpgradePackage = new RoutedCommand();
         public static readonly ICommand UninstallPackage = new RoutedCommand();
         public static readonly ICommand InstallPip = new RoutedCommand();
+        public static readonly ICommand PipSecurityLearnMore = new RoutedCommand();
 
         private readonly PipExtensionProvider _provider;
         private readonly Timer _focusTimer;
@@ -182,6 +184,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        private void PipSecurityLearnMore_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = true;
+            e.Handled = true;
+        }
+
+        private void PipSecurityLearnMore_Executed(object sender, ExecutedRoutedEventArgs e) {
+            Process.Start("https://go.microsoft.com/fwlink/?linkid=874576");
+        }
+
         private void InstallPip_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = _provider.CanExecute;
             e.Handled = true;
@@ -252,6 +263,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.InstalledPackagesChanged += PipExtensionProvider_InstalledPackagesChanged;
 
             IsPipInstalled = _provider.IsPipInstalled ?? true;
+            ShowSecurityWarning =
+                provider._packageManager.UniqueKey == "pip" &&
+                view.Configuration.Version != new Version(2, 7) &&
+                view.Configuration.Version < new Version(3, 3);
 
             _installCommandView = new InstallPackageView(this);
 
@@ -352,7 +367,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-
         public bool IsPipInstalled {
             get { return (bool)GetValue(IsPipInstalledProperty); }
             private set { SetValue(IsPipInstalledPropertyKey, value); }
@@ -367,6 +381,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public static readonly DependencyProperty IsPipInstalledProperty = IsPipInstalledPropertyKey.DependencyProperty;
 
+        public bool ShowSecurityWarning {
+            get { return (bool)GetValue(ShowSecurityWarningProperty); }
+            private set { SetValue(ShowSecurityWarningPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey ShowSecurityWarningPropertyKey = DependencyProperty.RegisterReadOnly(
+            "ShowSecurityWarning",
+            typeof(bool),
+            typeof(PipEnvironmentView),
+            new PropertyMetadata(true)
+        );
+
+        public static readonly DependencyProperty ShowSecurityWarningProperty = ShowSecurityWarningPropertyKey.DependencyProperty;
 
         public string SearchQuery {
             get { return (string)GetValue(SearchQueryProperty); }

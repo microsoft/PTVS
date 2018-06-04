@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly DkmNativeInstructionAddress _evalFrameFunc;
         private readonly PointerProxy _defaultEvalFrameFunc;
-        private readonly UInt32Proxy _pyTracingPossible;
+        private readonly Int32Proxy _pyTracingPossible;
         private readonly ByteProxy _isTracing;
 
         // A step-in gate is a function inside the Python interpreter or one of the libaries that may call out
@@ -260,7 +260,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _evalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
             _defaultEvalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc");
             _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
-            _pyTracingPossible = _pyrtInfo.DLLs.Python.GetStaticVariable<UInt32Proxy>("_Py_TracingPossible");
+            _pyTracingPossible = _pyrtInfo.GetRuntimeState()?.ceval.tracing_possible
+                ?? _pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("_Py_TracingPossible");
 
             if (kind == Kind.StepIn) {
                 var fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
@@ -493,7 +494,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 // Addressing this local by name does not work for release builds, so read the return value directly from the register instead.
-                var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
+                var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64(), _owner._pyrtInfo.LanguageVersion);
                 if (tstate == null) {
                     return;
                 }

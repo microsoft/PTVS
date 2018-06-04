@@ -32,7 +32,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -3325,7 +3324,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3335,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]
@@ -3425,8 +3424,8 @@ class cls(cls):
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
-                "The most base type",
-                "cls"
+                "cls",
+                "object"
             );
         }
 
@@ -5310,12 +5309,12 @@ import imp as impp
 ";
             PermutedTest("mod", new[] { text1, text2 }, state => {
                 state.DefaultModule = "mod1";
-                state.AssertDescription("g", "mod1.g() -> built-in module _io");
-                state.AssertDescription("f", "mod1.f() -> built-in module sys");
-                state.AssertDescription("h", "mod1.h() -> built-in module sys");
-                state.AssertDescription("i", "mod1.i() -> built-in module zlib");
-                state.AssertDescription("j", "mod1.j() -> built-in module mmap");
-                state.AssertDescription("k", "mod1.k() -> built-in module imp");
+                state.AssertDescription("g", "mod1.g() -> _io");
+                state.AssertDescription("f", "mod1.f() -> sys");
+                state.AssertDescription("h", "mod1.h() -> sys");
+                state.AssertDescription("i", "mod1.i() -> zlib");
+                state.AssertDescription("j", "mod1.j() -> mmap");
+                state.AssertDescription("k", "mod1.k() -> imp");
             });
         }
 
@@ -5825,15 +5824,15 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertIsInstance("x", BuiltinTypeId.Tuple);
             entry.AssertIsInstance("y", BuiltinTypeId.List);
             entry.AssertDescription("z", "int");
-            entry.AssertDescriptionContains("min", "built-in function min", "min(");
-            entry.AssertDescriptionContains("list.append", "built-in function list.append(");
+            entry.AssertDescriptionContains("min", "min(");
+            entry.AssertDescriptionContains("list.append", "list.append(");
             entry.AssertIsInstance("\"abc\".Length");
             entry.AssertIsInstance("c.Length");
             entry.AssertIsInstance("d", "fob");
-            entry.AssertDescription("sys", "built-in module sys");
+            entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects");
             entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
@@ -5841,7 +5840,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("None", "None");
             entry.AssertDescription("f.func_name", "property of type str");
             entry.AssertDescription("h", "test-module.h() -> test-module.f() -> str, test-module.g()");
-            entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int\r\nuseful documentation");
+            entry.AssertDescription("docstr_func", "test-module.docstr_func() -> int");
+            entry.AssertDocumentation("docstr_func", "useful documentation");
 
             entry.AssertDescription("with_params", "test-module.with_params(a, b, c)");
             entry.AssertDescription("with_params_default", "test-module.with_params_default(a, b, c: int=100)");
@@ -5854,7 +5854,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...\r\nsome help");
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects...");
+            entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
         [TestMethod, Priority(0)]
@@ -5885,7 +5886,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.Contains(entry.GetCompletionDocumentation("", "d", 1).First(), "instance of fob");
+            AssertUtil.Contains(entry.GetCompletionDocumentation("", "d", 1).First(), "fob");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "int", 1).First(), "integer");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "min", 1).First(), "min(");
         }

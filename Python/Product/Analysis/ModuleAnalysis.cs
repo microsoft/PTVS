@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public sealed class ModuleAnalysis {
         private readonly AnalysisUnit _unit;
-        private readonly InterpreterScope _scope;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
@@ -44,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;
-            _scope = scope;
+            Scope = scope;
         }
 
         #region Public API
@@ -405,9 +404,10 @@ namespace Microsoft.PythonTools.Analysis {
             scope = scope ?? FindScope(location);
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var u = unit.CopyForEval();
 
             if (!lookup.Any()) {
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+                var eval = new ExpressionEvaluator(u, scope, mergeScopes: true);
                 if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
                     lookup = eval.EvaluateNoMemberRecursion(expr);
                 } else {
@@ -415,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            return GetMemberResults(lookup.Resolve(unit), scope, options);
+            return GetMemberResults(lookup.Resolve(u), scope, options);
         }
 
         private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
@@ -655,6 +655,9 @@ namespace Microsoft.PythonTools.Analysis {
             // collect builtins
             if (!options.HasFlag(GetMemberOptions.ExcludeBuiltins)) {
                 foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
+                    if (options.Exceptions() && !IsExceptionType(variable.Key, variable.Value)) {
+                        continue;
+                    }
                     result[variable.Key] = new List<AnalysisValue>(variable.Value);
                 }
             }
@@ -664,10 +667,14 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 var scopeResult = new Dictionary<string, List<AnalysisValue>>();
                 foreach (var kvp in s.GetAllMergedVariables()) {
+                    var vars = kvp.Value.TypesNoCopy;
+                    if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
+                        continue;
+                    }
                     if (scopeResult.TryGetValue(kvp.Key, out var values)) {
-                        values.AddRange(kvp.Value.TypesNoCopy);
+                        values.AddRange(vars);
                     } else {
-                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
                     }
                     values.Add(new SyntheticDefinitionInfo(
                         kvp.Key,
@@ -683,13 +690,31 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
-            if (options.Keywords()) {
+            if (options.StatementKeywords() || options.ExpressionKeywords()) {
                 res = GetKeywordMembers(options, scope).Union(res);
             }
 
             return res;
         }
 
+
+        private bool IsExceptionType(string name, IAnalysisSet values) {
+            if (name.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                name.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0) {
+                return true;
+            }
+
+            if (values.OfType<IModule>().Any()) {
+                return true;
+            }
+
+            if (_unit.State.BuiltinModule.TryGetMember("BaseException", out var baseCls) &&
+                values.Any(v => v.Mro.Any(m => m.ContainsAny(baseCls)))) {
+                return true;
+            }
+
+            return false;
+        }
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             IEnumerable<string> keywords = null;
@@ -768,9 +793,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return GlobalScope.ProjectEntry.ProjectState; }
         }
 
-        internal InterpreterScope Scope {
-            get { return _scope; }
-        }
+        internal InterpreterScope Scope { get; }
 
         internal IEnumerable<MemberResult> GetMemberResults(
             IEnumerable<AnalysisValue> vars,
@@ -925,11 +948,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAstFromText(exprText, privatePrefix);
         }
 
-        public string ModuleName {
-            get {
-                return _scope.GlobalScope.Name;
-            }
-        }
+        public string ModuleName => Scope.GlobalScope.Name;
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
             var parser = Parser.CreateParser(new StringReader(exprText), _unit.State.LanguageVersion, new ParserOptions { PrivatePrefix = privatePrefix });
