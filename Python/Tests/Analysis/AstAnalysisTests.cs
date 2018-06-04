@@ -743,7 +743,13 @@ y = g()");
 
                     analysis.AssertIsInstance("x", BuiltinTypeId.Int);
                     analysis.AssertIsInstance("y", BuiltinTypeId.Str);
-                    analysis.AssertIsInstance("p", 30, "...");
+                    var sigs = analysis.GetSignatures("f").ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(1, sigs[0].Parameters.Length);
+                    var p = sigs[0].Parameters[0];
+                    Assert.AreEqual("p", p.Name);
+                    Assert.AreEqual("int", p.Type);
+                    Assert.AreEqual("", p.DefaultValue ?? "");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }

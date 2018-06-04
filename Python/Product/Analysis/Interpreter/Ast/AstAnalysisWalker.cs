@@ -247,9 +247,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (CreateBuiltinTypes) {
                 funcScope.SuppressBuiltinLookup = true;
             }
-            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node);
-            _postWalkers.Add(funcWalk);
-            existing.AddOverload(funcWalk.Overload);
+            existing.AddOverload(CreateFunctionOverload(funcScope, node));
 
             // Do not recurse into functions
             return false;
@@ -269,9 +267,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (CreateBuiltinTypes) {
                 funcScope.SuppressBuiltinLookup = true;
             }
-            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node);
+            existing.AddOverload(CreateFunctionOverload(funcScope, node));
+        }
+
+        private IPythonFunctionOverload CreateFunctionOverload(NameLookupContext funcScope, FunctionDefinition node) {
+            var parameters = new List<AstPythonParameterInfo>();
+            foreach (var p in node.ParametersInternal) {
+                var annType = p.Annotation != null ? Scope.GetValueFromExpression(p.Annotation) as IPythonType : null;
+                parameters.Add(new AstPythonParameterInfo(_ast, p, annType != null ? new[] { annType } : null));
+            }
+
+            var overload = new AstPythonFunctionOverload(parameters, funcScope.GetLocOfName(node, node.NameExpression));
+
+            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node, overload);
             _postWalkers.Add(funcWalk);
-            existing.AddOverload(funcWalk.Overload);
+
+            return overload;
         }
 
         private static string GetDoc(SuiteStatement node) {

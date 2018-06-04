@@ -25,25 +25,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisFunctionWalker : PythonWalker {
         private readonly FunctionDefinition _target;
         private readonly NameLookupContext _scope;
-        private readonly List<IPythonType> _returnTypes;
         private readonly AstPythonFunctionOverload _overload;
         private AstPythonType _selfType;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
-            FunctionDefinition targetFunction
+            FunctionDefinition targetFunction,
+            AstPythonFunctionOverload overload
         ) {
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             _target = targetFunction ?? throw new ArgumentNullException(nameof(targetFunction));
-            _returnTypes = new List<IPythonType>();
-            _overload = new AstPythonFunctionOverload(
-                AstPythonFunction.MakeParameters(_scope.Ast, _target),
-                _scope.GetLocOfName(_target, _target.NameExpression),
-                _returnTypes
-            );
+            _overload = overload;
         }
 
-        public IList<IPythonType> ReturnTypes => _returnTypes;
+        public IList<IPythonType> ReturnTypes => _overload.ReturnTypes;
         public IPythonFunctionOverload Overload => _overload;
 
         private void GetMethodType(FunctionDefinition node, out bool classmethod, out bool staticmethod) {
@@ -75,9 +70,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
                 var m = retAnn.GetValue(new AstTypeAnnotationConverter(_scope));
                 if (m is IPythonMultipleMembers mm) {
-                    _returnTypes.AddRange(mm.Members.OfType<IPythonType>());
+                    _overload.ReturnTypes.AddRange(mm.Members.OfType<IPythonType>());
                 } else if (m is IPythonType type) {
-                    _returnTypes.Add(type);
+                    _overload.ReturnTypes.Add(type);
                 }
             }
 
@@ -178,7 +173,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(ReturnStatement node) {
             foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
-                _returnTypes.Add(type);
+                _overload.ReturnTypes.Add(type);
             }
             return true; // We want to evaluate all code so all private variables in __new__ get defined
         }

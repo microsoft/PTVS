@@ -70,12 +70,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _overloads.Add(overload);
         }
 
-        internal static IEnumerable<IParameterInfo> MakeParameters(PythonAst ast, FunctionDefinition def) {
-            foreach (var p in def.ParametersInternal) {
-                yield return new AstPythonParameterInfo(ast, p);
-            }
-        }
-
         public IPythonModule DeclaringModule {get;}
         public IPythonType DeclaringType {get;}
         public string Name { get; }
