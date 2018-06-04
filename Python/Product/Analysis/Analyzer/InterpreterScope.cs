@@ -239,10 +239,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public virtual VariableDef AddVariable(string name, VariableDef variable = null)
             => _variables[name] = variable ?? new VariableDef();
 
-        internal virtual bool RemoveVariable(string name) => _variables.Remove(name);
+        internal virtual bool RemoveVariable(string name) {
+            _linkedVariables.Remove(name);
+            return _variables.Remove(name);
+        }
 
-        internal bool RemoveVariable(string name, out VariableDef value)
-            => _variables.TryGetValue(name, out value) && _variables.Remove(name);
+        internal bool RemoveVariable(string name, out VariableDef value) {
+            _linkedVariables.Remove(name);
+            return _variables.TryGetValue(name, out value) && _variables.Remove(name);
+        }
 
         internal virtual bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
             if (!TryGetVariable(name, out var vd) || vd == ifNot) {

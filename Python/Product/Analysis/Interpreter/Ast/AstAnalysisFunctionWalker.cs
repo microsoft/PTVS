@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             _target = targetFunction ?? throw new ArgumentNullException(nameof(targetFunction));
-            _overload = overload;
+            _overload = overload ?? throw new ArgumentNullException(nameof(overload));
         }
 
         public IList<IPythonType> ReturnTypes => _overload.ReturnTypes;
