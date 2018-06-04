@@ -66,13 +66,28 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
         private bool _cancel;
 
         private Program(string command, string installer, string targetDir) {
-            _targetDir = Path.GetFullPath(targetDir);
-            _installer = Path.GetFullPath(installer);
+            _targetDir = GetFullPath(targetDir);
+            _installer = GetFullPath(installer);
             if (!File.Exists(_installer)) {
                 Console.Error.WriteLine($"Did not find {_installer}");
                 throw new FileNotFoundException(_installer);
             }
             _install = command.Equals("install", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetFullPath(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return null;
+            }
+
+            if (Path.IsPathRooted(path)) {
+                return path;
+            }
+
+            return Path.Combine(
+                Path.GetDirectoryName(typeof(Program).Assembly.Location),
+                path
+            );
         }
 
         int Go() {
