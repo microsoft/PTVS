@@ -17,7 +17,6 @@
 using System;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -33,12 +32,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
-using VsTask = Microsoft.VisualStudio.Shell.Task;
 
 namespace Microsoft.PythonTools.Profiling {
 
-    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
     using global::DiagnosticsHub.Packaging.Interop;
+    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
 
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
@@ -74,7 +72,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
-        private static readonly string externalProfilerDriverExe = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
+        private const string ExternalProfilerDriverExe = "ExternalProfilerDriver.exe";
 
         /// <summary>
         /// Default constructor of the package.
@@ -98,10 +96,10 @@ namespace Microsoft.PythonTools.Profiling {
             base.Dispose(disposing);
         }
 
-        protected override int CreateToolWindow(ref Guid toolWindowType, int id) 
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id)
             => toolWindowType == PerfToolWindow.WindowGuid ? CreatePerfToolWindow(id) : base.CreateToolWindow(ref toolWindowType, id);
 
-        private int CreatePerfToolWindow( int id) {
+        private int CreatePerfToolWindow(int id) {
             try {
                 var type = typeof(PerfToolWindow);
                 var toolWindow = FindWindowPane(type, id, false) ?? CreateToolWindow(type, id, this);
@@ -229,7 +227,7 @@ namespace Microsoft.PythonTools.Profiling {
                         }
 #endif
 
-                        if (stndTarget.InterpreterPath == string.Empty) {
+                        if (!File.Exists(stndTarget.InterpreterPath)) {
                             MessageBox.Show($"Can't find specified python interpreter.");
                             return;
                         }
@@ -238,25 +236,26 @@ namespace Microsoft.PythonTools.Profiling {
                         string outPathDir = Path.GetTempPath();
                         string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
 
-                        ProcessStartInfo procInfo = new ProcessStartInfo(externalProfilerDriverExe);
-                        Process proc = new Process();
-                        proc.StartInfo = procInfo;
-                        proc.StartInfo.CreateNoWindow = false;
-                        proc.StartInfo.Arguments = $" -d {outPathDir} -- {stndTarget.InterpreterPath} {py}";
-                        proc.StartInfo.WorkingDirectory = outPathDir;
+                        var driver = PythonToolsInstallPath.GetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
+                        var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+
+                        var procInfo = new ProcessStartInfo(driver) {
+                            CreateNoWindow = false,
+                            Arguments = FormattableString.Invariant($" -d {outPathDir} -- {stndTarget.InterpreterPath} {py}"),
+                            WorkingDirectory = outPathDir,
+                        };
+
+                        var proc = new Process { StartInfo = procInfo };
                         proc.EnableRaisingEvents = true;
-                        proc.Exited += (object sender1, EventArgs args) =>
-                        {
+                        proc.Exited += (_, args) => {
                             if (!File.Exists(Path.Combine(outPathDir, "Sample.dwjson"))) {
                                 MessageBox.Show($"Something happened, cannot find output file");
                             } else {
-                              PackageTrace(outPathDir);
-                              var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-                              dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
+                                PackageTrace(outPathDir);
+                                dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
                             }
                         };
                         proc.Start();
-                        //proc.WaitForExit();
                     }
                 }
             }
@@ -518,28 +517,32 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         public static bool CheckForExternalProfiler() {
-            // const string exec = @"C:\Users\perf\projects\ExternalProfilerDriver\ExternalProfilerDriver\ExternalProfilerDriver\bin\Debug\ExternalProfilerDriver.exe";
+            var driver = PythonToolsInstallPath.TryGetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
+            if (string.IsNullOrEmpty(driver)) {
+                return false;
+            }
 
-            ProcessStartInfo psi = new ProcessStartInfo(externalProfilerDriverExe, "-p")
-            {
-                UseShellExecute = false,
-                // Arguments = args,
-                CreateNoWindow = true,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false,
-            };
+            try {
+                var psi = new ProcessStartInfo(driver, "-p") {
+                    UseShellExecute = false,
+                    // Arguments = args,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                };
 
-            var process = Process.Start(psi);
+                using (var process = Process.Start(psi)) {
+                    process.WaitForExit();
+                    return (process.ExitCode == 0);
+                }
+            } catch (Exception ex) {
+                Debug.Fail($"Failed to launch {driver} because {ex}");
+            }
 
-            process.WaitForExit();
-            bool ret = (process.ExitCode == 0);
-            process.Close();
-
-            return ret;
+            return false;
         }
 
-        public static void PackageTrace(string dirname)
-        {
+        public static void PackageTrace(string dirname) {
             var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
             using (var package = DhPackage.CreateLegacyPackage()) {
                 package.AddTool(ref cpuToolId);

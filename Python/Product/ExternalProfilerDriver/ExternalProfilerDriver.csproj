@@ -22,7 +22,7 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <Import Project="..\ToolProjectBefore.settings" />
+  <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -68,5 +68,5 @@
     <Compile Include="VTuneToDWJSON.cs" />
   </ItemGroup>
 
-  <Import Project="..\ToolProjectAfter.settings" />
+  <Import Project="..\ProjectAfter.settings" />
 </Project>

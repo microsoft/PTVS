@@ -292,4 +292,7 @@ Error:
     <value>Reports</value>
     <comment>Tree view node that contains the set of profiling reports</comment>
   </data>
+  <data name="LaunchProfiling_MixedModeProfiling" xml:space="preserve">
+    <value>Mi_xed Mode Profiling</value>
+  </data>
 </root>

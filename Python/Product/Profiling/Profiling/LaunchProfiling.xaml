@@ -154,7 +154,10 @@
         </Grid>
 
         <Grid Grid.Row="1">
-            <CheckBox Grid.Row="1" Margin="12 12 12 4" Content="Mi_xed Mode Profiling" IsEnabled="{Binding IsVTuneAvailable}" IsChecked="{Binding UseVTune}" />
+            <CheckBox Grid.Row="1" Margin="12 12 12 4"
+                      Content="{x:Static ui:Strings.LaunchProfiling_MixedModeProfiling}"
+                      IsEnabled="{Binding IsVTuneAvailable}"
+                      IsChecked="{Binding UseVTune}" />
         </Grid>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
