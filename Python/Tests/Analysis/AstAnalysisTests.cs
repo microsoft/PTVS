@@ -743,6 +743,7 @@ y = g()");
 
                     analysis.AssertIsInstance("x", BuiltinTypeId.Int);
                     analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("p", 30, "...");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
