@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns></returns>
         internal static IEnumerable<string> ResolveRelativeFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
             var root = node.Root.MakeString();
- 
+
             if (!string.IsNullOrEmpty(root) && root.StartsWith(".")) {
                 var prefix = root.All(c => c == '.') ? root : $"{root}.";
 
@@ -55,8 +55,9 @@ namespace Microsoft.PythonTools.Analysis {
                     resolved[0] = resolved[0].Substring(0, resolved[0].Length-2);
                 }
                 return resolved;
-        }
-            return new[] { root };
+            }
+
+           return ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, root, node.ForceAbsolute);
         }
 
         /// <summary>
