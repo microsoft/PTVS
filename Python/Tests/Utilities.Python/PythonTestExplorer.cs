@@ -28,6 +28,7 @@ namespace TestUtilities.UI {
         private static class TestCommands {
             public const string ToggleShowTestHierarchy = "TestExplorer.ToggleShowTestHierarchy";
             public const string GroupBy = "TestExplorer.GroupBy";
+            public const string NextGroupBy = "TestExplorer.NextGroupBy";
             public const string RunAllTests = "TestExplorer.RunAllTests";
         }
 
@@ -101,8 +102,9 @@ namespace TestUtilities.UI {
                 _app.WaitForCommandAvailable(groupCommand, TimeSpan.FromSeconds(5));
             }
 
-            // This groups by namespace
-            _app.ExecuteCommand(TestCommands.GroupBy);
+            _app.ExecuteCommand(TestCommands.GroupBy); // by class
+            _app.ExecuteCommand(TestCommands.NextGroupBy); // by duration
+            _app.ExecuteCommand(TestCommands.NextGroupBy); // by namespace
 
             // Wait for the test list to be created
             int retry = 5;
