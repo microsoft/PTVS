@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -81,10 +82,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var evt = PostProcessCompletion;
             if (evt != null) {
                 var e = new Hooks.CompletionEventArgs { Analysis = analysis, Tree = tree, Location = @params.position, CompletionList = res };
-                evt(this, e);
-                res = e.CompletionList;
-                res.items = res.items ?? Array.Empty<CompletionItem>();
-                LogMessage(MessageType.Info, $"Found {res.items.Length} completions after hooks");
+                try {
+                    evt(this, e);
+                    res = e.CompletionList;
+                    res.items = res.items ?? Array.Empty<CompletionItem>();
+                    LogMessage(MessageType.Info, $"Found {res.items.Length} completions after hooks");
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    // We do not replace res in this case.
+                    LogMessage(MessageType.Error, $"Error while post-processing completions: {ex}");
+                }
             }
 
             return res;
