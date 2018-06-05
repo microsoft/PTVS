@@ -21,32 +21,25 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
-        private IList<IMember> _members;
-        private bool _checkForLazy;
+    class AstPythonMultipleTypes : IPythonMultipleMembers, IPythonType, ILocatedMember {
+        private IList<IPythonType> _members;
+        private IPythonFunction _constructor;
 
-        public AstPythonMultipleMembers() {
-            _members = Array.Empty<IMember>();
+        public AstPythonMultipleTypes() {
+            _members = Array.Empty<IPythonType>();
         }
 
-        private AstPythonMultipleMembers(IMember[] members) {
+        private AstPythonMultipleTypes(IPythonType[] members) {
             _members = members;
-            _checkForLazy = true;
         }
 
-        public AstPythonMultipleMembers(IEnumerable<IMember> members) {
+        public AstPythonMultipleTypes(IEnumerable<IPythonType> members) {
             _members = members.ToArray();
-            _checkForLazy = true;
         }
 
-        public IMember Trim() {
-            if (_members.Count == 1) {
-                return _members[0];
-            }
-            return this;
-        }
+        public IPythonType Trim() => _members.Count == 1 ? _members[0] : this;
 
-        public static IMember Combine(IMember x, IMember y) {
+        public static IPythonType Combine(IPythonType x, IPythonType y) {
             if (x == null && y == null) {
                 throw new InvalidOperationException("Cannot add two null members");
             } else if (x == null || (x.MemberType == PythonMemberType.Unknown && !(x is ILazyMember))) {
@@ -57,8 +50,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return x;
             }
 
-            var mmx = x as AstPythonMultipleMembers;
-            var mmy = y as AstPythonMultipleMembers;
+            var mmx = x as AstPythonMultipleTypes;
+            var mmy = y as AstPythonMultipleTypes;
 
             if (mmx != null && mmy == null) {
                 mmx.AddMember(y);
@@ -70,54 +63,74 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 mmx.AddMembers(mmy._members);
                 return mmx;
             } else {
-                return new AstPythonMultipleMembers(new[] { x, y });
+                return new AstPythonMultipleTypes(new[] { x, y });
             }
         }
 
-        public void AddMember(IMember member) {
+        public void AddMember(IPythonType member) {
             if (member == this) {
                 return;
             }
 
+            if (member is AstPythonMultipleTypes mt) {
+                AddMembers(mt._members);
+            }
+
             if (member is IPythonMultipleMembers mm) {
-                AddMembers(mm.Members);
+                AddMembers(mm.Members.OfType<IPythonType>());
                 return;
             }
 
             var old = _members;
             if (!old.Contains(member)) {
                 _members = old.Concat(Enumerable.Repeat(member, 1)).ToArray();
-                _checkForLazy = true;
             } else if (!old.Any()) {
                 _members = new[] { member };
-                _checkForLazy = true;
             }
+            _constructor = null;
         }
 
-        public void AddMembers(IEnumerable<IMember> members) {
+        public void AddMembers(IEnumerable<IPythonType> members) {
             var old = _members;
             if (old.Any()) {
                 _members = old.Union(members.Where(m => m != this)).ToArray();
-                _checkForLazy = true;
             } else {
                 _members = members.Where(m => m != this).ToArray();
-                _checkForLazy = true;
             }
+            _constructor = null;
         }
 
-
-        public IList<IMember> Members {
-            get {
-                if (_checkForLazy) {
-                    _members = _members.Select(m => (m as ILazyMember)?.Get() ?? m).Where(m => m != this).ToArray();
-                    _checkForLazy = false;
+        public IPythonFunction GetConstructors() {
+            if (_constructor == null) {
+                var fns = _members.Select(m => m.GetConstructors()).Where(c => c != null).ToList();
+                if (fns.Count == 0) {
+                    return null;
                 }
-                return _members;
+                var fn = new AstPythonFunction(fns[0]);
+                foreach (var o in fns.Skip(1).SelectMany(f => f.Overloads)) {
+                    fn.AddOverload(o);
+                }
+                _constructor = fn;
             }
+            return _constructor;
         }
 
-        public PythonMemberType MemberType => PythonMemberType.Multiple;
+        public IMember GetMember(IModuleContext context, string name) {
+            return new AstPythonMultipleMembers(_members.Select(m => m.GetMember(context, name))).Trim();
+        }
 
+        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            return _members.SelectMany(m => m.GetMemberNames(moduleContext)).Distinct();
+        }
+
+        public IList<IMember> Members => _members.Cast<IMember>().ToArray();
+        public PythonMemberType MemberType => PythonMemberType.Class;
+        public string Name => _members.Select(m => m.Name).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "<type>";
+        public string Documentation => _members.Select(m => m.Documentation).OrderByDescending(d => d?.Length ?? 0).FirstOrDefault() ?? "";
+        public BuiltinTypeId TypeId => BuiltinTypeId.Type;
+        public IPythonModule DeclaringModule => _members.Select(m => m.DeclaringModule).FirstOrDefault(m => m != null);
+        public IList<IPythonType> Mro => _members.FirstOrDefault()?.Mro;
+        public bool IsBuiltin => _members.All(m => m.IsBuiltin);
         public IEnumerable<LocationInfo> Locations => _members.OfType<ILocatedMember>().SelectMany(m => m.Locations.MaybeEnumerate());
     }
 }
