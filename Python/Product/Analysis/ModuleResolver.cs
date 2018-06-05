@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis {
             => ResolveRelativeFromImport(entry.ModuleName, entry.FilePath, node);
 
         /// <summary>
-        /// Resolves modules listed in the relative import statetement
+        /// Resolves modules listed in the relative import statement
         /// such as 'from . import a, b, c' or 'from .a import b, c'
         /// </summary>
         /// <param name="importingFromModuleName">Name of the importing module</param>
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Extracts actual module names from the 'from import' statetement
+        /// Extracts actual module names from the 'from import' statement
         /// such as [a, b, c] from 'from . import a, b, c' or [a] from 'from .a import b, c'
         /// </summary>
         /// <param name="entry">Project entry</param>
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis {
             => GetModuleNamesFromImport(entry.ModuleName, entry.FilePath, node);
 
         /// <summary>
-        /// Extracts actual module names from the 'from import' statetement
+        /// Extracts actual module names from the 'from import' statement
         /// such as [a, b, c] from 'from . import a, b, c' or [a] from 'from .a import b, c'
         /// </summary>
         /// <param name="importingFromModuleName">Name of the importing module</param>
