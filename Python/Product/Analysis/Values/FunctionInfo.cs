@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal static IEnumerable<KeyValuePair<string,string>> GetDocumentationString(string documentation) {
+        internal static IEnumerable<KeyValuePair<string, string>> GetDocumentationString(string documentation) {
             if (!String.IsNullOrEmpty(documentation)) {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, documentation);
             }
@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             public StringArrayComparer(IEqualityComparer<string> comparer) {
                 _comparer = comparer;
             }
-            
+
             public bool Equals(string[] x, string[] y) {
                 if (x == null || y == null) {
                     return x == null && y == null;

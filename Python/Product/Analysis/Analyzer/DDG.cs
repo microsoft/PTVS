@@ -399,7 +399,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         if (moduleRef.Name.Length + 1 < name.Length) {
                             var remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
                             resolved(moduleRef, remainingParts);
-                         } else {
+                        } else {
                             resolved(moduleRef, null);
                         }
                         return;

@@ -514,7 +514,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (!File.Exists(Path.Combine(dir, "__init__.py"))) {
 
                     var parentModName = Path.GetFileName(dir);
-                    if(!module.StartsWithOrdinal(parentModName)) {
+                    if (!module.StartsWithOrdinal(parentModName)) {
                         break;
                     }
                     if (!_analyzer.Modules.TryImport(parentModName, out var parentModRef)) {

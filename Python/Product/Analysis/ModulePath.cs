@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
         public bool IsCompiled => PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
- 
+
         /// <summary>
         /// True if the module is a native extension module.
         /// </summary>
