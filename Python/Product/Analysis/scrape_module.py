@@ -102,13 +102,13 @@ LIES_ABOUT_MODULE = frozenset([
 
 # These type names cause conflicts with their values, so
 # we need to forcibly rename them.
-SYS_INFO_TYPES = {
+SYS_INFO_TYPES = frozenset((
     "float_info",
     "hash_info",
     "int_info",
     "thread_info",
     "version_info",
-}
+))
 
 VALUE_REPR_FIX = {
     float('inf'): "float('inf')",
