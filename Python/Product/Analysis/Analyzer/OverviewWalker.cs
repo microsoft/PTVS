@@ -441,6 +441,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         _scope.ContainsImportStar = true;
                     } else {
                         var v = CreateVariableInDeclaredScope(nameNode, isLocated: false);
+                        v.IsAlwaysAssigned = true;
                         v.AddReference(nameNode, _curUnit);
                     }
                 }

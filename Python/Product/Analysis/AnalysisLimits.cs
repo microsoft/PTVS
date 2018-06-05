@@ -51,6 +51,9 @@ namespace Microsoft.PythonTools.Analysis {
             return limits;
         }
 
+        // We use string literals here rather than nameof() to ensure back-compat
+        // (though we need to preserve the names of the properties as well for
+        // the same reason, so just don't change anything :) )
         private const string CrossModuleId = "CrossModule";
         private const string CallDepthId = "CallDepth";
         private const string DecreaseCallDepthId = "DecreaseCallDepth";
@@ -66,6 +69,9 @@ namespace Microsoft.PythonTools.Analysis {
         private const string AssignedTypesId = "AssignedTypes";
         private const string UnifyCallsToNewId = "UnifyCallsToNew";
         private const string ProcessCustomDecoratorsId = "ProcessCustomDecorators";
+        private const string UseTypeStubPackagesId = "UseTypeStubPackages";
+        private const string UseTypeStubPackagesExclusivelyId = "UseTypeStubPackagesExclusively";
+
 #if DESKTOP
         /// <summary>
         /// Loads a new instance from the specified registry key.
@@ -99,6 +105,8 @@ namespace Microsoft.PythonTools.Analysis {
                 limits.AssignedTypes = (key.GetValue(AssignedTypesId) as int?) ?? limits.AssignedTypes;
                 limits.UnifyCallsToNew = ((key.GetValue(UnifyCallsToNewId) as int?) ?? (limits.UnifyCallsToNew ? 1 : 0)) != 0;
                 limits.ProcessCustomDecorators = ((key.GetValue(ProcessCustomDecoratorsId) as int?) ?? (limits.ProcessCustomDecorators ? 1 : 0)) != 0;
+                limits.UseTypeStubPackages = ((key.GetValue(UseTypeStubPackagesId) as int?) ?? (limits.UseTypeStubPackages ? 1 : 0)) != 0;
+                limits.UseTypeStubPackagesExclusively = ((key.GetValue(UseTypeStubPackagesExclusivelyId) as int?) ?? (limits.UseTypeStubPackagesExclusively ? 1 : 0)) != 0;
             }
 
             return limits;
@@ -123,8 +131,11 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(AssignedTypesId, AssignedTypes, RegistryValueKind.DWord);
             key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
             key.SetValue(ProcessCustomDecoratorsId, ProcessCustomDecorators ? 1 : 0, RegistryValueKind.DWord);
+            key.SetValue(UseTypeStubPackagesId, UseTypeStubPackages ? 1 : 0, RegistryValueKind.DWord);
+            key.SetValue(UseTypeStubPackagesExclusivelyId, UseTypeStubPackagesExclusively ? 1 : 0, RegistryValueKind.DWord);
         }
 #endif
+
         /// <summary>
         /// The key to use with ProjectEntry.Properties to override the call
         /// depth for functions in that module.
@@ -147,6 +158,8 @@ namespace Microsoft.PythonTools.Analysis {
             AssignedTypes = 30;
             UnifyCallsToNew = true;
             ProcessCustomDecorators = true;
+            UseTypeStubPackages = true;
+            UseTypeStubPackagesExclusively = false;
         }
 
         internal AnalysisLimits(Dictionary<string, int> limits) : this() {
@@ -166,6 +179,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (limits.TryGetValue(AssignedTypesId, out i)) AssignedTypes = i;
             if (limits.TryGetValue(UnifyCallsToNewId, out i)) UnifyCallsToNew = i != 0;
             if (limits.TryGetValue(ProcessCustomDecoratorsId, out i)) ProcessCustomDecorators = i != 0;
+            if (limits.TryGetValue(UseTypeStubPackagesId, out i)) UseTypeStubPackages = i != 0;
+            if (limits.TryGetValue(UseTypeStubPackagesExclusivelyId, out i)) UseTypeStubPackagesExclusively = i != 0;
         }
 
         internal Dictionary<string, int> ToDictionary() {
@@ -185,6 +200,8 @@ namespace Microsoft.PythonTools.Analysis {
                 { AssignedTypesId, AssignedTypes },
                 { UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0 },
                 { ProcessCustomDecoratorsId, ProcessCustomDecorators ? 1 : 0 },
+                { UseTypeStubPackagesId, UseTypeStubPackages ? 1 : 0 },
+                { UseTypeStubPackagesExclusivelyId, UseTypeStubPackagesExclusively ? 1 : 0 }
             };
         }
 
@@ -293,5 +310,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// assumed to return the original function unmodified.
         /// </summary>
         public bool ProcessCustomDecorators { get; set; }
+
+        /// <summary>
+        /// True to read information from type stub packages.
+        /// </summary>
+        public bool UseTypeStubPackages { get; set; }
+
+        /// <summary>
+        /// When both this value and <see cref="UseTypeStubPackages"/> are
+        /// true, omits regular analysis when a matching type stub package is
+        /// found.
+        /// </summary>
+        public bool UseTypeStubPackagesExclusively { get; set; }
     }
 }

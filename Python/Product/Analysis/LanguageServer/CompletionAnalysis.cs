@@ -295,12 +295,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 if (fd.NameExpression != null) {
-                    if (Index >= fd.NameExpression.StartIndex) {
+                    if (fd.NameExpression.StartIndex > fd.KeywordEndIndex && Index >= fd.NameExpression.StartIndex) {
                         return Empty;
                     }
                 }
 
+                if (Index > fd.KeywordEndIndex) {
+                    return Empty;
+                }
+
+                // Disallow keywords, unless we're between the end of decorators and the
+                // end of the "[async] def" keyword.
                 allowKeywords = false;
+                if (Index <= fd.KeywordEndIndex) {
+                    if (fd.Decorators == null || Index >= fd.Decorators.EndIndex) {
+                        allowKeywords = true;
+                    }
+                }
                 return null;
 
             } else if (Statement is ClassDefinition cd) {
@@ -323,12 +334,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 if (cd.NameExpression != null) {
-                    if (Index >= cd.NameExpression.StartIndex) {
+                    if (cd.NameExpression.StartIndex > cd.KeywordEndIndex && Index >= cd.NameExpression.StartIndex) {
                         return Empty;
                     }
                 }
 
+                if (Index > cd.KeywordEndIndex) {
+                    return Empty;
+                }
+
+                // Disallow keywords, unless we're between the end of decorators and the
+                // end of the "[async] def" keyword.
                 allowKeywords = false;
+                if (Index <= cd.KeywordEndIndex) {
+                    if (cd.Decorators == null || Index >= cd.Decorators.EndIndex) {
+                        allowKeywords = true;
+                    }
+                }
                 return null;
             }
             return null;
