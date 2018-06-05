@@ -34,11 +34,13 @@ namespace TestUtilities {
         public static VCCompiler VC11_X86 { get { return FindVC("11.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC12_X86 { get { return FindVC("12.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC14_X86 { get { return FindVC("14.0", ProcessorArchitecture.X86); } }
+        public static VCCompiler VC15_X86 { get { return FindVC("15.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC9_X64 { get { return FindVC("9.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC10_X64 { get { return FindVC("10.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC11_X64 { get { return FindVC("11.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC12_X64 { get { return FindVC("12.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC14_X64 { get { return FindVC("14.0", ProcessorArchitecture.Amd64); } }
+        public static VCCompiler VC15_X64 { get { return FindVC("15.0", ProcessorArchitecture.Amd64); } }
 
         private VCCompiler(string bin, string bins, string include, string lib) {
             BinPath = bin ?? string.Empty;

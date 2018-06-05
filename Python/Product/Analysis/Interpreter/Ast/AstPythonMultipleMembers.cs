@@ -39,6 +39,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _checkForLazy = true;
         }
 
+        public IMember Trim() {
+            if (_members.Count == 1) {
+                return _members[0];
+            }
+            return this;
+        }
+
         public static IMember Combine(IMember x, IMember y) {
             if (x == null && y == null) {
                 throw new InvalidOperationException("Cannot add two null members");

@@ -309,6 +309,75 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstLibraryMembers_Datetime() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    entry.AddModule("test-module", "import datetime");
+                    entry.WaitForAnalysis();
+
+                    var dtClass = entry.GetTypes("datetime.datetime").FirstOrDefault(t => t.MemberType == PythonMemberType.Class && t.Name == "datetime");
+                    Assert.IsNotNull(dtClass);
+
+                    var dayProperty = dtClass.GetMember(entry.ModuleContext, "day");
+                    Assert.IsNotNull(dayProperty);
+                    Assert.AreEqual(PythonMemberType.Property, dayProperty.MemberType);
+
+                    var prop = dayProperty as AstPythonProperty;
+                    Assert.IsTrue(prop.IsReadOnly);
+                    Assert.AreEqual(BuiltinTypeId.Int, prop.Type.TypeId);
+
+                    var nowMethod = dtClass.GetMember(entry.ModuleContext, "now");
+                    Assert.IsNotNull(nowMethod);
+                    Assert.AreEqual(PythonMemberType.Method, nowMethod.MemberType);
+
+                    var func = nowMethod as AstPythonFunction;
+                    Assert.IsTrue(func.IsClassMethod);
+
+                    Assert.AreEqual(1, func.Overloads.Count);
+                    var overload = func.Overloads[0];
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("datetime", overload.ReturnType[0].Name);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstComparisonTypeInference() {
+            using (var entry = CreateAnalysis()) {
+                try {
+                    var code = @"
+class BankAccount(object):
+    def __init__(self, initial_balance=0):
+        self.balance = initial_balance
+    def withdraw(self, amount):
+        self.balance -= amount
+    def overdrawn(self):
+        return self.balance < 0
+";
+                    entry.AddModule("test-module", code);
+                    entry.WaitForAnalysis();
+
+                    var moduleEntry = entry.Modules.First().Value;
+
+                    var varDef = moduleEntry.Analysis.Scope.AllVariables.First(x => x.Key == "BankAccount").Value;
+                    var clsInfo = varDef.Types.First(x => x is ClassInfo).First() as ClassInfo;
+                    var overdrawn = clsInfo.Scope.GetVariable("overdrawn").Types.First() as FunctionInfo;
+
+                    Assert.AreEqual(1, overdrawn.Overloads.Count());
+                    var overload = overdrawn.Overloads.First();
+                    Assert.IsNotNull(overload);
+                    Assert.AreEqual(1, overload.ReturnType.Count);
+                    Assert.AreEqual("bool", overload.ReturnType[0]);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {
@@ -386,7 +455,7 @@ R_A3 = R_A1.r_A()");
             if (!Path.IsPathRooted(path)) {
                 path = TestData.GetPath(Path.Combine("TestData", "AstAnalysis", path));
             }
-            return AstPythonModule.FromFile(interpreter, path, version);
+            return PythonModuleLoader.FromFile(interpreter, path, version);
         }
 
         [TestMethod, Priority(0)]
@@ -674,11 +743,102 @@ y = g()");
 
                     analysis.AssertIsInstance("x", BuiltinTypeId.Int);
                     analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+                    var sigs = analysis.GetSignatures("f").ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(1, sigs[0].Parameters.Length);
+                    var p = sigs[0].Parameters[0];
+                    Assert.AreEqual("p", p.Name);
+                    Assert.AreEqual("int", p.Type);
+                    Assert.AreEqual("", p.DefaultValue ?? "");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
             }
         }
+        #endregion
+
+        #region Type Shed tests
+
+        private static PythonVersion VersionWithTypeShed =>
+            PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "typeshed")));
+
+        [TestMethod, Priority(0)]
+        public void TypeShedElementTree() {
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
+
+e = ET.Element()
+e2 = e.makeelement()
+iterfind = e.iterfind
+l = iterfind()");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertHasParameters("ET.Element", "tag", "attrib", "**extra");
+                    analysis.AssertHasParameters("e.makeelement", "tag", "attrib");
+                    analysis.AssertHasParameters("iterfind", "path", "namespaces");
+                    analysis.AssertIsInstance("l", BuiltinTypeId.List);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedChildModules() {
+            string[] expected;
+
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    expected = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    Assert.AreNotEqual(0, expected.Length);
+                    AssertUtil.ContainsAtLeast(expected, "parse", "request");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    var mods = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    AssertUtil.ArrayEquals(expected, mods);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedSysExcInfo() {
+            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+                try {
+                    var entry = analysis.AddModule("test-module", @"import sys
+
+e1, e2, e3 = sys.exc_info()");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertIsInstance("e1", "BaseException", "Type", "Unknown");
+                    analysis.AssertIsInstance("e2", "BaseException", "Type", "Unknown");
+                    analysis.AssertIsInstance("e3", "BaseException", "Type", "Unknown");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
         #endregion
     }
 }

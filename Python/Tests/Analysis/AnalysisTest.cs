@@ -32,7 +32,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -936,7 +935,7 @@ a = A()
 
             var clsA = entry.GetValue<ClassInfo>("A");
             var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
 
             // Unsuccessful: cannot order X and Y
             code = @"
@@ -979,7 +978,7 @@ G.remember2buy
             entry = ProcessTextV2(code);
             clsG = entry.GetValue<ClassInfo>("G");
             var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "object");
+            AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -999,7 +998,7 @@ z = Z()
             var clsZ = entry.GetValue<ClassInfo>("Z");
             Assert.IsNotNull(clsZ);
             var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "object");
+            AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
             code = @"
@@ -1012,28 +1011,28 @@ z = None
             entry = ProcessTextV2(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
 
             var clsB = entry.GetValue<ClassInfo>("B");
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "str", "basestring", "object");
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type basestring", "type object");
 
             entry = ProcessTextV3(code);
             clsA = entry.GetValue<ClassInfo>("A");
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "int", "object");
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
 
             clsB = entry.GetValue<ClassInfo>("B");
             mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "float", "object");
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
 
             clsC = entry.GetValue<ClassInfo>("C");
             mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "str", "object");
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
         }
 
         [TestMethod, Priority(0)]
@@ -2957,7 +2956,7 @@ from oarbaz import abc
 abc()
 ";
             var oarText = "class abc1(object): pass";
-            var bazText = "class abc2(object): pass";
+            var bazText = "\n\n\n\nclass abc2(object): pass";
             var oarBazText = @"from oar import abc1 as abc
 from baz import abc2 as abc";
 
@@ -2973,20 +2972,18 @@ from baz import abc2 as abc";
             state.AssertReferences(oarMod, "abc1", oarText.IndexOf("abc1"),
                 new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(1, 25, VariableType.Reference)
+                new VariableLocation(1, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(bazMod, "abc2", bazText.IndexOf("abc2"),
-                new VariableLocation(1, 1, VariableType.Value),
-                new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(2, 25, VariableType.Reference)
+                new VariableLocation(5, 1, VariableType.Value),
+                new VariableLocation(5, 7, VariableType.Definition),
+                new VariableLocation(2, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(fobMod, "abc", 0,
-                new VariableLocation(1, 1, VariableType.Value),
-                new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
+                new VariableLocation(1, 1, VariableType.Value, "oar"),
+                new VariableLocation(5, 1, VariableType.Value, "baz"),
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
-                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
-                new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
             );
@@ -3325,7 +3322,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
 
             entry = ProcessText(@"
 class C(object):
@@ -3336,7 +3333,7 @@ a = C()
 b = a.f
             ");
 
-            entry.AssertDescription("b", "method f of test-module.C objects \r\ndoc string");
+            entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
         [TestMethod, Priority(0)]
@@ -3425,8 +3422,8 @@ class cls(cls):
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
             AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
-                "The most base type",
-                "cls"
+                "cls",
+                "object"
             );
         }
 
@@ -4822,7 +4819,7 @@ min(a, D())
 
         [TestMethod, Priority(0)]
         public void MoveClass() {
-            var fobSrc = "from oar import C";
+            var fobSrc = "";
 
             var oarSrc = @"
 class C(object):
@@ -4839,11 +4836,15 @@ class C(object):
                 var oar = state.AddModule("oar", oarSrc);
                 var baz = state.AddModule("baz", bazSrc);
 
+                state.UpdateModule(fob, "from oar import C");
+                state.WaitForAnalysis();
+
                 state.WaitForAnalysis();
 
                 state.AssertDescription(fob, "C", "C");
-                state.AssertReferencesInclude(baz, "C", 0,
-                    new VariableLocation(2, 7, VariableType.Definition, oar.FilePath)
+                state.AssertReferencesInclude(fob, "C", 0,
+                    new VariableLocation(1, 17, VariableType.Reference, fob.FilePath),
+                    new VariableLocation(2, 1, VariableType.Value, oar.FilePath)
                 );
 
                 // delete the class..
@@ -4857,7 +4858,8 @@ class C(object):
 
                 state.AssertDescription(fob, "C", "C");
                 state.AssertReferencesInclude(fob, "C", 0,
-                    new VariableLocation(2, 7, VariableType.Definition, baz.FilePath)
+                    new VariableLocation(1, 17, VariableType.Reference, fob.FilePath),
+                    new VariableLocation(2, 1, VariableType.Value, baz.FilePath)
                 );
             }
         }
@@ -5833,8 +5835,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("sys", "sys");
             entry.AssertDescription("f", "test-module.f() -> str");
             entry.AssertDescription("fob.f", "test-module.fob.f(self: fob)\r\ndeclared in fob");
-            entry.AssertDescription("fob().g", "method g of test-module.fob objects ");
-            entry.AssertDescription("fob", "test-module.fob(object)");
+            entry.AssertDescription("fob().g", "method g of test-module.fob objects");
+            entry.AssertDescription("fob", "class test-module.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             entry.AssertDescription("g", "test-module.g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
@@ -5855,7 +5857,8 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("with_params_default_starargs", "test-module.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns itself, we shouldn't stack overflow producing the help...
-            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects ...\r\nsome help");
+            entry.AssertDescription("return_func_class().return_func", "method return_func of test-module.return_func_class objects...");
+            entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
         [TestMethod, Priority(0)]
@@ -6965,6 +6968,28 @@ y = mcc()
             entry.AddModule("test-module", code);
             entry.WaitForAnalysis();
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("P"), "abspath", "dirname");
+        }
+
+        [TestMethod, Priority(0)]
+        public void UnassignedClassMembers() {
+            var code = @"
+from typing import NamedTuple
+
+class Employee(NamedTuple):
+    name: str
+    id: int = 3
+
+e = Employee('Guido')
+";
+            var version = PythonPaths.Versions.LastOrDefault(v => v.IsCPython && File.Exists(v.InterpreterPath));
+            version.AssertInstalled();
+            var entry = CreateAnalyzer(new Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory(
+                version.Configuration,
+                new InterpreterFactoryCreationOptions { DatabasePath = TestData.GetTempPath(), WatchFileSystem = false }
+            ));
+            entry.AddModule("test-module", code);
+            entry.WaitForAnalysis();
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("e"), "name", "id");
         }
 
         #endregion

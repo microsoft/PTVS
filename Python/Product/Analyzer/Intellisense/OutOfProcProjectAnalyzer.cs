@@ -1421,7 +1421,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                     startLine = s.location.range.start.line + 1,
                                     startColumn = s.location.range.start.character + 1,
                                     endLine = s.location.range.end.line + 1,
-                                    endColumn = s.location.range.end.character + 1
+                                    endColumn = s.location.range.end.character + 1,
+                                    kind = "definition",
                                 }
                             }
                         }

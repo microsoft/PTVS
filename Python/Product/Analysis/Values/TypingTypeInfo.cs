@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet GetInstanceType() => this;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (_args == null && node is CallExpression ce) {
+            if ((_args == null || !_args.Any()) && node is CallExpression ce) {
                 return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.TypeAnnotation, n => {
                     // Use annotation converter and reparse the arguments
                     var newArgs = new List<IAnalysisSet>();
@@ -152,9 +152,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override string Description => _innerValue?.Description ?? base.Description; 
-        public override string Documentation => _innerValue?.Documentation ?? base.Documentation;
-        public override PythonMemberType MemberType => _innerValue != null ? _innerValue.MemberType : base.MemberType;
+        public override string Description => base.Description ?? _innerValue?.Description; 
+        public override string Documentation => base.Documentation ?? _innerValue?.Documentation;
 
         public override bool Equals(object obj) {
             if (obj is TypingTypeInfo other) {

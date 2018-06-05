@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -41,6 +42,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         // Available for tests to override
         internal static bool LogToConsole = false;
 
+        private IReadOnlyList<string> _typeShedPaths;
+
 #if DEBUG
         const int LogCacheSize = 1;
         const int LogRotationSize = 16384;
@@ -64,6 +67,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             } catch (InvalidOperationException ex) {
                 throw new ArgumentException(ex.Message, ex);
             }
+            BuiltinModuleName = BuiltinTypeId.Unknown.GetModuleName(LanguageVersion);
 
             _databasePath = CreationOptions.DatabasePath;
             _useDefaultDatabase = useDefaultDatabase;
@@ -130,13 +134,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public PythonLanguageVersion LanguageVersion { get; }
 
+        public string BuiltinModuleName { get; }
+
         public event EventHandler ImportableModulesChanged;
 
         public void NotifyImportNamesChanged() {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
+                _typeShedPaths = null;
             }
+
 
             if (File.Exists(_searchPathCachePath)) {
                 PathUtils.DeleteFile(_searchPathCachePath);
@@ -420,5 +428,340 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return ex.ToString();
             }
         }
+
+        #region Module Imports
+
+        public enum TryImportModuleResult {
+            Success,
+            ModuleNotFound,
+            NeedRetry,
+            NotSupported,
+            Timeout
+        }
+
+        public sealed class TryImportModuleContext {
+            public IPythonInterpreter Interpreter { get; set; }
+            public ConcurrentDictionary<string, IPythonModule> ModuleCache { get; set; }
+            public int Timeout { get; set; } = 5000;
+            public IPythonModule BuiltinModule { get; set; }
+            public Func<string, Task<ModulePath?>> FindModuleInUserSearchPathAsync { get; set; }
+            public bool IncludeTypeStubPackages { get; set; }
+            public bool MergeTypeStubPackages { get; set; }
+        }
+
+        public TryImportModuleResult TryImportModule(
+            string name,
+            out IPythonModule module,
+            TryImportModuleContext context
+        ) {
+            module = null;
+            if (string.IsNullOrEmpty(name)) {
+                return TryImportModuleResult.ModuleNotFound;
+            }
+
+            Debug.Assert(!name.EndsWithOrdinal("."), $"{name} should not end with '.'");
+
+            // Handle builtins explicitly
+            if (name == BuiltinModuleName) {
+                Debug.Fail($"Interpreters must handle import {name} explicitly");
+                return TryImportModuleResult.NotSupported;
+            }
+
+            var modules = context?.ModuleCache;
+            int importTimeout = context?.Timeout ?? 5000;
+            SentinelModule sentinalValue = null;
+
+            if (modules != null) {
+                // Return any existing module
+                if (modules.TryGetValue(name, out module) && module != null) {
+                    if (module is SentinelModule smod) {
+                        // If we are importing this module on another thread, allow
+                        // time for it to complete. This does not block if we are
+                        // importing on the current thread or the module is not
+                        // really being imported.
+                        var newMod = smod.WaitForImport(importTimeout);
+                        if (newMod is SentinelModule) {
+                            _log?.Log(TraceLevel.Warning, "RecursiveImport", name);
+                            module = newMod;
+                        } else if (newMod == null) {
+                            _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
+                            module = null;
+                            return TryImportModuleResult.Timeout;
+                        } else {
+                            module = newMod;
+                        }
+                    }
+                    return TryImportModuleResult.Success;
+                }
+
+                // Set up a sentinel so we can detect recursive imports
+                sentinalValue = new SentinelModule(name, true);
+                if (!modules.TryAdd(name, sentinalValue)) {
+                    // Try to get the new module, in case we raced with a .Clear()
+                    if (modules.TryGetValue(name, out module) && !(module is SentinelModule)) {
+                        return module == null ? TryImportModuleResult.ModuleNotFound : TryImportModuleResult.Success;
+                    }
+                    // If we reach here, the race is too complicated to recover
+                    // from. Signal the caller to try importing again.
+                    _log?.Log(TraceLevel.Warning, "RetryImport", name);
+                    return TryImportModuleResult.NeedRetry;
+                }
+            }
+
+            // Do normal searches
+            if (!string.IsNullOrEmpty(Configuration?.InterpreterPath)) {
+                var importTask = ImportFromSearchPathsAsync(name, context);
+                if (importTask.Wait(importTimeout)) {
+                    module = importTask.Result;
+                } else {
+                    _log?.Log(TraceLevel.Error, "ImportTimeout", name, "ImportFromSearchPaths");
+                    module = null;
+                }
+                module = module ?? ImportFromBuiltins(name, context.BuiltinModule as AstBuiltinsPythonModule);
+            }
+            if (module == null) {
+                module = ImportFromCache(name);
+            }
+
+            if (modules != null) {
+                // Replace our sentinel, or if we raced, get the current
+                // value and abandon the one we just created.
+                if (!modules.TryUpdate(name, module, sentinalValue)) {
+                    // Try to get the new module, in case we raced
+                    if (modules.TryGetValue(name, out module) && !(module is SentinelModule)) {
+                        return module == null ? TryImportModuleResult.ModuleNotFound : TryImportModuleResult.Success;
+                    }
+                    // If we reach here, the race is too complicated to recover
+                    // from. Signal the caller to try importing again.
+                    _log?.Log(TraceLevel.Warning, "RetryImport", name);
+                    return TryImportModuleResult.NeedRetry;
+                }
+                sentinalValue.Complete(module);
+                sentinalValue.Dispose();
+            }
+
+            // Also search for type stub packages if enabled and we are not a blacklisted module
+            if (module != null && context.IncludeTypeStubPackages && module.Name != "typing") {
+                // Note that this currently only looks in the typeshed package, as type stub
+                // packages are not yet standardised so we don't know where to look.
+                // The details will be in PEP 561.
+                var typeShedPaths = GetTypeShedPaths(importTimeout);
+                if (typeShedPaths?.Any() == true) {
+                    var mtsp = FindModuleInSearchPath(typeShedPaths, null, module.Name);
+                    if (mtsp.HasValue) {
+                        var mp = mtsp.Value;
+                        if (mp.IsCompiled) {
+                            Debug.Fail("Unsupported native module in typeshed");
+                        } else {
+                            _log?.Log(TraceLevel.Verbose, "ImportTypeShed", mp.FullName, FastRelativePath(mp.SourceFile));
+                            var tsModule = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
+
+                            if (tsModule != null) {
+                                if (context.MergeTypeStubPackages) {
+                                    module = AstPythonMultipleModules.Combine(module, tsModule);
+                                } else {
+                                    module = tsModule;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return module == null ? TryImportModuleResult.ModuleNotFound : TryImportModuleResult.Success;
+        }
+
+        private IPythonModule ImportFromCache(string name) {
+            if (string.IsNullOrEmpty(CreationOptions.DatabasePath)) {
+                return null;
+            }
+
+            if (File.Exists(GetCacheFilePath("python.{0}.pyi".FormatInvariant(name)))) {
+                return new AstCachedPythonModule(name, "python.{0}".FormatInvariant(name));
+            }
+            if (File.Exists(GetCacheFilePath("python._{0}.pyi".FormatInvariant(name)))) {
+                return new AstCachedPythonModule(name, "python._{0}".FormatInvariant(name));
+            }
+            if (File.Exists(GetCacheFilePath("{0}.pyi".FormatInvariant(name)))) {
+                return new AstCachedPythonModule(name, name);
+            }
+
+            return null;
+        }
+
+        private IPythonModule ImportFromBuiltins(string name, AstBuiltinsPythonModule builtinModule) {
+            if (builtinModule == null) {
+                return null;
+            }
+            var bmn = builtinModule.GetAnyMember("__builtin_module_names__") as AstPythonStringLiteral;
+            var names = bmn?.Value ?? string.Empty;
+            // Quick substring check
+            if (!names.Contains(name)) {
+                return null;
+            }
+            // Proper split/trim check
+            if (!names.Split(',').Select(n => n.Trim()).Contains(name)) {
+                return null;
+            }
+
+            _log?.Log(TraceLevel.Info, "ImportBuiltins", name, FastRelativePath(Configuration.InterpreterPath));
+
+            try {
+                return new AstBuiltinPythonModule(name, Configuration.InterpreterPath);
+            } catch (ArgumentNullException) {
+                Debug.Fail("No factory means cannot import builtin modules");
+                return null;
+            }
+        }
+
+        private async Task<IPythonModule> ImportFromSearchPathsAsync(string name, TryImportModuleContext context) {
+            try {
+                return await ImportFromSearchPathsAsyncWorker(name, context).ConfigureAwait(false);
+            } catch (Exception ex) {
+                _log?.Log(TraceLevel.Error, "ImportFromSearchPathsAsync", ex.ToString());
+                throw;
+            }
+        }
+
+        protected async Task<ModulePath?> FindModuleInSearchPathAsync(string name) {
+            var searchPaths = await GetSearchPathsAsync().ConfigureAwait(false);
+            var packages = await GetImportableModulesAsync().ConfigureAwait(false);
+            return FindModuleInSearchPath(searchPaths, packages, name);
+        }
+
+        protected virtual ModulePath? FindModuleInSearchPath(IReadOnlyList<string> searchPaths, IReadOnlyDictionary<string, string> packages, string name) {
+            _log?.Log(TraceLevel.Verbose, "FindModule", name, "system", string.Join(", ", searchPaths));
+
+            if (searchPaths == null) {
+                return null;
+            }
+
+            int i = name.IndexOf('.');
+            var firstBit = i < 0 ? name : name.Remove(i);
+            string searchPath;
+
+            ModulePath mp;
+
+            if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
+                    return mp;
+                }
+            }
+
+            foreach (var sp in searchPaths.MaybeEnumerate()) {
+                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, out mp)) {
+                    return mp;
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<IPythonModule> ImportFromSearchPathsAsyncWorker(string name, TryImportModuleContext context) {
+            ModulePath? mmp = null;
+            if (context.FindModuleInUserSearchPathAsync != null) {
+                try {
+                    mmp = await context.FindModuleInUserSearchPathAsync(name);
+                } catch (Exception ex) {
+                    _log?.Log(TraceLevel.Error, "Exception", ex.ToString());
+                    _log?.Flush();
+                    return null;
+                }
+            }
+
+            if (!mmp.HasValue) {
+                mmp = await FindModuleInSearchPathAsync(name);
+            }
+
+            if (!mmp.HasValue) {
+                _log?.Log(TraceLevel.Verbose, "ImportNotFound", name);
+                return null;
+            }
+
+            var mp = mmp.Value;
+
+            IPythonModule module;
+
+            if (mp.IsCompiled) {
+                _log?.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, FastRelativePath(mp.SourceFile));
+                module = new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
+            } else {
+                _log?.Log(TraceLevel.Verbose, "Import", mp.FullName, FastRelativePath(mp.SourceFile));
+                module = PythonModuleLoader.FromFile(context.Interpreter, mp.SourceFile, LanguageVersion, mp.FullName);
+            }
+
+            return module;
+        }
+
+        private IReadOnlyList<string> GetTypeShedPaths(int timeout) {
+            // First check
+            var typeShedPaths = _typeShedPaths;
+            if (typeShedPaths != null) {
+                return typeShedPaths;
+            }
+            lock (_searchPathsLock) {
+                // Second check after locking
+                if (_typeShedPaths != null) {
+                    return _typeShedPaths;
+                }
+            }
+
+            try {
+                var importTask = GetTypeShedPathsAsync();
+                return importTask.Wait(timeout) ? importTask.Result : null;
+            } catch (Exception ex) {
+                _log?.Log(TraceLevel.Error, "GetTypeShedPaths", ex.ToString());
+            }
+            return null;
+        }
+
+        private async Task<IReadOnlyList<string>> GetTypeShedPathsAsync() {
+            // Assume caller has already done the quick checks
+
+            IReadOnlyList<string> typeShedPaths;
+            var typeshed = await FindModuleInSearchPathAsync("typeshed");
+
+            lock (_searchPathsLock) {
+                // Final check after searching and locking
+                if (_typeShedPaths != null) {
+                    return _typeShedPaths;
+                }
+                
+                if (typeshed.HasValue) {
+                    typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile), LanguageVersion.ToVersion()).ToArray();
+                } else {
+                    typeShedPaths = Array.Empty<string>();
+                }
+
+                if (_typeShedPaths == null) {
+                    _typeShedPaths = typeShedPaths;
+                } else {
+                    typeShedPaths = _typeShedPaths;
+                }
+            }
+
+            return typeShedPaths;
+        }
+
+        private static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
+            var stdlib = Path.Combine(path, "stdlib");
+            var thirdParty = Path.Combine(path, "third_party");
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(stdlib, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(thirdParty, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+        }
+
+        #endregion
     }
 }

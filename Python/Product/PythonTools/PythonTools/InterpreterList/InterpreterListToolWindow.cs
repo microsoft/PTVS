@@ -161,6 +161,8 @@ namespace Microsoft.PythonTools.InterpreterList {
                     view.Factory.Configuration,
                     false
                 ));
+            } catch (DirectoryNotFoundException) {
+                path = null;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 view.Dispatcher.BeginInvoke((Action)(() => ex.ReportUnhandledException(_site, GetType())), DispatcherPriority.ApplicationIdle);
                 path = null;

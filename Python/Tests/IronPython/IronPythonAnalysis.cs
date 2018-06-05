@@ -15,9 +15,9 @@
 // permissions and limitations under the License.
 
 using System.Runtime.Remoting;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using TestUtilities.Python;
 
 namespace IronPythonTests {

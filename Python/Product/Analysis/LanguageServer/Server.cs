@@ -433,7 +433,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
             }
             if (uri.IsFile) {
-                return uri.LocalPath;
+                return uri.ToAbsolutePath();
             }
             var scheme = uri.Scheme;
             var path = uri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
