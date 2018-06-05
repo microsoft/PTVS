@@ -459,9 +459,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return TryImportModuleResult.ModuleNotFound;
             }
 
-            if(name.EndsWithOrdinal(".")) { // Incomplete construct
-                return TryImportModuleResult.ModuleNotFound;
-            }
+            Debug.Assert(!name.EndsWithOrdinal("."), $"{name} should not end with '.'");
 
             // Handle builtins explicitly
             if (name == BuiltinModuleName) {
