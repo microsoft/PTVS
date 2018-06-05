@@ -162,8 +162,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            DeclaringModule.Scope.ClearLinkedVariables();
-
             ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
 

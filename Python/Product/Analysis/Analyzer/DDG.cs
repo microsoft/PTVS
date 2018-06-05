@@ -288,8 +288,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             if (added) {
-                variable.AddAssignment(node, _unit);
-
                 // anyone who read from the module will now need to get the new values
                 GlobalScope.ModuleDefinition.EnqueueDependents();
             }
