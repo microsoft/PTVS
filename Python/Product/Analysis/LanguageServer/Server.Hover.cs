@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
 
-            if (w.ImportedModules.Any()) {
+            if (string.IsNullOrEmpty(w.ImportedMember) && w.ImportedModules.Any()) {
                 var sb = new StringBuilder();
                 foreach (var n in w.ImportedModules) {
                     if (_analyzer.Modules.TryImport(n, out var modRef)) {
@@ -60,9 +60,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
                     }
                 }
-                if (sb.Length > 0) {
-                    return new Hover { contents = sb.ToString() };
-                }
+                return new Hover { contents = sb.ToString() };
             }
 
             Expression expr;

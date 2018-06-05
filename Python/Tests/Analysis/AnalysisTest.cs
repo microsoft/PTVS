@@ -6805,12 +6805,12 @@ def f():
                 new { Code="import abc", Index=10, Expected="abc", Base="" },
                 new { Code="import deg, abc as A", Index=12, Expected="abc", Base="" },
                 new { Code="from abc import A", Index=6, Expected="abc", Base="" },
-                new { Code="from .deg import A", Index=9, Expected="abc.deg.A", Base="abc" },
-                new { Code="from .hij import A", Index=9, Expected="abc.deg.hij.A", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="abc.hij.A", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="abc.deg.hij.A", Base="abc.deg.HIJ" },
-                new { Code="from .. import deg", Index=10, Expected="abc.deg", Base="abc.deg" },
-                new { Code="from . import A", Index=10, Expected="abc.deg.A", Base="abc.deg" },
+                new { Code="from .deg import A", Index=9, Expected="deg.A", Base="abc" },
+                new { Code="from .hij import A", Index=9, Expected="abc.hij.A", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="hij.A", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.hij.A", Base="abc.deg.HIJ" },
+                new { Code="from .. import deg", Index=10, Expected="deg", Base="abc.deg" },
+                new { Code="from . import A", Index=10, Expected="abc.A", Base="abc.deg" },
             }) {
                 var entry = ProcessTextV3(item.Code);
                 var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);
