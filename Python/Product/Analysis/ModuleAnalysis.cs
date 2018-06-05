@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null, InterpreterScope scope = null) {
             scope = scope ?? FindScope(location);
-            if(scope == null) {
+            if (scope == null) {
                 return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), null);
             }
 
@@ -411,7 +411,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
-            if(scope == null) {
+            if (scope == null) {
                 return Enumerable.Empty<MemberResult>();
             }
 
@@ -500,7 +500,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
-            if(scope == null) {
+            if (scope == null) {
                 return Enumerable.Empty<IOverloadResult>();
             }
 
@@ -607,7 +607,7 @@ namespace Microsoft.PythonTools.Analysis {
                     } else if ((builtinClass = baseClass as BuiltinClassInfo) != null) {
                         source = builtinClass.GetAllMembers(InterpreterContext)
                             .SelectMany(kv => kv.Value)
-                            .Where(child => child != null && 
+                            .Where(child => child != null &&
                                 (child.MemberType == PythonMemberType.Function ||
                                  child.MemberType == PythonMemberType.Method));
                     } else {
@@ -683,7 +683,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // collect variables from user defined scopes
             var scope = FindScope(location);
-            if(scope == null) {
+            if (scope == null) {
                 return Enumerable.Empty<MemberResult>();
             }
 
@@ -741,7 +741,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             IEnumerable<string> keywords = null;
-            
+
             if (options.ExpressionKeywords()) {
                 // keywords available in any context
                 keywords = PythonKeywords.Expression(ProjectState.LanguageVersion);
@@ -995,7 +995,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private InterpreterScope FindScope(SourceLocation location) 
+        private InterpreterScope FindScope(SourceLocation location)
             => _unit.Tree != null ? FindScope(Scope, _unit.Tree, location) : null;
 
         private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {

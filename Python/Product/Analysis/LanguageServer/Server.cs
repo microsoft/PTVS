@@ -498,6 +498,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return Task.FromResult(item);
         }
+
         private void AddParentModules(string module, string path) {
             if (ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion) ||
                 string.IsNullOrEmpty(_rootDir)) {
@@ -507,7 +508,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var dir = Path.GetDirectoryName(path);
             while (true) {
                 // Go up one level
-                dir = Path.GetDirectoryName(dir);
+                dir = PathUtils.GetParent(dir);
                 if (dir.Length <= _rootDir.Length) {
                     break;
                 }
@@ -530,7 +531,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             entry.GetModuleInfo().AddModuleReference(modRef);
 
                             var varName = module.Substring(parentModName.Length + 1);
-                            var v = entry.Analysis.Scope.AddVariable(varName, new LocatedVariableDef(entry, new EncodedLocation()));
+                            var v = entry.Analysis.Scope.AddVariable(varName, new VariableDef());
                             v.AddTypes(entry, modRef.AnalysisModule.SelfSet, false);
                         }
                     }
