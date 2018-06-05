@@ -345,8 +345,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
-                    var modName = node.Root.MakeString();
-                    if (modRef.Name != modName) {
+                    if (bits == null || bits.Count == 0) {
                         AssignImportedModule(nameNode, modRef, bits, newName ?? impName);
                     } else {
                         fullImpName[fullImpName.Length - 1] = impName;
@@ -382,7 +381,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 ModuleReference moduleRef = null;
-                foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
+                foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {
                         // First part is module
                         moduleRef = mref;
@@ -403,10 +402,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                          } else {
                             resolved(moduleRef, null);
                         }
-                        continue;
+                        return;
                     }
-                    unresolved(name);
                 }
+                unresolved(name);
             }
         }
 

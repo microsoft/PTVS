@@ -115,9 +115,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     calledUnit.Enqueue();
                 }
 
-                res.Split(v => v.IsResolvable(), out _, out var nonLazy);
-                res = DoCall(node, unit, calledUnit, callArgs);
-                res = res.Union(nonLazy);
+                if (calledUnit != null) {
+                    res.Split(v => v.IsResolvable(), out _, out var nonLazy);
+                    res = DoCall(node, unit, calledUnit, callArgs);
+                    res = res.Union(nonLazy);
+                }
             }
 
             var context = unit.ForEval ? ResolutionContext.Complete : new ResolutionContext {
