@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 var resolved = names.SelectMany(n => ResolvePotentialModuleNames(
                         importingFromModuleName, importingFromFilePath,
-                        $"{0}{1}".FormatInvariant(prefix, n), node.ForceAbsolute)).ToArray();
+                        "{0}{1}".FormatInvariant(prefix, n), node.ForceAbsolute)).ToArray();
                 if (resolved.Length == 1 && resolved[0].Length > 2 && resolved[0].EndsWithOrdinal(".*")) {
                     resolved[0] = resolved[0].Substring(0, resolved[0].Length - 2);
                 }

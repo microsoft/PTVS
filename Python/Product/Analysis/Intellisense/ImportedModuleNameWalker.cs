@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public IEnumerable<string> ImportedModules { get; private set; } = Enumerable.Empty<string>();
-        public string ImportedMember { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
             if (node.StartIndex <= Location && Location <= node.EndIndex) {
@@ -42,11 +41,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 // over 'a' in 'from . import a, b, c' or over 'x' in 'from a import x'
                 // and store module names and imported parts
                 ImportedModules = ModuleResolver.ResolveRelativeFromImport(_importingFromModuleName, _importingFromFilePath, node);
-                ImportedMember = node.Names
-                    .Where(n => n.StartIndex <= Location && Location <= n.EndIndex)
-                    .Select(n => n.Name)
-                    .Except(ImportedModules)
-                    .FirstOrDefault();
             }
             return false;
         }
