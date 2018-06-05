@@ -400,5 +400,38 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             );
             return isDir ? EnsureEndSeparator(newPath) : newPath;
         }
+
+        /// <summary>
+        /// Returns the path to the parent directory segment of a path. If the
+        /// last character of the path is a directory separator, the segment
+        /// prior to that character is removed. Otherwise, the segment following
+        /// the last directory separator is removed.
+        /// </summary>
+        /// <remarks>
+        /// This should be used in place of:
+        /// <c>Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar</c>
+        /// </remarks>
+        public static string GetParent(string path) {
+            if (string.IsNullOrEmpty(path) || path.Length <= 1) {
+                return string.Empty;
+            }
+
+            int last = path.Length - 1;
+            if (DirectorySeparators.Contains(path[last])) {
+                last -= 1;
+            }
+
+            if (last <= 0) {
+                return string.Empty;
+            }
+
+            last = path.LastIndexOfAny(DirectorySeparators, last);
+
+            if (last < 0) {
+                return string.Empty;
+            }
+
+            return path.Remove(last + 1);
+        }
     }
 }
