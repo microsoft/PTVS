@@ -345,7 +345,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </returns>
         public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
             var unresolved = importFrom.GetModuleInfo().GetAllUnresolvedModules();
-            if(unresolved.Count == 0) {
+            if (unresolved.Count == 0) {
                 return true;
             }
             var names = ModuleResolver.ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports);
