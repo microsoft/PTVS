@@ -2956,7 +2956,7 @@ from oarbaz import abc
 abc()
 ";
             var oarText = "class abc1(object): pass";
-            var bazText = "class abc2(object): pass";
+            var bazText = "\n\n\n\nclass abc2(object): pass";
             var oarBazText = @"from oar import abc1 as abc
 from baz import abc2 as abc";
 
@@ -2972,20 +2972,18 @@ from baz import abc2 as abc";
             state.AssertReferences(oarMod, "abc1", oarText.IndexOf("abc1"),
                 new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(1, 25, VariableType.Reference)
+                new VariableLocation(1, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(bazMod, "abc2", bazText.IndexOf("abc2"),
-                new VariableLocation(1, 1, VariableType.Value),
-                new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(2, 25, VariableType.Reference)
+                new VariableLocation(5, 1, VariableType.Value),
+                new VariableLocation(5, 7, VariableType.Definition),
+                new VariableLocation(2, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(fobMod, "abc", 0,
-                new VariableLocation(1, 1, VariableType.Value),
-                new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
+                new VariableLocation(1, 1, VariableType.Value, "oar"),
+                new VariableLocation(5, 1, VariableType.Value, "baz"),
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
-                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
-                new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
             );
@@ -4821,7 +4819,7 @@ min(a, D())
 
         [TestMethod, Priority(0)]
         public void MoveClass() {
-            var fobSrc = "from oar import C";
+            var fobSrc = "";
 
             var oarSrc = @"
 class C(object):
@@ -4838,11 +4836,15 @@ class C(object):
                 var oar = state.AddModule("oar", oarSrc);
                 var baz = state.AddModule("baz", bazSrc);
 
+                state.UpdateModule(fob, "from oar import C");
+                state.WaitForAnalysis();
+
                 state.WaitForAnalysis();
 
                 state.AssertDescription(fob, "C", "C");
-                state.AssertReferencesInclude(baz, "C", 0,
-                    new VariableLocation(2, 7, VariableType.Definition, oar.FilePath)
+                state.AssertReferencesInclude(fob, "C", 0,
+                    new VariableLocation(1, 17, VariableType.Reference, fob.FilePath),
+                    new VariableLocation(2, 1, VariableType.Value, oar.FilePath)
                 );
 
                 // delete the class..
@@ -4856,7 +4858,8 @@ class C(object):
 
                 state.AssertDescription(fob, "C", "C");
                 state.AssertReferencesInclude(fob, "C", 0,
-                    new VariableLocation(2, 7, VariableType.Definition, baz.FilePath)
+                    new VariableLocation(1, 17, VariableType.Reference, fob.FilePath),
+                    new VariableLocation(2, 1, VariableType.Value, baz.FilePath)
                 );
             }
         }

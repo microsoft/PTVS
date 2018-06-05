@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-// Setting this variable will enable the typeshed package to override
-// imports. However, this generally makes completions worse, so it's
-// turned off for now.
-//#define USE_TYPESHED
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -46,11 +41,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _userSearchPathPackages;
         private HashSet<string> _userSearchPathImported;
 
-#if USE_TYPESHED
-        private readonly object _typeShedPathsLock = new object();
-        private IReadOnlyList<string> _typeShedPaths;
-#endif
-
         public AstPythonInterpreter(AstPythonInterpreterFactory factory, AnalysisLogWriter log = null) {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _log = log;
@@ -68,11 +58,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private void Factory_ImportableModulesChanged(object sender, EventArgs e) {
             _modules.Clear();
-#if USE_TYPESHED
-            lock (_typeShedPathsLock) {
-                _typeShedPaths = null;
-            }
-#endif
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -214,7 +199,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 Interpreter = this,
                 ModuleCache = _modules,
                 BuiltinModule = _builtinModule,
-                FindModuleInUserSearchPathAsync = FindModuleInUserSearchPathAsync
+                FindModuleInUserSearchPathAsync = FindModuleInUserSearchPathAsync,
+                IncludeTypeStubPackages = _analyzer.Limits.UseTypeStubPackages,
+                MergeTypeStubPackages = !_analyzer.Limits.UseTypeStubPackagesExclusively
             };
 
             for (int retries = 5; retries > 0; --retries) {
