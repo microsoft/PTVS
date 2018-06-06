@@ -252,13 +252,23 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 35));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
 
-            u = await AddModule(s, "@dec\nasync   def  f(): pass");
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
-            await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
-            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
-            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 13));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 14));
+            if (this is LanguageServerTests_V2) {
+                u = await AddModule(s, "@dec\ndef  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 4));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 5));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 6));
+            } else {
+                u = await AddModule(s, "@dec\nasync   def  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 13));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 14));
+            }
         }
 
         [TestMethod, Priority(0)]
