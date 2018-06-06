@@ -621,17 +621,7 @@ f(1, 2, 3, 4,")) {
                 AssertUtil.ContainsExactly(editor.GetCompletions(-1), "as");
             }
         }
-
-        private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {
-            foreach (var comp in completions.Completions) {
-                yield return comp.InsertionText;
-            }
-        }
-
-        private static IEnumerable<string> GetCompletionNames(CompletionAnalysis analysis) {
-            return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
-        }
-
+        
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {

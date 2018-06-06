@@ -440,14 +440,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.Span;
         }
 
-        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs, SnapshotSpan span) {
-            if (!prefs.AutoListMembers) {
-                return false;
-            }
-
-            return StringLiteralCompletionList.CanComplete(span.GetText());
-        }
-
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
