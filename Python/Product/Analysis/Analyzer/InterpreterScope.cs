@@ -239,10 +239,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public virtual VariableDef AddVariable(string name, VariableDef variable = null)
             => _variables[name] = variable ?? new VariableDef();
 
-        internal virtual bool RemoveVariable(string name) => _variables.Remove(name);
+        internal virtual bool RemoveVariable(string name) {
+            _linkedVariables.Remove(name);
+            return _variables.Remove(name);
+        }
 
-        internal bool RemoveVariable(string name, out VariableDef value)
-            => _variables.TryGetValue(name, out value) && _variables.Remove(name);
+        internal bool RemoveVariable(string name, out VariableDef value) {
+            _linkedVariables.Remove(name);
+            return _variables.TryGetValue(name, out value) && _variables.Remove(name);
+        }
 
         internal virtual bool TryPropagateVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet values, VariableDef ifNot = null, bool addRef = true) {
             if (!TryGetVariable(name, out var vd) || vd == ifNot) {
@@ -255,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearVariables() {
-            _variables.Clear();
+            _variables = new AnalysisDictionary<string, VariableDef>();
         }
 
         public virtual InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
@@ -267,7 +272,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearNodeScopes() {
-            _nodeScopes.Clear();
+            _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
         }
 
         public virtual IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
@@ -289,7 +294,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal virtual void ClearNodeValues() {
-            _nodeValues.Clear();
+            _nodeValues = new AnalysisDictionary<Node, NodeValue>();
         }
 
         public virtual bool VisibleToChildren => true;
@@ -297,7 +302,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public AnalysisValue AnalysisValue { get; }
 
         public void ClearLinkedVariables() {
-            _linkedVariables.Clear();
+            _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
         }
 
         internal bool AddLinkedVariable(string name, VariableDef variable) {

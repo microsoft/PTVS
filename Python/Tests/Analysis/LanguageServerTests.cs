@@ -252,6 +252,13 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 35));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
 
+            u = await AddModule(s, "@dec\nasync   def  f(): pass");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+            await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 13));
+            await AssertNoCompletion(s, u, new SourceLocation(2, 14));
         }
 
         [TestMethod, Priority(0)]
@@ -447,6 +454,7 @@ mc
             );
 
             await s.UnloadFileAsync(mod2);
+            await s.WaitForCompleteAnalysisAsync();
 
             await AssertCompletion(s, mod1,
                 position: new Position { line = 2, character = 5 },

@@ -1114,7 +1114,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.RETURN:
                             if (_services.Python.AdvancedOptions.EnterCommitsIntellisense &&
                                 !session.IsDismissed &&
-                                session.SelectedCompletionSet.SelectionStatus.IsSelected) {
+                                (session.SelectedCompletionSet?.SelectionStatus.IsSelected ?? false)) {
 
                                 // If the user has typed all of the characters as the completion and presses
                                 // enter we should dismiss & let the text editor receive the enter.  For example 
