@@ -138,8 +138,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     },
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
-                    // https://github.com/Microsoft/PTVS/issues/3803
-                    // definitionProvider = true,
+                    definitionProvider = true,
                     referencesProvider = true
                 }
             };
