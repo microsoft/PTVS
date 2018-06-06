@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Determine if location is over imported parts such as 
                 // over 'a' in 'from . import a, b, c' or over 'x' in 'from a import x'
                 // and store module names and imported parts
-                ImportedModules = ModuleResolver.ResolveRelativeFromImport(_importingFromModuleName, _importingFromFilePath, node);
+                ImportedModules = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, node.Root.MakeString(), node.ForceAbsolute);
             }
             return false;
         }

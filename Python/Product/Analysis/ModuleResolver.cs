@@ -22,47 +22,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis {
     internal class ModuleResolver {
         /// <summary>
-        /// Resolves modules listed in the relative import statement
-        /// such as 'from . import a, b, c' or 'from .a import b, c'
-        /// </summary>
-        /// <param name="entry">Project entry</param>
-        /// <param name="node">Import statement node</param>
-        /// <returns>Names of modules</returns>
-        internal static IEnumerable<string> ResolveRelativeFromImport(IPythonProjectEntry entry, FromImportStatement node)
-            => ResolveRelativeFromImport(entry.ModuleName, entry.FilePath, node);
-
-        /// <summary>
-        /// Resolves modules listed in the relative import statement
-        /// such as 'from . import a, b, c' or 'from .a import b, c'
-        /// </summary>
-        /// <param name="importingFromModuleName">Name of the importing module</param>
-        /// <param name="importingFromFilePath">Disk path to the importing module</param>
-        /// <param name="node">Import statement node</param>
-        /// <returns></returns>
-        internal static IEnumerable<string> ResolveRelativeFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
-            var root = node.Root.MakeString();
-
-            if (!string.IsNullOrEmpty(root) && root.StartsWith(".")) {
-                var prefix = root.All(c => c == '.') ? root : "{0}.".FormatInvariant(root);
-
-                var names = node.Names.Where(n => !string.IsNullOrEmpty(n.Name)).Select(n => n.Name);
-                if (!names.Any()) {
-                    return Enumerable.Empty<string>();
-                }
-
-                var resolved = names.SelectMany(n => ResolvePotentialModuleNames(
-                        importingFromModuleName, importingFromFilePath,
-                        "{0}{1}".FormatInvariant(prefix, n), node.ForceAbsolute)).ToArray();
-                if (resolved.Length == 1 && resolved[0].Length > 2 && resolved[0].EndsWithOrdinal(".*")) {
-                    resolved[0] = resolved[0].Substring(0, resolved[0].Length - 2);
-                }
-                return resolved;
-            }
-
-            return ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, root, node.ForceAbsolute);
-        }
-
-        /// <summary>
         /// Extracts actual module names from the 'from import' statement
         /// such as [a, b, c] from 'from . import a, b, c' or [a] from 'from .a import b, c'
         /// </summary>
