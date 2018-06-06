@@ -17,11 +17,18 @@
 using System;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.LanguageServer.Hooks {
+namespace Microsoft.PythonTools.Analysis.LanguageServer.Extensibility {
     public sealed class CompletionEventArgs : EventArgs {
-        public ModuleAnalysis Analysis;
-        public PythonAst Tree;
-        public SourceLocation Location;
+        public CompletionEventArgs(ModuleAnalysis analysis, PythonAst tree, SourceLocation location, CompletionList initialCompletionList) {
+            Analysis = analysis;
+            Tree = tree;
+            Location = location;
+        }
+
+        public ModuleAnalysis Analysis { get; }
+        public PythonAst Tree { get; }
+        public SourceLocation Location { get; }
+
         public CompletionList CompletionList;
     }
 }

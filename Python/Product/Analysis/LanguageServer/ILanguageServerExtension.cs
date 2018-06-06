@@ -36,6 +36,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// <summary>
         /// Called when an extension command arrives for this extension.
         /// </summary>
-        Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties);
+        IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties);
     }
 }

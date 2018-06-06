@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var evt = PostProcessCompletion;
             if (evt != null) {
-                var e = new Hooks.CompletionEventArgs { Analysis = analysis, Tree = tree, Location = @params.position, CompletionList = res };
+                var e = new Extensibility.CompletionEventArgs(analysis, tree, @params.position, res);
                 try {
                     evt(this, e);
                     res = e.CompletionList;
@@ -112,6 +112,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return opts;
         }
 
-        public event EventHandler<Hooks.CompletionEventArgs> PostProcessCompletion;
+        public event EventHandler<Extensibility.CompletionEventArgs> PostProcessCompletion;
     }
 }

@@ -351,7 +351,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     [Serializable]
     public class ExtensionCommandResult {
-        public Dictionary<string, object> properties;
+        public IReadOnlyDictionary<string, object> properties;
     }
 
     public sealed class FileFoundEventArgs : EventArgs {

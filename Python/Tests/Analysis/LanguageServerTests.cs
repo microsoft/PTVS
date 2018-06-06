@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
-using Microsoft.PythonTools.Analysis.LanguageServer.Hooks;
+using Microsoft.PythonTools.Analysis.LanguageServer.Extensibility;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -458,7 +458,7 @@ mc
         public class TestCompletionHook : ILanguageServerExtension {
             public TestCompletionHook() { }
             public string Name => null;
-            public Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties) => null;
+            public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) => null;
             public void Register(Server server) => server.PostProcessCompletion += Server_PostProcessCompletion;
             private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
                 Assert.IsNotNull(e.Tree);
@@ -805,7 +805,7 @@ datetime.datetime.now().day
 
             public string Name => "getall";
 
-            public Dictionary<string, object> ExecuteCommand(string command, Dictionary<string, object> properties) {
+            public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) {
                 if (properties == null) {
                     return null;
                 }
