@@ -56,7 +56,6 @@
       <HintPath>$(PackagesPath)\Microsoft.DotNet.PlatformAbstractions.2.0.4\lib\net45\Microsoft.DotNet.PlatformAbstractions.dll</HintPath>
       <Private>True</Private>
     </Reference>
-  
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -66,6 +65,26 @@
     <Compile Include="VTuneCPUUtilizationParser.cs" />
     <Compile Include="VTuneStackParser.cs" />
     <Compile Include="VTuneToDWJSON.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
+      <Link>Newtonsoft.Json.dll</Link>
+      <Visible>false</Visible>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\CommandLineParser.2.2.1\lib\net45\CommandLine.dll">
+      <Link>CommandLine.dll</Link>
+      <Visible>false</Visible>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.DotNet.PlatformAbstractions.2.0.4\lib\net45\Microsoft.DotNet.PlatformAbstractions.dll">
+      <Link>Microsoft.DotNet.PlatformAbstractions.dll</Link>
+      <Visible>false</Visible>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
   </ItemGroup>
 
   <Import Project="..\ProjectAfter.settings" />

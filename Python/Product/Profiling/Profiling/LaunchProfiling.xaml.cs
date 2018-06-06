@@ -57,6 +57,9 @@ namespace Microsoft.PythonTools.Profiling {
                 );
                 if (File.Exists(path)) {
                     standalone.ScriptPath = path;
+                    if (!Directory.Exists(standalone.WorkingDirectory)) {
+                        standalone.WorkingDirectory = Path.GetDirectoryName(path);
+                    }
                 }
             }
         }
