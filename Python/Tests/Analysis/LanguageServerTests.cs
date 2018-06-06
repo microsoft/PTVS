@@ -795,7 +795,7 @@ datetime.datetime.now().day
             private BuiltinTypeId _typeId;
             private Server _server;
 
-            public GetAllExtension(Dictionary<string, object> properties) {
+            public GetAllExtension(IReadOnlyDictionary<string, object> properties) {
                 if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
                     throw new ArgumentException("typeid was not valid");
                 }
@@ -861,7 +861,7 @@ datetime.datetime.now().day
             cmd.command = BuiltinTypeId_Str.ToString();
             res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
             Assert.IsNotNull(res);
-            AssertUtil.ContainsExactly(res, "z", "__doc__", "__name__", "__file__");
+            AssertUtil.ContainsAtLeast(res, "z", "__name__", "__file__");
             cmd.command = "Int";
             res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
             Assert.IsNull(res);

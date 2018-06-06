@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer.Extensibility {
             Analysis = analysis;
             Tree = tree;
             Location = location;
+            CompletionList = initialCompletionList;
         }
 
         public ModuleAnalysis Analysis { get; }
