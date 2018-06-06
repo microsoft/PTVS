@@ -432,33 +432,33 @@ y = f('fob', 'oar')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-//        [TestMethod, Priority(0)]
-//        public void CartesianMerge() {
-//            var limits = GetLimits();
-//            // Ensure we include enough calls
-//            var callCount = limits.CallDepth * limits.DecreaseCallDepth + 1;
-//            var code = new StringBuilder(@"def f(a):
-//    return g(a)
+        //        [TestMethod, Priority(0)]
+        //        public void CartesianMerge() {
+        //            var limits = GetLimits();
+        //            // Ensure we include enough calls
+        //            var callCount = limits.CallDepth * limits.DecreaseCallDepth + 1;
+        //            var code = new StringBuilder(@"def f(a):
+        //    return g(a)
 
-//def g(b):
-//    return h(b)
+        //def g(b):
+        //    return h(b)
 
-//def h(c):
-//    return c
+        //def h(c):
+        //    return c
 
-//");
-//            for (int i = 0; i < callCount; ++i) {
-//                code.AppendLine("x = g(123)");
-//            }
-//            code.AppendLine("y = f(3.1415)");
+        //");
+        //            for (int i = 0; i < callCount; ++i) {
+        //                code.AppendLine("x = g(123)");
+        //            }
+        //            code.AppendLine("y = f(3.1415)");
 
-//            var text = code.ToString();
-//            Console.WriteLine(text);
-//            var entry = ProcessTextV2(text);
+        //            var text = code.ToString();
+        //            Console.WriteLine(text);
+        //            var entry = ProcessTextV2(text);
 
-//            entry.AssertIsInstance("x", BuiltinTypeId.Int, BuiltinTypeId.Float);
-//            entry.AssertIsInstance("y", BuiltinTypeId.Int, BuiltinTypeId.Float);
-//        }
+        //            entry.AssertIsInstance("x", BuiltinTypeId.Int, BuiltinTypeId.Float);
+        //            entry.AssertIsInstance("y", BuiltinTypeId.Int, BuiltinTypeId.Float);
+        //        }
 
         [TestMethod, Priority(0)]
         public void ImportAs() {
@@ -1280,30 +1280,30 @@ d = a.next()";
                 return;
             }
 
-//            var text = @"
-//def f():
-//    yield 1
-//    yield 2
-//    yield 3
-//    return 3.14
+            //            var text = @"
+            //def f():
+            //    yield 1
+            //    yield 2
+            //    yield 3
+            //    return 3.14
 
-//def g():
-//    x = yield from f()
+            //def g():
+            //    x = yield from f()
 
-//a = g()
-//a2 = iter(a)
-//b = next(a)
+            //a = g()
+            //a2 = iter(a)
+            //b = next(a)
 
-//for c in g():
-//    print(c)
-//";
-//            var entry = ProcessTextV3(text);
+            //for c in g():
+            //    print(c)
+            //";
+            //            var entry = ProcessTextV3(text);
 
-//            entry.AssertIsInstance("a", BuiltinTypeId.Generator);
-//            entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
-//            entry.AssertIsInstance("b", BuiltinTypeId.Int);
-//            entry.AssertIsInstance("c", BuiltinTypeId.Int);
-//            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
+            //            entry.AssertIsInstance("a", BuiltinTypeId.Generator);
+            //            entry.AssertIsInstance("a2", BuiltinTypeId.Generator);
+            //            entry.AssertIsInstance("b", BuiltinTypeId.Int);
+            //            entry.AssertIsInstance("c", BuiltinTypeId.Int);
+            //            entry.AssertIsInstance("x", text.IndexOf("x ="), BuiltinTypeId.Float);
 
             var text = @"
 def f(x):
@@ -3421,7 +3421,7 @@ class cls(cls):
             entry.AssertIsInstance("cls().abc", BuiltinTypeId.Int);
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
-            AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
+            AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("", "cls")),
                 "cls",
                 "object"
             );
@@ -3853,7 +3853,7 @@ class oar(list):
     pass
 ";
             var entry = ProcessTextV2(text);
-            
+
             var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
             AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "value");
 
@@ -4901,6 +4901,38 @@ abc = 42
 
                 state.AssertIsInstance(x, "abc", BuiltinTypeId.Int);
                 state.AssertIsInstance(package, "abc", BuiltinTypeId.Int);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void PackageRelativeImportPep328() {
+            var imports = new Dictionary<string, string>() {
+                { "from .moduleY import spam", "spam"},
+                { "from .moduleY import spam as ham", "ham"},
+                { "from . import moduleY", "moduleY.spam" },
+                { "from ..subpackage1 import moduleY", "moduleY.spam"},
+                { "from ..subpackage2.moduleZ import eggs", "eggs"},
+                { "from ..moduleA import foo", "foo" },
+                { "from ...package import bar", "bar"}
+            };
+
+            foreach (var imp in imports) {
+                using (var state = CreateAnalyzer()) {
+                    state.CreateProjectOnDisk = true;
+
+                    var package = state.AddModule("package", "def bar():\n  pass\n", @"package\__init__.py");
+                    var modA = state.AddModule("package.moduleA", "def foo():\n  pass\n", @"package\moduleA.py");
+
+                    var sub1 = state.AddModule("package.subpackage1", string.Empty, @"package\subpackage1\__init__.py");
+                    var modX = state.AddModule("package.subpackage1.moduleX", imp.Key, @"package\subpackage1\moduleX.py");
+                    var modY = state.AddModule("package.subpackage1.moduleY", "def spam():\n  pass\n", @"package\subpackage1\moduleY.py");
+
+                    var sub2 = state.AddModule("package.subpackage2", string.Empty, @"package\subpackage2\__init__.py");
+                    var modZ = state.AddModule("package.subpackage2.moduleZ", "def eggs():\n  pass\n", @"package\subpackage2\moduleZ.py");
+
+                    state.WaitForAnalysis();
+                    state.AssertIsInstance(modX, imp.Value, BuiltinTypeId.Function);
+                }
             }
         }
 
@@ -6709,8 +6741,8 @@ async def f():
             var entry = ProcessText(code, PythonLanguageVersion.V35);
 
             entry.AssertIsInstance("x", code.IndexOf("x ="), BuiltinTypeId.Int);
-            entry.AssertIsInstance("y", code.IndexOf("x ="),  BuiltinTypeId.Int);
-            entry.AssertIsInstance("g2", code.IndexOf("x ="),  BuiltinTypeId.Generator);
+            entry.AssertIsInstance("y", code.IndexOf("x ="), BuiltinTypeId.Int);
+            entry.AssertIsInstance("g2", code.IndexOf("x ="), BuiltinTypeId.Generator);
         }
 
         [TestMethod, Priority(0)]
@@ -6808,12 +6840,10 @@ def f():
                 new { Code="import abc", Index=10, Expected="abc", Base="" },
                 new { Code="import deg, abc as A", Index=12, Expected="abc", Base="" },
                 new { Code="from abc import A", Index=6, Expected="abc", Base="" },
-                new { Code="from .deg import A", Index=9, Expected="deg.A", Base="abc" },
-                new { Code="from .hij import A", Index=9, Expected="abc.hij.A", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="hij.A", Base="abc.deg" },
-                new { Code="from ..hij import A", Index=10, Expected="abc.hij.A", Base="abc.deg.HIJ" },
-                new { Code="from .. import deg", Index=10, Expected="deg", Base="abc.deg" },
-                new { Code="from . import A", Index=10, Expected="abc.A", Base="abc.deg" },
+                new { Code="from .deg import A", Index=9, Expected="deg", Base="abc" },
+                new { Code="from .hij import A", Index=9, Expected="abc.hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg.HIJ" },
             }) {
                 var entry = ProcessTextV3(item.Code);
                 var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);
