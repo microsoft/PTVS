@@ -343,12 +343,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 } else {
                     userMod.Imported(_unit);
-                    if (bits == null || bits.Count == 0) {
-                        AssignImportedModule(nameNode, modRef, bits, newName ?? impName);
-                    } else {
-                        fullImpName[fullImpName.Length - 1] = impName;
-                        AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
-                    }
+                    fullImpName[fullImpName.Length - 1] = impName;
+                    AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
                 }
             }
         }
@@ -362,24 +358,28 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return;
             }
 
-            IEnumerable<string> candidates = null;
+            bool forceAbsolute;
             if (node is FromImportStatement fromImport) {
-                candidates = ModuleResolver.ResolveRelativeFromImport(_unit.ProjectEntry, fromImport);
+                modName = fromImport.Root.MakeString();
+                forceAbsolute = fromImport.ForceAbsolute;
             } else if (node is ImportStatement importNode) {
-                candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, importNode.ForceAbsolute).ToArray();
+                forceAbsolute = importNode.ForceAbsolute;
             } else {
                 throw new ArgumentException(nameof(node), "Must be import or from-import node");
             }
 
-            foreach (var name in candidates) {
-                if (ProjectState.Modules.TryImport(name, out var originalModRef)) {
-                    // Complete name is resolved, such as a.b
-                    resolved(originalModRef, null);
-                    continue;
-                }
+            var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
 
+            foreach (var name in candidates) {
+                if (ProjectState.Modules.TryImport(name, out var modRef)) {
+                    ResolveParts(modRef, name, resolved);
+                    return;
+                }
+            }
+
+            foreach (var name in candidates) {
                 ModuleReference moduleRef = null;
-                foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
+                foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {
                         // First part is module
                         moduleRef = mref;
@@ -394,12 +394,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (moduleRef != null) {
                         // Part not resolved, most probably member (such as path in os.path).
                         Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
-                        if (moduleRef.Name.Length + 1 < name.Length) {
-                            var remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
-                            resolved(moduleRef, remainingParts);
-                        } else {
-                            resolved(moduleRef, null);
-                        }
+                        ResolveParts(moduleRef, name, resolved);
                         return;
                     }
                 }
@@ -407,6 +402,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        private void ResolveParts(ModuleReference modRef, string fullItemName, Action<ModuleReference, IReadOnlyList<string>> resolved) {
+            var remainingParts = modRef.Name.Length + 1 < fullItemName.Length
+                ? fullItemName.Substring(modRef.Name.Length + 1).Split('.')
+                : null;
+            resolved(modRef, remainingParts);
+        }
         internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
             var result = new List<AnalysisValue>();
             foreach (var b in bases) {
