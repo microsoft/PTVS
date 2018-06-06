@@ -60,6 +60,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             .ToArray());
                     }
                 }
+                if(extras.Count > 0) {
+                    return extras.ToArray();
+                }
             }
 
             IEnumerable<IAnalysisVariable> result;
