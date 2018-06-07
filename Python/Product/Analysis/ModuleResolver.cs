@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return string.IsNullOrEmpty(root)
                 ? subPath
-                : string.IsNullOrEmpty(subPath) ? root : $"{root}.{subPath}";
+                : string.IsNullOrEmpty(subPath) ? root : "{0}.{1}".FormatInvariant(root, subPath);
         }
     }
 }
