@@ -115,20 +115,11 @@ namespace Microsoft.PythonTools {
             var snapshot = buffer.CurrentSnapshot;
             var triggerPoint = session.GetTriggerPoint(buffer);
 
-            var span = snapshot.GetApplicableSpan(triggerPoint, session.IsCompleteWordMode());
+            var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
             if (span != null) {
                 return span;
             }
             return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
-        }
-
-        /// <summary>
-        /// Returns the applicable span at the provided position.
-        /// </summary>
-        /// <returns>A tracking span, or null if there is no token at the
-        /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, ITrackingPoint point, bool completeWord) {
-            return snapshot.GetApplicableSpan(point.GetPosition(snapshot), completeWord);
         }
 
         /// <summary>

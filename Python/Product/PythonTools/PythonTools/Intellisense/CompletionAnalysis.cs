@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Editor;
@@ -35,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     internal class CompletionAnalysis {
         internal const long TooMuchTime = 50;
-        private static Stopwatch _stopwatch = MakeStopWatch();
+        private static readonly Stopwatch _stopwatch = MakeStopWatch();
 
         private readonly PythonEditorServices _services;
         private readonly ICompletionSession _session;
@@ -78,8 +77,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            IEnumerable<CompletionResult> members = null;
-
             var point = _point.GetPoint(bufferInfo.CurrentSnapshot);
 
             var location = VsProjectAnalyzer.TranslateIndex(
@@ -106,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 : new SnapshotSpan(point, 0);
             _span = bufferInfo.CurrentSnapshot.CreateTrackingSpan(snapshotSpan, SpanTrackingMode.EdgeInclusive);
 
-            members = completions.items.Select(c => new CompletionResult(
+            var members = completions.items.Select(c => new CompletionResult(
                 c.label,
                 c.insertText ?? c.label,
                 c.documentation?.value,
@@ -210,7 +207,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public override string ToString() {
             if (_span == null) {
                 return "CompletionContext.EmptyCompletionContext";
-            };
+            }
             var snapSpan = _span.GetSpan(_textBuffer.CurrentSnapshot);
             return String.Format("CompletionContext({0}): {1} @{2}", GetType().Name, snapSpan.GetText(), snapSpan.Span);
         }

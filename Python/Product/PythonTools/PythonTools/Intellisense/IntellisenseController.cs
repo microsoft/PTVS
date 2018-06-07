@@ -1291,7 +1291,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
             var caret = mcaret.Value;
-            var span = session.GetApplicableSpan(caret.Snapshot.TextBuffer).GetSpan(caret.Snapshot);
+            var span = session.SelectedCompletionSet.ApplicableTo.GetSpan(caret.Snapshot);
 
             return caret == span.End &&
                 span.Length == selectionStatus.Completion?.InsertionText.Length &&
