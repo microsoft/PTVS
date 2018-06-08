@@ -139,7 +139,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
                     definitionProvider = true,
-                    referencesProvider = true
+                    referencesProvider = true,
+                    workspaceSymbolProvider = true,
+                    documentSymbolProvider = true
                 }
             };
         }
