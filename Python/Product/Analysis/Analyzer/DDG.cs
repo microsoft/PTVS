@@ -375,7 +375,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             moduleRef.Module?.Imported(_unit);
                         }
                     } else if (moduleRef != null) {
-                        // Part not resolved, most probably member (such as path in os.path).
                         Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
                         if (moduleRef.Name.Length + 1 < name.Length) {
                             remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
