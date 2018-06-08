@@ -297,14 +297,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
 
-            TryImportModules(modName, node,
-                (modRef, bits) => ResolvedModule(node, modRef, bits),
-                name => _unit.DeclaringModule.AddUnresolvedModule(name, node.ForceAbsolute));
-            return false;
+            if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
+                _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
+                return false;
+            }
 
-        }
-
-        private void ResolvedModule(FromImportStatement node, ModuleReference modRef, IReadOnlyList<string> bits) {
             _unit.DeclaringModule.AddModuleReference(modRef);
 
             Debug.Assert(modRef.Module != null);
@@ -347,67 +344,51 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     AssignImportedMember(nameNode, userMod, fullImpName, newName ?? impName);
                 }
             }
+
+            return false;
         }
 
-        private void TryImportModules(string modName, Statement node, Action<ModuleReference, IReadOnlyList<string>> resolved, Action<string> unresolved) {
+        private bool TryImportModule(string modName, bool forceAbsolute, out ModuleReference moduleRef, out IReadOnlyList<string> remainingParts) {
+            moduleRef = null;
+            remainingParts = null;
 
             if (ProjectState.Limits.CrossModule > 0 &&
                 ProjectState.ModulesByFilename.Count > ProjectState.Limits.CrossModule) {
                 // too many modules loaded, disable cross module analysis by blocking
                 // scripts from seeing other modules.
-                return;
-            }
-
-            bool forceAbsolute;
-            if (node is FromImportStatement fromImport) {
-                modName = fromImport.Root.MakeString();
-                forceAbsolute = fromImport.ForceAbsolute;
-            } else if (node is ImportStatement importNode) {
-                forceAbsolute = importNode.ForceAbsolute;
-            } else {
-                throw new ArgumentException(nameof(node), "Must be import or from-import node");
+                return false;
             }
 
             var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
-
             foreach (var name in candidates) {
-                if (ProjectState.Modules.TryImport(name, out var modRef)) {
-                    ResolveParts(modRef, name, resolved);
-                    return;
+                if (ProjectState.Modules.TryImport(name, out moduleRef)) {
+                    return true;
                 }
             }
 
             foreach (var name in candidates) {
-                ModuleReference moduleRef = null;
+                moduleRef = null;
                 foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
                     if (ProjectState.Modules.TryImport(part, out var mref)) {
-                        // First part is module
                         moduleRef = mref;
                         if (part.Length < name.Length) {
                             moduleRef.Module?.Imported(_unit);
-                        } else {
-                            resolved(moduleRef, null);
                         }
-                        continue;
-                    }
-
-                    if (moduleRef != null) {
+                    } else if (moduleRef != null) {
                         // Part not resolved, most probably member (such as path in os.path).
                         Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
-                        ResolveParts(moduleRef, name, resolved);
-                        return;
+                        if (moduleRef.Name.Length + 1 < name.Length) {
+                            remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
+                        }
+                        return true;
+                    } else {
+                        break;
                     }
                 }
-                unresolved(name);
             }
+            return moduleRef?.Module != null;
         }
 
-        private void ResolveParts(ModuleReference modRef, string fullItemName, Action<ModuleReference, IReadOnlyList<string>> resolved) {
-            var remainingParts = modRef.Name.Length + 1 < fullItemName.Length
-                ? fullItemName.Substring(modRef.Name.Length + 1).Split('.')
-                : null;
-            resolved(modRef, remainingParts);
-        }
         internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
             var result = new List<AnalysisValue>();
             foreach (var b in bases) {
@@ -518,20 +499,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // Ensure a variable exists, even if the import fails
                 Scope.CreateVariable(nameNode, _unit, saveName);
 
-                TryImportModules(importing, node,
-                    (modRef, bits) => {
-                        _unit.DeclaringModule.AddModuleReference(modRef);
+                if (!TryImportModule(importing, node.ForceAbsolute, out var modRef, out var bits)) {
+                    _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);
+                    continue;
+                }
 
-                        var userMod = modRef.Module;
-                        Debug.Assert(userMod != null);
+                _unit.DeclaringModule.AddModuleReference(modRef);
 
-                        if (userMod != null) {
-                            userMod.Imported(_unit);
-                            AssignImportedModule(nameNode, modRef, bits, saveName);
-                        }
-                    },
-                    name => _unit.DeclaringModule.AddUnresolvedModule(name, node.ForceAbsolute)
-                );
+                var userMod = modRef.Module;
+                Debug.Assert(userMod != null);
+
+                if (userMod != null) {
+                    userMod.Imported(_unit);
+                    AssignImportedModule(nameNode, modRef, bits, saveName);
+                }
             }
             return true;
         }
