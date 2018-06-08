@@ -162,7 +162,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            DeclaringModule.Scope.ClearLinkedVariables();
 
             ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
@@ -171,7 +170,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
-                if (variableInfo.Value._dependencies.Count == 0 && !variableInfo.Value.HasTypes) {
+                if (!variableInfo.Value.HasTypes) {
                     toRemove = toRemove ?? new List<KeyValuePair<string, VariableDef>>();
                     toRemove.Add(variableInfo);
                 }
