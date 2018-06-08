@@ -112,6 +112,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void Dispose() {
+            foreach (var ext in _extensions.Values) {
+                (ext as IDisposable)?.Dispose();
+            }
             _queue.Dispose();
         }
 

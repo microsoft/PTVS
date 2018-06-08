@@ -19,7 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public abstract class ServerBase {
+    public abstract class ServerBase : IServer {
         private RequestLock _lock;
 
         private sealed class RequestLock : IDisposable {

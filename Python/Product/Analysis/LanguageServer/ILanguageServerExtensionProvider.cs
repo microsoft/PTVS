@@ -17,19 +17,14 @@
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public interface ILanguageServerExtension {
+    /// <summary>
+    /// Implemented on a class that can create a language server extension.
+    /// This class must have a default constructor.
+    /// </summary>
+    public interface ILanguageServerExtensionProvider {
         /// <summary>
-        /// The name of the extension. Used to look up the current instance
-        /// when processing extension command messages. If null or empty,
-        /// the extension cannot be sent messages and may be garbage collected
-        /// if it does not manage its own lifetime against the <see cref="IServer"/>
-        /// instance provided to its provider.
+        /// Called when the extension is loaded for a language server.
         /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Called when an extension command arrives for this extension.
-        /// </summary>
-        IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties);
+        ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties);
     }
 }

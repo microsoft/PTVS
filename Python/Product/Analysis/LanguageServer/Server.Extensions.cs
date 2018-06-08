@@ -15,21 +15,35 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     partial class Server {
         public async Task LoadExtension(PythonAnalysisExtensionParams extension) {
-            var ext = ActivateObject<ILanguageServerExtension>(extension.assembly, extension.typeName, extension.properties);
-            if (ext != null) {
-                var n = ext.Name;
-                ext.Register(this);
-                if (!string.IsNullOrEmpty(n)) {
-                    _extensions.AddOrUpdate(n, ext, (_, previous) => {
-                        (previous as IDisposable)?.Dispose();
-                        return ext;
-                    });
-                }
+            var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
+            if (provider == null) {
+                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
+                return;
+            }
+            var ext = provider.Create(this, extension.properties ?? new Dictionary<string, object>());
+            if (ext == null) {
+                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} returned null");
+                return;
+            }
+
+            string n = null;
+            try {
+                n = ext.Name;
+            } catch (NotImplementedException) {
+            } catch (NotSupportedException) {
+            }
+
+            if (!string.IsNullOrEmpty(n)) {
+                _extensions.AddOrUpdate(n, ext, (_, previous) => {
+                    (previous as IDisposable)?.Dispose();
+                    return ext;
+                });
             }
         }
 

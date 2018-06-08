@@ -473,16 +473,28 @@ mc
             );
         }
 
-        public class TestCompletionHook : ILanguageServerExtension {
-            public TestCompletionHook() { }
-            public string Name => null;
-            public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) => null;
-            public void Register(Server server) => server.PostProcessCompletion += Server_PostProcessCompletion;
-            private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
-                Assert.IsNotNull(e.Tree);
-                Assert.IsNotNull(e.Analysis);
-                for (int i = 0; i < e.CompletionList.items.Length; ++i) {
-                    e.CompletionList.items[i].insertText = "*" + e.CompletionList.items[i].insertText;
+
+        class TestCompletionHookProvider : ILanguageServerExtensionProvider {
+            public ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties) {
+                return new TestCompletionHook(server);
+            }
+
+            class TestCompletionHook : ILanguageServerExtension {
+                public TestCompletionHook(IServer server) {
+                    if (server is Server s) {
+                        s.PostProcessCompletion += Server_PostProcessCompletion;
+                    } else {
+                        server.LogMessage(MessageType.Error, "Only Python language server is supported");
+                    }
+                }
+                public string Name => null;
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) => null;
+                private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
+                    Assert.IsNotNull(e.Tree);
+                    Assert.IsNotNull(e.Analysis);
+                    for (int i = 0; i < e.CompletionList.items.Length; ++i) {
+                        e.CompletionList.items[i].insertText = "*" + e.CompletionList.items[i].insertText;
+                    }
                 }
             }
         }
@@ -495,8 +507,8 @@ mc
             await AssertCompletion(s, u, new[] { "real", "imag" }, new string[0], new Position { line = 1, character = 2 });
 
             await s.LoadExtension(new PythonAnalysisExtensionParams {
-                assembly = typeof(TestCompletionHook).Assembly.FullName,
-                typeName = typeof(TestCompletionHook).FullName
+                assembly = typeof(TestCompletionHookProvider).Assembly.FullName,
+                typeName = typeof(TestCompletionHookProvider).FullName
             });
 
             await AssertCompletion(s, u, new[] { "*real", "*imag" }, new[] { "real" }, new Position { line = 1, character = 2 });
@@ -809,39 +821,47 @@ datetime.datetime.now().day
             );
         }
 
-        private class GetAllExtension : ILanguageServerExtension {
-            private BuiltinTypeId _typeId;
-            private Server _server;
-
-            public GetAllExtension(IReadOnlyDictionary<string, object> properties) {
-                if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
-                    throw new ArgumentException("typeid was not valid");
-                }
+        class GetAllExtensionProvider : ILanguageServerExtensionProvider {
+            public ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties) {
+                return new GetAllExtension(
+                    (Server)server, // Let the invalid cast exception bubble out
+                    properties
+                );
             }
 
-            public void Register(Server server) => _server = server;
+            private class GetAllExtension : ILanguageServerExtension {
+                private readonly BuiltinTypeId _typeId;
+                private readonly Server _server;
 
-            public string Name => "getall";
+                public GetAllExtension(Server server, IReadOnlyDictionary<string, object> properties) {
+                    _server = server; 
+                    if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
+                        throw new ArgumentException("typeid was not valid");
+                    }
+                }
 
-            public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) {
-                if (properties == null) {
+                public string Name => "getall";
+
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) {
+                    if (properties == null) {
+                        return null;
+                    }
+
+                    // Very bad code, but good for testing. Copy/paste at your own risk!
+                    var entry = _server.GetEntry(new Uri((string)properties["uri"])) as IPythonProjectEntry;
+                    var location = new SourceLocation((int)properties["line"], (int)properties["column"]);
+
+                    if (command == _typeId.ToString()) {
+                        var res = new List<string>();
+                        foreach (var m in entry.Analysis.GetAllAvailableMembers(location)) {
+                            if (m.Values.Any(v => v.MemberType == PythonMemberType.Constant && v.TypeId == _typeId)) {
+                                res.Add(m.Name);
+                            }
+                        }
+                        return new Dictionary<string, object> { ["names"] = res };
+                    }
                     return null;
                 }
-
-                // Very bad code, but good for testing. Copy/paste at your own risk!
-                var entry = _server.GetEntry(new Uri((string)properties["uri"])) as IPythonProjectEntry;
-                var location = new SourceLocation((int)properties["line"], (int)properties["column"]);
-
-                if (command == _typeId.ToString()) {
-                    var res = new List<string>();
-                    foreach (var m in entry.Analysis.GetAllAvailableMembers(location)) {
-                        if (m.Values.Any(v => v.MemberType == PythonMemberType.Constant && v.TypeId == _typeId)) {
-                            res.Add(m.Name);
-                        }
-                    }
-                    return new Dictionary<string, object> { ["names"] = res };
-                }
-                return null;
             }
         }
 
@@ -851,8 +871,8 @@ datetime.datetime.now().day
             var u = await AddModule(s, "x = 1\ny = 2\nz = 'abc'");
 
             await s.LoadExtension(new PythonAnalysisExtensionParams {
-                assembly = typeof(GetAllExtension).Assembly.FullName,
-                typeName = typeof(GetAllExtension).FullName,
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
                 properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId.Int.ToString() }
             });
 
@@ -871,8 +891,8 @@ datetime.datetime.now().day
             Assert.IsNull(res);
 
             await s.LoadExtension(new PythonAnalysisExtensionParams {
-                assembly = typeof(GetAllExtension).Assembly.FullName,
-                typeName = typeof(GetAllExtension).FullName,
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
                 properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId_Str.ToString() }
             });
 

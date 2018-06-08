@@ -111,7 +111,9 @@
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Extensibility.cs" />
     <Compile Include="LanguageServer\ILanguageServerExtension.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtensionProvider.cs" />
     <Compile Include="LanguageServer\ILogger.cs" />
+    <Compile Include="LanguageServer\IServer.cs" />
     <Compile Include="LanguageServer\MarkdownDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Server.Completion.cs" />
