@@ -78,13 +78,20 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void SaveToFile(bool includeAnalysisLogs) {
-            var path = Site.BrowseForFileSave(
-                _window.Handle,
-                Strings.DiagnosticsWindow_TextFileFilter,
-                PathUtils.GetAbsoluteFilePath(
+            string initialPath = null;
+            try {
+                initialPath = PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     Strings.DiagnosticsWindow_DefaultFileName.FormatUI(DateTime.Now)
-                )
+                );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+
+            var path = Site.BrowseForFileSave(
+                _window?.Handle ?? IntPtr.Zero,
+                Strings.DiagnosticsWindow_TextFileFilter,
+                initialPath
             );
 
             if (string.IsNullOrEmpty(path)) {
@@ -109,8 +116,7 @@ namespace Microsoft.PythonTools.Options {
                     );
 
                     if (File.Exists(path)) {
-                        var process = Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path));
-                        process?.Dispose();
+                        Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path))?.Dispose();
                     }
                 } catch (OperationCanceledException) {
                 }
