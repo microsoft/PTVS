@@ -296,7 +296,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 throw new ArgumentNullException(nameof(node));
             }
             if (CreateBuiltinTypes) {
-                return new AstPythonBuiltinType(_ast, _module, node, GetDoc(node.Body as SuiteStatement));
+                return new AstPythonBuiltinType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
             }
 
             return new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));

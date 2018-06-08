@@ -44,6 +44,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            if (type == _scope._unknownType) {
+                return null;
+            }
+
             var n = GetName(type);
             if (!string.IsNullOrEmpty(n)) {
                 return AsIPythonType(_scope.LookupNameInScopes(n));
@@ -98,6 +102,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return MakeSequenceType(BuiltinTypeId.Set, args);
                 case "Optional":
                     return Finalize(args.FirstOrDefault()) ?? _scope._unknownType;
+                case "Union":
+                    return MakeUnion(args);
+                case "Type":
+                    return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Type);
                 // TODO: Other types
                 default:
                     Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);

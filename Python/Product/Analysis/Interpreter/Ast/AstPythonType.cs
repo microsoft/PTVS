@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
+    class AstPythonType : IPythonType, IMemberContainer, ILocatedMember, IHasQualifiedName {
         private readonly string _name;
         protected readonly Dictionary<string, IMember> _members;
         private IList<IPythonType> _mro;
@@ -178,6 +178,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public int StartIndex { get; }
 
         public IEnumerable<LocationInfo> Locations { get; }
+
+        public string FullyQualifiedName => FullyQualifiedNamePair.CombineNames();
+        public KeyValuePair<string, string> FullyQualifiedNamePair => new KeyValuePair<string, string>(DeclaringModule.Name, Name);
 
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;

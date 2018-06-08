@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         // Available for tests to override
         internal static bool LogToConsole = false;
 
-        private IReadOnlyList<string> _typeShedPaths;
+        private readonly IReadOnlyList<string> _typeShedPaths;
 
 #if DEBUG
         const int LogCacheSize = 1;
@@ -86,6 +86,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             }
             _skipCache = !CreationOptions.UseExistingCache;
+            if (!string.IsNullOrEmpty(CreationOptions.TypeShedPath)) {
+                _typeShedPaths = GetTypeShedPaths(CreationOptions.TypeShedPath, Configuration.Version).ToArray();
+            }
         }
 
         public void Dispose() {
@@ -142,7 +145,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
-                _typeShedPaths = null;
             }
 
 
@@ -545,9 +547,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 // Note that this currently only looks in the typeshed package, as type stub
                 // packages are not yet standardised so we don't know where to look.
                 // The details will be in PEP 561.
-                var typeShedPaths = GetTypeShedPaths(importTimeout);
-                if (typeShedPaths?.Any() == true) {
-                    var mtsp = FindModuleInSearchPath(typeShedPaths, null, module.Name);
+                if (_typeShedPaths?.Any() == true) {
+                    var mtsp = FindModuleInSearchPath(_typeShedPaths, null, module.Name);
                     if (mtsp.HasValue) {
                         var mp = mtsp.Value;
                         if (mp.IsCompiled) {
@@ -691,56 +692,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return module;
-        }
-
-        private IReadOnlyList<string> GetTypeShedPaths(int timeout) {
-            // First check
-            var typeShedPaths = _typeShedPaths;
-            if (typeShedPaths != null) {
-                return typeShedPaths;
-            }
-            lock (_searchPathsLock) {
-                // Second check after locking
-                if (_typeShedPaths != null) {
-                    return _typeShedPaths;
-                }
-            }
-
-            try {
-                var importTask = GetTypeShedPathsAsync();
-                return importTask.Wait(timeout) ? importTask.Result : null;
-            } catch (Exception ex) {
-                _log?.Log(TraceLevel.Error, "GetTypeShedPaths", ex.ToString());
-            }
-            return null;
-        }
-
-        private async Task<IReadOnlyList<string>> GetTypeShedPathsAsync() {
-            // Assume caller has already done the quick checks
-
-            IReadOnlyList<string> typeShedPaths;
-            var typeshed = await FindModuleInSearchPathAsync("typeshed");
-
-            lock (_searchPathsLock) {
-                // Final check after searching and locking
-                if (_typeShedPaths != null) {
-                    return _typeShedPaths;
-                }
-                
-                if (typeshed.HasValue) {
-                    typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile), LanguageVersion.ToVersion()).ToArray();
-                } else {
-                    typeShedPaths = Array.Empty<string>();
-                }
-
-                if (_typeShedPaths == null) {
-                    _typeShedPaths = typeShedPaths;
-                } else {
-                    typeShedPaths = _typeShedPaths;
-                }
-            }
-
-            return typeShedPaths;
         }
 
         private static IEnumerable<string> GetTypeShedPaths(string path, Version version) {

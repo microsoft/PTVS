@@ -42,6 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public TraceLevel TraceLevel { get; set; } = TraceLevel.Info;
 
+        public string TypeShedPath { get; set; }
+
         #region Dictionary serialization
 
         public static InterpreterFactoryCreationOptions FromDictionary(Dictionary<string, object> properties) {
@@ -50,7 +52,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var opts = new InterpreterFactoryCreationOptions {
                 DatabasePath = properties.TryGetValue("DatabasePath", out o) ? (o as string) : null,
                 UseExistingCache = ReadBool(properties, nameof(UseExistingCache)) ?? true,
-                WatchFileSystem = ReadBool(properties, nameof(WatchFileSystem)) ?? false
+                WatchFileSystem = ReadBool(properties, nameof(WatchFileSystem)) ?? false,
+                TypeShedPath = properties.TryGetValue(nameof(TypeShedPath), out o) ? (o as string) : null
             };
 
             if (properties.TryGetValue(nameof(TraceLevel), out o) && Enum.TryParse(o as string, true, out level)) {
@@ -69,6 +72,9 @@ namespace Microsoft.PythonTools.Interpreter {
             d[nameof(UseExistingCache)] = UseExistingCache;
             if (!suppressFileWatching) {
                 d[nameof(WatchFileSystem)] = WatchFileSystem;
+            }
+            if (!string.IsNullOrEmpty(TypeShedPath)) {
+                d[nameof(TypeShedPath)] = TypeShedPath;
             }
 
             return d;

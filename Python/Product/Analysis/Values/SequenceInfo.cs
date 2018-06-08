@@ -100,11 +100,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return this.SelfSet;
             }
 
-            if (IndexTypes.Length == 0) {
-                IndexTypes = new[] { new VariableDef() };
-            }
+            if (!unit.ForEval) {
+                if (IndexTypes.Length == 0) {
+                    IndexTypes = new[] { new VariableDef() };
+                }
 
-            IndexTypes[0].AddDependency(unit);
+                IndexTypes[0].AddDependency(unit);
+            }
 
             EnsureUnionType();
             return UnionType;

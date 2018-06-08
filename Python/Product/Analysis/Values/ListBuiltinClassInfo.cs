@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -23,10 +24,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
+        protected override BuiltinInstanceInfo MakeInstance() {
+            return new SequenceBuiltinInstanceInfo(this, false, false);
+        }
+
         internal override SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry) {
-            if (_indexTypes.Count > 0) {
-                var vals = new[] { new VariableDef() };
-                vals[0].AddTypes(entry, _indexTypes, false, entry);
+            if (_indexTypes.Length > 0) {
+                var vals = _indexTypes.Zip(VariableDef.Generator, (t, v) => { v.AddTypes(entry, t, false, entry); return v; }).ToArray();
                 return new ListInfo(vals, this, node, entry);
             } else {
                 return new ListInfo(VariableDef.EmptyArray, this, node, entry);

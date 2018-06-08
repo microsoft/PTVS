@@ -113,7 +113,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            return new AstAnalysisWalker(interpreter, ast, this, _filePath, null, _members, false, true);
+#if DEBUG
+            // In debug builds we let you F12 to the scraped file
+            var filePath = string.IsNullOrEmpty(_filePath)
+                ? null
+                : ((interpreter as AstPythonInterpreter)?.Factory as AstPythonInterpreterFactory)?.GetCacheFilePath(_filePath);
+            const bool includeLocations = true;
+#else
+            const string filePath = null;
+            const bool includeLocations = false;
+#endif
+            return new AstAnalysisWalker(interpreter, ast, this, filePath, null, _members, includeLocations, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {

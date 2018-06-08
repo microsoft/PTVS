@@ -830,9 +830,16 @@ l = iterfind()");
 e1, e2, e3 = sys.exc_info()");
                     analysis.WaitForAnalysis();
 
-                    analysis.AssertIsInstance("e1", "BaseException", "Type", "Unknown");
-                    analysis.AssertIsInstance("e2", "BaseException", "Type", "Unknown");
-                    analysis.AssertIsInstance("e3", "BaseException", "Type", "Unknown");
+                    var funcs = analysis.GetValues("sys.exc_info").ToArray();
+                    AssertUtil.ContainsExactly(
+                        funcs.SelectMany(f => f.Overloads).Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "exc_info()->[tuple of type, BaseException, None]",
+                        "exc_info()->[tuple]"
+                    );
+
+                    analysis.AssertIsInstance("e1", BuiltinTypeId.Type);
+                    analysis.AssertIsInstance("e2", "BaseException");
+                    analysis.AssertIsInstance("e3", BuiltinTypeId.NoneType);
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
