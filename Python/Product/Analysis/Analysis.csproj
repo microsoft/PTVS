@@ -114,6 +114,7 @@
     <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Server.Completion.cs" />
     <Compile Include="LanguageServer\Server.FindReferences.cs" />
+    <Compile Include="LanguageServer\Server.GoToDefinition.cs" />
     <Compile Include="LanguageServer\Server.Hover.cs" />
     <Compile Include="LanguageServer\Server.PrivateHelpers.cs" />
     <Compile Include="LanguageServer\Server.SignatureHelp.cs" />
