@@ -2393,7 +2393,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             List<NavigationInfo> res = new List<NavigationInfo>();
-            foreach (var nav in navigations) {
+            foreach (var nav in navigations.OrderBy(n => n.name, CompletionComparer.UnderscoresLast)) {
                 // translate the span from the version we last parsed to the current version
 
                 var span = translator.Translate(
