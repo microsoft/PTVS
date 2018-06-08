@@ -30,18 +30,15 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private readonly ICompletionBroker _completionBroker;
         private readonly ISignatureHelpBroker _signatureHelpBroker;
         private readonly PythonToolsService _pyService;
-
-#pragma warning disable 618 // Microsoft.Web.Editor.Completion.CompletionController uses the deprecated IQuickInfoBroker
-        private readonly IQuickInfoBroker _quickInfoBroker;
+        private readonly IAsyncQuickInfoBroker _quickInfoBroker;
 
         [ImportingConstructor]
-        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, ICompletionBroker completionBroker, IQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
+        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
             _completionBroker = completionBroker;
             _quickInfoBroker = quickInfoBroker;
             _signatureHelpBroker = signatureHelpBroker;
             _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
         }
-#pragma warning restore 618
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView view, IList<ITextBuffer> subjectBuffers) {
             var completionController = ServiceManager.GetService<TemplateCompletionController>(view);

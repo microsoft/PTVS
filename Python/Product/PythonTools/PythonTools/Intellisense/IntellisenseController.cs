@@ -440,14 +440,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.Span;
         }
 
-        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs, SnapshotSpan span) {
-            if (!prefs.AutoListMembers) {
-                return false;
-            }
-
-            return StringLiteralCompletionList.CanComplete(span.GetText());
-        }
-
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
@@ -1299,7 +1291,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
             var caret = mcaret.Value;
-            var span = session.GetApplicableSpan(caret.Snapshot.TextBuffer).GetSpan(caret.Snapshot);
+            var span = session.SelectedCompletionSet.ApplicableTo.GetSpan(caret.Snapshot);
 
             return caret == span.End &&
                 span.Length == selectionStatus.Completion?.InsertionText.Length &&

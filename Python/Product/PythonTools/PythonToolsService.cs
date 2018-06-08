@@ -594,8 +594,40 @@ namespace Microsoft.PythonTools {
 
         #region Intellisense
 
-        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
+        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point) {
+            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
+                // Cannot complete a word immediately after a space
+                session.ClearCompleteWordMode();
+            }
+
+            var bi = EditorServices.GetBufferInfo(snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
+                return CompletionAnalysis.EmptyCompletionContext;
+            }
+
+            var options = session.GetOptions(Site);
+            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
+                options = options.Clone();
+                options.IncludeStatementKeywords = false;
+            }
+
+            return new CompletionAnalysis(
+                EditorServices,
+                session,
+                view,
+                snapshot,
+                point,
+                options
+            );
+        }
+
+        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
+            var pos = loc.GetPosition(snapshot);
+            if (pos > 0) {
+                return snapshot.GetText(pos - 1, 1) == " ";
+            }
+            return false;
         }
 
         internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
@@ -604,14 +636,6 @@ namespace Microsoft.PythonTools {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
-        }
-
-        internal Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry == null) {
-                return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
-            }
-            return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
         }
 
         internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {

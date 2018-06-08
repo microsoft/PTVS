@@ -633,7 +633,6 @@
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />
@@ -644,7 +643,6 @@
     <Compile Include="PythonTools\Intellisense\SignatureHelpSource.cs" />
     <Compile Include="PythonTools\Intellisense\SignatureHelpSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\SnapshotCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\StringLiteralCompletionList.cs" />
     <Compile Include="PythonTools\Options\PythonDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
