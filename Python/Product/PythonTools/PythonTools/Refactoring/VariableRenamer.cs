@@ -117,30 +117,6 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private async Task<List<AnalysisVariable>> GetKeywordParameters(string expr, string originalName) {
-            List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
-            if (expr.IndexOf('.')  == -1) {
-                // let's check if we'r re-naming a keyword argument...
-                ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = await _uiThread.InvokeTask(() => _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span))
-                    .ConfigureAwait(false);
-
-                foreach (var sig in sigs.Signatures) {
-                    PythonSignature overloadRes = sig as PythonSignature;
-                    if (overloadRes != null) {
-                        foreach (PythonParameter param in overloadRes.Parameters) {
-                            // UNDONE: Need to get parameter references some other way
-                            //if (param.Name == originalName && param.Variables != null) {
-                            //    paramVars.AddRange(param.Variables);
-                            //}
-                        }
-                    }
-                }
-            }
-
-            return paramVars;
-        }
-
         private bool IsModuleName(IRenameVariableInput input) {
             // make sure we're in 
             var span = _view.GetCaretSpan();

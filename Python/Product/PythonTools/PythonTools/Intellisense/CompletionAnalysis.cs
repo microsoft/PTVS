@@ -15,19 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
@@ -36,45 +32,138 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context
     /// </summary>
-    class CompletionAnalysis {
+    internal class CompletionAnalysis {
+        internal const long TooMuchTime = 50;
+        private static readonly Stopwatch _stopwatch = MakeStopWatch();
+
         private readonly PythonEditorServices _services;
         private readonly ICompletionSession _session;
         private readonly ITextView _view;
-        private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
-        protected readonly CompletionOptions _options;
-        internal const Int64 TooMuchTime = 50;
-        protected static Stopwatch _stopwatch = MakeStopWatch();
+        private readonly ITextSnapshot _snapshot;
+        private readonly ITrackingPoint _point;
+        private readonly CompletionOptions _options;
+        private ITrackingSpan _span;
 
         internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null, null);
 
-        internal CompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        internal CompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
             _session = session;
             _view = view;
-            _span = span;
             _services = services;
-            _textBuffer = textBuffer;
-            _options = (options == null) ? new CompletionOptions() : options.Clone();
+            _snapshot = snapshot;
+            _textBuffer = snapshot?.TextBuffer;
+            _point = point;
+            _options = options == null ? new CompletionOptions() : options.Clone();
         }
 
-        internal PythonEditorServices EditorServices => _services;
-        public ICompletionSession Session => _session;
-        public ITextBuffer TextBuffer => _textBuffer;
-        public ITrackingSpan Span => _span;
-        public ITextView View => _view;
+        public CompletionSet GetCompletions(IGlyphService glyphService) {
+            if (_snapshot == null) {
+                return null;
+            }
 
-        public virtual CompletionSet GetCompletions(IGlyphService glyphService) {
-            return null;
-        }
+            var start = _stopwatch.ElapsedMilliseconds;
 
-        internal static bool IsKeyword(ClassificationSpan token, string keyword, Lazy<string> text = null) {
-            return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && (text?.Value ?? token.Span.GetText()) == keyword;
+            var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
+            var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
+
+            var bufferInfo = PythonTextBufferInfo.TryGetForBuffer(_textBuffer);
+            Debug.Assert(bufferInfo != null, "Getting completions from uninitialized buffer " + _textBuffer);
+
+            var analysis = bufferInfo?.AnalysisEntry;
+            var analyzer = analysis?.Analyzer;
+
+            if (analyzer == null) {
+                return null;
+            }
+
+            var point = _point.GetPoint(bufferInfo.CurrentSnapshot);
+
+            var location = VsProjectAnalyzer.TranslateIndex(
+                point.Position,
+                point.Snapshot,
+                analysis
+            );
+
+            var triggerChar = _session.GetTriggerCharacter();
+            var completions = analyzer.WaitForRequest(analyzer.GetCompletionsAsync(
+                analysis,
+                location,
+                _options.MemberOptions,
+                triggerChar == '\0' ? Analysis.LanguageServer.CompletionTriggerKind.Invoked : Analysis.LanguageServer.CompletionTriggerKind.TriggerCharacter,
+                triggerChar == '\0' ? null : triggerChar.ToString()
+            ), "GetCompletions.GetMembers");
+
+            if (completions.items == null) {
+                return null;
+            }
+
+            var snapshotSpan = completions._applicableSpan.HasValue
+                ? ((SourceSpan)completions._applicableSpan.Value).ToSnapshotSpan(_snapshot)
+                : new SnapshotSpan(point, 0);
+            _span = bufferInfo.CurrentSnapshot.CreateTrackingSpan(snapshotSpan, SpanTrackingMode.EdgeInclusive);
+
+            var members = completions.items.Select(c => new CompletionResult(
+                c.label,
+                c.insertText ?? c.label,
+                c.documentation?.value,
+                Enum.TryParse(c._kind, true, out PythonMemberType mt) ? mt : PythonMemberType.Unknown,
+                null
+            ));
+
+            if (pyReplEval?.Analyzer != null && (string.IsNullOrEmpty(completions._expr) || pyReplEval.Analyzer.ShouldEvaluateForCompletion(completions._expr))) {
+                var replMembers = pyReplEval.GetMemberNames(completions._expr ?? "");
+                if (replMembers != null) {
+                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                }
+            }
+
+            if (pyReplEval == null && (completions._allowSnippet ?? false)) {
+                var expansions = analyzer.WaitForRequest(_services.Python?.GetExpansionCompletionsAsync(), "GetCompletions.GetExpansions", null, 5);
+                if (expansions != null) {
+                    // Expansions should come first, so that they replace our keyword
+                    // completions with the more detailed snippets.
+                    members = expansions.Union(members, CompletionComparer.MemberEquality);
+                }
+            }
+
+
+            var end = _stopwatch.ElapsedMilliseconds;
+
+            if (/*Logging &&*/ (end - start) > TooMuchTime) {
+                var memberArray = members.ToArray();
+                members = memberArray;
+                Trace.WriteLine($"{this} lookup time {end - start} for {memberArray.Length} members");
+            }
+
+            start = _stopwatch.ElapsedMilliseconds;
+
+            var result = new FuzzyCompletionSet(
+                "Python",
+                "Python",
+                _span,
+                members.Select(m => PythonCompletion(glyphService, m)),
+                _options,
+                CompletionComparer.UnderscoresLast,
+                matchInsertionText: true
+            ) {
+                CommitByDefault = completions._commitByDefault ?? true
+            };
+
+
+            end = _stopwatch.ElapsedMilliseconds;
+
+            if (/*Logging &&*/ (end - start) > TooMuchTime) {
+                Trace.WriteLine($"{this} completion set time {end - start} total time {end - start}");
+            }
+
+            return result;
         }
 
         internal DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
             var insert = memberResult.Completion;
-            if (insert.IndexOf('\t') >= 0 && View.Options.IsConvertTabsToSpacesEnabled()) {
-                insert = insert.Replace("\t", new string(' ', View.Options.GetIndentSize()));
+            if (insert.IndexOf('\t') >= 0 && _view.Options.IsConvertTabsToSpacesEnabled()) {
+                insert = insert.Replace("\t", new string(' ', _view.Options.GetIndentSize()));
             }
 
             return new DynamicallyVisibleCompletion(memberResult.Name, 
@@ -109,105 +198,17 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal PythonTextBufferInfo GetBufferInfo() {
-            var bi = PythonTextBufferInfo.TryGetForBuffer(TextBuffer);
-            Debug.Assert(bi != null, "Getting completions from uninitialized buffer " + TextBuffer.ToString());
-            return bi;
-        }
-
-        internal AnalysisEntry GetAnalysisEntry() {
-            return GetBufferInfo()?.AnalysisEntry;
-        }
-
         private static Stopwatch MakeStopWatch() {
             var res = new Stopwatch();
             res.Start();
             return res;
         }
 
-        protected IEnumerable<CompletionResult> GetModules(string[] package, bool modulesOnly = true) {
-            var analysis = GetAnalysisEntry();
-            if (analysis == null) {
-                return Enumerable.Empty<CompletionResult>();
-            }
-
-            IPythonInteractiveIntellisense pyReplEval = null;
-            IInteractiveEvaluator eval;
-            if (TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
-                pyReplEval = eval as IPythonInteractiveIntellisense;
-            }
-            IEnumerable<KeyValuePair<string, string>> replScopes = null;
-            if (pyReplEval != null) {
-                replScopes = pyReplEval.GetAvailableScopesAndPaths();
-            }
-
-            if (package == null) {
-                package = new string[0];
-            }
-
-            var modules = Enumerable.Empty<CompletionResult>();
-
-            if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                var analyzer = analysis.Analyzer;
-                IEnumerable<CompletionResult> result;
-
-                if (modulesOnly || package.Length == 0) {
-                    result = analyzer.WaitForRequest(analyzer.GetModulesAsync(analysis, package), "GetModules");
-                } else {
-                    result = analyzer.WaitForRequest(analyzer.GetMembersAsync(
-                        analysis,
-                        $"__import__('{string.Join(".", package)}')",
-                        SourceLocation.MinValue,
-                        Analysis.GetMemberOptions.None
-                    ), "GetMembers");
-                }
-
-                if (result != null) {
-                    modules = modules.Concat(result).Distinct(CompletionComparer.MemberEquality);
-                }
-            }
-
-            if (replScopes != null) {
-                modules = GetModulesFromReplScope(replScopes, package)
-                    .Concat(modules)
-                    .Distinct(CompletionComparer.MemberEquality);
-            }
-
-            return modules;
-        }
-
-        private static IEnumerable<CompletionResult> GetModulesFromReplScope(
-            IEnumerable<KeyValuePair<string, string>> scopes,
-            string[] package
-        ) {
-            if (package == null || package.Length == 0) {
-                foreach (var scope in scopes) {
-                    if (scope.Key.IndexOf('.') < 0) {
-                        yield return new CompletionResult(
-                            scope.Key,
-                            string.IsNullOrEmpty(scope.Value) ? PythonMemberType.Namespace : PythonMemberType.Module
-                        );
-                    }
-                }
-            } else {
-                foreach (var scope in scopes) {
-                    var parts = scope.Key.Split('.');
-                    if (parts.Length - 1 == package.Length &&
-                        parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
-                        yield return new CompletionResult(
-                            parts[parts.Length - 1],
-                            string.IsNullOrEmpty(scope.Value) ? PythonMemberType.Namespace : PythonMemberType.Module
-                        );
-                    }
-                }
-            }
-        }
-
         public override string ToString() {
-            if (Span == null) {
+            if (_span == null) {
                 return "CompletionContext.EmptyCompletionContext";
-            };
-            var snapSpan = Span.GetSpan(TextBuffer.CurrentSnapshot);
+            }
+            var snapSpan = _span.GetSpan(_textBuffer.CurrentSnapshot);
             return String.Format("CompletionContext({0}): {1} @{2}", GetType().Name, snapSpan.GetText(), snapSpan.Span);
         }
     }
