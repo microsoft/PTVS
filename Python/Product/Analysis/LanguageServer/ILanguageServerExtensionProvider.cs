@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// <summary>
@@ -25,6 +27,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// <summary>
         /// Called when the extension is loaded for a language server.
         /// </summary>
-        ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties);
+        Task<ILanguageServerExtension> CreateAsync(
+            IServer server,
+            IReadOnlyDictionary<string, object> properties,
+            CancellationToken cancellationToken
+        );
     }
 }

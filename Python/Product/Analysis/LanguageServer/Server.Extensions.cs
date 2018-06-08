@@ -21,29 +21,31 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     partial class Server {
         public async Task LoadExtension(PythonAnalysisExtensionParams extension) {
-            var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
-            if (provider == null) {
-                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
-                return;
-            }
-            var ext = provider.Create(this, extension.properties ?? new Dictionary<string, object>());
-            if (ext == null) {
-                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} returned null");
-                return;
-            }
+            using (AllowRequestCancellation()) {
+                var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
+                if (provider == null) {
+                    LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
+                    return;
+                }
+                var ext = await provider.CreateAsync(this, extension.properties ?? new Dictionary<string, object>(), CancellationToken);
+                if (ext == null) {
+                    LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} returned null");
+                    return;
+                }
 
-            string n = null;
-            try {
-                n = ext.Name;
-            } catch (NotImplementedException) {
-            } catch (NotSupportedException) {
-            }
+                string n = null;
+                try {
+                    n = ext.Name;
+                } catch (NotImplementedException) {
+                } catch (NotSupportedException) {
+                }
 
-            if (!string.IsNullOrEmpty(n)) {
-                _extensions.AddOrUpdate(n, ext, (_, previous) => {
-                    (previous as IDisposable)?.Dispose();
-                    return ext;
-                });
+                if (!string.IsNullOrEmpty(n)) {
+                    _extensions.AddOrUpdate(n, ext, (_, previous) => {
+                        (previous as IDisposable)?.Dispose();
+                        return ext;
+                    });
+                }
             }
         }
 

@@ -475,8 +475,8 @@ mc
 
 
         class TestCompletionHookProvider : ILanguageServerExtensionProvider {
-            public ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties) {
-                return new TestCompletionHook(server);
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new TestCompletionHook(server));
             }
 
             class TestCompletionHook : ILanguageServerExtension {
@@ -822,11 +822,8 @@ datetime.datetime.now().day
         }
 
         class GetAllExtensionProvider : ILanguageServerExtensionProvider {
-            public ILanguageServerExtension Create(IServer server, IReadOnlyDictionary<string, object> properties) {
-                return new GetAllExtension(
-                    (Server)server, // Let the invalid cast exception bubble out
-                    properties
-                );
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new GetAllExtension((Server)server, properties));
             }
 
             private class GetAllExtension : ILanguageServerExtension {
