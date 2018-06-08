@@ -61,12 +61,9 @@ namespace Microsoft.PythonTools.Analysis {
         internal Expression GetExpressionForText(string exprText, SourceLocation location, out InterpreterScope scope, out PythonAst exprTree) {
             exprTree = null;
             scope = FindScope(location);
-            if (scope != null) {
-                var privatePrefix = GetPrivatePrefixClassName(scope);
-                exprTree = GetAstFromText(exprText, privatePrefix);
-                return Statement.GetExpression(exprTree.Body);
-            }
-            return null;
+            var privatePrefix = GetPrivatePrefixClassName(scope);
+            exprTree = GetAstFromText(exprText, privatePrefix);
+            return Statement.GetExpression(exprTree.Body);
         }
 
         /// <summary>
@@ -85,16 +82,14 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal IEnumerable<AnalysisValue> GetValues(Expression expr, SourceLocation location, InterpreterScope scope = null) {
-            var res = AnalysisSet.EmptyUnion;
             scope = scope ?? FindScope(location);
-            if (scope != null) {
-                var unit = GetNearestEnclosingAnalysisUnit(scope);
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
-                var values = eval.Evaluate(expr);
-                foreach (var v in values) {
-                    res = ResolveAndAdd(unit, res, v);
-                }
+            var values = eval.Evaluate(expr);
+            var res = AnalysisSet.EmptyUnion;
+            foreach (var v in values) {
+                res = ResolveAndAdd(unit, res, v);
             }
             return res;
         }
@@ -211,9 +206,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null, InterpreterScope scope = null) {
             scope = scope ?? FindScope(location);
-            if (scope == null) {
-                return new VariablesResult(Enumerable.Empty<IAnalysisVariable>(), null);
-            }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var tree = unit.Tree;
@@ -411,10 +403,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
-            if (scope == null) {
-                return Enumerable.Empty<MemberResult>();
-            }
-
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var u = unit.CopyForEval();
 
@@ -500,9 +488,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
-            if (scope == null) {
-                return Enumerable.Empty<IOverloadResult>();
-            }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
@@ -550,12 +535,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public IEnumerable<MemberResult> GetDefinitionTree(SourceLocation location) {
             try {
-                var scope = FindScope(location);
-                return scope != null
-                    ? scope.EnumerateTowardsGlobal
+                return FindScope(location).EnumerateTowardsGlobal
                         .Select(s => new MemberResult(s.Name, s.GetMergedAnalysisValues()))
-                        .ToList()
-                    : Enumerable.Empty<MemberResult>();
+                        .ToList();
             } catch (Exception) {
                 // TODO: log exception
                 Debug.Fail("Failed to find scope. Bad state in analysis");
@@ -683,9 +665,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             // collect variables from user defined scopes
             var scope = FindScope(location);
-            if (scope == null) {
-                return Enumerable.Empty<MemberResult>();
-            }
 
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 var scopeResult = new Dictionary<string, List<AnalysisValue>>();
@@ -788,11 +767,9 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<string> GetVariablesNoBuiltins(SourceLocation location) {
             var result = Enumerable.Empty<string>();
             var chain = FindScope(location);
-            if (chain != null) {
-                foreach (var scope in chain.EnumerateFromGlobal) {
-                    if (scope.VisibleToChildren || scope == chain) {
-                        result = result.Concat(scope.GetAllMergedVariables().Select(val => val.Key));
-                    }
+            foreach (var scope in chain.EnumerateFromGlobal) {
+                if (scope.VisibleToChildren || scope == chain) {
+                    result = result.Concat(scope.GetAllMergedVariables().Select(val => val.Key));
                 }
             }
             return result.Distinct();
@@ -968,11 +945,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public PythonAst GetAstFromText(string exprText, SourceLocation location) {
             var scope = FindScope(location);
-            if (scope != null) {
-                var privatePrefix = GetPrivatePrefixClassName(scope);
-                return GetAstFromText(exprText, privatePrefix);
-            }
-            return null;
+            var privatePrefix = GetPrivatePrefixClassName(scope);
+            return GetAstFromText(exprText, privatePrefix);
         }
 
         public string ModuleName => Scope.GlobalScope.Name;
@@ -995,8 +969,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private InterpreterScope FindScope(SourceLocation location)
-            => _unit.Tree != null ? FindScope(Scope, _unit.Tree, location) : null;
+        private InterpreterScope FindScope(SourceLocation location) {
+            var res = FindScope(Scope, _unit.Tree, location);
+            Debug.Assert(res != null, "Should never return null from FindScope");
+            return res;
+        }
 
         private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {
             var function = scope.Node as FunctionDefinition;
@@ -1177,8 +1154,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal string GetPrivatePrefix(SourceLocation sourceLocation) {
-            var scope = FindScope(sourceLocation);
-            return scope != null ? GetPrivatePrefix(scope) : string.Empty;
+            return GetPrivatePrefix(FindScope(sourceLocation));
         }
 
         private static string GetPrivatePrefixClassName(InterpreterScope scope) {
