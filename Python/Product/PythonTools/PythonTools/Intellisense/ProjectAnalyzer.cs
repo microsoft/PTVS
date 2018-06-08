@@ -1348,13 +1348,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Gets a CompletionList providing a list of possible members the user can dot through.
-        /// </summary>
-        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) 
-            => GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) ??
-               GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
-
-        /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal async Task<SignatureAnalysis> GetSignaturesAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
@@ -1767,62 +1760,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 ShouldExecute = false;
                 return base.Walk(node);
             }
-        }
-
-        private static CompletionAnalysis GetStringLiteralCompletionCompletion(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
-            var buffer = snapshot.TextBuffer;
-            var classifier = buffer.GetPythonClassifier();
-            if (classifier == null) {
-                return null;
-            }
-
-            var snapSpan = span.GetSpan(snapshot);
-            var tokens = classifier.GetClassificationSpans(snapSpan);
-            var lastToken = tokens.LastOrDefault();
-            if (lastToken == null || !lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                return null;
-            }
-
-            // String completion
-            return span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber
-                ? new StringLiteralCompletionList(services, session, view, span, buffer, options)
-                : null;
-        }
-
-        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
-                // Cannot complete a word immediately after a space
-                session.ClearCompleteWordMode();
-            }
-
-            var bi = services.GetBufferInfo(snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
-            if (entry == null) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
-
-            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
-
-            return new NormalCompletionAnalysis(
-                services,
-                session,
-                view,
-                snapshot,
-                applicableSpan,
-                snapshot.TextBuffer,
-                options
-            );
-        }
-
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
-            var pos = loc.GetPosition(snapshot);
-            if (pos > 0) {
-                return snapshot.GetText(pos - 1, 1) == " ";
-            }
-            return false;
         }
 
         private static Stopwatch MakeStopWatch() {
@@ -2393,7 +2330,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             List<NavigationInfo> res = new List<NavigationInfo>();
-            foreach (var nav in navigations) {
+            foreach (var nav in navigations.OrderBy(n => n.name, CompletionComparer.UnderscoresLast)) {
                 // translate the span from the version we last parsed to the current version
 
                 var span = translator.Translate(

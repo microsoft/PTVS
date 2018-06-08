@@ -342,12 +342,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var filePath = GetLocalPath(document);
 
             if (!string.IsNullOrEmpty(filePath)) {
-                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, _analyzer.LanguageVersion, out var mp)) {
+                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, out var mp)) {
                     yield return mp;
                 }
 
                 foreach (var sp in _analyzer.GetSearchPaths()) {
-                    if (ModulePath.FromBasePathAndFile_NoThrow(sp, filePath, _analyzer.LanguageVersion, out mp)) {
+                    if (ModulePath.FromBasePathAndFile_NoThrow(sp, filePath, out mp)) {
                         yield return mp;
                     }
                 }
@@ -454,7 +454,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             IEnumerable<string> aliases = null;
             var path = GetLocalPath(documentUri);
             if (fromSearchPath != null) {
-                if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, _analyzer.LanguageVersion, out var mp)) {
+                if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
                     aliases = new[] { mp.ModuleName };
                 }
             } else {
@@ -473,8 +473,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var a in aliases.Skip(1)) {
                 _analyzer.AddModuleAlias(first, a);
             }
-
-            AddParentModules(first, path);
 
             var actualItem = _projectFiles.GetOrAddEntry(documentUri, item);
             if (actualItem != item) {
@@ -496,46 +494,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             return Task.FromResult(item);
-        }
-
-        private void AddParentModules(string module, string path) {
-            if (ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion) ||
-                string.IsNullOrEmpty(_rootDir)) {
-                return;
-            }
-
-            var dir = Path.GetDirectoryName(path);
-            while (true) {
-                // Go up one level
-                dir = PathUtils.GetParent(dir);
-                if (dir.Length <= _rootDir.Length) {
-                    break;
-                }
-                if (!File.Exists(Path.Combine(dir, "__init__.py"))) {
-
-                    var parentModName = Path.GetFileName(dir);
-                    if (!module.StartsWithOrdinal(parentModName)) {
-                        break;
-                    }
-                    if (!_analyzer.Modules.TryImport(parentModName, out var parentModRef)) {
-                        // Parent is not in the module table
-                        _analyzer.AddModule(parentModName, dir);
-                        var entry = _analyzer.AddModule(parentModName, dir) as ProjectEntry;
-                        _analyzer.Modules.TryImport(parentModName, out parentModRef);
-
-                        if (_analyzer.Modules.TryImport(module, out var modRef)) {
-                            parentModRef.AddReference(modRef.AnalysisModule as ModuleInfo);
-                            modRef.AddReference(parentModRef.AnalysisModule as ModuleInfo);
-
-                            entry.GetModuleInfo().AddModuleReference(modRef);
-
-                            var varName = module.Substring(parentModName.Length + 1);
-                            var v = entry.Analysis.Scope.AddVariable(varName, new VariableDef());
-                            v.AddTypes(entry, modRef.AnalysisModule.SelfSet, false);
-                        }
-                    }
-                }
-            }
         }
 
         private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {

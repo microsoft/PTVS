@@ -37,13 +37,6 @@ namespace Microsoft.PythonTools.Analysis {
             => languageVersion < new Version(3, 3);
 
         /// <summary>
-        /// Returns true if the provided version of Python can only import
-        /// packages containing an <c>__init__.py</c> file.
-        /// </summary>
-        public static bool PythonVersionRequiresInitPyFiles(PythonLanguageVersion languageVersion)
-            => languageVersion < PythonLanguageVersion.V33;
-
-        /// <summary>
         /// The name by which the module can be imported in Python code.
         /// </summary>
         public string FullName { get; set; }
@@ -659,22 +652,14 @@ namespace Microsoft.PythonTools.Analysis {
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
-            PythonLanguageVersion? languageVersion,
             out ModulePath modulePath
-        ) {
-            var isPackage = languageVersion.HasValue && PythonVersionRequiresInitPyFiles(languageVersion.Value) ? (Func<string, bool>)null : s => true;
-            return FromBasePathAndName_NoThrow(basePath, moduleName, isPackage, null, out modulePath, out _, out _, out _);
-        }
+        )  => FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
 
         internal static bool FromBasePathAndFile_NoThrow(
             string basePath,
             string sourceFile,
-            PythonLanguageVersion? languageVersion,
             out ModulePath modulePath
-        ) {
-            var isPackage = languageVersion.HasValue && PythonVersionRequiresInitPyFiles(languageVersion.Value) ? (Func<string, bool>)null : s => true;
-            return FromBasePathAndFile_NoThrow(basePath, sourceFile, isPackage, out modulePath, out _, out _);
-        }
+        ) => FromBasePathAndFile_NoThrow(basePath, sourceFile, null, out modulePath, out _, out _);
 
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
             var m = regex.Match(PathUtils.GetFileName(path));

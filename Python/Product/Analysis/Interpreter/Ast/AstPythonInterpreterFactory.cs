@@ -643,13 +643,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ModulePath mp;
 
             if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, null, out mp)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
                     return mp;
                 }
             }
 
             foreach (var sp in searchPaths.MaybeEnumerate()) {
-                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, null, out mp)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, out mp)) {
                     return mp;
                 }
             }
