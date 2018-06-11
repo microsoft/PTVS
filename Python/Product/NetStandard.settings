@@ -5,8 +5,16 @@
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\VsCode\</BuildOutputRoot>
-   </PropertyGroup>
 
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(BuildOutputRoot)raw\obj\$(AssemblyName)\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath Condition="!HasTrailingSlash($(BaseIntermediateOutputPath))">$(BaseIntermediateOutputPath)\</BaseIntermediateOutputPath>
+
+    <IntermediateOutputRoot Condition="'$(IntermediateOutputRoot)' == ''">$(BuildOutputRoot)raw\obj\$(AssemblyName)\</IntermediateOutputRoot>
+    <IntermediateOutputRoot Condition="!HasTrailingSlash($(IntermediateOutputRoot))">$(IntermediateOutputRoot)\</IntermediateOutputRoot>
+
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)\$(Configuration)\</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
+  </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.Core.settings" />
 
   <PropertyGroup>

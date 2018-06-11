@@ -14,23 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis;
+using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Projects {
-    /// <summary>
-    /// Provides an extension which registers against a given analyzer.
-    /// </summary>
-    public interface IAnalysisExtension {
+namespace Microsoft.PythonTools.Analysis.LanguageServer {
+    public interface ILanguageServerExtension {
         /// <summary>
-        /// Called when the extension is registered for an analyzer.
+        /// The name of the extension. Used to look up the current instance
+        /// when processing extension command messages. If null or empty,
+        /// the extension cannot be sent messages and may be garbage collected
+        /// if it does not manage its own lifetime against the <see cref="IServer"/>
+        /// instance provided to its provider.
         /// </summary>
-        /// <param name="analyzer"></param>
-        void Register(PythonAnalyzer analyzer);
+        string Name { get; }
 
         /// <summary>
-        /// Handles an extension command.  The extension receives the command body and
-        /// returns a response.
+        /// Called when an extension command arrives for this extension.
         /// </summary>
-        string HandleCommand(string commandId, string body);
+        IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties);
     }
 }
