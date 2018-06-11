@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Options {
             }
 
             var path = Site.BrowseForFileSave(
-                _window?.Handle ?? IntPtr.Zero,
+                _window.Handle,
                 Strings.DiagnosticsWindow_TextFileFilter,
                 initialPath
             );
