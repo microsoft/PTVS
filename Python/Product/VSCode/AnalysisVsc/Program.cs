@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Services;
+using Newtonsoft.Json;
 using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.VsCode {
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.VsCode {
                 using (var rpc = new JsonRpc(cout, cin, server)) {
                     var ui = new UIService(rpc);
                     rpc.SynchronizationContext = new SingleThreadSynchronizationContext(ui);
+                    rpc.JsonSerializer.Converters.Add(new UriConverter());
 
                     services.AddService(ui);
                     services.AddService(new TelemetryService(rpc));
@@ -82,21 +84,55 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             private void QueueWorker() {
-                while(true) {
+                while (true) {
                     _workAvailable.Wait(_cts.Token);
-                    if(_cts.IsCancellationRequested) {
+                    if (_cts.IsCancellationRequested) {
                         break;
                     }
-                    while(_queue.TryDequeue(out var t)) {
+                    while (_queue.TryDequeue(out var t)) {
                         try {
                             t.Item1(t.Item2);
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             _ui.LogMessage($"Exception processing request: {ex.Message}", MessageType.Error);
                         }
                     }
                     _workAvailable.Reset();
                 }
             }
+        }
+    }
+
+    sealed class UriConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) => objectType == typeof(Uri);
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            if (reader.TokenType == JsonToken.String) {
+                var str = (string)reader.Value;
+                return new Uri(str.Replace("%3A", ":"));
+            }
+
+            if (reader.TokenType == JsonToken.Null) {
+                return null;
+            }
+
+            throw new InvalidOperationException($"UriConverter: unsupported token type {reader.TokenType}");
+        }
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            if (null == value) {
+                writer.WriteNull();
+                return;
+            }
+
+            if (value is Uri) {
+                var original = ((Uri)value).OriginalString;
+                if(original.StartsWith("file:///")) {
+                    original = original.Substring(8);
+                }
+                var str = "file:///" + original.Replace(":", "%3A").Replace('\\', '/');
+                writer.WriteValue(str);
+                return;
+            }
+
+            throw new InvalidOperationException($"UriConverter: unsupported value type {value.GetType()}");
         }
     }
 }
