@@ -3821,7 +3821,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.]D;]A;]D;]A;When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.]D;]A;]D;]A;There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.]D;]A;]D;]A;Please refer to <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> for information about configuring and publishing to Azure App Service.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[这些更改将允许你更可靠、更快速地进行部署，但是首先需要配置项目或部署目标。]D;]A;]D;]A;在发布时，我们将不再自动生成 web.config 文件。可以使用“添加新项”添加该文件并根据站点需要进行自定义。]D;]A;]D;]A;在部署时，对使用的 Python 版本没有限制，但在部署时我们将不再包括虚拟环境或 Python 运行时。仅发布直接包含在项目中的库。]D;]A;]D;]A;请参阅 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> 了解有关配置和发布到 Azure App Service 的信息。]]></Val>
+            <Val><![CDATA[这些更改将允许你更可靠、更快速地进行部署，但是首先需要配置项目或部署目标。]D;]A;]D;]A;在发布时，我们将不再自动生成 web.config 文件。可以使用“添加新项”添加该文件并根据站点需要进行自定义。]D;]A;]D;]A;在部署时，对使用的 Python 版本没有限制，但在部署时我们将不再包括虚拟环境或 Python 运行时。仅发布直接包含在项目中的库。]D;]A;]D;]A;请参阅 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> 了解有关配置和发布到 Azure 应用服务的信息。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

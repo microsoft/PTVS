@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.Analysis {
     public class AnalysisUnit : ISet<AnalysisUnit>, ILocationResolver, ICanExpire {
         internal InterpreterScope _scope;
         private ModuleInfo _declaringModule;
+        private bool _suppressEnqueue;
 #if DEBUG
         private long _analysisTime;
         private long _analysisCount;
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void Enqueue() {
-            if (!ForEval && !IsInQueue) {
+            if (!ForEval && !IsInQueue && !_suppressEnqueue) {
                 State.Queue.Append(this);
                 AnalysisLog.Enqueue(State.Queue, this);
                 this.IsInQueue = true;
@@ -162,7 +163,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-
             ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
 
@@ -177,12 +177,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (toRemove != null) {
-                foreach (var nameValue in toRemove) {
-                    DeclaringModule.Scope.RemoveVariable(nameValue.Key);
-                    // if anyone read this value it could now be gone (e.g. user 
-                    // deletes a class definition) so anyone dependent upon it
-                    // needs to be updated.
-                    nameValue.Value.EnqueueDependents();
+                // Do not allow variable removal to re-enqueue our unit
+                _suppressEnqueue = true;
+                try {
+                    foreach (var nameValue in toRemove) {
+                        DeclaringModule.Scope.RemoveVariable(nameValue.Key);
+                        // if anyone read this value it could now be gone (e.g. user 
+                        // deletes a class definition) so anyone dependent upon it
+                        // needs to be updated.
+                        nameValue.Value.EnqueueDependents();
+                    }
+                } finally {
+                    _suppressEnqueue = false;
                 }
             }
         }
