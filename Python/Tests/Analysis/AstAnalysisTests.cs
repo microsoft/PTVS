@@ -65,11 +65,20 @@ namespace AnalysisTests {
             TestEnvironmentImpl.TestCleanup();
         }
 
-        private static PythonAnalysis CreateAnalysis(PythonVersion version) {
+        private static PythonAnalysis CreateAnalysis(PythonVersion version, string typeShedPath) {
+            if (string.IsNullOrEmpty(typeShedPath)) {
+                Assert.Inconclusive("typeshed is required for this test");
+            }
+            return _CreateAnalysis(version, typeShedPath);
+        }
+        private static PythonAnalysis CreateAnalysis(PythonVersion version) => _CreateAnalysis(version, null);
+
+        private static PythonAnalysis _CreateAnalysis(PythonVersion version, string typeShedPath) {
             version.AssertInstalled();
             var opts = new InterpreterFactoryCreationOptions {
                 DatabasePath = TestData.GetTempPath("AstAnalysisCache"),
-                UseExistingCache = false
+                UseExistingCache = false,
+                TypeShedPath = typeShedPath
             };
 
             Trace.TraceInformation("Cache Path: " + opts.DatabasePath);
@@ -80,8 +89,27 @@ namespace AnalysisTests {
             ));
         }
 
-        private static PythonAnalysis CreateAnalysis() {
-            return CreateAnalysis(PythonPaths.Versions.OrderByDescending(p => p.Version).FirstOrDefault());
+        private static PythonVersion Latest => PythonPaths.Versions.OrderByDescending(p => p.Version).FirstOrDefault();
+        private static PythonAnalysis CreateAnalysis() => CreateAnalysis(Latest);
+
+        private static readonly Lazy<string> _typeShedPath = new Lazy<string>(FindTypeShedForTest);
+        private static string TypeShedPath => _typeShedPath.Value;
+        private static string FindTypeShedForTest() {
+            var candidate = Environment.GetEnvironmentVariable("_TESTDATA_TYPESHED");
+            if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "stdlib", "2and3"))) {
+                return candidate;
+            }
+
+            var root = TestData.GetPath();
+
+            for (string previousRoot = null; root != previousRoot; previousRoot = root, root = PathUtils.GetParent(root)) {
+                candidate = Path.Combine(root, "typeshed");
+                if (Directory.Exists(Path.Combine(candidate, "stdlib", "2and3"))) {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         #region Test cases
@@ -759,12 +787,9 @@ y = g()");
 
         #region Type Shed tests
 
-        private static PythonVersion VersionWithTypeShed =>
-            PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "typeshed")));
-
         [TestMethod, Priority(0)]
         public void TypeShedElementTree() {
-            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
                 try {
                     var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
 
@@ -788,7 +813,7 @@ l = iterfind()");
         public void TypeShedChildModules() {
             string[] expected;
 
-            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
                 analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
                 try {
                     var entry = analysis.AddModule("test-module", @"import urllib");
@@ -805,7 +830,7 @@ l = iterfind()");
                 }
             }
 
-            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
                 try {
                     var entry = analysis.AddModule("test-module", @"import urllib");
                     analysis.WaitForAnalysis();
@@ -823,7 +848,7 @@ l = iterfind()");
 
         [TestMethod, Priority(0)]
         public void TypeShedSysExcInfo() {
-            using (var analysis = CreateAnalysis(VersionWithTypeShed)) {
+            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
                 try {
                     var entry = analysis.AddModule("test-module", @"import sys
 
