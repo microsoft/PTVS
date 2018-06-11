@@ -31,11 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _interpreterModule = module;
         }
 
-        public IPythonModule InterpreterModule {
-            get {
-                return _interpreterModule;
-            }
-        }
+        public IPythonModule InterpreterModule => _interpreterModule;
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // Must unconditionally call the base implementation of GetMember
@@ -65,7 +61,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation => _type.Documentation;
         public override string Description => _interpreterModule.Name;
         public override string Name => _interpreterModule.Name;
-
         public override IPythonType PythonType => ProjectState.Types[BuiltinTypeId.Module];
         public override PythonMemberType MemberType => _interpreterModule.MemberType;
 

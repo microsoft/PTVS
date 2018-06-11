@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// reference.
         /// </returns>
         public bool TryImport(string name, out ModuleReference res) {
-            bool firstImport = false;
+            var firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)), name);
                 firstImport = true;
@@ -135,10 +135,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return res != null && res.Module != null;
         }
-
-        public bool TryRemove(string name, out ModuleReference res) {
-            return _modules.TryRemove(name, out res);
-        }
+        public bool TryRemove(string name, out ModuleReference res) => _modules.TryRemove(name, out res);
 
         public ModuleReference this[string name] {
             get {

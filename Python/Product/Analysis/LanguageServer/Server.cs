@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -129,7 +130,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _testEnvironment = @params.initializationOptions.testEnvironment;
             _analyzerCreationTask = DoInitializeAsync(@params);
             // Test environment needs predictable initialization.
-            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
+            if (!@params.initializationOptions.asyncStartup) {
                 await _analyzerCreationTask;
             }
 

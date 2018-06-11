@@ -356,132 +356,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if the module was imported during analysis; otherwise, false.
         /// </returns>
         public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
-            ModuleReference moduleRef;
-            return ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
-                .Any(m => Modules.TryImport(m, out moduleRef));
+            var unresolved = importFrom.GetModuleInfo()?.GetAllUnresolvedModules();
+            if (unresolved == null || unresolved.Count == 0) {
+                return true;
+            }
+            var names = ModuleResolver.ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports);
+            return names.All(n => !unresolved.Contains(n));
         }
-
-        /// <summary>
-        /// Returns a sequence of candidate absolute module names for the given
-        /// modules.
-        /// </summary>
-        /// <param name="importingFrom">
-        /// The project entry that is importing the module.
-        /// </param>
-        /// <param name="relativeModuleName">
-        /// A dotted name identifying the path to the module.
-        /// </param>
-        /// <returns>
-        /// A sequence of strings representing the absolute names of the module
-        /// in order of precedence.
-        /// </returns>
-        internal static IEnumerable<string> ResolvePotentialModuleNames(
-            IPythonProjectEntry importingFrom,
-            string relativeModuleName,
-            bool absoluteImports
-        ) {
-            return ResolvePotentialModuleNames(
-                importingFrom?.ModuleName,
-                importingFrom?.FilePath,
-                relativeModuleName,
-                absoluteImports
-            );
-        }
-
-        /// <summary>
-        /// Returns a sequence of candidate absolute module names for the given
-        /// modules.
-        /// </summary>
-        /// <param name="importingFromModuleName">
-        /// The module that is importing the module.
-        /// </param>
-        /// <param name="importingFromFilePath">
-        /// The path to the file that is importing the module.
-        /// </param>
-        /// <param name="relativeModuleName">
-        /// A dotted name identifying the path to the module.
-        /// </param>
-        /// <returns>
-        /// A sequence of strings representing the absolute names of the module
-        /// in order of precedence.
-        /// </returns>
-        internal static IEnumerable<string> ResolvePotentialModuleNames(
-            string importingFromModuleName,
-            string importingFromFilePath,
-            string relativeModuleName,
-            bool absoluteImports
-        ) {
-            string importingFrom = null;
-            if (!string.IsNullOrEmpty(importingFromModuleName)) {
-                importingFrom = importingFromModuleName;
-                if (!string.IsNullOrEmpty(importingFromFilePath) && ModulePath.IsInitPyFile(importingFromFilePath)) {
-                    if (string.IsNullOrEmpty(importingFrom)) {
-                        importingFrom = "__init__";
-                    } else {
-                        importingFrom += ".__init__";
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty(relativeModuleName)) {
-                yield break;
-            }
-
-            // Handle relative module names
-            if (relativeModuleName.FirstOrDefault() == '.') {
-                if (string.IsNullOrEmpty(importingFrom)) {
-                    // No source to import relative to.
-                    yield break;
-                }
-
-                var prefix = importingFrom.Split('.');
-
-                if (relativeModuleName.All(c => c == '.')) {
-                    // The whole name is dots, so there's nothing to concatenate.
-                    yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
-                } else {
-                    // Assume trailing dots are not part of the import
-                    var suffix = relativeModuleName.TrimEnd('.').Split('.');
-                    var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
-                    if (dotCount < prefix.Length) {
-                        // If we have as many dots as prefix parts, the entire
-                        // name will disappear. Despite what PEP 328 says, in
-                        // reality this means the import will fail.
-                        yield return string.Join(".", prefix.Take(prefix.Length - dotCount).Concat(suffix.Skip(dotCount)));
-                    }
-                }
-                yield break;
-            }
-
-            // The two possible names that can be imported here are:
-            // * relativeModuleName
-            // * importingFrom.relativeModuleName
-            // and the order they are returned depends on whether
-            // absolute_import is enabled or not.
-
-            // Assume trailing dots are not part of the import
-            relativeModuleName = relativeModuleName.TrimEnd('.');
-
-            // With absolute_import, we treat the name as complete first.
-            if (absoluteImports) {
-                yield return relativeModuleName;
-            }
-
-            if (!string.IsNullOrEmpty(importingFrom)) {
-                var prefix = importingFrom.Split('.');
-
-                if (prefix.Length > 1) {
-                    var adjacentModuleName = string.Join(".", prefix.Take(prefix.Length - 1)) + "." + relativeModuleName;
-                    yield return adjacentModuleName;
-                }
-            }
-
-            // Without absolute_import, we treat the name as complete last.
-            if (!absoluteImports) {
-                yield return relativeModuleName;
-            }
-        }
-
 
         /// <summary>
         /// Gets a top-level list of all the available modules as a list of MemberResults.
