@@ -473,7 +473,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }).ToArray();
                 var res = Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
                 if (types.Length > 0) {
-                    res = new AstPythonSequence(res, Module, types);
+                    var iterRes = Interpreter.GetBuiltinType(BuiltinTypeId.TupleIterator);
+                    res = new AstPythonSequence(res, Module, types, iterRes);
                 }
                 return res;
             }

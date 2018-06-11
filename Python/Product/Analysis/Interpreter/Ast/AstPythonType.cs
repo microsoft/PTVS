@@ -78,7 +78,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (Bases.Count > 0) {
                     _members["__base__"] = Bases[0];
                 }
-                _members["__bases__"] = new AstPythonSequence(interpreter?.GetBuiltinType(BuiltinTypeId.Tuple), DeclaringModule, Bases);
+                _members["__bases__"] = new AstPythonSequence(
+                    interpreter?.GetBuiltinType(BuiltinTypeId.Tuple),
+                    DeclaringModule,
+                    Bases,
+                    interpreter?.GetBuiltinType(BuiltinTypeId.TupleIterator)
+                );
             }
         }
 
@@ -195,7 +200,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         member = _members[name] = new AstPythonSequence(
                             (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.Tuple),
                             DeclaringModule,
-                            Mro
+                            Mro,
+                            (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.TupleIterator)
                         );
                         return member;
                 }

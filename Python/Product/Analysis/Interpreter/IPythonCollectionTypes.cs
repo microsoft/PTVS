@@ -17,9 +17,21 @@
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
+    public interface IPythonIterableType : IPythonType {
+        IPythonIteratorType IteratorType { get; }
+    }
+
+    public interface IPythonIteratorType : IPythonType {
+        IEnumerable<IPythonType> NextType { get; }
+    }
+
     public interface IPythonSequenceType : IPythonType {
-        IEnumerable<IPythonType> IndexTypes {
-            get;
-        }
+        IEnumerable<IPythonType> IndexTypes { get; }
+    }
+
+    public interface IPythonLookupType : IPythonType {
+        IEnumerable<IPythonType> KeyTypes { get; }
+        IEnumerable<IPythonType> ValueTypes { get; }
+        IEnumerable<IPythonType> GetIndex(IPythonType key);
     }
 }

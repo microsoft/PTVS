@@ -101,9 +101,11 @@
     <Compile Include="Intellisense\VersionCookie.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonIterables.cs" />
     <Compile Include="Interpreter\Ast\AstPythonMultipleTypes.cs" />
     <Compile Include="Interpreter\Ast\AstPythonMultipleModules.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
@@ -195,7 +197,7 @@
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
-    <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\IPythonCollectionTypes.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
@@ -266,6 +268,7 @@
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\ProtocolInfo.cs" />
     <Compile Include="Values\Protocols.cs" />
+    <Compile Include="Values\DictBuiltinInstanceInfo.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
