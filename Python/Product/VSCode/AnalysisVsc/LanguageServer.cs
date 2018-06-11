@@ -43,12 +43,12 @@ namespace Microsoft.PythonTools.VsCode {
         private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
         private ITelemetryService _telemetry;
-        private JsonRpc _vscode;
+        private JsonRpc _rpc;
 
-        public CancellationToken Start(IServiceContainer services, JsonRpc vscode) {
+        public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
             _telemetry = services.GetService<ITelemetryService>();
-            _vscode = vscode;
+            _rpc = rpc;
 
             _server.OnLogMessage += OnLogMessage;
             _server.OnShowMessage += OnShowMessage;
@@ -92,14 +92,14 @@ namespace Microsoft.PythonTools.VsCode {
                 uri = e.uri.ToString(),
                 diagnostics = e.diagnostics.ToArray()
             };
-            _vscode.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
+            _rpc.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
         }
         private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params).DoNotWait();
+            => _rpc.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params).DoNotWait();
         private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("client/registerCapability", e.@params).DoNotWait();
+            => _rpc.NotifyWithParameterObjectAsync("client/registerCapability", e.@params).DoNotWait();
         private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e)
-            => _vscode.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params).DoNotWait();
+            => _rpc.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params).DoNotWait();
         #endregion
 
         #region Lifetime
@@ -189,92 +189,92 @@ namespace Microsoft.PythonTools.VsCode {
         #region TextDocument
         [JsonRpcMethod("textDocument/didOpen")]
         public Task DidOpenTextDocument(JToken token)
-           => _server.DidOpenTextDocument(token.ToObject<DidOpenTextDocumentParams>());
+           => _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/didChange")]
         public void DidChangeTextDocument(JToken token)
-           => _server.DidChangeTextDocument(token.ToObject<DidChangeTextDocumentParams>());
+           => _server.DidChangeTextDocument(ToObject<DidChangeTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/willSave")]
         public Task WillSaveTextDocument(JToken token)
-           => _server.WillSaveTextDocument(token.ToObject<WillSaveTextDocumentParams>());
+           => _server.WillSaveTextDocument(ToObject<WillSaveTextDocumentParams>(token));
 
         public Task<TextEdit[]> WillSaveWaitUntilTextDocument(JToken token)
-           => _server.WillSaveWaitUntilTextDocument(token.ToObject<WillSaveTextDocumentParams>());
+           => _server.WillSaveWaitUntilTextDocument(ToObject<WillSaveTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/didSave")]
         public Task DidSaveTextDocument(JToken token)
-           => _server.DidSaveTextDocument(token.ToObject<DidSaveTextDocumentParams>());
+           => _server.DidSaveTextDocument(ToObject<DidSaveTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/didClose")]
         public Task DidCloseTextDocument(JToken token)
-           => _server.DidCloseTextDocument(token.ToObject<DidCloseTextDocumentParams>());
+           => _server.DidCloseTextDocument(ToObject<DidCloseTextDocumentParams>(token));
         #endregion
 
         #region Editor features
         [JsonRpcMethod("textDocument/completion")]
         public Task<CompletionList> Completion(JToken token)
-           => _server.Completion(token.ToObject<CompletionParams>());
+           => _server.Completion(ToObject<CompletionParams>(token));
 
         [JsonRpcMethod("completionItem/resolve")]
         public Task<CompletionItem> CompletionItemResolve(JToken token)
-           => _server.CompletionItemResolve(token.ToObject<CompletionItem>());
+           => _server.CompletionItemResolve(ToObject<CompletionItem>(token));
 
         [JsonRpcMethod("textDocument/hover")]
         public Task<Hover> Hover(JToken token)
-           => _server.Hover(token.ToObject<TextDocumentPositionParams>());
+           => _server.Hover(ToObject<TextDocumentPositionParams>(token));
 
         [JsonRpcMethod("textDocument/signatureHelp")]
         public Task<SignatureHelp> SignatureHelp(JToken token)
-            => _server.SignatureHelp(token.ToObject<TextDocumentPositionParams>());
+            => _server.SignatureHelp(ToObject<TextDocumentPositionParams>(token));
 
         [JsonRpcMethod("textDocument/definition")]
         public Task<Reference[]> GotoDefinition(JToken token)
-           => _server.GotoDefinition(token.ToObject<TextDocumentPositionParams>());
+           => _server.GotoDefinition(ToObject<TextDocumentPositionParams>(token));
 
         [JsonRpcMethod("textDocument/references")]
         public Task<Reference[]> FindReferences(JToken token)
-           => _server.FindReferences(token.ToObject<ReferencesParams>());
+           => _server.FindReferences(ToObject<ReferencesParams>(token));
 
         [JsonRpcMethod("textDocument/documentHighlight")]
         public Task<DocumentHighlight[]> DocumentHighlight(JToken token)
-           => _server.DocumentHighlight(token.ToObject<TextDocumentPositionParams>());
+           => _server.DocumentHighlight(ToObject<TextDocumentPositionParams>(token));
 
         [JsonRpcMethod("textDocument/documentSymbol")]
         public Task<SymbolInformation[]> DocumentSymbol(JToken token)
-           => _server.DocumentSymbol(token.ToObject<DocumentSymbolParams>());
+           => _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
 
         [JsonRpcMethod("textDocument/codeAction")]
         public Task<Command[]> CodeAction(JToken token)
-           => _server.CodeAction(token.ToObject<CodeActionParams>());
+           => _server.CodeAction(ToObject<CodeActionParams>(token));
 
         [JsonRpcMethod("textDocument/codeLens")]
         public Task<CodeLens[]> CodeLens(JToken token)
-           => _server.CodeLens(token.ToObject<TextDocumentPositionParams>());
+           => _server.CodeLens(ToObject<TextDocumentPositionParams>(token));
 
         [JsonRpcMethod("codeLens/resolve")]
         public Task<CodeLens> CodeLensResolve(JToken token)
-           => _server.CodeLensResolve(token.ToObject<CodeLens>());
+           => _server.CodeLensResolve(ToObject<CodeLens>(token));
 
         [JsonRpcMethod("textDocument/documentLink")]
         public Task<DocumentLink[]> DocumentLink(JToken token)
-           => _server.DocumentLink(token.ToObject<DocumentLinkParams>());
+           => _server.DocumentLink(ToObject<DocumentLinkParams>(token));
 
         [JsonRpcMethod("documentLink/resolve")]
         public Task<DocumentLink> DocumentLinkResolve(JToken token)
-           => _server.DocumentLinkResolve(token.ToObject<DocumentLink>());
+           => _server.DocumentLinkResolve(ToObject<DocumentLink>(token));
 
         [JsonRpcMethod("textDocument/formatting")]
         public Task<TextEdit[]> DocumentFormatting(JToken token)
-           => _server.DocumentFormatting(token.ToObject<DocumentFormattingParams>());
+           => _server.DocumentFormatting(ToObject<DocumentFormattingParams>(token));
 
         [JsonRpcMethod("textDocument/rangeFormatting")]
         public Task<TextEdit[]> DocumentRangeFormatting(JToken token)
-           => _server.DocumentRangeFormatting(token.ToObject<DocumentRangeFormattingParams>());
+           => _server.DocumentRangeFormatting(ToObject<DocumentRangeFormattingParams>(token));
 
         [JsonRpcMethod("textDocument/onTypeFormatting")]
         public Task<TextEdit[]> DocumentOnTypeFormatting(JToken token)
-           => _server.DocumentOnTypeFormatting(token.ToObject<DocumentOnTypeFormattingParams>());
+           => _server.DocumentOnTypeFormatting(ToObject<DocumentOnTypeFormattingParams>(token));
 
         [JsonRpcMethod("textDocument/rename")]
         public Task<WorkspaceEdit> Rename(JToken token)
@@ -284,8 +284,10 @@ namespace Microsoft.PythonTools.VsCode {
         #region Extensions
         [JsonRpcMethod("python/loadExtension")]
         public Task LoadExtension(JToken token)
-            => _server.LoadExtension(token.ToObject<PythonAnalysisExtensionParams>());
+            => _server.LoadExtension(ToObject<PythonAnalysisExtensionParams>(token));
 
         #endregion
+
+        private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
     }
 }

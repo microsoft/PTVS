@@ -651,7 +651,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     continue;
                 }
 
-                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
+                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file), UriKind.RelativeOrAbsolute));
                 if (entry != null) {
                     FileFound(entry.DocumentUri);
                 }

@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     _includeValues = true
                 }
             });
-            return references.Where(r => r._kind == ReferenceKind.Definition).ToArray();
+            return references.Where(r => r._kind == ReferenceKind.Definition && r.uri != null).ToArray();
         }
     }
 }

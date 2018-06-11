@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!Path.IsPathRooted(filePath)) {
                 u = new Uri("file:///LOCAL-PATH/{0}".FormatInvariant(filePath.Replace('\\', '/')));
             } else {
-                u = new Uri(filePath);
+                u = new Uri(filePath, UriKind.RelativeOrAbsolute);
             }
 
             return u;
