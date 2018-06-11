@@ -109,10 +109,15 @@
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\DocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
+    <Compile Include="LanguageServer\Extensibility.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtension.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtensionProvider.cs" />
     <Compile Include="LanguageServer\ILogger.cs" />
+    <Compile Include="LanguageServer\IServer.cs" />
     <Compile Include="LanguageServer\MarkdownDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Server.Completion.cs" />
+    <Compile Include="LanguageServer\Server.Extensions.cs" />
     <Compile Include="LanguageServer\Server.FindReferences.cs" />
     <Compile Include="LanguageServer\Server.Hover.cs" />
     <Compile Include="LanguageServer\Server.PrivateHelpers.cs" />
@@ -128,6 +133,7 @@
     <Compile Include="LanguageServer\Settings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
+    <Compile Include="ModuleResolver.cs" />
     <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />

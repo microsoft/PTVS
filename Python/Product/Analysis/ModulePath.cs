@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
     struct ModulePath {
@@ -32,9 +33,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns true if the provided version of Python can only import
         /// packages containing an <c>__init__.py</c> file.
         /// </summary>
-        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion) {
-            return languageVersion < new Version(3, 3);
-        }
+        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion)
+            => languageVersion < new Version(3, 3);
 
         /// <summary>
         /// The name by which the module can be imported in Python code.
@@ -94,31 +94,19 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if the module is a binary file.
         /// </summary>
         /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
-        public bool IsCompiled {
-            get {
-                return PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
+        public bool IsCompiled => PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
         /// True if the module is a native extension module.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public bool IsNativeExtension {
-            get {
-                return PythonBinaryRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
+        public bool IsNativeExtension => PythonBinaryRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
         /// True if the module is a stub file.
         /// </summary>
         /// <remarks>New in 3.2</remarks>
-        public bool IsStub {
-            get {
-                return PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
-            }
-        }
+        public bool IsStub => PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
         /// Creates a new ModulePath item.
@@ -665,17 +653,13 @@ namespace Microsoft.PythonTools.Analysis {
             string basePath,
             string moduleName,
             out ModulePath modulePath
-        ) {
-            return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
-        }
+        )  => FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
 
         internal static bool FromBasePathAndFile_NoThrow(
             string basePath,
             string sourceFile,
             out ModulePath modulePath
-        ) {
-            return FromBasePathAndFile_NoThrow(basePath, sourceFile, null, out modulePath, out _, out _);
-        }
+        ) => FromBasePathAndFile_NoThrow(basePath, sourceFile, null, out modulePath, out _, out _);
 
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
             var m = regex.Match(PathUtils.GetFileName(path));

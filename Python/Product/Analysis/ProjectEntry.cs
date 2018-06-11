@@ -56,8 +56,10 @@ namespace Microsoft.PythonTools.Analysis {
             DocumentUri = documentUri ?? MakeDocumentUri(filePath);
             FilePath = filePath;
             Cookie = cookie;
+
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(null, MyScope.Scope);
+
             _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
                 _buffers[0].Reset(c.Version, c.Content);

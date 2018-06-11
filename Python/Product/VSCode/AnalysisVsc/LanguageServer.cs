@@ -280,5 +280,12 @@ namespace Microsoft.PythonTools.VsCode {
         public Task<WorkspaceEdit> Rename(JToken token)
             => _server.Rename(token.ToObject<RenameParams>());
         #endregion
+
+        #region Extensions
+        [JsonRpcMethod("python/loadExtension")]
+        public Task LoadExtension(JToken token)
+            => _server.LoadExtension(token.ToObject<PythonAnalysisExtensionParams>());
+
+        #endregion
     }
 }
