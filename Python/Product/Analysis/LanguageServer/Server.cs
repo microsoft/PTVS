@@ -651,7 +651,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     continue;
                 }
 
-                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file), UriKind.RelativeOrAbsolute));
+                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
                 if (entry != null) {
                     FileFound(entry.DocumentUri);
                 }
@@ -661,17 +661,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // so files in different folders don't replace each other.
                 // See https://github.com/Microsoft/vscode-python/issues/1063
 
-                //if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
-                //    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
-
                 // Skip over virtual environments.
-                // TODO: handle pyenv that may have more compilcated structure
-                if (!Directory.Exists(Path.Combine(dir, "lib", "site-packages"))) {
+                if (!IsVirtualEnv(dir)) {
                     await LoadFromDirectoryAsync(dir);
                 }
-                //}
             }
         }
+
+        private bool IsVirtualEnv(string dir)
+            // Drill down to check if there is "lib/site-packages" underneath
+            => Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories).Any(x => Directory.Exists(Path.Combine(x, "lib", "site-packages")));
 
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
             version = null;
