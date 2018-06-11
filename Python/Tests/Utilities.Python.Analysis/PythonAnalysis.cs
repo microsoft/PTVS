@@ -192,6 +192,10 @@ namespace TestUtilities.Python {
             _analyzer.SetSearchPaths(paths);
         }
 
+        public void SetTypeStubSearchPath(params string[] paths) {
+            _analyzer.SetTypeStubPaths(paths);
+        }
+
         public void ReanalyzeAll(CancellationToken? cancel = null) {
             foreach (var entry in _entries.Values) {
                 entry.Analyze(CancellationToken.None, true);

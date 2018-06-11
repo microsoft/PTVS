@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly List<string> _searchPaths = new List<string>();
+        private readonly List<string> _typeStubPaths = new List<string>();
         private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
@@ -735,13 +736,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This property is thread safe.
         /// </summary>
-        public IEnumerable<string> AnalysisDirectories {
-            get {
-                lock (_searchPaths) {
-                    return _searchPaths.ToArray();
-                }
-            }
-        }
+        public IEnumerable<string> AnalysisDirectories => _searchPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Gets the list of directories which should be searched for type stubs.
+        /// 
+        /// This property is thread safe.
+        /// </summary>
+        public IEnumerable<string> TypeStubDirectories => _typeStubPaths.AsLockedEnumerable().ToArray();
 
         public AnalysisLimits Limits {
             get { return _limits; }
@@ -1071,11 +1073,7 @@ namespace Microsoft.PythonTools.Analysis {
             _reportQueueInterval = interval;
         }
 
-        public IReadOnlyList<string> GetSearchPaths() {
-            lock (_searchPaths) {
-                return _searchPaths.ToArray();
-            }
-        }
+        public IReadOnlyList<string> GetSearchPaths() => _searchPaths.AsLockedEnumerable().ToArray();
 
         /// <summary>
         /// Sets the search paths for this analyzer, invoking callbacks for any
@@ -1084,7 +1082,21 @@ namespace Microsoft.PythonTools.Analysis {
         public void SetSearchPaths(IEnumerable<string> paths) {
             lock (_searchPaths) {
                 _searchPaths.Clear();
-                _searchPaths.AddRange(paths);
+                _searchPaths.AddRange(paths.MaybeEnumerate());
+            }
+            SearchPathsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IReadOnlyList<string> GetTypeStubPaths() => _typeStubPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Sets the type stub search paths for this analyzer, invoking callbacks for any
+        /// path added or removed.
+        /// </summary>
+        public void SetTypeStubPaths(IEnumerable<string> paths) {
+            lock (_typeStubPaths) {
+                _typeStubPaths.Clear();
+                _typeStubPaths.AddRange(paths.MaybeEnumerate());
             }
             SearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }

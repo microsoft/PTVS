@@ -65,20 +65,11 @@ namespace AnalysisTests {
             TestEnvironmentImpl.TestCleanup();
         }
 
-        private static PythonAnalysis CreateAnalysis(PythonVersion version, string typeShedPath) {
-            if (string.IsNullOrEmpty(typeShedPath)) {
-                Assert.Inconclusive("typeshed is required for this test");
-            }
-            return _CreateAnalysis(version, typeShedPath);
-        }
-        private static PythonAnalysis CreateAnalysis(PythonVersion version) => _CreateAnalysis(version, null);
-
-        private static PythonAnalysis _CreateAnalysis(PythonVersion version, string typeShedPath) {
+        private static PythonAnalysis CreateAnalysis(PythonVersion version) {
             version.AssertInstalled();
             var opts = new InterpreterFactoryCreationOptions {
                 DatabasePath = TestData.GetTempPath("AstAnalysisCache"),
-                UseExistingCache = false,
-                TypeShedPath = typeShedPath
+                UseExistingCache = false
             };
 
             Trace.TraceInformation("Cache Path: " + opts.DatabasePath);
@@ -111,6 +102,27 @@ namespace AnalysisTests {
 
             return null;
         }
+
+        private static IEnumerable<string> GetTypeShedPaths(string path, PythonLanguageVersion version) {
+            var stdlib = Path.Combine(path, "stdlib");
+            var thirdParty = Path.Combine(path, "third_party");
+
+            var v = version.ToVersion();
+            foreach (var subdir in new[] { v.ToString(), v.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(stdlib, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+
+            foreach (var subdir in new[] { v.ToString(), v.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(thirdParty, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+        }
+
 
         #region Test cases
 
@@ -789,7 +801,8 @@ y = g()");
 
         [TestMethod, Priority(0)]
         public void TypeShedElementTree() {
-            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
                 try {
                     var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
 
@@ -813,7 +826,7 @@ l = iterfind()");
         public void TypeShedChildModules() {
             string[] expected;
 
-            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
+            using (var analysis = CreateAnalysis(Latest)) {
                 analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
                 try {
                     var entry = analysis.AddModule("test-module", @"import urllib");
@@ -830,7 +843,8 @@ l = iterfind()");
                 }
             }
 
-            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
                 try {
                     var entry = analysis.AddModule("test-module", @"import urllib");
                     analysis.WaitForAnalysis();
@@ -848,7 +862,8 @@ l = iterfind()");
 
         [TestMethod, Priority(0)]
         public void TypeShedSysExcInfo() {
-            using (var analysis = CreateAnalysis(Latest, TypeShedPath)) {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
                 try {
                     var entry = analysis.AddModule("test-module", @"import sys
 

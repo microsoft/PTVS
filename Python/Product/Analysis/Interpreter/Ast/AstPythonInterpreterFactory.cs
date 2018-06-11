@@ -42,8 +42,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         // Available for tests to override
         internal static bool LogToConsole = false;
 
-        private readonly IReadOnlyList<string> _typeShedPaths;
-
 #if DEBUG
         const int LogCacheSize = 1;
         const int LogRotationSize = 16384;
@@ -86,9 +84,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             }
             _skipCache = !CreationOptions.UseExistingCache;
-            if (!string.IsNullOrEmpty(CreationOptions.TypeShedPath)) {
-                _typeShedPaths = GetTypeShedPaths(CreationOptions.TypeShedPath, Configuration.Version).ToArray();
-            }
         }
 
         public void Dispose() {
@@ -447,7 +442,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             public int Timeout { get; set; } = 5000;
             public IPythonModule BuiltinModule { get; set; }
             public Func<string, Task<ModulePath?>> FindModuleInUserSearchPathAsync { get; set; }
-            public bool IncludeTypeStubPackages { get; set; }
+            public IReadOnlyList<string> TypeStubPaths { get; set; }
             public bool MergeTypeStubPackages { get; set; }
         }
 
@@ -543,12 +538,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             // Also search for type stub packages if enabled and we are not a blacklisted module
-            if (module != null && context.IncludeTypeStubPackages && module.Name != "typing") {
+            if (module != null && module.Name != "typing") {
                 // Note that this currently only looks in the typeshed package, as type stub
                 // packages are not yet standardised so we don't know where to look.
                 // The details will be in PEP 561.
-                if (_typeShedPaths?.Any() == true) {
-                    var mtsp = FindModuleInSearchPath(_typeShedPaths, null, module.Name);
+                if (context.TypeStubPaths?.Any() == true) {
+                    var mtsp = FindModuleInSearchPath(context.TypeStubPaths, null, module.Name);
                     if (mtsp.HasValue) {
                         var mp = mtsp.Value;
                         if (mp.IsCompiled) {
@@ -692,25 +687,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return module;
-        }
-
-        private static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
-            var stdlib = Path.Combine(path, "stdlib");
-            var thirdParty = Path.Combine(path, "third_party");
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(stdlib, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(thirdParty, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
         }
 
         #endregion

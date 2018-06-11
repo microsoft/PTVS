@@ -175,6 +175,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
+            SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
 
             if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
@@ -419,6 +420,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void SetSearchPaths(IEnumerable<string> searchPaths) => _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
+        public void SetTypeStubSearchPaths(IEnumerable<string> typeStubSearchPaths) => _analyzer.SetTypeStubPaths(typeStubSearchPaths.MaybeEnumerate());
 
         public event EventHandler<FileFoundEventArgs> OnFileFound;
         private void FileFound(Uri uri) {
