@@ -22,22 +22,20 @@ namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         internal static readonly LocationInfo[] Empty = new LocationInfo[0];
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
-
-        private readonly string _path;
-        public LocationInfo(string path, Uri documentUri, int line, int column): 
-            this(path, documentUri, line, column, null, null) {
+        public LocationInfo(string path, Uri documentUri, int line, int column) :
+             this(path, documentUri, line, column, null, null) {
         }
 
         public LocationInfo(string path, Uri documentUri, int line, int column, int? endLine, int? endColumn) {
-            _path = path;
-            DocumentUri = documentUri ?? (!string.IsNullOrEmpty(_path) ? new Uri(_path, UriKind.RelativeOrAbsolute) : null);
+            FilePath = path;
+            DocumentUri = documentUri;
             StartLine = line;
             StartColumn = column;
             EndLine = endLine;
             EndColumn = endColumn;
         }
 
-        public string FilePath => _path ?? DocumentUri?.LocalPath;
+        public string FilePath { get; }
 
         public Uri DocumentUri { get; }
 
