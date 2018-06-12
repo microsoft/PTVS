@@ -192,10 +192,14 @@ namespace AnalysisTests {
 
             // Python.PrefixPath and LibraryPath should be included.
             // We can't assume anything else
-            AssertUtil.ContainsAtLeast(paths.Select(p => p.Path.ToLowerInvariant().TrimEnd('\\')),
+            var expected = Python.IsCPython ? new[] {
                 Python.PrefixPath.ToLowerInvariant().TrimEnd('\\'),
-                Path.Combine(Python.PrefixPath, "Lib").ToLowerInvariant().TrimEnd('\\')
-            );
+                Path.Combine(Python.PrefixPath, "Lib").ToLowerInvariant()
+            } : new[] {
+                Path.Combine(Python.PrefixPath, "Lib").ToLowerInvariant()
+            };
+
+            AssertUtil.ContainsAtLeast(paths.Select(p => p.Path.ToLowerInvariant().TrimEnd('\\')), expected);
             
             // All paths should exist
             AssertUtil.ArrayEquals(paths.Where(p => !Directory.Exists(p.Path)).ToList(), new PythonLibraryPath[0]);

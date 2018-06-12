@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -34,6 +35,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new ListInfo(vals, this, node, entry);
             } else {
                 return new ListInfo(VariableDef.EmptyArray, this, node, entry);
+            }
+        }
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _type.Name);
+            if (_indexTypes == null || _indexTypes.Length == 0) {
+                yield break;
+            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " of ");
+            foreach (var kv in AnalysisSet.UnionAll(_indexTypes).GetRichDescriptions()) {
+                yield return kv;
             }
         }
     }
