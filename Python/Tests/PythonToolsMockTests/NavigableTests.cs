@@ -68,7 +68,7 @@ sys.version
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // sys
-              await helper.CheckDefinitionLocations(14, 3, ExternalLocation(1, 1, null), Location(1, 8));
+                await helper.CheckDefinitionLocations(14, 3, Location(1, 8));
 
                 // version
                 await helper.CheckDefinitionLocations(18, 7, null);
@@ -89,7 +89,7 @@ obj
             using (var helper = new NavigableHelper(code, Version)) {
                 // ClassBase
                 await helper.CheckDefinitionLocations(57, 9, Location(1, 1), Location(1, 7));
-                
+
                 // ClassDerived
                 await helper.CheckDefinitionLocations(88, 12, Location(4, 1), Location(4, 7));
 
@@ -117,12 +117,12 @@ my_func(2, param2=False)
                 // param1
                 await helper.CheckDefinitionLocations(12, 6, Location(1, 13));
                 await helper.CheckDefinitionLocations(47, 6, Location(1, 13));
-                
+
                 // param2
                 await helper.CheckDefinitionLocations(20, 6, Location(1, 21));
                 await helper.CheckDefinitionLocations(66, 6, Location(1, 21));
                 await helper.CheckDefinitionLocations(100, 6, Location(1, 21));
-                
+
                 // my_func
                 await helper.CheckDefinitionLocations(4, 7, Location(1, 1), Location(1, 5));
                 await helper.CheckDefinitionLocations(77, 7, Location(1, 1), Location(1, 5));
