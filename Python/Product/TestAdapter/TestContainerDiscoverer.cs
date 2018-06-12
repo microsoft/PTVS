@@ -41,28 +41,15 @@ namespace Microsoft.PythonTools.TestAdapter {
         public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
 
         [ImportingConstructor]
-        private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState)
-            : this(serviceProvider,
-                   new SolutionEventsListener(serviceProvider),
-                    operationState) { }
-
-        internal bool IsProjectKnown(IVsProject project) {
-            var pyProj = PythonProject.FromObject(project);
-            return pyProj != null && _projectInfo.ContainsKey(pyProj);
-        }
-
-        public TestContainerDiscoverer(IServiceProvider serviceProvider,
-                                       SolutionEventsListener solutionListener,
-                                       IOperationState operationState) {
+        private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             ValidateArg.NotNull(serviceProvider, "serviceProvider");
-            ValidateArg.NotNull(solutionListener, "solutionListener");
             ValidateArg.NotNull(operationState, "operationState");
 
             _projectInfo = new Dictionary<PythonProject, ProjectInfo>();
 
             _serviceProvider = serviceProvider;
 
-            _solutionListener = solutionListener;
+            _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectClosing += OnProjectUnloaded;
@@ -219,17 +206,17 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete += AnalysisComplete;
                     await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
-                    await UpdateTestCasesAsync(_analyzer.Files, false).ConfigureAwait(false);
+                    await UpdateTestCasesAsync(_analyzer, _analyzer.Files, false).ConfigureAwait(false);
                 }
             }
 
             private async void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
-                await PendOrSubmitRequests(e.Path)
+                await PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
                     .HandleAllExceptions(_discoverer._serviceProvider, GetType())
                     .ConfigureAwait(false);
             }
 
-            private async Task PendOrSubmitRequests(string path) {
+            private async Task PendOrSubmitRequests(ProjectAnalyzer analyzer, string path) {
                 List<string> pendingRequests;
                 int originalCount;
                 lock (_containersLock) {
@@ -253,15 +240,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
                 }
 
-                await UpdateTestCasesAsync(pendingRequests, true).ConfigureAwait(false);
+                await UpdateTestCasesAsync(analyzer, pendingRequests, true).ConfigureAwait(false);
             }
 
-            private async Task UpdateTestCasesAsync(IEnumerable<string> paths, bool notify) {
-                var analyzer = await _project.GetAnalyzerAsync();
-                if (analyzer == null) {
-                    return;
-                }
-
+            private async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
                 var testCaseData = await analyzer.SendExtensionCommandAsync(
                     TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
