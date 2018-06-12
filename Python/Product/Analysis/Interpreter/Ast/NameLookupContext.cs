@@ -167,6 +167,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        public IEnumerable<IPythonType> GetTypesFromAnnotation(Expression expr) {
+            if (expr == null) {
+                return Enumerable.Empty<IPythonType>();
+            }
+
+            var ann = new TypeAnnotation(Ast.LanguageVersion, expr);
+            var m = ann.GetValue(new AstTypeAnnotationConverter(this));
+            if (m is IPythonMultipleMembers mm) {
+                return mm.Members.OfType<IPythonType>();
+            } else if (m is IPythonType type) {
+                return Enumerable.Repeat(type, 1);
+            }
+
+            return Enumerable.Empty<IPythonType>();
+        }
+
         public IMember GetValueFromExpression(Expression expr) => GetValueFromExpression(expr, DefaultLookupOptions);
 
         public IMember GetValueFromExpression(Expression expr, LookupOptions options) {
@@ -284,7 +300,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             var type = GetTypeFromValue(GetValueFromExpression(expr.Target));
-            if (type != null) {
+            if (type != null && type != _unknownType) {
                 switch (type.TypeId) {
                     case BuiltinTypeId.Bytes:
                         if (Ast.LanguageVersion.Is3x()) {
@@ -295,6 +311,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     case BuiltinTypeId.Unicode:
                         return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unicode), GetLoc(expr));
                 }
+
+                if (type.MemberType == PythonMemberType.Class) {
+                    // When indexing into a type, assume result is the type
+                    // TODO: Proper generic handling
+                    return type;
+                }
+
                 _log?.Log(TraceLevel.Verbose, "UnknownIndex", type.TypeId, expr.ToCodeString(Ast, CodeFormattingOptions.Traditional).Trim());
             } else {
                 _log?.Log(TraceLevel.Verbose, "UnknownIndex", expr.ToCodeString(Ast, CodeFormattingOptions.Traditional).Trim());

@@ -784,39 +784,34 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var attrType = attr.GetType();
-            if (attr is IPythonType) {
-                return GetBuiltinType((IPythonType)attr);
-            } else if (attr is IPythonFunction) {
-                var bf = (IPythonFunction)attr;
-                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this)) ?? _noneInst;
-            } else if (attr is IPythonMethodDescriptor) {
+            if (attr is IPythonType pt) {
+                return GetBuiltinType(pt);
+            } else if (attr is IPythonFunction pf) {
+                return GetCached(attr, () => new BuiltinFunctionInfo(pf, this)) ?? _noneInst;
+            } else if (attr is IPythonMethodDescriptor md) {
                 return GetCached(attr, () => {
-                    var md = (IPythonMethodDescriptor)attr;
                     if (md.IsBound) {
                         return new BuiltinFunctionInfo(md.Function, this);
                     } else {
                         return new BuiltinMethodInfo(md, this);
                     }
                 }) ?? _noneInst;
-            } else if (attr is IPythonBoundFunction) {
-                return GetCached(attr, () => new BoundBuiltinMethodInfo((IPythonBoundFunction)attr, this)) ?? _noneInst;
-            } else if (attr is IBuiltinProperty) {
-                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonModule) {
-                return _modules.GetBuiltinModule((IPythonModule)attr);
-            } else if (attr is IPythonEvent) {
-                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonConstant) {
-                return GetConstant((IPythonConstant)attr).First();
-            } else if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
-                        attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double) ||
-                        attr == null) {
+            } else if (attr is IPythonBoundFunction pbf) {
+                return GetCached(attr, () => new BoundBuiltinMethodInfo(pbf, this)) ?? _noneInst;
+            } else if (attr is IBuiltinProperty bp) {
+                return GetCached(attr, () => new BuiltinPropertyInfo(bp, this)) ?? _noneInst;
+            } else if (attr is IPythonModule pm) {
+                return _modules.GetBuiltinModule(pm);
+            } else if (attr is IPythonEvent pe) {
+                return GetCached(attr, () => new BuiltinEventInfo(pe, this)) ?? _noneInst;
+            } else if (attr is IPythonConstant ||
+                       attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
+                       attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double)) {
                 return GetConstant(attr).First();
-            } else if (attr is IMemberContainer) {
-                return GetCached(attr, () => new ReflectedNamespace((IMemberContainer)attr, this));
-            } else if (attr is IPythonMultipleMembers) {
-                IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
-                var members = multMembers.Members;
+            } else if (attr is IMemberContainer mc) {
+                return GetCached(attr, () => new ReflectedNamespace(mc, this));
+            } else if (attr is IPythonMultipleMembers mm) {
+                var members = mm.Members;
                 return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
                         ClassInfos[BuiltinTypeId.NoneType].Instance
@@ -868,14 +863,25 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        internal IAnalysisSet GetConstant(IPythonConstant value) {
-            object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
-        }
-
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
+            return GetCached(key, () => {
+                var constant = value as IPythonConstant;
+                var constantType = constant?.Type;
+                var av = GetAnalysisValueFromObjectsThrowOnNull(constantType ?? GetTypeFromObject(value));
+
+                if (av is ConstantInfo ci) {
+                    return ci;
+                }
+
+                if (av is BuiltinClassInfo bci) {
+                    if (constant == null) {
+                        return new ConstantInfo(bci, value, PythonMemberType.Constant);
+                    }
+                    return bci.Instance;
+                }
+                return _noneInst;
+            }) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {

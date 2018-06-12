@@ -528,10 +528,10 @@ class BankAccount(object):
                     var math = analysis.GetValue<AnalysisValue>("math");
                     Assert.IsNotNull(math);
 
-                    var inf = analysis.GetValue<ConstantInfo>("inf");
+                    var inf = analysis.GetValue<NumericInstanceInfo>("inf");
                     Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
 
-                    var nan = analysis.GetValue<ConstantInfo>("nan");
+                    var nan = analysis.GetValue<NumericInstanceInfo>("nan");
                     Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
@@ -543,6 +543,9 @@ class BankAccount(object):
 
         #region Black-box sanity tests
         // "Do we crash?"
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV37() => AstBuiltinScrape(PythonPaths.Python37_x64 ?? PythonPaths.Python37);
 
         [TestMethod, Priority(0)]
         public void AstBuiltinScrapeV36() => AstBuiltinScrape(PythonPaths.Python36_x64 ?? PythonPaths.Python36);
@@ -625,6 +628,13 @@ class BankAccount(object):
                 }
             }
         }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV37() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V37);
+            await FullStdLibTest(v);
+        }
+
 
         [TestMethod, TestCategory("60s"), Priority(0)]
         public async Task FullStdLibV36() {
@@ -880,6 +890,51 @@ e1, e2, e3 = sys.exc_info()");
                     analysis.AssertIsInstance("e1", BuiltinTypeId.Type);
                     analysis.AssertIsInstance("e2", "BaseException");
                     analysis.AssertIsInstance("e3", BuiltinTypeId.NoneType);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedSysInfo() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
+                analysis.SetLimits(new AnalysisLimits { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = true });
+                try {
+                    var entry = analysis.AddModule("test-module", @"import sys
+
+l_1 = sys.argv
+
+s_1 = sys.argv[0]
+s_2 = next(iter(sys.argv))
+s_3 = sys.stdout.encoding
+
+f_1 = sys.stdout.write
+f_2 = sys.__stdin__.read
+
+i_1 = sys.flags.debug
+i_2 = sys.flags.quiet
+i_3 = sys.implementation.version.major
+i_4 = sys.getsizeof(None)
+i_5 = sys.getwindowsversion().platform_version[0]
+");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertIsInstance("l_1", BuiltinTypeId.List);
+
+                    analysis.AssertIsInstance("s_1", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("s_2", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("s_3", BuiltinTypeId.Str);
+
+                    analysis.AssertIsInstance("f_1", BuiltinTypeId.BuiltinMethodDescriptor);
+                    analysis.AssertIsInstance("f_2", BuiltinTypeId.BuiltinMethodDescriptor);
+
+                    analysis.AssertIsInstance("i_1", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_2", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_3", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_4", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_5", BuiltinTypeId.Int);
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
