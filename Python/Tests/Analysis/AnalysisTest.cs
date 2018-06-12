@@ -4794,7 +4794,7 @@ min(a, D())
 
         [TestMethod, Priority(0)]
         public void CancelAnalysis() {
-            var ver = PythonPaths.Versions.LastOrDefault(v => v != null);
+            var ver = PythonPaths.Versions.LastOrDefault(v => v.IsCPython);
             if (ver == null) {
                 Assert.Inconclusive("Test requires Python installation");
             }
