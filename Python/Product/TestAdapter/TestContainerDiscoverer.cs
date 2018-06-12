@@ -210,10 +210,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            private async void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
-                await PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
+            private void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
+                PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
                     .HandleAllExceptions(_discoverer._serviceProvider, GetType())
-                    .ConfigureAwait(false);
+                    .DoNotWait();
             }
 
             private async Task PendOrSubmitRequests(ProjectAnalyzer analyzer, string path) {
