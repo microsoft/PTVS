@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 if (baseWalk && ifTrue) {
-                    Expression = node;
+                    Expression = (node is ModuleName m && m.Names != null) ? m.Names.FirstOrDefault() : node;
                 }
                 return baseWalk;
             }

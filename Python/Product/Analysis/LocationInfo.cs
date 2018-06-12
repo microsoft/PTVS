@@ -16,29 +16,28 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         internal static readonly LocationInfo[] Empty = new LocationInfo[0];
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
-        public LocationInfo(string path, Uri documentUri, int line, int column) {
-            FilePath = path;
-            DocumentUri = documentUri;
-            StartLine = line;
-            StartColumn = column;
+        private readonly string _path;
+        public LocationInfo(string path, Uri documentUri, int line, int column): 
+            this(path, documentUri, line, column, null, null) {
         }
 
         public LocationInfo(string path, Uri documentUri, int line, int column, int? endLine, int? endColumn) {
-            FilePath = path;
-            DocumentUri = documentUri;
+            _path = path;
+            DocumentUri = documentUri ?? (!string.IsNullOrEmpty(_path) ? new Uri(_path, UriKind.RelativeOrAbsolute) : null);
             StartLine = line;
             StartColumn = column;
             EndLine = endLine;
             EndColumn = endColumn;
         }
 
-        public string FilePath { get; }
+        public string FilePath => _path ?? DocumentUri?.LocalPath;
 
         public Uri DocumentUri { get; }
 

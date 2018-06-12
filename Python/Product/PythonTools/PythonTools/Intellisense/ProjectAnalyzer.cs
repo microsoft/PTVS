@@ -1321,7 +1321,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.SourceSpan.End;
+                var location = point.ToSourceLocation();
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,

@@ -56,7 +56,7 @@ namespace PythonToolsMockTests {
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // os
-                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"));
+                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"), Location(1, 8));
             }
         }
 
@@ -68,7 +68,7 @@ sys.version
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // sys
-                await helper.CheckDefinitionLocations(14, 3, Location(1, 8));
+              await helper.CheckDefinitionLocations(14, 3, ExternalLocation(1, 1, null), Location(1, 8));
 
                 // version
                 await helper.CheckDefinitionLocations(18, 7, null);

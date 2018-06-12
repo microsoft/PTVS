@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     internal sealed class AnalysisEntry : IDisposable {
         private readonly WeakReference<BufferParser> _bufferParser;
+        private string _path;
 
         public readonly bool IsTemporaryFile;
         public readonly bool SuppressErrorList;
@@ -50,8 +51,8 @@ namespace Microsoft.PythonTools.Intellisense {
             bool suppressErrorList = false
         ) {
             Analyzer = analyzer;
-            Path = path;
-            DocumentUri = documentUri;
+            _path = path;
+            DocumentUri = documentUri ?? (!string.IsNullOrEmpty(path) ? new Uri(path) : null);
             Properties = new Dictionary<object, object>();
             IsTemporaryFile = isTemporaryFile;
             SuppressErrorList = suppressErrorList;
@@ -95,7 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public IIntellisenseCookie AnalysisCookie { get; set; }
 
-        public string Path { get; }
+        public string Path => _path ?? DocumentUri?.LocalPath;
         public Uri DocumentUri { get; }
         public bool IsAnalyzed { get; internal set; }
 

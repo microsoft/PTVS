@@ -1274,7 +1274,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.AnalysisReference {
                 documentUri = r.uri,
-                file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
+                file = (_server.GetEntry(r.uri, throwIfMissing: false)?.FilePath) ?? r.uri?.LocalPath,
                 startLine = range.Start.Line,
                 startColumn = range.Start.Column,
                 endLine = range.End.Line,
