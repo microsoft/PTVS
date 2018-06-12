@@ -110,6 +110,7 @@ namespace Microsoft.PythonTools {
 
             _idleManager.OnIdle += OnIdleInitialization;
 
+            EditorServices = ComponentModel.GetService<PythonEditorServices>();
             EditorServices.SetPythonToolsService(this);
         }
 
@@ -179,7 +180,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
+        internal PythonEditorServices EditorServices { get; }
 
         internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs) {
             _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
