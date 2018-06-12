@@ -15,11 +15,11 @@
 // permissions and limitations under the License.
 
 using System.Diagnostics;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
+using Microsoft.VisualStudioTools;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -51,26 +51,79 @@ namespace Microsoft.PythonTools.Debugger {
             if (PackageVersion.TryParse(response.Debugger.Version, out PackageVersion runningVersion)) {
                 var bundledPtvsdVersion = PackageVersion.Parse(PtvsdVersion.Version);
                 if (runningVersion.CompareTo(bundledPtvsdVersion) < 0) {
-                    ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version));
+                    ShowPtvsdMessage(
+                        Strings.InstalledPtvsdOutdatedTitle,
+                        Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version),
+                        allowDisable: false,
+                        isError: false
+                    );
                 }
             }
         }
 
         public static void VerifyPtvsdVersionError(PtvsdVersionArguments args, ProtocolException ex) {
-            ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", PtvsdVersion.Version));
+            ShowPtvsdMessage(
+                Strings.InstalledPtvsdOutdatedTitle,
+                Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", PtvsdVersion.Version),
+                allowDisable: false,
+                isError: false
+            );
         }
 
         public static void VerifyPtvsdVersionLegacy() {
-            ShowPtvsdVersionMessage(Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", PtvsdVersion.Version));
+            ShowPtvsdMessage(
+                Strings.InstalledPtvsdOutdatedTitle,
+                Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", PtvsdVersion.Version),
+                allowDisable: false,
+                isError: false
+            );
         }
 
-        private static void ShowPtvsdVersionMessage(string message) {
-            MessageBox.Show(
-                new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
-                message,
-                Strings.ProductTitle,
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
+        public static void ShowPtvsdIncompatibleEnvError() {
+            ShowPtvsdMessage(
+                Strings.PtvsdIncompatibleEnvTitle,
+                Strings.PtvsdIncompatibleEnvMessage,
+                allowDisable: true,
+                isError: true
+            );
+        }
+
+        public static void ShowPtvsdModuleNotFoundError() {
+            ShowPtvsdMessage(
+                Strings.ImportPtvsdModuleNotFoundTitle,
+                Strings.ImportPtvsdModuleNotFoundMessage,
+                allowDisable: false,
+                isError: true
+            );
+        }
+
+        private static void ShowPtvsdMessage(string main, string content, bool allowDisable, bool isError) {
+            var serviceProvider = VisualStudio.Shell.ServiceProvider.GlobalProvider;
+            serviceProvider.GetUIThread().Invoke(() => {
+                var dlg = new TaskDialog(serviceProvider) {
+                    Title = Strings.ProductTitle,
+                    MainInstruction = main,
+                    Content = content,
+                    AllowCancellation = true,
+                    MainIcon = isError ? TaskDialogIcon.Error : TaskDialogIcon.Warning,
+                };
+
+                var disable = new TaskDialogButton(Strings.PtvsdDisableCaption, Strings.PtvsdDisableSubtext);
+                var learnMore = new TaskDialogButton(Strings.PtvsdLearnMoreCaption, Strings.PtvsdLearnMoreSubtext);
+
+                dlg.Buttons.Add(TaskDialogButton.OK);
+                dlg.Buttons.Insert(0, learnMore);
+                if (allowDisable) {
+                    dlg.Buttons.Insert(0, disable);
+                }
+
+                var selection = dlg.ShowModal();
+                if (selection == learnMore) {
+                    Process.Start("https://aka.ms/upgradeptvsd");
+                } else if (selection == disable) {
+                    ExperimentalOptions.UseVsCodeDebugger = false;
+                }
+            });
         }
     }
 
