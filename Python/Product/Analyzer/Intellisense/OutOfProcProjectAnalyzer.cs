@@ -1703,9 +1703,11 @@ namespace Microsoft.PythonTools.Intellisense {
             Project.Limits = new AnalysisLimits(Options.analysisLimits);
             _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
             _server._parseQueue.TaskCommentMap = Options.commentTokens;
+            _server._analyzer.SetTypeStubPaths(Options.typeStubPaths);
 
             return new Response();
         }
+
 
         public AP.AnalysisOptions Options { get; set; }
 

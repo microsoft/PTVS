@@ -1685,7 +1685,7 @@ namespace Microsoft.PythonTools.Parsing {
             var start = GetStart();
             var name = ReadName();
             var nameExpr = MakeName(name);
-            string nameWhiteSpace = _tokenWhiteSpace;
+            string nameWhiteSpace = name.HasName ? _tokenWhiteSpace : null;
 
             bool isParenFree = false;
             string leftParenWhiteSpace = null, rightParenWhiteSpace = null;

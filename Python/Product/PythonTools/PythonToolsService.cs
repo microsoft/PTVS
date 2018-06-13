@@ -60,6 +60,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<Options.ExperimentalOptions> _experimentalOptions;
         private readonly Lazy<DiagnosticsOptions> _diagnosticsOptions;
         private readonly Lazy<GeneralOptions> _generalOptions;
+        private readonly Lazy<LanguageServerOptions> _languageServerOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
@@ -102,6 +103,7 @@ namespace Microsoft.PythonTools {
             _experimentalOptions = new Lazy<Options.ExperimentalOptions>(CreateExperimentalOptions);
             _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
+            _languageServerOptions = new Lazy<LanguageServerOptions>(CreateLanguageServerOptions);
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
@@ -277,6 +279,7 @@ namespace Microsoft.PythonTools {
         public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
         public GeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
+        public LanguageServerOptions LanguageServerOptions => _languageServerOptions.Value;
 
         private AdvancedEditorOptions CreateAdvancedEditorOptions() {
             var opts = new AdvancedEditorOptions(this);
@@ -304,6 +307,12 @@ namespace Microsoft.PythonTools {
 
         private GeneralOptions CreateGeneralOptions() {
             var opts = new GeneralOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private LanguageServerOptions CreateLanguageServerOptions() {
+            var opts = new LanguageServerOptions(this);
             opts.Load();
             return opts;
         }

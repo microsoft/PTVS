@@ -1554,6 +1554,11 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V35, "def inner(_it, _timer{init}): pass");
         }
 
+        [TestMethod, Priority(0)]
+        public void RoundTripInvalidClassName() {
+            TestOneString(PythonLanguageVersion.V35, "\nclass {{ invalid_name }}MyClass:\n");
+        }
+
 
         private static void RoundTripStdLibTest(PythonVersion version) {
             version.AssertInstalled();

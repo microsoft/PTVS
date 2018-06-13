@@ -236,7 +236,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public string version;
         }
         public Interpreter interpreter;
+        /// <summary>
+        /// Paths to search when attempting to resolve module imports.
+        /// </summary>
         public string[] searchPaths;
+        /// <summary>
+        /// Secondary paths to search when resolving modules. Not supported by all
+        /// factories. In generaly, only source files will be discovered, and their
+        /// contents will be merged with the initial module.
+        /// </summary>
+        public string[] typeStubSearchPaths;
         public bool testEnvironment;
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.

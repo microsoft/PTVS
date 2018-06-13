@@ -256,6 +256,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
 
+            var lso = _services.Python.LanguageServerOptions;
+            if (!string.IsNullOrEmpty(lso.TypeShedPath)) {
+                _analysisOptions.typeStubPaths = GetTypeShedPaths(lso.TypeShedPath, _interpreterFactory.Configuration.Version).ToArray();
+            }
+            lso.Changed += LanguageServerOptions_Changed;
+
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
@@ -310,9 +316,32 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
+        internal static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
+            var stdlib = Path.Combine(path, "stdlib");
+            var thirdParty = Path.Combine(path, "third_party");
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(stdlib, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(thirdParty, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+        }
+
         public event EventHandler AnalyzerNeedsRestart;
 
         private void Factory_NewDatabaseAvailable(object sender, EventArgs e) {
+            AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void LanguageServerOptions_Changed(object sender, EventArgs e) {
             AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
         }
 

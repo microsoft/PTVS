@@ -221,6 +221,12 @@ namespace Microsoft.PythonTools.Analysis {
 #if DESKTOP
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
 #endif
+
+            // These are also specially handled in Function
+            SpecializeFunction("abc", "abstractmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractclassmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractstaticmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractproperty", IdentityDecorator);
         }
 
         internal static IAnalysisSet GetArg(
@@ -690,5 +696,6 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 #endif
+
     }
 }

@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly List<string> _searchPaths = new List<string>();
+        private readonly List<string> _typeStubPaths = new List<string>();
         private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
@@ -616,13 +617,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This property is thread safe.
         /// </summary>
-        public IEnumerable<string> AnalysisDirectories {
-            get {
-                lock (_searchPaths) {
-                    return _searchPaths.ToArray();
-                }
-            }
-        }
+        public IEnumerable<string> AnalysisDirectories => _searchPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Gets the list of directories which should be searched for type stubs.
+        /// 
+        /// This property is thread safe.
+        /// </summary>
+        public IEnumerable<string> TypeStubDirectories => _typeStubPaths.AsLockedEnumerable().ToArray();
 
         public AnalysisLimits Limits {
             get { return _limits; }
@@ -782,39 +784,34 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var attrType = attr.GetType();
-            if (attr is IPythonType) {
-                return GetBuiltinType((IPythonType)attr);
-            } else if (attr is IPythonFunction) {
-                var bf = (IPythonFunction)attr;
-                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this)) ?? _noneInst;
-            } else if (attr is IPythonMethodDescriptor) {
+            if (attr is IPythonType pt) {
+                return GetBuiltinType(pt);
+            } else if (attr is IPythonFunction pf) {
+                return GetCached(attr, () => new BuiltinFunctionInfo(pf, this)) ?? _noneInst;
+            } else if (attr is IPythonMethodDescriptor md) {
                 return GetCached(attr, () => {
-                    var md = (IPythonMethodDescriptor)attr;
                     if (md.IsBound) {
                         return new BuiltinFunctionInfo(md.Function, this);
                     } else {
                         return new BuiltinMethodInfo(md, this);
                     }
                 }) ?? _noneInst;
-            } else if (attr is IPythonBoundFunction) {
-                return GetCached(attr, () => new BoundBuiltinMethodInfo((IPythonBoundFunction)attr, this)) ?? _noneInst;
-            } else if (attr is IBuiltinProperty) {
-                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonModule) {
-                return _modules.GetBuiltinModule((IPythonModule)attr);
-            } else if (attr is IPythonEvent) {
-                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonConstant) {
-                return GetConstant((IPythonConstant)attr).First();
-            } else if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
-                        attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double) ||
-                        attr == null) {
+            } else if (attr is IPythonBoundFunction pbf) {
+                return GetCached(attr, () => new BoundBuiltinMethodInfo(pbf, this)) ?? _noneInst;
+            } else if (attr is IBuiltinProperty bp) {
+                return GetCached(attr, () => new BuiltinPropertyInfo(bp, this)) ?? _noneInst;
+            } else if (attr is IPythonModule pm) {
+                return _modules.GetBuiltinModule(pm);
+            } else if (attr is IPythonEvent pe) {
+                return GetCached(attr, () => new BuiltinEventInfo(pe, this)) ?? _noneInst;
+            } else if (attr is IPythonConstant ||
+                       attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
+                       attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double)) {
                 return GetConstant(attr).First();
-            } else if (attr is IMemberContainer) {
-                return GetCached(attr, () => new ReflectedNamespace((IMemberContainer)attr, this));
-            } else if (attr is IPythonMultipleMembers) {
-                IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
-                var members = multMembers.Members;
+            } else if (attr is IMemberContainer mc) {
+                return GetCached(attr, () => new ReflectedNamespace(mc, this));
+            } else if (attr is IPythonMultipleMembers mm) {
+                var members = mm.Members;
                 return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
                         ClassInfos[BuiltinTypeId.NoneType].Instance
@@ -866,14 +863,25 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        internal IAnalysisSet GetConstant(IPythonConstant value) {
-            object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
-        }
-
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
+            return GetCached(key, () => {
+                var constant = value as IPythonConstant;
+                var constantType = constant?.Type;
+                var av = GetAnalysisValueFromObjectsThrowOnNull(constantType ?? GetTypeFromObject(value));
+
+                if (av is ConstantInfo ci) {
+                    return ci;
+                }
+
+                if (av is BuiltinClassInfo bci) {
+                    if (constant == null) {
+                        return new ConstantInfo(bci, value, PythonMemberType.Constant);
+                    }
+                    return bci.Instance;
+                }
+                return _noneInst;
+            }) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {
@@ -952,11 +960,7 @@ namespace Microsoft.PythonTools.Analysis {
             _reportQueueInterval = interval;
         }
 
-        public IReadOnlyList<string> GetSearchPaths() {
-            lock (_searchPaths) {
-                return _searchPaths.ToArray();
-            }
-        }
+        public IReadOnlyList<string> GetSearchPaths() => _searchPaths.AsLockedEnumerable().ToArray();
 
         /// <summary>
         /// Sets the search paths for this analyzer, invoking callbacks for any
@@ -965,7 +969,21 @@ namespace Microsoft.PythonTools.Analysis {
         public void SetSearchPaths(IEnumerable<string> paths) {
             lock (_searchPaths) {
                 _searchPaths.Clear();
-                _searchPaths.AddRange(paths);
+                _searchPaths.AddRange(paths.MaybeEnumerate());
+            }
+            SearchPathsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IReadOnlyList<string> GetTypeStubPaths() => _typeStubPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Sets the type stub search paths for this analyzer, invoking callbacks for any
+        /// path added or removed.
+        /// </summary>
+        public void SetTypeStubPaths(IEnumerable<string> paths) {
+            lock (_typeStubPaths) {
+                _typeStubPaths.Clear();
+                _typeStubPaths.AddRange(paths.MaybeEnumerate());
             }
             SearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }
