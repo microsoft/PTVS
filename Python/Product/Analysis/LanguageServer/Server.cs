@@ -373,8 +373,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return default(T);
             }
             try {
-                var assembly = File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName);
-                var type = Assembly.Load(assembly).GetType(typeName, true);
+                Type type;
+                if (Path.IsPathRooted(assemblyName)) {
+                    type = Assembly.LoadFrom(assemblyName).GetType(typeName, true);
+                }
+                else {
+                    var assembly = File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName);
+                    type = Assembly.Load(assembly).GetType(typeName, true);
+                }
 
                 return (T)Activator.CreateInstance(
                     type,
