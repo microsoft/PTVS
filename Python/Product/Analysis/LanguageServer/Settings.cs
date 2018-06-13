@@ -25,4 +25,79 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void SetCompletionTimeout(int? timeout)
             => _completionTimeout = timeout.HasValue ? timeout.Value : _completionTimeout;
     }
+
+    internal sealed class Capabilities {
+        public PythonCapabilities Python { get; }
+        public TextDocumentCapabilities TextDocument { get; }
+
+        public Capabilities() {
+            Python = new PythonCapabilities();
+            TextDocument = new TextDocumentCapabilities();
+        }
+
+        public Capabilities(ClientCapabilities capabilities) {
+            Python = capabilities.python != null ? new PythonCapabilities(capabilities.python) : new PythonCapabilities();
+            TextDocument = capabilities.textDocument != null ? new TextDocumentCapabilities(capabilities.textDocument) : new TextDocumentCapabilities();
+        }
+
+        internal class PythonCapabilities {
+            public bool AnalysisUpdates { get; }
+            public int CompletionsTimeout { get; } = Timeout.Infinite;
+            public bool LiveLinting { get; }
+            public bool TraceLogging { get; }
+            public bool ManualFileLoad { get; }
+
+            public PythonCapabilities() {}
+
+            public PythonCapabilities(PythonClientCapabilities python) {
+                if (python.analysisUpdates.HasValue) AnalysisUpdates = python.analysisUpdates.Value;
+                if (python.completionsTimeout.HasValue) CompletionsTimeout = python.completionsTimeout.Value;
+                if (python.liveLinting.HasValue) LiveLinting = python.liveLinting.Value;
+                if (python.manualFileLoad.HasValue) ManualFileLoad = python.manualFileLoad.Value;
+                if (python.traceLogging.HasValue) TraceLogging = python.traceLogging.Value;
+            }
+        }
+        
+        internal class TextDocumentCapabilities {
+            public HoverCapabilities Hover { get; }
+            public SignatureHelpCapabilities SignatureHelp { get; }
+
+            public TextDocumentCapabilities() {
+                Hover = new HoverCapabilities();
+                SignatureHelp = new SignatureHelpCapabilities();
+            }
+
+            public TextDocumentCapabilities(TextDocumentClientCapabilities textDocument) {
+                Hover = textDocument.hover.HasValue ? new HoverCapabilities(textDocument.hover.Value) : new HoverCapabilities();
+                SignatureHelp = textDocument.signatureHelp.HasValue ? new SignatureHelpCapabilities(textDocument.signatureHelp.Value) : new SignatureHelpCapabilities();
+            }
+
+            internal class HoverCapabilities {
+                public MarkupKind[] ContentFormat { get; }
+
+                public HoverCapabilities() {
+                    ContentFormat = new MarkupKind[0];
+                }
+
+                public HoverCapabilities(TextDocumentClientCapabilities.HoverCapabilities hover) {
+                    ContentFormat = hover.contentFormat ?? new MarkupKind[0];
+                }
+            }
+
+            internal class SignatureHelpCapabilities {
+                public bool SignatureInformationShortLabel { get; }
+                public MarkupKind[] SignatureInformationDocumentationFormat { get; }
+
+                public SignatureHelpCapabilities() {
+                    SignatureInformationShortLabel = false;
+                    SignatureInformationDocumentationFormat = new MarkupKind[0];
+                }
+
+                public SignatureHelpCapabilities(TextDocumentClientCapabilities.SignatureHelpCapabilities signatureHelp) {
+                    SignatureInformationShortLabel = signatureHelp.signatureInformation?._shortLabel ?? false;
+                    SignatureInformationDocumentationFormat = signatureHelp.signatureInformation?.documentationFormat ?? new MarkupKind[0];
+                }
+            }
+        }
+    }
 }

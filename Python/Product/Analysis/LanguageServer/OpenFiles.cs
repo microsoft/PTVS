@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void DidChangeTextDocument(DidChangeTextDocumentParams @params, Action<IDocument> enqueueAction) {
             var changes = @params.contentChanges;
-            if (changes == null) {
+            if (changes == null || changes.Length == 0) {
                 return;
             }
 

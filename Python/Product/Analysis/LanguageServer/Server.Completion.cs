@@ -27,8 +27,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;
-            // Make sure document is enqueued for processing
-            var openFile = _openFiles.GetDocument(uri);
 
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");

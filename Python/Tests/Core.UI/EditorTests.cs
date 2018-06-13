@@ -769,10 +769,6 @@ x\
         }
 
         private static void SquiggleShowHide(PythonVisualStudioApp app, string document, Action test) {
-            UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = true;
-            app.OnDispose(() => UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false);
-
-
             var project = app.OpenProject(@"TestData\MissingImport.sln");
 
             var editorWindows = app.Dte.Windows

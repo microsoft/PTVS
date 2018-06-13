@@ -482,20 +482,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool? failed;
         }
 
-        public sealed class UnresolvedImportsRequest : Request<UnresolvedImportsResponse> {
-            public const string Command = "unresolvedImports";
-
-            public override string command => Command;
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-        }
-
-        public sealed class UnresolvedImportsResponse : Response {
-            public int version = -1;
-            public UnresolvedImport[] unresolved;
-        }
-
         public sealed class UnresolvedImport {
             public string name;
             public int startLine, endLine, startColumn, endColumn;

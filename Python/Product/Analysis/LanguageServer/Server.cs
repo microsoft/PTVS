@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Intellisense;
@@ -76,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
-        internal ClientCapabilities _clientCaps;
+        private Capabilities _clientCaps = new Capabilities();
         private LanguageServerSettings _settings = new LanguageServerSettings();
 
         private bool _traceLogging;
@@ -150,6 +151,44 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     referencesProvider = true
                 }
             };
+        }
+
+        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
+            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            OnAnalyzerCreated(@params);
+        }
+
+        private void OnAnalyzerCreated(InitializeParams @params) {
+            _clientCaps = new Capabilities(@params.capabilities);
+            _settings.SetCompletionTimeout(_clientCaps.Python.CompletionsTimeout);
+            _traceLogging = _clientCaps.Python.TraceLogging;
+            _analyzer.EnableDiagnostics = _clientCaps.Python.LiveLinting;
+
+            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
+
+            if (@params.initializationOptions.displayOptions != null) {
+                DisplayOptions = @params.initializationOptions.displayOptions;
+            }
+            _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
+
+            if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
+                LogMessage(MessageType.Log, "Initializing for generic interpreter");
+            } else {
+                LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
+            }
+
+            if (@params.rootUri != null) {
+                _rootDir = @params.rootUri.ToAbsolutePath();
+            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
+                _rootDir = PathUtils.NormalizePath(@params.rootPath);
+            }
+
+            SetSearchPaths(@params.initializationOptions.searchPaths);
+
+            if (_rootDir != null && !_clientCaps.Python.ManualFileLoad) {
+                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
+                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
+            }
         }
 
         public override Task Shutdown() {
@@ -226,6 +265,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (doc != null) {
                 // No need to keep in-memory buffers now
                 doc.ResetDocument(-1, null);
+
+                _openFiles.Remove(@params.textDocument.uri);
 
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
@@ -480,9 +521,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(actualItem);
             }
 
-            if (_clientCaps?.python?.analysisUpdates ?? false) {
-                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
-            }
+            pyItem.OnNewAnalysis += (o, e) => OnPythonEntryNewAnalysis(pyItem);
 
             if (item is IDocument doc) {
                 EnqueueItem(doc);
@@ -577,9 +616,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 disposeWhenEnqueued?.Dispose();
                 disposeWhenEnqueued = null;
-                var openedFile = _openFiles.GetDocument(doc.DocumentUri);
                 if (vc != null) {
-                    var reported = openedFile.LastReportedDiagnostics;
+                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
                             var part = _projectFiles.GetPart(kv.Key);
@@ -605,42 +643,48 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
-            if (sender is IPythonProjectEntry entry) {
-                TraceMessage($"Received new analysis for {entry.DocumentUri}");
-                var version = 0;
-                var parse = entry.GetCurrentParse();
+        private void OnPythonEntryNewAnalysis(IPythonProjectEntry pythonProjectEntry) {
+            TraceMessage($"Received new analysis for {pythonProjectEntry.DocumentUri}");
+            var version = 0;
+            var parse = pythonProjectEntry.GetCurrentParse();
+            if (_clientCaps.Python.AnalysisUpdates) {
                 if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
-                    foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
+                    foreach (var kv in vc.GetAllParts(pythonProjectEntry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
                         if (kv.Value.Version > version) {
                             version = kv.Value.Version;
                         }
                     }
                 } else {
-                    AnalysisComplete(entry.DocumentUri, 0);
+                    AnalysisComplete(pythonProjectEntry.DocumentUri, 0);
                 }
+            }
 
-                var diags = _analyzer.GetDiagnostics(entry);
-                if (!diags.Any()) {
-                    return;
-                }
+            var diags = _analyzer.GetDiagnostics(pythonProjectEntry);
+            if (parse != null) {
+                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer);
+                parse.Tree.Walk(walker);
+                diags = diags.Concat(walker.Diagnostics).ToArray();
+            }
 
-                if (entry is IDocument doc) {
-                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
-                    lock (reported) {
-                        if (reported.TryGetValue(0, out var lastVersion)) {
-                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
-                        }
+            if (!diags.Any()) {
+                return;
+            }
+
+            if (pythonProjectEntry is IDocument doc) {
+                var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
+                lock (reported) {
+                    if (reported.TryGetValue(0, out var lastVersion)) {
+                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
                     }
                 }
-
-                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    diagnostics = diags,
-                    uri = entry.DocumentUri,
-                    _version = version
-                });
             }
+
+            PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                diagnostics = diags,
+                uri = pythonProjectEntry.DocumentUri,
+                _version = version
+            });
         }
 
         private async Task LoadFromDirectoryAsync(string rootDir) {
@@ -677,9 +721,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
             version = null;
             PythonAst tree = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
+            var parse = entry.WaitForCurrentParse(_clientCaps.Python.CompletionsTimeout, token);
             if (parse != null) {
-                tree = parse.Tree ?? tree;
+                tree = parse.Tree;
                 if (parse.Cookie is VersionCookie vc) {
                     if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
                         tree = bv.Ast ?? tree;

@@ -917,27 +917,6 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        internal async Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
-            var entry = await buffer.GetAnalysisEntryAsync(CancellationToken.None);
-            if (entry == null) {
-                return new AP.UnresolvedImportsResponse();
-            }
-
-            return await EnsureSingleRequest(
-                typeof(AP.UnresolvedImportsRequest),
-                entry,
-                n => n == entry,
-                async () => {
-                    return await SendRequestAsync(
-                        new AP.UnresolvedImportsRequest() {
-                            documentUri = entry.DocumentUri
-                        },
-                        null
-                    ).ConfigureAwait(false);
-                }
-            );
-        }
-
         internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModuleAsync(string moduleName, bool includeUnresolved) {
             var modules = await SendRequestAsync(
                 new AP.ModuleImportsRequest() {
@@ -1061,7 +1040,6 @@ namespace Microsoft.PythonTools.Intellisense {
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
 
-            buffer.Services.UnresolvedImportSquiggleProvider?.AddBuffer(buffer);
             buffer.Services.InvalidEncodingSquiggleProvider?.AddBuffer(buffer);
         }
 
@@ -1074,8 +1052,8 @@ namespace Microsoft.PythonTools.Intellisense {
             // remove our sources.
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
+            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
-            buffer.Services.MaybeUnresolvedImportSquiggleProvider?.RemoveBuffer(buffer);
         }
 
         internal void OnAnalysisStarted() {
@@ -1099,6 +1077,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (!entry.SuppressErrorList) {
                     _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
                     _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, UnresolvedImportMoniker);
+                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, InvalidEncodingMoniker);
                     _services.CommentTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
                 }
 
@@ -1458,53 +1437,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<MissingImportAnalysis> GetMissingImportsAsync(IServiceProvider serviceProvider, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
-            var loc = span.GetSpan(snapshot.Version);
-            int dummy;
-            SnapshotPoint? dummyPoint;
-            string lastKeywordArg;
-            bool isParameterName;
-#pragma warning disable CS0618  // See https://github.com/Microsoft/PTVS/issues/3171
-            var exprRange = parser.GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName);
-#pragma warning restore CO0618
-            if (exprRange == null || isParameterName) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry == null) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var text = exprRange.Value.GetText();
-            if (string.IsNullOrEmpty(text)) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var analyzer = entry.Analyzer;
-            var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
-
-            var location = TranslateIndex(
-                index,
-                snapshot,
-                entry
-            );
-
-            var isMissing = await analyzer.IsMissingImportAsync(entry, text, location);
-
-            if (isMissing) {
-                var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                    exprRange.Value.Span,
-                    SpanTrackingMode.EdgeExclusive
-                );
-                return new MissingImportAnalysis(text, analyzer, applicableSpan);
-            }
-
-            // if we have type information don't offer to add imports
-            return MissingImportAnalysis.Empty;
-        }
-
         internal static void AddImport(ITextBuffer textBuffer, string fromModule, string name) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(textBuffer);
             var entry = bi?.AnalysisEntry;
@@ -1544,39 +1476,6 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
 
             return res?.isMissing ?? false;
-        }
-
-        private static NameExpression GetFirstNameExpression(Statement stmt) {
-            return GetFirstNameExpression(Statement.GetExpression(stmt));
-        }
-
-        private static NameExpression GetFirstNameExpression(Expression expr) {
-            NameExpression nameExpr;
-            CallExpression callExpr;
-            MemberExpression membExpr;
-
-            if ((nameExpr = expr as NameExpression) != null) {
-                return nameExpr;
-            }
-            if ((callExpr = expr as CallExpression) != null) {
-                return GetFirstNameExpression(callExpr.Target);
-            }
-            if ((membExpr = expr as MemberExpression) != null) {
-                return GetFirstNameExpression(membExpr.Target);
-            }
-
-            return null;
-        }
-
-        private static bool IsDefinition(IAnalysisVariable variable) {
-            return variable.Type == VariableType.Definition;
-        }
-
-        private static bool IsImplicitlyDefinedName(NameExpression nameExpr) {
-            return nameExpr.Name == "__all__" ||
-                nameExpr.Name == "__file__" ||
-                nameExpr.Name == "__doc__" ||
-                nameExpr.Name == "__name__";
         }
 
         internal bool IsAnalyzing {
