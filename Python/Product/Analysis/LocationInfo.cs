@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {

@@ -123,12 +123,10 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             if (value is Uri) {
-                var original = ((Uri)value).OriginalString;
-                var str = original.StartsWith("file://")
-                    ? original.Substring(7)
-                    : original;
-
-                str = "file://" + str.Replace(":", "%3A").Replace('\\', '/');
+                var uri = ((Uri)value);
+                var scheme = uri.Scheme;
+                var path = uri.PathAndQuery;
+                var str = scheme + path.Replace(":", "%3A").Replace('\\', '/');
                 writer.WriteValue(str);
                 return;
             }

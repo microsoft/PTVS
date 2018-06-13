@@ -2985,55 +2985,69 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
+                new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
+                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),    // as
+                new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
             );
         }
 
         [TestMethod, Priority(0)]
-        public void ReferencesGenerators() {
+        public void ReferencesGeneratorsV3() {
             var text = @"
 [f for f in x]
 [x for x in f]
 (g for g in y)
 (y for y in g)
 ";
-            var entry = ProcessTextV3(text);
-            entry.AssertReferences("f", text.IndexOf("f for"),
-                new VariableLocation(2, 2, VariableType.Reference),
-                new VariableLocation(2, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("x", text.IndexOf("x for"),
-                new VariableLocation(3, 2, VariableType.Reference),
-                new VariableLocation(3, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("g", text.IndexOf("g for"),
-                new VariableLocation(4, 2, VariableType.Reference),
-                new VariableLocation(4, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("y", text.IndexOf("y for"),
-                new VariableLocation(5, 2, VariableType.Reference),
-                new VariableLocation(5, 8, VariableType.Definition)
-            );
+            using (var entry = ProcessTextV3(text)) {
+                entry.AssertReferences("f", text.IndexOf("f for"),
+                    new VariableLocation(2, 2, VariableType.Reference),
+                    new VariableLocation(2, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("x", text.IndexOf("x for"),
+                    new VariableLocation(3, 2, VariableType.Reference),
+                    new VariableLocation(3, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("g", text.IndexOf("g for"),
+                    new VariableLocation(4, 2, VariableType.Reference),
+                    new VariableLocation(4, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("y", text.IndexOf("y for"),
+                    new VariableLocation(5, 2, VariableType.Reference),
+                    new VariableLocation(5, 8, VariableType.Definition)
+                );
+            }
+        }
 
-            entry = ProcessTextV2(text);
-            // Index variable leaks out of list comprehension
-            entry.AssertReferences("f", text.IndexOf("f for"),
-                new VariableLocation(2, 2, VariableType.Reference),
-                new VariableLocation(2, 8, VariableType.Definition),
-                new VariableLocation(3, 13, VariableType.Reference)
-            );
-            entry.AssertReferences("x", text.IndexOf("x for"),
-                new VariableLocation(3, 2, VariableType.Reference),
-                new VariableLocation(3, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("g", text.IndexOf("g for"),
-                new VariableLocation(4, 2, VariableType.Reference),
-                new VariableLocation(4, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("y", text.IndexOf("y for"),
-                new VariableLocation(5, 2, VariableType.Reference),
-                new VariableLocation(5, 8, VariableType.Definition)
-            );
+        [TestMethod, Priority(0)]
+        public void ReferencesGeneratorsV2() {
+            var text = @"
+[f for f in x]
+[x for x in f]
+(g for g in y)
+(y for y in g)
+";
+            using (var entry = ProcessTextV2(text)) {
+                // Index variable leaks out of list comprehension
+                entry.AssertReferences("f", text.IndexOf("f for"),
+                    new VariableLocation(2, 2, VariableType.Reference),
+                    new VariableLocation(2, 8, VariableType.Definition),
+                    new VariableLocation(3, 13, VariableType.Reference)
+                );
+                entry.AssertReferences("x", text.IndexOf("x for"),
+                    new VariableLocation(3, 2, VariableType.Reference),
+                    new VariableLocation(3, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("g", text.IndexOf("g for"),
+                    new VariableLocation(4, 2, VariableType.Reference),
+                    new VariableLocation(4, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("y", text.IndexOf("y for"),
+                    new VariableLocation(5, 2, VariableType.Reference),
+                    new VariableLocation(5, 8, VariableType.Definition)
+                );
+            }
         }
 
         [TestMethod, Priority(0)]
