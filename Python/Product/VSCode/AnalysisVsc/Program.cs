@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.VsCode {
                     var ui = new UIService(rpc);
                     rpc.SynchronizationContext = new SingleThreadSynchronizationContext(ui);
                     rpc.JsonSerializer.Converters.Add(new UriConverter());
-                    
+
                     services.AddService(ui);
                     services.AddService(new TelemetryService(rpc));
                     var token = server.Start(services, rpc);
@@ -125,8 +125,8 @@ namespace Microsoft.PythonTools.VsCode {
             if (value is Uri) {
                 var uri = ((Uri)value);
                 var scheme = uri.Scheme;
-                var path = uri.PathAndQuery;
-                var str = scheme + path.Replace(":", "%3A").Replace('\\', '/');
+                var str = uri.ToString();
+                str = uri.Scheme + "://" + str.Substring(scheme.Length + 3).Replace(":", "%3A").Replace('\\', '/');
                 writer.WriteValue(str);
                 return;
             }
