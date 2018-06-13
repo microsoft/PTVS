@@ -274,16 +274,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             bool added = false;
             if (attributes == null) {
                 if (analysisMod != null) {
-                    added = variable.AddTypes(_unit, analysisMod);
+                    added = Assign(variable, analysisMod, node);
                 }
             } else {
                 var value = userMod.GetModuleMember(node, _unit, attributes[0], true, Scope, addLink ? assignName : null);
-
                 foreach (var n in attributes.Skip(1)) {
                     value = value.GetMember(node, _unit, n);
                 }
 
-                added = variable.AddTypes(_unit, value);
+                added = Assign(variable, value, node);
             }
 
             if (added) {
@@ -291,6 +290,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 GlobalScope.ModuleDefinition.EnqueueDependents();
             }
 
+            return added;
+        }
+
+        private bool Assign(VariableDef variable, IAnalysisSet value, Node locationNode) {
+            var added = variable.AddTypes(_unit, value);
+            if (added) {
+                variable.AddAssignment(new EncodedLocation(_unit, locationNode), _unit.ProjectEntry);
+            }
             return added;
         }
 

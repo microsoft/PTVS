@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
                     TraceMessage($"No references found in {uri} at {@params.position}");
-                    return Array.Empty<Reference>();
+                    result = Enumerable.Empty<IAnalysisVariable>();
                 }
             }
 
