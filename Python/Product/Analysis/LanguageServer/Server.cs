@@ -70,9 +70,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         // Uri does not consider #fragment for equality
         private readonly ProjectFiles _projectFiles = new ProjectFiles();
         private readonly OpenFiles _openFiles;
-        private Task _analyzerCreationTask;
-
-        internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
@@ -127,11 +124,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.testEnvironment;
-            _analyzerCreationTask = DoInitializeAsync(@params);
-            // Test environment needs predictable initialization.
-            if (!@params.initializationOptions.asyncStartup) {
-                await _analyzerCreationTask;
-            }
+            await DoInitializeAsync(@params);
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -160,7 +153,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
             TraceMessage($"Opening document {@params.textDocument.uri}");
-            await _analyzerCreationTask;
 
             var entry = _projectFiles.GetEntry(@params.textDocument.uri, throwIfMissing: false);
             var doc = entry as IDocument;
@@ -185,14 +177,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
-            _analyzerCreationTask.Wait();
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
             openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
-            await _analyzerCreationTask;
-
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
                 switch (c.type) {
@@ -219,10 +208,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
-            await _analyzerCreationTask;
+        public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
             var doc = _projectFiles.GetEntry(@params.textDocument.uri) as IDocument;
-
             if (doc != null) {
                 // No need to keep in-memory buffers now
                 doc.ResetDocument(-1, null);
@@ -230,11 +217,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
+            return Task.CompletedTask;
         }
 
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
-            await _analyzerCreationTask;
             if (_analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
@@ -286,8 +273,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Task.FromResult(false);
         }
 
-        public Task WaitForDirectoryScanAsync() => _loadingFromDirectory ?? Task.CompletedTask;
-
         public async Task WaitForCompleteAnalysisAsync() {
             // Wait for all current parsing to complete
             TraceMessage($"Waiting for parsing to complete");
@@ -318,16 +303,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void SetSearchPaths(IEnumerable<string> searchPaths) => _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         public void SetTypeStubSearchPaths(IEnumerable<string> typeStubSearchPaths) => _analyzer.SetTypeStubPaths(typeStubSearchPaths.MaybeEnumerate());
 
-        public event EventHandler<FileFoundEventArgs> OnFileFound;
-        private void FileFound(Uri uri) {
-            TraceMessage($"Found file to analyze {uri}");
-            OnFileFound?.Invoke(this, new FileFoundEventArgs { uri = uri });
-        }
-
         #endregion
 
         #region Private Helpers
-
         private IProjectEntry RemoveEntry(Uri documentUri) {
             var entry = _projectFiles.RemoveEntry(documentUri);
             _openFiles.Remove(documentUri);
@@ -363,11 +341,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
             SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
-
-            if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
-                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
-                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
-            }
         }
 
         private T ActivateObject<T>(string assemblyName, string typeName, Dictionary<string, object> properties) {
@@ -643,36 +616,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private async Task LoadFromDirectoryAsync(string rootDir) {
-            foreach (var file in PathUtils.EnumerateFiles(rootDir, recurse: false, fullPaths: true)) {
-                if (!ModulePath.IsPythonSourceFile(file)) {
-                    if (ModulePath.IsPythonFile(file, true, true, true)) {
-                        // TODO: Deal with scrapable files (if we need to do anything?)
-                    }
-                    continue;
-                }
-
-                var entry = await LoadFileAsync(new Uri(PathUtils.NormalizePath(file)));
-                if (entry != null) {
-                    FileFound(entry.DocumentUri);
-                }
-            }
-            foreach (var dir in PathUtils.EnumerateDirectories(rootDir, recurse: false, fullPaths: true)) {
-                // TODO: figure out correct loading sequence and the name resolution 
-                // so files in different folders don't replace each other.
-                // See https://github.com/Microsoft/vscode-python/issues/1063
-
-                // Skip over virtual environments.
-                if (!IsVirtualEnv(dir)) {
-                    await LoadFromDirectoryAsync(dir);
-                }
-            }
-        }
-
-        private bool IsVirtualEnv(string dir)
-            // Drill down to check if there is "lib/site-packages" underneath
-            => Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories).Any(x => Directory.Exists(Path.Combine(x, "lib", "site-packages")));
-
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
             version = null;
             PythonAst tree = null;
@@ -693,7 +636,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task IfTestWaitForAnalysisCompleteAsync() {
             if (_testEnvironment) {
-                await WaitForDirectoryScanAsync();
                 await WaitForCompleteAnalysisAsync();
             }
         }

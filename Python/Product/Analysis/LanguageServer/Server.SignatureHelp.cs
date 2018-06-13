@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;

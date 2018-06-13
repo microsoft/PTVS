@@ -23,7 +23,6 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<CompletionList> Completion(CompletionParams @params) {
-            await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;

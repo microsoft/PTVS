@@ -23,10 +23,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
-    struct ModulePath {
+    internal struct ModulePath {
         public static readonly ModulePath Empty = new ModulePath(null, null, null);
 
         /// <summary>

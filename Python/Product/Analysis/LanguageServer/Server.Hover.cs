@@ -29,7 +29,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private DocumentationBuilder _displayTextBuilder;
 
         public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
 
             var uri = @params.textDocument.uri;

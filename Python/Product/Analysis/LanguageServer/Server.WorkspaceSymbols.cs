@@ -24,7 +24,6 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
 
             var members = Enumerable.Empty<MemberResult>();
@@ -41,7 +40,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
-            await _analyzerCreationTask;
             await IfTestWaitForAnalysisCompleteAsync();
 
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;

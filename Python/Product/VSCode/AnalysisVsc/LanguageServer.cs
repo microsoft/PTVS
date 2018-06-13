@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +35,7 @@ namespace Microsoft.PythonTools.VsCode {
     /// https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md
     /// https://github.com/Microsoft/vs-streamjsonrpc/blob/master/doc/index.md
     /// </summary>
-    public sealed class LanguageServer : IDisposable {
+    public sealed partial class LanguageServer : IDisposable {
         private readonly DisposableBag _disposables = new DisposableBag(nameof(LanguageServer));
         private readonly Server _server = new Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
@@ -100,53 +99,6 @@ namespace Microsoft.PythonTools.VsCode {
             => _rpc.NotifyWithParameterObjectAsync("client/registerCapability", e.@params).DoNotWait();
         private void OnUnregisterCapability(object sender, UnregisterCapabilityEventArgs e)
             => _rpc.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params).DoNotWait();
-        #endregion
-
-        #region Lifetime
-        [JsonRpcMethod("initialize")]
-        public Task<InitializeResult> Initialize(JToken token) {
-            var p = token.ToObject<InitializeParams>();
-            // Monitor parent process
-            if (p.processId.HasValue) {
-                Process parentProcess = null;
-                try {
-                    parentProcess = Process.GetProcessById(p.processId.Value);
-                } catch (ArgumentException) { }
-
-                Debug.Assert(parentProcess != null, "Parent process does not exist");
-                if (parentProcess != null) {
-                    parentProcess.Exited += (s, e) => {
-                        _sessionTokenSource.Cancel();
-                    };
-                    MonitorParentProcess(parentProcess);
-                }
-            }
-            return _server.Initialize(p);
-        }
-
-        [JsonRpcMethod("initialized")]
-        public Task Initialized(JToken token)
-            => _server.Initialized(token.ToObject<InitializedParams>());
-
-        [JsonRpcMethod("shutdown")]
-        public Task Shutdown() => _server.Shutdown();
-
-        [JsonRpcMethod("exit")]
-        public async Task Exit() {
-            await _server.Exit();
-            _sessionTokenSource.Cancel();
-        }
-
-        private void MonitorParentProcess(Process process) {
-            Task.Run(async () => {
-                while (!_sessionTokenSource.IsCancellationRequested) {
-                    await Task.Delay(2000);
-                    if (process.HasExited) {
-                        _sessionTokenSource.Cancel();
-                    }
-                }
-            }).DoNotWait();
-        }
         #endregion
 
         #region Cancellation
