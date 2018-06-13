@@ -153,44 +153,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
         }
 
-        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
-            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-            OnAnalyzerCreated(@params);
-        }
-
-        private void OnAnalyzerCreated(InitializeParams @params) {
-            _clientCaps = new Capabilities(@params.capabilities);
-            _settings.SetCompletionTimeout(_clientCaps.Python.CompletionsTimeout);
-            _traceLogging = _clientCaps.Python.TraceLogging;
-            _analyzer.EnableDiagnostics = _clientCaps.Python.LiveLinting;
-
-            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
-
-            if (@params.initializationOptions.displayOptions != null) {
-                DisplayOptions = @params.initializationOptions.displayOptions;
-            }
-            _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
-
-            if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.Log, "Initializing for generic interpreter");
-            } else {
-                LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
-            }
-
-            if (@params.rootUri != null) {
-                _rootDir = @params.rootUri.ToAbsolutePath();
-            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                _rootDir = PathUtils.NormalizePath(@params.rootPath);
-            }
-
-            SetSearchPaths(@params.initializationOptions.searchPaths);
-
-            if (_rootDir != null && !_clientCaps.Python.ManualFileLoad) {
-                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
-                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
-            }
-        }
-
         public override Task Shutdown() {
             Interlocked.Exchange(ref _analyzer, null)?.Dispose();
             _projectFiles.Clear();
@@ -378,10 +340,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private async Task DoInitializeAsync(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
 
-            _clientCaps = @params.capabilities;
-            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
-            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
-            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
+            _clientCaps = new Capabilities(@params.capabilities);
+            _settings.SetCompletionTimeout(_clientCaps.Python.CompletionsTimeout);
+            _traceLogging = _clientCaps.Python.TraceLogging;
+            _analyzer.EnableDiagnostics = _clientCaps.Python.LiveLinting;
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
@@ -405,7 +367,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             SetSearchPaths(@params.initializationOptions.searchPaths);
             SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
 
-            if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
+            if (_rootDir != null && !_clientCaps.Python.ManualFileLoad) {
                 LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
                 _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
