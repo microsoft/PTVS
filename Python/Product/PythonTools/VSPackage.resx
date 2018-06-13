@@ -556,4 +556,7 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="5081" xml:space="preserve">
     <value>A mypy.ini file for configuring Mypy settings</value>
   </data>
+  <data name="131" xml:space="preserve">
+    <value>Language Server</value>
+  </data>
 </root>

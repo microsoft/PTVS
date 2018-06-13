@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -30,8 +31,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonAst ast,
             IPythonModule declModule,
             ClassDefinition def,
-            string doc
-        ) : base(ast, declModule, def, doc, null) {
+            string doc,
+            LocationInfo loc
+        ) : base(ast, declModule, def, doc, loc) {
             _typeId = BuiltinTypeId.Unknown;
         }
 

@@ -457,13 +457,15 @@ namespace AnalysisTests {
         public async Task GetDatabasePaths() {
             foreach (var version in PythonPaths.Versions) {
                 var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
-                AssertUtil.ContainsAtLeast(
-                    paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
-                    new[] {
-                        PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
-                        Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
-                    }
-                );
+
+                var expected = version.IsCPython ? new[] {
+                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                } : new[] {
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                };
+
+                AssertUtil.ContainsAtLeast(paths.Where(p => p.IsStandardLibrary).Select(p => p.Path), expected);
                 AssertUtil.ContainsAtLeast(
                     paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
                     new[] {
@@ -499,7 +501,6 @@ namespace AnalysisTests {
                 new[] {
                     Path.Combine(env, "Scripts").ToLowerInvariant(),
                     PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
-                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
                     Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
                 }
             );
@@ -577,7 +578,6 @@ namespace AnalysisTests {
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {
-                    Path.Combine(env, "Scripts").ToLowerInvariant(),
                     PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
                     PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
                     Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
@@ -618,7 +618,6 @@ namespace AnalysisTests {
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {
-                    Path.Combine(env, "Scripts").ToLowerInvariant(),
                     PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
                     PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
                     Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()

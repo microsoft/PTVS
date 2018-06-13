@@ -23,7 +23,10 @@
     <ProjectReference Include="../AnalysisVsc/AnalysisVsc.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Nuget.CommandLine" Version="4.5.1" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
@@ -57,9 +60,6 @@
     <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)/$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
     <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)/$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)/$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
     <Exec Command="rmdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" />
-  </Target>
-  <Target Name="PackNetcoreDependentFolder">
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
   </Target>
   <ItemGroup>
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />

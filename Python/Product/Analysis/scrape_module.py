@@ -601,7 +601,7 @@ class Signature(object):
                 optional = True
             elif tt == tokenize.RSQB:
                 optional = False
-            elif s == '...':
+            elif s in ('->', '...'):
                 return
 
         if name and (allow_name_mismatch or name == self.name):

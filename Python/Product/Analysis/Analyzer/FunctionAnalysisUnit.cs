@@ -104,6 +104,37 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        private bool ProcessAbstractDecorators(IAnalysisSet decorator) {
+            var res = false;
+
+            // Only handle these if they are specialized
+            foreach (var d in decorator.OfType<SpecializedCallable>()) {
+                if (d.DeclaringModule?.ModuleName != "abc") {
+                    continue;
+                }
+
+                switch (d.Name) {
+                    case "abstractmethod":
+                        res = true;
+                        break;
+                    case "abstractstaticmethod":
+                        Function.IsStatic = true;
+                        res = true;
+                        break;
+                    case "abstractclassmethod":
+                        Function.IsClassMethod = true;
+                        res = true;
+                        break;
+                    case "abstractproperty":
+                        Function.IsProperty = true;
+                        res = true;
+                        break;
+                }
+            }
+
+            return res;
+        }
+
         internal IAnalysisSet ProcessFunctionDecorators(DDG ddg) {
             var types = Function.SelfSet;
             if (Ast.Decorators != null) {
@@ -121,6 +152,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.ClassMethod])) {
                             // TODO: Warn if IsStatic is set
                             Function.IsClassMethod = true;
+                        } else if (ProcessAbstractDecorators(decorator)) {
+                            // No-op
                         } else {
                             Expression nextExpr;
                             if (!_decoratorCalls.TryGetValue(d, out nextExpr)) {

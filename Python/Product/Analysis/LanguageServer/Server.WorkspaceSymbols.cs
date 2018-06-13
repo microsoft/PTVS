@@ -40,6 +40,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return members.Select(m => ToSymbolInformation(m)).ToArray();
         }
 
+        public override async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
+            await _analyzerCreationTask;
+            await IfTestWaitForAnalysisCompleteAsync();
+
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
+            var entry = _projectFiles.GetEntry(@params.textDocument);
+
+            var members = GetModuleVariables(entry as IPythonProjectEntry, opts, string.Empty);
+            return members
+                .GroupBy(mr => mr.Name)
+                .Select(g => g.First())
+                .Select(m => ToSymbolInformation(m))
+                .ToArray();
+        }
+
         private static IEnumerable<MemberResult> GetModuleVariables(
             IPythonProjectEntry entry,
             GetMemberOptions opts,

@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis.LanguageServer.Extensibility;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -59,6 +60,7 @@ namespace AnalysisTests {
         }
 
         protected virtual PythonVersion Default => DefaultV3;
+        protected virtual BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Unicode;
 
         public Task<Server> CreateServer() {
             return CreateServer((Uri)null, Default);
@@ -250,13 +252,23 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 35));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
 
-            u = await AddModule(s, "@dec\nasync   def  f(): pass");
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
-            await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
-            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
-            await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 13));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 14));
+            if (this is LanguageServerTests_V2) {
+                u = await AddModule(s, "@dec\ndef  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 4));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 5));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 6));
+            } else {
+                u = await AddModule(s, "@dec\nasync   def  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 13));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 14));
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -459,6 +471,47 @@ mc
                 contains: new string[0],
                 excludes: new[] { "value" }
             );
+        }
+
+
+        class TestCompletionHookProvider : ILanguageServerExtensionProvider {
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new TestCompletionHook(server));
+            }
+
+            class TestCompletionHook : ILanguageServerExtension {
+                public TestCompletionHook(IServer server) {
+                    if (server is Server s) {
+                        s.PostProcessCompletion += Server_PostProcessCompletion;
+                    } else {
+                        server.LogMessage(MessageType.Error, "Only Python language server is supported");
+                    }
+                }
+                public string Name => null;
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) => null;
+                private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
+                    Assert.IsNotNull(e.Tree);
+                    Assert.IsNotNull(e.Analysis);
+                    for (int i = 0; i < e.CompletionList.items.Length; ++i) {
+                        e.CompletionList.items[i].insertText = "*" + e.CompletionList.items[i].insertText;
+                    }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionHook() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 123\nx.");
+
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new string[0], new Position { line = 1, character = 2 });
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(TestCompletionHookProvider).Assembly.FullName,
+                typeName = typeof(TestCompletionHookProvider).FullName
+            });
+
+            await AssertCompletion(s, u, new[] { "*real", "*imag" }, new[] { "real" }, new Position { line = 1, character = 2 });
         }
 
         [TestMethod, Priority(0)]
@@ -768,6 +821,88 @@ datetime.datetime.now().day
             );
         }
 
+        class GetAllExtensionProvider : ILanguageServerExtensionProvider {
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new GetAllExtension((Server)server, properties));
+            }
+
+            private class GetAllExtension : ILanguageServerExtension {
+                private readonly BuiltinTypeId _typeId;
+                private readonly Server _server;
+
+                public GetAllExtension(Server server, IReadOnlyDictionary<string, object> properties) {
+                    _server = server; 
+                    if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
+                        throw new ArgumentException("typeid was not valid");
+                    }
+                }
+
+                public string Name => "getall";
+
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) {
+                    if (properties == null) {
+                        return null;
+                    }
+
+                    // Very bad code, but good for testing. Copy/paste at your own risk!
+                    var entry = _server.GetEntry(new Uri((string)properties["uri"])) as IPythonProjectEntry;
+                    var location = new SourceLocation((int)properties["line"], (int)properties["column"]);
+
+                    if (command == _typeId.ToString()) {
+                        var res = new List<string>();
+                        foreach (var m in entry.Analysis.GetAllAvailableMembers(location)) {
+                            if (m.Values.Any(v => v.MemberType == PythonMemberType.Constant && v.TypeId == _typeId)) {
+                                res.Add(m.Name);
+                            }
+                        }
+                        return new Dictionary<string, object> { ["names"] = res };
+                    }
+                    return null;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ExtensionCommand() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 1\ny = 2\nz = 'abc'");
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId.Int.ToString() }
+            });
+
+            List<string> res;
+            var cmd = new ExtensionCommandParams {
+                extensionName = "getall",
+                command = "Int",
+                properties = new Dictionary<string, object> { ["uri"] = u.AbsoluteUri, ["line"] = 1, ["column"] = 1 }
+            };
+
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsExactly(res, "x", "y");
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId_Str.ToString() }
+            });
+
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsAtLeast(res, "z", "__name__", "__file__");
+            cmd.command = "Int";
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+        }
+
+
         private static IEnumerable<string> GetDiagnostics(Dictionary<Uri, PublishDiagnosticsEventArgs> events, Uri uri) {
             return events[uri].diagnostics
                 .OrderBy(d => (SourceLocation)d.range.start)
@@ -874,5 +1009,7 @@ datetime.datetime.now().day
     [TestClass]
     public class LanguageServerTests_V2 : LanguageServerTests {
         protected override PythonVersion Default => DefaultV2;
+        protected override BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Bytes;
+
     }
 }

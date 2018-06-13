@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -81,6 +82,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private bool _testEnvironment;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
 
+        private readonly ConcurrentDictionary<string, ILanguageServerExtension> _extensions;
+
         // If null, all files must be added manually
         private string _rootDir;
 
@@ -100,6 +103,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
             _openFiles = new OpenFiles(_projectFiles, this);
+            _extensions = new ConcurrentDictionary<string, ILanguageServerExtension>();
         }
 
         private void Analysis_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -108,6 +112,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void Dispose() {
+            foreach (var ext in _extensions.Values) {
+                (ext as IDisposable)?.Dispose();
+            }
             _queue.Dispose();
         }
 
@@ -120,9 +127,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             _testEnvironment = @params.initializationOptions.testEnvironment;
-            _analyzerCreationTask = CreateAnalyzerAndNotify(@params);
+            _analyzerCreationTask = DoInitializeAsync(@params);
             // Test environment needs predictable initialization.
-            if (!@params.initializationOptions.asyncStartup || _testEnvironment) {
+            if (!@params.initializationOptions.asyncStartup) {
                 await _analyzerCreationTask;
             }
 
@@ -137,49 +144,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     },
                     hoverProvider = true,
                     signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
-                    // https://github.com/Microsoft/PTVS/issues/3803
-                    // definitionProvider = true,
-                    referencesProvider = true
+                    definitionProvider = true,
+                    referencesProvider = true,
+                    workspaceSymbolProvider = true,
+                    documentSymbolProvider = true
                 }
             };
-        }
-
-        private async Task CreateAnalyzerAndNotify(InitializeParams @params) {
-            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-            OnAnalyzerCreated(@params);
-        }
-
-        private void OnAnalyzerCreated(InitializeParams @params) {
-            _clientCaps = @params.capabilities;
-            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
-            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
-            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
-
-            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
-
-            if (@params.initializationOptions.displayOptions != null) {
-                DisplayOptions = @params.initializationOptions.displayOptions;
-            }
-            _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
-
-            if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.Log, "Initializing for generic interpreter");
-            } else {
-                LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
-            }
-
-            if (@params.rootUri != null) {
-                _rootDir = @params.rootUri.ToAbsolutePath();
-            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                _rootDir = PathUtils.NormalizePath(@params.rootPath);
-            }
-
-            SetSearchPaths(@params.initializationOptions.searchPaths);
-
-            if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
-                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
-                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
-            }
         }
 
         public override Task Shutdown() {
@@ -291,79 +261,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         #endregion
 
-        #region Private Helpers
-
-        private IProjectEntry RemoveEntry(Uri documentUri) {
-            var entry = _projectFiles.RemoveEntry(documentUri);
-            _openFiles.Remove(documentUri);
-            return entry;
-        }
-
-        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter) {
-            IPythonInterpreterFactory factory = null;
-            if (!string.IsNullOrEmpty(interpreter.assembly) && !string.IsNullOrEmpty(interpreter.typeName)) {
-                try {
-                    var assembly = File.Exists(interpreter.assembly) ? AssemblyName.GetAssemblyName(interpreter.assembly) : new AssemblyName(interpreter.assembly);
-                    var type = Assembly.Load(assembly).GetType(interpreter.typeName, true);
-
-                    factory = (IPythonInterpreterFactory)Activator.CreateInstance(
-                        type,
-                        BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
-                        null,
-                        new object[] { interpreter.properties },
-                        CultureInfo.CurrentCulture
-                    );
-                } catch (Exception ex) {
-                    LogMessage(MessageType.Warning, ex.ToString());
-                }
-            } else {
-                factory = new AstPythonInterpreterFactory(interpreter.properties);
-            }
-
-            if (factory == null) {
-                Version v;
-                if (!Version.TryParse(interpreter.version ?? "0.0", out v)) {
-                    v = new Version();
-                }
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(v);
-            }
-
-            var interp = factory.CreateInterpreter();
-            if (interp == null) {
-                throw new InvalidOperationException("Failed to create interpreter");
-            }
-
-            LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
-
-            return await PythonAnalyzer.CreateAsync(factory, interp);
-        }
-
-        private IEnumerable<ModulePath> GetImportNames(Uri document) {
-            var filePath = GetLocalPath(document);
-
-            if (!string.IsNullOrEmpty(filePath)) {
-                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, out var mp)) {
-                    yield return mp;
-                }
-
-                foreach (var sp in _analyzer.GetSearchPaths()) {
-                    if (ModulePath.FromBasePathAndFile_NoThrow(sp, filePath, out mp)) {
-                        yield return mp;
-                    }
-                }
-            }
-
-            if (document.Scheme == "python") {
-                var path = Path.Combine(document.Host, document.AbsolutePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar));
-                if (ModulePath.FromBasePathAndFile_NoThrow("", path, p => true, out var mp, out _, out _)) {
-                    yield return mp;
-                }
-            }
-        }
-
-
-        #endregion
-
         #region Non-LSP public API
         public IProjectEntry GetEntry(TextDocumentIdentifier document) => _projectFiles.GetEntry(document.uri);
         public IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) => _projectFiles.GetEntry(documentUri, throwIfMissing);
@@ -419,6 +316,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void SetSearchPaths(IEnumerable<string> searchPaths) => _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
+        public void SetTypeStubSearchPaths(IEnumerable<string> typeStubSearchPaths) => _analyzer.SetTypeStubPaths(typeStubSearchPaths.MaybeEnumerate());
 
         public event EventHandler<FileFoundEventArgs> OnFileFound;
         private void FileFound(Uri uri) {
@@ -427,6 +325,109 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #endregion
+
+        #region Private Helpers
+
+        private IProjectEntry RemoveEntry(Uri documentUri) {
+            var entry = _projectFiles.RemoveEntry(documentUri);
+            _openFiles.Remove(documentUri);
+            return entry;
+        }
+
+        private async Task DoInitializeAsync(InitializeParams @params) {
+            _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+
+            _clientCaps = @params.capabilities;
+            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
+            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
+            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
+
+            _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
+
+            if (@params.initializationOptions.displayOptions != null) {
+                DisplayOptions = @params.initializationOptions.displayOptions;
+            }
+            _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
+
+            if (string.IsNullOrEmpty(_analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
+                LogMessage(MessageType.Log, "Initializing for generic interpreter");
+            } else {
+                LogMessage(MessageType.Log, $"Initializing for {_analyzer.InterpreterFactory.Configuration.InterpreterPath}");
+            }
+
+            if (@params.rootUri != null) {
+                _rootDir = @params.rootUri.ToAbsolutePath();
+            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
+                _rootDir = PathUtils.NormalizePath(@params.rootPath);
+            }
+
+            SetSearchPaths(@params.initializationOptions.searchPaths);
+            SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
+
+            if (_rootDir != null && !(_clientCaps?.python?.manualFileLoad ?? false)) {
+                LogMessage(MessageType.Log, $"Loading files from {_rootDir}");
+                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
+            }
+        }
+
+        private T ActivateObject<T>(string assemblyName, string typeName, Dictionary<string, object> properties) {
+            if (string.IsNullOrEmpty(assemblyName) || string.IsNullOrEmpty(typeName)) {
+                return default(T);
+            }
+            try {
+                var assembly = File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName);
+                var type = Assembly.Load(assembly).GetType(typeName, true);
+
+                return (T)Activator.CreateInstance(
+                    type,
+                    BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
+                    null,
+                    properties == null ? Array.Empty<object>() : new object[] { properties },
+                    CultureInfo.CurrentCulture
+                );
+            } catch (Exception ex) {
+                LogMessage(MessageType.Warning, ex.ToString());
+            }
+
+            return default(T);
+        }
+
+        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter) {
+            var factory = ActivateObject<IPythonInterpreterFactory>(interpreter.assembly, interpreter.typeName, interpreter.properties)
+                ?? new AstPythonInterpreterFactory(interpreter.properties);
+
+            var interp = factory.CreateInterpreter();
+            if (interp == null) {
+                throw new InvalidOperationException("Failed to create interpreter");
+            }
+
+            LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
+
+            return await PythonAnalyzer.CreateAsync(factory, interp);
+        }
+
+        private IEnumerable<ModulePath> GetImportNames(Uri document) {
+            var filePath = GetLocalPath(document);
+
+            if (!string.IsNullOrEmpty(filePath)) {
+                if (!string.IsNullOrEmpty(_rootDir) && ModulePath.FromBasePathAndFile_NoThrow(_rootDir, filePath, out var mp)) {
+                    yield return mp;
+                }
+
+                foreach (var sp in _analyzer.GetSearchPaths()) {
+                    if (ModulePath.FromBasePathAndFile_NoThrow(sp, filePath, out mp)) {
+                        yield return mp;
+                    }
+                }
+            }
+
+            if (document.Scheme == "python") {
+                var path = Path.Combine(document.Host, document.AbsolutePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar));
+                if (ModulePath.FromBasePathAndFile_NoThrow("", path, p => true, out var mp, out _, out _)) {
+                    yield return mp;
+                }
+            }
+        }
 
         private string GetLocalPath(Uri uri) {
             if (uri == null) {
@@ -661,17 +662,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // so files in different folders don't replace each other.
                 // See https://github.com/Microsoft/vscode-python/issues/1063
 
-                //if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
-                //    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
-
                 // Skip over virtual environments.
-                // TODO: handle pyenv that may have more compilcated structure
-                if (!Directory.Exists(Path.Combine(dir, "lib", "site-packages"))) {
+                if (!IsVirtualEnv(dir)) {
                     await LoadFromDirectoryAsync(dir);
                 }
-                //}
             }
         }
+
+        private bool IsVirtualEnv(string dir)
+            // Drill down to check if there is "lib/site-packages" underneath
+            => Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories).Any(x => Directory.Exists(Path.Combine(x, "lib", "site-packages")));
+
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
             version = null;
             PythonAst tree = null;
@@ -696,5 +697,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 await WaitForCompleteAnalysisAsync();
             }
         }
+
+        #endregion
     }
 }

@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class ListInfo : SequenceInfo {
         private AnalysisValue _appendMethod, _popMethod, _insertMethod, _extendMethod;
 
-        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
+        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, IPythonProjectEntry entry)
             : base(indexTypes, seqType, node, entry) {
         }
 

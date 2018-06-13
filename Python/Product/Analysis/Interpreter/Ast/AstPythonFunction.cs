@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonFunction : IPythonFunction, ILocatedMember {
+    class AstPythonFunction : IPythonFunction, ILocatedMember, IHasQualifiedName {
         private readonly List<IPythonFunctionOverload> _overloads;
         private readonly string _doc;
 
@@ -84,5 +84,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IList<IPythonFunctionOverload> Overloads => _overloads.ToArray();
 
         public IEnumerable<LocationInfo> Locations { get; }
+
+        public string FullyQualifiedName => FullyQualifiedNamePair.CombineNames();
+        public KeyValuePair<string, string> FullyQualifiedNamePair =>
+            new KeyValuePair<string, string>((DeclaringType as IHasQualifiedName)?.FullyQualifiedName ?? DeclaringType?.Name ?? DeclaringModule?.Name, Name);
     }
 }

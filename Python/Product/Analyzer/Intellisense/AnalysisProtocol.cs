@@ -845,6 +845,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public Dictionary<string, LS.DiagnosticSeverity> commentTokens;
             public Dictionary<string, int> analysisLimits;
             public LS.MessageType? traceLevel;
+            public string[] typeStubPaths;
         }
 
 
