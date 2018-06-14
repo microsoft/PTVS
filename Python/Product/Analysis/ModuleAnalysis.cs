@@ -519,7 +519,7 @@ namespace Microsoft.PythonTools.Analysis {
             var specific = new List<OverloadResult>();
             var generic = new List<OverloadResult>();
             foreach (var overload in result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge)) {
-                if (overload.Parameters.All(p => p.Name.StartsWithOrdinal("*"))) {
+                if (overload.Parameters.Any() && overload.Parameters.All(p => p.Name.StartsWithOrdinal("*"))) {
                     generic.Add(overload);
                 } else {
                     specific.Add(overload);
