@@ -494,7 +494,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 // Addressing this local by name does not work for release builds, so read the return value directly from the register instead.
-                var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64(), _owner._pyrtInfo.LanguageVersion);
+                var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
                 if (tstate == null) {
                     return;
                 }
