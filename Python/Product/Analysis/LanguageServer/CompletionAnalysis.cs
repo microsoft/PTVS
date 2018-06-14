@@ -34,7 +34,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly ILogger _log;
         private readonly DocumentationBuilder _textBuilder;
 
-        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, DocumentationBuilder textBuilder, ILogger log) {
+        public CompletionAnalysis(
+            ModuleAnalysis analysis,
+            PythonAst tree,
+            SourceLocation position,
+            GetMemberOptions opts,
+            DocumentationBuilder textBuilder,
+            ILogger log
+        ) {
             Analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             Position = position;
@@ -45,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
                 Names = true,
-                MemberName = true,
+                Members = true,
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
@@ -61,6 +68,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceLocation Position { get; }
         public int Index { get; }
         public GetMemberOptions Options { get; set; }
+        public SourceSpan? ApplicableSpan { get; set; }
+
         public bool? ShouldCommitByDefault { get; set; }
 
         public Node Node => _node;
@@ -132,11 +141,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IEnumerable<CompletionItem> GetCompletionsFromMembers(ref GetMemberOptions opts) {
-            var finder = new ExpressionFinder(Tree, GetExpressionOptions.EvaluateMembers);
-            if (finder.GetExpression(Index) is Expression expr) {
-                _log.TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
-                ParentExpression = expr;
-                return Analysis.GetMembers(expr, Position, opts, null).Select(ToCompletionItem);
+            if (Node is MemberExpression me && me.Target != null && me.DotIndex > me.StartIndex && Index > me.DotIndex) {
+                _log.TraceMessage($"Completing expression {me.Target.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
+                ParentExpression = me.Target;
+                ApplicableSpan = new SourceSpan(Position, Position);
+                return Analysis.GetMembers(me.Target, Position, opts, null).Select(ToCompletionItem);
             }
             return null;
         }

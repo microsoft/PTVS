@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     _displayTextBuilder.GetDocumentation(values, originalExpr),
                     _clientCaps.textDocument?.hover?.contentFormat),
                 range = exprSpan,
-                _version = version,
+                _version = version?.Version,
                 _typeNames = names
             };
             return res;

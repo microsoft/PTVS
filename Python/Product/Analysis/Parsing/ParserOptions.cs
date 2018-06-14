@@ -63,6 +63,12 @@ namespace Microsoft.PythonTools.Parsing {
                 handler(sender, e);
             }
         }
+
+        /// <summary>
+        /// Optionally retain the tokenized tokens and their spans. These need to be
+        /// retrieved from <see cref="Parser.GetTokens()"/> after parsing.
+        /// </summary>
+        public bool KeepTokens { get; set; }
     }
 
     public class CommentEventArgs : EventArgs {

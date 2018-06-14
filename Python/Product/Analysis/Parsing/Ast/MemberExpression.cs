@@ -20,7 +20,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public sealed class MemberExpression : Expression {
         private readonly Expression _target;
         private readonly string _name;
-        private int _nameHeader;
 
         public MemberExpression(Expression target, string name) {
             _target = target;
@@ -29,17 +28,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public void SetLoc(int start, int name, int end) {
             SetLoc(start, end);
-            _nameHeader = name;
+            NameHeader = name;
         }
 
         /// <summary>
         /// Returns the index which is the start of the name.
         /// </summary>
-        public int NameHeader {
-            get {
-                return _nameHeader;
-            }
-        }
+        public int NameHeader { get; set; }
+
+        /// <summary>
+        /// The index where the dot appears.
+        /// </summary>
+        public int DotIndex { get; set; }
 
         public Expression Target {
             get { return _target; }
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// Returns the span of the name component of the expression
         /// </summary>
         public SourceSpan GetNameSpan(PythonAst parent) {
-            return new SourceSpan(parent.IndexToLocation(_nameHeader), GetEnd(parent));
+            return new SourceSpan(parent.IndexToLocation(NameHeader), GetEnd(parent));
         }
     }
 }

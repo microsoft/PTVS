@@ -223,15 +223,15 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(MemberExpression node) {
                 if (base.Walk(node)) {
-                    if (Location >= node.NameHeader && _endLocation <= node.EndIndex) {
-                        if (_options.MemberName) {
-                            var nameNode = new NameExpression(node.Name);
-                            nameNode.SetLoc(node.NameHeader, node.EndIndex);
-                            Expression = nameNode;
-                            return false;
-                        } else if (_options.Members) {
-                            Expression = node;
-                        }
+                    if (_options.MemberName && Location > node.DotIndex && _endLocation <= node.EndIndex) {
+                        var nameNode = new NameExpression(node.Name);
+                        nameNode.SetLoc(node.NameHeader, node.EndIndex);
+                        Expression = nameNode;
+                        return false;
+                    } else if (_options.MemberTarget && _endLocation <= node.DotIndex) {
+                        Expression = node.Target;
+                    } else if (_options.Members) {
+                        Expression = node;
                     }
                     return true;
                 }

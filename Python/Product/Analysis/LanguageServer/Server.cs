@@ -180,14 +180,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc);
+                EnqueueItem(doc, keepTokens: true);
             }
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             _analyzerCreationTask.Wait();
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
-            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
+            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true, keepTokens: true));
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
@@ -525,7 +525,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true, bool keepTokens = false) {
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
                 Task<IAnalysisCookie> cookieTask;
@@ -537,7 +537,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return;
                     }
                     TraceMessage($"Parsing document {doc.DocumentUri}");
-                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion, keepTokens);
                 }
 
                 // The call must be fire and forget, but should not be yielding.
@@ -673,18 +673,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // Drill down to check if there is "lib/site-packages" underneath
             => Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories).Any(x => Directory.Exists(Path.Combine(x, "lib", "site-packages")));
 
-        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
-            version = null;
+        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out BufferVersion bufferVersion) {
             PythonAst tree = null;
+            bufferVersion = null;
             var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
             if (parse != null) {
                 tree = parse.Tree ?? tree;
                 if (parse.Cookie is VersionCookie vc) {
-                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
-                        tree = bv.Ast ?? tree;
-                        if (bv.Version >= 0) {
-                            version = bv.Version;
-                        }
+                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out bufferVersion)) {
+                        tree = bufferVersion.Ast ?? tree;
                     }
                 }
             }

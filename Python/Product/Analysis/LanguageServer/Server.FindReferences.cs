@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             .Select(l => new Reference {
                                 uri = l.DocumentUri,
                                 range = l.Span,
-                                _version = version,
+                                _version = version?.Version,
                                 _kind = ReferenceKind.Definition
                             })
                             .ToArray());
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
                 _kind = ToReferenceKind(v.Type),
-                _version = version
+                _version = version?.Version
             })
                 .Concat(extras)
                 .GroupBy(r => r, ReferenceComparer.Instance)

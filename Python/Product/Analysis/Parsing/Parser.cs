@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Parsing {
     public class Parser {
         // immutable properties:
         private readonly Tokenizer _tokenizer;
+        private readonly List<List<TokenWithSpan>> _tokens;
 
         // mutable properties:
         private ErrorSink _errors;
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Construction
 
-        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs, string privatePrefix) {
+        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs, string privatePrefix, bool keepTokens) {
             Contract.Assert(tokenizer != null);
             Contract.Assert(errorSink != null);
 
@@ -76,6 +77,9 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
+            if (keepTokens) {
+                _tokens = new List<List<TokenWithSpan>> { new List<TokenWithSpan>() };
+            }
 
             Reset(FutureOptions.None);
 
@@ -114,7 +118,8 @@ namespace Microsoft.PythonTools.Parsing {
                 version,
                 options.Verbatim,
                 options.BindReferences,
-                options.PrivatePrefix
+                options.PrivatePrefix,
+                options.KeepTokens
             ) { _stubFile = options.StubFile };
 
             return parser;
@@ -267,6 +272,21 @@ namespace Microsoft.PythonTools.Parsing {
 
         public void Reset() {
             Reset(_languageFeatures);
+        }
+
+        internal IReadOnlyList<IReadOnlyList<TokenWithSpan>> GetTokensInternal() => _tokens;
+
+        public IEnumerable<IReadOnlyList<KeyValuePair<SourceSpan, Token>>> GetTokens() {
+            if (_tokens == null) {
+                yield break;
+            }
+            var linelocs = _tokenizer.GetLineLocations();
+            foreach (var line in _tokens) {
+                yield return line.Select(t => new KeyValuePair<SourceSpan, Token>(
+                    new SourceSpan(NewLineLocation.IndexToLocation(linelocs, t.Span.Start), NewLineLocation.IndexToLocation(linelocs, t.Span.End)),
+                    t.Token
+                )).ToArray();
+            }
         }
 
         #endregion
@@ -1790,6 +1810,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 decorator.SetLoc(GetStart(), GetEnd());
                 while (MaybeEat(TokenKind.Dot)) {
+                    int dotStart = GetStart();
                     string whitespace = _tokenWhiteSpace;
                     name = ReadNameMaybeNone();
                     if (!name.HasName) {
@@ -1799,6 +1820,7 @@ namespace Microsoft.PythonTools.Parsing {
                         string nameWhitespace = _tokenWhiteSpace;
                         var memberDecorator = MakeMember(decorator, name);
                         memberDecorator.SetLoc(start, GetStart(), GetEnd());
+                        memberDecorator.DotIndex = dotStart;
                         if (_verbatim) {
                             AddPreceedingWhiteSpace(memberDecorator, whitespace);
                             AddSecondPreceedingWhiteSpace(memberDecorator, nameWhitespace);
@@ -3372,11 +3394,13 @@ namespace Microsoft.PythonTools.Parsing {
                             break;
                         case TokenKind.Dot:
                             NextToken();
+                            int dotStart = GetStart();
                             whitespace = _tokenWhiteSpace;
                             var name = ReadNameMaybeNone();
                             string nameWhitespace = _tokenWhiteSpace;
                             MemberExpression fe = MakeMember(ret, name);
                             fe.SetLoc(ret.StartIndex, name.HasName ? GetStart() : GetEnd(), GetEnd());
+                            fe.DotIndex = dotStart;
                             if (_verbatim) {
                                 AddPreceedingWhiteSpace(fe, whitespace);
                                 AddSecondPreceedingWhiteSpace(fe, nameWhitespace);
@@ -4852,6 +4876,12 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
                 _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            }
+            if (_tokens != null) {
+                _tokens.Last().Add(_lookahead);
+                if (_lookahead.Token.Kind == TokenKind.NewLine || _lookahead.Token.Kind == TokenKind.NLToken) {
+                    _tokens.Add(new List<TokenWithSpan>());
+                }
             }
         }
 
