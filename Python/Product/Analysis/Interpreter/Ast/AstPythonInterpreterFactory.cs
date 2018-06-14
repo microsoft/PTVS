@@ -452,7 +452,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             TryImportModuleContext context
         ) {
             module = null;
-            if (string.IsNullOrEmpty(name)) {
+            if (string.IsNullOrEmpty(name) || name.All(c => c == '.')) {
+                // All . name means .. or ... in 'from ..' went above 
+                // the root and were not resolved.
                 return TryImportModuleResult.ModuleNotFound;
             }
 
