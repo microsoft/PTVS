@@ -366,7 +366,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
+            // All . name means .. or ... in 'from ..' went above the root and were not resolved.
+            var candidates = ModuleResolver
+                .ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute)
+                .Where(n => n.Any(c => c != '.'))
+                .ToArray();
+
             foreach (var name in candidates) {
                 if (ProjectState.Modules.TryImport(name, out moduleRef)) {
                     return true;
