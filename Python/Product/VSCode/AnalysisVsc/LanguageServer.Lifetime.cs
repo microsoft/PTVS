@@ -113,9 +113,7 @@ namespace Microsoft.PythonTools.VsCode {
 
                 Debug.Assert(parentProcess != null, "Parent process does not exist");
                 if (parentProcess != null) {
-                    parentProcess.Exited += (s, e) => {
-                        _sessionTokenSource.Cancel();
-                    };
+                    parentProcess.Exited += (s, e) => _sessionTokenSource.Cancel();
                 }
             }
 
