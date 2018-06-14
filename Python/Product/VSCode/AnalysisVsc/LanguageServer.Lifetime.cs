@@ -29,30 +29,22 @@ using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.VsCode {
     public partial class LanguageServer {
-        private TaskCompletionSource<InitializeResult> _tcs = new TaskCompletionSource<InitializeResult>();
+        private InitializeParams _initParams;
 
         [JsonRpcMethod("initialize")]
         public Task<InitializeResult> Initialize(JToken token) {
             var p = token.ToObject<InitializeParams>();
             MonitorParentProcess(p);
 
-            _server.Initialize(p).ContinueWith(async t => {
-                if (t.IsCompletedSuccessfully) {
-                    await LoadDirectoryFiles(p);
-                    _tcs.SetResult(t.Result);
-                } else if (t.IsCanceled || _sessionTokenSource.IsCancellationRequested) {
-                    _tcs.TrySetCanceled();
-                } else if (t.Exception != null) {
-                    _tcs.TrySetException(t.Exception);
-                }
-            }).DoNotWait();
-
-            return _tcs.Task;
+            _initParams = p;
+            return _server.Initialize(p);
         }
 
         [JsonRpcMethod("initialized")]
-        public Task Initialized(JToken token)
-            => _server.Initialized(token.ToObject<InitializedParams>());
+        public async Task Initialized(JToken token) { 
+            await _server.Initialized(token.ToObject<InitializedParams>());
+            await LoadDirectoryFiles();
+        }
 
         [JsonRpcMethod("shutdown")]
         public Task Shutdown() => _server.Shutdown();
@@ -63,12 +55,12 @@ namespace Microsoft.PythonTools.VsCode {
             _sessionTokenSource.Cancel();
         }
 
-        private Task LoadDirectoryFiles(InitializeParams @params) {
+        private Task LoadDirectoryFiles() {
             string rootDir = null;
-            if (@params.rootUri != null) {
-                rootDir = @params.rootUri.ToAbsolutePath();
-            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
-                rootDir = PathUtils.NormalizePath(@params.rootPath);
+            if (_initParams.rootUri != null) {
+                rootDir = _initParams.rootUri.ToAbsolutePath();
+            } else if (!string.IsNullOrEmpty(_initParams.rootPath)) {
+                rootDir = PathUtils.NormalizePath(_initParams.rootPath);
             }
 
             if (string.IsNullOrEmpty(rootDir)) {
@@ -76,8 +68,8 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             var matcher = new Matcher();
-            matcher.AddIncludePatterns(@params.initializationOptions.includeFiles ?? new[] { "**/*" });
-            matcher.AddExcludePatterns(@params.initializationOptions.excludeFiles ?? Enumerable.Empty<string>());
+            matcher.AddIncludePatterns(_initParams.initializationOptions.includeFiles ?? new[] { "**/*" });
+            matcher.AddExcludePatterns(_initParams.initializationOptions.excludeFiles ?? Enumerable.Empty<string>());
 
             var dib = new DirectoryInfoWrapper(new DirectoryInfo(rootDir));
             var matchResult = matcher.Execute(dib);
@@ -92,7 +84,7 @@ namespace Microsoft.PythonTools.VsCode {
                     break;
                 }
 
-                var path = Path.Combine(rootDir, file.Path);
+                var path = Path.Combine(rootDir, PathUtils.NormalizePath(file.Path));
                 if (!ModulePath.IsPythonSourceFile(path)) {
                     if (ModulePath.IsPythonFile(path, true, true, true)) {
                         // TODO: Deal with scrapable files (if we need to do anything?)
@@ -126,6 +118,12 @@ namespace Microsoft.PythonTools.VsCode {
                         }
                     }
                 }).DoNotWait();
+            }
+        }
+
+        private async Task IfTestWaitForAnalysisCompleteAsync() {
+            if (_initParams.initializationOptions.testEnvironment) {
+                await _server.WaitForCompleteAnalysisAsync();
             }
         }
     }

@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.VsCode {
         [JsonObject]
         class PublishDiagnosticsParams {
             [JsonProperty]
-            public string uri;
+            public Uri uri;
             [JsonProperty]
             public Diagnostic[] diagnostics;
         }
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.VsCode {
         private void OnLogMessage(object sender, LogMessageEventArgs e) => _ui.LogMessage(e.message, e.type);
         private void OnPublishDiagnostics(object sender, PublishDiagnosticsEventArgs e) {
             var parameters = new PublishDiagnosticsParams {
-                uri = e.uri.ToString(),
+                uri = e.uri,
                 diagnostics = e.diagnostics.ToArray()
             };
             _rpc.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.VsCode {
             var autoComplete = pythonSection?["autoComplete"];
             if (autoComplete != null) {
                 var showAdvancedMembers = autoComplete["showAdvancedMembers"] as JValue;
-                settings.SuppressAdvancedMembers = showAdvancedMembers == null || 
+                settings.SuppressAdvancedMembers = showAdvancedMembers == null ||
                     (showAdvancedMembers.Type == JTokenType.Boolean && !showAdvancedMembers.ToObject<bool>());
             }
             var p = new DidChangeConfigurationParams() { settings = settings };
@@ -165,72 +165,100 @@ namespace Microsoft.PythonTools.VsCode {
 
         #region Editor features
         [JsonRpcMethod("textDocument/completion")]
-        public Task<CompletionList> Completion(JToken token)
-           => _server.Completion(ToObject<CompletionParams>(token));
+        public async Task<CompletionList> Completion(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.Completion(ToObject<CompletionParams>(token));
+        }
 
         [JsonRpcMethod("completionItem/resolve")]
         public Task<CompletionItem> CompletionItemResolve(JToken token)
            => _server.CompletionItemResolve(ToObject<CompletionItem>(token));
 
         [JsonRpcMethod("textDocument/hover")]
-        public Task<Hover> Hover(JToken token)
-           => _server.Hover(ToObject<TextDocumentPositionParams>(token));
+        public async Task<Hover> Hover(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.Hover(ToObject<TextDocumentPositionParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/signatureHelp")]
-        public Task<SignatureHelp> SignatureHelp(JToken token)
-            => _server.SignatureHelp(ToObject<TextDocumentPositionParams>(token));
+        public async Task<SignatureHelp> SignatureHelp(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.SignatureHelp(ToObject<TextDocumentPositionParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/definition")]
-        public Task<Reference[]> GotoDefinition(JToken token)
-           => _server.GotoDefinition(ToObject<TextDocumentPositionParams>(token));
+        public async Task<Reference[]> GotoDefinition(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.GotoDefinition(ToObject<TextDocumentPositionParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/references")]
-        public Task<Reference[]> FindReferences(JToken token)
-           => _server.FindReferences(ToObject<ReferencesParams>(token));
+        public async Task<Reference[]> FindReferences(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.FindReferences(ToObject<ReferencesParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/documentHighlight")]
-        public Task<DocumentHighlight[]> DocumentHighlight(JToken token)
-           => _server.DocumentHighlight(ToObject<TextDocumentPositionParams>(token));
+        public async Task<DocumentHighlight[]> DocumentHighlight(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentHighlight(ToObject<TextDocumentPositionParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/documentSymbol")]
-        public Task<SymbolInformation[]> DocumentSymbol(JToken token)
-           => _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
+        public async Task<SymbolInformation[]> DocumentSymbol(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/codeAction")]
-        public Task<Command[]> CodeAction(JToken token)
-           => _server.CodeAction(ToObject<CodeActionParams>(token));
+        public async Task<Command[]> CodeAction(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.CodeAction(ToObject<CodeActionParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/codeLens")]
-        public Task<CodeLens[]> CodeLens(JToken token)
-           => _server.CodeLens(ToObject<TextDocumentPositionParams>(token));
+        public async Task<CodeLens[]> CodeLens(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.CodeLens(ToObject<TextDocumentPositionParams>(token));
+        }
 
         [JsonRpcMethod("codeLens/resolve")]
         public Task<CodeLens> CodeLensResolve(JToken token)
            => _server.CodeLensResolve(ToObject<CodeLens>(token));
 
         [JsonRpcMethod("textDocument/documentLink")]
-        public Task<DocumentLink[]> DocumentLink(JToken token)
-           => _server.DocumentLink(ToObject<DocumentLinkParams>(token));
+        public async Task<DocumentLink[]> DocumentLink(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentLink(ToObject<DocumentLinkParams>(token));
+        }
 
         [JsonRpcMethod("documentLink/resolve")]
         public Task<DocumentLink> DocumentLinkResolve(JToken token)
            => _server.DocumentLinkResolve(ToObject<DocumentLink>(token));
 
         [JsonRpcMethod("textDocument/formatting")]
-        public Task<TextEdit[]> DocumentFormatting(JToken token)
-           => _server.DocumentFormatting(ToObject<DocumentFormattingParams>(token));
+        public async Task<TextEdit[]> DocumentFormatting(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentFormatting(ToObject<DocumentFormattingParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/rangeFormatting")]
-        public Task<TextEdit[]> DocumentRangeFormatting(JToken token)
-           => _server.DocumentRangeFormatting(ToObject<DocumentRangeFormattingParams>(token));
+        public async Task<TextEdit[]> DocumentRangeFormatting(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentRangeFormatting(ToObject<DocumentRangeFormattingParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/onTypeFormatting")]
-        public Task<TextEdit[]> DocumentOnTypeFormatting(JToken token)
-           => _server.DocumentOnTypeFormatting(ToObject<DocumentOnTypeFormattingParams>(token));
+        public async Task<TextEdit[]> DocumentOnTypeFormatting(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.DocumentOnTypeFormatting(ToObject<DocumentOnTypeFormattingParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/rename")]
-        public Task<WorkspaceEdit> Rename(JToken token)
-            => _server.Rename(token.ToObject<RenameParams>());
+        public async Task<WorkspaceEdit> Rename(JToken token) {
+            await IfTestWaitForAnalysisCompleteAsync();
+            return await _server.Rename(token.ToObject<RenameParams>());
+        }
         #endregion
 
         #region Extensions

@@ -76,7 +76,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private LanguageServerSettings _settings = new LanguageServerSettings();
 
         private bool _traceLogging;
-        private bool _testEnvironment;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
 
         private readonly ConcurrentDictionary<string, ILanguageServerExtension> _extensions;
@@ -123,7 +122,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
-            _testEnvironment = @params.initializationOptions.testEnvironment;
             await DoInitializeAsync(@params);
 
             return new InitializeResult {
@@ -633,13 +631,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             return tree;
         }
-
-        private async Task IfTestWaitForAnalysisCompleteAsync() {
-            if (_testEnvironment) {
-                await WaitForCompleteAnalysisAsync();
-            }
-        }
-
         #endregion
     }
 }

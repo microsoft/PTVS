@@ -24,9 +24,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -35,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Array.Empty<Reference>();
+                return Task.FromResult(Array.Empty<Reference>());
             }
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version);
@@ -94,7 +92,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .GroupBy(r => r, ReferenceComparer.Instance)
                 .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
                 .ToArray();
-            return res;
+
+            return Task.FromResult(res);
         }
 
         private static ReferenceKind ToReferenceKind(VariableType type) {

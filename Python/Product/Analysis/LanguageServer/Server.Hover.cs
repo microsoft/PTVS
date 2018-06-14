@@ -28,9 +28,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
         private DocumentationBuilder _displayTextBuilder;
 
-        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -39,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return EmptyHover;
+                return Task.FromResult(EmptyHover);
             }
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
@@ -60,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
                 if (sb.Length > 0) {
-                    return new Hover { contents = sb.ToString() };
+                    return Task.FromResult(new Hover { contents = sb.ToString() });
                 }
             }
 
@@ -74,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (expr == null) {
                 TraceMessage($"No hover info found in {uri} at {@params.position}");
-                return EmptyHover;
+                return Task.FromResult(EmptyHover);
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
@@ -100,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _version = version,
                 _typeNames = names
             };
-            return res;
+            return Task.FromResult(res);
         }
 
         private static string GetFullTypeName(AnalysisValue value) {
