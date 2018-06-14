@@ -514,8 +514,19 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // Take nearly-equivalent overloads and merge them, retaining the maximum
-            // possible information.
-            return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
+            // possible information. And if we have any overloads that are all */** args,
+            // only return them if we don't have any more precise overloads.
+            var specific = new List<OverloadResult>();
+            var generic = new List<OverloadResult>();
+            foreach (var overload in result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge)) {
+                if (overload.Parameters.All(p => p.Name.StartsWithOrdinal("*"))) {
+                    generic.Add(overload);
+                } else {
+                    specific.Add(overload);
+                }
+            }
+
+            return specific.Any() ? specific : generic;
         }
 
         /// <summary>
