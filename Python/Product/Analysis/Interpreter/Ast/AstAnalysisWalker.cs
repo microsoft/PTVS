@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisWalker : PythonWalker {
         private readonly IPythonModule _module;
         private readonly Dictionary<string, IMember> _members;
+        private readonly HashSet<string> _typingMembers = new HashSet<string>();
         private readonly List<AstAnalysisFunctionWalker> _postWalkers = new List<AstAnalysisFunctionWalker>();
         private readonly AnalysisLogWriter _log;
 
@@ -83,6 +84,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public void Complete() {
             foreach (var walker in _postWalkers) {
                 walker.Walk();
+            }
+
+            if (_module.Name != "typing" && Scope.FilePath.EndsWithOrdinal(".pyi", ignoreCase: true)) {
+                // Do not expose members directly imported from typing
+                foreach (var m in _typingMembers) {
+                    _members.Remove(m);
+                }
             }
         }
 
@@ -194,6 +202,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
+            bool isTyping = modName == "typing";
+
             var mod = new AstNestedPythonModule(
                 _interpreter,
                 modName,
@@ -213,6 +223,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         Scope.SetInScope(member, mem);
                         (mem as IPythonModule)?.Imported(Scope.Context);
+                        if (isTyping) {
+                            _typingMembers.Add(member);
+                        }
                     }
                 } else {
                     IMember mem;
@@ -227,6 +240,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         mem = new AstNestedPythonModuleMember(name.Key, mod, Scope.Context, GetLoc(name.Value));
                     }
                     Scope.SetInScope(name.Value.Name, mem);
+                    if (isTyping) {
+                        _typingMembers.Add(name.Value.Name);
+                    }
                 }
             }
 

@@ -88,8 +88,10 @@ LIES_ABOUT_MODULE = frozenset([
     builtins.__name__ + ".weakcallableproxy",
     builtins.__name__ + ".weakproxy",
     builtins.__name__ + ".weakref",
+    "ctypes.ArgumentError",
     "os.stat_result",
     "os.statvfs_result",
+    "xml.parsers.expat.ExpatError",
 
     "numpy.broadcast",
     "numpy.busdaycalendar",
@@ -98,6 +100,17 @@ LIES_ABOUT_MODULE = frozenset([
     "numpy.flatiter",
     "numpy.ndarray",
     "numpy.nditer",
+
+    # These modules contain multiple members that lie about their
+    # module. Always write out all members of these in full.
+    "_asyncio.*",
+    "_bsddb.*",
+    "_decimal.*",
+    "_elementtree.*",
+    "_socket.*",
+    "_sqlite3.*",
+    "_ssl.*",
+    "_testmultiphase.*",
 ])
 
 # These type names cause conflicts with their values, so
@@ -728,7 +741,7 @@ class MemberInfo(object):
 
                 fullname = module + '.' + type_name
 
-                if fullname in LIES_ABOUT_MODULE:
+                if fullname in LIES_ABOUT_MODULE or (in_module + '.*') in LIES_ABOUT_MODULE:
                     # Treat the type as if it came from the current module
                     return (in_module,), type_name
 
