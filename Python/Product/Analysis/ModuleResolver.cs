@@ -111,7 +111,10 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Handle relative module names
             if (relativeModuleName.FirstOrDefault() == '.') {
-                yield return GetModuleFullName(importingFrom, relativeModuleName);
+                var fullName = GetModuleFullName(importingFrom, relativeModuleName);
+                if (fullName.Any(c => c != '.')) {
+                    yield return fullName;
+                }
                 yield break;
             }
 
