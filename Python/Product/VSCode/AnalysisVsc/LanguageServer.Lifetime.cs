@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             var matcher = new Matcher();
-            matcher.AddIncludePatterns(@params.initializationOptions.includeFiles ?? new[] { "**/*.py" });
+            matcher.AddIncludePatterns(@params.initializationOptions.includeFiles ?? new[] { "**/*" });
             matcher.AddExcludePatterns(@params.initializationOptions.excludeFiles ?? Enumerable.Empty<string>());
 
             var dib = new DirectoryInfoWrapper(new DirectoryInfo(rootDir));
