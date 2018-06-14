@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -99,31 +100,35 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static void ShowPtvsdMessage(string main, string content, bool allowDisable, bool isError) {
             var serviceProvider = VisualStudio.Shell.ServiceProvider.GlobalProvider;
-            serviceProvider.GetUIThread().Invoke(() => {
-                var dlg = new TaskDialog(serviceProvider) {
-                    Title = Strings.ProductTitle,
-                    MainInstruction = main,
-                    Content = content,
-                    AllowCancellation = true,
-                    MainIcon = isError ? TaskDialogIcon.Error : TaskDialogIcon.Warning,
-                };
+            try {
+                serviceProvider.GetUIThread().Invoke(() => {
+                    var dlg = new TaskDialog(serviceProvider) {
+                        Title = Strings.ProductTitle,
+                        MainInstruction = main,
+                        Content = content,
+                        AllowCancellation = true,
+                        MainIcon = isError ? TaskDialogIcon.Error : TaskDialogIcon.Warning,
+                    };
 
-                var disable = new TaskDialogButton(Strings.PtvsdDisableCaption, Strings.PtvsdDisableSubtext);
-                var learnMore = new TaskDialogButton(Strings.PtvsdLearnMoreCaption, Strings.PtvsdLearnMoreSubtext);
+                    var disable = new TaskDialogButton(Strings.PtvsdDisableCaption, Strings.PtvsdDisableSubtext);
+                    var learnMore = new TaskDialogButton(Strings.PtvsdLearnMoreCaption, Strings.PtvsdLearnMoreSubtext);
 
-                dlg.Buttons.Add(TaskDialogButton.OK);
-                dlg.Buttons.Insert(0, learnMore);
-                if (allowDisable) {
-                    dlg.Buttons.Insert(0, disable);
-                }
+                    dlg.Buttons.Add(TaskDialogButton.OK);
+                    dlg.Buttons.Insert(0, learnMore);
+                    if (allowDisable) {
+                        dlg.Buttons.Insert(0, disable);
+                    }
 
-                var selection = dlg.ShowModal();
-                if (selection == learnMore) {
-                    Process.Start("https://aka.ms/upgradeptvsd");
-                } else if (selection == disable) {
-                    ExperimentalOptions.UseVsCodeDebugger = false;
-                }
-            });
+                    var selection = dlg.ShowModal();
+                    if (selection == learnMore) {
+                        Process.Start("https://aka.ms/upgradeptvsd")?.Dispose();
+                    } else if (selection == disable) {
+                        ExperimentalOptions.UseVsCodeDebugger = false;
+                    }
+                });
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(serviceProvider, typeof(PtvsdVersionHelper));
+            }
         }
     }
 
