@@ -374,12 +374,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             try {
                 Type type;
-                if (Path.IsPathRooted(assemblyName)) {
-                    type = Assembly.LoadFrom(assemblyName).GetType(typeName, true);
-                }
-                else {
+                try {
                     var assembly = File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName);
                     type = Assembly.Load(assembly).GetType(typeName, true);
+                } catch (IOException) {
+                    type = Assembly.LoadFrom(assemblyName).GetType(typeName, true);
                 }
 
                 return (T)Activator.CreateInstance(
