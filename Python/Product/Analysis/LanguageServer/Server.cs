@@ -421,11 +421,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return string.Join(Path.DirectorySeparatorChar.ToString(), bits);
         }
 
-        private Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
+        private async Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
             var item = _projectFiles.GetEntry(documentUri, throwIfMissing: false);
-
             if (item != null) {
-                return Task.FromResult(item);
+                return item;
             }
 
             IEnumerable<string> aliases = null;
@@ -453,7 +452,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var actualItem = _projectFiles.GetOrAddEntry(documentUri, item);
             if (actualItem != item) {
-                return Task.FromResult(actualItem);
+                return actualItem;
             }
 
             if (_clientCaps?.python?.analysisUpdates ?? false) {
@@ -470,7 +469,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return Task.FromResult(item);
+            return item;
         }
 
         private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {

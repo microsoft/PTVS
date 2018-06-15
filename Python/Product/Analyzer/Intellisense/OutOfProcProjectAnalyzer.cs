@@ -69,7 +69,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
-            _server.OnFileFound += OnFileFound;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -1813,14 +1812,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     version = e.version
                 }
             ).DoNotWait();
-        }
-
-        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
-            // Send a notification for this file
-            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = e.uri,
-                filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            }).DoNotWait();
         }
 
 

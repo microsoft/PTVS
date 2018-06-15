@@ -106,11 +106,22 @@ namespace AnalysisTests {
             }
 
             if (rootUri != null) {
-                await s.WaitForDirectoryScanAsync().ConfigureAwait(false);
+                await LoadFromDirectoryAsync(s, rootUri.LocalPath).ConfigureAwait(false);
                 await s.WaitForCompleteAnalysisAsync().ConfigureAwait(false);
             }
 
             return s;
+        }
+
+        private async Task LoadFromDirectoryAsync(Server s, string rootDir) {
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir)) {
+                await LoadFromDirectoryAsync(s, dir);
+            }
+            foreach (var file in PathUtils.EnumerateFiles(rootDir)) {
+                if (ModulePath.IsPythonSourceFile(file)) {
+                    await s.LoadFileAsync(new Uri(file));
+                }
+            }
         }
 
         private void Server_OnLogMessage(object sender, LogMessageEventArgs e) {
@@ -831,7 +842,7 @@ datetime.datetime.now().day
                 private readonly Server _server;
 
                 public GetAllExtension(Server server, IReadOnlyDictionary<string, object> properties) {
-                    _server = server; 
+                    _server = server;
                     if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
                         throw new ArgumentException("typeid was not valid");
                     }

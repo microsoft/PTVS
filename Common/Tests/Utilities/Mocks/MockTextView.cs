@@ -152,9 +152,7 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public ITextViewRoleSet Roles {
-            get { throw new NotImplementedException(); }
-        }
+        public ITextViewRoleSet Roles { get; } = new MockTextViewRoleSet();
 
         public ITextSelection Selection {
             get { return _selection; }
