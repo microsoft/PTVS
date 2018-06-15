@@ -467,169 +467,169 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return item;
         }
 
-    private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {
-        if (t.IsCompleted) {
-            lock (_pendingParse) {
-                if (counter.IsZero) {
-                    if (_pendingParse.TryGetValue(doc, out var existing) && existing == counter) {
-                        _pendingParse.Remove(doc);
+        private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {
+            if (t.IsCompleted) {
+                lock (_pendingParse) {
+                    if (counter.IsZero) {
+                        if (_pendingParse.TryGetValue(doc, out var existing) && existing == counter) {
+                            _pendingParse.Remove(doc);
+                        }
+                        return;
                     }
-                    return;
                 }
+            }
+            counter.WaitForChangeToZeroAsync().ContinueWith(t2 => RemoveDocumentParseCounter(t, doc, counter));
+        }
+
+        private IDisposable GetDocumentParseCounter(IDocument doc, out int count) {
+            VolatileCounter counter;
+            lock (_pendingParse) {
+                if (!_pendingParse.TryGetValue(doc, out counter)) {
+                    _pendingParse[doc] = counter = new VolatileCounter();
+                    // Automatically remove counter from the dictionary when it reaches zero.
+                    counter.WaitForChangeToZeroAsync().ContinueWith(t => RemoveDocumentParseCounter(t, doc, counter));
+                }
+                var res = counter.Incremented();
+                count = counter.Count;
+                return res;
             }
         }
-        counter.WaitForChangeToZeroAsync().ContinueWith(t2 => RemoveDocumentParseCounter(t, doc, counter));
-    }
 
-    private IDisposable GetDocumentParseCounter(IDocument doc, out int count) {
-        VolatileCounter counter;
-        lock (_pendingParse) {
-            if (!_pendingParse.TryGetValue(doc, out counter)) {
-                _pendingParse[doc] = counter = new VolatileCounter();
-                // Automatically remove counter from the dictionary when it reaches zero.
-                counter.WaitForChangeToZeroAsync().ContinueWith(t => RemoveDocumentParseCounter(t, doc, counter));
+        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+            var pending = _pendingAnalysisEnqueue.Incremented();
+            try {
+                Task<IAnalysisCookie> cookieTask;
+                using (GetDocumentParseCounter(doc, out var count)) {
+                    if (count > 3) {
+                        // Rough check to prevent unbounded queueing. If we have
+                        // multiple parses in queue, we will get the latest doc
+                        // version in one of the ones to come.
+                        return;
+                    }
+                    TraceMessage($"Parsing document {doc.DocumentUri}");
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
+                }
+
+                // The call must be fire and forget, but should not be yielding.
+                // It is called from DidChangeTextDocument which must fully finish
+                // since otherwise Complete() may come before the change is enqueued
+                // for processing and the completion list will be driven off the stale data.
+                var p = pending;
+                cookieTask.ContinueWith(t => {
+                    if (t.IsFaulted) {
+                        // Happens when file got deleted before processing
+                        p.Dispose();
+                        LogMessage(MessageType.Error, t.Exception.Message);
+                        return;
+                    }
+                    OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
+                }).DoNotWait();
+                pending = null;
+            } finally {
+                pending?.Dispose();
             }
-            var res = counter.Incremented();
-            count = counter.Count;
-            return res;
         }
-    }
 
-    private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
-        var pending = _pendingAnalysisEnqueue.Incremented();
-        try {
-            Task<IAnalysisCookie> cookieTask;
-            using (GetDocumentParseCounter(doc, out var count)) {
-                if (count > 3) {
-                    // Rough check to prevent unbounded queueing. If we have
-                    // multiple parses in queue, we will get the latest doc
-                    // version in one of the ones to come.
-                    return;
-                }
-                TraceMessage($"Parsing document {doc.DocumentUri}");
-                cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
-            }
-
-            // The call must be fire and forget, but should not be yielding.
-            // It is called from DidChangeTextDocument which must fully finish
-            // since otherwise Complete() may come before the change is enqueued
-            // for processing and the completion list will be driven off the stale data.
-            var p = pending;
-            cookieTask.ContinueWith(t => {
-                if (t.IsFaulted) {
-                    // Happens when file got deleted before processing
-                    p.Dispose();
-                    LogMessage(MessageType.Error, t.Exception.Message);
-                    return;
-                }
-                OnDocumentChangeProcessingComplete(doc, t.Result as VersionCookie, enqueueForAnalysis, priority, p);
-            }).DoNotWait();
-            pending = null;
-        } finally {
-            pending?.Dispose();
-        }
-    }
-
-    private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
-        try {
-            if (vc != null) {
-                foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                    ParseComplete(kv.Key, kv.Value.Version);
-                }
-            } else {
-                ParseComplete(doc.DocumentUri, 0);
-            }
-
-            if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
-                TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
-                _queue.Enqueue(analyzable, priority);
-            }
-
-            disposeWhenEnqueued?.Dispose();
-            disposeWhenEnqueued = null;
-            var openedFile = _openFiles.GetDocument(doc.DocumentUri);
-            if (vc != null) {
-                var reported = openedFile.LastReportedDiagnostics;
-                lock (reported) {
+        private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
+            try {
+                if (vc != null) {
                     foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                        var part = _projectFiles.GetPart(kv.Key);
-                        if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version) {
-                            reported[part] = kv.Value;
-                            PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                                uri = kv.Key,
-                                diagnostics = kv.Value.Diagnostics,
-                                _version = kv.Value.Version
-                            });
+                        ParseComplete(kv.Key, kv.Value.Version);
+                    }
+                } else {
+                    ParseComplete(doc.DocumentUri, 0);
+                }
+
+                if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
+                    TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
+                    _queue.Enqueue(analyzable, priority);
+                }
+
+                disposeWhenEnqueued?.Dispose();
+                disposeWhenEnqueued = null;
+                var openedFile = _openFiles.GetDocument(doc.DocumentUri);
+                if (vc != null) {
+                    var reported = openedFile.LastReportedDiagnostics;
+                    lock (reported) {
+                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                            var part = _projectFiles.GetPart(kv.Key);
+                            if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version) {
+                                reported[part] = kv.Value;
+                                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                                    uri = kv.Key,
+                                    diagnostics = kv.Value.Diagnostics,
+                                    _version = kv.Value.Version
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (BadSourceException) {
+            } catch (OperationCanceledException ex) {
+                LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
+                TraceMessage($"{ex}");
+            } catch (Exception ex) {
+                LogMessage(MessageType.Error, ex.ToString());
+            } finally {
+                disposeWhenEnqueued?.Dispose();
+            }
+        }
+
+        private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
+            if (sender is IPythonProjectEntry entry) {
+                TraceMessage($"Received new analysis for {entry.DocumentUri}");
+                var version = 0;
+                var parse = entry.GetCurrentParse();
+                if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
+                    foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
+                        AnalysisComplete(kv.Key, kv.Value.Version);
+                        if (kv.Value.Version > version) {
+                            version = kv.Value.Version;
+                        }
+                    }
+                } else {
+                    AnalysisComplete(entry.DocumentUri, 0);
+                }
+
+                var diags = _analyzer.GetDiagnostics(entry);
+                if (!diags.Any()) {
+                    return;
+                }
+
+                if (entry is IDocument doc) {
+                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
+                    lock (reported) {
+                        if (reported.TryGetValue(0, out var lastVersion)) {
+                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+                        }
+                    }
+                }
+
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                    diagnostics = diags,
+                    uri = entry.DocumentUri,
+                    _version = version
+                });
+            }
+        }
+
+        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
+            version = null;
+            PythonAst tree = null;
+            var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
+            if (parse != null) {
+                tree = parse.Tree ?? tree;
+                if (parse.Cookie is VersionCookie vc) {
+                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
+                        tree = bv.Ast ?? tree;
+                        if (bv.Version >= 0) {
+                            version = bv.Version;
                         }
                     }
                 }
             }
-        } catch (BadSourceException) {
-        } catch (OperationCanceledException ex) {
-            LogMessage(MessageType.Warning, $"Parsing {doc.DocumentUri} cancelled");
-            TraceMessage($"{ex}");
-        } catch (Exception ex) {
-            LogMessage(MessageType.Error, ex.ToString());
-        } finally {
-            disposeWhenEnqueued?.Dispose();
+            return tree;
         }
+        #endregion
     }
-
-    private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
-        if (sender is IPythonProjectEntry entry) {
-            TraceMessage($"Received new analysis for {entry.DocumentUri}");
-            var version = 0;
-            var parse = entry.GetCurrentParse();
-            if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
-                foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
-                    AnalysisComplete(kv.Key, kv.Value.Version);
-                    if (kv.Value.Version > version) {
-                        version = kv.Value.Version;
-                    }
-                }
-            } else {
-                AnalysisComplete(entry.DocumentUri, 0);
-            }
-
-            var diags = _analyzer.GetDiagnostics(entry);
-            if (!diags.Any()) {
-                return;
-            }
-
-            if (entry is IDocument doc) {
-                var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
-                lock (reported) {
-                    if (reported.TryGetValue(0, out var lastVersion)) {
-                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
-                    }
-                }
-            }
-
-            PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                diagnostics = diags,
-                uri = entry.DocumentUri,
-                _version = version
-            });
-        }
-    }
-
-    private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
-        version = null;
-        PythonAst tree = null;
-        var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
-        if (parse != null) {
-            tree = parse.Tree ?? tree;
-            if (parse.Cookie is VersionCookie vc) {
-                if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
-                    tree = bv.Ast ?? tree;
-                    if (bv.Version >= 0) {
-                        version = bv.Version;
-                    }
-                }
-            }
-        }
-        return tree;
-    }
-    #endregion
-}
 }
