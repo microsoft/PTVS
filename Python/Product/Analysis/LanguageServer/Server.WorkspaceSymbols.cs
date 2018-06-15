@@ -23,10 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -37,22 +34,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return members.Select(m => ToSymbolInformation(m)).ToArray();
+            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
         }
 
-        public override async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = _projectFiles.GetEntry(@params.textDocument);
 
             var members = GetModuleVariables(entry as IPythonProjectEntry, opts, string.Empty);
-            return members
+            return Task.FromResult(members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
                 .Select(m => ToSymbolInformation(m))
-                .ToArray();
+                .ToArray());
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(

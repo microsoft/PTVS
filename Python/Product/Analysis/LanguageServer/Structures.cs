@@ -246,15 +246,36 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// contents will be merged with the initial module.
         /// </summary>
         public string[] typeStubSearchPaths;
+
+        /// <summary>
+        /// Indicates that analysis engine is running in a test environment.
+        /// Causes initialization and analysis sequences to fully
+        /// complete before information requests such as hover or
+        /// completion can be processed.
+        /// </summary>
         public bool testEnvironment;
+
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.
         /// </summary>
         public InformationDisplayOptions displayOptions;
+
         /// <summary>
         /// If true, analyzer will be created asynchronously. Used in VS Code.
         /// </summary>
         public bool asyncStartup;
+
+        /// <summary>
+        /// Glob pattern of files and folders to exclude from loading
+        /// into the Python analysis engine.
+        /// </summary>
+        public string[] excludeFiles;
+
+        /// <summary>
+        /// Glob pattern of files and folders under the root folder that
+        /// should be loaded into the Python analysis engine.
+        /// </summary>
+        public string[] includeFiles;
     }
 
 
