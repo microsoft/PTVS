@@ -20,9 +20,6 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
             var references = await FindReferences(new ReferencesParams {
                 textDocument = @params.textDocument,
                 position = @params.position,

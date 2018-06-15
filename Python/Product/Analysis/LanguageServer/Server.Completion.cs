@@ -22,10 +22,7 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<CompletionList> Completion(CompletionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<CompletionList> Completion(CompletionParams @params) {
             var uri = @params.textDocument.uri;
             // Make sure document is enqueued for processing
             var openFile = _openFiles.GetDocument(uri);
@@ -37,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return new CompletionList();
+                return Task.FromResult(new CompletionList());
             }
 
             var opts = GetOptions(@params.context);
@@ -45,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
             if (members == null) {
                 TraceMessage($"Do not trigger at {@params.position} in {uri}");
-                return new CompletionList();
+                return Task.FromResult(new CompletionList());
             }
 
             if (_settings.SuppressAdvancedMembers) {
@@ -95,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            return res;
+            return Task.FromResult(res);
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {
