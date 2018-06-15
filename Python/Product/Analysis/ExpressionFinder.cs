@@ -230,8 +230,6 @@ namespace Microsoft.PythonTools.Analysis {
                         nameNode.SetLoc(node.NameHeader, node.EndIndex);
                         Expression = nameNode;
                         return false;
-                    } else if (_options.MemberTarget && _endLocation <= node.DotIndex) {
-                        Expression = node.Target;
                     } else if (_options.Members) {
                         Expression = node;
                     }
