@@ -114,10 +114,10 @@ namespace AnalysisTests {
         }
 
         private async Task LoadFromDirectoryAsync(Server s, string rootDir) {
-            foreach (var dir in Directory.EnumerateDirectories(rootDir, "*", SearchOption.AllDirectories)) {
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir)) {
                 await LoadFromDirectoryAsync(s, dir);
             }
-            foreach (var file in Directory.EnumerateFiles(rootDir)) {
+            foreach (var file in PathUtils.EnumerateFiles(rootDir)) {
                 if (ModulePath.IsPythonSourceFile(file)) {
                     await s.LoadFileAsync(new Uri(file));
                 }
