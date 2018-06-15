@@ -301,6 +301,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void SetSearchPaths(IEnumerable<string> searchPaths) => _analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         public void SetTypeStubSearchPaths(IEnumerable<string> typeStubSearchPaths) => _analyzer.SetTypeStubPaths(typeStubSearchPaths.MaybeEnumerate());
 
+        public event EventHandler<FileFoundEventArgs> OnFileFound;
+        private void FileFound(Uri uri) {
+            TraceMessage($"Found file to analyze {uri}");
+            OnFileFound?.Invoke(this, new FileFoundEventArgs { uri = uri });
+        }
+
         #endregion
 
         #region Private Helpers
@@ -416,56 +422,55 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return string.Join(Path.DirectorySeparatorChar.ToString(), bits);
         }
 
-        private Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
+        private async Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
             var item = _projectFiles.GetEntry(documentUri, throwIfMissing: false);
+            if (item == null) {
 
-            if (item != null) {
-                return Task.FromResult(item);
-            }
-
-            IEnumerable<string> aliases = null;
-            var path = GetLocalPath(documentUri);
-            if (fromSearchPath != null) {
-                if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
-                    aliases = new[] { mp.ModuleName };
+                IEnumerable<string> aliases = null;
+                var path = GetLocalPath(documentUri);
+                if (fromSearchPath != null) {
+                    if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
+                        aliases = new[] { mp.ModuleName };
+                    }
+                } else {
+                    aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToArray();
                 }
-            } else {
-                aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToArray();
-            }
 
-            if (!(aliases?.Any() ?? false)) {
-                aliases = new[] { Path.GetFileNameWithoutExtension(path) };
-            }
+                if (!(aliases?.Any() ?? false)) {
+                    aliases = new[] { Path.GetFileNameWithoutExtension(path) };
+                }
 
-            var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
-            var first = aliases.FirstOrDefault();
+                var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
+                var first = aliases.FirstOrDefault();
 
-            var pyItem = _analyzer.AddModule(first, path, documentUri, cookie);
-            item = pyItem;
-            foreach (var a in aliases.Skip(1)) {
-                _analyzer.AddModuleAlias(first, a);
-            }
+                var pyItem = _analyzer.AddModule(first, path, documentUri, cookie);
+                item = pyItem;
+                foreach (var a in aliases.Skip(1)) {
+                    _analyzer.AddModuleAlias(first, a);
+                }
 
-            var actualItem = _projectFiles.GetOrAddEntry(documentUri, item);
-            if (actualItem != item) {
-                return Task.FromResult(actualItem);
-            }
+                var actualItem = _projectFiles.GetOrAddEntry(documentUri, item);
+                if (actualItem != item) {
+                    item = actualItem;
+                } else {
+                    if (_clientCaps?.python?.analysisUpdates ?? false) {
+                        pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
+                    }
 
-            if (_clientCaps?.python?.analysisUpdates ?? false) {
-                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
-            }
+                    if (item is IDocument doc) {
+                        EnqueueItem(doc);
+                    }
 
-            if (item is IDocument doc) {
-                EnqueueItem(doc);
-            }
-
-            if (reanalyzeEntries != null) {
-                foreach (var entryRef in reanalyzeEntries) {
-                    _queue.Enqueue(entryRef, AnalysisPriority.Low);
+                    if (reanalyzeEntries != null) {
+                        foreach (var entryRef in reanalyzeEntries) {
+                            _queue.Enqueue(entryRef, AnalysisPriority.Low);
+                        }
+                    }
                 }
             }
 
-            return Task.FromResult(item);
+            FileFound(item.DocumentUri);
+            return item;
         }
 
         private void RemoveDocumentParseCounter(Task t, IDocument doc, VolatileCounter counter) {
