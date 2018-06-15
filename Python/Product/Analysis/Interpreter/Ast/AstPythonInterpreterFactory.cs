@@ -194,6 +194,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var hash = SHA256.Create();
             var dir = Path.GetDirectoryName(filePath);
+            if (IsWindows()) {
+                dir = dir.ToLowerInvariant();
+            }
+
             var dirHash = Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(dir)))
                 .Replace('/', '_').Replace('+', '-');
 
@@ -201,6 +205,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _databasePath,
                 Path.Combine(dirHash, name)
             ), ".pyi");
+        }
+
+        private static bool IsWindows() {
+#if DESKTOP
+            return true;
+#else
+            return System.Runtime.InteropServices.RuntimeInformation
+                .IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+#endif
         }
 
         #region Cache File Management

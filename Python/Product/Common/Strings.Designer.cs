@@ -2058,6 +2058,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable the experimental debugger.
+        /// </summary>
+        public static string DisableExperimentalDebugger {
+            get {
+                return ResourceManager.GetString("DisableExperimentalDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {
@@ -2929,20 +2938,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please run &apos;pip install --upgrade ptvsd --pre&apos; in your Python environment to use the experimental debugger.
+        ///   Looks up a localized string similar to There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd..
         /// </summary>
-        public static string ImportPtvsdFailedMessage {
+        public static string ImportPtvsdModuleNotFoundMessage {
             get {
-                return ResourceManager.GetString("ImportPtvsdFailedMessage", resourceCulture);
+                return ResourceManager.GetString("ImportPtvsdModuleNotFoundMessage", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ImportError: ptvsd not found.
+        ///   Looks up a localized string similar to Debugger package could not be loaded.
         /// </summary>
-        public static string ImportPtvsdFailedTitle {
+        public static string ImportPtvsdModuleNotFoundTitle {
             get {
-                return ResourceManager.GetString("ImportPtvsdFailedTitle", resourceCulture);
+                return ResourceManager.GetString("ImportPtvsdModuleNotFoundTitle", resourceCulture);
             }
         }
         
@@ -3273,11 +3282,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.
+        ///   Looks up a localized string similar to You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality..
         /// </summary>
         public static string InstalledPtvsdOutdatedMessage {
             get {
                 return ResourceManager.GetString("InstalledPtvsdOutdatedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger package is outdated.
+        /// </summary>
+        public static string InstalledPtvsdOutdatedTitle {
+            get {
+                return ResourceManager.GetString("InstalledPtvsdOutdatedTitle", resourceCulture);
             }
         }
         
@@ -3885,6 +3903,60 @@ namespace Microsoft.PythonTools {
         public static string ProjectDoesNotSupportedMSBuild {
             get {
                 return ResourceManager.GetString("ProjectDoesNotSupportedMSBuild", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable the experimental debugger.
+        /// </summary>
+        public static string PtvsdDisableCaption {
+            get {
+                return ResourceManager.GetString("PtvsdDisableCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page..
+        /// </summary>
+        public static string PtvsdDisableSubtext {
+            get {
+                return ResourceManager.GetString("PtvsdDisableSubtext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments..
+        /// </summary>
+        public static string PtvsdIncompatibleEnvMessage {
+            get {
+                return ResourceManager.GetString("PtvsdIncompatibleEnvMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger is incompatible with this environment.
+        /// </summary>
+        public static string PtvsdIncompatibleEnvTitle {
+            get {
+                return ResourceManager.GetString("PtvsdIncompatibleEnvTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn more.
+        /// </summary>
+        public static string PtvsdLearnMoreCaption {
+            get {
+                return ResourceManager.GetString("PtvsdLearnMoreCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package..
+        /// </summary>
+        public static string PtvsdLearnMoreSubtext {
+            get {
+                return ResourceManager.GetString("PtvsdLearnMoreSubtext", resourceCulture);
             }
         }
         

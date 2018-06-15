@@ -2250,11 +2250,32 @@ Expand selection to the full expression?</value>
   <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
   </data>
-  <data name="ImportPtvsdFailedMessage" xml:space="preserve">
-    <value>Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger</value>
+  <data name="ImportPtvsdModuleNotFoundMessage" xml:space="preserve">
+    <value>There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.</value>
   </data>
-  <data name="ImportPtvsdFailedTitle" xml:space="preserve">
-    <value>ImportError: ptvsd not found</value>
+  <data name="ImportPtvsdModuleNotFoundTitle" xml:space="preserve">
+    <value>Debugger package could not be loaded</value>
+  </data>
+  <data name="PtvsdDisableCaption" xml:space="preserve">
+    <value>Disable the experimental debugger</value>
+  </data>
+  <data name="PtvsdDisableSubtext" xml:space="preserve">
+    <value>Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.</value>
+  </data>
+  <data name="PtvsdLearnMoreCaption" xml:space="preserve">
+    <value>Learn more</value>
+  </data>
+  <data name="PtvsdLearnMoreSubtext" xml:space="preserve">
+    <value>View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.</value>
+  </data>
+  <data name="PtvsdIncompatibleEnvTitle" xml:space="preserve">
+    <value>Debugger is incompatible with this environment</value>
+  </data>
+  <data name="PtvsdIncompatibleEnvMessage" xml:space="preserve">
+    <value>The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.</value>
+  </data>
+  <data name="DisableExperimentalDebugger" xml:space="preserve">
+    <value>Disable the experimental debugger</value>
   </data>
   <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
     <value>This debug REPL feature is not supported with the experimental debugger.</value>
@@ -2263,7 +2284,10 @@ Expand selection to the full expression?</value>
     <value>Run Mypy</value>
     <comment>Mypy is a product name and should not be localized</comment>
   </data>
+  <data name="InstalledPtvsdOutdatedTitle" xml:space="preserve">
+    <value>Debugger package is outdated</value>
+  </data>
   <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
-    <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality</value>
+    <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.</value>
   </data>
 </root>
