@@ -85,6 +85,27 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void IsDebug() {
+            foreach (var test in new[] {
+                new { SourceFile = @"spam\abc.py", Expected = false },
+                new { SourceFile = @"spam\abc.pyd", Expected = false },
+                new { SourceFile = @"spam\abc.cp35-win32.pyd", Expected = false },
+                new { SourceFile = @"spam\abc.cpython-35d.pyd", Expected = true },  // not a real filename, but should match the tag still
+                new { SourceFile = @"spam\abc_d.pyd", Expected = true },
+                new { SourceFile = @"spam\abc_d.cp3-win_amd64.pyd", Expected = true },
+                new { SourceFile = @"spam\abc.cpython-35.so", Expected = false },
+                new { SourceFile = @"spam\abc.cpython-35u.so", Expected = false },
+                new { SourceFile = @"spam\abc.pypy-35m.so", Expected = false },
+                new { SourceFile = @"spam\abc.cpython-35d.so", Expected = true },
+                new { SourceFile = @"spam\abc.cpython-35dmu.so", Expected = true },
+                new { SourceFile = @"spam\abc.jython-35udm.dylib", Expected = true },
+                new { SourceFile = @"spam\abc.cpython-35umd.dylib", Expected = true },
+            }) {
+                Assert.AreEqual(test.Expected, new ModulePath("abc", test.SourceFile, null).IsDebug, test.SourceFile);
+            }
+        }
+
         /// <summary>
         /// Verify that the analyzer has the proper algorithm for turning a filename into a package name
         /// </summary>

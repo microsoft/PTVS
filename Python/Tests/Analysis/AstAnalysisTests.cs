@@ -629,6 +629,124 @@ class BankAccount(object):
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV37x64() => AstNativeBuiltinScrape(PythonPaths.Python37_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV36x64() => AstNativeBuiltinScrape(PythonPaths.Python36_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV35x64() => AstNativeBuiltinScrape(PythonPaths.Python35_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV34x64() => AstNativeBuiltinScrape(PythonPaths.Python34_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV33x64() => AstNativeBuiltinScrape(PythonPaths.Python33_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV32x64() => AstNativeBuiltinScrape(PythonPaths.Python32_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV31x64() => AstNativeBuiltinScrape(PythonPaths.Python31_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV27x64() => AstNativeBuiltinScrape(PythonPaths.Python27_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV26x64() => AstNativeBuiltinScrape(PythonPaths.Python26_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV37x86() => AstNativeBuiltinScrape(PythonPaths.Python37);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV36x86() => AstNativeBuiltinScrape(PythonPaths.Python36);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV35x86() => AstNativeBuiltinScrape(PythonPaths.Python35);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV34x86() => AstNativeBuiltinScrape(PythonPaths.Python34);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV33x86() => AstNativeBuiltinScrape(PythonPaths.Python33);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV32x86() => AstNativeBuiltinScrape(PythonPaths.Python32);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV31x86() => AstNativeBuiltinScrape(PythonPaths.Python31);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV27x86() => AstNativeBuiltinScrape(PythonPaths.Python27);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV26x86() => AstNativeBuiltinScrape(PythonPaths.Python26);
+
+
+        private void AstNativeBuiltinScrape(PythonVersion version) {
+            AstScrapedPythonModule.KeepAst = true;
+            version.AssertInstalled();
+            using (var analysis = CreateAnalysis(version)) {
+                try {
+                    var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                    var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                    var ctxt = interp.CreateModuleContext();
+
+                    var dllsDir = PathUtils.GetAbsoluteDirectoryPath(fact.Configuration.PrefixPath, "DLLs");
+                    if (!Directory.Exists(dllsDir)) {
+                        Assert.Inconclusive("Configuration does not have DLLs");
+                    }
+
+                    var report = new List<string>();
+                    var permittedImports = fact.GetLanguageVersion().Is2x() ?
+                        new[] { interp.BuiltinModuleName, "exceptions" } :
+                        new[] { interp.BuiltinModuleName };
+
+                    foreach (var pyd in PathUtils.EnumerateFiles(dllsDir, "*", recurse: false).Where(ModulePath.IsPythonFile)) {
+                        var mp = ModulePath.FromFullPath(pyd);
+                        if (mp.IsDebug) {
+                            continue;
+                        }
+
+                        Console.WriteLine("Importing {0} from {1}", mp.ModuleName, mp.SourceFile);
+                        var mod = interp.ImportModule(mp.ModuleName);
+                        Assert.IsInstanceOfType(mod, typeof(AstScrapedPythonModule));
+                        mod.Imported(ctxt);
+
+                        var modPath = fact.GetCacheFilePath(pyd);
+                        Assert.IsTrue(File.Exists(modPath), "No cache file created");
+                        _moduleCache = File.ReadAllText(modPath);
+
+                        var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
+                        foreach (var err in errors) {
+                            Console.WriteLine(err);
+                        }
+                        Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
+
+                        var ast = ((AstScrapedPythonModule)mod).Ast;
+
+                        
+                        var imports = ((Ast.SuiteStatement)ast.Body).Statements
+                            .OfType<Ast.ImportStatement>()
+                            .SelectMany(s => s.Names)
+                            .Select(n => n.MakeString())
+                            .Except(permittedImports)
+                            .ToArray();
+
+                        // We expect no imports (after excluding builtins)
+                        report.AddRange(imports.Select(n => $"{mp.ModuleName} imported {n}"));
+
+                        _moduleCache = null;
+                    }
+
+                    AssertUtil.ContainsExactly(report);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
         [TestMethod, TestCategory("60s"), Priority(0)]
         public async Task FullStdLibV37() {
             var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V37);
