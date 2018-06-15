@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -56,9 +55,43 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
-                Literals = true
+                Literals = true,
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
+
+            int index = Index;
+            int col = Position.Column;
+            while (CanBackUp(Tree, _node, _statement, _scope, col)) {
+                col -= 1;
+                index -= 1;
+                finder.Get(index, index, out _node, out _statement, out _scope);
+            }
+
+            _node = _node ?? (_statement as ExpressionStatement)?.Expression;
+        }
+
+        private static bool CanBackUp(PythonAst tree, Node node, Node statement, ScopeStatement scope, int column) {
+            if (node != null || (statement != null && !((statement as ExpressionStatement)?.Expression is ErrorExpression))) {
+                return false;
+            }
+
+            int top = 1;
+            if (scope != null) {
+                var scopeStart = scope.GetStart(tree);
+                if (scope.Body != null) {
+                    top = (scope.Body.GetEnd(tree).Line == scopeStart.Line) ?
+                        scope.Body.GetStart(tree).Column :
+                        scopeStart.Column;
+                } else {
+                    top = scopeStart.Column;
+                }
+            }
+
+            if (column <= top) {
+                return false;
+            }
+
+            return true;
         }
 
         private static readonly IEnumerable<CompletionItem> Empty = Enumerable.Empty<CompletionItem>();
@@ -507,6 +540,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
+            if (Node?.EndIndex < Index) {
+                return Empty;
+            }
+
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
                 if (ShouldIncludeStatementKeywords(Statement, Index)) {
@@ -668,6 +705,5 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return sb.ToString();
         }
-
     }
 }

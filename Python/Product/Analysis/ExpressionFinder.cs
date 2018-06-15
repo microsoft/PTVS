@@ -177,8 +177,10 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
+            public override bool Walk(ErrorExpression node) => Save(node, base.Walk(node), _options.Errors);
 
             public override bool Walk(AssignmentStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(ExpressionStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(RaiseStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
@@ -663,6 +665,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool FunctionDefinitionName { get; set; } = false;
         public bool ImportNames { get; set; } = false;
         public bool ImportAsNames { get; set; } = false;
+        public bool Errors { get; set; } = false;
 
         public GetExpressionOptions Clone() {
             return (GetExpressionOptions)MemberwiseClone();

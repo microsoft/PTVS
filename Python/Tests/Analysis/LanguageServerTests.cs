@@ -391,12 +391,15 @@ namespace AnalysisTests {
             var s = await CreateServer();
             Uri u;
 
-            u = await AddModule(s, "x = 1\nx. n\nx.(\nx(x.");
-            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "" }, new SourceLocation(2, 3));
-            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "" }, new SourceLocation(2, 4));
-            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "" }, new SourceLocation(2, 5));
-            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "" }, new SourceLocation(3, 3));
-            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "" }, new SourceLocation(4, 5));
+            u = await AddModule(s, "x = 1\nx. n\nx.(  )\nx(x.  )\nx.  \nx  ");
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 4));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(3, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(4, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(5, 4));
+            await AssertCompletion(s, u, new[] { "abs" }, new[] { "real", "imag" }, new SourceLocation(6, 2));
+            await AssertNoCompletion(s, u, new SourceLocation(6, 3));
         }
 
         [TestMethod, Priority(0)]

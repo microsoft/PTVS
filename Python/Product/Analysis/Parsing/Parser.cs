@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Parsing {
         // immutable properties:
         private readonly Tokenizer _tokenizer;
         private readonly List<List<TokenWithSpan>> _tokens;
+        private readonly List<TokenWithSpan> _statementTokens;
 
         // mutable properties:
         private ErrorSink _errors;
@@ -80,6 +81,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (keepTokens) {
                 _tokens = new List<List<TokenWithSpan>> { new List<TokenWithSpan>() };
             }
+            _statementTokens = new List<TokenWithSpan>();
 
             Reset(FutureOptions.None);
 
@@ -592,6 +594,8 @@ namespace Microsoft.PythonTools.Parsing {
         yield_stmt: 'yield' testlist
         */
         private Statement ParseSmallStmt() {
+            _statementTokens.Clear();
+
             switch (PeekToken().Kind) {
                 case TokenKind.KeywordPrint:
                     return ParsePrintStmt();
@@ -740,7 +744,7 @@ namespace Microsoft.PythonTools.Parsing {
             Debug.Assert(e != null); // caller already verified we have a yield.
 
             Statement s = new ExpressionStatement(e);
-            s.SetLoc(e.IndexSpan);
+            s.SetLoc(e.StartIndex, GetEndForStatement());
             return s;
         }
 
@@ -902,6 +906,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private ErrorExpression ReadLineAsError(Expression preceeding, string message) {
             var t = NextToken();
+
             Debug.Assert(t.Kind == TokenKind.Colon);
             var image = new StringBuilder();
             if (_verbatim) {
@@ -982,7 +987,7 @@ namespace Microsoft.PythonTools.Parsing {
                 hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
                     Statement stmt = new ExpressionStatement(ret);
-                    stmt.SetLoc(ret.IndexSpan);
+                    stmt.SetLoc(ret.StartIndex, GetEndForStatement());
                     return stmt;
                 }
             }
@@ -1034,7 +1039,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return aug;
                 } else {
                     Statement stmt = new ExpressionStatement(ret);
-                    stmt.SetLoc(ret.IndexSpan);
+                    stmt.SetLoc(ret.StartIndex, GetEndForStatement());
                     return stmt;
                 }
             }
@@ -2285,7 +2290,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 body = new ReturnStatement(expr);
             }
-            body.SetLoc(expr.StartIndex, expr.EndIndex);
+            body.SetLoc(expr.StartIndex, GetEndForStatement());
 
             FunctionDefinition func2 = PopFunction();
             System.Diagnostics.Debug.Assert(func == func2);
@@ -4837,7 +4842,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private int GetEndForStatement() {
             Debug.Assert(_token.Token != null, "No token fetched");
-            if (_lookahead.Token != null && _lookahead.Token.Kind == TokenKind.EndOfFile) {
+            if (_lookahead.Token?.Kind == TokenKind.EndOfFile) {
                 return _lookahead.Span.End;
             }
             return _token.Span.End;
@@ -4883,6 +4888,7 @@ namespace Microsoft.PythonTools.Parsing {
                     _tokens.Add(new List<TokenWithSpan>());
                 }
             }
+            _statementTokens.Add(_lookahead);
         }
 
         private bool PeekToken(TokenKind kind) {
