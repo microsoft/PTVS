@@ -385,6 +385,9 @@ namespace Microsoft.PythonTools.Repl {
             provider.MustBeCalledFromUIThread();
 
             var root = provider.GetPythonToolsService().InteractiveOptions.Scripts;
+            if (Path.GetInvalidPathChars().Any(c => root.Contains(c))) {
+                throw new DirectoryNotFoundException(root);
+            }
 
             if (string.IsNullOrEmpty(root)) {
                 try {
@@ -401,6 +404,10 @@ namespace Microsoft.PythonTools.Repl {
 
             string candidate;
             if (!string.IsNullOrEmpty(displayName)) {
+                foreach (var c in Path.GetInvalidFileNameChars()) {
+                    displayName = displayName.Replace(c, '_');
+                }
+
                 try {
                     candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
                 } catch (ArgumentException argEx) {
