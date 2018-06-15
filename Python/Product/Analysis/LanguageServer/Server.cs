@@ -180,14 +180,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc, keepTokens: true);
+                EnqueueItem(doc);
             }
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             _analyzerCreationTask.Wait();
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
-            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true, keepTokens: true));
+            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
@@ -525,7 +525,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true, bool keepTokens = false) {
+        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
                 Task<IAnalysisCookie> cookieTask;
@@ -537,7 +537,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return;
                     }
                     TraceMessage($"Parsing document {doc.DocumentUri}");
-                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion, keepTokens);
+                    cookieTask = _parseQueue.Enqueue(doc, _analyzer.LanguageVersion);
                 }
 
                 // The call must be fire and forget, but should not be yielding.

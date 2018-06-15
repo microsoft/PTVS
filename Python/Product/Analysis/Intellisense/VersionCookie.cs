@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public VersionCookie(int version) {
             Versions = new Dictionary<int, BufferVersion> {
-                [0] = new BufferVersion(version, null, null, null)
+                [0] = new BufferVersion(version, null, null)
             };
         }
 
@@ -97,21 +97,15 @@ namespace Microsoft.PythonTools.Intellisense {
         /// The diagnostic messages produced for this buffer
         /// </summary>
         public readonly IReadOnlyList<Analysis.LanguageServer.Diagnostic> Diagnostics;
-        /// <summary>
-        /// Optional cache of tokens from the parse.
-        /// </summary>
-        public readonly IReadOnlyList<IReadOnlyList<Parsing.TokenWithSpan>> Tokens;
 
         public BufferVersion(
             int version,
             PythonAst ast,
-            IEnumerable<Analysis.LanguageServer.Diagnostic> diagnostics,
-            IReadOnlyList<IReadOnlyList<Parsing.TokenWithSpan>> tokens
+            IEnumerable<Analysis.LanguageServer.Diagnostic> diagnostics
         ) {
             Version = version;
             Ast = ast;
             Diagnostics = diagnostics.MaybeEnumerate().ToArray();
-            Tokens = tokens;
         }
     }
 }

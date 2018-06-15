@@ -30,8 +30,6 @@ namespace Microsoft.PythonTools.Parsing {
     public class Parser {
         // immutable properties:
         private readonly Tokenizer _tokenizer;
-        private readonly List<List<TokenWithSpan>> _tokens;
-        private readonly List<TokenWithSpan> _statementTokens;
 
         // mutable properties:
         private ErrorSink _errors;
@@ -67,7 +65,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Construction
 
-        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs, string privatePrefix, bool keepTokens) {
+        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs, string privatePrefix) {
             Contract.Assert(tokenizer != null);
             Contract.Assert(errorSink != null);
 
@@ -78,10 +76,6 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
-            if (keepTokens) {
-                _tokens = new List<List<TokenWithSpan>> { new List<TokenWithSpan>() };
-            }
-            _statementTokens = new List<TokenWithSpan>();
 
             Reset(FutureOptions.None);
 
@@ -120,8 +114,7 @@ namespace Microsoft.PythonTools.Parsing {
                 version,
                 options.Verbatim,
                 options.BindReferences,
-                options.PrivatePrefix,
-                options.KeepTokens
+                options.PrivatePrefix
             ) { _stubFile = options.StubFile };
 
             return parser;
@@ -274,21 +267,6 @@ namespace Microsoft.PythonTools.Parsing {
 
         public void Reset() {
             Reset(_languageFeatures);
-        }
-
-        internal IReadOnlyList<IReadOnlyList<TokenWithSpan>> GetTokensInternal() => _tokens;
-
-        public IEnumerable<IReadOnlyList<KeyValuePair<SourceSpan, Token>>> GetTokens() {
-            if (_tokens == null) {
-                yield break;
-            }
-            var linelocs = _tokenizer.GetLineLocations();
-            foreach (var line in _tokens) {
-                yield return line.Select(t => new KeyValuePair<SourceSpan, Token>(
-                    new SourceSpan(NewLineLocation.IndexToLocation(linelocs, t.Span.Start), NewLineLocation.IndexToLocation(linelocs, t.Span.End)),
-                    t.Token
-                )).ToArray();
-            }
         }
 
         #endregion
@@ -594,8 +572,6 @@ namespace Microsoft.PythonTools.Parsing {
         yield_stmt: 'yield' testlist
         */
         private Statement ParseSmallStmt() {
-            _statementTokens.Clear();
-
             switch (PeekToken().Kind) {
                 case TokenKind.KeywordPrint:
                     return ParsePrintStmt();
@@ -4882,13 +4858,6 @@ namespace Microsoft.PythonTools.Parsing {
                 _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
                 _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
             }
-            if (_tokens != null) {
-                _tokens.Last().Add(_lookahead);
-                if (_lookahead.Token.Kind == TokenKind.NewLine || _lookahead.Token.Kind == TokenKind.NLToken) {
-                    _tokens.Add(new List<TokenWithSpan>());
-                }
-            }
-            _statementTokens.Add(_lookahead);
         }
 
         private bool PeekToken(TokenKind kind) {

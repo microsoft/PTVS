@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Task WaitForAllAsync() => _parsingInProgress.WaitForZeroAsync();
 
-        public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion, bool keepTokens = false) {
+        public Task<IAnalysisCookie> Enqueue(IDocument doc, PythonLanguageVersion languageVersion) {
             if (doc == null) {
                 throw new ArgumentNullException(nameof(doc));
             }
 
-            var task = new ParseTask(this, doc, languageVersion, keepTokens);
+            var task = new ParseTask(this, doc, languageVersion);
             try {
                 return _parsing.AddOrUpdate(doc.DocumentUri, task, (d, prev) => task.ContinueAfter(prev)).Start();
             } finally {
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private IPythonParse ParseWorker(IDocument doc, PythonLanguageVersion languageVersion, bool keepTokens) {
+        private IPythonParse ParseWorker(IDocument doc, PythonLanguageVersion languageVersion) {
             IPythonParse result = null;
 
             if (doc is IExternalProjectEntry externalEntry) {
@@ -70,14 +70,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             } else if (doc is IPythonProjectEntry pyEntry) {
                 var lastParse = pyEntry.GetCurrentParse();
-                result = ParsePythonEntry(pyEntry, languageVersion, lastParse?.Cookie as VersionCookie, keepTokens);
+                result = ParsePythonEntry(pyEntry, languageVersion, lastParse?.Cookie as VersionCookie);
             } else {
                 Debug.Fail($"Don't know how to parse {doc.GetType().FullName}");
             }
             return result;
         }
 
-        private IPythonParse ParsePythonEntry(IPythonProjectEntry entry, PythonLanguageVersion languageVersion, VersionCookie lastParseCookie, bool keepTokens) {
+        private IPythonParse ParsePythonEntry(IPythonProjectEntry entry, PythonLanguageVersion languageVersion, VersionCookie lastParseCookie) {
             PythonAst tree;
             var doc = (IDocument)entry;
             var buffers = new SortedDictionary<int, BufferVersion>();
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         continue;
                     }
 
-                    buffers[part] = ParsePython(r, entry, languageVersion, version, keepTokens);
+                    buffers[part] = ParsePython(r, entry, languageVersion, version);
                 }
             }
 
@@ -124,7 +124,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private readonly ParseQueue _queue;
             private readonly IDocument _document;
             private readonly PythonLanguageVersion _languageVersion;
-            private readonly bool _keepTokens;
 
             private readonly IPythonParse _parse;
 
@@ -142,11 +141,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private const int DISPOSED = 3;
             private int _state = UNSTARTED;
 
-            public ParseTask(ParseQueue queue, IDocument document, PythonLanguageVersion languageVersion, bool keepTokens) {
+            public ParseTask(ParseQueue queue, IDocument document, PythonLanguageVersion languageVersion) {
                 _queue = queue;
                 _document = document;
                 _languageVersion = languageVersion;
-                _keepTokens = keepTokens;
 
                 _queue._parsingInProgress.Increment();
                 _parse = (_document as IPythonProjectEntry)?.BeginParse();
@@ -211,7 +209,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 try {
-                    var r = _queue.ParseWorker(_document, _languageVersion, _keepTokens);
+                    var r = _queue.ParseWorker(_document, _languageVersion);
                     if (r != null && _parse != null) {
                         _parse.Tree = r.Tree;
                         _parse.Cookie = r.Cookie;
@@ -233,8 +231,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Stream stream,
             IPythonProjectEntry entry,
             PythonLanguageVersion languageVersion,
-            int version,
-            bool keepTokens
+            int version
         ) {
             var opts = new ParserOptions {
                 BindReferences = true,
@@ -253,12 +250,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            opts.KeepTokens = keepTokens;
-
             var parser = Parser.CreateParser(stream, languageVersion, opts);
             var tree = parser.ParseFile();
 
-            return new BufferVersion(version, tree, diags.MaybeEnumerate(), parser.GetTokensInternal());
+            return new BufferVersion(version, tree, diags.MaybeEnumerate());
         }
     }
 }
