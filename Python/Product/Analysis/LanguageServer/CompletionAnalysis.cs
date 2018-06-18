@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class CompletionAnalysis {
-        private readonly Node _node;
         private readonly Node _statement;
         private readonly ScopeStatement _scope;
         private readonly ILogger _log;
@@ -62,17 +61,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 Literals = true,
                 Errors = true
             });
-            finder.Get(Index, Index, out _node, out _statement, out _scope);
+
+            Node node;
+            finder.Get(Index, Index, out node, out _statement, out _scope);
 
             int index = Index;
             int col = Position.Column;
-            while (CanBackUp(Tree, _node, _statement, _scope, col)) {
+            while (CanBackUp(Tree, node, _statement, _scope, col)) {
                 col -= 1;
                 index -= 1;
-                finder.Get(index, index, out _node, out _statement, out _scope);
+                finder.Get(index, index, out node, out _statement, out _scope);
             }
 
-            _node = _node ?? (_statement as ExpressionStatement)?.Expression;
+            Node = node ?? (_statement as ExpressionStatement)?.Expression;
         }
 
         private static bool CanBackUp(PythonAst tree, Node node, Node statement, ScopeStatement scope, int column) {
@@ -110,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public bool? ShouldCommitByDefault { get; set; }
 
-        public Node Node => _node;
+        public Node Node { get; set; }
         public Node Statement => _statement;
         public ScopeStatement Scope => _scope;
         /// <summary>
@@ -183,7 +184,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (Node is MemberExpression me && me.Target != null && me.DotIndex > me.StartIndex && Index > me.DotIndex) {
                 _log.TraceMessage($"Completing expression {me.Target.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
                 ParentExpression = me.Target;
-                ApplicableSpan = new SourceSpan(Position, Position);
+                if (!string.IsNullOrEmpty(me.Name)) {
+                    Node = new NameExpression(me.Name);
+                    Node.SetLoc(me.NameHeader, me.NameHeader + me.Name.Length);
+                } else {
+                    Node = null;
+                }
+                ShouldCommitByDefault = true;
                 return Analysis.GetMembers(me.Target, Position, opts, null).Select(ToCompletionItem);
             }
             return null;
