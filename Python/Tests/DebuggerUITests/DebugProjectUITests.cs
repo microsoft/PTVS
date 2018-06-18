@@ -1040,6 +1040,7 @@ namespace DebuggerUITests {
 
         private static IDisposable SelectDefaultInterpreter(PythonVisualStudioApp app, string pythonVersion) {
             if (string.IsNullOrEmpty(pythonVersion)) {
+                // Test wants to use the existing global default
                 return new EmptyDisposable();
             }
 

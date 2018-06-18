@@ -262,13 +262,11 @@ namespace DebuggerUITestsRunner {
 
     [TestClass]
     public class DebugProjectUITestsExperimental27 : DebugProjectUITestsExperimental {
-        protected override bool UseVsCodeDebugger => true;
         protected override string Interpreter => "Python27|Python27_x64";
     }
 
     [TestClass]
     public class DebugProjectUITestsExperimental36 : DebugProjectUITestsExperimental {
-        protected override bool UseVsCodeDebugger => true;
         protected override string Interpreter => "Python36|Python36_x64";
     }
 }
