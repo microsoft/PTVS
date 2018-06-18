@@ -362,6 +362,12 @@ namespace AnalysisTests {
 
             u = await AddModule(s, "@");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 2));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\n");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\ndef f(): pass");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
         }
 
         [TestMethod, Priority(0)]
