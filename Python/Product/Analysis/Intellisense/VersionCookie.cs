@@ -98,7 +98,11 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public readonly IReadOnlyList<Analysis.LanguageServer.Diagnostic> Diagnostics;
 
-        public BufferVersion(int version, PythonAst ast, IEnumerable<Analysis.LanguageServer.Diagnostic> diagnostics) {
+        public BufferVersion(
+            int version,
+            PythonAst ast,
+            IEnumerable<Analysis.LanguageServer.Diagnostic> diagnostics
+        ) {
             Version = version;
             Ast = ast;
             Diagnostics = diagnostics.MaybeEnumerate().ToArray();

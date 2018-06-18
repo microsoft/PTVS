@@ -398,6 +398,22 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionAfterDot() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = 1\nx. n\nx.(  )\nx(x.  )\nx.  \nx  ");
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 4));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(3, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(4, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(5, 4));
+            await AssertCompletion(s, u, new[] { "abs" }, new[] { "real", "imag" }, new SourceLocation(6, 2));
+            await AssertNoCompletion(s, u, new SourceLocation(6, 3));
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionWithNewDot() {
             // LSP assumes that the text buffer is up to date with typing,
             // which means the language server must know about dot for a

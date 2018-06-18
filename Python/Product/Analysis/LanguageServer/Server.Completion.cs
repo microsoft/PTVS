@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
-            tree = GetParseTree(entry, uri, CancellationToken, out _) ?? tree;
+            tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
@@ -61,7 +61,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _commitByDefault = ctxt.ShouldCommitByDefault
             };
 
-            if (ctxt.Node != null) {
+            if (ctxt.ApplicableSpan.HasValue) {
+                res._applicableSpan = ctxt.ApplicableSpan;
+            } else if (ctxt.Node != null) {
                 var span = ctxt.Node.GetSpan(tree);
                 if (@params.context?.triggerKind == CompletionTriggerKind.TriggerCharacter) {
                     SourceLocation trigger = @params.position;

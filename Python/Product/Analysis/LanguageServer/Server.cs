@@ -208,6 +208,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
             var doc = _projectFiles.GetEntry(@params.textDocument.uri) as IDocument;
+
             if (doc != null) {
                 // No need to keep in-memory buffers now
                 doc.ResetDocument(-1, null);
@@ -304,6 +305,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #endregion
 
         #region Private Helpers
+
         private IProjectEntry RemoveEntry(Uri documentUri) {
             var entry = _projectFiles.RemoveEntry(documentUri);
             _openFiles.Remove(documentUri);
@@ -423,6 +425,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
             var item = _projectFiles.GetEntry(documentUri, throwIfMissing: false);
+
             if (item != null) {
                 return item;
             }
@@ -618,23 +621,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out int? version) {
-            version = null;
+        private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out BufferVersion bufferVersion) {
             PythonAst tree = null;
+            bufferVersion = null;
             var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
             if (parse != null) {
                 tree = parse.Tree ?? tree;
                 if (parse.Cookie is VersionCookie vc) {
-                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out var bv)) {
-                        tree = bv.Ast ?? tree;
-                        if (bv.Version >= 0) {
-                            version = bv.Version;
-                        }
+                    if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out bufferVersion)) {
+                        tree = bufferVersion.Ast ?? tree;
                     }
                 }
             }
             return tree;
         }
+
         #endregion
     }
 }
