@@ -420,6 +420,16 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionAfterAssign() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = x\ny = ");
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(1, 5));
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(2, 5));
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionWithNewDot() {
             // LSP assumes that the text buffer is up to date with typing,
             // which means the language server must know about dot for a

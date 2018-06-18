@@ -76,9 +76,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     res._applicableSpan = span;
                 }
             } else if (@params.context?.triggerKind == CompletionTriggerKind.TriggerCharacter) {
+                var ch = @params.context?.triggerCharacter.FirstOrDefault() ?? '\0';
                 res._applicableSpan = new SourceSpan(
                     trigger.Line,
-                    Math.Max(1, trigger.Column - 1),
+                    Tokenizer.IsIdentifierStartChar(ch) ? Math.Max(1, trigger.Column - 1) : trigger.Column,
                     trigger.Line,
                     trigger.Column
                 );
