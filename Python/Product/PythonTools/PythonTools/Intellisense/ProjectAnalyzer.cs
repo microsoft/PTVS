@@ -256,6 +256,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
 
+            var lso = _services.Python.LanguageServerOptions;
+            if (!string.IsNullOrEmpty(lso.TypeShedPath)) {
+                _analysisOptions.typeStubPaths = GetTypeShedPaths(lso.TypeShedPath, _interpreterFactory.Configuration.Version).ToArray();
+            }
+            lso.Changed += LanguageServerOptions_Changed;
+
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                     _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
@@ -310,9 +316,32 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
+        internal static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
+            var stdlib = Path.Combine(path, "stdlib");
+            var thirdParty = Path.Combine(path, "third_party");
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(stdlib, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = Path.Combine(thirdParty, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+        }
+
         public event EventHandler AnalyzerNeedsRestart;
 
         private void Factory_NewDatabaseAvailable(object sender, EventArgs e) {
+            AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void LanguageServerOptions_Changed(object sender, EventArgs e) {
             AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
         }
 
@@ -827,20 +856,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         Debug.WriteLine("Unknown file id for diagnostics event: {0}", diagnostics.documentUri);
                     }
                     break;
-                case AP.ChildFileAnalyzed.Name:
-                    var childFile = (AP.ChildFileAnalyzed)e.Event;
-
-                    if (!_projectFilesByUri.TryGetValue(childFile.documentUri, out entry)) {
-                        entry = new AnalysisEntry(
-                            this,
-                            childFile.filename,
-                            childFile.documentUri,
-                            false,
-                            false
-                        );
-                        _projectFilesByUri[childFile.documentUri] = _projectFiles[childFile.filename] = entry;
-                    }
-                    break;
                 case AP.AnalyzerWarningEvent.Name:
                     var warning = (AP.AnalyzerWarningEvent)e.Event;
                     _logger?.LogEvent(PythonLogEvent.AnalysisWarning, warning.message);
@@ -1321,7 +1336,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.SourceSpan.End;
+                var location = point.ToSourceLocation();
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
@@ -1346,13 +1361,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return null;
         }
-
-        /// <summary>
-        /// Gets a CompletionList providing a list of possible members the user can dot through.
-        /// </summary>
-        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) 
-            => GetStringLiteralCompletionCompletion(services, session, view, snapshot, span, options) ??
-               GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
@@ -1767,62 +1775,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 ShouldExecute = false;
                 return base.Walk(node);
             }
-        }
-
-        private static CompletionAnalysis GetStringLiteralCompletionCompletion(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
-            var buffer = snapshot.TextBuffer;
-            var classifier = buffer.GetPythonClassifier();
-            if (classifier == null) {
-                return null;
-            }
-
-            var snapSpan = span.GetSpan(snapshot);
-            var tokens = classifier.GetClassificationSpans(snapSpan);
-            var lastToken = tokens.LastOrDefault();
-            if (lastToken == null || !lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                return null;
-            }
-
-            // String completion
-            return span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber
-                ? new StringLiteralCompletionList(services, session, view, span, buffer, options)
-                : null;
-        }
-
-        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
-                // Cannot complete a word immediately after a space
-                session.ClearCompleteWordMode();
-            }
-
-            var bi = services.GetBufferInfo(snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
-            if (entry == null) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
-
-            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
-
-            return new NormalCompletionAnalysis(
-                services,
-                session,
-                view,
-                snapshot,
-                applicableSpan,
-                snapshot.TextBuffer,
-                options
-            );
-        }
-
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
-            var pos = loc.GetPosition(snapshot);
-            if (pos > 0) {
-                return snapshot.GetText(pos - 1, 1) == " ";
-            }
-            return false;
         }
 
         private static Stopwatch MakeStopWatch() {
@@ -2393,7 +2345,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             List<NavigationInfo> res = new List<NavigationInfo>();
-            foreach (var nav in navigations) {
+            foreach (var nav in navigations.OrderBy(n => n.name, CompletionComparer.UnderscoresLast)) {
                 // translate the span from the version we last parsed to the current version
 
                 var span = translator.Translate(

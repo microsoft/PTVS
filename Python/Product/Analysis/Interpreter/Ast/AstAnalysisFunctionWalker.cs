@@ -66,15 +66,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var self = GetSelf();
             _selfType = (self as AstPythonConstant)?.Type as AstPythonType;
 
-            if (_target.ReturnAnnotation != null) {
-                var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
-                var m = retAnn.GetValue(new AstTypeAnnotationConverter(_scope));
-                if (m is IPythonMultipleMembers mm) {
-                    _overload.ReturnTypes.AddRange(mm.Members.OfType<IPythonType>());
-                } else if (m is IPythonType type) {
-                    _overload.ReturnTypes.Add(type);
-                }
-            }
+            _overload.ReturnTypes.AddRange(_scope.GetTypesFromAnnotation(_target.ReturnAnnotation));
 
             _scope.PushScope();
             if (self != null) {

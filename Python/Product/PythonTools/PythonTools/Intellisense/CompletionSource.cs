@@ -67,16 +67,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             var textBuffer = _textBuffer;
-            var span = session.GetApplicableSpan(textBuffer);
             var triggerPoint = session.GetTriggerPoint(textBuffer);
-            var options = session.GetOptions(_provider._serviceProvider);
             var provider = _provider._pyService.GetCompletions(
                 session,
                 session.TextView,
                 textBuffer.CurrentSnapshot,
-                span,
-                triggerPoint,
-                options
+                triggerPoint
             );
 
             var completions = provider.GetCompletions(_provider._glyphService);

@@ -69,7 +69,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
-            _server.OnFileFound += OnFileFound;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -993,9 +992,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(FromImportStatement node) {
-                var name = node.Root.MakeString();
-                if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                    Imports.Add(MakeUnresolvedImport(name, node.Root));
+                var names = ModuleResolver.GetModuleNamesFromImport(_entry, node);
+                foreach (var n in names) {
+                    if (!_analyzer.IsModuleResolved(_entry, n, node.ForceAbsolute)) {
+                        Imports.Add(MakeUnresolvedImport(n, node.Root));
+                    }
                 }
                 return base.Walk(node);
             }
@@ -1272,7 +1273,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.AnalysisReference {
                 documentUri = r.uri,
-                file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
+                file = (_server.GetEntry(r.uri, throwIfMissing: false)?.FilePath) ?? r.uri?.LocalPath,
                 startLine = range.Start.Line,
                 startColumn = range.Start.Column,
                 endLine = range.End.Line,
@@ -1701,9 +1702,11 @@ namespace Microsoft.PythonTools.Intellisense {
             Project.Limits = new AnalysisLimits(Options.analysisLimits);
             _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
             _server._parseQueue.TaskCommentMap = Options.commentTokens;
+            _server._analyzer.SetTypeStubPaths(Options.typeStubPaths);
 
             return new Response();
         }
+
 
         public AP.AnalysisOptions Options { get; set; }
 
@@ -1809,14 +1812,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     version = e.version
                 }
             ).DoNotWait();
-        }
-
-        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
-            // Send a notification for this file
-            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = e.uri,
-                filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            }).DoNotWait();
         }
 
 

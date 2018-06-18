@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -27,10 +28,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
         private DocumentationBuilder _displayTextBuilder;
 
-        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -39,18 +37,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return EmptyHover;
+                return Task.FromResult(EmptyHover);
             }
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
 
             var index = tree.LocationToIndex(@params.position);
-            var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+            var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
-            if (!string.IsNullOrEmpty(w.ImportedName) &&
-                _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var doc = _displayTextBuilder.GetModuleDocumentation(modRef);
-                return new Hover { contents = doc };
+
+            if (w.ImportedModules.Any()) {
+                var sb = new StringBuilder();
+                foreach (var n in w.ImportedModules) {
+                    if (_analyzer.Modules.TryImport(n, out var modRef)) {
+                        if (sb.Length > 0) {
+                            sb.AppendLine();
+                            sb.AppendLine();
+                        }
+                        sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
+                    }
+                }
+                if (sb.Length > 0) {
+                    return Task.FromResult(new Hover { contents = sb.ToString() });
+                }
             }
 
             Expression expr;
@@ -63,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (expr == null) {
                 TraceMessage($"No hover info found in {uri} at {@params.position}");
-                return EmptyHover;
+                return Task.FromResult(EmptyHover);
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
@@ -86,10 +95,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     _displayTextBuilder.GetDocumentation(values, originalExpr),
                     _clientCaps.textDocument?.hover?.contentFormat),
                 range = exprSpan,
-                _version = version,
+                _version = version?.Version,
                 _typeNames = names
             };
-            return res;
+            return Task.FromResult(res);
         }
 
         private static string GetFullTypeName(AnalysisValue value) {

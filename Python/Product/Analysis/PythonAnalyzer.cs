@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly List<string> _searchPaths = new List<string>();
+        private readonly List<string> _typeStubPaths = new List<string>();
         private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
@@ -356,132 +357,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if the module was imported during analysis; otherwise, false.
         /// </returns>
         public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
-            ModuleReference moduleRef;
-            return ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
-                .Any(m => Modules.TryImport(m, out moduleRef));
+            var unresolved = importFrom.GetModuleInfo()?.GetAllUnresolvedModules();
+            if (unresolved == null || unresolved.Count == 0) {
+                return true;
+            }
+            var names = ModuleResolver.ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports);
+            return names.All(n => !unresolved.Contains(n));
         }
-
-        /// <summary>
-        /// Returns a sequence of candidate absolute module names for the given
-        /// modules.
-        /// </summary>
-        /// <param name="importingFrom">
-        /// The project entry that is importing the module.
-        /// </param>
-        /// <param name="relativeModuleName">
-        /// A dotted name identifying the path to the module.
-        /// </param>
-        /// <returns>
-        /// A sequence of strings representing the absolute names of the module
-        /// in order of precedence.
-        /// </returns>
-        internal static IEnumerable<string> ResolvePotentialModuleNames(
-            IPythonProjectEntry importingFrom,
-            string relativeModuleName,
-            bool absoluteImports
-        ) {
-            return ResolvePotentialModuleNames(
-                importingFrom?.ModuleName,
-                importingFrom?.FilePath,
-                relativeModuleName,
-                absoluteImports
-            );
-        }
-
-        /// <summary>
-        /// Returns a sequence of candidate absolute module names for the given
-        /// modules.
-        /// </summary>
-        /// <param name="importingFromModuleName">
-        /// The module that is importing the module.
-        /// </param>
-        /// <param name="importingFromFilePath">
-        /// The path to the file that is importing the module.
-        /// </param>
-        /// <param name="relativeModuleName">
-        /// A dotted name identifying the path to the module.
-        /// </param>
-        /// <returns>
-        /// A sequence of strings representing the absolute names of the module
-        /// in order of precedence.
-        /// </returns>
-        internal static IEnumerable<string> ResolvePotentialModuleNames(
-            string importingFromModuleName,
-            string importingFromFilePath,
-            string relativeModuleName,
-            bool absoluteImports
-        ) {
-            string importingFrom = null;
-            if (!string.IsNullOrEmpty(importingFromModuleName)) {
-                importingFrom = importingFromModuleName;
-                if (!string.IsNullOrEmpty(importingFromFilePath) && ModulePath.IsInitPyFile(importingFromFilePath)) {
-                    if (string.IsNullOrEmpty(importingFrom)) {
-                        importingFrom = "__init__";
-                    } else {
-                        importingFrom += ".__init__";
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty(relativeModuleName)) {
-                yield break;
-            }
-
-            // Handle relative module names
-            if (relativeModuleName.FirstOrDefault() == '.') {
-                if (string.IsNullOrEmpty(importingFrom)) {
-                    // No source to import relative to.
-                    yield break;
-                }
-
-                var prefix = importingFrom.Split('.');
-
-                if (relativeModuleName.All(c => c == '.')) {
-                    // The whole name is dots, so there's nothing to concatenate.
-                    yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
-                } else {
-                    // Assume trailing dots are not part of the import
-                    var suffix = relativeModuleName.TrimEnd('.').Split('.');
-                    var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
-                    if (dotCount < prefix.Length) {
-                        // If we have as many dots as prefix parts, the entire
-                        // name will disappear. Despite what PEP 328 says, in
-                        // reality this means the import will fail.
-                        yield return string.Join(".", prefix.Take(prefix.Length - dotCount).Concat(suffix.Skip(dotCount)));
-                    }
-                }
-                yield break;
-            }
-
-            // The two possible names that can be imported here are:
-            // * relativeModuleName
-            // * importingFrom.relativeModuleName
-            // and the order they are returned depends on whether
-            // absolute_import is enabled or not.
-
-            // Assume trailing dots are not part of the import
-            relativeModuleName = relativeModuleName.TrimEnd('.');
-
-            // With absolute_import, we treat the name as complete first.
-            if (absoluteImports) {
-                yield return relativeModuleName;
-            }
-
-            if (!string.IsNullOrEmpty(importingFrom)) {
-                var prefix = importingFrom.Split('.');
-
-                if (prefix.Length > 1) {
-                    var adjacentModuleName = string.Join(".", prefix.Take(prefix.Length - 1)) + "." + relativeModuleName;
-                    yield return adjacentModuleName;
-                }
-            }
-
-            // Without absolute_import, we treat the name as complete last.
-            if (!absoluteImports) {
-                yield return relativeModuleName;
-            }
-        }
-
 
         /// <summary>
         /// Gets a top-level list of all the available modules as a list of MemberResults.
@@ -735,13 +617,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// This property is thread safe.
         /// </summary>
-        public IEnumerable<string> AnalysisDirectories {
-            get {
-                lock (_searchPaths) {
-                    return _searchPaths.ToArray();
-                }
-            }
-        }
+        public IEnumerable<string> AnalysisDirectories => _searchPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Gets the list of directories which should be searched for type stubs.
+        /// 
+        /// This property is thread safe.
+        /// </summary>
+        public IEnumerable<string> TypeStubDirectories => _typeStubPaths.AsLockedEnumerable().ToArray();
 
         public AnalysisLimits Limits {
             get { return _limits; }
@@ -901,39 +784,34 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var attrType = attr.GetType();
-            if (attr is IPythonType) {
-                return GetBuiltinType((IPythonType)attr);
-            } else if (attr is IPythonFunction) {
-                var bf = (IPythonFunction)attr;
-                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this)) ?? _noneInst;
-            } else if (attr is IPythonMethodDescriptor) {
+            if (attr is IPythonType pt) {
+                return GetBuiltinType(pt);
+            } else if (attr is IPythonFunction pf) {
+                return GetCached(attr, () => new BuiltinFunctionInfo(pf, this)) ?? _noneInst;
+            } else if (attr is IPythonMethodDescriptor md) {
                 return GetCached(attr, () => {
-                    var md = (IPythonMethodDescriptor)attr;
                     if (md.IsBound) {
                         return new BuiltinFunctionInfo(md.Function, this);
                     } else {
                         return new BuiltinMethodInfo(md, this);
                     }
                 }) ?? _noneInst;
-            } else if (attr is IPythonBoundFunction) {
-                return GetCached(attr, () => new BoundBuiltinMethodInfo((IPythonBoundFunction)attr, this)) ?? _noneInst;
-            } else if (attr is IBuiltinProperty) {
-                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonModule) {
-                return _modules.GetBuiltinModule((IPythonModule)attr);
-            } else if (attr is IPythonEvent) {
-                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this)) ?? _noneInst;
-            } else if (attr is IPythonConstant) {
-                return GetConstant((IPythonConstant)attr).First();
-            } else if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
-                        attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double) ||
-                        attr == null) {
+            } else if (attr is IPythonBoundFunction pbf) {
+                return GetCached(attr, () => new BoundBuiltinMethodInfo(pbf, this)) ?? _noneInst;
+            } else if (attr is IBuiltinProperty bp) {
+                return GetCached(attr, () => new BuiltinPropertyInfo(bp, this)) ?? _noneInst;
+            } else if (attr is IPythonModule pm) {
+                return _modules.GetBuiltinModule(pm);
+            } else if (attr is IPythonEvent pe) {
+                return GetCached(attr, () => new BuiltinEventInfo(pe, this)) ?? _noneInst;
+            } else if (attr is IPythonConstant ||
+                       attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
+                       attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double)) {
                 return GetConstant(attr).First();
-            } else if (attr is IMemberContainer) {
-                return GetCached(attr, () => new ReflectedNamespace((IMemberContainer)attr, this));
-            } else if (attr is IPythonMultipleMembers) {
-                IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
-                var members = multMembers.Members;
+            } else if (attr is IMemberContainer mc) {
+                return GetCached(attr, () => new ReflectedNamespace(mc, this));
+            } else if (attr is IPythonMultipleMembers mm) {
+                var members = mm.Members;
                 return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
                         ClassInfos[BuiltinTypeId.NoneType].Instance
@@ -985,14 +863,25 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        internal IAnalysisSet GetConstant(IPythonConstant value) {
-            object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
-        }
-
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
+            return GetCached(key, () => {
+                var constant = value as IPythonConstant;
+                var constantType = constant?.Type;
+                var av = GetAnalysisValueFromObjectsThrowOnNull(constantType ?? GetTypeFromObject(value));
+
+                if (av is ConstantInfo ci) {
+                    return ci;
+                }
+
+                if (av is BuiltinClassInfo bci) {
+                    if (constant == null) {
+                        return new ConstantInfo(bci, value, PythonMemberType.Constant);
+                    }
+                    return bci.Instance;
+                }
+                return _noneInst;
+            }) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {
@@ -1071,11 +960,7 @@ namespace Microsoft.PythonTools.Analysis {
             _reportQueueInterval = interval;
         }
 
-        public IReadOnlyList<string> GetSearchPaths() {
-            lock (_searchPaths) {
-                return _searchPaths.ToArray();
-            }
-        }
+        public IReadOnlyList<string> GetSearchPaths() => _searchPaths.AsLockedEnumerable().ToArray();
 
         /// <summary>
         /// Sets the search paths for this analyzer, invoking callbacks for any
@@ -1084,7 +969,21 @@ namespace Microsoft.PythonTools.Analysis {
         public void SetSearchPaths(IEnumerable<string> paths) {
             lock (_searchPaths) {
                 _searchPaths.Clear();
-                _searchPaths.AddRange(paths);
+                _searchPaths.AddRange(paths.MaybeEnumerate());
+            }
+            SearchPathsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IReadOnlyList<string> GetTypeStubPaths() => _typeStubPaths.AsLockedEnumerable().ToArray();
+
+        /// <summary>
+        /// Sets the type stub search paths for this analyzer, invoking callbacks for any
+        /// path added or removed.
+        /// </summary>
+        public void SetTypeStubPaths(IEnumerable<string> paths) {
+            lock (_typeStubPaths) {
+                _typeStubPaths.Clear();
+                _typeStubPaths.AddRange(paths.MaybeEnumerate());
             }
             SearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }

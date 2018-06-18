@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -44,12 +45,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            if (type == _scope._unknownType) {
+                return null;
+            }
+
             var n = GetName(type);
             if (!string.IsNullOrEmpty(n)) {
                 return AsIPythonType(_scope.LookupNameInScopes(n));
             }
 
             return type;
+        }
+
+        private IEnumerable<IPythonType> FinalizeList(IPythonType type) {
+            if (type is UnionType ut) {
+                foreach (var t in ut.Types.MaybeEnumerate()) {
+                    yield return Finalize(t);
+                }
+                yield break;
+            }
+
+            yield return Finalize(type);
         }
 
         public override IPythonType LookupName(string name) {
@@ -91,13 +107,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             switch (baseType.Name) {
                 case "Tuple":
-                    return MakeSequenceType(BuiltinTypeId.Tuple, args);
+                case "Sequence":
+                    return MakeSequenceType(BuiltinTypeId.Tuple, BuiltinTypeId.TupleIterator, args);
                 case "List":
-                    return MakeSequenceType(BuiltinTypeId.List, args);
+                    return MakeSequenceType(BuiltinTypeId.List, BuiltinTypeId.ListIterator, args);
                 case "Set":
-                    return MakeSequenceType(BuiltinTypeId.Set, args);
+                    return MakeSequenceType(BuiltinTypeId.Set, BuiltinTypeId.SetIterator, args);
+                case "Iterable":
+                    return MakeIterableType(args);
+                case "Iterator":
+                    return MakeIteratorType(args);
+                case "Dict":
+                case "Mapping":
+                    return MakeLookupType(BuiltinTypeId.Dict, args);
                 case "Optional":
                     return Finalize(args.FirstOrDefault()) ?? _scope._unknownType;
+                case "Union":
+                    return MakeUnion(args);
+                case "Type":
+                    return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Type);
                 // TODO: Other types
                 default:
                     Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);
@@ -107,10 +135,53 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return baseType;
         }
 
-        private IPythonType MakeSequenceType(BuiltinTypeId typeId, IReadOnlyList<IPythonType> types) {
+        private IPythonType MakeSequenceType(BuiltinTypeId typeId, BuiltinTypeId iterTypeId, IReadOnlyList<IPythonType> types) {
             var res = _scope.Interpreter.GetBuiltinType(typeId);
             if (types.Count > 0) {
-                res = new AstPythonSequence(res, _scope.Module, types.Select(Finalize));
+                var iterRes = _scope.Interpreter.GetBuiltinType(iterTypeId);
+                res = new AstPythonSequence(res, _scope.Module, types.Select(Finalize), new AstPythonIterator(iterRes, types, _scope.Module));
+            }
+            return res;
+        }
+
+        private IPythonType MakeIterableType(IReadOnlyList<IPythonType> types) {
+            var iterator = MakeIteratorType(types);
+            var bti = BuiltinTypeId.List;
+            switch (iterator.TypeId) {
+                case BuiltinTypeId.BytesIterator:
+                    bti = BuiltinTypeId.Bytes;
+                    break;
+                case BuiltinTypeId.UnicodeIterator:
+                    bti = BuiltinTypeId.Unicode;
+                    break;
+            }
+
+            return new AstPythonIterable(_scope.Interpreter.GetBuiltinType(bti), types, iterator, _scope.Module);
+        }
+
+        private IPythonType MakeIteratorType(IReadOnlyList<IPythonType> types) {
+            var bti = BuiltinTypeId.ListIterator;
+            if (types.Any(t => t.TypeId == BuiltinTypeId.Bytes)) {
+                bti = BuiltinTypeId.BytesIterator;
+            } else if (types.Any(t => t.TypeId == BuiltinTypeId.Unicode)) {
+                bti = BuiltinTypeId.UnicodeIterator;
+            }
+
+            return new AstPythonIterator(_scope.Interpreter.GetBuiltinType(bti), types, _scope.Module);
+        }
+
+        private IPythonType MakeLookupType(BuiltinTypeId typeId, IReadOnlyList<IPythonType> types) {
+            var res = _scope.Interpreter.GetBuiltinType(typeId);
+            if (types.Count > 0) {
+                var keys = FinalizeList(types.ElementAtOrDefault(0));
+                res = new AstPythonLookup(
+                    res,
+                    _scope.Module,
+                    keys,
+                    FinalizeList(types.ElementAtOrDefault(1)),
+                    null,
+                    new AstPythonIterator(_scope.Interpreter.GetBuiltinType(BuiltinTypeId.DictKeys), keys, _scope.Module)
+                );
             }
             return res;
         }

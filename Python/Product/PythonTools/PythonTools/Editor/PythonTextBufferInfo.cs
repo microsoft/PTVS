@@ -190,7 +190,12 @@ namespace Microsoft.PythonTools.Editor {
 
             var path = Filename;
             if (!string.IsNullOrEmpty(path)) {
-                return new Uri(path);
+                try {
+                    return new Uri(path);
+                } catch (UriFormatException ex) {
+                    Debug.Fail("{0} is not a valid URI.{1}{2}".FormatInvariant(path, Environment.NewLine, ex.ToUnhandledExceptionMessage(GetType())));
+                    return null;
+                }
             }
 
             var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;

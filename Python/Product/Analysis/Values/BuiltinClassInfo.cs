@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
@@ -116,6 +117,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (_type.TypeId == BuiltinTypeId.Str || _type.TypeId == BuiltinTypeId.Unicode || _type.TypeId == BuiltinTypeId.Bytes) {
                 return new SequenceBuiltinInstanceInfo(this, true, true);
             } else if (_type.TypeId == BuiltinTypeId.Tuple || _type.TypeId == BuiltinTypeId.List) {
+                Debug.Fail("Overloads should have been called here");
+                // But we fall back to the old type anyway
                 return new SequenceBuiltinInstanceInfo(this, false, false);
             }
 
@@ -132,7 +135,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var ctors = _type.GetConstructors();
 
                 if (ctors != null) {
-                    return ctors.Overloads.Select(ctor => new BuiltinFunctionOverloadResult(ProjectState, ctor, 1, _type.Name, () => Documentation));
+                    return ctors.Overloads.Select(ctor => new BuiltinFunctionOverloadResult(ProjectState, _type.Name, ctor, 1, () => Documentation));
                 }
                 return new OverloadResult[0];
             }
@@ -236,7 +239,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+        public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, _type.IsBuiltin ? "type " : "class ");
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, string.Empty);

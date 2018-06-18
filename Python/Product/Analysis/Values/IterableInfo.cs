@@ -122,11 +122,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             if (IndexTypes.Length == 0) {
+                if (unit.ForEval) {
+                    return AnalysisSet.Empty;
+                }
                 IndexTypes = new[] { new VariableDef() };
                 IndexTypes[0].AddDependency(unit);
                 return AnalysisSet.Empty;
-            } else {
-                IndexTypes[0].AddDependency(unit);
+            } else if (!unit.ForEval) {
+                foreach (var v in IndexTypes) {
+                    v.AddDependency(unit);
+                }
             }
 
             return base.GetEnumeratorTypes(node, unit);

@@ -19,8 +19,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.AnacondaInstallLauncher {
     class Program {
@@ -30,8 +32,8 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
         static int PrintUsage() {
             var name = Path.GetFileName(typeof(Program).Assembly.Location);
             var spaces = new string(' ', name.Length);
-            Console.Error.WriteLine("{0} install [installer] [target directory]", name);
-            Console.Error.WriteLine("{0} uninstall [uninstaller] [target directory]", spaces);
+            Console.Error.WriteLine("{0} install [installer] [target directory] [regkey@name=value]", name);
+            Console.Error.WriteLine("{0} uninstall [uninstaller] [target directory] [regkey]", spaces);
             Console.Error.WriteLine();
             return ERROR_INVALID_PARAMETER;
         }
@@ -40,7 +42,7 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
             Program p;
 
             try {
-                p = new Program(args[0], args[1], args[2]);
+                p = new Program(args[0], args[1], args[2], args.ElementAtOrDefault(3));
 #if DEBUG
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex);
@@ -62,10 +64,10 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
         }
 
         private readonly bool _install;
-        private readonly string _installer, _targetDir;
+        private readonly string _installer, _targetDir, _regKey, _regValueName, _regValue;
         private bool _cancel;
 
-        private Program(string command, string installer, string targetDir) {
+        private Program(string command, string installer, string targetDir, string registryValue) {
             _targetDir = GetFullPath(targetDir);
             _installer = GetFullPath(installer);
             if (!File.Exists(_installer)) {
@@ -73,6 +75,13 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 throw new FileNotFoundException(_installer);
             }
             _install = command.Equals("install", StringComparison.OrdinalIgnoreCase);
+
+            var m = Regex.Match(registryValue ?? "", @"^(?<key>[^@]+)(@(?<name>.+)=(?<value>.+))?$");
+            if (m.Success) {
+                _regKey = m.Groups["key"].Value;
+                _regValueName = m.Groups["name"].Value;
+                _regValue = m.Groups["value"].Value;
+            }
         }
 
         private static string GetFullPath(string path) {
@@ -128,6 +137,13 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
                 return ERROR_INSTALL_CANCEL;
             }
 
+            if (!string.IsNullOrEmpty(_regKey) && !string.IsNullOrEmpty(_regValueName) && !string.IsNullOrEmpty(_regValue)) {
+                Console.Error.WriteLine("Setting {0}@{1} to '{2}'", _regKey, _regValueName, _regValue);
+                using (var key = Registry.LocalMachine.CreateSubKey(_regKey)) {
+                    key?.SetValue(_regValueName, _regValue);
+                }
+            }
+
             var p = Run(_installer,
                 // We do not quote the target directory here, because the Anaconda installer requires it to be unquoted
                 // (also last on the command line - everything after "/D=" is treated as a directory)
@@ -137,6 +153,14 @@ namespace Microsoft.PythonTools.AnacondaInstallLauncher {
         }
 
         int DoUninstall() {
+            if (!string.IsNullOrEmpty(_regKey)) {
+                try {
+                    Registry.LocalMachine.DeleteSubKeyTree(_regKey, false);
+                } catch (Exception ex) {
+                    Console.Error.WriteLine("Error deleting {0}: {1}", _regKey, ex);
+                }
+            }
+
             var p = Run(_installer, "/S");
 
             if (p.WaitForExit(30000)) {

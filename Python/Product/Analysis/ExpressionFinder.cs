@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 if (baseWalk && ifTrue) {
-                    Expression = node;
+                    Expression = (node is ModuleName m && m.Names != null) ? m.Names.FirstOrDefault() : node;
                 }
                 return baseWalk;
             }
@@ -177,8 +177,10 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
+            public override bool Walk(ErrorExpression node) => Save(node, base.Walk(node), _options.Errors);
 
             public override bool Walk(AssignmentStatement node) => SaveStmt(node, base.Walk(node));
+            public override bool Walk(ExpressionStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(ForStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(RaiseStatement node) => SaveStmt(node, base.Walk(node));
             public override bool Walk(WithStatement node) => SaveStmt(node, base.Walk(node));
@@ -223,15 +225,13 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(MemberExpression node) {
                 if (base.Walk(node)) {
-                    if (Location >= node.NameHeader && _endLocation <= node.EndIndex) {
-                        if (_options.MemberName) {
-                            var nameNode = new NameExpression(node.Name);
-                            nameNode.SetLoc(node.NameHeader, node.EndIndex);
-                            Expression = nameNode;
-                            return false;
-                        } else if (_options.Members) {
-                            Expression = node;
-                        }
+                    if (_options.MemberName && Location > node.DotIndex && _endLocation <= node.EndIndex) {
+                        var nameNode = new NameExpression(node.Name);
+                        nameNode.SetLoc(node.NameHeader, node.EndIndex);
+                        Expression = nameNode;
+                        return false;
+                    } else if (_options.Members) {
+                        Expression = node;
                     }
                     return true;
                 }
@@ -663,6 +663,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool FunctionDefinitionName { get; set; } = false;
         public bool ImportNames { get; set; } = false;
         public bool ImportAsNames { get; set; } = false;
+        public bool Errors { get; set; } = false;
 
         public GetExpressionOptions Clone() {
             return (GetExpressionOptions)MemberwiseClone();

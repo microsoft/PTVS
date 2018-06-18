@@ -19,20 +19,23 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonSequence : IPythonSequenceType {
+    class AstPythonSequence : IPythonSequenceType, IPythonIterableType {
         private readonly IPythonType _sequenceType;
 
         public AstPythonSequence(
             IPythonType sequenceType,
             IPythonModule declaringModule,
-            IEnumerable<IPythonType> contents
+            IEnumerable<IPythonType> contents,
+            IPythonType iteratorBase
         ) {
             _sequenceType = sequenceType;
             IndexTypes = (contents ?? throw new ArgumentNullException(nameof(contents))).ToArray();
             DeclaringModule = declaringModule;
+            IteratorType = new AstPythonIterator(iteratorBase, IndexTypes, declaringModule);
         }
 
         public IEnumerable<IPythonType> IndexTypes { get; }
+        public IPythonIteratorType IteratorType { get; }
         public IPythonModule DeclaringModule { get; }
 
         public string Name => _sequenceType?.Name ?? "tuple";

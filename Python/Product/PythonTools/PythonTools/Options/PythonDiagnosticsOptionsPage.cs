@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Options {
         private PythonDiagnosticsOptionsControl _window;
 
         // replace the default UI of the dialog page w/ our own UI.
-        protected override System.Windows.Forms.IWin32Window Window {
+        protected override IWin32Window Window {
             get {
                 if (_window == null) {
                     _window = new PythonDiagnosticsOptionsControl();
@@ -53,16 +53,12 @@ namespace Microsoft.PythonTools.Options {
             PyService.DiagnosticsOptions.Load();
 
             // Synchronize UI with backing properties.
-            if (_window != null) {
-                _window.SyncControlWithPageSettings(PyService);
-            }
+            _window?.SyncControlWithPageSettings(PyService);
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
-            if (_window != null) {
-                _window.SyncPageWithControlSettings(PyService);
-            }
+            _window?.SyncPageWithControlSettings(PyService);
 
             PyService.DiagnosticsOptions.Save();
         }
@@ -82,13 +78,20 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void SaveToFile(bool includeAnalysisLogs) {
-            var path = PyService.Site.BrowseForFileSave(
-                _window.Handle,
-                Strings.DiagnosticsWindow_TextFileFilter,
-                PathUtils.GetAbsoluteFilePath(
+            string initialPath = null;
+            try {
+                initialPath = PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     Strings.DiagnosticsWindow_DefaultFileName.FormatUI(DateTime.Now)
-                )
+                );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+
+            var path = Site.BrowseForFileSave(
+                _window.Handle,
+                Strings.DiagnosticsWindow_TextFileFilter,
+                initialPath
             );
 
             if (string.IsNullOrEmpty(path)) {
@@ -104,7 +107,7 @@ namespace Microsoft.PythonTools.Options {
                                 PyService.GetDiagnosticsLog(log, includeAnalysisLogs);
                             }
                         },
-                        PyService.Site,
+                        Site,
                         Strings.ProductTitle,
                         Strings.FailedToSaveDiagnosticInfo,
                         Strings.ErrorDetail,
@@ -113,7 +116,7 @@ namespace Microsoft.PythonTools.Options {
                     );
 
                     if (File.Exists(path)) {
-                        Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path)).Dispose();
+                        Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path))?.Dispose();
                     }
                 } catch (OperationCanceledException) {
                 }

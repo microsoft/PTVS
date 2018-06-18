@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription {
+    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription, IHasQualifiedName {
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
         private readonly Lazy<IAnalysisSet> _returnTypes;
@@ -142,6 +142,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override PythonMemberType MemberType => Function.MemberType;
+
+        public string FullyQualifiedName => FullyQualifiedNamePair.CombineNames();
+        public KeyValuePair<string, string> FullyQualifiedNamePair => (Function as IHasQualifiedName)?.FullyQualifiedNamePair ??
+            new KeyValuePair<string, string>(DeclaringModule?.ModuleName, Name);
+
         public override ILocatedMember GetLocatedMember() => Function as ILocatedMember;
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {

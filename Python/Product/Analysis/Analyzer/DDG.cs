@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -275,16 +274,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             bool added = false;
             if (attributes == null) {
                 if (analysisMod != null) {
-                    added = variable.AddTypes(_unit, analysisMod);
+                    added = Assign(variable, analysisMod, node);
                 }
             } else {
                 var value = userMod.GetModuleMember(node, _unit, attributes[0], true, Scope, addLink ? assignName : null);
-
                 foreach (var n in attributes.Skip(1)) {
                     value = value.GetMember(node, _unit, n);
                 }
 
-                added = variable.AddTypes(_unit, value);
+                added = Assign(variable, value, node);
             }
 
             if (added) {
@@ -292,6 +290,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 GlobalScope.ModuleDefinition.EnqueueDependents();
             }
 
+            return added;
+        }
+
+        private bool Assign(VariableDef variable, IAnalysisSet value, Node locationNode) {
+            var added = variable.AddTypes(_unit, value);
+            if (added) {
+                variable.AddAssignment(new EncodedLocation(_unit, locationNode), _unit.ProjectEntry);
+            }
             return added;
         }
 
@@ -360,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            var candidates = PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
+            var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
             foreach (var name in candidates) {
                 if (ProjectState.Modules.TryImport(name, out moduleRef)) {
                     return true;
@@ -386,7 +392,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
             }
-
             return moduleRef?.Module != null;
         }
 
@@ -394,7 +399,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var result = new List<AnalysisValue>();
             foreach (var b in bases) {
                 foreach (var curType in b) {
-                    BuiltinClassInfo klass = curType as BuiltinClassInfo;
+                    var klass = curType as BuiltinClassInfo;
                     if (klass != null) {
                         var value = klass.GetMember(node, unit, name);
                         if (value != null) {
@@ -464,8 +469,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(ImportStatement node) {
-            int len = Math.Min(node.Names.Count, node.AsNames.Count);
-            for (int i = 0; i < len; i++) {
+            var len = Math.Min(node.Names.Count, node.AsNames.Count);
+            for (var i = 0; i < len; i++) {
                 var curName = node.Names[i];
                 var asName = node.AsNames[i];
 
@@ -512,7 +517,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 if (userMod != null) {
                     userMod.Imported(_unit);
-
                     AssignImportedModule(nameNode, modRef, bits, saveName);
                 }
             }

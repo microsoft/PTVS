@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var seqInfo = klass as SequenceBuiltinClassInfo;
             if (seqInfo != null) {
-                UnionType = seqInfo.IndexTypes;
+                UnionType = AnalysisSet.UnionAll(seqInfo.IndexTypes);
             } else if (sequenceOfSelf) {
                 UnionType = SelfSet;
             } else {
@@ -50,6 +50,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            if (ClassInfo is SequenceBuiltinClassInfo seq && seq.IndexTypes?.Count > 0) {
+                int? constIndex = SequenceInfo.GetConstantIndex(index);
+
+                if (constIndex != null) {
+                    if (constIndex.Value < 0) {
+                        constIndex += seq.IndexTypes.Count;
+                    }
+                    if (0 <= constIndex.Value && constIndex.Value < seq.IndexTypes.Count) {
+                        return seq.IndexTypes[constIndex.Value];
+                    }
+                }
+
+                if (index.Split(out IReadOnlyList<SliceInfo> sliceInfo, out _)) {
+                    return this.SelfSet;
+                }
+            }
+
             return UnionType;
         }
 

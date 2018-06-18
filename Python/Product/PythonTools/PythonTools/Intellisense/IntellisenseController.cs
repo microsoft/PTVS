@@ -440,14 +440,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.Span;
         }
 
-        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs, SnapshotSpan span) {
-            if (!prefs.AutoListMembers) {
-                return false;
-            }
-
-            return StringLiteralCompletionList.CanComplete(span.GetText());
-        }
-
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
@@ -1114,7 +1106,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.RETURN:
                             if (_services.Python.AdvancedOptions.EnterCommitsIntellisense &&
                                 !session.IsDismissed &&
-                                session.SelectedCompletionSet.SelectionStatus.IsSelected) {
+                                (session.SelectedCompletionSet?.SelectionStatus.IsSelected ?? false)) {
 
                                 // If the user has typed all of the characters as the completion and presses
                                 // enter we should dismiss & let the text editor receive the enter.  For example 
@@ -1299,7 +1291,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
             var caret = mcaret.Value;
-            var span = session.GetApplicableSpan(caret.Snapshot.TextBuffer).GetSpan(caret.Snapshot);
+            var span = session.SelectedCompletionSet.ApplicableTo.GetSpan(caret.Snapshot);
 
             return caret == span.End &&
                 span.Length == selectionStatus.Completion?.InsertionText.Length &&

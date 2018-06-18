@@ -24,10 +24,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<Reference[]> FindReferences(ReferencesParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -36,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Array.Empty<Reference>();
+                return Task.FromResult(Array.Empty<Reference>());
             }
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version);
@@ -44,22 +41,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?.includeDeclaration ?? false) {
                 var index = tree.LocationToIndex(@params.position);
-                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
+                var w = new ImportedModuleNameWalker(entry, index);
                 tree.Walk(w);
 
-                if (!string.IsNullOrEmpty(w.ImportedName) &&
-                    _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-
-                    // Return a module reference
-                    extras.AddRange(modRef.AnalysisModule.Locations
-                        .Select(l => new Reference {
-                            uri = l.DocumentUri,
-                            range = l.Span,
-                            _version = version,
-                            _kind = ReferenceKind.Definition
-                        })
-                        .ToArray()
-                    );
+                foreach (var n in w.ImportedModules) {
+                    if(_analyzer.Modules.TryImport(n, out var modRef)) {
+                        // Return a module reference
+                        extras.AddRange(modRef.AnalysisModule.Locations
+                            .Select(l => new Reference {
+                                uri = l.DocumentUri,
+                                range = l.Span,
+                                _version = version?.Version,
+                                _kind = ReferenceKind.Definition
+                            })
+                            .ToArray());
+                    }
                 }
             }
 
@@ -74,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     result = analysis.GetVariables(expr, @params.position);
                 } else {
                     TraceMessage($"No references found in {uri} at {@params.position}");
-                    return Array.Empty<Reference>();
+                    result = Enumerable.Empty<IAnalysisVariable>();
                 }
             }
 
@@ -90,13 +86,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 uri = v.Location.DocumentUri,
                 range = v.Location.Span,
                 _kind = ToReferenceKind(v.Type),
-                _version = version
+                _version = version?.Version
             })
                 .Concat(extras)
                 .GroupBy(r => r, ReferenceComparer.Instance)
                 .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
                 .ToArray();
-            return res;
+
+            return Task.FromResult(res);
         }
 
         private static ReferenceKind ToReferenceKind(VariableType type) {
