@@ -136,9 +136,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
 
-        public event EventHandler<TelemetryEventArgs> OnTelemetry;
 
+        public event EventHandler<TelemetryEventArgs> OnTelemetry;
         public void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
+
+        public event EventHandler<CommandEventArgs> OnCommand;
+        public void Command(CommandEventArgs e) => OnCommand?.Invoke(this, e);
 
         public event EventHandler<RegisterCapabilityEventArgs> OnRegisterCapability;
         public Task RegisterCapability(RegistrationParams @params) {

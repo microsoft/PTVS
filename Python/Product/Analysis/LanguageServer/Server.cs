@@ -244,6 +244,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
+
+        public override Task<object> ExecuteCommand(ExecuteCommandParams @params) {
+            Command(new CommandEventArgs {
+                command = @params.command,
+                arguments = @params.arguments
+            });
+            return Task.FromResult((object)null);
+        }
         #endregion
 
         #region Non-LSP public API
