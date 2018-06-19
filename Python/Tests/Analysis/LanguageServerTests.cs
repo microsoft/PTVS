@@ -362,6 +362,12 @@ namespace AnalysisTests {
 
             u = await AddModule(s, "@");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 2));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\n");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\ndef f(): pass");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
         }
 
         [TestMethod, Priority(0)]
@@ -395,6 +401,32 @@ namespace AnalysisTests {
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
             await AssertNoCompletion(s, u, new SourceLocation(3, 22));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionAfterDot() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = 1\nx. n\nx.(  )\nx(x.  )\nx.  \nx  ");
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 4));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(3, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(4, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(5, 4));
+            await AssertCompletion(s, u, new[] { "abs" }, new[] { "real", "imag" }, new SourceLocation(6, 2));
+            await AssertNoCompletion(s, u, new SourceLocation(6, 3));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionAfterAssign() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = x\ny = ");
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(1, 5));
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(2, 5));
         }
 
         [TestMethod, Priority(0)]

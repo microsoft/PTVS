@@ -720,7 +720,7 @@ namespace Microsoft.PythonTools.Parsing {
             Debug.Assert(e != null); // caller already verified we have a yield.
 
             Statement s = new ExpressionStatement(e);
-            s.SetLoc(e.IndexSpan);
+            s.SetLoc(e.StartIndex, GetEndForStatement());
             return s;
         }
 
@@ -882,6 +882,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private ErrorExpression ReadLineAsError(Expression preceeding, string message) {
             var t = NextToken();
+
             Debug.Assert(t.Kind == TokenKind.Colon);
             var image = new StringBuilder();
             if (_verbatim) {
@@ -962,7 +963,7 @@ namespace Microsoft.PythonTools.Parsing {
                 hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
                     Statement stmt = new ExpressionStatement(ret);
-                    stmt.SetLoc(ret.IndexSpan);
+                    stmt.SetLoc(ret.StartIndex, GetEndForStatement());
                     return stmt;
                 }
             }
@@ -1014,7 +1015,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return aug;
                 } else {
                     Statement stmt = new ExpressionStatement(ret);
-                    stmt.SetLoc(ret.IndexSpan);
+                    stmt.SetLoc(ret.StartIndex, GetEndForStatement());
                     return stmt;
                 }
             }
@@ -1790,6 +1791,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 decorator.SetLoc(GetStart(), GetEnd());
                 while (MaybeEat(TokenKind.Dot)) {
+                    int dotStart = GetStart();
                     string whitespace = _tokenWhiteSpace;
                     name = ReadNameMaybeNone();
                     if (!name.HasName) {
@@ -1799,6 +1801,7 @@ namespace Microsoft.PythonTools.Parsing {
                         string nameWhitespace = _tokenWhiteSpace;
                         var memberDecorator = MakeMember(decorator, name);
                         memberDecorator.SetLoc(start, GetStart(), GetEnd());
+                        memberDecorator.DotIndex = dotStart;
                         if (_verbatim) {
                             AddPreceedingWhiteSpace(memberDecorator, whitespace);
                             AddSecondPreceedingWhiteSpace(memberDecorator, nameWhitespace);
@@ -2263,7 +2266,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 body = new ReturnStatement(expr);
             }
-            body.SetLoc(expr.StartIndex, expr.EndIndex);
+            body.SetLoc(expr.StartIndex, GetEndForStatement());
 
             FunctionDefinition func2 = PopFunction();
             System.Diagnostics.Debug.Assert(func == func2);
@@ -3372,11 +3375,13 @@ namespace Microsoft.PythonTools.Parsing {
                             break;
                         case TokenKind.Dot:
                             NextToken();
+                            int dotStart = GetStart();
                             whitespace = _tokenWhiteSpace;
                             var name = ReadNameMaybeNone();
                             string nameWhitespace = _tokenWhiteSpace;
                             MemberExpression fe = MakeMember(ret, name);
                             fe.SetLoc(ret.StartIndex, name.HasName ? GetStart() : GetEnd(), GetEnd());
+                            fe.DotIndex = dotStart;
                             if (_verbatim) {
                                 AddPreceedingWhiteSpace(fe, whitespace);
                                 AddSecondPreceedingWhiteSpace(fe, nameWhitespace);
@@ -4813,7 +4818,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private int GetEndForStatement() {
             Debug.Assert(_token.Token != null, "No token fetched");
-            if (_lookahead.Token != null && _lookahead.Token.Kind == TokenKind.EndOfFile) {
+            if (_lookahead.Token?.Kind == TokenKind.EndOfFile) {
                 return _lookahead.Span.End;
             }
             return _token.Span.End;

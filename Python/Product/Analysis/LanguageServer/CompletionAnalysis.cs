@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -33,8 +33,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly ScopeStatement _scope;
         private readonly ILogger _log;
         private readonly DocumentationBuilder _textBuilder;
+        private readonly Func<TextReader> _openDocument;
 
-        public CompletionAnalysis(ModuleAnalysis analysis, PythonAst tree, SourceLocation position, GetMemberOptions opts, DocumentationBuilder textBuilder, ILogger log) {
+        public CompletionAnalysis(
+            ModuleAnalysis analysis,
+            PythonAst tree,
+            SourceLocation position,
+            GetMemberOptions opts,
+            DocumentationBuilder textBuilder,
+            ILogger log,
+            Func<TextReader> openDocument
+        ) {
             Analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             Position = position;
@@ -42,16 +51,52 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             Options = opts;
             _textBuilder = textBuilder;
             _log = log;
+            _openDocument = openDocument;
 
             var finder = new ExpressionFinder(Tree, new GetExpressionOptions {
                 Names = true,
-                MemberName = true,
+                Members = true,
                 NamedArgumentNames = true,
                 ImportNames = true,
                 ImportAsNames = true,
-                Literals = true
+                Literals = true,
+                Errors = true
             });
             finder.Get(Index, Index, out _node, out _statement, out _scope);
+
+            int index = Index;
+            int col = Position.Column;
+            while (CanBackUp(Tree, _node, _statement, _scope, col)) {
+                col -= 1;
+                index -= 1;
+                finder.Get(index, index, out _node, out _statement, out _scope);
+            }
+
+            _node = _node ?? (_statement as ExpressionStatement)?.Expression;
+        }
+
+        private static bool CanBackUp(PythonAst tree, Node node, Node statement, ScopeStatement scope, int column) {
+            if (node != null || (statement != null && !((statement as ExpressionStatement)?.Expression is ErrorExpression))) {
+                return false;
+            }
+
+            int top = 1;
+            if (scope != null) {
+                var scopeStart = scope.GetStart(tree);
+                if (scope.Body != null) {
+                    top = (scope.Body.GetEnd(tree).Line == scopeStart.Line) ?
+                        scope.Body.GetStart(tree).Column :
+                        scopeStart.Column;
+                } else {
+                    top = scopeStart.Column;
+                }
+            }
+
+            if (column <= top) {
+                return false;
+            }
+
+            return true;
         }
 
         private static readonly IEnumerable<CompletionItem> Empty = Enumerable.Empty<CompletionItem>();
@@ -61,6 +106,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceLocation Position { get; }
         public int Index { get; }
         public GetMemberOptions Options { get; set; }
+        public SourceSpan? ApplicableSpan { get; set; }
+
         public bool? ShouldCommitByDefault { get; set; }
 
         public Node Node => _node;
@@ -94,6 +141,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 GetCompletionsInWithStatement() ??
                 GetCompletionsInRaiseStatement(ref allowArguments, ref opts) ??
                 GetCompletionsInExceptStatement(ref allowKeywords, ref opts) ??
+                GetCompletionsFromError() ??
                 GetCompletionsFromTopLevel(allowKeywords, allowArguments, opts);
 
             if (additional != null) {
@@ -132,11 +180,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private IEnumerable<CompletionItem> GetCompletionsFromMembers(ref GetMemberOptions opts) {
-            var finder = new ExpressionFinder(Tree, GetExpressionOptions.EvaluateMembers);
-            if (finder.GetExpression(Index) is Expression expr) {
-                _log.TraceMessage($"Completing expression {expr.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
-                ParentExpression = expr;
-                return Analysis.GetMembers(expr, Position, opts, null).Select(ToCompletionItem);
+            if (Node is MemberExpression me && me.Target != null && me.DotIndex > me.StartIndex && Index > me.DotIndex) {
+                _log.TraceMessage($"Completing expression {me.Target.ToCodeString(Tree, CodeFormattingOptions.Traditional)}");
+                ParentExpression = me.Target;
+                ApplicableSpan = new SourceSpan(Position, Position);
+                return Analysis.GetMembers(me.Target, Position, opts, null).Select(ToCompletionItem);
             }
             return null;
         }
@@ -255,14 +303,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
                 var loc = fd.GetStart(Tree);
                 ShouldCommitByDefault = false;
-                return Analysis.GetOverrideable(loc)
-                    .Select(o => new CompletionItem {
-                        label = o.Name,
-                        insertText = MakeCompletionString(new string(' ', loc.Column - 1), o, cd.Name),
-                        kind = CompletionItemKind.Method
-                    });
+                return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
             }
             return null;
+        }
+
+        private CompletionItem ToOverrideCompletionItem(IOverloadResult o, ClassDefinition cd, string indent) {
+            return new CompletionItem {
+                label = o.Name,
+                insertText = MakeOverrideCompletionString(indent, o, cd.Name),
+                kind = CompletionItemKind.Method
+            };
         }
 
         private IEnumerable<CompletionItem> GetCompletionsInDefinition(ref bool allowKeywords, ref List<CompletionItem> additional) {
@@ -497,7 +548,81 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
+        private IEnumerable<CompletionItem> GetCompletionsFromError() {
+            if (!(Node is ErrorExpression)) {
+                return null;
+            }
+
+            if (Statement is AssignmentStatement assign && Node == assign.Right) {
+                return null;
+            }
+
+            var reader = _openDocument?.Invoke();
+            if (reader == null) {
+                _log.TraceMessage($"Cannot get completions at error node without sources");
+                return Empty;
+            }
+            var tokens = new Stack<KeyValuePair<IndexSpan, Token>>();
+            Tokenizer tokenizer;
+            using (reader) {
+                tokenizer = new Tokenizer(Tree.LanguageVersion, options: TokenizerOptions.GroupingRecovery);
+                tokenizer.Initialize(reader);
+                for (var t = tokenizer.GetNextToken(); !tokenizer.IsEndOfFile && tokenizer.TokenSpan.Start < Index; t = tokenizer.GetNextToken()) {
+                    tokens.Push(new KeyValuePair<IndexSpan, Token>(tokenizer.TokenSpan, t));
+                }
+            }
+
+            if (tokens.Count == 0) {
+                return Empty;
+            }
+
+            string exprString;
+            var lastToken = tokens.Pop();
+            switch (lastToken.Value.Kind) {
+                case TokenKind.Dot:
+                    exprString = ReadExpression(tokens, tokenizer);
+                    if (exprString != null) {
+                        ApplicableSpan = new SourceSpan(Position, Position);
+                        return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
+                    }
+                    break;
+                case TokenKind.Name:
+                    if (tokens.Count >= 2 && tokens.Pop().Value.Kind == TokenKind.Dot) {
+                        exprString = ReadExpression(tokens, tokenizer);
+                        if (exprString != null) {
+                            ApplicableSpan = new SourceSpan(tokenizer.IndexToLocation(lastToken.Key.Start), Position);
+                            return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
+                        }
+                    }
+                    break;
+                case TokenKind.KeywordDef:
+                    if (lastToken.Key.End < Index) {
+                        var cd = Scope as ClassDefinition ?? ((Scope as FunctionDefinition)?.Parent as ClassDefinition);
+                        if (cd == null) {
+                            return null;
+                        }
+
+                        var loc = tokenizer.IndexToLocation(lastToken.Key.Start);
+                        ShouldCommitByDefault = false;
+                        return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
+                    }
+                    return null;
+                default:
+                    if (lastToken.Value.Kind >= TokenKind.FirstKeyword && lastToken.Value.Kind <= TokenKind.LastKeyword) {
+                        return null;
+                    }
+                    break;
+            }
+
+            _log.TraceMessage($"Unhandled completions from error.\nTokens were: ({lastToken.Value.Image}:{lastToken.Value.Kind}), {string.Join(", ", tokens.AsEnumerable().Take(10).Select(t => $"({t.Value.Image}:{t.Value.Kind})"))}");
+            return Empty;
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsFromTopLevel(bool allowKeywords, bool allowArguments, GetMemberOptions opts) {
+            if (Node?.EndIndex < Index) {
+                return Empty;
+            }
+
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
                 if (ShouldIncludeStatementKeywords(Statement, Index)) {
@@ -629,7 +754,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private string MakeCompletionString(string indentation, IOverloadResult result, string className) {
+        private string MakeOverrideCompletionString(string indentation, IOverloadResult result, string className) {
             var sb = new StringBuilder();
 
             sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
@@ -660,5 +785,74 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return sb.ToString();
         }
 
+        private static string ReadExpression(Stack<KeyValuePair<IndexSpan, Token>> tokens, Tokenizer tokenizer) {
+            var expr = ReadExpressionTokens(tokens, tokenizer);
+
+            return string.Join("", expr.Select(e => e.VerbatimImage ?? e.Image));
+        }
+
+        private static IEnumerable<Token> ReadExpressionTokens(Stack<KeyValuePair<IndexSpan, Token>> tokens, Tokenizer tokenizer) {
+            int nesting = 0;
+            var exprTokens = new Stack<Token>();
+            int currentLine = -1;
+
+            while (tokens.Any()) {
+                var t = tokens.Pop();
+                var p = tokenizer.IndexToLocation(t.Key.Start);
+                if (p.Line > currentLine) {
+                    currentLine = p.Line;
+                } else if (p.Line < currentLine && nesting == 0) {
+                    break;
+                }
+
+                exprTokens.Push(t.Value);
+
+                switch (t.Value.Kind) {
+                    case TokenKind.RightParenthesis:
+                    case TokenKind.RightBracket:
+                    case TokenKind.RightBrace:
+                        nesting += 1;
+                        break;
+                    case TokenKind.LeftParenthesis:
+                    case TokenKind.LeftBracket:
+                    case TokenKind.LeftBrace:
+                        if (--nesting < 0) {
+                            exprTokens.Pop();
+                            return exprTokens;
+                        }
+                        break;
+
+                    case TokenKind.Comment:
+                        exprTokens.Pop();
+                        break;
+
+                    case TokenKind.Name:
+                    case TokenKind.Constant:
+                    case TokenKind.Dot:
+                    case TokenKind.Ellipsis:
+                    case TokenKind.MatMultiply:
+                    case TokenKind.KeywordAwait:
+                        break;
+
+                    case TokenKind.Assign:
+                    case TokenKind.LeftShiftEqual:
+                    case TokenKind.RightShiftEqual:
+                    case TokenKind.BitwiseAndEqual:
+                    case TokenKind.BitwiseOrEqual:
+                    case TokenKind.ExclusiveOrEqual:
+                        exprTokens.Pop();
+                        return exprTokens;
+
+                    default:
+                        if (t.Value.Kind >= TokenKind.FirstKeyword || nesting == 0) {
+                            exprTokens.Pop();
+                            return exprTokens;
+                        }
+                        break;
+                }
+            }
+
+            return exprTokens;
+        }
     }
 }
