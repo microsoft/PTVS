@@ -5,6 +5,10 @@
     <AssemblyName>Microsoft.Python.Analysis.Engine</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <!-- 
+      1701, 1702 - "You may need to supply assembly policy"
+      1998 - "This async method lacks 'await'"
+    -->
     <NoWarn>1701;1702;1998</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
