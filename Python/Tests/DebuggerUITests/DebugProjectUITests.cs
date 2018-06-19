@@ -110,17 +110,23 @@ namespace DebuggerUITests {
         /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
-        public void DebugPythonCustomInterpreter(PythonVisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonCustomInterpreter(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
-                var interpreter = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-                interpreter.AssertInstalled();
-
                 var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
                 var project = app.OpenProject(sln, "Program.py");
-                var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
+                var interpreterFolder = PathUtils.GetParent(sln);
+                var interpreterPath = Path.Combine(interpreterFolder, "Interpreter.exe");
 
-                File.Copy(interpreter.InterpreterPath, interpreterPath, true);
+                var defaultInterpreter = app.OptionsService.DefaultInterpreter;
+                File.Copy(defaultInterpreter.Configuration.InterpreterPath, interpreterPath, true);
+                if (defaultInterpreter.Configuration.Version >= new Version(3, 0)) {
+                    foreach (var sourceDll in FileUtils.EnumerateFiles(defaultInterpreter.Configuration.PrefixPath, "python*.dll", recurse: false)) {
+                        var targetDll = Path.Combine(interpreterFolder, Path.GetFileName(sourceDll));
+                        File.Copy(sourceDll, targetDll, true);
+                    }
+                }
 
                 app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 1);
                 app.Dte.ExecuteCommand("Debug.Start");

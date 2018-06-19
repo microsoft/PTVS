@@ -64,8 +64,7 @@ namespace DebuggerUITestsRunner {
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonCustomInterpreter() {
-            // This test uses a custom 2.7 interpreter
-            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonCustomInterpreter), UseVsCodeDebugger);
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonCustomInterpreter), UseVsCodeDebugger, Interpreter);
         }
 
         [TestMethod, Priority(0)]
