@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
-                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
+                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.Absolute),
                     range = new SourceSpan(
                         new SourceLocation(loc.StartLine, loc.StartColumn),
                         new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)
