@@ -552,6 +552,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if (!(Node is ErrorExpression)) {
                 return null;
             }
+
+            if (Statement is AssignmentStatement assign && Node == assign.Right) {
+                return null;
+            }
+
             var reader = _openDocument?.Invoke();
             if (reader == null) {
                 _log.TraceMessage($"Cannot get completions at error node without sources");
