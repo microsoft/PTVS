@@ -89,13 +89,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     LogMessage(MessageType.Error, $"Error while post-processing completions: {ex}");
                 }
             }
-
-            for(var i = 0; i < res.items.Length; i++) {
-                res.items[i].command = new Command {
-                    command = completionItemCommand,
-                    arguments = new object[] { res.items[i].label }
-                };
-            }
             return Task.FromResult(res);
         }
 
