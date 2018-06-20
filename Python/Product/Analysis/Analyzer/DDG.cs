@@ -304,6 +304,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
 
+            var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, node.ForceAbsolute).ToArray();
+            if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0])) {
+                // If current module is at the root of the workspace, there is no parent module
+                // to resolve . against. In VS there is always parent (project) but in VS Code
+                // there may be none. Treat `from . import test` as `import test`
+                var nameNode = node.Names.FirstOrDefault();
+                modName = node.Names.FirstOrDefault()?.Name;
+                if (string.IsNullOrEmpty(modName)) {
+                    return false;
+                }
+                TryImportModule(nameNode, modName, modName, node.ForceAbsolute);
+                return false;
+            }
+
             if (!TryImportModule(modName, node.ForceAbsolute, out var modRef, out var bits)) {
                 _unit.DeclaringModule.AddUnresolvedModule(modName, node.ForceAbsolute);
                 return false;
@@ -393,6 +407,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
             return moduleRef?.Module != null;
+        }
+
+        private bool TryImportModule(Node nameNode, string modName, string asName, bool forceAbsolute) {
+            // Ensure a variable exists, even if the import fails
+            Scope.CreateVariable(nameNode, _unit, asName);
+
+            if (!TryImportModule(modName, forceAbsolute, out var modRef, out var bits)) {
+                _unit.DeclaringModule.AddUnresolvedModule(modName, forceAbsolute);
+                return false;
+            }
+            _unit.DeclaringModule.AddModuleReference(modRef);
+
+            var userMod = modRef.Module;
+            Debug.Assert(userMod != null);
+
+            userMod.Imported(_unit);
+            AssignImportedModule(nameNode, modRef, bits, asName);
+            return true;
         }
 
         internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
@@ -502,23 +534,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
 
-                // Ensure a variable exists, even if the import fails
-                Scope.CreateVariable(nameNode, _unit, saveName);
-
-                if (!TryImportModule(importing, node.ForceAbsolute, out var modRef, out var bits)) {
-                    _unit.DeclaringModule.AddUnresolvedModule(importing, node.ForceAbsolute);
-                    continue;
-                }
-
-                _unit.DeclaringModule.AddModuleReference(modRef);
-
-                var userMod = modRef.Module;
-                Debug.Assert(userMod != null);
-
-                if (userMod != null) {
-                    userMod.Imported(_unit);
-                    AssignImportedModule(nameNode, modRef, bits, saveName);
-                }
+                TryImportModule(nameNode, importing, saveName, node.ForceAbsolute);
             }
             return true;
         }
