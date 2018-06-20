@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
@@ -82,7 +83,7 @@ namespace Microsoft.PythonTools {
 
         #region Private Members
 
-        private Task OnTextContentChangedAsync(PythonTextBufferInfo sender, TextContentChangedEventArgs e) {
+        private async Task OnTextContentChangedAsync(PythonTextBufferInfo sender, TextContentChangedEventArgs e) {
             // NOTE: Runs on background thread
             if (e == null) {
                 Debug.Fail("Invalid type passed to event");
@@ -91,28 +92,50 @@ namespace Microsoft.PythonTools {
             var snapshot = e.After;
 
             if (snapshot.IsReplBufferWithCommand()) {
-                return Task.CompletedTask;
+                return;
             }
 
-            Span changedSpan = new Span(0, 0);
+            int firstLine = int.MaxValue, lastLine = int.MinValue;
             foreach (var change in e.Changes) {
-                if (changedSpan.Length == 0) {
-                    changedSpan = change.NewSpan;
+                if (change.LineCountDelta > 0) {
+                    firstLine = Math.Min(firstLine, snapshot.GetLineNumberFromPosition(change.NewPosition));
+                    lastLine = Math.Max(lastLine, snapshot.GetLineNumberFromPosition(change.NewEnd));
+                } else if (change.LineCountDelta < 0) {
+                    firstLine = Math.Min(firstLine, snapshot.GetLineNumberFromPosition(change.NewPosition));
+                    if (change.OldEnd < snapshot.Length) {
+                        lastLine = Math.Max(lastLine, snapshot.GetLineNumberFromPosition(change.OldEnd));
+                    } else {
+                        lastLine = snapshot.LineCount - 1;
+                    }
                 } else {
-                    changedSpan = Span.FromBounds(
-                        Math.Min(change.NewSpan.Start, changedSpan.Start),
-                        Math.Max(change.NewSpan.End, changedSpan.End)
-                    );
+                    int line = snapshot.GetLineNumberFromPosition(change.NewPosition);
+                    firstLine = Math.Min(firstLine, line);
+                    lastLine = Math.Max(lastLine, line);
                 }
             }
-            if (changedSpan.Length > 0) {
+            if (lastLine >= firstLine) {
+                SnapshotSpan changedSpan;
+                try {
+                    if (lastLine == firstLine) {
+                        changedSpan = snapshot.GetLineFromLineNumber(firstLine).ExtentIncludingLineBreak;
+                    } else {
+                        changedSpan = new SnapshotSpan(
+                            snapshot.GetLineFromLineNumber(firstLine).Start,
+                            snapshot.GetLineFromLineNumber(lastLine).EndIncludingLineBreak
+                        );
+                    }
+                } catch (ArgumentException ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                    return;
+                }
+
+                await Task.Yield();
+
                 ClassificationChanged?.Invoke(
                     this,
-                    new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, changedSpan))
+                    new ClassificationChangedEventArgs(changedSpan)
                 );
             }
-
-            return Task.CompletedTask;
         }
 
         private ClassificationSpan ClassifyToken(SnapshotSpan span, TrackingTokenInfo token) {
