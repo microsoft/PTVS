@@ -170,6 +170,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var ussp = GetUserSearchPathPackagesAsync().WaitAndUnwrapExceptions();
             var ssp = _factory.GetImportableModulesAsync().WaitAndUnwrapExceptions();
             var bmn = _builtinModuleNames;
+            if (bmn == null && _builtinModule != null) {
+                var builtinModules = (_builtinModule as IBuiltinPythonModule)?.GetAnyMember("__builtin_module_names__");
+                bmn = _builtinModuleNames = (builtinModules as AstPythonStringLiteral)?.Value?.Split(',') ?? Array.Empty<string>();
+            }
 
             IEnumerable<string> names = null;
             if (ussp != null) {
