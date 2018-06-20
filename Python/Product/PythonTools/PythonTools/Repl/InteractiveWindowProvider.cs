@@ -36,7 +36,10 @@ namespace Microsoft.PythonTools.Repl {
         private readonly Dictionary<int, IVsInteractiveWindow> _windows = new Dictionary<int, IVsInteractiveWindow>();
         private int _nextId = 1;
 
-        private readonly List<IVsInteractiveWindow> _mruWindows = new List<IVsInteractiveWindow>();
+        /// <summary>
+        /// A reverse-ordered list of recently used windows. Last item is most recently used.
+        /// </summary>
+        private readonly List<IVsInteractiveWindow> _lruWindows = new List<IVsInteractiveWindow>();
         private readonly Dictionary<string, int> _temporaryWindows = new Dictionary<string, int>();
 
         private readonly IServiceProvider _serviceProvider;
@@ -91,13 +94,27 @@ namespace Microsoft.PythonTools.Repl {
             return false;
         }
 
-        public IVsInteractiveWindow Open(string replId) {
+        public void OnWindowUsed(IVsInteractiveWindow window) {
+            if (window == null) {
+                throw new ArgumentNullException(nameof(window));
+            }
+
+            lock (_windows) {
+                _lruWindows.Remove(window);
+                _lruWindows.Add(window);
+            }
+        }
+
+        public IVsInteractiveWindow Open(string replId) => Open(replId, null);
+
+        public IVsInteractiveWindow Open(string replId, Func<IInteractiveEvaluator, bool> predicate) {
             EnsureInterpretersAvailable();
 
             lock (_windows) {
-                foreach(var window in _windows.Values) {
+                foreach(var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
-                    if (eval?.CurrentEvaluator == replId) {
+                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
+                        OnWindowUsed(window);
                         window.Show(true);
                         return window;
                     }
@@ -107,14 +124,17 @@ namespace Microsoft.PythonTools.Repl {
             return null;
         }
 
-        public IVsInteractiveWindow OpenOrCreate(string replId) {
+        public IVsInteractiveWindow OpenOrCreate(string replId) => OpenOrCreate(replId, null);
+
+        public IVsInteractiveWindow OpenOrCreate(string replId, Func<IInteractiveEvaluator, bool> predicate) {
             EnsureInterpretersAvailable();
 
             IVsInteractiveWindow wnd;
             lock (_windows) {
-                foreach(var window in _windows.Values) {
+                foreach(var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
-                    if (eval?.CurrentEvaluator == replId) {
+                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
+                        OnWindowUsed(window);
                         window.Show(true);
                         return window;
                     }
@@ -145,12 +165,14 @@ namespace Microsoft.PythonTools.Repl {
 
             lock (_windows) {
                 _windows[curId] = window;
+                _lruWindows.Add(window);
             }
 
             window.InteractiveWindow.TextView.Closed += (s, e) => {
                 lock (_windows) {
                     Debug.Assert(ReferenceEquals(_windows[curId], window));
                     _windows.Remove(curId);
+                    _lruWindows.Remove(window);
                 }
             };
 
@@ -202,6 +224,7 @@ namespace Microsoft.PythonTools.Repl {
             lock (_windows) {
                 _windows[curId] = window;
                 _temporaryWindows[replId] = curId;
+                _lruWindows.Add(window);
             }
 
             window.InteractiveWindow.TextView.Closed += (s, e) => {
@@ -209,6 +232,7 @@ namespace Microsoft.PythonTools.Repl {
                     Debug.Assert(ReferenceEquals(_windows[curId], window));
                     _windows.Remove(curId);
                     _temporaryWindows.Remove(replId);
+                    _lruWindows.Remove(window);
                 }
             };
 
