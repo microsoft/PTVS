@@ -142,14 +142,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     workspaceSymbolProvider = true,
                     documentSymbolProvider = true,
                     executeCommandProvider = new ExecuteCommandOptions {
-                        commands = new [] {
+                        commands = new[] {
                             completionItemCommand
                         }
                     }
                 }
             };
         }
-
         public override Task Shutdown() {
             Interlocked.Exchange(ref _analyzer, null)?.Dispose();
             _projectFiles.Clear();

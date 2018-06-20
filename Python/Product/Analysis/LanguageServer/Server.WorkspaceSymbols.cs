@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
-                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.Absolute),
+                    uri = loc.DocumentUri,
                     range = new SourceSpan(
                         new SourceLocation(loc.StartLine, loc.StartColumn),
                         new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)
