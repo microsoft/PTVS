@@ -551,22 +551,22 @@ f(1, 2, 3, 4,")) {
 
         [TestMethod, Priority(0)]
         public void FromOSPathImportCompletions2x() {
-            using (var vs = new MockVs())
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath", "os2emxpath")) {
-                OSPathImportTest(vs, db);
+            using (var vs = new MockVs()) {
+                var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 2));
+                OSPathImportTest(vs, factory);
             }
         }
 
         [TestMethod, Priority(0)]
         public void FromOSPathImportCompletions3x() {
-            using (var vs = new MockVs())
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath", "os2emxpath")) {
-                OSPathImportTest(vs, db);
+            using (var vs = new MockVs()) {
+                var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 3));
+                OSPathImportTest(vs, factory);
             }
         }
 
-        private static void OSPathImportTest(MockVs vs, MockCompletionDB db) {
-            using (var editor = new PythonEditor(vs: vs, factory: db.Factory)) {
+        private static void OSPathImportTest(MockVs vs, Microsoft.PythonTools.Interpreter.IPythonInterpreterFactory factory) {
+            using (var editor = new PythonEditor(vs: vs, factory: factory)) {
                 editor.Text = "from ";
                 AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), "os", "sys");
 
@@ -728,7 +728,7 @@ e): <unknown type>");
     def func_b(self, b, *p, **kw): pass
 
 class Baz(Fob):
-    def None
+    def 
 ",
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -737,7 +737,7 @@ class Oar(Fob):
     def func_b(self, b, *p, **kw): pass
 
 class Baz(Oar):
-    def None
+    def 
 ",
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -746,7 +746,7 @@ class Oar(object):
     def func_b(self, b, *p, **kw): pass
 
 class Baz(Fob, Oar):
-    def None
+    def 
 ",
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -755,7 +755,7 @@ class Baz(Fob, Oar):
 
 class Baz(Fob):
     def func_c(self): pass
-    def None
+    def 
 ",
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -766,7 +766,7 @@ class Oar(Fob):
 
 class Baz(Oar):
     def func_c(self): pass
-    def None
+    def 
 ",
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -777,13 +777,13 @@ class Oar(object):
 
 class Baz(Fob, Oar):
     def func_c(self): pass
-    def None
+    def 
 "}) {
                     view2.Text = code;
 
                     Console.WriteLine(code);
                     AssertUtil.ContainsAtLeast(
-                        view2.GetCompletionList(code.IndexOf("None")).Select(c => c.InsertionText),
+                        view2.GetCompletionList(code.LastIndexOf("def ") + 4).Select(c => c.InsertionText),
                         @"func_a(self, a = 100):
         return super(Baz, self).func_a(a)",
                         @"func_b(self, b, *p, **kw):
@@ -793,7 +793,7 @@ class Baz(Fob, Oar):
                     view3.Text = code;
 
                     AssertUtil.ContainsAtLeast(
-                        view3.GetCompletionList(code.IndexOf("None")).Select(c => c.InsertionText),
+                        view3.GetCompletionList(code.LastIndexOf("def ") + 4).Select(c => c.InsertionText),
                         @"func_a(self, a = 100):
         return super().func_a(a)",
                         @"func_b(self, b, *p, **kw):

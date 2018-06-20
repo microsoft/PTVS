@@ -1220,7 +1220,7 @@ namespace Microsoft.PythonTools.Parsing {
             ModuleName dname = ParseRelativeModuleName();
 
             bool ateImport = Eat(TokenKind.KeywordImport);
-            int importIndex = GetStart();
+            int importIndex = ateImport ? GetStart() : 0;
             string importWhiteSpace = _tokenWhiteSpace;
 
             bool ateParen = ateImport && MaybeEat(TokenKind.LeftParenthesis);
@@ -1346,6 +1346,9 @@ namespace Microsoft.PythonTools.Parsing {
                 ws = _tokenWhiteSpace;
             } else {
                 name = ReadName();
+                if (!name.HasName) {
+                    return;
+                }
                 nameExpr = MakeName(name);
                 ws = name.HasName ? _tokenWhiteSpace : "";
             }
