@@ -100,7 +100,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     LogMessage(MessageType.Error, $"Error while post-processing completions: {ex}");
                 }
             }
-
             return Task.FromResult(res);
         }
 
