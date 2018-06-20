@@ -16,13 +16,11 @@
 
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using EnvDTE;
 using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using Thread = System.Threading.Thread;
 
 namespace DebuggerUITests {
     public class MixedModeDebugProjectUITests {
@@ -59,14 +57,7 @@ namespace DebuggerUITests {
         }
 
         private static PythonVersion FindInterpreter(string pythonVersion) {
-            // Examples of values for pythonVersion (match field names on PythonPaths):
-            // "Python36"
-            // "Python36|Python36_x64"
-            var interpreter = pythonVersion.Split('|')
-                .Select(v => typeof(PythonPaths).GetField(v, BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as PythonVersion)
-                .Where(HasSymbols)
-                .FirstOrDefault();
-
+            var interpreter = PythonPaths.GetVersionsByName(pythonVersion, HasSymbols).FirstOrDefault();
             if (interpreter == null) {
                 Assert.Inconclusive($"Interpreter '{pythonVersion}' not installed.");
             }
