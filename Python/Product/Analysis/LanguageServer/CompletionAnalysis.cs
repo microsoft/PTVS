@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public bool? ShouldCommitByDefault { get; set; }
 
-        public Node Node { get; set; }
+        public Node Node { get; private set; }
         public Node Statement => _statement;
         public ScopeStatement Scope => _scope;
         /// <summary>
