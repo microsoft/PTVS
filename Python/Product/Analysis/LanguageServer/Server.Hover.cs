@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,9 +43,62 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
 
+            Expression expr;
+            SourceSpan? exprSpan;
+            Analyzer.InterpreterScope scope = null;
+
+            var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
+            expr = finder.GetExpression(@params.position) as Expression;
+            exprSpan = expr?.GetSpan(tree);
+
+            if (expr == null) {
+                TraceMessage($"No hover info found in {uri} at {@params.position}");
+                return Task.FromResult(EmptyHover);
+            }
+
+            TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
+
+            // First try values from expression. This works for 
+            // import statements most of the time as well.
             var index = tree.LocationToIndex(@params.position);
             var w = new ImportedModuleNameWalker(entry, index);
             tree.Walk(w);
+
+            IEnumerable<AnalysisValue> values = null;
+            // Perhaps it is an assigned member like 'p' in 'from os import path as p'
+            if (!string.IsNullOrEmpty(w.ImportedType)) {
+                values = analysis.GetValues(w.ImportedType, @params.position).ToList();
+            } else {
+                // Perhaps it is a member like 'path' in 'from os import path'
+                w.ImportedMembers.FirstOrDefault(m => {
+                    values = analysis.GetValues(m, @params.position).ToList();
+                    return values.Any();
+                });
+            }
+
+            values = values ?? analysis.GetValues(expr, @params.position, scope).ToList();
+            if (values.Any()) {
+                string originalExpr;
+                if (expr is ConstantExpression || expr is ErrorExpression) {
+                    originalExpr = null;
+                } else {
+                    originalExpr = @params._expr?.Trim();
+                    if (string.IsNullOrEmpty(originalExpr)) {
+                        originalExpr = expr.ToCodeString(tree, CodeFormattingOptions.Traditional);
+                    }
+                }
+
+                var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
+                var res = new Hover {
+                    contents = GetMarkupContent(
+                        _displayTextBuilder.GetDocumentation(values, originalExpr),
+                        _clientCaps.textDocument?.hover?.contentFormat),
+                    range = exprSpan,
+                    _version = version?.Version,
+                    _typeNames = names
+                };
+                return Task.FromResult(res);
+            }
 
             if (w.ImportedModules.Any()) {
                 var sb = new StringBuilder();
@@ -62,43 +116,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            Expression expr;
-            SourceSpan? exprSpan;
-            Analyzer.InterpreterScope scope = null;
-
-            var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
-            expr = finder.GetExpression(@params.position) as Expression;
-            exprSpan = expr?.GetSpan(tree);
-
-            if (expr == null) {
-                TraceMessage($"No hover info found in {uri} at {@params.position}");
-                return Task.FromResult(EmptyHover);
-            }
-
-            TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-            var values = analysis.GetValues(expr, @params.position, scope).ToList();
-
-            string originalExpr;
-            if (expr is ConstantExpression || expr is ErrorExpression) {
-                originalExpr = null;
-            } else {
-                originalExpr = @params._expr?.Trim();
-                if (string.IsNullOrEmpty(originalExpr)) {
-                    originalExpr = expr.ToCodeString(tree, CodeFormattingOptions.Traditional);
-                }
-            }
-
-            var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
-
-            var res = new Hover {
-                contents = GetMarkupContent(
-                    _displayTextBuilder.GetDocumentation(values, originalExpr),
-                    _clientCaps.textDocument?.hover?.contentFormat),
-                range = exprSpan,
-                _version = version?.Version,
-                _typeNames = names
-            };
-            return Task.FromResult(res);
+            return Task.FromResult(EmptyHover);
         }
 
         private static string GetFullTypeName(AnalysisValue value) {
