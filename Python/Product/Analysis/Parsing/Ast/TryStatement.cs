@@ -99,6 +99,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public int HeaderIndex { get; set; }
+        public int KeywordLength => 6;
         public int KeywordEndIndex { get; set; }
 
         public Expression Test { get; }

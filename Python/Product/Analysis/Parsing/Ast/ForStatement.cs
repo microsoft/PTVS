@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             IsAsync = isAsync;
         }
 
+        public int ForIndex { get; set; }
+        public int InIndex { get; set; }
         public int HeaderIndex { get; set; }
         public int ElseIndex { get; set; }
         internal void SetKeywordEndIndex(int index) => _keywordEndIndex = index;
@@ -52,20 +54,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Else?.Walk(walker);
             }
             walker.PostWalk(this);
-        }
-
-        public int GetIndexOfFor(PythonAst ast) {
-            if (!IsAsync) {
-                return StartIndex;
-            }
-            return StartIndex + this.GetFourthWhiteSpace(ast).Length + 5;
-        }
-
-        public int GetIndexOfIn(PythonAst ast) {
-            if (this.IsIncompleteNode(ast)) {
-                return -1;
-            }
-            return Left.EndIndex + this.GetSecondWhiteSpace(ast).Length;
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {

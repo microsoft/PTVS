@@ -247,6 +247,40 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInForStatement() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "for  ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for  x ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 6));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 9));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(1, 10));
+            await s.UnloadFileAsync(u);
+
+            if (!(this is LanguageServerTests_V2)) {
+                u = await AddModule(s, "async def f():\n    async for x in ");
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 5));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 10));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 14));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 15));
+                await s.UnloadFileAsync(u);
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInFunctionDefinition() {
             var s = await CreateServer();
             var u = await AddModule(s, "def f(a, b:int, c=2, d:float=None): pass");
