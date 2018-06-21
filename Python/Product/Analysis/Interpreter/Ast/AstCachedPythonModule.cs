@@ -16,20 +16,18 @@
 
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstCachedPythonModule : AstScrapedPythonModule {
-        private readonly string _cachedModuleName;
+        private readonly string _cachePath;
 
-        public AstCachedPythonModule(string name, string cachedModuleName) : base(name, null) {
-            _cachedModuleName = cachedModuleName + ".pyi";
+        public AstCachedPythonModule(string name, string cachePath) : base(name, null) {
+            _cachePath = cachePath;
         }
 
         protected override Stream LoadCachedCode(AstPythonInterpreter interpreter) {
-            if (interpreter.Factory is AstPythonInterpreterFactory factory) {
-                return factory.ReadCachedModule(_cachedModuleName);
-            }
-            return null;
+            return PathUtils.OpenWithRetry(_cachePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {

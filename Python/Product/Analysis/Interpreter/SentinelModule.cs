@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule, IDisposable {
         private readonly Thread _thread;
-        private volatile ManualResetEventSlim _event;
+        private volatile TaskCompletionSource<IPythonModule> _tcs;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
@@ -34,38 +34,39 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public IPythonModule WaitForImport(int millisecondsTimeout) {
+        public Task<IPythonModule> WaitForImportAsync(CancellationToken cancel) {
             var mod = _realModule;
             if (mod != null) {
-                return mod;
+                return Task.FromResult(mod);
             }
             if (_thread == Thread.CurrentThread) {
-                return this;
+                return Task.FromResult<IPythonModule>(this);
             }
 
-            var evt = _event;
-            if (evt == null) {
-                evt = new ManualResetEventSlim();
-                evt = Interlocked.CompareExchange(ref _event, evt, null) ?? evt;
+            var tcs = _tcs;
+            if (tcs == null) {
+                tcs = new TaskCompletionSource<IPythonModule>();
+                tcs = Interlocked.CompareExchange(ref _tcs, tcs, null) ?? tcs;
             }
 
-            if (!evt.Wait(millisecondsTimeout)) {
-                return _realModule;
+            if (cancel.CanBeCanceled) {
+                var tcs2 = new TaskCompletionSource<IPythonModule>();
+                tcs.Task.ContinueWith(t => tcs2.TrySetResult(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                tcs.Task.ContinueWith(t => tcs2.TrySetCanceled(), TaskContinuationOptions.OnlyOnCanceled);
+                cancel.Register(() => tcs2.TrySetCanceled());
+                return tcs2.Task;
             }
 
-            return _realModule ?? this;
+            return tcs.Task;
         }
 
         public void Complete(IPythonModule module) {
             _realModule = module;
-            _event?.Set();
+            _tcs?.TrySetResult(module);
         }
 
         public void Dispose() {
-            var evt = Interlocked.Exchange(ref _event, null);
-            if (evt != null) {
-                evt.Dispose();
-            }
+            Interlocked.Exchange(ref _tcs, null)?.TrySetCanceled();
         }
 
         public string Name { get; }
