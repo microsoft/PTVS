@@ -17,7 +17,7 @@
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-    public class ForStatement : Statement {
+    public class ForStatement : Statement, IMaybeAsyncStatement {
         private int? _keywordEndIndex;
 
         public ForStatement(Expression left, Expression list, Statement body, Statement else_) {

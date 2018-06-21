@@ -555,9 +555,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 int keywordStart = s.KeywordEndIndex - s.KeywordLength;
                 if (index >= keywordStart) {
                     span = new IndexSpan(keywordStart, s.KeywordLength);
-                } else if (((s as ForStatement)?.IsAsync ?? false) ||
-                    ((s as WithStatement)?.IsAsync ?? false) ||
-                    ((s as FunctionDefinition)?.IsCoroutine ?? false)) {
+                } else if ((s as IMaybeAsyncStatement)?.IsAsync == true) {
                     // Must be in the "async" at the start of the keyword
                     span = new IndexSpan(s.StartIndex, "async".Length);
                 }
