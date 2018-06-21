@@ -41,11 +41,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?.includeDeclaration ?? false) {
                 var index = tree.LocationToIndex(@params.position);
-                var w = new ImportedModuleNameWalker(entry, index);
+                var w = new ImportedModuleNameWalker(entry, index, tree);
                 tree.Walk(w);
 
                 foreach (var n in w.ImportedModules) {
-                    if(_analyzer.Modules.TryImport(n, out var modRef)) {
+                    if(_analyzer.Modules.TryImport(n.Text, out var modRef)) {
                         // Return a module reference
                         extras.AddRange(modRef.AnalysisModule.Locations
                             .Select(l => new Reference {

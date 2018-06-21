@@ -6860,7 +6860,7 @@ def f():
                 new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg.HIJ" },
             }) {
                 var entry = ProcessTextV3(item.Code);
-                var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);
+                var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index, null);
                 entry.Modules[entry.DefaultModule].Tree.Walk(walker);
 
                 Assert.AreEqual(item.Expected, walker.ImportedModules.First());

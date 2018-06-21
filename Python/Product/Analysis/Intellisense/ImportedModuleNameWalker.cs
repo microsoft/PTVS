@@ -18,24 +18,32 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
+    sealed class NamedLocation {
+        public string Text { get; set; }
+        public Range Range { get; set; }
+    }
+
     class ImportedModuleNameWalker : PythonWalkerWithLocation {
         private readonly string _importingFromModuleName;
         private readonly string _importingFromFilePath;
+        private readonly PythonAst _ast;
 
-        public ImportedModuleNameWalker(IPythonProjectEntry entry, int location) :
-            this(entry.ModuleName, entry.FilePath, location) {
+        public ImportedModuleNameWalker(IPythonProjectEntry entry, int location, PythonAst ast) :
+            this(entry.ModuleName, entry.FilePath, location, ast) {
         }
-        public ImportedModuleNameWalker(string importingFromModuleName, string importingFromFilePath, int location) : base(location) {
+        public ImportedModuleNameWalker(string importingFromModuleName, string importingFromFilePath, int location, PythonAst ast) : base(location) {
             _importingFromModuleName = importingFromModuleName;
             _importingFromFilePath = importingFromFilePath;
+            _ast = ast;
         }
 
-        public IEnumerable<string> ImportedModules { get; private set; } = Enumerable.Empty<string>();
-        public IEnumerable<string> ImportedMembers { get; private set; } = Enumerable.Empty<string>();
-        public string ImportedType { get; private set; }
+        public IEnumerable<NamedLocation> ImportedModules { get; private set; } = Enumerable.Empty<NamedLocation>();
+        public IEnumerable<NamedLocation> ImportedMembers { get; private set; } = Enumerable.Empty<NamedLocation>();
+        public NamedLocation ImportedType { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
             if (node.StartIndex <= Location && Location <= node.EndIndex) {
@@ -48,16 +56,20 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Over name, see if we have 'as' and fetch type from there
                     if (node.AsNames != null) {
                         var index = node.Names.IndexOf(nameNode);
-                        if (index < node.AsNames.Count) {
-                            ImportedType = node.AsNames[index]?.Name;
+                        if (index < node.AsNames.Count && node.AsNames[index] != null) {
+                            ImportedType = GetNamedLocation(node.AsNames[index]);
                             return false;
                         }
                     }
                     // See if we can resolve relative names
-                    var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute);
-                    ImportedMembers = candidates.Select(c => "{0}.{1}".FormatInvariant(c, nameNode.Name));
+                    var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute).ToArray();
+                    if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0]) && node.Names != null && node.Names.Any()) {
+                        ImportedModules = new[] { GetNamedLocation(node.Names.First()) };
+                    } else {
+                        ImportedMembers = candidates.Select(c => GetNamedLocation("{0}.{1}".FormatInvariant(c, nameNode.Name), nameNode));
+                    }
                 } else {
-                    ImportedModules = new[] { modName };
+                    ImportedModules = new[] { GetNamedLocation(modName, node.Root) };
                 }
             }
             return false;
@@ -66,9 +78,23 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(ImportStatement node) {
             if (node.StartIndex <= Location && Location <= node.EndIndex) {
                 var nameNode = node.Names.MaybeEnumerate().Where(n => n.StartIndex <= Location && Location <= n.EndIndex).FirstOrDefault();
-                ImportedModules = nameNode != null ? new[] { nameNode.MakeString() } : Enumerable.Empty<string>();
+                if (nameNode != null) {
+                    ImportedModules = new[] { GetNamedLocation(nameNode.MakeString(), nameNode) };
+                }
             }
             return false;
         }
+
+
+        private NamedLocation GetNamedLocation(NameExpression node) => GetNamedLocation(node.Name, node);
+
+        private NamedLocation GetNamedLocation(string name, Node node)
+            => new NamedLocation { Text = name, Range = GetRange(node) };
+
+        private Range GetRange(Node n)
+            => _ast != null ? new Range {
+                start = _ast.IndexToLocation(n.StartIndex),
+                end = _ast.IndexToLocation(n.EndIndex)
+            } : default(Range);
     }
 }
