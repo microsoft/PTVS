@@ -86,7 +86,12 @@ namespace PythonToolsUITests {
             bool result = await mgr.CreateAsync(envPath, NonExistingPackages, ui, CancellationToken.None);
 
             Assert.IsFalse(result, "Create did not fail.");
-            Assert.IsTrue(ui.ErrorText.Any(line => line.Contains("The following packages are not available from current channels")));
+            // Account for Anaconda version differences
+            Assert.IsTrue(
+                ui.ErrorText.Any(line => line.Contains("The following packages are not available from current channels")) ||
+                ui.OutputText.Any(line => line.Contains("PackageNotFoundError")),
+                "Expected a message indicating packages were not found."
+            );
             Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Failed to create '{envPath}'")));
             Assert.IsFalse(Directory.Exists(envPath), "Environment folder was found.");
         }
