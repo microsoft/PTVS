@@ -52,22 +52,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 // and store module names and imported parts
                 var modName = node.Root.MakeString();
                 var nameNode = node.Names.MaybeEnumerate().Where(n => n.StartIndex <= Location && Location <= n.EndIndex).FirstOrDefault();
-                if (nameNode != null) {
-                    // Over name, see if we have 'as' and fetch type from there
-                    if (node.AsNames != null) {
-                        var index = node.Names.IndexOf(nameNode);
-                        if (index < node.AsNames.Count && node.AsNames[index] != null) {
-                            ImportedType = GetNamedLocation(node.AsNames[index]);
-                            return false;
-                        }
+                if (nameNode != null && node.AsNames != null) {
+                    var index = node.Names.IndexOf(nameNode);
+                    if (index < node.AsNames.Count && node.AsNames[index] != null) {
+                        ImportedType = GetNamedLocation(node.AsNames[index]);
+                        return false;
                     }
-                    // See if we can resolve relative names
-                    var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute).ToArray();
-                    if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0]) && node.Names != null && node.Names.Any()) {
-                        ImportedModules = new[] { GetNamedLocation(node.Names.First()) };
-                    } else {
-                        ImportedMembers = candidates.Select(c => GetNamedLocation("{0}.{1}".FormatInvariant(c, nameNode.Name), nameNode));
-                    }
+                }
+
+                // See if we can resolve relative names
+                var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute).ToArray();
+                if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0]) && node.Names != null && node.Names.Any()) {
+                    ImportedModules = new[] { GetNamedLocation(node.Names.First()) };
+                } else if (nameNode != null) {
+                    ImportedMembers = candidates.Select(c => GetNamedLocation("{0}.{1}".FormatInvariant(c, nameNode.Name), nameNode));
+                } else if (candidates.Length > 0) {
+                    ImportedModules = candidates.Select(c => GetNamedLocation(c, node.Root));
                 } else {
                     ImportedModules = new[] { GetNamedLocation(modName, node.Root) };
                 }
