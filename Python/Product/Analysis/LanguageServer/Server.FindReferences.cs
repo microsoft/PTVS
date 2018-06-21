@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 tree.Walk(w);
 
                 foreach (var n in w.ImportedModules) {
-                    if(_analyzer.Modules.TryImport(n.Text, out var modRef)) {
+                    if(_analyzer.Modules.TryImport(n.Name, out var modRef)) {
                         // Return a module reference
                         extras.AddRange(modRef.AnalysisModule.Locations
                             .Select(l => new Reference {

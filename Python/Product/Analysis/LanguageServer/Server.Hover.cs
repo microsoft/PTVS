@@ -66,12 +66,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             IEnumerable<AnalysisValue> values = null;
             // Perhaps it is an assigned member like 'p' in 'from os import path as p'
-            if (!string.IsNullOrEmpty(w.ImportedType?.Text)) {
-                values = analysis.GetValues(w.ImportedType.Text, @params.position).ToList();
+            if (!string.IsNullOrEmpty(w.ImportedType?.Name)) {
+                values = analysis.GetValues(w.ImportedType.Name, @params.position).ToList();
             } else {
                 // Perhaps it is a member like 'path' in 'from os import path'
                 w.ImportedMembers.FirstOrDefault(m => {
-                    values = analysis.GetValues(m.Text, @params.position).ToList();
+                    values = analysis.GetValues(m.Name, @params.position).ToList();
                     return values.Any();
                 });
             }
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var sb = new StringBuilder();
                 var range = default(Range);
                 foreach (var n in w.ImportedModules) {
-                    if (_analyzer.Modules.TryImport(n.Text, out var modRef)) {
+                    if (_analyzer.Modules.TryImport(n.Name, out var modRef)) {
                         if (sb.Length > 0) {
                             sb.AppendLine();
                             sb.AppendLine();

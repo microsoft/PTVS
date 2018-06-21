@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
     sealed class NamedLocation {
-        public string Text { get; set; }
+        public string Name { get; set; }
         public Range Range { get; set; }
     }
 
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private NamedLocation GetNamedLocation(NameExpression node) => GetNamedLocation(node.Name, node);
 
         private NamedLocation GetNamedLocation(string name, Node node)
-            => new NamedLocation { Text = name, Range = GetRange(node) };
+            => new NamedLocation { Name = name, Range = GetRange(node) };
 
         private Range GetRange(Node n)
             => _ast != null ? new Range {
