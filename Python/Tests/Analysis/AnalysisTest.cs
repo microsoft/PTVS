@@ -6863,7 +6863,7 @@ def f():
                 var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index, null);
                 entry.Modules[entry.DefaultModule].Tree.Walk(walker);
 
-                Assert.AreEqual(item.Expected, walker.ImportedModules.First().Text);
+                Assert.AreEqual(item.Expected, walker.ImportedModules.First().Name);
             }
         }
 
