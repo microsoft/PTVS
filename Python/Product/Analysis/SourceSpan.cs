@@ -78,17 +78,16 @@ namespace Microsoft.PythonTools {
         public bool IsValid => Start.IsValid && End.IsValid;
 
         public SourceSpan Union(SourceSpan other) {
-            if (other.Start.Line < Start.Line) {
-                Start = other.Start;
-            } else if(other.Start.Line == Start.Line && other.Start.Column < Start.Column) {
-                Start = other.Start;
-            }
-            if (other.End.Line > End.Line) {
-                End = other.End;
-            } else if (other.End.Line == End.Line && other.End.Column > End.Column) {
-                End = other.End;
-            }
-            return this;
+            var startLine = Math.Min(other.Start.Line, Start.Line);
+            var startColumn = Math.Min(other.Start.Column, Start.Column);
+
+            var endLine = Math.Max(other.End.Line, End.Line);
+            var endColumn = Math.Max(other.End.Column, End.Column);
+
+            return new SourceSpan {
+                Start = new SourceLocation(startLine, startColumn),
+                End = new SourceLocation(endLine, endColumn),
+            };
         }
 
         /// <summary>

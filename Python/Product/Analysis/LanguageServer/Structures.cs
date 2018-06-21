@@ -64,10 +64,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public Range Union(Range other) {
             var span = (SourceSpan)this;
-            span.Union(other);
-            start = span.Start;
-            end = span.End;
-            return this;
+            return span.Union(other);
         }
 
         public bool IsEmpty => start.line == end.line && start.character == end.character;
