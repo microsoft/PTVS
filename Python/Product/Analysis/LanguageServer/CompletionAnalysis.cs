@@ -436,9 +436,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IEnumerable<CompletionItem> GetCompletionsInForStatement() {
             if (Statement is ForStatement fs) {
                 if (fs.Left != null) {
-                    if (Index < fs.Left.StartIndex) {
-                        return null;
-                    } else if (Index <= fs.Left.EndIndex) {
+                    if (fs.InIndex > fs.StartIndex) {
+                        if (Index > fs.InIndex + 2) {
+                            return null;
+                        } else if (Index >= fs.InIndex) {
+                            ApplicableSpan = new SourceSpan(Tree.IndexToLocation(fs.InIndex), Tree.IndexToLocation(fs.InIndex + 2));
+                            return Once(InKeywordCompletion);
+                        }
+                    }
+                    if (fs.Left.StartIndex > fs.StartIndex && fs.Left.EndIndex > fs.Left.StartIndex && Index > fs.Left.EndIndex) {
+                        return Once(InKeywordCompletion);
+                    } else if (fs.ForIndex >= fs.StartIndex && Index > fs.ForIndex + 3) {
                         return Empty;
                     }
                 }
@@ -524,7 +532,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return null;
         }
 
-        private static bool ShouldIncludeStatementKeywords(Node statement, int index) {
+        private static bool ShouldIncludeStatementKeywords(Node statement, int index, out IndexSpan? span) {
+            span = null;
             if (statement == null) {
                 return true;
             }
@@ -539,10 +548,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             // Allow keywords when we are in another keyword
             if (statement is Statement s && index <= s.KeywordEndIndex) {
+                int keywordStart = s.KeywordEndIndex - s.KeywordLength;
+                if (index >= keywordStart) {
+                    span = new IndexSpan(keywordStart, s.KeywordLength);
+                } else if ((s as IMaybeAsyncStatement)?.IsAsync == true) {
+                    // Must be in the "async" at the start of the keyword
+                    span = new IndexSpan(s.StartIndex, "async".Length);
+                }
                 return true;
             }
             // TryStatementHandler is 'except', but not a Statement subclass
             if (statement is TryStatementHandler except && index <= except.KeywordEndIndex) {
+                int keywordStart = except.KeywordEndIndex - except.KeywordLength;
+                if (index >= keywordStart) {
+                    span = new IndexSpan(keywordStart, except.KeywordLength);
+                }
                 return true;
             }
             // Allow keywords in function body (we'd have a different statement if we were deeper)
@@ -655,6 +675,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     break;
+                case TokenKind.KeywordFor:
+                case TokenKind.KeywordAs:
+                    return Empty;
             }
 
             Debug.WriteLine($"Unhandled completions from error.\nTokens were: ({lastToken.Value.Image}:{lastToken.Value.Kind}), {string.Join(", ", tokens.AsEnumerable().Take(10).Select(t => $"({t.Value.Image}:{t.Value.Kind})"))}");
@@ -668,8 +691,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (allowKeywords) {
                 opts |= GetMemberOptions.IncludeExpressionKeywords;
-                if (ShouldIncludeStatementKeywords(Statement, Index)) {
+                if (ShouldIncludeStatementKeywords(Statement, Index, out var span)) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
+                    if (span.HasValue) {
+                        ApplicableSpan = new SourceSpan(
+                            Tree.IndexToLocation(span.Value.Start),
+                            Tree.IndexToLocation(span.Value.End)
+                        );
+                    }
                 }
             }
 
@@ -701,6 +730,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private static readonly CompletionItem MetadataArgCompletion = ToCompletionItem("metaclass=", PythonMemberType.NamedArgument);
         private static readonly CompletionItem AsKeywordCompletion = ToCompletionItem("as", PythonMemberType.Keyword);
         private static readonly CompletionItem FromKeywordCompletion = ToCompletionItem("from", PythonMemberType.Keyword);
+        private static readonly CompletionItem InKeywordCompletion = ToCompletionItem("in", PythonMemberType.Keyword);
         private static readonly CompletionItem ImportKeywordCompletion = ToCompletionItem("import", PythonMemberType.Keyword);
         private static readonly CompletionItem WithKeywordCompletion = ToCompletionItem("with", PythonMemberType.Keyword);
         private static readonly CompletionItem StarCompletion = ToCompletionItem("*", PythonMemberType.Keyword);

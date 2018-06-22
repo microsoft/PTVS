@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
-    public class FunctionDefinition : ScopeStatement {
+    public class FunctionDefinition : ScopeStatement, IMaybeAsyncStatement {
         protected Statement _body;
         private readonly NameExpression/*!*/ _name;
         private readonly Parameter[] _parameters;
@@ -128,6 +128,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _coroutine; }
             set { _coroutine = value; }
         }
+
+        bool IMaybeAsyncStatement.IsAsync => IsCoroutine;
 
         /// <summary>
         /// Gets the variable that this function is assigned to.
