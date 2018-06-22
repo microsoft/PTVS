@@ -293,18 +293,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         #endregion
 
-        internal async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(CancellationToken cancel) {
+        internal async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(CancellationToken cancellationToken) {
             var spp = _searchPathPackages;
             if (spp != null) {
                 return spp;
             }
 
-            var sp = await GetSearchPathsAsync(cancel).ConfigureAwait(false);
+            var sp = await GetSearchPathsAsync(cancellationToken).ConfigureAwait(false);
             if (sp == null) {
                 return null;
             }
 
-            var packageDict = await GetImportableModulesAsync(sp, cancel).ConfigureAwait(false);
+            var packageDict = await GetImportableModulesAsync(sp, cancellationToken).ConfigureAwait(false);
             if (!packageDict.Any()) {
                 return null;
             }
@@ -319,18 +319,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths, CancellationToken cancel) {
+        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths, CancellationToken cancellationToken) {
             var packageDict = new Dictionary<string, string>();
 
             foreach (var searchPath in searchPaths.MaybeEnumerate()) {
                 IReadOnlyCollection<string> packages = null;
                 if (File.Exists(searchPath)) {
-                    packages = GetPackagesFromZipFile(searchPath, cancel);
+                    packages = GetPackagesFromZipFile(searchPath, cancellationToken);
                 } else if (Directory.Exists(searchPath)) {
-                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath, cancel)).ConfigureAwait(false);
+                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath, cancellationToken)).ConfigureAwait(false);
                 }
                 foreach (var package in packages.MaybeEnumerate()) {
-                    cancel.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
                     packageDict[package] = searchPath;
                 }
             }
@@ -339,15 +339,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
 
-        private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath, CancellationToken cancel) {
+        private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath, CancellationToken cancellationToken) {
             return ModulePath.GetModulesInPath(
                 searchPath,
                 recurse: false,
                 includePackages: true
-            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).TakeWhile(_ => !cancel.IsCancellationRequested).ToList();
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
         }
 
-        private static IReadOnlyCollection<string> GetPackagesFromZipFile(string searchPath, CancellationToken cancel) {
+        private static IReadOnlyCollection<string> GetPackagesFromZipFile(string searchPath, CancellationToken cancellationToken) {
             // TODO: Search zip files for packages
             return new string[0];
         }
@@ -364,7 +364,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual async Task<IReadOnlyList<string>> GetCurrentSearchPathsAsync(CancellationToken cancel) {
+        protected virtual async Task<IReadOnlyList<string>> GetCurrentSearchPathsAsync(CancellationToken cancellationToken) {
             if (Configuration.SearchPaths.Any()) {
                 return Configuration.SearchPaths;
             }
@@ -376,17 +376,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Log(TraceLevel.Info, "GetCurrentSearchPaths", Configuration.InterpreterPath, _searchPathCachePath);
             try {
                 var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
-                cancel.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
                 return paths.MaybeEnumerate().Select(p => p.Path).ToArray();
             } catch (InvalidOperationException) {
                 return Array.Empty<string>();
             }
         }
 
-        public async Task<IReadOnlyList<string>> GetSearchPathsAsync(CancellationToken cancel) {
+        public async Task<IReadOnlyList<string>> GetSearchPathsAsync(CancellationToken cancellationToken) {
             var sp = _searchPaths;
             if (sp == null) {
-                sp = await GetCurrentSearchPathsAsync(cancel).ConfigureAwait(false);
+                sp = await GetCurrentSearchPathsAsync(cancellationToken).ConfigureAwait(false);
                 lock (_searchPathsLock) {
                     if (_searchPaths == null) {
                         _searchPaths = sp;
@@ -400,8 +400,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return sp;
         }
 
-        private async Task<ModulePath> FindModuleAsync(string filePath, CancellationToken cancel) {
-            var sp = await GetSearchPathsAsync(cancel);
+        private async Task<ModulePath> FindModuleAsync(string filePath, CancellationToken cancellationToken) {
+            var sp = await GetSearchPathsAsync(cancellationToken);
 
             string bestLibraryPath = "";
 
@@ -417,11 +417,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mp;
         }
 
-        internal static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath, CancellationToken cancel) {
+        internal static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath, CancellationToken cancellationToken) {
             try {
                 var apif = factory as AstPythonInterpreterFactory;
                 if (apif != null) {
-                    return await apif.FindModuleAsync(filePath, cancel);
+                    return await apif.FindModuleAsync(filePath, cancellationToken);
                 }
 
                 return ModulePath.FromFullPath(filePath);
@@ -490,7 +490,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public async Task<TryImportModuleResult> TryImportModuleAsync(
             string name,
             TryImportModuleContext context,
-            CancellationToken cancel
+            CancellationToken cancellationToken
         ) {
             IPythonModule module = null;
             if (string.IsNullOrEmpty(name)) {
@@ -517,7 +517,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         // importing on the current thread or the module is not
                         // really being imported.
                         try {
-                            module = await smod.WaitForImportAsync(cancel);
+                            module = await smod.WaitForImportAsync(cancellationToken);
                         } catch (OperationCanceledException) {
                             _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
                             return TryImportModuleResult.Timeout;
@@ -547,7 +547,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             // Do normal searches
             if (!string.IsNullOrEmpty(Configuration?.InterpreterPath)) {
                 try {
-                    module = await ImportFromSearchPathsAsync(name, context, cancel);
+                    module = await ImportFromSearchPathsAsync(name, context, cancellationToken);
                 } catch (OperationCanceledException) {
                     _log?.Log(TraceLevel.Error, "ImportTimeout", name, "ImportFromSearchPaths");
                     return TryImportModuleResult.Timeout;
@@ -585,7 +585,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             // Also search for type stub packages if enabled and we are not a blacklisted module
             if (module != null && context?.TypeStubPaths != null && module.Name != "typing") {
-                var tsModule = await ImportFromTypeStubsAsync(module.Name, context, cancel);
+                var tsModule = await ImportFromTypeStubsAsync(module.Name, context, cancellationToken);
                 if (tsModule != null) {
                     if (context.MergeTypeStubPackages) {
                         module = AstPythonMultipleModules.Combine(module, tsModule);
@@ -598,7 +598,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new TryImportModuleResult(module);
         }
 
-        private async Task<IPythonModule> ImportFromTypeStubsAsync(string name, TryImportModuleContext context, CancellationToken cancel) {
+        private async Task<IPythonModule> ImportFromTypeStubsAsync(string name, TryImportModuleContext context, CancellationToken cancellationToken) {
             var mp = FindModuleInSearchPath(context.TypeStubPaths, null, name);
 
             if (mp == null) {
@@ -611,7 +611,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 ModulePath? stubMp = null;
                 if (context.FindModuleInUserSearchPathAsync != null) {
                     try {
-                        stubMp = await context.FindModuleInUserSearchPathAsync(stubName, cancel);
+                        stubMp = await context.FindModuleInUserSearchPathAsync(stubName, cancellationToken);
                     } catch (Exception ex) {
                         _log?.Log(TraceLevel.Error, "Exception", ex.ToString());
                         _log?.Flush();
@@ -619,7 +619,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
                 }
                 if (stubMp == null) {
-                    stubMp = await FindModuleInSearchPathAsync(stubName, cancel);
+                    stubMp = await FindModuleInSearchPathAsync(stubName, cancellationToken);
                 }
 
                 if (stubMp != null) {
@@ -703,9 +703,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        protected async Task<ModulePath?> FindModuleInSearchPathAsync(string name, CancellationToken cancel) {
-            var searchPaths = await GetSearchPathsAsync(cancel).ConfigureAwait(false);
-            var packages = await GetImportableModulesAsync(cancel).ConfigureAwait(false);
+        protected async Task<ModulePath?> FindModuleInSearchPathAsync(string name, CancellationToken cancellationToken) {
+            var searchPaths = await GetSearchPathsAsync(cancellationToken).ConfigureAwait(false);
+            var packages = await GetImportableModulesAsync(cancellationToken).ConfigureAwait(false);
             return FindModuleInSearchPath(searchPaths, packages, name);
         }
 
@@ -741,11 +741,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
-        private async Task<IPythonModule> ImportFromSearchPathsAsync(string name, TryImportModuleContext context, CancellationToken cancel) {
+        private async Task<IPythonModule> ImportFromSearchPathsAsync(string name, TryImportModuleContext context, CancellationToken cancellationToken) {
             ModulePath? mmp = null;
             if (context.FindModuleInUserSearchPathAsync != null) {
                 try {
-                    mmp = await context.FindModuleInUserSearchPathAsync(name, cancel);
+                    mmp = await context.FindModuleInUserSearchPathAsync(name, cancellationToken);
                 } catch (Exception ex) {
                     _log?.Log(TraceLevel.Error, "Exception", ex.ToString());
                     _log?.Flush();
@@ -754,7 +754,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (!mmp.HasValue) {
-                mmp = await FindModuleInSearchPathAsync(name, cancel);
+                mmp = await FindModuleInSearchPathAsync(name, cancellationToken);
             }
 
             if (!mmp.HasValue) {

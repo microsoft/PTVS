@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return res;
         }
 
-        private async Task<IReadOnlyDictionary<string, string>> GetUserSearchPathPackagesAsync(CancellationToken cancel) {
+        private async Task<IReadOnlyDictionary<string, string>> GetUserSearchPathPackagesAsync(CancellationToken cancellationToken) {
             _log?.Log(TraceLevel.Verbose, "GetUserSearchPathPackagesAsync");
             var ussp = _userSearchPathPackages;
             if (ussp == null) {
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
 
                 _log?.Log(TraceLevel.Verbose, "GetImportableModulesAsync");
-                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp, cancel);
+                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp, cancellationToken);
                 lock (_userSearchPathsLock) {
                     if (_userSearchPathPackages == null) {
                         _userSearchPathPackages = ussp;
