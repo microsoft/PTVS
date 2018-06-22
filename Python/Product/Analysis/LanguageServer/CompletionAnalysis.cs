@@ -217,15 +217,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return Empty;
                 }
 
-                var names = new List<string>();
-                foreach (var n in dn.Names) {
-                    if (Index > n.EndIndex) {
-                        names.Add(n.Name);
-                    } else {
-                        break;
-                    }
-                }
-
+                var names = dn.Names.TakeWhile(n => Index > n.EndIndex).Select(n => n.Name).ToArray();
 
                 return GetModules(names, includeMembers);
             } else if (name == null || name is NameExpression) {
@@ -312,7 +304,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     if (Index > fimp.Root.EndIndex && fimp.Root.EndIndex > fimp.Root.StartIndex) {
                         return Once(ImportKeywordCompletion);
                     } else if (Index >= fimp.Root.StartIndex) {
-                        ApplicableSpan = fimp.Root.GetSpan(Tree);
+                        Node = fimp.Root.Names.MaybeEnumerate().LastOrDefault(n => n.StartIndex <= Index && Index <= n.EndIndex);
                         return GetModulesFromNode(fimp.Root);
                     }
                 }
