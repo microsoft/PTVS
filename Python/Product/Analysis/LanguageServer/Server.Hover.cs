@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var res = new Hover {
                 contents = GetMarkupContent(
                     _displayTextBuilder.GetDocumentation(values, originalExpr),
-                    _clientCaps.TextDocument.Hover.ContentFormat),
+                    _clientCaps.TextDocument.hover.contentFormat),
                 range = exprSpan,
                 _version = version,
                 _typeNames = names

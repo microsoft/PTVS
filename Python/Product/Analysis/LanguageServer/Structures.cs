@@ -16,6 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
@@ -299,23 +303,33 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public class TextDocumentClientCapabilities {
+    public struct TextDocumentClientCapabilities {
         [Serializable]
         public struct SynchronizationCapabilities {
+            [DefaultValue(false)]
             public bool dynamicRegistration;
+
+            [DefaultValue(false)]
             public bool willSave;
+
             /// <summary>
             /// The client supports sending a will save request and
             /// waits for a response providing text edits which will
             /// be applied to the document before it is saved.
             /// </summary>
+            [DefaultValue(false)]
             public bool willSaveWaitUntil;
+            
+            [DefaultValue(false)]
             public bool didSave;
         }
-        public SynchronizationCapabilities? synchronization;
+
+        [DefaultJson]
+        public SynchronizationCapabilities synchronization;
 
         [Serializable]
         public struct CompletionCapabilities {
+            [DefaultValue(false)]
             public bool dynamicRegistration;
 
             [Serializable]
@@ -328,13 +342,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// the end of the snippet. Placeholders with equal identifiers are linked,
                 /// that is typing in one will update others too.
                 /// </summary>
+                [DefaultValue(false)]
                 public bool snippetSupport;
 
+                [DefaultValue(false)]
                 public bool commitCharactersSupport;
 
+                [DefaultJson]
                 public MarkupKind[] documentationFormat;
             }
-            public CompletionItemCapabilities? completionItem;
+
+            [DefaultJson]
+            public CompletionItemCapabilities completionItem;
 
             [Serializable]
             public struct CompletionItemKindCapabilities {
@@ -348,31 +367,42 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// the completion items kinds from `Text` to `Reference` as defined in
                 /// the initial version of the protocol.
                 /// </summary>
+                [DefaultJson]
                 public SymbolKind[] valueSet;
             }
-            public CompletionItemKindCapabilities? completionItemKind;
+
+            [DefaultJson]
+            public CompletionItemKindCapabilities completionItemKind;
 
             /// <summary>
             /// The client supports to send additional context information for a
             /// `textDocument/completion` request.
             /// </summary>
+            [DefaultValue(false)]
             public bool contextSupport;
         }
-        public CompletionCapabilities? completion;
+
+        [DefaultJson]
+        public CompletionCapabilities completion;
 
         [Serializable]
         public struct HoverCapabilities {
+            [DefaultValue(false)]
             public bool dynamicRegistration;
             /// <summary>
             /// Client supports the follow content formats for the content
             /// property.The order describes the preferred format of the client.
             /// </summary>
+            [DefaultJson]
             public MarkupKind[] contentFormat;
         }
-        public HoverCapabilities? hover;
+
+        [DefaultJson]
+        public HoverCapabilities hover;
 
         [Serializable]
         public struct SignatureHelpCapabilities {
+            [DefaultValue(false)]
             public bool dynamicRegistration;
 
             public struct SignatureInformationCapabilities {
@@ -380,6 +410,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ///  Client supports the follow content formats for the documentation
                 /// property.The order describes the preferred format of the client.
                 /// </summary>
+                [DefaultJson]
                 public MarkupKind[] documentationFormat;
 
                 /// <summary>
@@ -387,11 +418,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 /// only contain the function name. Otherwise, the label will contain
                 /// the full signature.
                 /// </summary>
-                public bool? _shortLabel;
+                [DefaultValue(false)]
+                public bool _shortLabel;
             }
-            public SignatureInformationCapabilities? signatureInformation;
+            
+            [DefaultJson]
+            public SignatureInformationCapabilities signatureInformation;
         }
-        public SignatureHelpCapabilities? signatureHelp;
+
+        [DefaultJson]
+        public SignatureHelpCapabilities signatureHelp;
 
         [Serializable]
         public struct ReferencesCapabilities { public bool dynamicRegistration; }
@@ -458,44 +494,67 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// client capabilities following the specification for extra settings.
     /// </summary>
     [Serializable]
-    public class PythonClientCapabilities {
+    public struct PythonClientCapabilities {
+        [JsonConstructor]
+        public PythonClientCapabilities([DefaultValue(false)] bool analysisUpdates,
+            [DefaultValue(Timeout.Infinite)] int completionsTimeout,
+            [DefaultValue(false)] bool traceLogging,
+            [DefaultValue(false)] bool manualFileLoad,
+            [DefaultValue(false)] bool liveLinting) {
+            AnalysisUpdates = analysisUpdates;
+            CompletionsTimeout = completionsTimeout;
+            TraceLogging = traceLogging;
+            ManualFileLoad = manualFileLoad;
+            LiveLinting = liveLinting;
+        }
+
         /// <summary>
         /// Client expects analysis progress updates, including notifications
         /// when analysis is complete for a particular document version.
         /// </summary>
-        public bool? analysisUpdates;
+        public readonly bool AnalysisUpdates;
 
         /// <summary>
         /// Number of milliseconds of synchronous wait to allow during request
         /// for completions.
         /// </summary>
-        public int? completionsTimeout;
+        public readonly int CompletionsTimeout;
 
         /// <summary>
         /// Enables an even higher level of logging via the logMessage event.
         /// This will likely have a performance impact.
         /// </summary>
-        public bool? traceLogging;
+        public readonly bool TraceLogging;
 
         /// <summary>
         /// Disables automatic analysis of all files under the root URI.
         /// </summary>
-        public bool? manualFileLoad;
+        public readonly bool ManualFileLoad;
 
         /// <summary>
         /// Enables rich diagnostics from code analysis.
         /// </summary>
-        public bool? liveLinting;
+        public readonly bool LiveLinting;
     }
-
+    
     [Serializable]
     public class ClientCapabilities {
-        public WorkspaceClientCapabilities workspace;
-        public TextDocumentClientCapabilities textDocument;
-        public object experimental;
-        public PythonClientCapabilities python;
-    }
+        public readonly WorkspaceClientCapabilities Workspace;
+        public readonly TextDocumentClientCapabilities TextDocument;
+        public readonly object Experimental;
+        public readonly PythonClientCapabilities Python;
 
+        [JsonConstructor]
+        public ClientCapabilities(WorkspaceClientCapabilities workspace,
+            [DefaultJson] TextDocumentClientCapabilities textDocument,
+            object experimental,
+            [DefaultJson] PythonClientCapabilities python) {
+            Workspace = workspace;
+            TextDocument = textDocument;
+            Experimental = experimental;
+            Python = python;
+        }
+    }
 
     [Serializable]
     public struct CompletionOptions {

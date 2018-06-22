@@ -10,14 +10,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     internal class ImportStatementWalker : PythonWalker {
         public readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
 
-        readonly IPythonProjectEntry _entry;
-        readonly PythonAnalyzer _analyzer;
+        private readonly IPythonProjectEntry _entry;
+        private readonly PythonAnalyzer _analyzer;
+        private readonly DiagnosticSeverity _severity;
         private readonly PythonAst _ast;
 
-        public ImportStatementWalker(PythonAst ast, IPythonProjectEntry entry, PythonAnalyzer analyzer) {
+        public ImportStatementWalker(PythonAst ast, IPythonProjectEntry entry, PythonAnalyzer analyzer, DiagnosticSeverity severity) {
             _ast = ast;
             _entry = entry;
             _analyzer = analyzer;
+            _severity = severity;
         }
 
         public override bool Walk(FromImportStatement node) {
@@ -35,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return new Diagnostic {
                 message = ErrorMessages.UnresolvedImport(name),
                 range = span,
-                severity = DiagnosticSeverity.Warning,
+                severity = _severity,
                 code = ErrorMessages.UnresolvedImportCode,
                 source = "Python"
             };
@@ -52,15 +54,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private static bool IsImportError(Expression expr) {
-            if (expr is NameExpression name) {
-                return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError";
+            switch (expr) {
+                case NameExpression name:
+                    return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError" || name.Name == "ModuleNotFoundError";
+                case TupleExpression tuple:
+                    return tuple.Items.Any(IsImportError);
+                default:
+                    return false;
             }
-
-            if (expr is TupleExpression tuple) {
-                return tuple.Items.Any(IsImportError);
-            }
-
-            return false;
         }
 
         private static bool ShouldWalkNormally(TryStatement node) {

@@ -32,6 +32,8 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server : ServerBase, ILogger, IDisposable {
@@ -77,8 +79,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
-        private Capabilities _clientCaps = new Capabilities();
-        private LanguageServerSettings _settings = new LanguageServerSettings();
+        private ClientCapabilities _clientCaps = JsonUtils.GetDefaultInstance<ClientCapabilities>();
+        private LanguageServerSettings _settings = JsonUtils.GetDefaultInstance<LanguageServerSettings>();
 
         private bool _traceLogging;
         private bool _testEnvironment;
@@ -243,14 +245,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            if (@params.settings != null) {
-                if (@params.settings is LanguageServerSettings settings) {
-                    _settings = settings;
-                } else {
-                    LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
-                    return;
-                }
+            if (!(@params.settings is JObject rootSection)) {
+                return;
             }
+
+            if (!rootSection.TryGetValue("python", out var pythonSection)) {
+                return;
+            }
+
+            _settings = pythonSection.ToObjectPopulateDefaults<LanguageServerSettings>();
 
             // Make sure reload modules is executed on the analyzer thread.
             var task = _reloadModulesQueueItem.Task;
@@ -339,9 +342,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-
-            _clientCaps = new Capabilities(@params.capabilities);
-            _settings.SetCompletionTimeout(_clientCaps.Python.CompletionsTimeout);
+            _clientCaps = @params.capabilities;
             _traceLogging = _clientCaps.Python.TraceLogging;
             _analyzer.EnableDiagnostics = _clientCaps.Python.LiveLinting;
 
@@ -455,7 +456,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(item);
             }
 
-            IEnumerable<string> aliases = null;
+            string[] aliases = null;
             var path = GetLocalPath(documentUri);
             if (fromSearchPath != null) {
                 if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
@@ -465,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToArray();
             }
 
-            if (!(aliases?.Any() ?? false)) {
+            if (aliases.IsNullOrEmpty()) {
                 aliases = new[] { Path.GetFileNameWithoutExtension(path) };
             }
 
@@ -489,10 +490,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 EnqueueItem(doc);
             }
 
-            if (reanalyzeEntries != null) {
-                foreach (var entryRef in reanalyzeEntries) {
-                    _queue.Enqueue(entryRef, AnalysisPriority.Low);
-                }
+            foreach (var entryRef in reanalyzeEntries) {
+                _queue.Enqueue(entryRef, AnalysisPriority.Low);
             }
 
             return Task.FromResult(item);
@@ -623,8 +622,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var diags = _analyzer.GetDiagnostics(pythonProjectEntry);
-            if (parse != null) {
-                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer);
+            if (parse != null && _settings.Diagnostics.UnresolvedImports.Show()) {
+                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer, _settings.Diagnostics.UnresolvedImports);
                 parse.Tree.Walk(walker);
                 diags = diags.Concat(walker.Diagnostics).ToArray();
             }
