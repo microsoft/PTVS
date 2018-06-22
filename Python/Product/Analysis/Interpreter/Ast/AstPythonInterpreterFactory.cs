@@ -464,18 +464,23 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public struct TryImportModuleResult {
-            public TryImportModuleResultCode Status;
-            public IPythonModule Module;
+            public readonly TryImportModuleResultCode Status;
+            public readonly IPythonModule Module;
 
             public TryImportModuleResult(IPythonModule module) {
                 Status = module == null ? TryImportModuleResultCode.ModuleNotFound : TryImportModuleResultCode.Success;
                 Module = module;
             }
 
-            public static TryImportModuleResult ModuleNotFound => new TryImportModuleResult { Status = TryImportModuleResultCode.ModuleNotFound };
-            public static TryImportModuleResult NeedRetry => new TryImportModuleResult { Status = TryImportModuleResultCode.NeedRetry };
-            public static TryImportModuleResult NotSupported => new TryImportModuleResult { Status = TryImportModuleResultCode.NotSupported };
-            public static TryImportModuleResult Timeout => new TryImportModuleResult { Status = TryImportModuleResultCode.Timeout };
+            public TryImportModuleResult(TryImportModuleResultCode status) {
+                Status = status;
+                Module = null;
+            }
+
+            public static TryImportModuleResult ModuleNotFound => new TryImportModuleResult(TryImportModuleResultCode.ModuleNotFound);
+            public static TryImportModuleResult NeedRetry => new TryImportModuleResult(TryImportModuleResultCode.NeedRetry);
+            public static TryImportModuleResult NotSupported => new TryImportModuleResult(TryImportModuleResultCode.NotSupported);
+            public static TryImportModuleResult Timeout => new TryImportModuleResult(TryImportModuleResultCode.Timeout);
         }
 
         public sealed class TryImportModuleContext {
