@@ -45,19 +45,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         private readonly Fields _fields;
-        private readonly PythonLanguageVersion _languageVersion;
 
-        public PyThreadState(DkmProcess process, ulong address, PythonLanguageVersion languageVersion)
+        public PyThreadState(DkmProcess process, ulong address)
             : base(process, address) {
-            _languageVersion = languageVersion;
             InitializeStruct(this, out _fields);
         }
 
-        public static PyThreadState TryCreate(DkmProcess process, ulong address, PythonLanguageVersion languageVersion) {
+        public static PyThreadState TryCreate(DkmProcess process, ulong address) {
             if (address == 0) {
                 return null;
             }
-            return new PyThreadState(process, address, languageVersion);
+            return new PyThreadState(process, address);
         }
 
         public PointerProxy<PyThreadState> next {
@@ -88,15 +86,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.curexc_traceback); }
         }
 
-        public PointerProxy<PyObject> exc_type => _languageVersion < PythonLanguageVersion.V37
+        public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
             ? GetFieldProxy(_fields.exc_type)
             : GetFieldProxy(_fields.exc_state).exc_type;
 
-        public PointerProxy<PyObject> exc_value => _languageVersion < PythonLanguageVersion.V37
+        public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
             ? GetFieldProxy(_fields.exc_value)
             : GetFieldProxy(_fields.exc_state).exc_value;
 
-        public PointerProxy<PyObject> exc_traceback => _languageVersion < PythonLanguageVersion.V37
+        public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
             ? GetFieldProxy(_fields.exc_traceback)
             : GetFieldProxy(_fields.exc_state).exc_traceback;
 

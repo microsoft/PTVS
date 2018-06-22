@@ -70,7 +70,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
-            _server.OnFileFound += OnFileFound;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -283,7 +282,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         new LS.PythonClientCapabilities (analysisUpdates: true,
                             completionsTimeout: 5000,
                             traceLogging: request.traceLogging,
-                            manualFileLoad: !request.analyzeAllFiles,
                             liveLinting: request.liveLinting))
                 });
             } catch (Exception ex) {
@@ -1153,7 +1151,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.AnalysisReference {
                 documentUri = r.uri,
-                file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
+                file = (_server.GetEntry(r.uri, throwIfMissing: false)?.FilePath) ?? r.uri?.LocalPath,
                 startLine = range.Start.Line,
                 startColumn = range.Start.Column,
                 endLine = range.End.Line,
@@ -1692,14 +1690,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     version = e.version
                 }
             ).DoNotWait();
-        }
-
-        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
-            // Send a notification for this file
-            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = e.uri,
-                filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            }).DoNotWait();
         }
 
 

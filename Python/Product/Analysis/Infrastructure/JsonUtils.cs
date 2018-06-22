@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                 if (property.DefaultValue == DefaultJsonAttribute.DummyValue) {
                     var type = property.PropertyType;
                     property.DefaultValue = type.IsArray 
-                        ? Array.CreateInstance(type, 0)
+                        ? Array.CreateInstance(type.GetElementType(), 0)
                         : GetDefaultInstance(type);
                 }
 

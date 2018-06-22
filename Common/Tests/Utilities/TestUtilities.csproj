@@ -119,6 +119,7 @@
     <Compile Include="Mocks\KeyWeakReference.cs" />
     <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
     <Compile Include="Mocks\MockTextImageVersion.cs" />
+    <Compile Include="Mocks\MockTextViewRoleSet.cs" />
     <Compile Include="Mocks\Undo\AutoEnclose.cs" />
     <Compile Include="Mocks\Undo\CatchOperationsFromHistoryForDelegatedPrimitive.cs" />
     <Compile Include="Mocks\Undo\DelegatedUndoPrimitiveState.cs" />

@@ -71,7 +71,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var classScope = (ClassScope)unit.Scope;
 
                 var classVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
-                classVar.AddTypes(unit, classScope.Class.SelfSet);
+                if (node.Decorators == null || node.Decorators.DecoratorsInternal.Length == 0) {
+                    classVar.AddTypes(unit, classScope.Class.SelfSet);
+                }
 
                 declScope.Children.Add(classScope);
                 declScope.AddNodeScope(node, classScope);

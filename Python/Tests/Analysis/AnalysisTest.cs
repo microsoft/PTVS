@@ -2985,55 +2985,69 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
+                new VariableLocation(1, 25, VariableType.Definition, "oarbaz"),
+                new VariableLocation(2, 25, VariableType.Definition, "oarbaz"),    // as
+                new VariableLocation(2, 20, VariableType.Definition, "fob"),    // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
             );
         }
 
         [TestMethod, Priority(0)]
-        public void ReferencesGenerators() {
+        public void ReferencesGeneratorsV3() {
             var text = @"
 [f for f in x]
 [x for x in f]
 (g for g in y)
 (y for y in g)
 ";
-            var entry = ProcessTextV3(text);
-            entry.AssertReferences("f", text.IndexOf("f for"),
-                new VariableLocation(2, 2, VariableType.Reference),
-                new VariableLocation(2, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("x", text.IndexOf("x for"),
-                new VariableLocation(3, 2, VariableType.Reference),
-                new VariableLocation(3, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("g", text.IndexOf("g for"),
-                new VariableLocation(4, 2, VariableType.Reference),
-                new VariableLocation(4, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("y", text.IndexOf("y for"),
-                new VariableLocation(5, 2, VariableType.Reference),
-                new VariableLocation(5, 8, VariableType.Definition)
-            );
+            using (var entry = ProcessTextV3(text)) {
+                entry.AssertReferences("f", text.IndexOf("f for"),
+                    new VariableLocation(2, 2, VariableType.Reference),
+                    new VariableLocation(2, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("x", text.IndexOf("x for"),
+                    new VariableLocation(3, 2, VariableType.Reference),
+                    new VariableLocation(3, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("g", text.IndexOf("g for"),
+                    new VariableLocation(4, 2, VariableType.Reference),
+                    new VariableLocation(4, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("y", text.IndexOf("y for"),
+                    new VariableLocation(5, 2, VariableType.Reference),
+                    new VariableLocation(5, 8, VariableType.Definition)
+                );
+            }
+        }
 
-            entry = ProcessTextV2(text);
-            // Index variable leaks out of list comprehension
-            entry.AssertReferences("f", text.IndexOf("f for"),
-                new VariableLocation(2, 2, VariableType.Reference),
-                new VariableLocation(2, 8, VariableType.Definition),
-                new VariableLocation(3, 13, VariableType.Reference)
-            );
-            entry.AssertReferences("x", text.IndexOf("x for"),
-                new VariableLocation(3, 2, VariableType.Reference),
-                new VariableLocation(3, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("g", text.IndexOf("g for"),
-                new VariableLocation(4, 2, VariableType.Reference),
-                new VariableLocation(4, 8, VariableType.Definition)
-            );
-            entry.AssertReferences("y", text.IndexOf("y for"),
-                new VariableLocation(5, 2, VariableType.Reference),
-                new VariableLocation(5, 8, VariableType.Definition)
-            );
+        [TestMethod, Priority(0)]
+        public void ReferencesGeneratorsV2() {
+            var text = @"
+[f for f in x]
+[x for x in f]
+(g for g in y)
+(y for y in g)
+";
+            using (var entry = ProcessTextV2(text)) {
+                // Index variable leaks out of list comprehension
+                entry.AssertReferences("f", text.IndexOf("f for"),
+                    new VariableLocation(2, 2, VariableType.Reference),
+                    new VariableLocation(2, 8, VariableType.Definition),
+                    new VariableLocation(3, 13, VariableType.Reference)
+                );
+                entry.AssertReferences("x", text.IndexOf("x for"),
+                    new VariableLocation(3, 2, VariableType.Reference),
+                    new VariableLocation(3, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("g", text.IndexOf("g for"),
+                    new VariableLocation(4, 2, VariableType.Reference),
+                    new VariableLocation(4, 8, VariableType.Definition)
+                );
+                entry.AssertReferences("y", text.IndexOf("y for"),
+                    new VariableLocation(5, 2, VariableType.Reference),
+                    new VariableLocation(5, 8, VariableType.Definition)
+                );
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -5242,35 +5256,71 @@ def my_fn():
         [TestMethod, Priority(0)]
         public void DecoratorReferences() {
             var text = @"
-def d1(f): return f
+def d1(f):
+    return f
 class d2:
     def __call__(self, f): return f
 
 @d1
 def func_d1(): pass
-@d2
+@d2()
 def func_d2(): pass
 
 @d1
-class cls_d1(): pass
-@d2
-class cls_d2(): pass
+class cls_d1(object): pass
+@d2()
+class cls_d2(object): pass
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("d1",
                 new VariableLocation(2, 1, VariableType.Value),
                 new VariableLocation(2, 5, VariableType.Definition),
-                new VariableLocation(6, 2, VariableType.Reference),
-                new VariableLocation(11, 2, VariableType.Reference)
+                new VariableLocation(7, 2, VariableType.Reference),
+                new VariableLocation(12, 2, VariableType.Reference)
             );
             entry.AssertReferences("d2",
-                new VariableLocation(3, 1, VariableType.Value),
-                new VariableLocation(3, 7, VariableType.Definition),
-                new VariableLocation(8, 2, VariableType.Reference),
-                new VariableLocation(13, 2, VariableType.Reference)
+                new VariableLocation(4, 1, VariableType.Value),
+                new VariableLocation(4, 7, VariableType.Definition),
+                new VariableLocation(9, 2, VariableType.Reference),
+                new VariableLocation(14, 2, VariableType.Reference)
             );
+            AssertUtil.ContainsExactly(entry.GetValues("f", 18).Select(v => v.MemberType), PythonMemberType.Function, PythonMemberType.Class);
+            AssertUtil.ContainsExactly(entry.GetValues("f", 66).Select(v => v.MemberType), PythonMemberType.Function, PythonMemberType.Class);
+            AssertUtil.ContainsExactly(entry.GetValues("func_d1").Select(v => v.MemberType), PythonMemberType.Function);
+            AssertUtil.ContainsExactly(entry.GetValues("func_d2").Select(v => v.MemberType), PythonMemberType.Function);
+            AssertUtil.ContainsExactly(entry.GetValues("cls_d1").Select(v => v.MemberType), PythonMemberType.Class);
+            AssertUtil.ContainsExactly(entry.GetValues("cls_d2").Select(v => v.MemberType), PythonMemberType.Class);
         }
 
+        [TestMethod, Priority(0)]
+        public void DecoratorClass() {
+            var text = @"
+def dec1(C):
+    def sub_method(self): pass
+    C.sub_method = sub_method
+    return C
+
+@dec1
+class MyBaseClass1(object):
+    def base_method(self): pass
+
+def dec2(C):
+    class MySubClass(C):
+        def sub_method(self): pass
+    return MySubClass
+
+@dec2
+class MyBaseClass2(object):
+    def base_method(self): pass
+
+mc1 = MyBaseClass1()
+mc2 = MyBaseClass2()
+";
+            var entry = ProcessText(text);
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("mc1", 0, GetMemberOptions.None), "base_method", "sub_method");
+            entry.AssertIsInstance("mc2", "MySubClass");
+            AssertUtil.ContainsAtLeast(entry.GetMemberNames("mc2", 0, GetMemberOptions.None), /*"base_method",*/ "sub_method");
+        }
 
         [TestMethod, Priority(0)]
         public void ClassInit() {

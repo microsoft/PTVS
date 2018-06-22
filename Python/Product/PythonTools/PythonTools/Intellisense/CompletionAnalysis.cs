@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 triggerChar == '\0' ? null : triggerChar.ToString()
             ), "GetCompletions.GetMembers");
 
-            if (completions.items == null) {
+            if (completions?.items == null) {
                 return null;
             }
 

@@ -364,12 +364,14 @@ namespace Microsoft.PythonTools.Analysis {
 
     class ClassAnalysisUnit : AnalysisUnit {
         private readonly AnalysisUnit _outerUnit;
+        private readonly Dictionary<Node, Expression> _decoratorCalls;
 
         public ClassAnalysisUnit(ClassDefinition node, InterpreterScope declScope, AnalysisUnit outerUnit)
             : base(node, new ClassScope(new ClassInfo(node, outerUnit), node, declScope)) {
 
             ((ClassScope)Scope).Class.SetAnalysisUnit(this);
             _outerUnit = outerUnit;
+            _decoratorCalls = new Dictionary<Node, Expression>();
 
             AnalysisLog.NewUnit(this);
         }
@@ -386,7 +388,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return;
             }
 
-            var classInfo = ((ClassScope)scope).Class;
+            var classInfo = ((ClassScope)Scope).Class;
             var bases = new List<IAnalysisSet>();
 
             if (Ast.BasesInternal.Length == 0) {
@@ -421,8 +423,51 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+
             ddg.SetCurrentUnit(this);
             ddg.WalkBody(Ast.Body, classInfo.AnalysisUnit);
+
+            ddg.SetCurrentUnit(_outerUnit);
+            var v = _outerUnit.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
+            v.AddTypes(this, ProcessClassDecorators(ddg, classInfo));
+        }
+
+        private IAnalysisSet ProcessClassDecorators(DDG ddg, ClassInfo classInfo) {
+            var types = classInfo.SelfSet;
+            if (Ast.Decorators != null) {
+                Expression expr = Ast.NameExpression;
+
+                foreach (var d in Ast.Decorators.DecoratorsInternal) {
+                    if (d != null) {
+                        var decorator = ddg._eval.Evaluate(d);
+
+                        Expression nextExpr;
+                        if (!_decoratorCalls.TryGetValue(d, out nextExpr)) {
+                            nextExpr = _decoratorCalls[d] = new CallExpression(d, new[] { new Arg(expr) });
+                            nextExpr.SetLoc(d.IndexSpan);
+                        }
+                        expr = nextExpr;
+                        var decorated = AnalysisSet.Empty;
+                        bool anyResults = false;
+                        foreach (var ns in decorator) {
+                            var fd = ns as FunctionInfo;
+                            if (fd != null && Scope.EnumerateTowardsGlobal.Any(s => s.AnalysisValue == fd)) {
+                                continue;
+                            }
+                            decorated = decorated.Union(ns.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames));
+                            anyResults = true;
+                        }
+
+                        // If processing decorators, update the current
+                        // function type. Otherwise, we are acting as if
+                        // each decorator returns the function unmodified.
+                        if (ddg.ProjectState.Limits.ProcessCustomDecorators && anyResults) {
+                            types = decorated;
+                        }
+                    }
+                }
+            }
+            return types;
         }
 
         internal static IAnalysisSet EvaluateBaseClass(DDG ddg, ClassInfo newClass, int indexInBaseList, Expression baseClass) {

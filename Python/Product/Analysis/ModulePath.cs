@@ -23,10 +23,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
-    struct ModulePath {
+    internal struct ModulePath {
         public static readonly ModulePath Empty = new ModulePath(null, null, null);
 
         /// <summary>
@@ -109,6 +108,30 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsStub => PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
 
         /// <summary>
+        /// True if the module can only be used in debug builds of the interpreter.
+        /// </summary>
+        public bool IsDebug {
+            get {
+                var m = PythonBinaryRegex.Match(PathUtils.GetFileName(SourceFile));
+                // Only binaries require debug builds
+                if (!m.Success) {
+                    return false;
+                }
+
+                if (m.Groups["windebug"].Success) {
+                    return true;
+                }
+
+                var abiTag = PythonAbiTagRegex.Match(m.Groups["abitag"].Value);
+                if (abiTag.Groups["flags"].Value?.Contains("d") == true) {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Creates a new ModulePath item.
         /// </summary>
         /// <param name="fullname">The full name of the module.</param>
@@ -131,10 +154,16 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonStubRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyi$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|so|dylib)$",
+        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+?(?<windebug>_d)?)\.((?<abitag>(\w|_|-)+?)\.)?(pyd|so|dylib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?(pyd|py[co]|so|dylib)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonAbiTagRegex = new Regex(@"^(
+              (?<implementation>\w+)-(?<version>\d+)(?<flags>[dmu]+)?   # SOABI style
+            | (?<abi>abi\d+)                                            # Stable ABI style
+            | (?<version>\w+)-(?<platform>(\w|_)+)                      # Windows style
+            )$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
             string libPath,

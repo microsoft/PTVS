@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools {
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Class)]
     [Name(PythonPredefinedClassificationTypeNames.Class)]
     [UserVisible(true)]
-    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    [Order(After = PredefinedClassificationTypeNames.Identifier)]
     internal sealed class ClassFormat : ClassificationFormatDefinition {
         public ClassFormat() {
             DisplayName = Strings.ClassClassificationType;
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools {
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Module)]
     [Name(PythonPredefinedClassificationTypeNames.Module)]
     [UserVisible(true)]
-    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    [Order(After = PredefinedClassificationTypeNames.Identifier)]
     internal sealed class ModuleFormat : ClassificationFormatDefinition {
         public ModuleFormat() {
             DisplayName = Strings.ModuleClassificationType;
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools {
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Parameter)]
     [Name(PythonPredefinedClassificationTypeNames.Parameter)]
     [UserVisible(true)]
-    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    [Order(After = PredefinedClassificationTypeNames.Identifier)]
     internal sealed class ParameterFormat : ClassificationFormatDefinition {
         public ParameterFormat() {
             DisplayName = Strings.ParameterClassificationType;
@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools {
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Function)]
     [Name(PythonPredefinedClassificationTypeNames.Function)]
     [UserVisible(true)]
-    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    [Order(After = PredefinedClassificationTypeNames.Identifier)]
     internal sealed class FunctionFormat : ClassificationFormatDefinition {
         public FunctionFormat() {
             DisplayName = Strings.FunctionClassificationType;
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools {
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.RegularExpression)]
     [Name(PythonPredefinedClassificationTypeNames.RegularExpression)]
     [UserVisible(true)]
-    [Order(After = Priority.High)]
+    [Order(After = PredefinedClassificationTypeNames.String)]
     internal sealed class RegexFormat : ClassificationFormatDefinition {
         public RegexFormat() {
             DisplayName = Strings.RegularExpressionClassificationType;

@@ -623,20 +623,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public Uri documentUri;
         }
 
-        public sealed class ChildFileAnalyzed : Event {
-            public const string Name = "childFileAnalyzed";
-
-            /// <summary>
-            /// The filename which got added
-            /// </summary>
-            public string filename;
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-
-            public override string name => Name;
-        }
-
         public class GetModulesRequest : Request<CompletionsResponse> {
             public const string Command = "getModules";
 

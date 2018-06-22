@@ -856,20 +856,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         Debug.WriteLine("Unknown file id for diagnostics event: {0}", diagnostics.documentUri);
                     }
                     break;
-                case AP.ChildFileAnalyzed.Name:
-                    var childFile = (AP.ChildFileAnalyzed)e.Event;
-
-                    if (!_projectFilesByUri.TryGetValue(childFile.documentUri, out entry)) {
-                        entry = new AnalysisEntry(
-                            this,
-                            childFile.filename,
-                            childFile.documentUri,
-                            false,
-                            false
-                        );
-                        _projectFilesByUri[childFile.documentUri] = _projectFiles[childFile.filename] = entry;
-                    }
-                    break;
                 case AP.AnalyzerWarningEvent.Name:
                     var warning = (AP.AnalyzerWarningEvent)e.Event;
                     _logger?.LogEvent(PythonLogEvent.AnalysisWarning, warning.message);
@@ -1329,7 +1315,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
-                var location = analysis.SourceSpan.End;
+                var location = point.ToSourceLocation();
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,

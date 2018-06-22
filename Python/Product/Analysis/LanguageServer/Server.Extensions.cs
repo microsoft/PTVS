@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public async Task<ExtensionCommandResult> ExtensionCommand(ExtensionCommandParams @params) {
+        public Task<ExtensionCommandResult> ExtensionCommand(ExtensionCommandParams @params) {
             if (string.IsNullOrEmpty(@params.extensionName)) {
                 throw new ArgumentNullException(nameof(@params.extensionName));
             }
@@ -58,10 +58,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 throw new LanguageServerException(LanguageServerException.UnknownExtension, "No extension loaded with name: " + @params.extensionName);
             }
 
-            return new ExtensionCommandResult {
+            return Task.FromResult(new ExtensionCommandResult {
                 properties = ext?.ExecuteCommand(@params.command, @params.properties)
-            };
+            });
         }
-
     }
 }

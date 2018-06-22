@@ -25,7 +25,6 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
@@ -199,12 +198,12 @@ namespace Microsoft.PythonTools.Debugger {
                 // This error code is returned only for the experimental debugger. MessageBox must be
                 // bound to the VS Main window otherwise it can be hidden behind the main window and the 
                 // user may not see it.
-                MessageBox.Show(
-                    new Win32Window(Process.GetCurrentProcess().MainWindowHandle),
-                    Strings.ImportPtvsdFailedMessage,
-                    Strings.ImportPtvsdFailedTitle,
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                PtvsdVersionHelper.ShowPtvsdModuleNotFoundError();
+            } else if (_process.ExitCode == 687 && !_debuggerConnected) {
+                // 687: ERROR_DLL_MIGHT_BE_INCOMPATIBLE
+                // This error is returned only for the experimental debugger,
+                // when running under an interpreter that is not supported.
+                PtvsdVersionHelper.ShowPtvsdIncompatibleEnvError();
             }
         }
 
