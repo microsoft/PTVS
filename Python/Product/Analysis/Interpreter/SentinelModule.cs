@@ -21,52 +21,47 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class SentinelModule : IPythonModule, IDisposable {
+    sealed class SentinelModule : IPythonModule {
         private readonly Thread _thread;
-        private volatile TaskCompletionSource<IPythonModule> _tcs;
+        private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
             _thread = Thread.CurrentThread;
             Name = name;
-            if (!importing) {
+            if (importing) {
+                _semaphore = new SemaphoreSlim(0, 1000);
+            } else {
                 _realModule = this;
             }
         }
 
-        public Task<IPythonModule> WaitForImportAsync(CancellationToken cancel) {
+        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
-                return Task.FromResult(mod);
+                return mod;
             }
             if (_thread == Thread.CurrentThread) {
-                return Task.FromResult<IPythonModule>(this);
+                return this;
             }
 
-            var tcs = _tcs;
-            if (tcs == null) {
-                tcs = new TaskCompletionSource<IPythonModule>();
-                tcs = Interlocked.CompareExchange(ref _tcs, tcs, null) ?? tcs;
+            try {
+                await _semaphore.WaitAsync(cancellationToken);
+                _semaphore.Release();
+            } catch (ObjectDisposedException) {
+                throw new OperationCanceledException();
             }
-
-            if (cancel.CanBeCanceled) {
-                var tcs2 = new TaskCompletionSource<IPythonModule>();
-                tcs.Task.ContinueWith(t => tcs2.TrySetResult(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
-                tcs.Task.ContinueWith(t => tcs2.TrySetCanceled(), TaskContinuationOptions.OnlyOnCanceled);
-                cancel.Register(() => tcs2.TrySetCanceled());
-                return tcs2.Task;
-            }
-
-            return tcs.Task;
+            return _realModule;
         }
 
         public void Complete(IPythonModule module) {
-            _realModule = module;
-            _tcs?.TrySetResult(module);
-        }
-
-        public void Dispose() {
-            Interlocked.Exchange(ref _tcs, null)?.TrySetCanceled();
+            if (_realModule == null) {
+                _realModule = module;
+                // Release all the waiters at once (unless we have more
+                // than than 1000 threads trying to import at once, which
+                // should never happen)
+                _semaphore.Release(1000);
+            }
         }
 
         public string Name { get; }

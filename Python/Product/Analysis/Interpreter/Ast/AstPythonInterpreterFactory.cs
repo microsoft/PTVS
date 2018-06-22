@@ -581,7 +581,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return TryImportModuleResult.NeedRetry;
                 }
                 sentinalValue.Complete(module);
-                sentinalValue.Dispose();
             }
 
             // Also search for type stub packages if enabled and we are not a blacklisted module

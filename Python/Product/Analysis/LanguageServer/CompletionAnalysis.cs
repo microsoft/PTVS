@@ -245,7 +245,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
                 foreach (var t in ZipLongest(imp.Names, imp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
-                        if (Index >= t.Item2.StartIndex && t.Item2.EndIndex > t.Item2.StartIndex) {
+                        if (Index >= t.Item2.StartIndex) {
                             return Empty;
                         }
                     }
@@ -269,7 +269,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 foreach (var t in ZipLongest(fimp.Names, fimp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
-                        if (Index >= t.Item2.StartIndex && t.Item2.EndIndex >= t.Item2.StartIndex) {
+                        if (Index >= t.Item2.StartIndex) {
                             return Empty;
                         }
                     }
