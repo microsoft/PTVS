@@ -254,7 +254,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static CondaInfoResult ExecuteCondaInfo(string condaPath) {
+        internal static CondaInfoResult ExecuteCondaInfo(string condaPath) {
             using (var output = ProcessOutput.RunHiddenAndCapture(condaPath, "info", "--json")) {
                 output.Wait();
                 if (output.ExitCode == 0) {
@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        class CondaInfoResult {
+        internal class CondaInfoResult {
             [JsonProperty("envs")]
             public string[] EnvironmentFolders = null;
 
