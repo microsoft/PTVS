@@ -686,29 +686,30 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     break;
                 case TokenKind.Name:
-                    if (tokens.Length >= 2) {
-                        if (nextLast == TokenKind.Dot) {
-                            exprString = ReadExpression(tokens.Skip(2));
-                            if (exprString != null) {
-                                ApplicableSpan = new SourceSpan(GetTokenSpan(lastToken.Key).Start, Position);
-                                return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
-                            }
-                        } else if (nextLast == TokenKind.KeywordDef) {
-                            var cd = Scope as ClassDefinition ?? ((Scope as FunctionDefinition)?.Parent as ClassDefinition);
-                            if (cd == null) {
-                                return null;
-                            }
-
+                    if (nextLast == TokenKind.Dot) {
+                        exprString = ReadExpression(tokens.Skip(2));
+                        if (exprString != null) {
                             ApplicableSpan = new SourceSpan(GetTokenSpan(lastToken.Key).Start, Position);
-
-                            var loc = GetTokenSpan(tokens.ElementAt(1).Key).Start;
-                            ShouldCommitByDefault = false;
-                            return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
+                            return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
                         }
+                    } else if (nextLast == TokenKind.KeywordDef) {
+                        var cd = Scope as ClassDefinition ?? ((Scope as FunctionDefinition)?.Parent as ClassDefinition);
+                        if (cd == null) {
+                            return null;
+                        }
+
+                        ApplicableSpan = new SourceSpan(GetTokenSpan(lastToken.Key).Start, Position);
+
+                        var loc = GetTokenSpan(tokens.ElementAt(1).Key).Start;
+                        ShouldCommitByDefault = false;
+                        return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
                     }
                     break;
                 case TokenKind.KeywordFor:
                 case TokenKind.KeywordAs:
+                    if (lastToken.Key.Start <= Index && Index <= lastToken.Key.End) {
+                        return null;
+                    }
                     return Empty;
             }
 
