@@ -1254,10 +1254,7 @@ namespace Microsoft.PythonTools.Parsing {
                 fromFuture = ProcessFutureStatements(start, names, fromFuture);
             }
 
-            bool ateRightParen = false;
-            if (ateParen) {
-                ateRightParen = Eat(TokenKind.RightParenthesis);
-            }
+            bool ateRightParen = ateParen && Eat(TokenKind.RightParenthesis);
 
             FromImportStatement ret = new FromImportStatement(dname, names, asNames, fromFuture, AbsoluteImports, importIndex);
             if (_verbatim) {
