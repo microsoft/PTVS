@@ -264,6 +264,11 @@ namespace AnalysisTests {
             await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8));
             await s.UnloadFileAsync(u);
 
+            // TODO: Fix parser to parse "for x i" as ForStatement and not ForStatement+ExpressionStatement
+            //u = await AddModule(s, "for x i");
+            //await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8), applicableSpan: new SourceSpan(1, 7, 1, 8));
+            //await s.UnloadFileAsync(u);
+
             u = await AddModule(s, "for x in ");
             await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 7));
             await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 9));
@@ -390,6 +395,14 @@ namespace AnalysisTests {
 
             u = await AddModule(s, "from unittest.case imp\n\npass");
             await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 22), applicableSpan: new SourceSpan(1, 20, 1, 23));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "import unittest.case a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 23), applicableSpan: new SourceSpan(1, 22, 1, 23));
+            await s.UnloadFileAsync(u);
+            u = await AddModule(s, "from unittest.case import TestCase a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 37), applicableSpan: new SourceSpan(1, 36, 1, 37));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -425,32 +438,51 @@ namespace AnalysisTests {
             var s = await CreateServer();
             var u = await AddModule(s, "raise ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+            await s.UnloadFileAsync(u);
 
             if (!(this is LanguageServerTests_V2)) {
                 u = await AddModule(s, "raise Exception from ");
                 await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
                 await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
                 await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+                await s.UnloadFileAsync(u);
+
+                u = await AddModule(s, "raise Exception fr");
+                await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 19), applicableSpan: new SourceSpan(1, 17, 1, 19));
+                await s.UnloadFileAsync(u);
             }
 
             u = await AddModule(s, "raise Exception, x, y");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 20));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
         public async Task CompletionInExcept() {
             var s = await CreateServer();
-            var u = await AddModule(s, "try:\n    pass\nexcept ");
+            Uri u;
+            u = await AddModule(s, "try:\n    pass\nexcept ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept (");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 9));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept Exception  as ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
             await AssertNoCompletion(s, u, new SourceLocation(3, 22));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexc");
+            await AssertCompletion(s, u, new[] { "except", "def", "abs" }, new string[0], new SourceLocation(3, 3));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexcept Exception a");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 19), applicableSpan: new SourceSpan(3, 18, 3, 19));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]

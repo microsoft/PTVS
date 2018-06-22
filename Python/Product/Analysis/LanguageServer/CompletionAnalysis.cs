@@ -274,6 +274,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return Empty;
         }
 
+        private void SetApplicableSpanToLastToken(Node containingNode) {
+            if (containingNode != null && Index >= containingNode.EndIndex) {
+                var token = Tokens.LastOrDefault();
+                if (token.Key.End >= Index) {
+                    ApplicableSpan = GetTokenSpan(token.Key);
+                }
+            }
+        }
+
         private IEnumerable<CompletionItem> GetCompletionsInImport(ref GetMemberOptions opts, ref List<CompletionItem> additional) {
             if (Statement is ImportStatement imp) {
                 if (imp.Names == null || imp.Names.Count == 0) {
@@ -290,6 +299,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     if (t.Item1 != null) {
                         if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
+                            SetApplicableSpanToLastToken(imp);
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
@@ -314,6 +324,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     if (t.Item1 != null) {
                         if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
+                            SetApplicableSpanToLastToken(fimp);
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
@@ -496,6 +507,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     if (fs.Left.StartIndex > fs.StartIndex && fs.Left.EndIndex > fs.Left.StartIndex && Index > fs.Left.EndIndex) {
+                        SetApplicableSpanToLastToken(fs);
                         return Once(InKeywordCompletion);
                     } else if (fs.ForIndex >= fs.StartIndex && Index > fs.ForIndex + 3) {
                         return Empty;
@@ -541,6 +553,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (rs.ExceptType != null) {
                     if (Index > rs.ExceptType.EndIndex) {
                         if (Tree.LanguageVersion.Is3x()) {
+                            SetApplicableSpanToLastToken(rs);
                             return Once(FromKeywordCompletion);
                         }
                         return Empty;
@@ -572,6 +585,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return null;
                 } else if (ts.Test != null) {
                     if (Index > ts.Test.EndIndex) {
+                        SetApplicableSpanToLastToken(ts);
                         return Once(AsKeywordCompletion);
                     } else if (Index >= ts.Test.StartIndex) {
                         opts |= GetMemberOptions.ExceptionsOnly;
