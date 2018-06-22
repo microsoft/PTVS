@@ -270,6 +270,16 @@ namespace AnalysisTests {
             await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(1, 10));
             await s.UnloadFileAsync(u);
 
+            u = await AddModule(s, "def f():\n    for ");
+            await AssertNoCompletion(s, u, new SourceLocation(2, 9));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "def f():\n    for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 11));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 13));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(2, 14));
+            await s.UnloadFileAsync(u);
+
             if (!(this is LanguageServerTests_V2)) {
                 u = await AddModule(s, "async def f():\n    async for x in ");
                 await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 5));

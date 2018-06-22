@@ -679,6 +679,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     break;
+                case TokenKind.KeywordFor:
+                case TokenKind.KeywordAs:
+                    return Empty;
             }
 
             Debug.WriteLine($"Unhandled completions from error.\nTokens were: ({lastToken.Value.Image}:{lastToken.Value.Kind}), {string.Join(", ", tokens.AsEnumerable().Take(10).Select(t => $"({t.Value.Image}:{t.Value.Kind})"))}");
