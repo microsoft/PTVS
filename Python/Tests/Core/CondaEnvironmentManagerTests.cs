@@ -286,19 +286,8 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            // Try a path that exists but is empty
-            var envPath = TestData.GetTempPath();
+            var envPath = Path.Combine(TestData.GetTempPath(), "test");
             var result = await mgr.DeleteAsync(envPath, ui, CancellationToken.None);
-
-            Assert.IsFalse(result, "Delete did not fail.");
-            Assert.IsTrue(ui.ErrorText.Any(line => line.Contains("Not a conda environment")));
-            Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Failed to delete '{envPath}'")));
-
-            ui.Clear();
-
-            // Try a path that doesn't exist
-            envPath = Path.Combine(TestData.GetTempPath(), "test");
-            result = await mgr.DeleteAsync(envPath, ui, CancellationToken.None);
 
             Assert.IsFalse(result, "Delete did not fail.");
             Assert.IsTrue(ui.ErrorText.Any(line => line.Contains($"Folder not found '{envPath}'")));
