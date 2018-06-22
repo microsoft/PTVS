@@ -23,7 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -97,10 +96,10 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            GetAvailableEnvironmentName("testenv", out string envName, out string envPath);
-            DeleteFolder.Add(envPath);
-
+            var envName = GetUnusedEnvironmentName(mgr);
             bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
+
+            var envPath = EnqueueEnvironmentDeletion(mgr, envName);
 
             Assert.IsTrue(result, "Create failed.");
             Assert.IsTrue(Directory.Exists(envPath), "Environment folder not found.");
@@ -114,10 +113,10 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            GetAvailableEnvironmentName("testenv", out string envName, out string envPath);
-            DeleteFolder.Add(envPath);
-
+            var envName = GetUnusedEnvironmentName(mgr);
             bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
+
+            var envPath = EnqueueEnvironmentDeletion(mgr, envName);
 
             Assert.IsTrue(result, "Create failed.");
             Assert.IsTrue(Directory.Exists(envPath), "Environment folder not found.");
@@ -138,16 +137,17 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            // Relative path is relative to user profile envs folder,
-            // passed to conda.exe using -n (by name) argument.
-            GetAvailableEnvironmentName(@"tests\\testenvrelative", out string envName, out string envPath);
-            DeleteFolder.Add(envPath);
+            // Relative path passed to conda.exe using -n (by name) argument.
+            // It's created in a subfolder of the usual default location.
+            var envName = GetUnusedEnvironmentName(mgr);
+            var envRelName = "relative\\" + envName;
+            bool result = await mgr.CreateAsync(envRelName, Python27Packages, ui, CancellationToken.None);
 
-            bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
+            var envPath = EnqueueEnvironmentDeletion(mgr, envName);
 
             Assert.IsTrue(result, "Create failed.");
             Assert.IsTrue(Directory.Exists(envPath), "Environment folder not found.");
-            Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Successfully created '{envName}'")));
+            Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Successfully created '{envRelName}'")));
             AssertCondaMetaFiles(envPath, "python-2.7.*.json");
         }
 
@@ -327,23 +327,34 @@ namespace PythonToolsUITests {
             Assert.IsTrue(File.Exists(Path.Combine(envPath, "Lib", "site-packages", fileRelativePath)), $"{fileRelativePath} not found.");
         }
 
-        private static void GetAvailableEnvironmentName(string prefix, out string envName, out string expectedEnvPath) {
-            int index = 0;
-            do {
-                index++;
-                envName = $"{prefix}{index}";
-                expectedEnvPath = GetExpectedEnvironmentPath(envName);
-            } while (Directory.Exists(expectedEnvPath));
+        private static string EnqueueEnvironmentDeletion(CondaEnvironmentManager mgr, string envName) {
+            var envPath = GetEnvironmentPath(mgr, envName);
+            if (envPath != null) {
+                DeleteFolder.Add(envPath);
+            } else {
+                Assert.Fail($"Path to '{envName}' was not found in conda info results.");
+            }
+            return envPath;
         }
 
-        private static string GetExpectedEnvironmentPath(string envName) {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "conda",
-                "conda",
-                "envs",
-                envName
-            );
+        private static string GetEnvironmentPath(CondaEnvironmentManager mgr, string envName) {
+            var info = CondaEnvironmentFactoryProvider.ExecuteCondaInfo(mgr.CondaPath);
+            return info.EnvironmentFolders.SingleOrDefault(absPath => string.Compare(PathUtils.GetFileOrDirectoryName(absPath), envName, StringComparison.OrdinalIgnoreCase) == 0);
+        }
+
+        private static string GetUnusedEnvironmentName(CondaEnvironmentManager mgr) {
+            // Avoid names already used by any of the existing environments.
+            var info = CondaEnvironmentFactoryProvider.ExecuteCondaInfo(mgr.CondaPath);
+            var used = info.EnvironmentFolders.Select(absPath => PathUtils.GetFileOrDirectoryName(absPath));
+            string name;
+
+            do {
+                // Pick a random name (instead of incrementing a numerical suffix)
+                // so this works better if we ever run tests in parallel.
+                name = Path.GetRandomFileName();
+            } while (used.Contains(name, StringComparer.OrdinalIgnoreCase));
+
+            return name;
         }
 
         private static CondaEnvironmentManager CreateEnvironmentManager() {
