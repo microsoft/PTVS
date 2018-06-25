@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public IEnumerable<string> ImportedModules { get; private set; } = Enumerable.Empty<string>();
 
         public override bool Walk(FromImportStatement node) {
-            if (node.StartIndex <= Location && Location <= node.EndIndex) {
+            if (node.Root != null && node.Root.StartIndex <= Location && Location <= node.Root.EndIndex) {
                 // Determine if location is over imported parts such as 
                 // over 'a' in 'from . import a, b, c' or over 'x' in 'from a import x'
                 // and store module names and imported parts

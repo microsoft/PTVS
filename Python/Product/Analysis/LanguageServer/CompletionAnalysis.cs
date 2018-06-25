@@ -119,6 +119,53 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public Expression ParentExpression { get; private set; }
 
+
+        private IReadOnlyList<KeyValuePair<IndexSpan, Token>> _tokens;
+        private NewLineLocation[] _tokenNewlines;
+        private IEnumerable<KeyValuePair<IndexSpan, Token>> Tokens {
+            get {
+                EnsureTokens();
+                return _tokens;
+            }
+        }
+
+        private SourceSpan GetTokenSpan(IndexSpan span) {
+            EnsureTokens();
+            return new SourceSpan(
+                NewLineLocation.IndexToLocation(_tokenNewlines, span.Start),
+                NewLineLocation.IndexToLocation(_tokenNewlines, span.End)
+            );
+        }
+
+        private void EnsureTokens() {
+            if (_tokens != null) {
+                return;
+            }
+
+            var reader = _openDocument?.Invoke();
+            if (reader == null) {
+                _log.TraceMessage($"Cannot get completions at error node without sources");
+                _tokens = Array.Empty<KeyValuePair<IndexSpan, Token>>();
+                _tokenNewlines = Array.Empty<NewLineLocation>();
+                return;
+            }
+
+            var tokens = new List<KeyValuePair<IndexSpan, Token>>();
+            Tokenizer tokenizer;
+            using (reader) {
+                tokenizer = new Tokenizer(Tree.LanguageVersion, options: TokenizerOptions.GroupingRecovery);
+                tokenizer.Initialize(reader);
+                for (var t = tokenizer.GetNextToken(); t.Kind != TokenKind.EndOfFile && tokenizer.TokenSpan.Start < Index; t = tokenizer.GetNextToken()) {
+                    tokens.Add(new KeyValuePair<IndexSpan, Token>(tokenizer.TokenSpan, t));
+                }
+            }
+
+            _tokens = tokens;
+            _tokenNewlines = tokenizer.GetLineLocations();
+        }
+
+
+
         public IEnumerable<CompletionItem> GetCompletionsFromString(string expr) {
             if (string.IsNullOrEmpty(expr)) {
                 return null;
@@ -217,15 +264,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return Empty;
                 }
 
-                var names = new List<string>();
-                foreach (var n in dn.Names) {
-                    if (Index > n.EndIndex) {
-                        names.Add(n.Name);
-                    } else {
-                        break;
-                    }
-                }
-
+                var names = dn.Names.TakeWhile(n => Index > n.EndIndex).Select(n => n.Name).ToArray();
 
                 return GetModules(names, includeMembers);
             } else if (name == null || name is NameExpression) {
@@ -233,6 +272,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             return Empty;
+        }
+
+        private void SetApplicableSpanToLastToken(Node containingNode) {
+            if (containingNode != null && Index >= containingNode.EndIndex) {
+                var token = Tokens.LastOrDefault();
+                if (token.Key.End >= Index) {
+                    ApplicableSpan = GetTokenSpan(token.Key);
+                }
+            }
         }
 
         private IEnumerable<CompletionItem> GetCompletionsInImport(ref GetMemberOptions opts, ref List<CompletionItem> additional) {
@@ -245,18 +293,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
                 foreach (var t in ZipLongest(imp.Names, imp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
-                        if (Index > t.Item2.EndIndex && t.Item2.EndIndex > t.Item2.StartIndex) {
+                        if (Index >= t.Item2.StartIndex) {
                             return Empty;
-                        } else if (Index >= t.Item2.StartIndex) {
-                            return Once(AsKeywordCompletion);
                         }
                     }
                     if (t.Item1 != null) {
                         if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
+                            SetApplicableSpanToLastToken(imp);
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
-                            ApplicableSpan = t.Item1.GetSpan(Tree);
+                            Node = t.Item1.Names.MaybeEnumerate().LastOrDefault(n => n.StartIndex <= Index && Index <= n.EndIndex);
                             return GetModulesFromNode(t.Item1);
                         }
                     }
@@ -271,14 +318,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 foreach (var t in ZipLongest(fimp.Names, fimp.AsNames).Reverse()) {
                     if (t.Item2 != null) {
-                        if (Index > t.Item2.EndIndex && t.Item2.EndIndex >= t.Item2.StartIndex) {
+                        if (Index >= t.Item2.StartIndex) {
                             return Empty;
-                        } else if (Index >= t.Item2.StartIndex) {
-                            return Once(AsKeywordCompletion);
                         }
                     }
                     if (t.Item1 != null) {
                         if (Index > t.Item1.EndIndex && t.Item1.EndIndex > t.Item1.StartIndex) {
+                            SetApplicableSpanToLastToken(fimp);
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
@@ -304,15 +350,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         return mods;
                     }
                     if (Index >= fimp.ImportIndex) {
+                        ApplicableSpan = new SourceSpan(
+                            Tree.IndexToLocation(fimp.ImportIndex),
+                            Tree.IndexToLocation(Math.Min(fimp.ImportIndex + 6, fimp.EndIndex))
+                        );
                         return Once(ImportKeywordCompletion);
                     }
                 }
 
                 if (fimp.Root != null) {
                     if (Index > fimp.Root.EndIndex && fimp.Root.EndIndex > fimp.Root.StartIndex) {
+                        if (Index > fimp.EndIndex) {
+                            // Only end up here for "from ... imp", and "imp" is not counted
+                            // as part of our span
+                            var token = Tokens.LastOrDefault();
+                            if (token.Key.End >= Index) {
+                                ApplicableSpan = GetTokenSpan(token.Key);
+                            }
+                        }
                         return Once(ImportKeywordCompletion);
                     } else if (Index >= fimp.Root.StartIndex) {
-                        ApplicableSpan = fimp.Root.GetSpan(Tree);
+                        Node = fimp.Root.Names.MaybeEnumerate().LastOrDefault(n => n.StartIndex <= Index && Index <= n.EndIndex);
                         return GetModulesFromNode(fimp.Root);
                     }
                 }
@@ -449,6 +507,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     if (fs.Left.StartIndex > fs.StartIndex && fs.Left.EndIndex > fs.Left.StartIndex && Index > fs.Left.EndIndex) {
+                        SetApplicableSpanToLastToken(fs);
                         return Once(InKeywordCompletion);
                     } else if (fs.ForIndex >= fs.StartIndex && Index > fs.ForIndex + 3) {
                         return Empty;
@@ -494,6 +553,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (rs.ExceptType != null) {
                     if (Index > rs.ExceptType.EndIndex) {
                         if (Tree.LanguageVersion.Is3x()) {
+                            SetApplicableSpanToLastToken(rs);
                             return Once(FromKeywordCompletion);
                         }
                         return Empty;
@@ -525,6 +585,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     return null;
                 } else if (ts.Test != null) {
                     if (Index > ts.Test.EndIndex) {
+                        SetApplicableSpanToLastToken(ts);
                         return Once(AsKeywordCompletion);
                     } else if (Index >= ts.Test.StartIndex) {
                         opts |= GetMemberOptions.ExceptionsOnly;
@@ -611,31 +672,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return null;
             }
 
-            var reader = _openDocument?.Invoke();
-            if (reader == null) {
-                _log.TraceMessage($"Cannot get completions at error node without sources");
-                return Empty;
-            }
-            var tokens = new Stack<KeyValuePair<IndexSpan, Token>>();
-            Tokenizer tokenizer;
-            using (reader) {
-                tokenizer = new Tokenizer(Tree.LanguageVersion, options: TokenizerOptions.GroupingRecovery);
-                tokenizer.Initialize(reader);
-                for (var t = tokenizer.GetNextToken(); t.Kind != TokenKind.EndOfFile && tokenizer.TokenSpan.Start < Index; t = tokenizer.GetNextToken()) {
-                    tokens.Push(new KeyValuePair<IndexSpan, Token>(tokenizer.TokenSpan, t));
-                }
-            }
-
-            if (tokens.Count == 0) {
-                return Empty;
-            }
+            var tokens = Tokens.Reverse().ToArray();
 
             string exprString;
-            var lastToken = tokens.Pop();
-            var nextLast = tokens.Count >= 2 ? tokens.Peek().Value.Kind : TokenKind.EndOfFile;
+            var lastToken = tokens.FirstOrDefault();
+            var nextLast = tokens.ElementAtOrDefault(1).Value?.Kind ?? TokenKind.EndOfFile;
             switch (lastToken.Value.Kind) {
                 case TokenKind.Dot:
-                    exprString = ReadExpression(tokens, tokenizer);
+                    exprString = ReadExpression(tokens.Skip(1));
                     if (exprString != null) {
                         ApplicableSpan = new SourceSpan(Position, Position);
                         return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
@@ -650,18 +694,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                         ApplicableSpan = new SourceSpan(Position, Position);
 
-                        var loc = tokenizer.IndexToLocation(lastToken.Key.Start);
+                        var loc = GetTokenSpan(lastToken.Key).Start;
                         ShouldCommitByDefault = false;
                         return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
                     }
                     break;
                 case TokenKind.Name:
-                    if (tokens.Count >= 2) {
                         if (nextLast == TokenKind.Dot) {
-                            tokens.Pop();
-                            exprString = ReadExpression(tokens, tokenizer);
+                        exprString = ReadExpression(tokens.Skip(2));
                             if (exprString != null) {
-                                ApplicableSpan = new SourceSpan(tokenizer.IndexToLocation(lastToken.Key.Start), Position);
+                            ApplicableSpan = new SourceSpan(GetTokenSpan(lastToken.Key).Start, Position);
                                 return Analysis.GetMembers(exprString, Position, Options).Select(ToCompletionItem);
                             }
                         } else if (nextLast == TokenKind.KeywordDef) {
@@ -670,17 +712,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                 return null;
                             }
 
-                            ApplicableSpan = new SourceSpan(tokenizer.IndexToLocation(lastToken.Key.Start), Position);
+                        ApplicableSpan = new SourceSpan(GetTokenSpan(lastToken.Key).Start, Position);
 
-                            lastToken = tokens.Pop();
-                            var loc = tokenizer.IndexToLocation(lastToken.Key.Start);
+                        var loc = GetTokenSpan(tokens.ElementAt(1).Key).Start;
                             ShouldCommitByDefault = false;
                             return Analysis.GetOverrideable(loc).Select(o => ToOverrideCompletionItem(o, cd, new string(' ', loc.Column - 1)));
                         }
-                    }
                     break;
                 case TokenKind.KeywordFor:
                 case TokenKind.KeywordAs:
+                    if (lastToken.Key.Start <= Index && Index <= lastToken.Key.End) {
+                        return null;
+                    }
                     return Empty;
             }
 
@@ -862,19 +905,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return sb.ToString();
         }
 
-        private static string ReadExpression(IEnumerable<KeyValuePair<IndexSpan, Token>> tokens, Tokenizer tokenizer) {
-            var expr = ReadExpressionTokens(tokens, tokenizer);
+        private string ReadExpression(IEnumerable<KeyValuePair<IndexSpan, Token>> tokens) {
+            var expr = ReadExpressionTokens(tokens);
 
             return string.Join("", expr.Select(e => e.VerbatimImage ?? e.Image));
         }
 
-        private static IEnumerable<Token> ReadExpressionTokens(IEnumerable<KeyValuePair<IndexSpan, Token>> tokens, Tokenizer tokenizer) {
+        private IEnumerable<Token> ReadExpressionTokens(IEnumerable<KeyValuePair<IndexSpan, Token>> tokens) {
             int nesting = 0;
             var exprTokens = new Stack<Token>();
             int currentLine = -1;
 
             foreach (var t in tokens) {
-                var p = tokenizer.IndexToLocation(t.Key.Start);
+                var p = GetTokenSpan(t.Key).Start;
                 if (p.Line > currentLine) {
                     currentLine = p.Line;
                 } else if (p.Line < currentLine && nesting == 0) {
