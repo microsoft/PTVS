@@ -4,6 +4,10 @@ if (-not $vs) {
     throw "Missing -vs [path] parameter"
     exit 1
 }
+if (-not (Test-Path "$vs\Common7\IDE\devenv.exe")) {
+    throw "devenv.exe not found under -vs [path]"
+    exit 1
+}
 
 $install_dirs = @(
     "Common7\IDE\Extensions\Microsoft\Cookiecutter",
