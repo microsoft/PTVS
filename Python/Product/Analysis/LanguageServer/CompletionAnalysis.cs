@@ -303,7 +303,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                             return Once(AsKeywordCompletion);
                         }
                         if (Index >= t.Item1.StartIndex) {
-                            ApplicableSpan = t.Item1.GetSpan(Tree);
+                            Node = t.Item1.Names.MaybeEnumerate().LastOrDefault(n => n.StartIndex <= Index && Index <= n.EndIndex);
                             return GetModulesFromNode(t.Item1);
                         }
                     }
