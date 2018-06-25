@@ -113,12 +113,13 @@ namespace Microsoft.PythonTools.VsCode {
 
             var rootSection = token["settings"];
             var pythonSection = rootSection?["python"];
+
             var autoComplete = pythonSection?["autoComplete"];
-            if (autoComplete != null) {
-                var showAdvancedMembers = autoComplete["showAdvancedMembers"] as JValue;
-                settings.SuppressAdvancedMembers = showAdvancedMembers == null ||
-                    (showAdvancedMembers.Type == JTokenType.Boolean && !showAdvancedMembers.ToObject<bool>());
-            }
+            settings.completionOptions.showAdvancedMembers = GetSetting(autoComplete, "showAdvancedMembers", true);
+
+            var diagnostics = pythonSection?["diagnostics"];
+            settings.diagnosticOptions.openFilesOnly = GetSetting(autoComplete, "openFilesOnly", true);
+
             var p = new DidChangeConfigurationParams() { settings = settings };
             return _server.DidChangeConfiguration(p);
         }
@@ -269,5 +270,15 @@ namespace Microsoft.PythonTools.VsCode {
         #endregion
 
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
+
+        private T GetSetting<T>(JToken section, string settingName, T defaultValue) {
+            var value = section?[settingName] as JValue;
+            try {
+                return value != null ? value.ToObject<T>() : defaultValue;
+            } catch(JsonException ex) {
+                _server.LogMessage(MessageType.Warning, $"Exception retrieving setting '{settingName}': {ex.Message}");
+            }
+            return defaultValue;
+        }
     }
 }

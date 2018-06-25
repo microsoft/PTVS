@@ -17,12 +17,19 @@
 using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class LanguageServerSettings {
-        private int _completionTimeout = Timeout.Infinite;
-        public bool SuppressAdvancedMembers { get; set; }
-        public int CompletionTimeout => _completionTimeout;
-
+    public sealed class LanguageServerSettings {
         public void SetCompletionTimeout(int? timeout)
-            => _completionTimeout = timeout.HasValue ? timeout.Value : _completionTimeout;
+            => completionOptions.timeout = timeout.HasValue ? timeout.Value : completionOptions.timeout;
+
+        public class PythonDiagnosticOptions {
+            public bool openFilesOnly;
+        }
+        public readonly PythonDiagnosticOptions diagnosticOptions = new PythonDiagnosticOptions();
+
+        public class PythonCompletionOptions {
+            public int timeout = Timeout.Infinite;
+            public bool showAdvancedMembers;
+        }
+        public readonly PythonCompletionOptions completionOptions = new PythonCompletionOptions();
     }
 }

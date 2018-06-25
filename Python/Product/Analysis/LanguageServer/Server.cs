@@ -232,8 +232,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
+            var reanalyze = true;
             if (@params.settings != null) {
                 if (@params.settings is LanguageServerSettings settings) {
+                    reanalyze = ChangeRequiresNewAnalysis(settings);
                     _settings = settings;
                 } else {
                     LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
@@ -241,14 +243,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            // Make sure reload modules is executed on the analyzer thread.
-            var task = _reloadModulesQueueItem.Task;
-            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
-            await task;
+            if (reanalyze) {
+                // Make sure reload modules is executed on the analyzer thread.
+                var task = _reloadModulesQueueItem.Task;
+                _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+                await task;
 
-            // re-analyze all of the modules when we get a new set of modules loaded...
-            foreach (var entry in _analyzer.ModulesByFilename) {
-                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+                // re-analyze all of the modules when we get a new set of modules loaded...
+                foreach (var entry in _analyzer.ModulesByFilename) {
+                    _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+                }
             }
         }
 
@@ -650,6 +654,34 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
+        private void UpdateDiagnostics() {
+            foreach (var entry in _projectFiles.All.Where(p => _openFiles.GetDocument(p.DocumentUri) == null)) {
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                    uri = entry.DocumentUri,
+                    diagnostics = _settings.diagnosticOptions.openFilesOnly
+                    ? Array.Empty<Diagnostic>()
+                    : _analyzer.GetDiagnostics(entry)
+                });
+            }
+        }
+
+        private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
+            var oldSettings = _settings;
+            _settings = newSettings;
+
+            if (newSettings.diagnosticOptions.openFilesOnly != _settings.diagnosticOptions.openFilesOnly) {
+                UpdateDiagnostics();
+            }
+            _settings =
+            // Currently no settings change in VS Code requires new analysis.
+            // Change in Python interpreter causes language server restart.
+            return false; 
+        }
+
+        private bool ChangeRequiresNewAnalysis(LanguageServerSettings newSettings) {
+            // TODO: add settings change analysis as needed
+            return false;
+        }
         #endregion
     }
 }

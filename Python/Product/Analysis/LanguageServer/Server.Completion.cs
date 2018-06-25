@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(new CompletionList());
             }
 
-            if (_settings.SuppressAdvancedMembers) {
+            if (!_settings.completionOptions.showAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
             }
 
