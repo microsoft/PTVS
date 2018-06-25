@@ -18,8 +18,19 @@ using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class LanguageServerSettings {
-        public void SetCompletionTimeout(int? timeout)
-            => completionOptions.timeout = timeout.HasValue ? timeout.Value : completionOptions.timeout;
+        public class PythonAnalysisOptions {
+            /// <summary>
+            /// Paths to search when attempting to resolve module imports.
+            /// </summary>
+            public string[] searchPaths;
+            /// <summary>
+            /// Secondary paths to search when resolving modules. Not supported by all
+            /// factories. In generaly, only source files will be discovered, and their
+            /// contents will be merged with the initial module.
+            /// </summary>
+            public string[] typeStubSearchPaths;
+        }
+        public readonly PythonAnalysisOptions analysisOptions = new PythonAnalysisOptions();
 
         public class PythonDiagnosticOptions {
             public bool openFilesOnly;
@@ -27,7 +38,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public readonly PythonDiagnosticOptions diagnosticOptions = new PythonDiagnosticOptions();
 
         public class PythonCompletionOptions {
-            public int timeout = Timeout.Infinite;
             public bool showAdvancedMembers;
         }
         public readonly PythonCompletionOptions completionOptions = new PythonCompletionOptions();

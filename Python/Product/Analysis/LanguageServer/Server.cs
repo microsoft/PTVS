@@ -235,8 +235,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var reanalyze = true;
             if (@params.settings != null) {
                 if (@params.settings is LanguageServerSettings settings) {
-                    reanalyze = ChangeRequiresNewAnalysis(settings);
-                    _settings = settings;
+                    reanalyze = HandleConfigurationChanges(settings);
                 } else {
                     LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
                     return;
@@ -334,7 +333,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
 
             _clientCaps = @params.capabilities;
-            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
@@ -356,9 +354,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } else if (!string.IsNullOrEmpty(@params.rootPath)) {
                 _rootDir = PathUtils.NormalizePath(@params.rootPath);
             }
-
-            SetSearchPaths(@params.initializationOptions.searchPaths);
-            SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
         }
 
         private T ActivateObject<T>(string assemblyName, string typeName, Dictionary<string, object> properties) {
@@ -642,7 +637,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out BufferVersion bufferVersion) {
             PythonAst tree = null;
             bufferVersion = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
+            var parse = entry.WaitForCurrentParse(Timeout.Infinite, token);
             if (parse != null) {
                 tree = parse.Tree ?? tree;
                 if (parse.Cookie is VersionCookie vc) {
@@ -666,21 +661,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
+            var reanalyze = false;
             var oldSettings = _settings;
             _settings = newSettings;
 
             if (newSettings.diagnosticOptions.openFilesOnly != _settings.diagnosticOptions.openFilesOnly) {
                 UpdateDiagnostics();
             }
-            _settings =
-            // Currently no settings change in VS Code requires new analysis.
-            // Change in Python interpreter causes language server restart.
-            return false; 
-        }
 
-        private bool ChangeRequiresNewAnalysis(LanguageServerSettings newSettings) {
-            // TODO: add settings change analysis as needed
-            return false;
+            if (newSettings.analysisOptions.searchPaths.SequenceEqual(oldSettings.analysisOptions.searchPaths)) {
+                SetSearchPaths(newSettings.analysisOptions.searchPaths);
+                reanalyze = true;
+            }
+
+            if (newSettings.analysisOptions.typeStubSearchPaths.SequenceEqual(oldSettings.analysisOptions.typeStubSearchPaths)) {
+                SetTypeStubSearchPaths(newSettings.analysisOptions.typeStubSearchPaths);
+                reanalyze = true;
+            }
+
+            return reanalyze; 
         }
         #endregion
     }

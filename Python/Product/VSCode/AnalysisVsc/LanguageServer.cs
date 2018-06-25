@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.VsCode {
         private IUIService _ui;
         private ITelemetryService _telemetry;
         private JsonRpc _rpc;
+        private bool _filesLoaded;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
@@ -108,7 +109,8 @@ namespace Microsoft.PythonTools.VsCode {
 
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
-        public Task DidChangeConfiguration(JToken token) {
+        public async Task DidChangeConfiguration(JToken token) {
+
             var settings = new LanguageServerSettings();
 
             var rootSection = token["settings"];
@@ -120,8 +122,15 @@ namespace Microsoft.PythonTools.VsCode {
             var diagnostics = pythonSection?["diagnostics"];
             settings.diagnosticOptions.openFilesOnly = GetSetting(autoComplete, "openFilesOnly", true);
 
-            var p = new DidChangeConfigurationParams() { settings = settings };
-            return _server.DidChangeConfiguration(p);
+            settings.analysisOptions.searchPaths = GetSetting(pythonSection, "searchPaths", Array.Empty<string>());
+            settings.analysisOptions.typeStubSearchPaths = GetSetting(pythonSection, "typeshedPaths", Array.Empty<string>());
+
+            await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
+
+            if (!_filesLoaded) {
+                await LoadDirectoryFiles();
+                _filesLoaded = true;
+            }
         }
 
         [JsonRpcMethod("workspace/didChangeWatchedFiles")]

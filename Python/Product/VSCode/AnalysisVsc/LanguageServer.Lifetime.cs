@@ -41,10 +41,8 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         [JsonRpcMethod("initialized")]
-        public async Task Initialized(JToken token) { 
-            await _server.Initialized(token.ToObject<InitializedParams>());
-            await LoadDirectoryFiles();
-        }
+        public Task Initialized(JToken token) 
+            => _server.Initialized(token.ToObject<InitializedParams>());
 
         [JsonRpcMethod("shutdown")]
         public Task Shutdown() => _server.Shutdown();
