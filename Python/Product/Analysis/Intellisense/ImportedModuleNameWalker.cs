@@ -14,7 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -40,16 +40,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _ast = ast;
         }
 
-        public IEnumerable<NamedLocation> ImportedModules { get; private set; } = Enumerable.Empty<NamedLocation>();
-        public IEnumerable<NamedLocation> ImportedMembers { get; private set; } = Enumerable.Empty<NamedLocation>();
+        public NamedLocation[] ImportedModules { get; private set; } = Array.Empty<NamedLocation>();
         public NamedLocation ImportedType { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
             if (node.StartIndex <= Location && Location <= node.EndIndex) {
-                // Determine if location is over imported parts such as 
-                // over 'a' in 'from . import a, b, c' or over 'x' in 'from a import x'
-                // and store module names and imported parts
-                var modName = node.Root.MakeString();
                 var nameNode = node.Names.MaybeEnumerate().Where(n => n.StartIndex <= Location && Location <= n.EndIndex).FirstOrDefault();
                 if (nameNode != null && node.AsNames != null) {
                     var index = node.Names.IndexOf(nameNode);
@@ -59,14 +54,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
+                var modName = node.Root.MakeString();
                 // See if we can resolve relative names
                 var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute).ToArray();
                 if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0]) && node.Names != null && node.Names.Any()) {
+                    // Did not resolve to anything. Happens at the top of the workspace
+                    // in VS Code when using 'from . import a'
                     ImportedModules = new[] { GetNamedLocation(node.Names.First()) };
-                } else if (nameNode != null) {
-                    ImportedMembers = candidates.Select(c => GetNamedLocation("{0}.{1}".FormatInvariant(c, nameNode.Name), nameNode));
                 } else if (candidates.Length > 0) {
-                    ImportedModules = candidates.Select(c => GetNamedLocation(c, node.Root));
+                    ImportedModules = candidates.Select(c => GetNamedLocation(c, node.Root)).ToArray();
                 } else {
                     ImportedModules = new[] { GetNamedLocation(modName, node.Root) };
                 }
@@ -91,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
             => new NamedLocation { Name = name, SourceSpan = GetSourceSpan(node) };
 
         private SourceSpan GetSourceSpan(Node n)
-            => _ast != null 
+            => _ast != null
             ? new SourceSpan(_ast.IndexToLocation(n.StartIndex), _ast.IndexToLocation(n.EndIndex))
             : default(SourceSpan);
     }

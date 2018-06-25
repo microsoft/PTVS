@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -58,26 +59,39 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
 
-            // First try values from expression. This works for 
-            // import statements most of the time as well.
-            var index = tree.LocationToIndex(@params.position);
-            var w = new ImportedModuleNameWalker(entry, index, tree);
-            tree.Walk(w);
+            // First try values from expression. This works for the import statement most of the time.
+            var values = analysis.GetValues(expr, @params.position, scope).ToList();
+            if (values.Count == 0) {
+                // See if this is hover over import statement
+                var index = tree.LocationToIndex(@params.position);
+                var w = new ImportedModuleNameWalker(entry, index, tree);
+                tree.Walk(w);
 
-            IEnumerable<AnalysisValue> values = null;
-            // Perhaps it is an assigned member like 'p' in 'from os import path as p'
-            if (!string.IsNullOrEmpty(w.ImportedType?.Name)) {
-                values = analysis.GetValues(w.ImportedType.Name, @params.position).ToList();
-            } else {
-                // Perhaps it is a member like 'path' in 'from os import path'
-                w.ImportedMembers.FirstOrDefault(m => {
-                    values = analysis.GetValues(m.Name, @params.position).ToList();
-                    return values.Any();
-                });
+                if (w.ImportedType != null) {
+                    values = analysis.GetValues(w.ImportedType.Name, @params.position).ToList();
+                } else {
+                    var sb = new StringBuilder();
+                    var span = SourceSpan.Invalid;
+                    foreach (var n in w.ImportedModules) {
+                        if (_analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
+                            if (sb.Length > 0) {
+                                sb.AppendLine();
+                                sb.AppendLine();
+                            }
+                            sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
+                            span = span.IsValid ? span.Union(n.SourceSpan) : n.SourceSpan;
+                        }
+                    }
+                    if (sb.Length > 0) {
+                        return Task.FromResult(new Hover {
+                            contents = sb.ToString(),
+                            range = span
+                        });
+                    }
+                }
             }
 
-            values = values ?? analysis.GetValues(expr, @params.position, scope).ToList();
-            if (values.Any()) {
+            if (values.Count > 0) {
                 string originalExpr;
                 if (expr is ConstantExpression || expr is ErrorExpression) {
                     originalExpr = null;
@@ -98,27 +112,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     _typeNames = names
                 };
                 return Task.FromResult(res);
-            }
-
-            if (w.ImportedModules.Any()) {
-                var sb = new StringBuilder();
-                var range = default(Range);
-                foreach (var n in w.ImportedModules) {
-                    if (_analyzer.Modules.TryImport(n.Name, out var modRef)) {
-                        if (sb.Length > 0) {
-                            sb.AppendLine();
-                            sb.AppendLine();
-                        }
-                        sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
-                        range = range.IsEmpty ? n.Range : range.Union(n.Range);
-                    }
-                }
-                if (sb.Length > 0) {
-                    return Task.FromResult(new Hover {
-                        contents = sb.ToString(),
-                        range = range
-                    });
-                }
             }
 
             return Task.FromResult(EmptyHover);

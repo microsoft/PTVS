@@ -61,13 +61,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public static implicit operator Range(SourceSpan span) => new Range { start = span.Start, end = span.End };
 
         public override string ToString() => ((SourceSpan)this).ToString();
-
-        public Range Union(Range other) {
-            var span = (SourceSpan)this;
-            return span.Union(other);
-        }
-
-        public bool IsEmpty => start.line == end.line && start.character == end.character;
     }
 
     [Serializable]

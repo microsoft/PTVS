@@ -55,12 +55,12 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The start location of the span.
         /// </summary>
-        public SourceLocation Start { get; private set; }
+        public SourceLocation Start { get; }
 
         /// <summary>
         /// The end location of the span. Location of the first character behind the span.
         /// </summary>
-        public SourceLocation End { get; private set; }
+        public SourceLocation End { get; }
 
         /// <summary>
         /// A valid span that represents no location.
@@ -84,10 +84,7 @@ namespace Microsoft.PythonTools {
             var endLine = Math.Max(other.End.Line, End.Line);
             var endColumn = Math.Max(other.End.Column, End.Column);
 
-            return new SourceSpan {
-                Start = new SourceLocation(startLine, startColumn),
-                End = new SourceLocation(endLine, endColumn),
-            };
+            return new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));
         }
 
         /// <summary>
