@@ -2140,6 +2140,25 @@ f(xyz = abc)
                 }
             );
 
+            RefactorTest("xyz", "abc",
+            new[] {
+                    new FileInput(
+@"
+def f(abc=10):
+    pass
+
+abc = 10
+f(abc)
+",
+@"
+def f(xyz=10):
+    pass
+
+abc = 10
+f(abc)
+"                    )
+                }
+            );
         }
 
         [TestMethod, Priority(2)]
