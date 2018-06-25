@@ -18,13 +18,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
     sealed class NamedLocation {
         public string Name { get; set; }
-        public Range Range { get; set; }
+        public SourceSpan SourceSpan { get; set; }
     }
 
     class ImportedModuleNameWalker : PythonWalkerWithLocation {
@@ -89,12 +88,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private NamedLocation GetNamedLocation(NameExpression node) => GetNamedLocation(node.Name, node);
 
         private NamedLocation GetNamedLocation(string name, Node node)
-            => new NamedLocation { Name = name, Range = GetRange(node) };
+            => new NamedLocation { Name = name, SourceSpan = GetSourceSpan(node) };
 
-        private Range GetRange(Node n)
-            => _ast != null ? new Range {
-                start = _ast.IndexToLocation(n.StartIndex),
-                end = _ast.IndexToLocation(n.EndIndex)
-            } : default(Range);
+        private SourceSpan GetSourceSpan(Node n)
+            => _ast != null 
+            ? new SourceSpan(_ast.IndexToLocation(n.StartIndex), _ast.IndexToLocation(n.EndIndex))
+            : default(SourceSpan);
     }
 }
