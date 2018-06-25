@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools {
             return Start == other.Start && End == other.End;
         }
 
-        public override string ToString() => Start.ToString() + " - " + End.ToString();
+        public override string ToString() => "{0} - {1}".FormatInvariant(Start, End);
 
         public override int GetHashCode()
             // 7 bits for each column (0-128), 9 bits for each row (0-512), xor helps if
