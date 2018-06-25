@@ -260,9 +260,15 @@ namespace Microsoft.PythonTools.Intellisense {
                             maxDocumentationLines = 100
                         }
                     },
-                    capabilities = new LS.ClientCapabilities (null,
-                        default(LS.TextDocumentClientCapabilities), 
-                        new LS.TextDocumentClientCapabilities {
+                    capabilities = new LS.ClientCapabilities {
+                        python = new LS.PythonClientCapabilities {
+                            analysisUpdates = true,
+                            completionsTimeout = 5000,
+                            manualFileLoad = !request.analyzeAllFiles,
+                            traceLogging = request.traceLogging,
+                            liveLinting = request.liveLinting
+                        },
+                        textDocument = new LS.TextDocumentClientCapabilities {
                             completion = new LS.TextDocumentClientCapabilities.CompletionCapabilities {
                                 completionItem = new LS.TextDocumentClientCapabilities.CompletionCapabilities.CompletionItemCapabilities {
                                     documentationFormat = new[] { LS.MarkupKind.PlainText },
@@ -278,11 +284,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             hover = new LS.TextDocumentClientCapabilities.HoverCapabilities {
                                 contentFormat = new[] { LS.MarkupKind.PlainText }
                             }
-                        }, 
-                        new LS.PythonClientCapabilities (analysisUpdates: true,
-                            completionsTimeout: 5000,
-                            traceLogging: request.traceLogging,
-                            liveLinting: request.liveLinting))
+                        }
+                    }
                 });
             } catch (Exception ex) {
                 return new AP.InitializeResponse {

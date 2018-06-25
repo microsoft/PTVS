@@ -92,15 +92,13 @@ namespace AnalysisTests {
                     asyncStartup = false,
                     testEnvironment = true
                 },
-                capabilities = new ClientCapabilities (
-                    workspace: default(WorkspaceClientCapabilities),
-                    textDocument: default(TextDocumentClientCapabilities),
-                    experimental: null,
-                    python: new PythonClientCapabilities (analysisUpdates: true,
-                        completionsTimeout: -1,
-                        traceLogging:true,
-                        liveLinting: true)
-                )
+                capabilities = new ClientCapabilities {
+                    python = new PythonClientCapabilities {
+                        analysisUpdates = true,
+                        liveLinting = true,
+                        traceLogging = true
+                    }
+                }
             });
 
             if (diagnosticEvents != null) {

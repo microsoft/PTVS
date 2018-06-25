@@ -31,8 +31,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server : ServerBase, ILogger, IDisposable {
@@ -77,8 +75,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly OpenFiles _openFiles;
 
         internal PythonAnalyzer _analyzer;
-        private ClientCapabilities _clientCaps = JsonUtils.GetDefaultInstance<ClientCapabilities>();
-        private LanguageServerSettings _settings = JsonUtils.GetDefaultInstance<LanguageServerSettings>();
+        private ClientCapabilities _clientCaps;
+        private LanguageServerSettings _settings = new LanguageServerSettings();
 
         private bool _traceLogging;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
@@ -237,15 +235,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            if (!(@params.settings is JObject rootSection)) {
+            if (@params.settings == null) {
                 return;
             }
 
-            if (!rootSection.TryGetValue("python", out var pythonSection)) {
+            if (@params.settings is LanguageServerSettings settings) {
+                _settings = settings;
+            } else {
+                LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
                 return;
             }
-
-            _settings = pythonSection.ToObjectPopulateDefaults<LanguageServerSettings>();
 
             // Make sure reload modules is executed on the analyzer thread.
             var task = _reloadModulesQueueItem.Task;
@@ -335,8 +334,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private async Task DoInitializeAsync(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
             _clientCaps = @params.capabilities;
-            _traceLogging = _clientCaps.Python.TraceLogging;
-            _analyzer.EnableDiagnostics = _clientCaps.Python.LiveLinting;
+            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
+            _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
             _reloadModulesQueueItem = new ReloadModulesQueueItem(_analyzer);
 
@@ -601,7 +600,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             TraceMessage($"Received new analysis for {pythonProjectEntry.DocumentUri}");
             var version = 0;
             var parse = pythonProjectEntry.GetCurrentParse();
-            if (_clientCaps.Python.AnalysisUpdates) {
+            if (_clientCaps?.python?.analysisUpdates ?? false) {
                 if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(pythonProjectEntry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
@@ -615,8 +614,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             var diags = _analyzer.GetDiagnostics(pythonProjectEntry);
-            if (parse != null && _settings.Diagnostics.UnresolvedImports.Show()) {
-                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer, _settings.Diagnostics.UnresolvedImports);
+            var severity = _settings?.diagnostics?.unresolvedImports ?? DiagnosticSeverity.Warning;
+            if (parse != null && severity.Show()) {
+                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer, severity);
                 parse.Tree.Walk(walker);
                 diags = diags.Concat(walker.Diagnostics).ToArray();
             }
@@ -644,7 +644,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out BufferVersion bufferVersion) {
             PythonAst tree = null;
             bufferVersion = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps.Python.CompletionsTimeout, token);
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, token);
             if (parse != null) {
                 tree = parse.Tree;
                 if (parse.Cookie is VersionCookie vc) {

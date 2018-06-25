@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.VsCode {
 
         [JsonRpcMethod("initialize")]
         public Task<InitializeResult> Initialize(JToken token) {
-            var p = token.ToObjectPopulateDefaults<InitializeParams>();
+            var p = token.ToObject<InitializeParams>();
             MonitorParentProcess(p);
 
             _initParams = p;

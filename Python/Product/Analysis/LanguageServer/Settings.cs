@@ -15,43 +15,20 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
-using Microsoft.PythonTools.Analysis.Infrastructure;
-using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    [Serializable]
-    internal struct LanguageServerSettings {
-        public readonly AutoCompleteSettings AutoComplete;
-        public readonly DiagnosticsSettings Diagnostics;
+    internal class LanguageServerSettings {
+        public AutoCompleteSettings autoComplete;
+        public DiagnosticsSettings diagnostics;
 
-        [JsonConstructor]
-        public LanguageServerSettings(
-            [DefaultJson] AutoCompleteSettings autoComplete,
-            [DefaultJson] DiagnosticsSettings diagnostics) {
-
-            AutoComplete = autoComplete;
-            Diagnostics = diagnostics;
+        [Serializable]
+        internal class AutoCompleteSettings {
+            public bool showAdvancedMembers;
         }
 
         [Serializable]
-        internal struct AutoCompleteSettings {
-            public readonly bool ShowAdvancedMembers;
-
-            [JsonConstructor]
-            public AutoCompleteSettings([DefaultValue(true)] bool showAdvancedMembers) {
-                ShowAdvancedMembers = showAdvancedMembers;
-            }
-        }
-
-        [Serializable]
-        internal struct DiagnosticsSettings {
-            public readonly DiagnosticSeverity UnresolvedImports;
-
-            [JsonConstructor]
-            public DiagnosticsSettings([DefaultValue(DiagnosticSeverity.Warning)] DiagnosticSeverity unresolvedImports) {
-                UnresolvedImports = unresolvedImports;
-            }
+        internal class DiagnosticsSettings {
+            public DiagnosticSeverity unresolvedImports;
         }
     }
 

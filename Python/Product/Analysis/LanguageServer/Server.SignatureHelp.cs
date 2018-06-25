@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             si._returnTypes = (overload as IOverloadResult2)?.ReturnType.OrderBy(k => k).ToArray();
 
-            if (_clientCaps.TextDocument.signatureHelp.signatureInformation._shortLabel) {
+            if (_clientCaps?.textDocument?.signatureHelp?.signatureInformation?._shortLabel ?? false) {
                 si.label = overload.Name;
             } else {
                 var doc = overload.Documentation;
@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
-            var formatSetting = _clientCaps.TextDocument.signatureHelp.signatureInformation.documentationFormat;
+            var formatSetting = _clientCaps?.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
             si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
             foreach (var p in si.parameters) {
                 p.documentation = GetMarkupContent(p.documentation.value, formatSetting);
