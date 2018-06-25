@@ -695,7 +695,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionItem {
+    public class CompletionItem {
         public string label;
         public CompletionItemKind kind;
         public string detail;
