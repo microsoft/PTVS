@@ -580,7 +580,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 disposeWhenEnqueued?.Dispose();
                 disposeWhenEnqueued = null;
                 var openedFile = _openFiles.GetDocument(doc.DocumentUri);
-                if (vc != null) {
+                if (vc != null && openedFile != null) {
                     var reported = openedFile.LastReportedDiagnostics;
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
@@ -589,7 +589,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                 reported[part] = kv.Value;
                                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                                     uri = kv.Key,
-                                    diagnostics = _settings.analysisOptions.openFilesOnly ? Array.Empty<Diagnostic>() : kv.Value.Diagnostics,
+                                    diagnostics = kv.Value.Diagnostics,
                                     _version = kv.Value.Version
                                 });
                             }
@@ -667,12 +667,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void UpdateFileDiagnostics(IProjectEntry entry) {
-            var hideDiagnostics = _openFiles.GetDocument(entry.DocumentUri) == null && _settings.analysisOptions.openFilesOnly;
             PublishDiagnostics(new PublishDiagnosticsEventArgs {
                 uri = entry.DocumentUri,
-                diagnostics = hideDiagnostics ? Array.Empty<Diagnostic>() : _analyzer.GetDiagnostics(entry)
+                diagnostics = HideFileDiagnostics(entry) ? Array.Empty<Diagnostic>() : _analyzer.GetDiagnostics(entry)
             });
         }
+
+        private bool HideFileDiagnostics(IProjectEntry entry)
+            =>_openFiles.GetDocument(entry.DocumentUri) == null && _settings.analysisOptions.openFilesOnly;
 
         private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
             var oldSettings = _settings;
