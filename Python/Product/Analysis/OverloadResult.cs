@@ -43,6 +43,10 @@ namespace Microsoft.PythonTools.Analysis {
             return new OverloadResult(newParameters, Name, Documentation, ReturnType);
         }
 
+        internal virtual OverloadResult WithoutLeadingParameters(int skipCount = 1) {
+            return new OverloadResult(_parameters.Skip(skipCount).ToArray(), Name, Documentation, _returnType);
+        }
+
         private static string Longest(string x, string y) {
             if (x == null) {
                 return y;
@@ -281,10 +285,14 @@ namespace Microsoft.PythonTools.Analysis {
                 _projectState,
                 Name,
                 _overload,
-                0,
+                _overload.GetParameters()?.Length ?? 0,
                 _fallbackDoc,
                 newParameters
             );
+        }
+
+        internal override OverloadResult WithoutLeadingParameters(int skipCount = 1) {
+            return new BuiltinFunctionOverloadResult(_projectState, Name, _overload, skipCount, _fallbackDoc);
         }
 
         public override string Documentation => _doc;

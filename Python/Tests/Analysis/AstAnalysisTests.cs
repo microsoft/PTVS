@@ -1048,16 +1048,37 @@ l = iterfind()");
 e1, e2, e3 = sys.exc_info()");
                     analysis.WaitForAnalysis();
 
-                    var funcs = analysis.GetValues("sys.exc_info").ToArray();
+                    var funcs = analysis.GetValues("sys.exc_info").SelectMany(f => f.Overloads).ToArray();
                     AssertUtil.ContainsExactly(
-                        funcs.SelectMany(f => f.Overloads).Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
-                        "exc_info()->[tuple of type, BaseException, None]",
+                        funcs.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "exc_info()->[tuple[type, BaseException, None]]",
                         "exc_info()->[tuple]"
                     );
 
                     analysis.AssertIsInstance("e1", BuiltinTypeId.Type);
                     analysis.AssertIsInstance("e2", "BaseException");
                     analysis.AssertIsInstance("e3", BuiltinTypeId.NoneType);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedJsonMakeScanner() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import _json
+
+scanner = _json.make_scanner()");
+                    analysis.WaitForAnalysis();
+
+                    var overloads = analysis.GetSignatures("scanner");
+                    AssertUtil.ContainsExactly(
+                        overloads.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "__call__(string:str=,index:int=)->[tuple[int, None, ]]"
+                    );
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
