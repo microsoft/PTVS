@@ -24,8 +24,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override Task<CompletionList> Completion(CompletionParams @params) {
             var uri = @params.textDocument.uri;
-            // Make sure document is enqueued for processing
-            var openFile = _openFiles.GetDocument(uri);
 
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
@@ -46,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(new CompletionList());
             }
 
-            if (_settings.SuppressAdvancedMembers) {
+            if (!_settings?.autoComplete?.showAdvancedMembers ?? false) {
                 members = members.Where(m => !m.label.StartsWith("__"));
             }
 

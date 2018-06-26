@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,16 +40,6 @@ namespace PythonToolsMockTests {
             AssertListener.Initialize();
         }
 
-        [TestInitialize]
-        public void TestInitialize() {
-            UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = true;
-        }
-
-        [TestCleanup]
-        public void TestCleanup() {
-            UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false;
-        }
-
         private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag) {
             return string.Format("{0}: {1} ({2})",
                 tag.Tag.ErrorType,
@@ -66,7 +57,7 @@ namespace PythonToolsMockTests {
 
 
         [TestMethod, Priority(0)]
-        public void UnresolvedImportSquiggle() {
+        public async Task UnresolvedImportSquiggle() {
             List<string> squiggles;
 
             using (var view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs")) {
@@ -74,7 +65,7 @@ namespace PythonToolsMockTests {
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
                 var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
-                var time = taskProvider.FlushAsync().GetAwaiter().GetResult();
+                var time = await taskProvider.FlushAsync();
                 Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 
                 squiggles = tagger.GetTaggedSpans(new SnapshotSpan(view.CurrentSnapshot, 0, view.CurrentSnapshot.Length))

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -74,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly OpenFiles _openFiles;
 
         internal PythonAnalyzer _analyzer;
-        internal ClientCapabilities _clientCaps;
+        private ClientCapabilities _clientCaps;
         private LanguageServerSettings _settings = new LanguageServerSettings();
 
         private bool _traceLogging;
@@ -219,6 +220,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // No need to keep in-memory buffers now
                 doc.ResetDocument(-1, null);
 
+                _openFiles.Remove(@params.textDocument.uri);
+
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
@@ -232,13 +235,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            if (@params.settings != null) {
-                if (@params.settings is LanguageServerSettings settings) {
-                    _settings = settings;
-                } else {
-                    LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
-                    return;
-                }
+            if (@params.settings == null) {
+                return;
+            }
+
+            if (@params.settings is LanguageServerSettings settings) {
+                _settings = settings;
+            } else {
+                LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
+                return;
             }
 
             // Make sure reload modules is executed on the analyzer thread.
@@ -328,9 +333,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-
             _clientCaps = @params.capabilities;
-            _settings.SetCompletionTimeout(_clientCaps?.python?.completionsTimeout);
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             _analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
 
@@ -362,13 +365,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return default(T);
             }
             try {
-                Type type;
-                try {
-                    var assembly = File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName);
-                    type = Assembly.Load(assembly).GetType(typeName, true);
-                } catch (IOException) {
-                    type = Assembly.LoadFrom(assemblyName).GetType(typeName, true);
-                }
+#if DESKTOP
+                var assembly = Assembly.Load(File.Exists(assemblyName) ? AssemblyName.GetAssemblyName(assemblyName) : new AssemblyName(assemblyName));
+#else
+                var assembly = File.Exists(assemblyName)
+                    ? Assembly.LoadFrom(assemblyName)
+                    : Assembly.Load(new AssemblyName(assemblyName));
+#endif
+                var type = assembly.GetType(typeName, true);
 
                 return (T)Activator.CreateInstance(
                     type,
@@ -444,7 +448,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return item;
             }
 
-            IEnumerable<string> aliases = null;
+            string[] aliases = null;
             var path = GetLocalPath(documentUri);
             if (fromSearchPath != null) {
                 if (ModulePath.FromBasePathAndFile_NoThrow(GetLocalPath(fromSearchPath), path, out var mp)) {
@@ -454,7 +458,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 aliases = GetImportNames(documentUri).Select(mp => mp.ModuleName).ToArray();
             }
 
-            if (!(aliases?.Any() ?? false)) {
+            if (aliases.IsNullOrEmpty()) {
                 aliases = new[] { Path.GetFileNameWithoutExtension(path) };
             }
 
@@ -472,18 +476,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return actualItem;
             }
 
-            if (_clientCaps?.python?.analysisUpdates ?? false) {
-                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
-            }
+            pyItem.OnNewAnalysis += (o, e) => OnPythonEntryNewAnalysis(pyItem);
 
             if (item is IDocument doc) {
                 EnqueueItem(doc);
             }
 
-            if (reanalyzeEntries != null) {
-                foreach (var entryRef in reanalyzeEntries) {
-                    _queue.Enqueue(entryRef, AnalysisPriority.Low);
-                }
+            foreach (var entryRef in reanalyzeEntries) {
+                _queue.Enqueue(entryRef, AnalysisPriority.Low);
             }
 
             return item;
@@ -569,9 +569,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 disposeWhenEnqueued?.Dispose();
                 disposeWhenEnqueued = null;
-                var openedFile = _openFiles.GetDocument(doc.DocumentUri);
                 if (vc != null) {
-                    var reported = openedFile.LastReportedDiagnostics;
+                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
                     lock (reported) {
                         foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
                             var part = _projectFiles.GetPart(kv.Key);
@@ -597,50 +596,57 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
-            if (sender is IPythonProjectEntry entry) {
-                TraceMessage($"Received new analysis for {entry.DocumentUri}");
-                var version = 0;
-                var parse = entry.GetCurrentParse();
+        private void OnPythonEntryNewAnalysis(IPythonProjectEntry pythonProjectEntry) {
+            TraceMessage($"Received new analysis for {pythonProjectEntry.DocumentUri}");
+            var version = 0;
+            var parse = pythonProjectEntry.GetCurrentParse();
+            if (_clientCaps?.python?.analysisUpdates ?? false) {
                 if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
-                    foreach (var kv in vc.GetAllParts(entry.DocumentUri)) {
+                    foreach (var kv in vc.GetAllParts(pythonProjectEntry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
                         if (kv.Value.Version > version) {
                             version = kv.Value.Version;
                         }
                     }
                 } else {
-                    AnalysisComplete(entry.DocumentUri, 0);
+                    AnalysisComplete(pythonProjectEntry.DocumentUri, 0);
                 }
+            }
 
-                var diags = _analyzer.GetDiagnostics(entry);
-                if (!diags.Any()) {
-                    return;
-                }
+            var diags = _analyzer.GetDiagnostics(pythonProjectEntry);
+            var severity = _settings?.diagnostics?.unresolvedImports ?? DiagnosticSeverity.Warning;
+            if (parse != null && severity.Show()) {
+                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _analyzer, severity);
+                parse.Tree.Walk(walker);
+                diags = diags.Concat(walker.Diagnostics).ToArray();
+            }
 
-                if (entry is IDocument doc) {
-                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
-                    lock (reported) {
-                        if (reported.TryGetValue(0, out var lastVersion)) {
-                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
-                        }
+            if (!diags.Any()) {
+                return;
+            }
+
+            if (pythonProjectEntry is IDocument doc) {
+                var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
+                lock (reported) {
+                    if (reported.TryGetValue(0, out var lastVersion)) {
+                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
                     }
                 }
-
-                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    diagnostics = diags,
-                    uri = entry.DocumentUri,
-                    _version = version
-                });
             }
+
+            PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                diagnostics = diags,
+                uri = pythonProjectEntry.DocumentUri,
+                _version = version
+            });
         }
 
         private PythonAst GetParseTree(IPythonProjectEntry entry, Uri documentUri, CancellationToken token, out BufferVersion bufferVersion) {
             PythonAst tree = null;
             bufferVersion = null;
-            var parse = entry.WaitForCurrentParse(_clientCaps.python?.completionsTimeout ?? Timeout.Infinite, token);
+            var parse = entry.WaitForCurrentParse(_clientCaps?.python?.completionsTimeout ?? Timeout.Infinite, token);
             if (parse != null) {
-                tree = parse.Tree ?? tree;
+                tree = parse.Tree;
                 if (parse.Cookie is VersionCookie vc) {
                     if (vc.Versions.TryGetValue(_projectFiles.GetPart(documentUri), out bufferVersion)) {
                         tree = bufferVersion.Ast ?? tree;

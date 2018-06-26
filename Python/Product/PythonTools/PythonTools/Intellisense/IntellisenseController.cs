@@ -102,47 +102,67 @@ namespace Microsoft.PythonTools.Intellisense {
                 .DoNotWait();
         }
 
+        private static async Task DismissQuickInfo(IAsyncQuickInfoSession session) {
+            if (session != null && session.State != QuickInfoSessionState.Dismissed) {
+                await session.DismissAsync();
+            }
+        }
+
         private async Task TextViewMouseHoverWorker(MouseHoverEventArgs e) {
-            if (_quickInfoSession != null && _quickInfoSession.State != QuickInfoSessionState.Dismissed) {
-                await _quickInfoSession.DismissAsync();
+            var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
+            if (pt == null) {
+                return;
             }
 
-            var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
-            if (pt != null) {
-                if (_textView.TextBuffer.GetInteractiveWindow() != null &&
-                    pt.Value.Snapshot.Length > 1 &&
-                    pt.Value.Snapshot[0] == '$') {
-                    // don't provide quick info on help, the content type doesn't switch until we have
-                    // a complete command otherwise we shouldn't need to do this.
-                    return;
-                }
+            if (_textView.TextBuffer.GetInteractiveWindow() != null &&
+                pt.Value.Snapshot.Length > 1 &&
+                pt.Value.Snapshot[0] == '$') {
+                // don't provide quick info on help, the content type doesn't switch until we have
+                // a complete command otherwise we shouldn't need to do this.
+                await DismissQuickInfo(Interlocked.Exchange(ref _quickInfoSession, null));
+                return;
+            }
 
-                var entry = await e.View.TextBuffer.GetAnalysisEntryAsync(_services);
-                if (entry == null) {
-                    return;
-                }
+            var entry = await e.View.TextBuffer.GetAnalysisEntryAsync(_services);
+            if (entry == null) {
+                await DismissQuickInfo(Interlocked.Exchange(ref _quickInfoSession, null));
+                return;
+            }
 
-                var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
-                var quickInfo = await Task.Run(() => entry.Analyzer.WaitForRequest(t, "GetQuickInfo", null, 2));
-
-                AsyncQuickInfoSource.AddQuickInfo(_textView, quickInfo);
-
-                if (quickInfo != null) {
-                    var viewPoint = _textView.BufferGraph.MapUpToBuffer(
-                        pt.Value,
-                        PointTrackingMode.Positive,
-                        PositionAffinity.Successor,
-                        _textView.TextBuffer
-                    );
-
-                    if (viewPoint != null) {
-                        _quickInfoSession = await _services.QuickInfoBroker.TriggerQuickInfoAsync(
-                            _textView,
-                            viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
-                            QuickInfoSessionOptions.TrackMouse
-                        );
+            var session = _quickInfoSession;
+            if (session != null) {
+                try {
+                    var span = session.ApplicableToSpan?.GetSpan(pt.Value.Snapshot);
+                    if (span != null && span.Value.Contains(pt.Value)) {
+                        return;
                     }
+                } catch (ArgumentException) {
                 }
+            }
+
+            var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
+            var quickInfo = await Task.Run(() => entry.Analyzer.WaitForRequest(t, "GetQuickInfo", null, 2));
+
+            AsyncQuickInfoSource.AddQuickInfo(_textView, quickInfo);
+
+            if (quickInfo == null) {
+                await DismissQuickInfo(Interlocked.Exchange(ref _quickInfoSession, null));
+                return;
+            }
+
+            var viewPoint = _textView.BufferGraph.MapUpToBuffer(
+                pt.Value,
+                PointTrackingMode.Positive,
+                PositionAffinity.Successor,
+                _textView.TextBuffer
+            );
+
+            if (viewPoint != null) {
+                _quickInfoSession = await _services.QuickInfoBroker.TriggerQuickInfoAsync(
+                    _textView,
+                    viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
+                    QuickInfoSessionOptions.TrackMouse
+                );
             }
         }
 

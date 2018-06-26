@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
@@ -516,7 +519,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object experimental;
         public PythonClientCapabilities python;
     }
-
 
     [Serializable]
     public struct CompletionOptions {
