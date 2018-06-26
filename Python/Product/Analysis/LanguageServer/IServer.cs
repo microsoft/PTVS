@@ -61,6 +61,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         event EventHandler<TelemetryEventArgs> OnTelemetry;
         void Telemetry(TelemetryEventArgs e);
 
+        event EventHandler<CommandEventArgs> OnCommand;
+        void Command(CommandEventArgs e);
+
         event EventHandler<RegisterCapabilityEventArgs> OnRegisterCapability;
         Task RegisterCapability(RegistrationParams @params);
 

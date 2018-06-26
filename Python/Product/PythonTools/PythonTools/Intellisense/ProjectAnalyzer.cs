@@ -258,7 +258,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var lso = _services.Python.LanguageServerOptions;
             if (!string.IsNullOrEmpty(lso.TypeShedPath)) {
-                _analysisOptions.typeStubPaths = GetTypeShedPaths(lso.TypeShedPath, _interpreterFactory.Configuration.Version).ToArray();
+                _analysisOptions.typeStubPaths = new[] { lso.TypeShedPath };
             }
             lso.Changed += LanguageServerOptions_Changed;
 
@@ -314,25 +314,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var resp = await SendRequestAsync(new AP.SetAnalysisOptionsRequest {
                 options = _analysisOptions
             });
-        }
-
-        internal static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
-            var stdlib = Path.Combine(path, "stdlib");
-            var thirdParty = Path.Combine(path, "third_party");
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(stdlib, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(thirdParty, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
         }
 
         public event EventHandler AnalyzerNeedsRestart;

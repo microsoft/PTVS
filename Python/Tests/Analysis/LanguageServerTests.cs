@@ -247,6 +247,55 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInForStatement() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "for  ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for  x ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 6));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            // TODO: Fix parser to parse "for x i" as ForStatement and not ForStatement+ExpressionStatement
+            //u = await AddModule(s, "for x i");
+            //await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8), applicableSpan: new SourceSpan(1, 7, 1, 8));
+            //await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 9));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(1, 10));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "def f():\n    for ");
+            await AssertNoCompletion(s, u, new SourceLocation(2, 9));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "def f():\n    for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 11));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 13));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(2, 14));
+            await s.UnloadFileAsync(u);
+
+            if (!(this is LanguageServerTests_V2)) {
+                u = await AddModule(s, "async def f():\n    async for x in ");
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 5));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 10));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 14));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 15));
+                await s.UnloadFileAsync(u);
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInFunctionDefinition() {
             var s = await CreateServer();
             var u = await AddModule(s, "def f(a, b:int, c=2, d:float=None): pass");
@@ -336,10 +385,24 @@ namespace AnalysisTests {
             await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(2, 6));
             await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 15));
             await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 20));
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 22), applicableSpan: new SourceSpan(2, 20, 2, 26));
             await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 27));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 36));
             await AssertNoCompletion(s, u, new SourceLocation(2, 39));
             await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 44));
+
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "from unittest.case imp\n\npass");
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 22), applicableSpan: new SourceSpan(1, 20, 1, 23));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "import unittest.case a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 23), applicableSpan: new SourceSpan(1, 22, 1, 23));
+            await s.UnloadFileAsync(u);
+            u = await AddModule(s, "from unittest.case import TestCase a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 37), applicableSpan: new SourceSpan(1, 36, 1, 37));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -375,32 +438,51 @@ namespace AnalysisTests {
             var s = await CreateServer();
             var u = await AddModule(s, "raise ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+            await s.UnloadFileAsync(u);
 
             if (!(this is LanguageServerTests_V2)) {
                 u = await AddModule(s, "raise Exception from ");
                 await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
                 await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
                 await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+                await s.UnloadFileAsync(u);
+
+                u = await AddModule(s, "raise Exception fr");
+                await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 19), applicableSpan: new SourceSpan(1, 17, 1, 19));
+                await s.UnloadFileAsync(u);
             }
 
             u = await AddModule(s, "raise Exception, x, y");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 20));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
         public async Task CompletionInExcept() {
             var s = await CreateServer();
-            var u = await AddModule(s, "try:\n    pass\nexcept ");
+            Uri u;
+            u = await AddModule(s, "try:\n    pass\nexcept ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept (");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 9));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept Exception  as ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
             await AssertNoCompletion(s, u, new SourceLocation(3, 22));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexc");
+            await AssertCompletion(s, u, new[] { "except", "def", "abs" }, new string[0], new SourceLocation(3, 3));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexcept Exception a");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 19), applicableSpan: new SourceSpan(3, 18, 3, 19));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -952,7 +1034,7 @@ datetime.datetime.now().day
                 .Select(d => $"{d.severity};{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}");
         }
 
-        public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {
+        public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null, Range? applicableSpan = null) {
             var res = await s.Completion(new CompletionParams {
                 textDocument = document,
                 position = position ?? new Position(),
@@ -967,6 +1049,9 @@ datetime.datetime.now().day
                 contains,
                 excludes
             );
+            if (applicableSpan.HasValue) {
+                Assert.AreEqual(applicableSpan, res._applicableSpan);
+            }
         }
 
         private static void DumpDetails(CompletionList completions) {

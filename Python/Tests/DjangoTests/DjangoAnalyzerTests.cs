@@ -62,7 +62,7 @@ namespace DjangoTests {
             TestSingleRenderVariable("test_render_to_response.html");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomFilter() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
@@ -90,7 +90,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomTag() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 

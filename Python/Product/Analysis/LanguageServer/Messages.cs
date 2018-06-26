@@ -79,6 +79,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object value { get; set; }
     }
 
+    public sealed class CommandEventArgs: EventArgs {
+        public string command;
+        public object[] arguments;
+    }
+
     [Serializable]
     public struct RegistrationParams {
         public Registration[] registrations;

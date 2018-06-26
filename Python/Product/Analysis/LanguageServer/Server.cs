@@ -33,6 +33,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server : ServerBase, ILogger, IDisposable {
+        private const string completionItemCommand = "completion/itemSelected";
+
         /// <summary>
         /// Implements ability to execute module reload on the analyzer thread
         /// </summary>
@@ -138,11 +140,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     definitionProvider = true,
                     referencesProvider = true,
                     workspaceSymbolProvider = true,
-                    documentSymbolProvider = true
+                    documentSymbolProvider = true,
+                    executeCommandProvider = new ExecuteCommandOptions {
+                        commands = new[] {
+                            completionItemCommand
+                        }
+                    }
                 }
             };
         }
-
         public override Task Shutdown() {
             Interlocked.Exchange(ref _analyzer, null)?.Dispose();
             _projectFiles.Clear();
@@ -244,6 +250,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var entry in _analyzer.ModulesByFilename) {
                 _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
+        }
+
+        public override Task<object> ExecuteCommand(ExecuteCommandParams @params) {
+            Command(new CommandEventArgs {
+                command = @params.command,
+                arguments = @params.arguments
+            });
+            return Task.FromResult((object)null);
         }
         #endregion
 
