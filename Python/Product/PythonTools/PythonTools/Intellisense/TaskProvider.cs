@@ -137,31 +137,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Factory Functions
 
-        internal TaskProviderItem FromUnresolvedImport(
-            IServiceProvider serviceProvider, 
-            IPythonInterpreterFactory factory,
-            string importName,
-            SourceSpan span
-        ) {
-            string message;
-            if ((factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)?.IsCurrent == false) {
-                message = Strings.UnresolvedModuleTooltipRefreshing.FormatUI(importName);
-            } else {
-                message = Strings.UnresolvedModuleTooltip.FormatUI(importName);
-            }
-
-            return new TaskProviderItem(
-                serviceProvider,
-                message,
-                span,
-                VSTASKPRIORITY.TP_NORMAL,
-                VSTASKCATEGORY.CAT_CODESENSE,
-                true,
-                _spanTranslator,
-                _fromVersion
-            );
-        }
-
         internal TaskProviderItem FromDiagnostic(
             IServiceProvider site,
             Diagnostic diagnostic,
@@ -195,8 +170,8 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     struct EntryKey : IEquatable<EntryKey> {
-        public string FilePath;
-        public string Moniker;
+        public readonly string FilePath;
+        public readonly string Moniker;
 
         public static readonly EntryKey Empty = new EntryKey(null, null);
 
@@ -206,7 +181,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override bool Equals(object obj) {
-            return obj is EntryKey && Equals((EntryKey)obj);
+            return obj is EntryKey key && Equals(key);
         }
 
         public bool Equals(EntryKey other) {
@@ -480,11 +455,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// for the given project entry and moniker for the error source.
         /// </summary>
         public void RemoveBufferForErrorSource(string filePath, string moniker, ITextBuffer buffer) {
-            Clear(filePath, moniker);
             lock (_errorSources) {
-                var key = new EntryKey(filePath, moniker);
-                HashSet<ITextBuffer> buffers;
-                if (_errorSources.TryGetValue(key, out buffers)) {
+                if (_errorSources.TryGetValue(new EntryKey(filePath, moniker), out var buffers)) {
                     buffers.Remove(buffer);
                 }
             }
@@ -495,7 +467,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// the error source.
         /// </summary>
         public void ClearErrorSource(string filePath, string moniker) {
-            Clear(filePath, moniker);
             lock (_errorSources) {
                 _errorSources.Remove(new EntryKey(filePath, moniker));
             }

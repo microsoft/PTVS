@@ -109,18 +109,17 @@ namespace Microsoft.PythonTools.VsCode {
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
         public Task DidChangeConfiguration(JToken token) {
-            var settings = new LanguageServerSettings();
-
-            var rootSection = token["settings"];
-            var pythonSection = rootSection?["python"];
-            var autoComplete = pythonSection?["autoComplete"];
-            if (autoComplete != null) {
-                var showAdvancedMembers = autoComplete["showAdvancedMembers"] as JValue;
-                settings.SuppressAdvancedMembers = showAdvancedMembers == null ||
-                    (showAdvancedMembers.Type == JTokenType.Boolean && !showAdvancedMembers.ToObject<bool>());
+            var @params = token.ToObject<DidChangeConfigurationParams>();
+            if (!(@params.settings is JObject rootSection)) {
+                return Task.CompletedTask;
             }
-            var p = new DidChangeConfigurationParams() { settings = settings };
-            return _server.DidChangeConfiguration(p);
+
+            if (!rootSection.TryGetValue("python", out var pythonSection)) {
+                return Task.CompletedTask;
+            }
+
+            var settings = pythonSection.ToObject<LanguageServerSettings>();
+            return _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
         }
 
         [JsonRpcMethod("workspace/didChangeWatchedFiles")]

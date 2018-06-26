@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -15,15 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Collections;
+using System.ComponentModel;
 
-namespace AnalysisTests.DotNetAnalysis {
-    public class GenericType<T> where T : IEnumerable {
-        public T ReturnsGenericParam() {
-            return default(T);
-        }
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
+    [AttributeUsage(AttributeTargets.All)]
+    internal sealed class DefaultJsonAttribute : DefaultValueAttribute {
+        public static readonly object DummyValue = new object();
+        public DefaultJsonAttribute() : base(DummyValue) {}
     }
 }

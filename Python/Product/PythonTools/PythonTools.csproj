@@ -390,7 +390,6 @@
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
