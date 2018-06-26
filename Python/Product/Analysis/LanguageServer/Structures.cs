@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
@@ -517,7 +520,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public PythonClientCapabilities python;
     }
 
-
     [Serializable]
     public struct CompletionOptions {
         /// <summary>
@@ -695,13 +697,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionItem {
+    public class CompletionItem {
         public string label;
         public CompletionItemKind kind;
         public string detail;
         public MarkupContent documentation;
         public string sortText;
         public string filterText;
+        public bool? preselect; // VS Code 1.25+
         public string insertText;
         public InsertTextFormat insertTextFormat;
         public TextEdit? textEdit;

@@ -61,9 +61,11 @@
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ErrorMessages.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
+    <Compile Include="Analyzer\ImportStatementWalker.cs" />
     <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="IHasQualifiedName.cs" />
+    <Compile Include="Infrastructure\DefaultJsonAttribute.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
@@ -107,6 +109,7 @@
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
+    <Compile Include="LanguageServer\CodeActionProvider.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\DocumentationBuilder.cs" />

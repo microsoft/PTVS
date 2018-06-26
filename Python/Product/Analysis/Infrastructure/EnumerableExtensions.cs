@@ -20,6 +20,9 @@ using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     static class EnumerableExtensions {
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source) 
+            => source == null || !source.Any();
+
         public static T[] MaybeEnumerate<T>(this T[] source) {
             return source ?? Array.Empty<T>();
         }
