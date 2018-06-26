@@ -17,7 +17,7 @@
 from __future__ import print_function
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "15.7"
+__version__ = "15.8"
 
 import ast
 import keyword

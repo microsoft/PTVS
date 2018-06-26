@@ -101,7 +101,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (args == null || args.Count == 0 || baseType == null) {
                 return baseType;
             }
-            if (baseType.DeclaringModule?.Name != "typing" && !(baseType is NameType) && !(baseType is UnionType) && !(baseType is ModuleType)) {
+
+            if (!AstTypingModule.IsTypingType(baseType) && !(baseType is NameType)) {
                 return baseType;
             }
 
@@ -124,8 +125,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return Finalize(args.FirstOrDefault()) ?? _scope._unknownType;
                 case "Union":
                     return MakeUnion(args);
+                case "ByteString":
+                    return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
                 case "Type":
                     return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+                case "Any":
+                    return baseType;
                 // TODO: Other types
                 default:
                     Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);

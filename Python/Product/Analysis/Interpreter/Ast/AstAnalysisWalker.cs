@@ -20,15 +20,16 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisWalker : PythonWalker {
         private readonly IPythonModule _module;
         private readonly Dictionary<string, IMember> _members;
-        private readonly HashSet<string> _typingMembers = new HashSet<string>();
         private readonly List<AstAnalysisFunctionWalker> _postWalkers = new List<AstAnalysisFunctionWalker>();
         private readonly AnalysisLogWriter _log;
+        private readonly Dictionary<string, IMember> _typingScope;
 
         private IPythonInterpreter _interpreter => Scope.Interpreter;
         private PythonAst _ast => Scope.Ast;
@@ -58,6 +59,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 includeLocationInfo,
                 log: warnAboutUndefinedValues ? _log : null
             );
+            _typingScope = new Dictionary<string, IMember>();
+            Scope.PushScope(_typingScope);
             WarnAboutUndefinedValues = warnAboutUndefinedValues;
         }
 
@@ -88,9 +91,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (_module.Name != "typing" && Scope.FilePath.EndsWithOrdinal(".pyi", ignoreCase: true)) {
                 // Do not expose members directly imported from typing
-                foreach (var m in _typingMembers) {
-                    _members.Remove(m);
-                }
+                _typingScope.Clear();
             }
         }
 
@@ -167,11 +168,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 for (int i = 0; i < node.Names.Count; ++i) {
                     var n = node.AsNames?[i] ?? node.Names[i].Names[0];
                     if (n != null) {
-                        Scope.SetInScope(n.Name, new AstNestedPythonModule(
-                            _interpreter,
-                            n.Name,
-                            ModuleResolver.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, node.Names[i].MakeString(), true).ToArray()
-                        ));
+                        if (n.Name == "typing") {
+                            Scope.SetInScope(n.Name, new AstTypingModule(_ast.LanguageVersion), scope: _typingScope);
+                        } else {
+                            Scope.SetInScope(n.Name, new AstNestedPythonModule(
+                                _interpreter,
+                                n.Name,
+                                ModuleResolver.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, node.Names[i].MakeString(), true).ToArray()
+                            ));
+                        }
                     }
                 }
             } catch (IndexOutOfRangeException) {
@@ -202,9 +207,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            bool isTyping = modName == "typing";
+            IPythonModule mod = null;
+            Dictionary<string, IMember> scope = null;
 
-            var mod = new AstNestedPythonModule(
+            bool isTyping = modName == "typing";
+            var warnAboutUnknownValues = WarnAboutUndefinedValues;
+            if (isTyping) {
+                mod = new AstTypingModule(_ast.LanguageVersion);
+                scope = _typingScope;
+                warnAboutUnknownValues = false;
+            }
+
+            mod = mod ?? new AstNestedPythonModule(
                 _interpreter,
                 modName,
                 ModuleResolver.ResolvePotentialModuleNames(_module.Name, Scope.FilePath, modName, true).ToArray()
@@ -216,37 +230,92 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     // Ensure child modules have been loaded
                     mod.GetChildrenModules();
                     foreach (var member in mod.GetMemberNames(Scope.Context)) {
-                        var mem = mod.GetMember(Scope.Context, member) ??
-                            new AstPythonConstant(_unknownType, mod.Locations.ToArray());
-                        if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
-                            _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
+                        var mem = mod.GetMember(Scope.Context, member);
+                        if (mem == null) {
+                            if (WarnAboutUndefinedValues) {
+                                _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, member);
+                            }
+                            mem = new AstPythonConstant(_unknownType, ((mod as ILocatedMember)?.Locations).MaybeEnumerate().ToArray());
+                        } else if (mem.MemberType == PythonMemberType.Unknown && warnAboutUnknownValues) {
+                            _log?.Log(TraceLevel.Warning, "UnknownImport", modName, member);
                         }
-                        Scope.SetInScope(member, mem);
+                        Scope.SetInScope(member, mem, scope: scope);
                         (mem as IPythonModule)?.Imported(Scope.Context);
-                        if (isTyping) {
-                            _typingMembers.Add(member);
-                        }
                     }
                 } else {
                     IMember mem;
-                    if (mod.IsLoaded) {
-                        mem = mod.GetMember(Scope.Context, name.Key) ??
-                            new AstPythonConstant(_unknownType, GetLoc(name.Value));
-                        if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
-                            _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
+                    if (mod is AstNestedPythonModule m && !m.IsLoaded) {
+                        mem = new AstNestedPythonModuleMember(name.Key, m, Scope.Context, GetLoc(name.Value));
+                    } else {
+                        mem = mod.GetMember(Scope.Context, name.Key);
+                        if (mem == null) {
+                            if (WarnAboutUndefinedValues) {
+                                _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
+                            }
+                            mem = new AstPythonConstant(_unknownType, GetLoc(name.Value));
+                        } else if (mem.MemberType == PythonMemberType.Unknown && warnAboutUnknownValues) {
+                            _log?.Log(TraceLevel.Warning, "UnknownImport", modName, name);
                         }
                         (mem as IPythonModule)?.Imported(Scope.Context);
-                    } else {
-                        mem = new AstNestedPythonModuleMember(name.Key, mod, Scope.Context, GetLoc(name.Value));
                     }
-                    Scope.SetInScope(name.Value.Name, mem);
-                    if (isTyping) {
-                        _typingMembers.Add(name.Value.Name);
-                    }
+                    Scope.SetInScope(name.Value.Name, mem, scope: scope);
                 }
             }
 
             return false;
+        }
+
+        public override bool Walk(IfStatement node) {
+            bool allValidComparisons = true;
+            foreach (var test in node.TestsInternal) {
+                if (test.Test is BinaryExpression cmp &&
+                    cmp.Left is MemberExpression me && (me.Target as NameExpression)?.Name == "sys" && me.Name == "version_info" &&
+                    cmp.Right is TupleExpression te && te.Items.All(i => (i as ConstantExpression)?.Value is int)) {
+                    Version v;
+                    try {
+                        v = new Version(
+                            (int)((te.Items.ElementAtOrDefault(0) as ConstantExpression)?.Value ?? 0),
+                            (int)((te.Items.ElementAtOrDefault(1) as ConstantExpression)?.Value ?? 0)
+                        );
+                    } catch (ArgumentException) {
+                        // Unsupported comparison, so walk all children
+                        return true;
+                    }
+
+                    switch (cmp.Operator) {
+                        case PythonOperator.LessThan:
+                            if (_ast.LanguageVersion.ToVersion() < v) {
+                                test.Walk(this);
+                                return false;
+                            }
+                            break;
+                        case PythonOperator.LessThanOrEqual:
+                            if (_ast.LanguageVersion.ToVersion() <= v) {
+                                test.Walk(this);
+                                return false;
+                            }
+                            break;
+                        case PythonOperator.GreaterThan:
+                            if (_ast.LanguageVersion.ToVersion() > v) {
+                                test.Walk(this);
+                                return false;
+                            }
+                            break;
+                        case PythonOperator.GreaterThanOrEqual:
+                            if (_ast.LanguageVersion.ToVersion() >= v) {
+                                test.Walk(this);
+                                return false;
+                            }
+                            break;
+                        default:
+                            // Unsupported comparison, so walk all children
+                            return true;
+                    }
+                } else {
+                    allValidComparisons = false;
+                }
+            }
+            return !allValidComparisons;
         }
 
         public override bool Walk(FunctionDefinition node) {
