@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override BuiltinInstanceInfo MakeInstance() {
-            return new SequenceBuiltinInstanceInfo(this, false, false);
+            return new TupleBuiltinInstanceInfo(this);
         }
 
         internal override SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry) {
@@ -45,6 +46,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new SequenceInfo(vals, this, node, entry);
             } else {
                 return new SequenceInfo(VariableDef.EmptyArray, this, node, entry);
+            }
+        }
+    }
+
+    class TupleBuiltinInstanceInfo : SequenceBuiltinInstanceInfo {
+        public TupleBuiltinInstanceInfo(BuiltinClassInfo classObj)
+            : base(classObj, false, false) { }
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            if (ClassInfo is TupleBuiltinClassInfo tuple && tuple.IndexTypes.Count > 0) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, TypeName);
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+                bool needComma = false;
+                foreach (var v in tuple.IndexTypes.Take(4)) {
+                    if (needComma) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    }
+                    foreach (var kv in v.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]", defaultIfEmpty: "None")) {
+                        yield return kv;
+                    }
+                    needComma = true;
+                }
+                if (tuple.IndexTypes.Count > 4) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "...");
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+            } else {
+                foreach (var kv in base.GetRichDescription()) {
+                    yield return kv;
+                }
             }
         }
     }

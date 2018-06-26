@@ -118,12 +118,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var filePath = string.IsNullOrEmpty(_filePath)
                 ? null
                 : ((interpreter as AstPythonInterpreter)?.Factory as AstPythonInterpreterFactory)?.GetCacheFilePath(_filePath);
+            var uri = string.IsNullOrEmpty(filePath) ? null : new Uri(filePath);
             const bool includeLocations = true;
 #else
             const string filePath = null;
+            const Uri uri = null;
             const bool includeLocations = false;
 #endif
-            return new AstAnalysisWalker(interpreter, ast, this, filePath, null, _members, includeLocations, true);
+            return new AstAnalysisWalker(interpreter, ast, this, filePath, uri, _members, includeLocations, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
