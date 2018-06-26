@@ -837,6 +837,25 @@ datetime.datetime.now().day
         }
 
         [TestMethod, Priority(0)]
+        public async Task FromImportHover() {
+            using (var s = await CreateServer()) {
+                var mod = await AddModule(s, @"from os import path as p\n");
+                await AssertHover(s, mod, new SourceLocation(1, 7), "built-in module os*", null, new SourceSpan(1, 6, 1, 8));
+                await AssertHover(s, mod, new SourceLocation(1, 17), "path: path", new[] { "path" }, new SourceSpan(1, 16, 1, 20));
+                await AssertHover(s, mod, new SourceLocation(1, 25), "p: path", new[] { "path" }, new SourceSpan(1, 24, 1, 25));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FromImportRelativeHover() {
+            using (var s = await CreateServer()) {
+                var mod1 = await AddModule(s, @"from . import mod2\n", "mod1");
+                var mod2 = await AddModule(s, @"def foo():\n  pass\n", "mod2");
+                await AssertHover(s, mod1, new SourceLocation(1, 16), "built-in module mod2", null, new SourceSpan(1, 15, 1, 19));
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task MultiPartDocument() {
             var s = await CreateServer();
 

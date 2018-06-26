@@ -15,12 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -55,10 +53,9 @@ namespace Microsoft.PythonTools.Editor {
         [ImportingConstructor]
         public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
             Site = site;
-            _componentModel = new Lazy<IComponentModel>(() => site.GetComponentModel());
+            _componentModel = new Lazy<IComponentModel>(site.GetComponentModel);
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
-            _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
             _mismatchedEncodingSquiggleProvider = new Lazy<InvalidEncodingSquiggleProvider>(CreateSquiggleProvider<InvalidEncodingSquiggleProvider>);
             _previewChangesService = new Lazy<PreviewChangesService>(() => _componentModel.Value.GetService<PreviewChangesService>());
             _featureFlags = new Lazy<IVsFeatureFlags>(() => (IVsFeatureFlags)site.GetService(typeof(SVsFeatureFlags)));
@@ -161,10 +158,6 @@ namespace Microsoft.PythonTools.Editor {
         private readonly Lazy<CommentTaskProvider> _commentTaskProvider;
         public CommentTaskProvider CommentTaskProvider => _commentTaskProvider.Value;
         public CommentTaskProvider MaybeCommentTaskProvider => _commentTaskProvider.IsValueCreated ? _commentTaskProvider.Value : null;
-
-        private readonly Lazy<UnresolvedImportSquiggleProvider> _unresolvedImportSquiggleProvider;
-        public UnresolvedImportSquiggleProvider UnresolvedImportSquiggleProvider => _unresolvedImportSquiggleProvider.Value;
-        public UnresolvedImportSquiggleProvider MaybeUnresolvedImportSquiggleProvider => _unresolvedImportSquiggleProvider.IsValueCreated ? _unresolvedImportSquiggleProvider.Value : null;
 
         private readonly Lazy<InvalidEncodingSquiggleProvider> _mismatchedEncodingSquiggleProvider;
         public InvalidEncodingSquiggleProvider InvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.Value;
