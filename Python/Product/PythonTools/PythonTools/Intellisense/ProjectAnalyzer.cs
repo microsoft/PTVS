@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly PythonEditorServices _services;
         private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
+        private Task _processingTask;
 
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
         internal static readonly object _testAnalyzer = new { Name = "TestAnalyzer" };
@@ -236,7 +237,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait();
+            _processingTask = Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false));
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
@@ -258,7 +259,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var lso = _services.Python.LanguageServerOptions;
             if (!string.IsNullOrEmpty(lso.TypeShedPath)) {
-                _analysisOptions.typeStubPaths = GetTypeShedPaths(lso.TypeShedPath, _interpreterFactory.Configuration.Version).ToArray();
+                _analysisOptions.typeStubPaths = new[] { lso.TypeShedPath };
             }
             lso.Changed += LanguageServerOptions_Changed;
 
@@ -314,25 +315,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var resp = await SendRequestAsync(new AP.SetAnalysisOptionsRequest {
                 options = _analysisOptions
             });
-        }
-
-        internal static IEnumerable<string> GetTypeShedPaths(string path, Version version) {
-            var stdlib = Path.Combine(path, "stdlib");
-            var thirdParty = Path.Combine(path, "third_party");
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(stdlib, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(thirdParty, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
         }
 
         public event EventHandler AnalyzerNeedsRestart;
@@ -547,6 +529,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
+                // give the task a chance to exit
+                if (_processingTask?.Wait(1000) == false) {
+                    Debug.Fail("Message processing task did not exit");
+                }
+
                 try {
                     if (!_analysisProcess.WaitForExit(500)) {
                         _analysisProcess.Kill();
@@ -1025,7 +1012,6 @@ namespace Microsoft.PythonTools.Intellisense {
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
-
             buffer.Services.InvalidEncodingSquiggleProvider?.AddBuffer(buffer);
         }
 
@@ -1040,6 +1026,7 @@ namespace Microsoft.PythonTools.Intellisense {
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
+            buffer.Services.MaybeInvalidEncodingSquiggleProvider?.RemoveBuffer(buffer);
         }
 
         internal void OnAnalysisStarted() {
@@ -1685,7 +1672,15 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
 
-            entry?.TryGetBufferParser()?.ClearBuffers();
+            var bp = entry?.TryGetBufferParser();
+            if (bp != null) {
+                bp.ClearBuffers();
+            } else {
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, UnresolvedImportMoniker);
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, InvalidEncodingMoniker);
+                _services.MaybeCommentTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
+            }
             if (entry?.Path != null) {
                 _projectFiles.TryRemove(entry.Path, out _);
             }

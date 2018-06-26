@@ -76,6 +76,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             );
         }
 
+        public static IPythonModule FromTypeStub(
+            IPythonInterpreter interpreter,
+            string stubFile,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
+        ) {
+            return new AstCachedPythonModule(moduleFullName, stubFile);
+        }
+
         // Avoid hitting the filesystem, but exclude non-importable
         // paths. Ideally, we'd stop at the first path that's a known
         // search path, except we don't know search paths here.

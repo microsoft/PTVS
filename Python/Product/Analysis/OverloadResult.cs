@@ -253,18 +253,27 @@ namespace Microsoft.PythonTools.Analysis {
             _extraParameters = extraParams;
             _removedParams = removedParams;
             _projectState = state;
-
-            if (!overload.ReturnType.Any()) {
-                _returnTypes = Array.Empty<string>();
-            } else {
-                _returnTypes = overload.ReturnType.Select(t => state.GetAnalysisValueFromObjects(t)?.ShortDescription ?? t.Name).OrderBy(n => n).Distinct().ToArray();
-            }
+            _returnTypes = GetInstanceDescriptions(state, overload.ReturnType).OrderBy(n => n).Distinct().ToArray();
 
             Calculate();
         }
 
         internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, params ParameterResult[] extraParams)
             : this(state, name, overload, removedParams, null, extraParams) {
+        }
+
+        private static IEnumerable<string> GetInstanceDescriptions(PythonAnalyzer state, IEnumerable<IPythonType> type) {
+            foreach (var t in type) {
+                var av = state.GetAnalysisValueFromObjects(t);
+                var inst = av?.GetInstanceType();
+                if (inst.IsUnknown()) {
+                    yield return t.Name;
+                } else {
+                    foreach (var d in inst.GetShortDescriptions()) {
+                        yield return d;
+                    }
+                }
+            }
         }
 
         internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {

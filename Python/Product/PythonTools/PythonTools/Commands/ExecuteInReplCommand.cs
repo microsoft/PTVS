@@ -60,15 +60,11 @@ namespace Microsoft.PythonTools.Commands {
 
             // If we find an open window for the project, prefer that to a per-config one
             if (!string.IsNullOrEmpty(projectId)) {
-                window = provider.Open(projectId);
+                window = provider.Open(
+                    projectId,
+                    e => ((e as SelectableReplEvaluator)?.Evaluator as PythonCommonInteractiveEvaluator)?.AssociatedProjectHasChanged != true
+                );
                 if (window != null) {
-                    if (window.InteractiveWindow.GetPythonEvaluator()?.AssociatedProjectHasChanged == true) {
-                        // We have an existing window, but it needs to be reset.
-                        // Let's create a new one
-                        window = provider.Create(projectId);
-                        project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
-                    }
-
                     return window;
                 }
             }

@@ -346,13 +346,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         public LocationInfo ResolveLocation(object location) {
             Node node = (Node)location;
-            MemberExpression me = node as MemberExpression;
-            SourceSpan span;
-            if (me != null) {
-                span = me.GetNameSpan(Tree);
-            } else {
-                span = node.GetSpan(Tree);
-            }
+            var span = (node as MemberExpression)?.GetNameSpan(Tree)
+                ?? (node as Parameter)?.NameExpression?.GetSpan(Tree)
+                ?? node.GetSpan(Tree);
 
             return new LocationInfo(ProjectEntry.FilePath, Entry.DocumentUri, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }

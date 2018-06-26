@@ -741,7 +741,7 @@ class MemberInfo(object):
 
                 fullname = module + '.' + type_name
 
-                if fullname in LIES_ABOUT_MODULE or (in_module + '.*') in LIES_ABOUT_MODULE:
+                if in_module and (fullname in LIES_ABOUT_MODULE or (in_module + '.*') in LIES_ABOUT_MODULE):
                     # Treat the type as if it came from the current module
                     return (in_module,), type_name
 
@@ -750,6 +750,7 @@ class MemberInfo(object):
             return (), type_name
         except Exception:
             warnings.warn('could not get type of ' + repr(value_type), InspectWarning)
+            raise
             return (), None
 
     def _str_from_literal(self, lit):
