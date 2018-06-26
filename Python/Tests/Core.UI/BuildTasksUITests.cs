@@ -50,7 +50,7 @@ namespace PythonToolsUITests {
             var pn = projectNode = dteProject.GetPythonProject();
             var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == python.Id).FirstOrDefault();
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
-            app.GetService<UIThreadBase>().Invoke(() => pn.ActiveInterpreter = fact);
+            app.ServiceProvider.GetUIThread().Invoke(() => pn.ActiveInterpreter = fact);
             dteProject.Save();
         }
 
