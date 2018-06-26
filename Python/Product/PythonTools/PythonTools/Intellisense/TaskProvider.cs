@@ -670,19 +670,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            var uiThreadTask = _serviceProvider.GetUIThread().InvokeAsync(() => {
-                if (_taskList != null) {
-                    if (_cookie == 0) {
-                        ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
-                    }
-                    try {
-                        _taskList.RefreshTasks(_cookie);
-                    } catch (InvalidComObjectException) {
-                        // DevDiv2 759317 - Watson bug, COM object can go away...
-                    }
-                }
-            }, cancellationToken);
-
             foreach (var kv in bufferToErrorList) {
                 var tagger = _errorProvider.GetErrorTagger(kv.Key);
                 if (tagger == null) {
@@ -708,7 +695,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            await uiThreadTask;
+            await _serviceProvider.GetUIThread().InvokeAsync(() => {
+                if (_taskList != null) {
+                    if (_cookie == 0) {
+                        ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
+                    }
+                    try {
+                        _taskList.RefreshTasks(_cookie);
+                    } catch (InvalidComObjectException) {
+                        // DevDiv2 759317 - Watson bug, COM object can go away...
+                    }
+                }
+            }, cancellationToken);
         }
 
         private void SendMessage(WorkerMessage message) {

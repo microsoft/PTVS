@@ -47,10 +47,10 @@ namespace PythonToolsUITests {
 
         internal void OpenProject(VisualStudioApp app, string slnName, PythonVersion python, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
             dteProject = app.OpenProject(app.CopyProjectForTest("TestData\\Targets\\" + slnName));
-            projectNode = dteProject.GetPythonProject();
+            var pn = projectNode = dteProject.GetPythonProject();
             var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == python.Id).FirstOrDefault();
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
-            projectNode.ActiveInterpreter = fact;
+            app.ServiceProvider.GetUIThread().Invoke(() => pn.ActiveInterpreter = fact);
             dteProject.Save();
         }
 

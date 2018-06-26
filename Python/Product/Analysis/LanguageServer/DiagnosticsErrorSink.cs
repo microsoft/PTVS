@@ -49,11 +49,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var d = new Diagnostic {
                 message = text,
-                range = e.Span
+                range = e.Span,
+                source = _source
             };
 
-            foreach (var kv in _taskCommentMap.MaybeEnumerate()) {
+            foreach (var kv in _taskCommentMap.MaybeEnumerate().OrderByDescending(kv => kv.Key.Length)) {
                 if (text.IndexOfOrdinal(kv.Key, ignoreCase: true) >= 0) {
+                    d.code = kv.Key;
                     d.severity = kv.Value;
                     break;
                 }

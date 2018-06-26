@@ -883,10 +883,12 @@ x\
 
             public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
-                    Console.WriteLine($"New entry in {e.AnalysisEntry?.Analyzer}");
                     if (e.AnalysisEntry != null) {
+                        Console.WriteLine($"New entry in {e.AnalysisEntry.Analyzer}");
                         var tcs = Interlocked.Exchange(ref _tcs, null);
                         tcs?.SetResult(e.AnalysisEntry);
+                    } else {
+                        Console.WriteLine($"Entry cleared for {sender.Filename}");
                     }
                 }
                 return Task.CompletedTask;
@@ -917,6 +919,7 @@ x\
                     Assert.AreEqual(pv.Id, e.Analyzer.InterpreterFactory.Configuration.Id);
                 }
             } finally {
+                wnd.CloseWindow();
                 dis?.Dispose();
             }
         }
