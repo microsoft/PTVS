@@ -110,6 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceSpan? ApplicableSpan { get; set; }
 
         public bool? ShouldCommitByDefault { get; set; }
+        public bool? ShouldAllowSnippets { get; set; }
 
         public Node Node { get; private set; }
         public Node Statement => _statement;
@@ -747,6 +748,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         );
                     }
                 }
+                ShouldAllowSnippets = true;
             }
 
             _log.TraceMessage($"Completing all names");
