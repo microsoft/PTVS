@@ -1767,7 +1767,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
 
-            entry?.TryGetBufferParser()?.ClearBuffers();
+            var bp = entry?.TryGetBufferParser();
+            if (bp != null) {
+                bp.ClearBuffers();
+            } else {
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, UnresolvedImportMoniker);
+                _services.MaybeCommentTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
+            }
             if (entry?.Path != null) {
                 _projectFiles.TryRemove(entry.Path, out _);
             }
