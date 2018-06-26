@@ -1047,8 +1047,11 @@ namespace Microsoft.PythonTools.Intellisense {
             // remove our sources.
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
+            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
+
             buffer.Services.MaybeUnresolvedImportSquiggleProvider?.RemoveBuffer(buffer);
+            buffer.Services.MaybeInvalidEncodingSquiggleProvider?.RemoveBuffer(buffer);
         }
 
         internal void OnAnalysisStarted() {
@@ -1779,6 +1782,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
                 _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, UnresolvedImportMoniker);
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, InvalidEncodingMoniker);
                 _services.MaybeCommentTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
             }
             if (entry?.Path != null) {

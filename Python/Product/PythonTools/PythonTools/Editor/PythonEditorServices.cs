@@ -168,6 +168,7 @@ namespace Microsoft.PythonTools.Editor {
 
         private readonly Lazy<InvalidEncodingSquiggleProvider> _mismatchedEncodingSquiggleProvider;
         public InvalidEncodingSquiggleProvider InvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.Value;
+        public InvalidEncodingSquiggleProvider MaybeInvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.IsValueCreated ? _mismatchedEncodingSquiggleProvider.Value : null;
 
         private T CreateTaskProvider<T>() where T : class {
             if (VsProjectAnalyzer.SuppressTaskProvider) {
