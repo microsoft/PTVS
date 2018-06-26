@@ -26,15 +26,16 @@ using Microsoft.PythonTools.Infrastructure;
 namespace Microsoft.PythonTools.Interpreter {
     sealed class CondaEnvironmentManager : ICondaEnvironmentManager, IDisposable {
         private readonly SemaphoreSlim _working = new SemaphoreSlim(1);
-        private readonly string _condaPath;
         private bool _isDisposed;
+
+        public string CondaPath { get; }
 
         private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
         private CondaEnvironmentManager(string condaPath) {
-            _condaPath = condaPath;
+            CondaPath = condaPath;
         }
 
         public void Dispose() {
@@ -286,9 +287,9 @@ namespace Microsoft.PythonTools.Interpreter {
             bool success = false;
             try {
                 using (var output = ProcessOutput.Run(
-                    _condaPath,
+                    CondaPath,
                     args,
-                    Path.GetDirectoryName(_condaPath),
+                    Path.GetDirectoryName(CondaPath),
                     UnbufferedEnv,
                     false,
                     redirector ?? CondaEnvironmentManagerUIRedirector.Get(this, ui),

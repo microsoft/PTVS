@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Analysis {
             LibraryPath = libraryPath;
         }
 
-        private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$",
+        private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)(?<stubs>-stubs)?$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[iw]?$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
                 var dirname = PathUtils.GetFileName(dir);
                 var match = PythonPackageRegex.Match(dirname);
-                if (match.Success) {
+                if (match.Success && !match.Groups["stubs"].Success) {
                     bool hasInitPy = true;
                     var modulePath = dir;
                     if (requireInitPy) {
@@ -753,13 +753,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var path = basePath;
+            bool allowStub = true;
+            Match m;
 
             foreach (var bit in bits.Take(bits.Length - 1)) {
-                if (!PythonPackageRegex.IsMatch(bit)) {
+                m = PythonPackageRegex.Match(bit);
+                if (!m.Success || (!allowStub && m.Groups["stubs"].Success)) {
                     isInvalid = true;
                     errorParameter = bit;
                     return false;
                 }
+                allowStub = false;
+
                 if (string.IsNullOrEmpty(path)) {
                     path = bit;
                 } else {
@@ -772,7 +777,8 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            if (!PythonPackageRegex.IsMatch(lastBit)) {
+            m = PythonPackageRegex.Match(lastBit);
+            if (!m.Success || (!allowStub && m.Groups["stubs"].Success)) {
                 isInvalid = true;
                 errorParameter = moduleName;
                 return false;
@@ -815,19 +821,28 @@ namespace Microsoft.PythonTools.Analysis {
             }
             var bits = new List<string> { nameMatch.Groups["name"].Value };
 
-            var path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(sourceFile));
+            var path = PathUtils.TrimEndSeparator(PathUtils.GetParent(sourceFile));
+            bool lastWasStubs = false;
+
             while (PathEqualityComparer.Instance.StartsWith(path, basePath, allowFullMatch: false)) {
                 if (!isPackage(path)) {
                     isMissing = true;
                     return false;
                 }
-                var bit = PathUtils.GetFileName(path);
-                if (!PythonPackageRegex.IsMatch(bit)) {
+                if (lastWasStubs) {
                     isInvalid = true;
                     return false;
                 }
+
+                var bit = PathUtils.GetFileName(path);
+                var m = PythonPackageRegex.Match(bit);
+                if (!m.Success) {
+                    isInvalid = true;
+                    return false;
+                }
+                lastWasStubs = m.Groups["stubs"].Success;
                 bits.Add(PathUtils.GetFileName(path));
-                path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(path));
+                path = PathUtils.TrimEndSeparator(PathUtils.GetParent(path));
             }
 
             if (!PathEqualityComparer.Instance.Equals(basePath, path)) {

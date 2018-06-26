@@ -103,26 +103,6 @@ namespace AnalysisTests {
             return null;
         }
 
-        private static IEnumerable<string> GetTypeShedPaths(string path, PythonLanguageVersion version) {
-            var stdlib = Path.Combine(path, "stdlib");
-            var thirdParty = Path.Combine(path, "third_party");
-
-            var v = version.ToVersion();
-            foreach (var subdir in new[] { v.ToString(), v.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(stdlib, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-
-            foreach (var subdir in new[] { v.ToString(), v.Major.ToString(), "2and3" }) {
-                var candidate = Path.Combine(thirdParty, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-        }
-
 
         #region Test cases
 
@@ -451,7 +431,7 @@ class BankAccount(object):
                     var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                     var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                    interp.ModuleNamesChanged += (s, e) => evt.Set();
+                    interp.ModuleNamesChanged += (s, e) => evt.SetIfNotDisposed();
 
                     analysis.Analyzer.SetSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
@@ -462,6 +442,76 @@ class BankAccount(object):
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
                     Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_NoStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
+                    analysis.SetTypeStubSearchPath();
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method");
+                    analysis.AssertNotHasAttr("c", "typed_method", "typed_method_2");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_MergeStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = false });
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method", "typed_method");
+                    analysis.AssertNotHasAttr("c", "typed_method_2");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_MergeStubsPath() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetTypeStubSearchPath(TestData.GetPath("TestData\\AstAnalysis\\Stubs"));
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method", "typed_method_2");
+                    analysis.AssertNotHasAttr("c", "typed_method");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_ExclusiveStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = true });
+                    analysis.SetTypeStubSearchPath(TestData.GetPath("TestData\\AstAnalysis\\Stubs"));
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "typed_method_2");
+                    analysis.AssertNotHasAttr("c", "untyped_method", "inferred_method", "typed_method");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
@@ -930,7 +980,7 @@ y = g()");
         [TestMethod, Priority(0)]
         public void TypeShedElementTree() {
             using (var analysis = CreateAnalysis(Latest)) {
-                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
+                analysis.SetTypeStubSearchPath(TypeShedPath);
                 try {
                     var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
 
@@ -972,7 +1022,7 @@ l = iterfind()");
             }
 
             using (var analysis = CreateAnalysis(Latest)) {
-                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
+                analysis.SetTypeStubSearchPath(TypeShedPath);
                 try {
                     var entry = analysis.AddModule("test-module", @"import urllib");
                     analysis.WaitForAnalysis();
@@ -991,7 +1041,7 @@ l = iterfind()");
         [TestMethod, Priority(0)]
         public void TypeShedSysExcInfo() {
             using (var analysis = CreateAnalysis(Latest)) {
-                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
+                analysis.SetTypeStubSearchPath(TypeShedPath);
                 try {
                     var entry = analysis.AddModule("test-module", @"import sys
 
@@ -1017,7 +1067,7 @@ e1, e2, e3 = sys.exc_info()");
         [TestMethod, Priority(0)]
         public void TypeShedSysInfo() {
             using (var analysis = CreateAnalysis(Latest)) {
-                analysis.SetTypeStubSearchPath(GetTypeShedPaths(TypeShedPath, analysis.Analyzer.LanguageVersion).ToArray());
+                analysis.SetTypeStubSearchPath(TypeShedPath);
                 analysis.SetLimits(new AnalysisLimits { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = true });
                 try {
                     var entry = analysis.AddModule("test-module", @"import sys

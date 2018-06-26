@@ -440,22 +440,49 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     ModuleCache = _modules
                 };
                 for (int retries = 5; retries > 0; --retries) {
-                    switch (apf.TryImportModule(name, out mod, ctxt)) {
-                        case AstPythonInterpreterFactory.TryImportModuleResult.Success:
+                    // The call should be cancelled by the cancellation token, but since we
+                    // are blocking here we wait for slightly longer. Timeouts are handled
+                    // gracefully by TryImportModuleAsync(), so we want those to trigger if
+                    // possible, but if all else fails then we'll abort and treat it as an
+                    // error.
+                    // (And if we've got a debugger attached, don't time out at all.)
+                    Task<AstPythonInterpreterFactory.TryImportModuleResult> impTask;
+#if DEBUG
+                    if (Debugger.IsAttached) {
+                        impTask = apf.TryImportModuleAsync(name, ctxt, CancellationToken.None);
+                    } else {
+#endif
+                        var cts = new CancellationTokenSource(5000);
+                        impTask = apf.TryImportModuleAsync(name, ctxt, cts.Token);
+                        try {
+                            if (!impTask.Wait(10000)) {
+                                throw new OperationCanceledException();
+                            }
+                        } catch (OperationCanceledException) {
+                            Debug.Fail("Import timeout");
+                            return null;
+                        }
+#if DEBUG
+                    }
+#endif
+                    var result = impTask.Result;
+                    mod = result.Module;
+                    switch (result.Status) {
+                        case AstPythonInterpreterFactory.TryImportModuleResultCode.Success:
                             if (mod == null) {
                                 _modules.TryRemove(name, out _);
                                 break;
                             }
                             return mod;
-                        case AstPythonInterpreterFactory.TryImportModuleResult.ModuleNotFound:
+                        case AstPythonInterpreterFactory.TryImportModuleResultCode.ModuleNotFound:
                             retries = 0;
                             _modules.TryRemove(name, out _);
                             break;
-                        case AstPythonInterpreterFactory.TryImportModuleResult.NotSupported:
+                        case AstPythonInterpreterFactory.TryImportModuleResultCode.NotSupported:
                             retries = 0;
                             break;
-                        case AstPythonInterpreterFactory.TryImportModuleResult.NeedRetry:
-                        case AstPythonInterpreterFactory.TryImportModuleResult.Timeout:
+                        case AstPythonInterpreterFactory.TryImportModuleResultCode.NeedRetry:
+                        case AstPythonInterpreterFactory.TryImportModuleResultCode.Timeout:
                             break;
                     }
                 }

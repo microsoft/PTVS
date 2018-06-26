@@ -465,10 +465,10 @@ namespace Microsoft.PythonTools.Analysis {
                     if (node.IsAsync && !Save(node, true, "async")) {
                         return false;
                     }
-                    if (!Save(node.GetIndexOfFor(_ast), true, "for")) {
+                    if (!Save(node.ForIndex, true, "for")) {
                         return false;
                     }
-                    if (!Save(node.GetIndexOfIn(_ast), true, "in")) {
+                    if (!Save(node.InIndex, true, "in")) {
                         return false;
                     }
                     if (node.Else != null) {

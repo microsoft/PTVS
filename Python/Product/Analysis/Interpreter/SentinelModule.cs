@@ -21,20 +21,22 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class SentinelModule : IPythonModule, IDisposable {
+    sealed class SentinelModule : IPythonModule {
         private readonly Thread _thread;
-        private volatile ManualResetEventSlim _event;
+        private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
             _thread = Thread.CurrentThread;
             Name = name;
-            if (!importing) {
+            if (importing) {
+                _semaphore = new SemaphoreSlim(0, 1000);
+            } else {
                 _realModule = this;
             }
         }
 
-        public IPythonModule WaitForImport(int millisecondsTimeout) {
+        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
@@ -43,28 +45,22 @@ namespace Microsoft.PythonTools.Interpreter {
                 return this;
             }
 
-            var evt = _event;
-            if (evt == null) {
-                evt = new ManualResetEventSlim();
-                evt = Interlocked.CompareExchange(ref _event, evt, null) ?? evt;
+            try {
+                await _semaphore.WaitAsync(cancellationToken);
+                _semaphore.Release();
+            } catch (ObjectDisposedException) {
+                throw new OperationCanceledException();
             }
-
-            if (!evt.Wait(millisecondsTimeout)) {
-                return _realModule;
-            }
-
-            return _realModule ?? this;
+            return _realModule;
         }
 
         public void Complete(IPythonModule module) {
-            _realModule = module;
-            _event?.Set();
-        }
-
-        public void Dispose() {
-            var evt = Interlocked.Exchange(ref _event, null);
-            if (evt != null) {
-                evt.Dispose();
+            if (_realModule == null) {
+                _realModule = module;
+                // Release all the waiters at once (unless we have more
+                // than than 1000 threads trying to import at once, which
+                // should never happen)
+                _semaphore.Release(1000);
             }
         }
 

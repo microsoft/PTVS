@@ -1254,10 +1254,7 @@ namespace Microsoft.PythonTools.Parsing {
                 fromFuture = ProcessFutureStatements(start, names, fromFuture);
             }
 
-            bool ateRightParen = false;
-            if (ateParen) {
-                ateRightParen = Eat(TokenKind.RightParenthesis);
-            }
+            bool ateRightParen = ateParen && Eat(TokenKind.RightParenthesis);
 
             FromImportStatement ret = new FromImportStatement(dname, names, asNames, fromFuture, AbsoluteImports, importIndex);
             if (_verbatim) {
@@ -2383,6 +2380,7 @@ namespace Microsoft.PythonTools.Parsing {
             var start = isAsync ? GetStart() : 0;
             var asyncWhiteSpace = isAsync ? _tokenWhiteSpace : null;
             Eat(TokenKind.KeywordFor);
+            int forIndex = GetStart();
             if (!isAsync) {
                 start = GetStart();
             }
@@ -2407,7 +2405,7 @@ namespace Microsoft.PythonTools.Parsing {
             Expression list;
             Statement body, else_;
             bool incomplete = false;
-            int header, elseIndex = -1;
+            int header, inIndex = -1, elseIndex = -1;
             string newlineWhiteSpace = "";
             int end;
             if ((lhs is ErrorExpression && MaybeEatNewLine(out newlineWhiteSpace)) || !Eat(TokenKind.KeywordIn)) {
@@ -2420,6 +2418,7 @@ namespace Microsoft.PythonTools.Parsing {
                 incomplete = true;
             } else {
                 inWhiteSpace = _tokenWhiteSpace;
+                inIndex = GetStart();
                 list = ParseTestListAsExpr();
                 header = GetEndForStatement();
                 body = ParseLoopSuite();
@@ -2447,6 +2446,8 @@ namespace Microsoft.PythonTools.Parsing {
                     AddErrorIsIncompleteNode(ret);
                 }
             }
+            ret.ForIndex = forIndex;
+            ret.InIndex = inIndex;
             ret.HeaderIndex = header;
             ret.ElseIndex = elseIndex;
             ret.SetKeywordEndIndex(keywordEnd);
