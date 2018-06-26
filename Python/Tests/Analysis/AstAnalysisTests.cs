@@ -1077,7 +1077,7 @@ scanner = _json.make_scanner()");
                     var overloads = analysis.GetSignatures("scanner");
                     AssertUtil.ContainsExactly(
                         overloads.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
-                        "__call__(string:str=,index:int=)->[tuple[int, None, ]]"
+                        "__call__(string:str=,index:int=)->[tuple[None, int]]"
                     );
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
