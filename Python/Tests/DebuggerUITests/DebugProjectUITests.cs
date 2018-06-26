@@ -1044,13 +1044,44 @@ namespace DebuggerUITests {
             }
         }
 
+        class AggregateDisposable : IDisposable {
+            private readonly IDisposable[] _disposables;
+
+            public AggregateDisposable(params IDisposable[] disposables) {
+                _disposables = disposables;
+            }
+
+            public void Dispose() {
+                foreach (var disposable in _disposables) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+        class CloseAllOnDispose : IDisposable {
+            private readonly VisualStudioApp _app;
+
+            public CloseAllOnDispose(VisualStudioApp app) {
+                _app = app;
+            }
+
+            public void Dispose() {
+                _app.CloseAll();
+            }
+        }
+
         private static IDisposable SelectDefaultInterpreter(PythonVisualStudioApp app, string pythonVersion) {
             if (string.IsNullOrEmpty(pythonVersion)) {
                 // Test wants to use the existing global default
                 return new EmptyDisposable();
             }
 
-            return app.SelectDefaultInterpreter(FindInterpreter(pythonVersion));
+            // Close all before we restore the global interpreter to avoid
+            // unnecessary project analysis right before the end of test.
+            return new AggregateDisposable(
+                new CloseAllOnDispose(app),
+                app.SelectDefaultInterpreter(FindInterpreter(pythonVersion))
+            );
         }
 
         private static PythonVersion FindInterpreter(string pythonVersion) {

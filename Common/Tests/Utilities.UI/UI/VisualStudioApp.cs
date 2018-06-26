@@ -46,7 +46,7 @@ namespace TestUtilities.UI {
         private IntPtr _mainWindowHandle;
         private readonly DTE _dte;
         private List<Action> _onDispose;
-        private bool _isDisposed, _skipCloseAll;
+        private bool _isDisposed;
 
         public VisualStudioApp(IServiceProvider site)
             : this(new IntPtr(GetDTE(site).MainWindow.HWnd)) {
@@ -119,16 +119,7 @@ namespace TestUtilities.UI {
                         }
                     }
                     DismissAllDialogs();
-                    for (int i = 0; i < 100 && !_skipCloseAll; i++) {
-                        try {
-                            _dte.Solution.Close(false);
-                            break;
-                        } catch (Exception ex) {
-                            Debug.WriteLine(ex.ToString());
-                            _dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
-                            System.Threading.Thread.Sleep(200);
-                        }
-                    }
+                    CloseAll();
                 } catch (Exception ex) {
                     Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
                 }
@@ -141,8 +132,17 @@ namespace TestUtilities.UI {
             Dispose(true);
         }
 
-        public void SuppressCloseAllOnDispose() {
-            _skipCloseAll = true;
+        public void CloseAll() {
+            for (int i = 0; i < 100; i++) {
+                try {
+                    _dte.Solution.Close(false);
+                    break;
+                } catch (Exception ex) {
+                    Debug.WriteLine(ex.ToString());
+                    _dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
+                    System.Threading.Thread.Sleep(200);
+                }
+            }
         }
 
         public IComponentModel ComponentModel {
