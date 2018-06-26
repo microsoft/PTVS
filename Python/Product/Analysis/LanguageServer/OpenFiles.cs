@@ -31,8 +31,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _projectFiles = projectFiles;
             _log = log;
         }
-        public OpenFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new OpenFile(_projectFiles, _log));
+        public void Add(Uri uri) => _files.TryAdd(uri, new OpenFile(_projectFiles, _log));
+        public OpenFile GetDocument(Uri uri) => _files.TryGetValue(uri, out var openFile) ? openFile : null;
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
+        public IReadOnlyList<OpenFile> All => _files.Values.ToList();
     }
 
     sealed class OpenFile {

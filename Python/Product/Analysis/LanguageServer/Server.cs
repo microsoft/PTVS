@@ -178,10 +178,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             if ((doc = entry as IDocument) != null) {
                 EnqueueItem(doc);
             }
+
+            _openFiles.Add(@params.textDocument.uri);
+            UpdateFileDiagnostics(entry);
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
+            Debug.Assert(openedFile != null);
             openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
@@ -222,6 +226,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 // Pick up any changes on disk that we didn't know about
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
+
+            _openFiles.Remove(@params.textDocument.uri);
+            UpdateFileDiagnostics(_projectFiles.GetEntry(@params.textDocument.uri));
+
             return Task.CompletedTask;
         }
 
@@ -581,7 +589,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                                 reported[part] = kv.Value;
                                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                                     uri = kv.Key,
-                                    diagnostics = kv.Value.Diagnostics,
+                                    diagnostics = _settings.analysisOptions.openFilesOnly ? Array.Empty<Diagnostic>() : kv.Value.Diagnostics,
                                     _version = kv.Value.Version
                                 });
                             }
@@ -630,7 +638,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    diagnostics = diags,
+                    diagnostics = _settings.analysisOptions.openFilesOnly ? Array.Empty<Diagnostic>() : diags,
                     uri = entry.DocumentUri,
                     _version = version
                 });
@@ -652,15 +660,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
-        private void UpdateDiagnostics() {
-            foreach (var entry in _projectFiles.All.Where(p => _openFiles.GetDocument(p.DocumentUri) == null)) {
-                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    uri = entry.DocumentUri,
-                    diagnostics = _settings.analysisOptions.openFilesOnly
-                    ? Array.Empty<Diagnostic>()
-                    : _analyzer.GetDiagnostics(entry)
-                });
+        private void UpdateAllDiagnostics(Uri documentUri = null) {
+            foreach (var entry in _projectFiles.All) {
+                UpdateFileDiagnostics(entry);
             }
+        }
+
+        private void UpdateFileDiagnostics(IProjectEntry entry) {
+            var hideDiagnostics = _openFiles.GetDocument(entry.DocumentUri) == null && _settings.analysisOptions.openFilesOnly;
+            PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                uri = entry.DocumentUri,
+                diagnostics = hideDiagnostics ? Array.Empty<Diagnostic>() : _analyzer.GetDiagnostics(entry)
+            });
         }
 
         private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
@@ -672,7 +683,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (newSettings.analysisOptions.openFilesOnly != _settings.analysisOptions.openFilesOnly) {
-                UpdateDiagnostics();
+                UpdateAllDiagnostics();
             }
             return false;
         }
