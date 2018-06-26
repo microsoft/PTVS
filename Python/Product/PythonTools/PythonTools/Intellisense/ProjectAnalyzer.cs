@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait();
+            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait(waitInTests: false);
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;

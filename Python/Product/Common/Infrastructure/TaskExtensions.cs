@@ -28,13 +28,13 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <remarks>
         /// <see cref="OperationCanceledException"/> is always ignored.
         /// </remarks>
-        public static void DoNotWait(this Task task) {
+        public static void DoNotWait(this Task task, bool waitInTests = true) {
             if (task.IsCompleted) {
                 ReThrowTaskException(task);
                 return;
             }
 
-            if (TestEnvironment.Current != null && TestEnvironment.Current.TryAddTaskToWait(task)) {
+            if (waitInTests && TestEnvironment.Current != null && TestEnvironment.Current.TryAddTaskToWait(task)) {
                 return;
             }
 
