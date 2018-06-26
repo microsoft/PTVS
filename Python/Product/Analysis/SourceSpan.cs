@@ -16,9 +16,7 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
 
@@ -26,11 +24,8 @@ namespace Microsoft.PythonTools {
     /// Stores the location of a span of text in a source file.
     /// </summary>
     [Serializable]
-    [DebuggerDisplay("({_start._line}, {_start._column})-({_end._line}, {_end._column})")]
+    [DebuggerDisplay("({Start._line}, {Start._column})-({End._line}, {End._column})")]
     public struct SourceSpan {
-        private readonly SourceLocation _start;
-        private readonly SourceLocation _end;
-
         /// <summary>
         /// Constructs a new span with a specific start and end location.
         /// </summary>
@@ -38,8 +33,8 @@ namespace Microsoft.PythonTools {
         /// <param name="end">The end of the span.</param>
         public SourceSpan(SourceLocation start, SourceLocation end) {
             ValidateLocations(start, end);
-            this._start = start;
-            this._end = end;
+            Start = start;
+            End = end;
         }
 
         public SourceSpan(int startLine, int startColumn, int endLine, int endColumn)
@@ -60,16 +55,12 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The start location of the span.
         /// </summary>
-        public SourceLocation Start {
-            get { return _start; }
-        }
+        public SourceLocation Start { get; }
 
         /// <summary>
         /// The end location of the span. Location of the first character behind the span.
         /// </summary>
-        public SourceLocation End {
-            get { return _end; }
-        }
+        public SourceLocation End { get; }
 
         /// <summary>
         /// A valid span that represents no location.
@@ -84,8 +75,16 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Whether the locations in the span are valid.
         /// </summary>
-        public bool IsValid {
-            get { return _start.IsValid && _end.IsValid; }
+        public bool IsValid => Start.IsValid && End.IsValid;
+
+        public SourceSpan Union(SourceSpan other) {
+            var startLine = Math.Min(other.Start.Line, Start.Line);
+            var startColumn = Math.Min(other.Start.Column, Start.Column);
+
+            var endLine = Math.Max(other.End.Line, End.Line);
+            var endColumn = Math.Max(other.End.Column, End.Column);
+
+            return new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));
         }
 
         /// <summary>
@@ -94,9 +93,8 @@ namespace Microsoft.PythonTools {
         /// <param name="left">One span to compare.</param>
         /// <param name="right">The other span to compare.</param>
         /// <returns>True if the spans are the same, False otherwise.</returns>
-        public static bool operator ==(SourceSpan left, SourceSpan right) {
-            return left._start == right._start && left._end == right._end;
-        }
+        public static bool operator ==(SourceSpan left, SourceSpan right) 
+            => left.Start == right.Start && left.End == right.End;
 
         /// <summary>
         /// Compares two specified Span values to see if they are not equal.
@@ -104,29 +102,24 @@ namespace Microsoft.PythonTools {
         /// <param name="left">One span to compare.</param>
         /// <param name="right">The other span to compare.</param>
         /// <returns>True if the spans are not the same, False otherwise.</returns>
-        public static bool operator !=(SourceSpan left, SourceSpan right) {
-            return left._start != right._start || left._end != right._end;
-        }
+        public static bool operator !=(SourceSpan left, SourceSpan right)
+            => left.Start != right.Start || left.End != right.End;
 
         public override bool Equals(object obj) {
             if (!(obj is SourceSpan)) return false;
 
-            SourceSpan other = (SourceSpan)obj;
-            return _start == other._start && _end == other._end;
+            var other = (SourceSpan)obj;
+            return Start == other.Start && End == other.End;
         }
 
-        public override string ToString() {
-            return _start.ToString() + " - " + _end.ToString();
-        }
+        public override string ToString() => "{0} - {1}".FormatInvariant(Start, End);
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
             // 7 bits for each column (0-128), 9 bits for each row (0-512), xor helps if
             // we have a bigger file.
-            return (_start.Column) ^ (_end.Column << 7) ^ (_start.Line << 14) ^ (_end.Line << 23);
-        }
+            => (Start.Column) ^ (End.Column << 7) ^ (Start.Line << 14) ^ (End.Line << 23);
 
-        internal string ToDebugString() {
-            return "{0}-{1}".FormatInvariant(_start.ToDebugString(), _end.ToDebugString());
-        }
+        internal string ToDebugString() =>
+            "{0}-{1}".FormatInvariant(Start.ToDebugString(), End.ToDebugString());
     }
 }
