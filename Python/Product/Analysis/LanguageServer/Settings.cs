@@ -14,31 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class LanguageServerSettings {
         public class PythonAnalysisOptions {
-            /// <summary>
-            /// Paths to search when attempting to resolve module imports.
-            /// </summary>
-            public string[] searchPaths;
-            /// <summary>
-            /// Secondary paths to search when resolving modules. Not supported by all
-            /// factories. In generaly, only source files will be discovered, and their
-            /// contents will be merged with the initial module.
-            /// </summary>
-            public string[] typeStubSearchPaths;
+            public bool openFilesOnly;
         }
         public readonly PythonAnalysisOptions analysisOptions = new PythonAnalysisOptions();
 
-        public class PythonDiagnosticOptions {
-            public bool openFilesOnly;
-        }
-        public readonly PythonDiagnosticOptions diagnosticOptions = new PythonDiagnosticOptions();
-
         public class PythonCompletionOptions {
-            public bool showAdvancedMembers;
+            public bool showAdvancedMembers = true;
         }
         public readonly PythonCompletionOptions completionOptions = new PythonCompletionOptions();
     }

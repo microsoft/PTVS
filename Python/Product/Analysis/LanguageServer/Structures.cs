@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// Required layout for the initializationOptions member of initializeParams
     /// </summary>
     [Serializable]
-    public struct PythonInitializationOptions {
+    public class PythonInitializationOptions {
         [Serializable]
         public struct Interpreter {
             /// <summary>
@@ -238,6 +238,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Interpreter interpreter;
 
         /// <summary>
+        /// Paths to search when attempting to resolve module imports.
+        /// </summary>
+        public string[] searchPaths = Array.Empty<string>();
+
+        /// <summary>
+        /// Secondary paths to search when resolving modules. Not supported by all
+        /// factories. In generaly, only source files will be discovered, and their
+        /// contents will be merged with the initial module.
+        /// </summary>
+        public string[] typeStubSearchPaths = Array.Empty<string>();
+
+        /// <summary>
         /// Indicates that analysis engine is running in a test environment.
         /// Causes initialization and analysis sequences to fully
         /// complete before information requests such as hover or
@@ -248,26 +260,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.
         /// </summary>
-        public InformationDisplayOptions displayOptions;
-
-        /// <summary>
-        /// If true, analyzer will be created asynchronously. Used in VS Code.
-        /// </summary>
-        public bool asyncStartup;
+        public InformationDisplayOptions displayOptions = new InformationDisplayOptions();
 
         /// <summary>
         /// Glob pattern of files and folders to exclude from loading
         /// into the Python analysis engine.
         /// </summary>
-        public string[] excludeFiles;
+        public string[] excludeFiles = Array.Empty<string>();
 
         /// <summary>
         /// Glob pattern of files and folders under the root folder that
         /// should be loaded into the Python analysis engine.
         /// </summary>
-        public string[] includeFiles;
+        public string[] includeFiles = Array.Empty<string>();
     }
-
 
     [Serializable]
     public class WorkspaceClientCapabilities {
@@ -679,14 +685,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public class CompletionItem {
+    public struct CompletionItem {
         public string label;
         public CompletionItemKind kind;
         public string detail;
         public MarkupContent documentation;
         public string sortText;
         public string filterText;
-        public bool? preselect; // VS Code 1.25+
         public string insertText;
         public InsertTextFormat insertTextFormat;
         public TextEdit? textEdit;

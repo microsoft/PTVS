@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
-        private LanguageServerSettings _settings = new LanguageServerSettings();
+        private LanguageServerSettings _settings;
 
         private bool _traceLogging;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
@@ -354,6 +354,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             } else if (!string.IsNullOrEmpty(@params.rootPath)) {
                 _rootDir = PathUtils.NormalizePath(@params.rootPath);
             }
+
+            SetSearchPaths(@params.initializationOptions.searchPaths);
+            SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
         }
 
         private T ActivateObject<T>(string assemblyName, string typeName, Dictionary<string, object> properties) {
@@ -653,7 +656,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var entry in _projectFiles.All.Where(p => _openFiles.GetDocument(p.DocumentUri) == null)) {
                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                     uri = entry.DocumentUri,
-                    diagnostics = _settings.diagnosticOptions.openFilesOnly
+                    diagnostics = _settings.analysisOptions.openFilesOnly
                     ? Array.Empty<Diagnostic>()
                     : _analyzer.GetDiagnostics(entry)
                 });
@@ -661,25 +664,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
-            var reanalyze = false;
             var oldSettings = _settings;
             _settings = newSettings;
 
-            if (newSettings.diagnosticOptions.openFilesOnly != _settings.diagnosticOptions.openFilesOnly) {
+            if (oldSettings == null) {
+                return true;
+            }
+
+            if (newSettings.analysisOptions.openFilesOnly != _settings.analysisOptions.openFilesOnly) {
                 UpdateDiagnostics();
             }
-
-            if (newSettings.analysisOptions.searchPaths.SequenceEqual(oldSettings.analysisOptions.searchPaths)) {
-                SetSearchPaths(newSettings.analysisOptions.searchPaths);
-                reanalyze = true;
-            }
-
-            if (newSettings.analysisOptions.typeStubSearchPaths.SequenceEqual(oldSettings.analysisOptions.typeStubSearchPaths)) {
-                SetTypeStubSearchPaths(newSettings.analysisOptions.typeStubSearchPaths);
-                reanalyze = true;
-            }
-
-            return reanalyze; 
+            return false;
         }
         #endregion
     }

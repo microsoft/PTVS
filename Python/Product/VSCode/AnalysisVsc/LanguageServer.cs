@@ -110,20 +110,19 @@ namespace Microsoft.PythonTools.VsCode {
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
         public async Task DidChangeConfiguration(JToken token) {
-
             var settings = new LanguageServerSettings();
 
             var rootSection = token["settings"];
             var pythonSection = rootSection?["python"];
+            if(pythonSection == null) {
+                return;
+            }
 
-            var autoComplete = pythonSection?["autoComplete"];
+            var autoComplete = pythonSection["autoComplete"];
             settings.completionOptions.showAdvancedMembers = GetSetting(autoComplete, "showAdvancedMembers", true);
 
-            var diagnostics = pythonSection?["diagnostics"];
-            settings.diagnosticOptions.openFilesOnly = GetSetting(autoComplete, "openFilesOnly", true);
-
-            settings.analysisOptions.searchPaths = GetSetting(pythonSection, "searchPaths", Array.Empty<string>());
-            settings.analysisOptions.typeStubSearchPaths = GetSetting(pythonSection, "typeshedPaths", Array.Empty<string>());
+            var analysis = pythonSection["analysis"];
+            settings.analysisOptions.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
 
             await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
 
