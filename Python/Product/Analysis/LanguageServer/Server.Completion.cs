@@ -57,7 +57,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var res = new CompletionList {
                 items = members.ToArray(),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
-                _commitByDefault = ctxt.ShouldCommitByDefault
+                _commitByDefault = ctxt.ShouldCommitByDefault,
+                _allowSnippet = ctxt.ShouldAllowSnippets
             };
 
             SourceLocation trigger = @params.position;
