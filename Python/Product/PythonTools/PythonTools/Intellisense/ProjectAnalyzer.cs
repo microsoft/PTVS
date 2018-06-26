@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly PythonEditorServices _services;
         private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
+        private Task _processingTask;
 
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
         internal static readonly object _testAnalyzer = new { Name = "TestAnalyzer" };
@@ -236,7 +237,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Trace.TraceInformation($"Connection log: {_conn.LogFilename}");
             }
 
-            Task.Run(() => _conn.ProcessMessages().HandleAllExceptions(_services.Site, allowUI: false)).DoNotWait(waitInTests: false);
+            _processingTask = Task.Run(() => _conn.ProcessMessages().WaitAndHandleAllExceptions(_services.Site, allowUI: false));
 
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:{_analysisProcess}:{comment.IfNullOrEmpty(DefaultComment)}>";
             _userCount = 1;
@@ -528,6 +529,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
+                // give the task a chance to exit
+                if (_processingTask?.Wait(1000) == false) {
+                    Debug.Fail("Message processing task did not exit");
+                }
+
                 try {
                     if (!_analysisProcess.WaitForExit(500)) {
                         _analysisProcess.Kill();
