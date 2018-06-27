@@ -158,6 +158,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return base.Walk(node);
         }
 
+        private BuiltinTypeId GetTypeId(AnalysisValue v) {
+            if (v.TypeId != BuiltinTypeId.Type) {
+                return v.TypeId;
+            }
+
+            if (v.MemberType == PythonMemberType.Instance &&
+                v.IsOfType(_analysis.ProjectState.ClassInfos[BuiltinTypeId.Type])) {
+                return BuiltinTypeId.Type;
+            }
+
+            return BuiltinTypeId.Unknown;
+        }
+
         private string ClassifyName(Tuple<string, Span> node) {
             var name = node.Item1;
             foreach (var sd in _head.EnumerateTowardsGlobal) {
@@ -184,7 +197,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     memberType = values.Select(v => v.MemberType)
                         .DefaultIfEmpty(PythonMemberType.Unknown)
                         .Aggregate((a, b) => a == b || b == PythonMemberType.Unknown ? a : PythonMemberType.Unknown);
-                    typeId = values.Select(v => v.TypeId)
+                    typeId = values.Select(GetTypeId)
                         .DefaultIfEmpty(BuiltinTypeId.Unknown)
                         .Aggregate((a, b) => a == b || b == BuiltinTypeId.Unknown ? a : BuiltinTypeId.Unknown);
                 }

@@ -267,7 +267,7 @@ namespace AnalysisTests {
 R_str = r_str()
 R_object = r_object()
 R_A1 = A()
-R_A2 = A.r_A()
+R_A2 = A().r_A()
 R_A3 = R_A1.r_A()");
                     entry.WaitForAnalysis();
 
@@ -278,9 +278,9 @@ R_A3 = R_A1.r_A()");
 
                     entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
                     entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
-                    entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
+                    entry.AssertIsInstance("R_A1", "A");
+                    entry.AssertIsInstance("R_A2", "A");
+                    entry.AssertIsInstance("R_A3", "A");
                     entry.AssertDescription("R_A1", "A");
                     entry.AssertDescription("R_A2", "A");
                     entry.AssertDescription("R_A3", "A");
