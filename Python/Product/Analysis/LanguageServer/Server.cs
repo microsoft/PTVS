@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         // Uri does not consider #fragment for equality
         private readonly ProjectFiles _projectFiles = new ProjectFiles();
-        private readonly OpenFiles _openFiles;
+        private readonly EditorFiles _editorFiles;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities _clientCaps;
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _pendingAnalysisEnqueue = new VolatileCounter();
             _parseQueue = new ParseQueue();
             _pendingParse = new Dictionary<IDocument, VolatileCounter>();
-            _openFiles = new OpenFiles(_projectFiles, this);
+            _editorFiles = new EditorFiles(_projectFiles, this);
             _extensions = new ConcurrentDictionary<string, ILanguageServerExtension>();
         }
 
@@ -175,17 +175,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 entry = await AddFileAsync(@params.textDocument.uri, null, cookie);
             }
 
+            _editorFiles.GetDocument(@params.textDocument.uri).IsOpen = true;
             if ((doc = entry as IDocument) != null) {
                 EnqueueItem(doc);
             }
-
-            _openFiles.Add(@params.textDocument.uri);
-            UpdateFileDiagnostics(entry);
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
-            var openedFile = _openFiles.GetDocument(@params.textDocument.uri);
-            Debug.Assert(openedFile != null);
+            var openedFile = _editorFiles.GetDocument(@params.textDocument.uri);
             openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
 
@@ -227,7 +224,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 EnqueueItem(doc, AnalysisPriority.Low);
             }
 
-            _openFiles.Remove(@params.textDocument.uri);
+            _editorFiles.GetDocument(@params.textDocument.uri).IsOpen = false;
             UpdateFileDiagnostics(_projectFiles.GetEntry(@params.textDocument.uri));
 
             return Task.CompletedTask;
@@ -333,7 +330,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private IProjectEntry RemoveEntry(Uri documentUri) {
             var entry = _projectFiles.RemoveEntry(documentUri);
-            _openFiles.Remove(documentUri);
+            _editorFiles.Remove(documentUri);
             return entry;
         }
 
@@ -579,21 +576,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 disposeWhenEnqueued?.Dispose();
                 disposeWhenEnqueued = null;
-                var openedFile = _openFiles.GetDocument(doc.DocumentUri);
-                if (vc != null && openedFile != null) {
-                    var reported = openedFile.LastReportedDiagnostics;
-                    lock (reported) {
-                        foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
-                            var part = _projectFiles.GetPart(kv.Key);
-                            if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version) {
-                                reported[part] = kv.Value;
-                                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                                    uri = kv.Key,
-                                    diagnostics = kv.Value.Diagnostics,
-                                    _version = kv.Value.Version
-                                });
-                            }
-                        }
+                if (vc != null) {
+                    var editorFile = _editorFiles.GetDocument(doc.DocumentUri);
+                    editorFile.UpdateDiagnostics(vc, doc.DocumentUri);
+                    foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
+                        PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                            uri = kv.Key,
+                            diagnostics = editorFile.IsOpen ? kv.Value.Diagnostics : Array.Empty<Diagnostic>(),
+                            _version = kv.Value.Version
+                        });
                     }
                 }
             } catch (BadSourceException) {
@@ -629,11 +620,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 if (entry is IDocument doc) {
-                    var reported = _openFiles.GetDocument(doc.DocumentUri).LastReportedDiagnostics;
-                    lock (reported) {
-                        if (reported.TryGetValue(0, out var lastVersion)) {
-                            diags = diags.Concat(lastVersion.Diagnostics).ToArray();
-                        }
+                    var editorFile = _editorFiles.GetDocument(doc.DocumentUri);
+                    if (editorFile.GetLastBufferVersion(out var lastVersion)) {
+                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
                     }
                 }
 
@@ -674,7 +663,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private bool HideFileDiagnostics(IProjectEntry entry)
-            =>_openFiles.GetDocument(entry.DocumentUri) == null && _settings.analysisOptions.openFilesOnly;
+            => !_editorFiles.GetDocument(entry.DocumentUri).IsOpen && _settings.analysisOptions.openFilesOnly;
 
         private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
             var oldSettings = _settings;

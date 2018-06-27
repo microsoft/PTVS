@@ -22,29 +22,33 @@ using System.Threading;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class OpenFiles {
-        private readonly ConcurrentDictionary<Uri, OpenFile> _files = new ConcurrentDictionary<Uri, OpenFile>();
+    internal sealed class EditorFiles {
+        private readonly ConcurrentDictionary<Uri, EditorFile> _files = new ConcurrentDictionary<Uri, EditorFile>();
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
 
-        public OpenFiles(ProjectFiles projectFiles, ILogger log) {
+        public EditorFiles(ProjectFiles projectFiles, ILogger log) {
             _projectFiles = projectFiles;
             _log = log;
         }
-        public void Add(Uri uri) => _files.TryAdd(uri, new OpenFile(_projectFiles, _log));
-        public OpenFile GetDocument(Uri uri) => _files.TryGetValue(uri, out var openFile) ? openFile : null;
+
+        public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_projectFiles, _log));
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
-        public IReadOnlyList<OpenFile> All => _files.Values.ToList();
+        public IReadOnlyList<EditorFile> All => _files.Values.ToList();
+        public IEnumerable<EditorFile> Open => All.Where(f => f.IsOpen);
+        public IEnumerable<EditorFile> Closed => All.Where(f => !f.IsOpen);
     }
 
-    sealed class OpenFile {
+    sealed class EditorFile {
         private readonly ILogger _log;
         private readonly ProjectFiles _projectFiles;
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
+        private readonly object _lock = new object();
 
         public IDictionary<int, BufferVersion> LastReportedDiagnostics { get; } = new Dictionary<int, BufferVersion>();
+        public bool IsOpen { get; set; }
 
-        public OpenFile(ProjectFiles projectFiles, ILogger log) {
+        public EditorFile(ProjectFiles projectFiles, ILogger log) {
             _projectFiles = projectFiles;
             _log = log;
         }
@@ -112,6 +116,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     enqueueAction(doc);
                 }
             }
+        }
+
+        public bool GetLastBufferVersion(out BufferVersion lastVersion) {
+            lock (_lock) {
+                return LastReportedDiagnostics.TryGetValue(0, out lastVersion);
+            }
+        }
+        
+        public bool UpdateDiagnostics(VersionCookie vc, Uri documentUri) {
+            var updated = false;
+            lock (_lock) {
+                var reported = LastReportedDiagnostics;
+                foreach (var kv in vc.GetAllParts(documentUri)) {
+                    var part = _projectFiles.GetPart(kv.Key);
+                    if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version) {
+                        reported[part] = kv.Value;
+                        updated = true;
+                    }
+                }
+            }
+            return updated;
         }
     }
 }
