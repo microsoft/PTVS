@@ -529,10 +529,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
-                // give the task a chance to exit
-                if (_processingTask?.Wait(1000) == false) {
-                    Debug.Fail("Message processing task did not exit");
-                }
+                // give the task a chance to exit cleanly
+                _processingTask?.Wait(1000);
 
                 try {
                     if (!_analysisProcess.WaitForExit(500)) {
