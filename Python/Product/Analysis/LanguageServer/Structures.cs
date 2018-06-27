@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct Diagnostic {
+    public class Diagnostic {
         /// <summary>
         /// The range at which the message applies.
         /// </summary>

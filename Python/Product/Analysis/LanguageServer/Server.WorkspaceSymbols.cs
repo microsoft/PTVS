@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
-            foreach (var entry in _projectFiles.All) {
+            foreach (var entry in ProjectFiles.All) {
                 members = members.Concat(
                     GetModuleVariables(entry as IPythonProjectEntry, opts, @params.query)
                 );
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
-            var entry = _projectFiles.GetEntry(@params.textDocument);
+            var entry = ProjectFiles.GetEntry(@params.textDocument);
 
             var members = GetModuleVariables(entry as IPythonProjectEntry, opts, string.Empty);
             return Task.FromResult(members

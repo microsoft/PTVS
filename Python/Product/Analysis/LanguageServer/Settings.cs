@@ -15,18 +15,62 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class LanguageServerSettings {
         public class PythonAnalysisOptions {
             public bool openFilesOnly;
+            public object[] errors = Array.Empty<object>();
+            public object[] warnings = Array.Empty<object>();
+            public object[] information = Array.Empty<object>();
+            public object[] disabled = Array.Empty<object>();
+
+            private HashSet<object> _errors;
+            private HashSet<object> _warnings;
+            private HashSet<object> _information;
+            private HashSet<object> _disabled;
+
+            public DiagnosticSeverity GetEffectiveSeverity(object code, DiagnosticSeverity defaultSeverity) {
+                Init();
+
+                if (_disabled != null && _disabled.Contains(code)) {
+                    return DiagnosticSeverity.Unspecified;
+                }
+                if (_errors != null && _errors.Contains(code)) {
+                    return DiagnosticSeverity.Error;
+                }
+                if (_warnings != null && _warnings.Contains(code)) {
+                    return DiagnosticSeverity.Warning;
+                }
+                if (_information != null && _information.Contains(code)) {
+                    return DiagnosticSeverity.Information;
+                }
+                return defaultSeverity;
+            }
+
+            public bool Show(DiagnosticSeverity severity) => severity != DiagnosticSeverity.Unspecified;
+
+            private void Init() {
+                if (errors != null && errors.Length > 0) {
+                    _errors = new HashSet<object>(errors);
+                }
+                if (warnings != null && warnings.Length > 0) {
+                    _warnings = new HashSet<object>(warnings);
+                }
+                if (information != null && information.Length > 0) {
+                    _information = new HashSet<object>(information);
+                }
+                if (disabled != null && disabled.Length > 0) {
+                    _disabled = new HashSet<object>(disabled);
+                }
+            }
         }
-        public readonly PythonAnalysisOptions analysisOptions = new PythonAnalysisOptions();
+        public readonly PythonAnalysisOptions analysis = new PythonAnalysisOptions();
 
         public class PythonCompletionOptions {
             public bool showAdvancedMembers = true;
         }
-        public readonly PythonCompletionOptions completionOptions = new PythonCompletionOptions();
+        public readonly PythonCompletionOptions completion = new PythonCompletionOptions();
     }
 }

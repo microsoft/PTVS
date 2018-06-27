@@ -119,10 +119,15 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             var autoComplete = pythonSection["autoComplete"];
-            settings.completionOptions.showAdvancedMembers = GetSetting(autoComplete, "showAdvancedMembers", true);
+            settings.completion.showAdvancedMembers = GetSetting(autoComplete, "showAdvancedMembers", true);
 
             var analysis = pythonSection["analysis"];
-            settings.analysisOptions.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+            settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+
+            settings.analysis.errors = GetSetting(analysis, "errors", Array.Empty<string>());
+            settings.analysis.warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
+            settings.analysis.information = GetSetting(analysis, "information", Array.Empty<string>());
+            settings.analysis.disabled = GetSetting(analysis, "disabled", Array.Empty<string>());
 
             await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
 
@@ -280,7 +285,7 @@ namespace Microsoft.PythonTools.VsCode {
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
 
         private T GetSetting<T>(JToken section, string settingName, T defaultValue) {
-            var value = section?[settingName] as JValue;
+            var value = section?[settingName];
             try {
                 return value != null ? value.ToObject<T>() : defaultValue;
             } catch(JsonException ex) {

@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override Task<CompletionList> Completion(CompletionParams @params) {
             var uri = @params.textDocument.uri;
  
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
@@ -37,14 +37,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var opts = GetOptions(@params.context);
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this,
-                () => entry.ReadDocument(_projectFiles.GetPart(uri), out _));
+                () => entry.ReadDocument(ProjectFiles.GetPart(uri), out _));
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
             if (members == null) {
                 TraceMessage($"Do not trigger at {@params.position} in {uri}");
                 return Task.FromResult(new CompletionList());
             }
 
-            if (!_settings.completionOptions.showAdvancedMembers) {
+            if (!Settings.completion.showAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
             }
 
