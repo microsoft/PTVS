@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     var n = node.AsNames?[i] ?? node.Names[i].Names[0];
                     if (n != null) {
                         if (n.Name == "typing") {
-                            Scope.SetInScope(n.Name, new AstTypingModule(_ast.LanguageVersion), scope: _typingScope);
+                            Scope.SetInScope(n.Name, new AstTypingModule(), scope: _typingScope);
                         } else {
                             Scope.SetInScope(n.Name, new AstNestedPythonModule(
                                 _interpreter,
@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             bool isTyping = modName == "typing";
             var warnAboutUnknownValues = WarnAboutUndefinedValues;
             if (isTyping) {
-                mod = new AstTypingModule(_ast.LanguageVersion);
+                mod = new AstTypingModule();
                 scope = _typingScope;
                 warnAboutUnknownValues = false;
             }

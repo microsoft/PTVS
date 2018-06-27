@@ -17,26 +17,16 @@
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstTypingModule : AstCachedPythonModule {
-        public AstTypingModule(PythonLanguageVersion version) : base("typing", FindTypingStub(version)) { }
+        public AstTypingModule() : base("typing", FindTypingStub()) { }
 
-        private static string FindTypingStub(PythonLanguageVersion version) {
+        private static string FindTypingStub() {
             if (InstallPath.TryGetFile("typing-stub.pyi", out var fullPath)) {
                 return fullPath;
             }
             throw new FileNotFoundException("typing-stub.pyi");
-        }
-
-        protected override PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            var walker = (AstAnalysisWalker)base.PrepareWalker(interpreter, ast);
-
-
-
-            return walker;
         }
 
         public static bool IsTypingType(IMember type) {
