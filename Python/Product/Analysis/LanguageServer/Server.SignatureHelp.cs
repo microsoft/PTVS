@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
-            var formatSetting = _clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
+            var formatSetting = _clientCaps?.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
             si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
             foreach (var p in si.parameters) {
                 p.documentation = GetMarkupContent(p.documentation.value, formatSetting);

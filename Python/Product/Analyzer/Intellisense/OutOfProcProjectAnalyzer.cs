@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -133,7 +134,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
                 case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
                 case AP.FileUpdateRequest.Command: response = await UpdateContent((AP.FileUpdateRequest)request); break;
-                case AP.UnresolvedImportsRequest.Command: response = GetUnresolvedImports((AP.UnresolvedImportsRequest)request); break;
                 case AP.AddImportRequest.Command: response = AddImportRequest((AP.AddImportRequest)request); break;
                 case AP.IsMissingImportRequest.Command: response = IsMissingImport((AP.IsMissingImportRequest)request); break;
                 case AP.AvailableImportsRequest.Command: response = AvailableImports((AP.AvailableImportsRequest)request); break;
@@ -922,31 +922,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     (constExpr.Value is string || constExpr.Value is AsciiString);
         }
 
-        private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
-            var entry = GetPythonEntry(request.documentUri);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-
-            var bufferVersion = GetPythonBuffer(request.documentUri);
-            if (bufferVersion.Ast == null) {
-                return IncorrectBufferId(request.documentUri);
-            }
-
-            var walker = new ImportStatementWalker(
-                bufferVersion.Ast,
-                entry,
-                Analyzer
-            );
-
-            bufferVersion.Ast.Walk(walker);
-
-            return new AP.UnresolvedImportsResponse() {
-                unresolved = walker.Imports.ToArray(),
-                version = bufferVersion.Version
-            };
-        }
-
         private IPythonProjectEntry GetPythonEntry(Uri documentUri) {
             if (documentUri == null) {
                 return null;
@@ -976,100 +951,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private struct VersionedAst {
             public PythonAst Ast;
             public int Version;
-        }
-
-        class ImportStatementWalker : PythonWalker {
-            public readonly List<AP.UnresolvedImport> Imports = new List<AP.UnresolvedImport>();
-
-            readonly IPythonProjectEntry _entry;
-            readonly PythonAnalyzer _analyzer;
-            private readonly PythonAst _ast;
-
-            public ImportStatementWalker(PythonAst ast, IPythonProjectEntry entry, PythonAnalyzer analyzer) {
-                _ast = ast;
-                _entry = entry;
-                _analyzer = analyzer;
-            }
-
-            public override bool Walk(FromImportStatement node) {
-                var names = ModuleResolver.GetModuleNamesFromImport(_entry, node);
-                foreach (var n in names) {
-                    if (!_analyzer.IsModuleResolved(_entry, n, node.ForceAbsolute)) {
-                        Imports.Add(MakeUnresolvedImport(n, node.Root));
-                    }
-                }
-                return base.Walk(node);
-            }
-
-            private AP.UnresolvedImport MakeUnresolvedImport(string name, Node spanNode) {
-                var span = spanNode.GetSpan(_ast);
-                return new AP.UnresolvedImport() {
-                    name = name,
-                    startLine = span.Start.Line,
-                    startColumn = span.Start.Column,
-                    endLine = span.End.Line,
-                    endColumn = span.End.Column,
-                };
-            }
-
-            public override bool Walk(ImportStatement node) {
-                foreach (var nameNode in node.Names) {
-                    var name = nameNode.MakeString();
-                    if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                        Imports.Add(MakeUnresolvedImport(name, nameNode));
-                    }
-                }
-                return base.Walk(node);
-            }
-
-            private static bool IsImportError(Expression expr) {
-                var name = expr as NameExpression;
-                if (name != null) {
-                    return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError";
-                }
-
-                var tuple = expr as TupleExpression;
-                if (tuple != null) {
-                    return tuple.Items.Any(IsImportError);
-                }
-
-                return false;
-            }
-
-            private static bool ShouldWalkNormally(TryStatement node) {
-                if (node.Handlers == null) {
-                    return true;
-                }
-
-                foreach (var handler in node.Handlers) {
-                    if (handler.Test == null || IsImportError(handler.Test)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            public override bool Walk(TryStatement node) {
-                if (ShouldWalkNormally(node)) {
-                    return base.Walk(node);
-                }
-
-                // Don't walk 'try' body, but walk everything else
-                if (node.Handlers != null) {
-                    foreach (var handler in node.Handlers) {
-                        handler.Walk(this);
-                    }
-                }
-                if (node.Else != null) {
-                    node.Else.Walk(this);
-                }
-                if (node.Finally != null) {
-                    node.Finally.Walk(this);
-                }
-
-                return false;
-            }
         }
 
         private Response GetOutliningRegions(AP.OutliningRegionsRequest request) {

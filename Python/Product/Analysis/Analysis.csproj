@@ -61,9 +61,11 @@
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ErrorMessages.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
+    <Compile Include="Analyzer\ImportStatementWalker.cs" />
     <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="IHasQualifiedName.cs" />
+    <Compile Include="Infrastructure\DefaultJsonAttribute.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
