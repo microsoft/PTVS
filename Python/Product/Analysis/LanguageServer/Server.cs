@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         internal PythonAnalyzer Analyzer { get; private set; }
-        internal LanguageServerSettings Settings { get; private set; }
+        internal LanguageServerSettings Settings { get; private set; } = new LanguageServerSettings();
         internal ProjectFiles ProjectFiles { get; } = new ProjectFiles();
 
         public void Dispose() {

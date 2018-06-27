@@ -32,10 +32,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_server));
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
-        public IReadOnlyList<EditorFile> All => _files.Values.ToList();
-        public IEnumerable<EditorFile> Opened => All.Where(f => f.IsOpen);
-        public IEnumerable<EditorFile> Closed => All.Where(f => !f.IsOpen);
-
         public void Open(Uri uri) => GetDocument(uri).Open();
         public void Close(Uri uri) => GetDocument(uri).Close(uri);
 
