@@ -282,34 +282,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return true;
                     }
 
+                    bool shouldWalk = false;
                     switch (cmp.Operator) {
                         case PythonOperator.LessThan:
-                            if (_ast.LanguageVersion.ToVersion() < v) {
-                                test.Walk(this);
-                                return false;
-                            }
+                            shouldWalk = _ast.LanguageVersion.ToVersion() < v;
                             break;
                         case PythonOperator.LessThanOrEqual:
-                            if (_ast.LanguageVersion.ToVersion() <= v) {
-                                test.Walk(this);
-                                return false;
-                            }
+                            shouldWalk = _ast.LanguageVersion.ToVersion() <= v;
                             break;
                         case PythonOperator.GreaterThan:
-                            if (_ast.LanguageVersion.ToVersion() > v) {
-                                test.Walk(this);
-                                return false;
-                            }
+                            shouldWalk = _ast.LanguageVersion.ToVersion() > v;
                             break;
                         case PythonOperator.GreaterThanOrEqual:
-                            if (_ast.LanguageVersion.ToVersion() >= v) {
-                                test.Walk(this);
-                                return false;
-                            }
+                            shouldWalk = _ast.LanguageVersion.ToVersion() >= v;
                             break;
-                        default:
-                            // Unsupported comparison, so walk all children
-                            return true;
+                    }
+                    if (shouldWalk) {
+                        // Supported comparison, so only walk the one block
+                        test.Walk(this);
+                        return false;
                     }
                 } else {
                     allValidComparisons = false;
