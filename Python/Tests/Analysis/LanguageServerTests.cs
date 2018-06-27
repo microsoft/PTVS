@@ -89,7 +89,6 @@ namespace AnalysisTests {
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = properties
                     },
-                    asyncStartup = false,
                     testEnvironment = true
                 },
                 capabilities = new ClientCapabilities {
