@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IPythonType CurrentClass => Scope.GetInScope("__class__") as IPythonType;
 
         private IMember Clone(IMember member) 
-            => member is IPythonMultipleMembers mm ? new AstPythonMultipleMembers(mm.Members) : member;
+            => member is IPythonMultipleMembers mm ? AstPythonMultipleMembers.Create(mm.Members) : member;
 
         public override bool Walk(AssignmentStatement node) {
             var value = Scope.GetValueFromExpression(node.Right);

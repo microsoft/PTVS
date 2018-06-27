@@ -34,10 +34,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         /// a multi-member object if possible.
         /// </summary>
         private static IPythonType AsIPythonType(IMember m) {
-            if (m is IPythonMultipleMembers mm) {
-                return new AstPythonMultipleTypes(mm.Members.OfType<IPythonType>()).Trim();
+            if (m is IPythonType t) {
+                return t;
             }
-            return m as IPythonType;
+
+            if (m is IPythonMultipleMembers mm) {
+                return AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members);
+            }
+
+            return null;
         }
 
         public override IPythonType Finalize(IPythonType type) {

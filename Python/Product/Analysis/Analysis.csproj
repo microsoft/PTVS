@@ -104,8 +104,6 @@
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonIterables.cs" />
-    <Compile Include="Interpreter\Ast\AstPythonMultipleTypes.cs" />
-    <Compile Include="Interpreter\Ast\AstPythonMultipleModules.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
     <Compile Include="Interpreter\Ast\AstTypingModule.cs" />

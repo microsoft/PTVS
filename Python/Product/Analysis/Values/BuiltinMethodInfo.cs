@@ -102,5 +102,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override PythonMemberType MemberType => _memberType;
         public override string Name => _function.Name;
         public override ILocatedMember GetLocatedMember() => _function as ILocatedMember;
+
+        public override int GetHashCode() => new { hc1 = base.GetHashCode(), hc2 = _function.GetHashCode() }.GetHashCode();
+        public override bool Equals(object obj) => base.Equals(obj) && obj is BuiltinMethodInfo bmi && _function.Equals(bmi._function);
     }
 }

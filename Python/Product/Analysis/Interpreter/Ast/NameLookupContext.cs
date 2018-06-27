@@ -334,19 +334,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            var left = GetValueFromExpression(expr.TrueExpression);
-            var right = GetValueFromExpression(expr.FalseExpression);
-            if (left?.MemberType == PythonMemberType.Unknown) {
-                left = null;
-            }
-            if (right?.MemberType == PythonMemberType.Unknown) {
-                right = null;
-            }
-
-            if (left != null && right != null && left != right) {
-                return new AstPythonMultipleMembers(new[] { left, right });
-            }
-            return left ?? right;
+            return AstPythonMultipleMembers.Combine(
+                GetValueFromExpression(expr.TrueExpression),
+                GetValueFromExpression(expr.FalseExpression)
+            );
         }
 
         private IMember GetValueFromCallable(CallExpression expr, LookupOptions options) {
