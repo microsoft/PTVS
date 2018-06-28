@@ -48,9 +48,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly object _lock = new object();
 
         private IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
-        private IDictionary<Uri, PublishDiagnosticsEventArgs> _parseDiagnostics = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
-        private PublishDiagnosticsEventArgs _analysisDiagnostics;
-        private PublishDiagnosticsEventArgs[] _lastPublishedDiagnostics;
+        private PublishDiagnosticsEventArgs _lastReportedDiagnostics;
         private bool _ignoreDiagnosticsVersion;
 
 
@@ -62,7 +60,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void Open(Uri documentUri) {
             IsOpen = true;
             _ignoreDiagnosticsVersion = true;
-            PublishDiagnostics(documentUri);
+
+            if (_lastReportedDiagnostics != null) {
+                PublishDiagnostics(_lastReportedDiagnostics);
+            }
         }
 
         public void Close(Uri documentUri) {
@@ -138,86 +139,57 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void UpdateParseDiagnostics(VersionCookie vc, Uri documentUri) {
             lock (_lock) {
                 var last = _parseBufferDiagnostics;
-                Dictionary<Uri, PublishDiagnosticsEventArgs> newDiags = null;
-
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
 
-                        newDiags = newDiags ?? new Dictionary<Uri, PublishDiagnosticsEventArgs>();
-                        newDiags[kv.Key] = new PublishDiagnosticsEventArgs {
+                        PublishDiagnostics(new PublishDiagnosticsEventArgs {
                             uri = kv.Key,
                             diagnostics = kv.Value.Diagnostics,
                             _version = kv.Value.Version
-                        };
+                        });
                     }
                 }
-
-                if (newDiags != null) {
-                    _parseDiagnostics = newDiags;
-                }
                 _ignoreDiagnosticsVersion = false;
-
-                PublishDiagnostics(documentUri);
             }
         }
 
         public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry) {
-            var diags = _server.Analyzer.GetDiagnostics(projectEntry);
-            for (var i = 0; i < diags.Count; i++) {
-                diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
-            }
-
-            var severity = _server.Settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
-            var pythonProjectEntry = projectEntry as IPythonProjectEntry;
-            var parse = pythonProjectEntry?.GetCurrentParse();
-
-            if (parse != null && _server.Settings.analysis.Show(severity)) {
-                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
-                parse.Tree.Walk(walker);
-                diags = diags.Concat(walker.Diagnostics).ToArray();
-            }
-
             lock (_lock) {
-                _analysisDiagnostics = new PublishDiagnosticsEventArgs {
+                var diags = _server.Analyzer.GetDiagnostics(projectEntry);
+                for (var i = 0; i < diags.Count; i++) {
+                    diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
+                }
+
+                var severity = _server.Settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
+                var pythonProjectEntry = projectEntry as IPythonProjectEntry;
+                var parse = pythonProjectEntry?.GetCurrentParse();
+
+                if (parse != null && _server.Settings.analysis.Show(severity)) {
+                    var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
+                    parse.Tree.Walk(walker);
+                    diags = diags.Concat(walker.Diagnostics).ToArray();
+                }
+
+                if (pythonProjectEntry is IDocument doc) {
+                    if (_parseBufferDiagnostics.TryGetValue(0, out var lastVersion)) {
+                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+                    }
+                }
+
+                PublishDiagnostics(new PublishDiagnosticsEventArgs {
                     uri = pythonProjectEntry.DocumentUri,
                     diagnostics = diags
-                };
-                PublishDiagnostics(projectEntry.DocumentUri);
+                });
             }
         }
 
-        private void PublishDiagnostics(Uri documentUri) {
-            if (HideDiagnostics(documentUri)) {
-                return;
-            }
+        private void PublishDiagnostics(PublishDiagnosticsEventArgs args) {
+            _lastReportedDiagnostics = args;
 
-            PublishDiagnosticsEventArgs[] diags;
-
-            if (_analysisDiagnostics == null) {
-                // No analysis diagnostics, report one from the parser
-                diags = _parseDiagnostics.Values.ToArray();
-            } else {
-                // Both parser and analysis diagnostics exist, merge them
-                // so they don't overwrite each other for the document.
-                var uri = _analysisDiagnostics.uri;
-                if (_parseDiagnostics.TryGetValue(uri, out var documentParseDiags)) {
-                    var combined = new PublishDiagnosticsEventArgs {
-                        uri = uri,
-                        diagnostics = documentParseDiags.diagnostics.Concat(_analysisDiagnostics.diagnostics).ToList()
-                    };
-                    diags = _parseDiagnostics.Values.Except(new[] { documentParseDiags }).Concat(new[] { combined }).ToArray();
-                } else {
-                    diags = _parseDiagnostics.Values.Concat(new[] { _analysisDiagnostics }).ToArray();
-                }
-            }
-
-            if (_lastPublishedDiagnostics == null || !_lastPublishedDiagnostics.SequenceEqual(diags, new PublishDiagComparer())) {
-                _lastPublishedDiagnostics = diags;
-                foreach (var d in diags) {
-                    _server.PublishDiagnostics(d);
-                }
+            if (!HideDiagnostics(args.uri)) {
+                _server.PublishDiagnostics(args);
             }
         }
 
@@ -234,24 +206,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
             return false;
         }
-
         private bool ShouldHideDiagnostics => !IsOpen && _server.Settings.analysis.openFilesOnly;
-
-        class PublishDiagComparer : IEqualityComparer<PublishDiagnosticsEventArgs> {
-            public bool Equals(PublishDiagnosticsEventArgs x, PublishDiagnosticsEventArgs y) 
-                => x.uri == y.uri && x._version == y._version && x.diagnostics.SequenceEqual(y.diagnostics, new DiagnosticsComparer());
-            public int GetHashCode(PublishDiagnosticsEventArgs obj) => obj.GetHashCode();
-        }
-        class DiagnosticsComparer : IEqualityComparer<Diagnostic> {
-            public bool Equals(Diagnostic x, Diagnostic y)
-                => x.range.start.line == y.range.start.line
-                && x.range.start.character == y.range.start.character
-                && x.range.end.line == y.range.end.line
-                && x.range.end.character == y.range.end.character
-                && x.code == y.code 
-                && x.message == y.message 
-                && x.severity == y.severity;
-            public int GetHashCode(Diagnostic obj) => obj.GetHashCode();
-        }
     }
 }
