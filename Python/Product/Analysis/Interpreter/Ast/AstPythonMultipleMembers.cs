@@ -21,9 +21,9 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
+    class AstPythonMultipleMembers : IPythonMultipleMembers2, ILocatedMember {
         private readonly IReadOnlyList<IMember> _members;
-        private readonly Lazy<IList<IMember>> _resolvedMembers;
+        private IReadOnlyList<IMember> _resolvedMembers;
 
         public AstPythonMultipleMembers() {
             _members = Array.Empty<IMember>();
@@ -31,7 +31,32 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private AstPythonMultipleMembers(IReadOnlyList<IMember> members) {
             _members = members;
-            _resolvedMembers = new Lazy<IList<IMember>>(() => _members.Select(m => (m as ILazyMember)?.Get() ?? m).Where(m => m != this).ToArray());
+        }
+
+        private void EnsureMembers() {
+            if (_resolvedMembers != null) {
+                return;
+            }
+
+            var unresolved = _members.OfType<ILazyMember>().ToArray();
+
+            if (unresolved.Any()) {
+                // Publish non-lazy members immediately. This will prevent recursion
+                // into EnsureMembers while we are resolving lazy values.
+                var resolved = _members.Where(m => !(m is ILazyMember)).ToList();
+                _resolvedMembers = resolved.ToArray();
+
+                foreach (var lm in unresolved) {
+                    var m = lm.Get();
+                    if (m != null) {
+                        resolved.Add(m);
+                    }
+                }
+
+                _resolvedMembers = resolved;
+            } else {
+                _resolvedMembers = _members;
+            }
         }
 
         public static IMember Create(IEnumerable<IMember> members) => Create(members.Where(m => m != null).Distinct().ToArray(), null);
@@ -90,22 +115,36 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (member is T t) {
                 return t;
             }
-            if (member is IPythonMultipleMembers mm) {
-                member = Create(mm.Members.Where(m => m is T));
+            var members = (member as IPythonMultipleMembers2)?.MembersNoCopy ?? (member as IPythonMultipleMembers)?.Members;
+            if (members != null) {
+                member = Create(members.Where(m => m is T));
                 if (member is T t2) {
                     return t2;
                 }
-                return mm.Members.OfType<T>().FirstOrDefault();
+                return members.OfType<T>().FirstOrDefault();
             }
 
             return default(T);
         }
 
-        public IList<IMember> Members => _resolvedMembers.Value;
+        public IList<IMember> Members {
+            get {
+                EnsureMembers();
+                return _resolvedMembers.ToArray();
+            }
+        }
+
+        public IEnumerable<IMember> MembersNoCopy {
+            get {
+                EnsureMembers();
+                return _resolvedMembers;
+            }
+        }
 
         public virtual PythonMemberType MemberType => PythonMemberType.Multiple;
-        public IEnumerable<LocationInfo> Locations => _members.OfType<ILocatedMember>().SelectMany(m => m.Locations.MaybeEnumerate());
+        public IEnumerable<LocationInfo> Locations => MembersNoCopy.OfType<ILocatedMember>().SelectMany(m => m.Locations.MaybeEnumerate());
 
+        // Equality deliberately uses unresolved members
         public override bool Equals(object obj) => GetType() == obj?.GetType() && obj is AstPythonMultipleMembers mm && new HashSet<IMember>(_members).SetEquals(mm._members);
         public override int GetHashCode() => _members.Aggregate(GetType().GetHashCode(), (hc, m) => hc ^ (m?.GetHashCode() ?? 0));
 
@@ -118,7 +157,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         class MultipleFunctionMembers : AstPythonMultipleMembers, IPythonFunction {
             public MultipleFunctionMembers(IReadOnlyList<IMember> members) : base(members) { }
 
-            private IEnumerable<IPythonFunction> Functions => Members.OfType<IPythonFunction>();
+            private IEnumerable<IPythonFunction> Functions => MembersNoCopy.OfType<IPythonFunction>();
 
             public string Name => ChooseName(Functions.Select(f => f.Name)) ?? "<function>";
             public string Documentation => ChooseDocumentation(Functions.Select(f => f.Documentation));
@@ -134,7 +173,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         class MultipleMethodMembers : AstPythonMultipleMembers, IPythonMethodDescriptor {
             public MultipleMethodMembers(IReadOnlyList<IMember> members) : base(members) { }
 
-            private IEnumerable<IPythonMethodDescriptor> Methods => Members.OfType<IPythonMethodDescriptor>();
+            private IEnumerable<IPythonMethodDescriptor> Methods => MembersNoCopy.OfType<IPythonMethodDescriptor>();
 
             public IPythonFunction Function => CreateAs<IPythonFunction>(Methods.Select(m => m.Function));
             public bool IsBound => Methods.Any(m => m.IsBound);
@@ -144,7 +183,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         class MultipleModuleMembers : AstPythonMultipleMembers, IPythonModule {
             public MultipleModuleMembers(IReadOnlyList<IMember> members) : base(members) { }
 
-            private IEnumerable<IPythonModule> Modules => Members.OfType<IPythonModule>();
+            private IEnumerable<IPythonModule> Modules => MembersNoCopy.OfType<IPythonModule>();
 
             public string Name => ChooseName(Modules.Select(m => m.Name)) ?? "<module>";
             public string Documentation => ChooseDocumentation(Modules.Select(m => m.Documentation));
@@ -172,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         class MultipleTypeMembers : AstPythonMultipleMembers, IPythonType {
             public MultipleTypeMembers(IReadOnlyList<IMember> members) : base(members) { }
 
-            private IEnumerable<IPythonType> Types => Members.OfType<IPythonType>();
+            private IEnumerable<IPythonType> Types => MembersNoCopy.OfType<IPythonType>();
 
             public string Name => ChooseName(Types.Select(t => t.Name)) ?? "<type>";
             public string Documentation => ChooseDocumentation(Types.Select(t => t.Documentation));

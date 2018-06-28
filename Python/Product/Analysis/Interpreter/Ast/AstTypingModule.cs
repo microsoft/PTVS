@@ -33,10 +33,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (type is IPythonType pyType) {
                 return pyType.DeclaringModule is AstTypingModule;
             }
-            if (type is IPythonMultipleMembers mm) {
-                return mm.Members.Any(IsTypingType);
-            }
-            return false;
+
+            return (type as IPythonMultipleMembers2)?.MembersNoCopy.Any(IsTypingType) ??
+                (type as IPythonMultipleMembers)?.Members.Any(IsTypingType) ??
+                false;
         }
     }
 }

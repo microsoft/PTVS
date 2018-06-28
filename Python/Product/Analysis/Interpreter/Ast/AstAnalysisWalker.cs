@@ -111,8 +111,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         internal LocationInfo GetLoc(Node node) => Scope.GetLoc(node);
         private IPythonType CurrentClass => Scope.GetInScope("__class__") as IPythonType;
 
-        private IMember Clone(IMember member) 
-            => member is IPythonMultipleMembers mm ? AstPythonMultipleMembers.Create(mm.Members) : member;
+        private IMember Clone(IMember member) =>
+            member is IPythonMultipleMembers2 mm2 ? AstPythonMultipleMembers.Create(mm2.MembersNoCopy) :
+            member is IPythonMultipleMembers mm ? AstPythonMultipleMembers.Create(mm.Members) :
+            member;
 
         public override bool Walk(AssignmentStatement node) {
             var value = Scope.GetValueFromExpression(node.Right);
@@ -425,10 +427,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(ClassDefinition node) {
             var member = Scope.GetInScope(node.Name);
-            AstPythonType t = member as AstPythonType;
-            if (t == null && member is IPythonMultipleMembers mm) {
-                t = mm.Members.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex);
-            }
+            AstPythonType t = member as AstPythonType ??
+                (member as IPythonMultipleMembers2)?.MembersNoCopy.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex) ??
+                (member as IPythonMultipleMembers)?.Members.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex);
             if (t == null) {
                 t = CreateType(node);
                 Scope.SetInScope(node.Name, t);
