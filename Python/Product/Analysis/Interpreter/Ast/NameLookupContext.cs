@@ -174,9 +174,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var ann = new TypeAnnotation(Ast.LanguageVersion, expr);
             var m = ann.GetValue(new AstTypeAnnotationConverter(this));
-            if (m is IPythonMultipleMembers2 mm2) {
-                return mm2.MembersNoCopy.OfType<IPythonType>();
-            } else if (m is IPythonMultipleMembers mm) {
+            if (m is IPythonMultipleMembers mm) {
                 return mm.Members.OfType<IPythonType>();
             } else if (m is IPythonType type) {
                 return Enumerable.Repeat(type, 1);
@@ -389,9 +387,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IEnumerable<IPythonType> GetTypesFromValue(IMember value) {
-            if (value is IPythonMultipleMembers2 mm2) {
-                return mm2.MembersNoCopy.Select(GetTypeFromValue).Distinct();
-            } else if (value is IPythonMultipleMembers mm) {
+            if (value is IPythonMultipleMembers mm) {
                 return mm.Members.Select(GetTypeFromValue).Distinct();
             } else {
                 var t = GetTypeFromValue(value);

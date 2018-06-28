@@ -112,7 +112,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IPythonType CurrentClass => Scope.GetInScope("__class__") as IPythonType;
 
         private IMember Clone(IMember member) =>
-            member is IPythonMultipleMembers2 mm2 ? AstPythonMultipleMembers.Create(mm2.MembersNoCopy) :
             member is IPythonMultipleMembers mm ? AstPythonMultipleMembers.Create(mm.Members) :
             member;
 
@@ -428,7 +427,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override bool Walk(ClassDefinition node) {
             var member = Scope.GetInScope(node.Name);
             AstPythonType t = member as AstPythonType ??
-                (member as IPythonMultipleMembers2)?.MembersNoCopy.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex) ??
                 (member as IPythonMultipleMembers)?.Members.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex);
             if (t == null) {
                 t = CreateType(node);

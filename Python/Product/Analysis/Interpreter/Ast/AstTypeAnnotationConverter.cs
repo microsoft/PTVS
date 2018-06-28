@@ -38,9 +38,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return t;
             }
 
-            if (m is IPythonMultipleMembers2 mm2) {
-                return AstPythonMultipleMembers.CreateAs<IPythonType>(mm2.MembersNoCopy);
-            } else if (m is IPythonMultipleMembers mm) {
+            if (m is IPythonMultipleMembers mm) {
                 return AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members);
             }
 
@@ -77,10 +75,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override IPythonType LookupName(string name) {
             var m = _scope.LookupNameInScopes(name, NameLookupContext.LookupOptions.Global | NameLookupContext.LookupOptions.Builtins);
-            if (m is IPythonMultipleMembers2 mm2) {
-                m = (IMember)AstPythonMultipleMembers.CreateAs<IPythonType>(mm2.MembersNoCopy) ??
-                    AstPythonMultipleMembers.CreateAs<IPythonModule>(mm2.MembersNoCopy);
-            } else if (m is IPythonMultipleMembers mm) {
+            if (m is IPythonMultipleMembers mm) {
                 m = (IMember)AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members) ??
                     AstPythonMultipleMembers.CreateAs<IPythonModule>(mm.Members);
             }
@@ -104,7 +99,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override IReadOnlyList<IPythonType> GetUnionTypes(IPythonType unionType) {
             return (unionType as UnionType)?.Types ??
-                   (unionType as IPythonMultipleMembers2)?.MembersNoCopy.OfType<IPythonType>().ToArray() ??
                    (unionType as IPythonMultipleMembers)?.Members.OfType<IPythonType>().ToArray();
         }
 
