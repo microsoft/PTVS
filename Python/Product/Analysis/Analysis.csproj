@@ -172,7 +172,6 @@
     <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
-    <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
     <Compile Include="Parsing\Ast\TypeAnnotation.cs" />

@@ -141,6 +141,11 @@ def safe_callable(v):
     except Exception:
         return False
 
+def safe_module_name(n):
+    if n:
+        return '_mod_' + n.replace('.', '_')
+    return n
+
 class Signature(object):
     # These two dictionaries start with Python 3 values.
     # There is an update below for Python 2 differences.
@@ -681,7 +686,8 @@ class MemberInfo(object):
         if issubclass(value_type, type):
             self.need_imports, type_name = self._get_typename(value, module)
             if '.' in type_name:
-                self.literal = type_name
+                m, s, n = type_name.rpartition('.')
+                self.literal = safe_module_name(m) + s + n
             else:
                 self.scope_name = self.type_name = type_name
                 self._collect_bases(value, module, self.type_name)
@@ -757,14 +763,17 @@ class MemberInfo(object):
         return self.name + ' = ' + lit
 
     def _str_from_typename(self, type_name):
-        return self.name + ' = ' + type_name + '()'
+        mod_name, sep, name = type_name.rpartition('.')
+        return self.name + ' = ' + safe_module_name(mod_name) + sep + name + '()'
 
     def _str_from_value(self, v):
         return self.name + ' = ' + repr(v)
 
     def _lines_with_members(self):
         if self.bases:
-            yield 'class ' + self.name + '(' + ','.join(self.bases) + '):'
+            split_bases = [n.rpartition('.') for n in self.bases]
+            bases = ','.join((safe_module_name(n[0]) + n[1] + n[2]) for n in split_bases)
+            yield 'class ' + self.name + '(' + bases + '):'
         else:
             yield 'class ' + self.name + ':'
         if self.documentation:
@@ -1023,7 +1032,7 @@ class ScrapeState(object):
 
         if imports:
             for mod in sorted(imports):
-                print("import " + mod, file=out)
+                print("import " + mod + " as " + safe_module_name(mod), file=out)
             print("", file=out)
 
         for value in self.members:
