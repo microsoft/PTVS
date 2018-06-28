@@ -33,9 +33,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (type is IPythonType pyType) {
                 return pyType.DeclaringModule is AstTypingModule;
             }
+
             if (type is IPythonMultipleMembers mm) {
                 return mm.Members.Any(IsTypingType);
             }
+
             return false;
         }
     }

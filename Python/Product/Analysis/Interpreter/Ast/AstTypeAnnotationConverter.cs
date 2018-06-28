@@ -76,8 +76,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override IPythonType LookupName(string name) {
             var m = _scope.LookupNameInScopes(name, NameLookupContext.LookupOptions.Global | NameLookupContext.LookupOptions.Builtins);
             if (m is IPythonMultipleMembers mm) {
-                m = mm.Members.OfType<IPythonType>().FirstOrDefault<IMember>() ??
-                    mm.Members.OfType<IPythonModule>().FirstOrDefault();
+                m = (IMember)AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members) ??
+                    AstPythonMultipleMembers.CreateAs<IPythonModule>(mm.Members);
             }
             if (m is IPythonModule mod) {
                 // Wrap the module in an IPythonType interface
