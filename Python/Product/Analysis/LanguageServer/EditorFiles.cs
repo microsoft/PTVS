@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var pythonProjectEntry = projectEntry as IPythonProjectEntry;
                 var parse = pythonProjectEntry?.GetCurrentParse();
 
-                if (parse != null && _server.Settings.analysis.Show(severity)) {
+                if (parse != null && severity != DiagnosticSeverity.Unspecified) {
                     var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
                     parse.Tree.Walk(walker);
                     diags = diags.Concat(walker.Diagnostics).ToArray();

@@ -633,10 +633,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _editorFiles.UpdateDiagnostics();
             }
 
-            if (!newSettings.analysis.errors.SequenceEqual(oldSettings.analysis.errors) ||
-                !newSettings.analysis.warnings.SequenceEqual(oldSettings.analysis.warnings) ||
-                !newSettings.analysis.information.SequenceEqual(oldSettings.analysis.information) ||
-                !newSettings.analysis.disabled.SequenceEqual(oldSettings.analysis.disabled)) {
+            if (!newSettings.analysis.errors.Intersect(oldSettings.analysis.errors).Any() ||
+                !newSettings.analysis.warnings.Intersect(oldSettings.analysis.warnings).Any() ||
+                !newSettings.analysis.information.Intersect(oldSettings.analysis.information).Any() ||
+                !newSettings.analysis.disabled.Intersect(oldSettings.analysis.disabled).Any()) {
                 _editorFiles.UpdateDiagnostics();
             }
             return false;

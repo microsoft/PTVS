@@ -26,43 +26,30 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public object[] information = Array.Empty<object>();
             public object[] disabled = Array.Empty<object>();
 
-            private HashSet<object> _errors;
-            private HashSet<object> _warnings;
-            private HashSet<object> _information;
-            private HashSet<object> _disabled;
+            private Dictionary<object, DiagnosticSeverity> _map;
 
             public DiagnosticSeverity GetEffectiveSeverity(object code, DiagnosticSeverity defaultSeverity) {
                 Init();
-
-                if (_disabled != null && _disabled.Contains(code)) {
-                    return DiagnosticSeverity.Unspecified;
-                }
-                if (_errors != null && _errors.Contains(code)) {
-                    return DiagnosticSeverity.Error;
-                }
-                if (_warnings != null && _warnings.Contains(code)) {
-                    return DiagnosticSeverity.Warning;
-                }
-                if (_information != null && _information.Contains(code)) {
-                    return DiagnosticSeverity.Information;
-                }
-                return defaultSeverity;
+                return _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
             }
 
-            public bool Show(DiagnosticSeverity severity) => severity != DiagnosticSeverity.Unspecified;
-
             private void Init() {
-                if (errors != null && errors.Length > 0) {
-                    _errors = new HashSet<object>(errors);
+                if (_map != null) {
+                    return;
                 }
-                if (warnings != null && warnings.Length > 0) {
-                    _warnings = new HashSet<object>(warnings);
+                _map = new Dictionary<object, DiagnosticSeverity>();
+                // disabled > error > warning > information
+                foreach (var x in information) {
+                    _map[x] = DiagnosticSeverity.Information;
                 }
-                if (information != null && information.Length > 0) {
-                    _information = new HashSet<object>(information);
+                foreach (var x in warnings) {
+                    _map[x] = DiagnosticSeverity.Warning;
                 }
-                if (disabled != null && disabled.Length > 0) {
-                    _disabled = new HashSet<object>(disabled);
+                foreach (var x in errors) {
+                    _map[x] = DiagnosticSeverity.Error;
+                }
+                foreach (var x in disabled) {
+                    _map[x] = DiagnosticSeverity.Unspecified;
                 }
             }
         }
