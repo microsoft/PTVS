@@ -46,9 +46,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly Server _server;
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
         private readonly object _lock = new object();
+
+        private IDictionary<int, BufferVersion> _lastParseDiagnostics = new Dictionary<int, BufferVersion>();
+        private IDictionary<Uri, PublishDiagnosticsEventArgs> _lastReportedParseDiagnostics = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+        private PublishDiagnosticsEventArgs _lastReportedAnalysisDiagnostics;
         private bool _updateDiagnostics;
 
-        public IDictionary<int, BufferVersion> LastReportedDiagnostics { get; } = new Dictionary<int, BufferVersion>();
 
         public EditorFile(Server server) {
             _server = server;
@@ -130,27 +133,28 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public bool GetLastBufferVersion(out BufferVersion lastVersion) {
-            lock (_lock) {
-                return LastReportedDiagnostics.TryGetValue(0, out lastVersion);
-            }
-        }
-
         public void UpdateParseDiagnostics(VersionCookie vc, Uri documentUri) {
+            if (HideDiagnostics(documentUri)) {
+                return;
+            }
             lock (_lock) {
-                var reported = LastReportedDiagnostics;
+                var last = _lastParseDiagnostics;
+                _lastReportedParseDiagnostics.Clear();
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
-                    if (!reported.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _updateDiagnostics) {
-                        reported[part] = kv.Value;
+                    if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _updateDiagnostics) {
+                        last[part] = kv.Value;
+
                         _updateDiagnostics = false;
-                        _server.PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                        _lastReportedParseDiagnostics[kv.Key] = new PublishDiagnosticsEventArgs {
                             uri = kv.Key,
-                            diagnostics = IsOpen ? kv.Value.Diagnostics : Array.Empty<Diagnostic>(),
+                            diagnostics = kv.Value.Diagnostics,
                             _version = kv.Value.Version
-                        });
+                        };
                     }
                 }
+
+                PublishDiagnostics();
             }
         }
 
@@ -174,16 +178,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 diags = diags.Concat(walker.Diagnostics).ToArray();
             }
 
-            if (pythonProjectEntry is IDocument doc) {
-                if (GetLastBufferVersion(out var lastVersion)) {
-                    diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+            lock (_lock) {
+                _lastReportedAnalysisDiagnostics = new PublishDiagnosticsEventArgs {
+                    uri = pythonProjectEntry.DocumentUri,
+                    diagnostics = diags
+                };
+                PublishDiagnostics();
+            }
+        }
+
+        private void PublishDiagnostics() {
+            IEnumerable<PublishDiagnosticsEventArgs> diags = null;
+            if (_lastReportedAnalysisDiagnostics == null) {
+                diags = _lastReportedParseDiagnostics.Values;
+            } else {
+                var uri = _lastReportedAnalysisDiagnostics.uri;
+                if (_lastReportedParseDiagnostics.TryGetValue(uri, out var d)) {
+                    var combined = new PublishDiagnosticsEventArgs {
+                        uri = uri,
+                        diagnostics = d.diagnostics.Concat(_lastReportedAnalysisDiagnostics.diagnostics).ToList()
+                    };
+                    diags = _lastReportedParseDiagnostics.Values.Except(new[] { d }).Concat(new[] { combined });
+                } else {
+                    diags = _lastReportedParseDiagnostics.Values.Concat(new[] { _lastReportedAnalysisDiagnostics });
                 }
             }
 
-            _server.PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                uri = pythonProjectEntry.DocumentUri,
-                diagnostics = diags
-            });
+            foreach (var d in diags) {
+                _server.PublishDiagnostics(d);
+            }
         }
 
         private bool HideDiagnostics(Uri documentUri) {
