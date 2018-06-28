@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Options {
             _changing = true;
             try {
                 typeShedPathTextBox.Text = _options.TypeShedPath;
+                suppressTypeShedCheckbox.Checked = _options.SuppressTypeShed;
             } finally {
                 _changing = false;
             }
@@ -55,6 +56,12 @@ namespace Microsoft.PythonTools.Options {
             var newPath = _serviceProvider.BrowseForDirectory(Handle, _options.TypeShedPath);
             if (!string.IsNullOrEmpty(newPath)) {
                 typeShedPathTextBox.Text = newPath;
+            }
+        }
+
+        private void suppressTypeShedCheckbox_CheckedChanged(object sender, EventArgs e) {
+            if (!_changing) {
+                _options.SuppressTypeShed = suppressTypeShedCheckbox.Checked;
             }
         }
     }

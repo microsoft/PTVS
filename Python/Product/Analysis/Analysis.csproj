@@ -520,4 +520,17 @@
     </PropertyGroup>
     <Exec Command="$(_RefreshCmd)" />
   </Target>
+  <Target Name="_IncludeTypeshed" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <TypeshedFiles Include="Typeshed\**\*" />
+      <TypeshedFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>Typeshed\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>Typeshed</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </TypeshedFiles>
+      <Content Include="@(TypeshedFiles)" />
+      <FileWrites Include="@(TypeshedFiles)" />
+    </ItemGroup>
+  </Target>
 </Project>
