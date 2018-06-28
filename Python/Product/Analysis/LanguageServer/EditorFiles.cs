@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_server));
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
-        public void Open(Uri uri) => GetDocument(uri).Open();
+        public void Open(Uri uri) => GetDocument(uri).Open(uri);
         public void Close(Uri uri) => GetDocument(uri).Close(uri);
 
         public void UpdateDiagnostics() {
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private IDictionary<Uri, PublishDiagnosticsEventArgs> _parseDiagnostics = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
         private PublishDiagnosticsEventArgs _analysisDiagnostics;
         private PublishDiagnosticsEventArgs[] _lastPublishedDiagnostics;
-        private bool _updateDiagnostics;
+        private bool _ignoreDiagnosticsVersion;
 
 
         public EditorFile(Server server) {
@@ -59,9 +59,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public bool IsOpen { get; private set; }
-        public void Open() {
+        public void Open(Uri documentUri) {
             IsOpen = true;
-            _updateDiagnostics = true;
+            _ignoreDiagnosticsVersion = true;
+            PublishDiagnostics(documentUri);
         }
 
         public void Close(Uri documentUri) {
@@ -137,20 +138,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void UpdateParseDiagnostics(VersionCookie vc, Uri documentUri) {
             lock (_lock) {
                 var last = _parseBufferDiagnostics;
-                _parseDiagnostics.Clear();
+                Dictionary<Uri, PublishDiagnosticsEventArgs> newDiags = null;
 
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
-                    if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _updateDiagnostics) {
+                    if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
-                        _parseDiagnostics[kv.Key] = new PublishDiagnosticsEventArgs {
+
+                        newDiags = newDiags ?? new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+                        newDiags[kv.Key] = new PublishDiagnosticsEventArgs {
                             uri = kv.Key,
                             diagnostics = kv.Value.Diagnostics,
                             _version = kv.Value.Version
                         };
                     }
                 }
-                _updateDiagnostics = false;
+
+                if (newDiags != null) {
+                    _parseDiagnostics = newDiags;
+                }
+                _ignoreDiagnosticsVersion = false;
+
                 PublishDiagnostics(documentUri);
             }
         }
