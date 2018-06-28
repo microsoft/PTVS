@@ -47,9 +47,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
         private readonly object _lock = new object();
 
-        private IDictionary<int, BufferVersion> _lastParseDiagnostics = new Dictionary<int, BufferVersion>();
-        private IDictionary<Uri, PublishDiagnosticsEventArgs> _lastReportedParseDiagnostics = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
-        private PublishDiagnosticsEventArgs _lastReportedAnalysisDiagnostics;
+        private IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
+        private IDictionary<Uri, PublishDiagnosticsEventArgs> _parseDiagnostics = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
+        private PublishDiagnosticsEventArgs _analysisDiagnostics;
+        private PublishDiagnosticsEventArgs[] _lastPublishedDiagnostics;
         private bool _updateDiagnostics;
 
 
@@ -134,35 +135,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void UpdateParseDiagnostics(VersionCookie vc, Uri documentUri) {
-            if (HideDiagnostics(documentUri)) {
-                return;
-            }
             lock (_lock) {
-                var last = _lastParseDiagnostics;
-                _lastReportedParseDiagnostics.Clear();
+                var last = _parseBufferDiagnostics;
+                _parseDiagnostics.Clear();
+
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _updateDiagnostics) {
                         last[part] = kv.Value;
-
-                        _updateDiagnostics = false;
-                        _lastReportedParseDiagnostics[kv.Key] = new PublishDiagnosticsEventArgs {
+                        _parseDiagnostics[kv.Key] = new PublishDiagnosticsEventArgs {
                             uri = kv.Key,
                             diagnostics = kv.Value.Diagnostics,
                             _version = kv.Value.Version
                         };
                     }
                 }
-
-                PublishDiagnostics();
+                _updateDiagnostics = false;
+                PublishDiagnostics(documentUri);
             }
         }
 
         public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry) {
-            if (HideDiagnostics(projectEntry.DocumentUri)) {
-                return;
-            }
-
             var diags = _server.Analyzer.GetDiagnostics(projectEntry);
             for (var i = 0; i < diags.Count; i++) {
                 diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
@@ -179,46 +172,78 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             lock (_lock) {
-                _lastReportedAnalysisDiagnostics = new PublishDiagnosticsEventArgs {
+                _analysisDiagnostics = new PublishDiagnosticsEventArgs {
                     uri = pythonProjectEntry.DocumentUri,
                     diagnostics = diags
                 };
-                PublishDiagnostics();
+                PublishDiagnostics(projectEntry.DocumentUri);
             }
         }
 
-        private void PublishDiagnostics() {
-            IEnumerable<PublishDiagnosticsEventArgs> diags = null;
-            if (_lastReportedAnalysisDiagnostics == null) {
-                diags = _lastReportedParseDiagnostics.Values;
+        private void PublishDiagnostics(Uri documentUri) {
+            if (HideDiagnostics(documentUri)) {
+                return;
+            }
+
+            PublishDiagnosticsEventArgs[] diags;
+
+            if (_analysisDiagnostics == null) {
+                // No analysis diagnostics, report one from the parser
+                diags = _parseDiagnostics.Values.ToArray();
             } else {
-                var uri = _lastReportedAnalysisDiagnostics.uri;
-                if (_lastReportedParseDiagnostics.TryGetValue(uri, out var d)) {
+                // Both parser and analysis diagnostics exist, merge them
+                // so they don't overwrite each other for the document.
+                var uri = _analysisDiagnostics.uri;
+                if (_parseDiagnostics.TryGetValue(uri, out var documentParseDiags)) {
                     var combined = new PublishDiagnosticsEventArgs {
                         uri = uri,
-                        diagnostics = d.diagnostics.Concat(_lastReportedAnalysisDiagnostics.diagnostics).ToList()
+                        diagnostics = documentParseDiags.diagnostics.Concat(_analysisDiagnostics.diagnostics).ToList()
                     };
-                    diags = _lastReportedParseDiagnostics.Values.Except(new[] { d }).Concat(new[] { combined });
+                    diags = _parseDiagnostics.Values.Except(new[] { documentParseDiags }).Concat(new[] { combined }).ToArray();
                 } else {
-                    diags = _lastReportedParseDiagnostics.Values.Concat(new[] { _lastReportedAnalysisDiagnostics });
+                    diags = _parseDiagnostics.Values.Concat(new[] { _analysisDiagnostics }).ToArray();
                 }
             }
 
-            foreach (var d in diags) {
-                _server.PublishDiagnostics(d);
+            if (_lastPublishedDiagnostics == null || !_lastPublishedDiagnostics.SequenceEqual(diags, new PublishDiagComparer())) {
+                _lastPublishedDiagnostics = diags;
+                foreach (var d in diags) {
+                    _server.PublishDiagnostics(d);
+                }
             }
         }
 
+        private void ClearDiagnostics(Uri documentUri) {
+            _server.PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                uri = documentUri,
+                diagnostics = Array.Empty<Diagnostic>()
+            });
+        }
         private bool HideDiagnostics(Uri documentUri) {
             if (ShouldHideDiagnostics) {
-                _server.PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    uri = documentUri,
-                    diagnostics = Array.Empty<Diagnostic>()
-                });
+                ClearDiagnostics(documentUri);
                 return true;
             }
             return false;
         }
+
         private bool ShouldHideDiagnostics => !IsOpen && _server.Settings.analysis.openFilesOnly;
+
+        class PublishDiagComparer : IEqualityComparer<PublishDiagnosticsEventArgs> {
+            public bool Equals(PublishDiagnosticsEventArgs x, PublishDiagnosticsEventArgs y) 
+                => x.uri == y.uri && x._version == y._version && x.diagnostics.SequenceEqual(y.diagnostics, new DiagnosticsComparer());
+            public int GetHashCode(PublishDiagnosticsEventArgs obj) => obj.GetHashCode();
+        }
+        class DiagnosticsComparer : IEqualityComparer<Diagnostic> {
+            public bool Equals(Diagnostic x, Diagnostic y)
+                => x.range.start.line == y.range.start.line
+                && x.range.start.character == y.range.start.character
+                && x.range.end.line == y.range.end.line
+                && x.range.end.character == y.range.end.character
+                && x.code == y.code 
+                && x.message == y.message 
+                && x.severity == y.severity;
+            public int GetHashCode(Diagnostic obj) => obj.GetHashCode();
+        }
     }
 }
