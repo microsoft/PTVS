@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void UpdateDiagnostics() {
             foreach (var entry in _server.ProjectFiles.All) {
-                GetDocument(entry.DocumentUri).UpdateAnalysisDiagnostics(entry);
+                GetDocument(entry.DocumentUri).UpdateAnalysisDiagnostics(entry, -1);
             }
         }
     }
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry) {
+        public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry, int version) {
             lock (_lock) {
                 var diags = _server.Analyzer.GetDiagnostics(projectEntry);
                 for (var i = 0; i < diags.Count; i++) {
@@ -172,6 +172,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     diags = diags.Concat(walker.Diagnostics).ToArray();
                 }
 
+                if (!diags.Any()) {
+                    return;
+                }
+
                 if (pythonProjectEntry is IDocument doc) {
                     if (_parseBufferDiagnostics.TryGetValue(0, out var lastVersion)) {
                         diags = diags.Concat(lastVersion.Diagnostics).ToArray();
@@ -180,7 +184,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 PublishDiagnostics(new PublishDiagnosticsEventArgs {
                     uri = pythonProjectEntry.DocumentUri,
-                    diagnostics = diags
+                    diagnostics = diags,
+                    _version = version >= 0
+                        ? version
+                        : _lastReportedDiagnostics != null ? _lastReportedDiagnostics._version : 0
                 });
             }
         }
