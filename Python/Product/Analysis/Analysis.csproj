@@ -526,7 +526,7 @@
       <TypeshedFiles>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>Typeshed\%(RecursiveDir)\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>Typeshed</VSIXSubPath>
+        <VSIXSubPath>Typeshed\%(RecursiveDir)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </TypeshedFiles>
       <Content Include="@(TypeshedFiles)" />
