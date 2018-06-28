@@ -158,6 +158,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return base.Walk(node);
         }
 
+        private BuiltinTypeId GetTypeId(AnalysisValue v) {
+            if (v.TypeId != BuiltinTypeId.Type) {
+                return v.TypeId;
+            }
+
+            if (v.MemberType == PythonMemberType.Instance &&
+                v.IsOfType(_analysis.ProjectState.ClassInfos[BuiltinTypeId.Type])) {
+                return BuiltinTypeId.Type;
+            }
+
+            return BuiltinTypeId.Unknown;
+        }
+
         private string ClassifyName(Tuple<string, Span> node) {
             var name = node.Item1;
             foreach (var sd in _head.EnumerateTowardsGlobal) {
@@ -176,23 +189,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (_analysis != null) {
                 var memberType = PythonMemberType.Unknown;
+                var typeId = BuiltinTypeId.Unknown;
                 bool isTypeHint = false;
                 lock (_analysis) {
                     var values = _analysis.GetValuesByIndex(name, node.Item2.Start).ToArray();
                     isTypeHint = values.Any(v => v is TypingTypeInfo || v.DeclaringModule?.ModuleName == "typing");
                     memberType = values.Select(v => v.MemberType)
                         .DefaultIfEmpty(PythonMemberType.Unknown)
-                        .Aggregate((a, b) => a == b ? a : PythonMemberType.Unknown);
+                        .Aggregate((a, b) => a == b || b == PythonMemberType.Unknown ? a : PythonMemberType.Unknown);
+                    typeId = values.Select(GetTypeId)
+                        .DefaultIfEmpty(BuiltinTypeId.Unknown)
+                        .Aggregate((a, b) => a == b || b == BuiltinTypeId.Unknown ? a : BuiltinTypeId.Unknown);
                 }
 
                 if (isTypeHint) {
                     return Classifications.TypeHint;
                 }
-                if (memberType == PythonMemberType.Module) {
+                if (memberType == PythonMemberType.Module || typeId == BuiltinTypeId.Module) {
                     return Classifications.Module;
-                } else if (memberType == PythonMemberType.Class) {
+                } else if (memberType == PythonMemberType.Class || typeId == BuiltinTypeId.Type) {
                     return Classifications.Class;
-                } else if (memberType == PythonMemberType.Function || memberType == PythonMemberType.Method) {
+                } else if (memberType == PythonMemberType.Function || memberType == PythonMemberType.Method ||
+                    typeId == BuiltinTypeId.Function || typeId == BuiltinTypeId.BuiltinFunction) {
                     return Classifications.Function;
                 }
             }

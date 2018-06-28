@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();
+            _scraped = false;
         }
 
         public string Name { get; }
@@ -144,7 +145,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_scraped) {
                 return;
             }
-            _scraped = true;
+            Debugger.NotifyOfCrossThreadDependency();
 
             var interp = context as AstPythonInterpreter;
             var fact = interp?.Factory as AstPythonInterpreterFactory;
@@ -154,6 +155,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var code = LoadCachedCode(interp);
             bool needCache = code == null;
+
+            _scraped = true;
 
             if (needCache) {
                 if (!File.Exists(fact.Configuration.InterpreterPath)) {

@@ -593,7 +593,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 var tsModule = await ImportFromTypeStubsAsync(module.Name, context, cancellationToken);
                 if (tsModule != null) {
                     if (context.MergeTypeStubPackages) {
-                        module = AstPythonMultipleModules.Combine(module, tsModule);
+                        module = AstPythonMultipleMembers.CombineAs<IPythonModule>(module, tsModule);
                     } else {
                         module = tsModule;
                     }
