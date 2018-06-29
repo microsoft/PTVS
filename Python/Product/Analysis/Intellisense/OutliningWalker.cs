@@ -169,6 +169,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
+            if (startIndex < 0 || endIndex < 0) {
+                return;
+            }
+
             var start = _ast.IndexToLocation(startIndex.Value);
             var end = _ast.IndexToLocation(endIndex.Value);
             var lines = end.Line - start.Line + 1;
