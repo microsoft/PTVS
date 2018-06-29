@@ -21,14 +21,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class LanguageServerSettings {
         public class PythonAnalysisOptions {
             public bool openFilesOnly;
-            public object[] errors = Array.Empty<object>();
-            public object[] warnings = Array.Empty<object>();
-            public object[] information = Array.Empty<object>();
-            public object[] disabled = Array.Empty<object>();
+            public string[] errors = Array.Empty<string>();
+            public string[] warnings = Array.Empty<string>();
+            public string[] information = Array.Empty<string>();
+            public string[] disabled = Array.Empty<string>();
 
-            private Dictionary<object, DiagnosticSeverity> _map;
+            private Dictionary<string, DiagnosticSeverity> _map;
 
-            public DiagnosticSeverity GetEffectiveSeverity(object code, DiagnosticSeverity defaultSeverity) {
+            public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity) {
                 Init();
                 return _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
             }
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (_map != null) {
                     return;
                 }
-                _map = new Dictionary<object, DiagnosticSeverity>();
+                _map = new Dictionary<string, DiagnosticSeverity>();
                 // disabled > error > warning > information
                 foreach (var x in information) {
                     _map[x] = DiagnosticSeverity.Information;

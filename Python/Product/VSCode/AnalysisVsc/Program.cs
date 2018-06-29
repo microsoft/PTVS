@@ -62,44 +62,6 @@ namespace Microsoft.PythonTools.VsCode {
             }
 #endif
         }
-
-        private sealed class SingleThreadSynchronizationContext : SynchronizationContext, IDisposable {
-            private readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _queue = new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
-            private readonly UIService _ui;
-            private readonly ManualResetEventSlim _workAvailable = new ManualResetEventSlim(false);
-            private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-
-            public SingleThreadSynchronizationContext(UIService ui) {
-                _ui = ui;
-                Task.Run(() => QueueWorker());
-            }
-
-            public override void Post(SendOrPostCallback d, object state) {
-                _queue.Enqueue(new Tuple<SendOrPostCallback, object>(d, state));
-                _workAvailable.Set();
-            }
-
-            public void Dispose() {
-                _cts.Cancel();
-            }
-
-            private void QueueWorker() {
-                while (true) {
-                    _workAvailable.Wait(_cts.Token);
-                    if (_cts.IsCancellationRequested) {
-                        break;
-                    }
-                    while (_queue.TryDequeue(out var t)) {
-                        try {
-                            t.Item1(t.Item2);
-                        } catch (Exception ex) {
-                            _ui.LogMessage($"Exception processing request: {ex.Message}", MessageType.Error);
-                        }
-                    }
-                    _workAvailable.Reset();
-                }
-            }
-        }
     }
 
     sealed class UriConverter : JsonConverter {

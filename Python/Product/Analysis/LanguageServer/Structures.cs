@@ -86,9 +86,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public DiagnosticSeverity severity;
 
         /// <summary>
-        /// The diagnostic's code (number or string). Can be omitted.
+        /// The diagnostic's code (string, such as 'unresolved-import'). Can be omitted.
+        /// <seealso cref="Analyzer.ErrorMessages"/>
         /// </summary>
-        public object code;
+        public string code;
 
         /// <summary>
         /// A human-readable string describing the source of this

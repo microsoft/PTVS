@@ -25,12 +25,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     internal sealed class EditorFiles {
         private readonly ConcurrentDictionary<Uri, EditorFile> _files = new ConcurrentDictionary<Uri, EditorFile>();
         private readonly Server _server;
+        private readonly SingleThreadSynchronizationContext _syncContext;
 
         public EditorFiles(Server server) {
             _server = server;
+            _syncContext = new SingleThreadSynchronizationContext(server);
         }
 
-        public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_server));
+        public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_server, _syncContext));
         public void Remove(Uri uri) => _files.TryRemove(uri, out _);
         public void Open(Uri uri) => GetDocument(uri).Open(uri);
         public void Close(Uri uri) => GetDocument(uri).Close(uri);
@@ -44,19 +46,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     internal sealed class EditorFile {
         private readonly Server _server;
+        private readonly SingleThreadSynchronizationContext _syncContext;
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
         private readonly object _lock = new object();
 
         private IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
-        private PublishDiagnosticsEventArgs _lastReportedDiagnostics;
+        private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedDiagnostics;
         private bool _ignoreDiagnosticsVersion;
 
-
-        public EditorFile(Server server) {
+        public EditorFile(Server server, SingleThreadSynchronizationContext syncContext) {
             _server = server;
+            _syncContext = syncContext;
         }
 
         public bool IsOpen { get; private set; }
+
         public void Open(Uri documentUri) {
             IsOpen = true;
             _ignoreDiagnosticsVersion = true;
@@ -68,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void Close(Uri documentUri) {
             IsOpen = false;
-            HideDiagnostics(documentUri);
+            _syncContext.Post(_ => HideDiagnostics(documentUri), null);
         }
 
         public void DidChangeTextDocument(DidChangeTextDocumentParams @params, Action<IDocument> enqueueAction) {
@@ -137,6 +141,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void UpdateParseDiagnostics(VersionCookie vc, Uri documentUri) {
+            List<PublishDiagnosticsEventArgs> diags = null;
+
             lock (_lock) {
                 var last = _parseBufferDiagnostics;
                 foreach (var kv in vc.GetAllParts(documentUri)) {
@@ -144,7 +150,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
 
-                        PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                        diags = diags ?? new List<PublishDiagnosticsEventArgs>();
+                        diags.Add(new PublishDiagnosticsEventArgs {
                             uri = kv.Key,
                             diagnostics = kv.Value.Diagnostics,
                             _version = kv.Value.Version
@@ -153,66 +160,69 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
                 _ignoreDiagnosticsVersion = false;
             }
+            if (diags != null) {
+                PublishDiagnostics(diags);
+            }
         }
 
         public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry, int version) {
-            lock (_lock) {
-                var diags = _server.Analyzer.GetDiagnostics(projectEntry);
-                for (var i = 0; i < diags.Count; i++) {
-                    diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
-                }
+            var diags = _server.Analyzer.GetDiagnostics(projectEntry);
+            for (var i = 0; i < diags.Count; i++) {
+                diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
+            }
 
-                var severity = _server.Settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
-                var pythonProjectEntry = projectEntry as IPythonProjectEntry;
-                var parse = pythonProjectEntry?.GetCurrentParse();
+            var severity = _server.Settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
+            var pythonProjectEntry = projectEntry as IPythonProjectEntry;
+            var parse = pythonProjectEntry?.GetCurrentParse();
 
-                if (parse != null && severity != DiagnosticSeverity.Unspecified) {
-                    var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
-                    parse.Tree.Walk(walker);
-                    diags = diags.Concat(walker.Diagnostics).ToArray();
-                }
+            if (parse != null && severity != DiagnosticSeverity.Unspecified) {
+                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
+                parse.Tree.Walk(walker);
+                diags = diags.Concat(walker.Diagnostics).ToArray();
+            }
 
-                if (!diags.Any() && version >= 0) {
-                    return;
-                }
+            if (!diags.Any() && version >= 0) {
+                return;
+            }
 
-                if (pythonProjectEntry is IDocument doc) {
+            if (pythonProjectEntry is IDocument doc) {
+                lock (_lock) {
                     if (_parseBufferDiagnostics.TryGetValue(0, out var lastVersion)) {
                         diags = diags.Concat(lastVersion.Diagnostics).ToArray();
                     }
                 }
-
-                PublishDiagnostics(new PublishDiagnosticsEventArgs {
-                    uri = pythonProjectEntry.DocumentUri,
-                    diagnostics = diags,
-                    _version = version >= 0
-                        ? version
-                        : _lastReportedDiagnostics != null ? _lastReportedDiagnostics._version : 0
-                });
             }
+
+            var lastDiagnostics = _lastReportedDiagnostics?.FirstOrDefault();
+            PublishDiagnostics(new[] { new PublishDiagnosticsEventArgs {
+                uri = pythonProjectEntry.DocumentUri,
+                diagnostics = diags,
+                _version = version >= 0
+                    ? version
+                    : lastDiagnostics != null ? lastDiagnostics._version : 0
+            }});
         }
 
-        private void PublishDiagnostics(PublishDiagnosticsEventArgs args) {
+        private void PublishDiagnostics(IEnumerable<PublishDiagnosticsEventArgs> args) {
             _lastReportedDiagnostics = args;
-
-            if (!HideDiagnostics(args.uri)) {
-                _server.PublishDiagnostics(args);
-            }
+            _syncContext.Post(_ => {
+                foreach (var a in args) {
+                    if (!ShouldHideDiagnostics) {
+                        _server.PublishDiagnostics(a);
+                    } else {
+                        HideDiagnostics(a.uri);
+                    }
+                }
+            }, null);
         }
 
-        private void ClearDiagnostics(Uri documentUri) {
+        private void HideDiagnostics(Uri documentUri) {
             _server.PublishDiagnostics(new PublishDiagnosticsEventArgs {
                 uri = documentUri,
                 diagnostics = Array.Empty<Diagnostic>()
             });
         }
-        private bool HideDiagnostics(Uri documentUri) {
-            if (ShouldHideDiagnostics) {
-                ClearDiagnostics(documentUri);
-                return true;
-            }
-            return false;
-        }
+
         private bool ShouldHideDiagnostics => !IsOpen && _server.Settings.analysis.openFilesOnly;
     }
 }

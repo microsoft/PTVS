@@ -633,7 +633,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool EnableDiagnostics { get; set; }
 
-        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, object code = null, string source = null) {
+        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, string code = null, string source = null) {
             if (!EnableDiagnostics) {
                 return;
             }
@@ -671,7 +671,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        public void ClearDiagnostic(Node node, AnalysisUnit unit, object code = null) {
+        public void ClearDiagnostic(Node node, AnalysisUnit unit, string code = null) {
             if (!EnableDiagnostics) {
                 return;
             }
