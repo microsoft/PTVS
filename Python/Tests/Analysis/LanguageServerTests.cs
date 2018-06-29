@@ -356,16 +356,34 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public async Task CompletionInStatements() {
+        public async Task CompletionInWithStatement() {
             var s = await CreateServer();
-            var u = await AddModule(s, "for f in l: pass\nwith x as y: pass");
+            Uri u;
 
-            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 10));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 12));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 6));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 11));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 13));
+            u = await AddModule(s, "with x as y, z as w: pass");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 17));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 20));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 21));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x as ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
