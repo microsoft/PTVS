@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     diags = diags.Concat(walker.Diagnostics).ToArray();
                 }
 
-                if (!diags.Any()) {
+                if (!diags.Any() && version >= 0) {
                     return;
                 }
 

@@ -631,6 +631,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (newSettings.analysis.openFilesOnly != oldSettings.analysis.openFilesOnly) {
                 _editorFiles.UpdateDiagnostics();
+                return false;
             }
 
             if (!newSettings.analysis.errors.Intersect(oldSettings.analysis.errors).Any() ||
