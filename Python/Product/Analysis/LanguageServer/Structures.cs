@@ -53,6 +53,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
         public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
 
+        public static bool operator >(Position p1, Position p2) => p1.line > p2.line || p1.line == p2.line && p1.character > p2.character;
+        public static bool operator <(Position p1, Position p2) => p1.line < p2.line || p1.line == p2.line && p1.character < p2.character;
+
         public override string ToString() => ((SourceLocation)this).ToString();
     }
 

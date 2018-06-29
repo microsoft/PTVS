@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -143,8 +144,57 @@ namespace Microsoft.PythonTools.VsCode {
            => _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/didChange")]
-        public void DidChangeTextDocument(JToken token)
-           => _server.DidChangeTextDocument(ToObject<DidChangeTextDocumentParams>(token));
+        public void DidChangeTextDocument(JToken token) {
+            var @params = ToObject<DidChangeTextDocumentParams>(token);
+            var version = @params.textDocument.version;
+            if (version == null || @params.contentChanges.IsNullOrEmpty()) {
+                _server.DidChangeTextDocument(@params);
+                return;
+            }
+
+            // _server.DidChangeTextDocument can handle change buckets with decreasing version and without overlaping 
+            // Split change into buckets that will be properly handled
+            var changes = SplitDidChangeTextDocumentParams(@params, version.Value);
+
+            foreach (var change in changes) {
+                _server.DidChangeTextDocument(change);
+            }
+        }
+
+        private static IEnumerable<DidChangeTextDocumentParams> SplitDidChangeTextDocumentParams(DidChangeTextDocumentParams @params, int version) {
+            var changes = new Stack<DidChangeTextDocumentParams>();
+            var contentChanges = new Stack<TextDocumentContentChangedEvent>();
+            var previousRange = new Range();
+
+            for (var i = @params.contentChanges.Length - 1; i >= 0; i--) {
+                var contentChange = @params.contentChanges[i];
+                var range = contentChange.range.GetValueOrDefault();
+                if (previousRange.end > range.start) {
+                    changes.Push(CreateDidChangeTextDocumentParams(@params, version, contentChanges));
+                    contentChanges = new Stack<TextDocumentContentChangedEvent>();
+                    version--;
+                } 
+                
+                contentChanges.Push(contentChange);
+                previousRange = range;
+            }
+
+            if (contentChanges.Count > 0) {
+                changes.Push(CreateDidChangeTextDocumentParams(@params, version, contentChanges));
+            }
+
+            return changes;
+        }
+
+        private static DidChangeTextDocumentParams CreateDidChangeTextDocumentParams(DidChangeTextDocumentParams @params, int version, Stack<TextDocumentContentChangedEvent> contentChanges) 
+            => new DidChangeTextDocumentParams {
+                _enqueueForAnalysis = @params._enqueueForAnalysis,
+                contentChanges = contentChanges.ToArray(),
+                textDocument = new VersionedTextDocumentIdentifier {
+                    uri = @params.textDocument.uri,
+                    version = version
+                }
+            };
 
         [JsonRpcMethod("textDocument/willSave")]
         public Task WillSaveTextDocument(JToken token)
