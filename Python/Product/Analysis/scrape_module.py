@@ -17,7 +17,7 @@
 from __future__ import print_function
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "15.7"
+__version__ = "15.8"
 
 import ast
 import keyword
@@ -79,6 +79,8 @@ STATICMETHOD_TYPES = ()
 CLASSMETHOD_TYPES = type(float.fromhex),
 PROPERTY_TYPES = type(int.real), type(property.fget)
 
+INVALID_ARGNAMES = set(keyword.kwlist) | set(('None', 'True', 'False'))
+
 # These full names are known to be lies. When we encounter
 # them while scraping a module, assume that we need to write
 # out the full type rather than including them by reference.
@@ -86,8 +88,10 @@ LIES_ABOUT_MODULE = frozenset([
     builtins.__name__ + ".weakcallableproxy",
     builtins.__name__ + ".weakproxy",
     builtins.__name__ + ".weakref",
+    "ctypes.ArgumentError",
     "os.stat_result",
     "os.statvfs_result",
+    "xml.parsers.expat.ExpatError",
 
     "numpy.broadcast",
     "numpy.busdaycalendar",
@@ -96,7 +100,28 @@ LIES_ABOUT_MODULE = frozenset([
     "numpy.flatiter",
     "numpy.ndarray",
     "numpy.nditer",
+
+    # These modules contain multiple members that lie about their
+    # module. Always write out all members of these in full.
+    "_asyncio.*",
+    "_bsddb.*",
+    "_decimal.*",
+    "_elementtree.*",
+    "_socket.*",
+    "_sqlite3.*",
+    "_ssl.*",
+    "_testmultiphase.*",
 ])
+
+# These type names cause conflicts with their values, so
+# we need to forcibly rename them.
+SYS_INFO_TYPES = frozenset((
+    "float_info",
+    "hash_info",
+    "int_info",
+    "thread_info",
+    "version_info",
+))
 
 VALUE_REPR_FIX = {
     float('inf'): "float('inf')",
@@ -115,6 +140,11 @@ def safe_callable(v):
         return hasattr(v, '__call__')
     except Exception:
         return False
+
+def safe_module_name(n):
+    if n:
+        return '_mod_' + n.replace('.', '_')
+    return n
 
 class Signature(object):
     # These two dictionaries start with Python 3 values.
@@ -339,7 +369,7 @@ class Signature(object):
             return
 
         argn = []
-        seen_names = set(keyword.kwlist)
+        seen_names = set(INVALID_ARGNAMES)
         defaults = list(defaults)
         for a in args.args:
             if defaults:
@@ -356,6 +386,9 @@ class Signature(object):
             argn.append('*' + args.varargs)
         if getattr(args, 'varkw', None):
             argn.append('**' + args.varkw)
+
+        if argn and argn[-1] in ('*', '**'):
+            argn[-1] += self._make_unique_name('_', seen_names)
 
         return self.name + '(' + ', '.join(argn) + ')'
 
@@ -406,7 +439,10 @@ class Signature(object):
         if typeName.startswith('int'):
             return "return 1"
         if typeName.startswith('long'):
-            return "return 1L"
+            if sys.version_info[0] < 3:
+                return "return 1L"
+            else:
+                return "return 1"
         if typeName.startswith('list'):
             return "return list()"
         if typeName.startswith('dict'):
@@ -449,7 +485,7 @@ class Signature(object):
         i = 0
         while True:
             i += 1
-            n = name + '_' + int(i)
+            n = name + '_' + str(i)
             if n not in seen_names:
                 seen_names.add(n)
                 return n
@@ -507,7 +543,7 @@ class Signature(object):
 
     def _parse_format_arg(self, name, args, defaults):
         defaults = list(defaults)
-        seen_names = set(keyword.kwlist)
+        seen_names = set(INVALID_ARGNAMES)
         parts = [name or '<function>', '(']
         any_default = False
 
@@ -540,6 +576,8 @@ class Signature(object):
             parts.append(', ')
         if parts[-1] == ', ':
             parts.pop()
+        if parts and parts[-1] in ('*', '**'):
+            parts[-1] += self._make_unique_name('_', seen_names)
         parts.append(')')
 
         return ''.join(parts)
@@ -581,7 +619,7 @@ class Signature(object):
                 optional = True
             elif tt == tokenize.RSQB:
                 optional = False
-            elif s == '...':
+            elif s in ('->', '...'):
                 return
 
         if name and (allow_name_mismatch or name == self.name):
@@ -648,23 +686,11 @@ class MemberInfo(object):
         if issubclass(value_type, type):
             self.need_imports, type_name = self._get_typename(value, module)
             if '.' in type_name:
-                self.literal = type_name
+                m, s, n = type_name.rpartition('.')
+                self.literal = safe_module_name(m) + s + n
             else:
                 self.scope_name = self.type_name = type_name
-                try:
-                    bases = getattr(value, '__bases__', ())
-                except Exception:
-                    pass
-                else:
-                    self.bases = []
-                    self.need_imports = list(self.need_imports)
-                    for ni, t in (self._get_typename(b, module) for b in bases):
-                        if not t:
-                            continue
-                        if t == type_name and module in ni:
-                            continue
-                        self.bases.append(t)
-                        self.need_imports.extend(ni)
+                self._collect_bases(value, module, self.type_name)
 
         elif safe_callable(value):
             dec = ()
@@ -679,6 +705,7 @@ class MemberInfo(object):
                 self.signature = Signature(name, value, scope, scope_alias=scope_alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
+                self._collect_bases(value_type, module, self.type_name)
             if isinstance(value, float) and repr(value) == 'nan':
                 self.literal = "float('nan')"
             try:
@@ -687,6 +714,22 @@ class MemberInfo(object):
                 pass
         elif not self.literal:
             self.literal = 'None'
+
+    def _collect_bases(self, value_type, module, type_name):
+        try:
+            bases = getattr(value_type, '__bases__', ())
+        except Exception:
+            pass
+        else:
+            self.bases = []
+            self.need_imports = list(self.need_imports)
+            for ni, t in (self._get_typename(b, module) for b in bases):
+                if not t:
+                    continue
+                if t == type_name and module in ni:
+                    continue
+                self.bases.append(t)
+                self.need_imports.extend(ni)
 
     @classmethod
     def _get_typename(cls, value_type, in_module):
@@ -703,28 +746,34 @@ class MemberInfo(object):
                     return (module,), type_name
 
                 fullname = module + '.' + type_name
-                if fullname in LIES_ABOUT_MODULE:
+
+                if in_module and (fullname in LIES_ABOUT_MODULE or (in_module + '.*') in LIES_ABOUT_MODULE):
                     # Treat the type as if it came from the current module
                     return (in_module,), type_name
 
                 return (module,), fullname
+
             return (), type_name
         except Exception:
             warnings.warn('could not get type of ' + repr(value_type), InspectWarning)
+            raise
             return (), None
 
     def _str_from_literal(self, lit):
         return self.name + ' = ' + lit
 
     def _str_from_typename(self, type_name):
-        return self.name + ' = ' + type_name + '()'
+        mod_name, sep, name = type_name.rpartition('.')
+        return self.name + ' = ' + safe_module_name(mod_name) + sep + name + '()'
 
     def _str_from_value(self, v):
         return self.name + ' = ' + repr(v)
 
     def _lines_with_members(self):
         if self.bases:
-            yield 'class ' + self.name + '(' + ','.join(self.bases) + '):'
+            split_bases = [n.rpartition('.') for n in self.bases]
+            bases = ','.join((safe_module_name(n[0]) + n[1] + n[2]) for n in split_bases)
+            yield 'class ' + self.name + '(' + bases + '):'
         else:
             yield 'class ' + self.name + ':'
         if self.documentation:
@@ -852,6 +901,12 @@ class ScrapeState(object):
     def collect_top_level_members(self):
         self._collect_members(self.module, self.members, MODULE_MEMBER_SUBSTITUTE, None)
 
+        if self.module_name == 'sys':
+            sysinfo = [m for m in self.members if m.type_name in SYS_INFO_TYPES]
+            for m in sysinfo:
+                self.members.append(MemberInfo(m.name, None, literal="__" + m.name + "()"))
+                m.name = m.scope_name = m.type_name = '__' + m.type_name
+
         m_names = set(m.name for m in self.members)
         undeclared = []
         for m in self.members:
@@ -977,7 +1032,7 @@ class ScrapeState(object):
 
         if imports:
             for mod in sorted(imports):
-                print("import " + mod, file=out)
+                print("import " + mod + " as " + safe_module_name(mod), file=out)
             print("", file=out)
 
         for value in self.members:

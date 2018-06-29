@@ -19,7 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public abstract class ServerBase {
+    public abstract class ServerBase : IServer {
         private RequestLock _lock;
 
         private sealed class RequestLock : IDisposable {
@@ -130,18 +130,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public event EventHandler<ShowMessageEventArgs> OnShowMessage;
 
-        protected void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
+        public void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
 
         public event EventHandler<LogMessageEventArgs> OnLogMessage;
 
-        protected void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
+        public void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
+
 
         public event EventHandler<TelemetryEventArgs> OnTelemetry;
+        public void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
 
-        protected void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
+        public event EventHandler<CommandEventArgs> OnCommand;
+        public void Command(CommandEventArgs e) => OnCommand?.Invoke(this, e);
 
         public event EventHandler<RegisterCapabilityEventArgs> OnRegisterCapability;
-        protected Task RegisterCapability(RegistrationParams @params) {
+        public Task RegisterCapability(RegistrationParams @params) {
             var evt = OnRegisterCapability;
             if (evt == null) {
                 return Task.CompletedTask;
@@ -154,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
         public event EventHandler<UnregisterCapabilityEventArgs> OnUnregisterCapability;
-        protected Task UnregisterCapability(UnregistrationParams @params) {
+        public Task UnregisterCapability(UnregistrationParams @params) {
             var evt = OnUnregisterCapability;
             if (evt == null) {
                 return Task.CompletedTask;
@@ -166,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<ApplyWorkspaceEditEventArgs> OnApplyWorkspaceEdit;
-        protected Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
+        public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
             var evt = OnApplyWorkspaceEdit;
             if (evt == null) {
                 return Task.FromResult((ApplyWorkspaceEditResponse)null);
@@ -178,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<PublishDiagnosticsEventArgs> OnPublishDiagnostics;
-        protected void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
+        public void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
 
         #endregion
     }

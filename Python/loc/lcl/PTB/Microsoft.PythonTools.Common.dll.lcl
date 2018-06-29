@@ -1054,6 +1054,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CustomCommandCanceled" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Command {0} has been canceled]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[O comando {0} foi cancelado]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CustomCommandExecutingModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing -m {0} {1}]]></Val>
@@ -2823,10 +2832,13 @@
       </Item>
       <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Val><![CDATA[Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Use o comando 'pip install ptvsd --pre' em seu ambiente Python para usar o depurador experimental]]></Val>
+            <Val><![CDATA[Execute 'pip install --upgrade ptvsd --pre' em seu ambiente Python para usar o depurador experimental]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3390,6 +3402,15 @@
           <Val><![CDATA[Operation cannot be started because the environment is not configured.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[A operação não pode ser iniciada porque o ambiente não está configurado.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";MisconfiguredPip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Operation cannot be started because pip is not installed in the environment at '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A operação não pode ser iniciada porque o pip não está instalado no ambiente em '{0}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5612,12 +5633,6 @@
   </Item>
   <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
     <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
-    <Item ItemId=";AssemblyVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.0.0.0]]></Val>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Private infrastructure helpers for Python support in Visual Studio.]]></Val>
@@ -5639,12 +5654,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[Visual Studio – Infraestrutura do Python]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5675,12 +5684,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[Suporte do Python para Microsoft® Visual Studio®]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

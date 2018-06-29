@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>python-analysis-vscode</id>
+    <id>Python-Analysis-VSCode</id>
     <version>0.1.0</version>
     <title>Python Analysis Engine for VS Code</title>
     <authors>Microsoft</authors>
@@ -15,6 +15,6 @@
     <tags>Python;VS Code</tags>
   </metadata>
   <files>
-    <file src="**\*.*" exclude="nuget\*.*;*.pdb;python-analysis-vscode.nuspec" />
+    <file src="**/*" exclude="nuget/*;*.pdb;Python-Analysis-VSCode.nuspec" />
 </files>
 </package>

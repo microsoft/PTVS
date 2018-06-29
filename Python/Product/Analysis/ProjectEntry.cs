@@ -56,8 +56,10 @@ namespace Microsoft.PythonTools.Analysis {
             DocumentUri = documentUri ?? MakeDocumentUri(filePath);
             FilePath = filePath;
             Cookie = cookie;
+
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(null, MyScope.Scope);
+
             _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
                 _buffers[0].Reset(c.Version, c.Content);
@@ -222,17 +224,19 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
+            MyScope.Scope.Children = new List<InterpreterScope>();
+            MyScope.Scope.ClearNodeScopes();
+            MyScope.Scope.ClearNodeValues();
+            MyScope.Scope.ClearLinkedVariables();
+            MyScope.Scope.ClearVariables();
+            MyScope.ClearUnresolvedModules();
+            _unit.State.ClearDiagnostics(this);
+
             MyScope.EnsureModuleVariables(_unit.State);
 
             foreach (var value in MyScope.Scope.AllVariables) {
                 value.Value.EnqueueDependents();
             }
-
-            MyScope.Scope.Children = new List<InterpreterScope>();
-            MyScope.Scope.ClearNodeScopes();
-            MyScope.Scope.ClearNodeValues();
-            MyScope.ClearUnresolvedModules();
-            _unit.State.ClearDiagnostics(this);
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit, tree);

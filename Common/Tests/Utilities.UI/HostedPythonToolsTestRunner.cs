@@ -141,13 +141,19 @@ namespace TestUtilities.UI {
                         method.Invoke(instance, args.ToArray());
                     }
                 } finally {
-                    TestEnvironmentImpl.TestCleanup();
                     foreach (var a in args) {
                         if (a == sp || a == dte) {
                             continue;
                         }
                         (a as IDisposable)?.Dispose();
                     }
+
+                    // Do TestCleanup after the arguments are disposed, because
+                    // for arguments like VisualStudioApp, that closes
+                    // the current project, which cleans up remaining tasks
+                    // running for that project, and unfinished tasks are
+                    // detected in TestCleanup.
+                    TestEnvironmentImpl.TestCleanup();
                 }
             } catch (Exception ex) {
                 ex = ExtractRealException(ex);

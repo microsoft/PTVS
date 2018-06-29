@@ -43,10 +43,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object TooltipTextKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.ForegroundBrush);
         public static readonly object TooltipTextColorKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.ForegroundColor);
 
-        public static readonly object InfoBackgroundKey = new ThemeResourceKey(EnvCategory, "InfoBackground", ThemeResourceKeyType.BackgroundBrush);
-        public static readonly object InfoBackgroundColorKey = new ThemeResourceKey(EnvCategory, "InfoBackground", ThemeResourceKeyType.BackgroundColor);
-        public static readonly object InfoTextKey = new ThemeResourceKey(EnvCategory, "InfoText", ThemeResourceKeyType.ForegroundBrush);
-        public static readonly object InfoTextColorKey = new ThemeResourceKey(EnvCategory, "InfoText", ThemeResourceKeyType.ForegroundColor);
+        public static readonly object InfoBackgroundKey = VsBrushes.InfoBackgroundKey;
+        public static readonly object InfoBackgroundColorKey = VsColors.InfoBackgroundKey;
+        public static readonly object InfoTextKey = VsBrushes.InfoTextKey;
+        public static readonly object InfoTextColorKey = VsColors.InfoTextKey;
 
         public static readonly object HyperlinkKey = VsBrushes.ControlLinkTextKey;
         public static readonly object HyperlinkHoverKey = VsBrushes.ControlLinkTextHoverKey;

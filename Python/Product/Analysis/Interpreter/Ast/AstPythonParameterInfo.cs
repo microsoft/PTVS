@@ -16,17 +16,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonParameterInfo : IParameterInfo {
-        public AstPythonParameterInfo(PythonAst ast, Parameter p) {
+        public AstPythonParameterInfo(PythonAst ast, Parameter p, IEnumerable<IPythonType> types) {
             Name = p?.Name ?? throw new ArgumentNullException(nameof(p));
             Documentation = "";
             DefaultValue = p.DefaultValue?.ToCodeString(ast).Trim();
+            if (DefaultValue == "...") {
+                DefaultValue = null;
+            }
             IsParamArray = p.Kind == ParameterKind.List;
             IsKeywordDict = p.Kind == ParameterKind.Dictionary;
-            ParameterTypes = new IPythonType[0];
+            ParameterTypes = types.MaybeEnumerate().Where(t => t.TypeId != BuiltinTypeId.Unknown).ToArray();
         }
 
         public string Name { get; }

@@ -141,9 +141,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 IAnalysisSet callRes;
                 if (_klass.GetAllMembers(ProjectState._defaultContext).TryGetValue("__call__", out callRes)) {
                     foreach (var overload in callRes.SelectMany(av => av.Overloads)) {
-                        yield return overload.WithNewParameters(
-                            overload.Parameters.Skip(1).ToArray()
-                        );
+                        yield return overload.WithoutLeadingParameters(1);
                     }
                 }
 

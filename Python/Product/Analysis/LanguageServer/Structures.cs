@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
@@ -236,16 +239,46 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public string version;
         }
         public Interpreter interpreter;
+        /// <summary>
+        /// Paths to search when attempting to resolve module imports.
+        /// </summary>
         public string[] searchPaths;
+        /// <summary>
+        /// Secondary paths to search when resolving modules. Not supported by all
+        /// factories. In generaly, only source files will be discovered, and their
+        /// contents will be merged with the initial module.
+        /// </summary>
+        public string[] typeStubSearchPaths;
+
+        /// <summary>
+        /// Indicates that analysis engine is running in a test environment.
+        /// Causes initialization and analysis sequences to fully
+        /// complete before information requests such as hover or
+        /// completion can be processed.
+        /// </summary>
         public bool testEnvironment;
+
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.
         /// </summary>
         public InformationDisplayOptions displayOptions;
+
         /// <summary>
         /// If true, analyzer will be created asynchronously. Used in VS Code.
         /// </summary>
         public bool asyncStartup;
+
+        /// <summary>
+        /// Glob pattern of files and folders to exclude from loading
+        /// into the Python analysis engine.
+        /// </summary>
+        public string[] excludeFiles;
+
+        /// <summary>
+        /// Glob pattern of files and folders under the root folder that
+        /// should be loaded into the Python analysis engine.
+        /// </summary>
+        public string[] includeFiles;
     }
 
 
@@ -487,7 +520,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public PythonClientCapabilities python;
     }
 
-
     [Serializable]
     public struct CompletionOptions {
         /// <summary>
@@ -636,7 +668,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionList {
+    public class CompletionList {
         /// <summary>
         /// This list is not complete. Further typing should result in recomputing
         /// this list.
@@ -665,13 +697,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionItem {
+    public class CompletionItem {
         public string label;
         public CompletionItemKind kind;
         public string detail;
         public MarkupContent documentation;
         public string sortText;
         public string filterText;
+        public bool? preselect; // VS Code 1.25+
         public string insertText;
         public InsertTextFormat insertTextFormat;
         public TextEdit? textEdit;

@@ -1054,6 +1054,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CustomCommandCanceled" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Command {0} has been canceled]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[命令 {0} 已取消]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CustomCommandExecutingModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing -m {0} {1}]]></Val>
@@ -2823,10 +2832,13 @@
       </Item>
       <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Val><![CDATA[Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[请使用 Python 环境中的 "pip install ptvsd --pre"，以使用试验性调试程序]]></Val>
+            <Val><![CDATA[请在 Python 环境中运行 "pip install --upgrade ptvsd --pre"，以使用试验性调试程序]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3394,6 +3406,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";MisconfiguredPip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Operation cannot be started because pip is not installed in the environment at '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[无法启动操作，因为在“{0}”环境中未安装 pip。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";MissingEnvironment" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The environment "{0}" appears to be incorrectly configured or missing. You may need to install Python {1} or re-create a virtual environment.]]></Val>
@@ -3800,7 +3821,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.]D;]A;]D;]A;When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.]D;]A;]D;]A;There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.]D;]A;]D;]A;Please refer to <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> for information about configuring and publishing to Azure App Service.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[这些更改将允许你更可靠、更快速地进行部署，但是首先需要配置项目或部署目标。]D;]A;]D;]A;在发布时，我们将不再自动生成 web.config 文件。可以使用“添加新项”添加该文件并根据站点需要进行自定义。]D;]A;]D;]A;在部署时，对使用的 Python 版本没有限制，但在部署时我们将不再包括虚拟环境或 Python 运行时。仅发布直接包含在项目中的库。]D;]A;]D;]A;请参阅 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> 了解有关配置和发布到 Azure App Service 的信息。]]></Val>
+            <Val><![CDATA[这些更改将允许你更可靠、更快速地进行部署，但是首先需要配置项目或部署目标。]D;]A;]D;]A;在发布时，我们将不再自动生成 web.config 文件。可以使用“添加新项”添加该文件并根据站点需要进行自定义。]D;]A;]D;]A;在部署时，对使用的 Python 版本没有限制，但在部署时我们将不再包括虚拟环境或 Python 运行时。仅发布直接包含在项目中的库。]D;]A;]D;]A;请参阅 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> 了解有关配置和发布到 Azure 应用服务的信息。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5612,12 +5633,6 @@
   </Item>
   <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
     <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
-    <Item ItemId=";AssemblyVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.0.0.0]]></Val>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Private infrastructure helpers for Python support in Visual Studio.]]></Val>
@@ -5639,12 +5654,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[Visual Studio - Python 基础结构]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5675,12 +5684,6 @@
         <Tgt Cat="Text" Stat="Loc" Orig="New">
           <Val><![CDATA[对 Microsoft® Visual Studio® 的 Python 支持]]></Val>
         </Tgt>
-      </Str>
-      <Disp Icon="Str" />
-    </Item>
-    <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
-      <Str Cat="Text" DevLk="true" UsrLk="true">
-        <Val><![CDATA[15.7.18096.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

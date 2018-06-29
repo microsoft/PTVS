@@ -21,6 +21,11 @@ namespace Microsoft.PythonTools.Options {
     public sealed class ExperimentalOptions {
         internal ExperimentalOptions(PythonToolsService service) {
             Load();
+            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
+        }
+
+        private void OnUseVsCodeDebuggerChanged(object sender, EventArgs e) {
+            UseVsCodeDebugger = EO.GetUseVsCodeDebugger();
         }
 
         public void Load() {

@@ -27,22 +27,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly PythonMemberType _memberType;
         private string _doc;
 
-        public static ConstantInfo Create(PythonAnalyzer state, object value) {
-            var constant = value as IPythonConstant;
-            var constantType = constant?.Type;
-            var av = state.GetAnalysisValueFromObjectsThrowOnNull(constantType ?? state.GetTypeFromObject(value));
-
-            var ci = av as ConstantInfo;
-            if (ci != null) {
-                return ci;
-            }
-            var bci = av as BuiltinClassInfo;
-            if (bci != null) {
-                return new ConstantInfo(bci, value, constant?.MemberType ?? PythonMemberType.Constant);
-            }
-            return null;
-        }
-
         internal ConstantInfo(BuiltinClassInfo klass, object value, PythonMemberType memberType)
             : base(klass) {
             _value = value;

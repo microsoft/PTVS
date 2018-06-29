@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             Analyzer = analyzer;
             Path = path;
-            DocumentUri = documentUri;
+            DocumentUri = documentUri ?? (!string.IsNullOrEmpty(path) ? new Uri(path) : null);
             Properties = new Dictionary<object, object>();
             IsTemporaryFile = isTemporaryFile;
             SuppressErrorList = suppressErrorList;

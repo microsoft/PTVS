@@ -15,11 +15,21 @@
 // permissions and limitations under the License.
 
 using System.Runtime.InteropServices;
+using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonExperimentalOptionsPage : PythonDialogPage {
         private PythonExperimentalOptionsControl _window;
+
+        public PythonExperimentalOptionsPage() {
+            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
+        }
+
+        private void OnUseVsCodeDebuggerChanged(object sender, System.EventArgs e) {
+            // Synchronize UI with backing properties.
+            _window?.SyncControlWithPageSettings(PyService);
+        }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {

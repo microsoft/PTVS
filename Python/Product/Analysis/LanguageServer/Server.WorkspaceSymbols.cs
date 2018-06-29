@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,10 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
@@ -37,7 +33,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return members.Select(m => ToSymbolInformation(m)).ToArray();
+            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
+        }
+
+        public override Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
+            var entry = _projectFiles.GetEntry(@params.textDocument);
+
+            var members = GetModuleVariables(entry as IPythonProjectEntry, opts, string.Empty);
+            return Task.FromResult(members
+                .GroupBy(mr => mr.Name)
+                .Select(g => g.First())
+                .Select(m => ToSymbolInformation(m))
+                .ToArray());
         }
 
         private static IEnumerable<MemberResult> GetModuleVariables(
@@ -69,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
-                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
+                    uri = loc.DocumentUri,
                     range = new SourceSpan(
                         new SourceLocation(loc.StartLine, loc.StartColumn),
                         new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)

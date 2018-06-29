@@ -14,16 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Collections;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
-namespace AnalysisTests.DotNetAnalysis {
-    public class GenericType<T> where T : IEnumerable {
-        public T ReturnsGenericParam() {
-            return default(T);
-        }
-    }
-}
+[assembly: AssemblyTitle("Anaconda Install Launcher")]
+[assembly: AssemblyDescription("Ensures the Anaconda installer is correctly launched.")]
+
+
+[assembly: ComVisible(false)]

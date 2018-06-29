@@ -61,9 +61,11 @@
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ErrorMessages.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
+    <Compile Include="Analyzer\ImportStatementWalker.cs" />
     <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="IHasQualifiedName.cs" />
+    <Compile Include="Infrastructure\DefaultJsonAttribute.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\InstallPath.cs" />
@@ -101,18 +103,26 @@
     <Compile Include="Intellisense\VersionCookie.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonIterables.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
-    <Compile Include="Interpreter\Ast\AstPythonTuple.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
+    <Compile Include="Interpreter\Ast\AstTypingModule.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\DocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
+    <Compile Include="LanguageServer\Extensibility.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtension.cs" />
+    <Compile Include="LanguageServer\ILanguageServerExtensionProvider.cs" />
     <Compile Include="LanguageServer\ILogger.cs" />
+    <Compile Include="LanguageServer\IServer.cs" />
     <Compile Include="LanguageServer\MarkdownDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\PlainTextDocumentationBuilder.cs" />
     <Compile Include="LanguageServer\Server.Completion.cs" />
+    <Compile Include="LanguageServer\Server.Extensions.cs" />
     <Compile Include="LanguageServer\Server.FindReferences.cs" />
+    <Compile Include="LanguageServer\Server.GoToDefinition.cs" />
     <Compile Include="LanguageServer\Server.Hover.cs" />
     <Compile Include="LanguageServer\Server.PrivateHelpers.cs" />
     <Compile Include="LanguageServer\Server.SignatureHelp.cs" />
@@ -127,6 +137,8 @@
     <Compile Include="LanguageServer\Settings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
+    <Compile Include="ModuleResolver.cs" />
+    <Compile Include="Parsing\Ast\IMaybeAsyncStatement.cs" />
     <Compile Include="ResolutionContext.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
@@ -160,7 +172,6 @@
     <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
-    <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
     <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
@@ -188,7 +199,7 @@
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
-    <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\IPythonCollectionTypes.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
@@ -259,6 +270,7 @@
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\ProtocolInfo.cs" />
     <Compile Include="Values\Protocols.cs" />
+    <Compile Include="Values\DictBuiltinInstanceInfo.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
@@ -454,6 +466,12 @@
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="typing-stub.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

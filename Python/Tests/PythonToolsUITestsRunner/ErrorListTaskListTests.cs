@@ -69,10 +69,16 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenFileIsDeleted));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted() {
+            _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted));
         }
 
         [TestMethod, Priority(0)]

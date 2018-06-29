@@ -76,6 +76,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             );
         }
 
+        public static IPythonModule FromTypeStub(
+            IPythonInterpreter interpreter,
+            string stubFile,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
+        ) {
+            return new AstCachedPythonModule(moduleFullName, stubFile);
+        }
+
         // Avoid hitting the filesystem, but exclude non-importable
         // paths. Ideally, we'd stop at the first path that's a known
         // search path, except we don't know search paths here.
@@ -224,8 +233,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             try {
                 using (var sr = new StreamReader(filePath)) {
                     string quote = null;
+                    string line;
                     while (true) {
-                        var line = sr.ReadLine();
+                        line = sr.ReadLine()?.Trim();
                         if (line == null) {
                             break;
                         }
@@ -241,9 +251,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
 
                     if (quote != null) {
+                        // Check if it is a single-liner
+                        if (line.EndsWithOrdinal(quote) && line.IndexOf(quote) < line.LastIndexOf(quote)) {
+                            return line.Substring(quote.Length, line.Length - 2 * quote.Length).Trim();
+                        }
                         var sb = new StringBuilder();
                         while (true) {
-                            var line = sr.ReadLine();
+                            line = sr.ReadLine();
                             if (line == null || line.EndsWithOrdinal(quote)) {
                                 break;
                             }
@@ -252,7 +266,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return sb.ToString();
                     }
                 }
-            } catch (IOException) { } catch(UnauthorizedAccessException) { }
+            } catch (IOException) { } catch (UnauthorizedAccessException) { }
             return string.Empty;
         }
     }

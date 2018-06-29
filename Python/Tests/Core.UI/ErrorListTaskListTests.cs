@@ -62,8 +62,12 @@ namespace PythonToolsUITests {
                 var errorItem = taskItem as IVsErrorItem;
                 if (errorItem != null) {
                     uint errorCategory;
-                    ErrorHandler.ThrowOnFailure(errorItem.GetCategory(out errorCategory));
-                    ErrorCategory = (__VSERRORCATEGORY)errorCategory;
+                    try {
+                        ErrorHandler.ThrowOnFailure(errorItem.GetCategory(out errorCategory));
+                        ErrorCategory = (__VSERRORCATEGORY)errorCategory;
+                    } catch (NotImplementedException) {
+                        ErrorCategory = null;
+                    }
                 } else {
                     ErrorCategory = null;
                 }
@@ -110,7 +114,7 @@ namespace PythonToolsUITests {
             var projectNode = project.GetPythonProject();
 
             var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
-            var expectedCategory = VSTASKCATEGORY.CAT_BUILDCOMPILE;
+            var expectedCategory = VSTASKCATEGORY.CAT_CODESENSE;
             var expectedItems = new[] {
                     new TaskItemInfo(expectedDocument, 2, 8, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected indent"),
                     new TaskItemInfo(expectedDocument, 2, 13, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '('"),
@@ -210,6 +214,23 @@ namespace PythonToolsUITests {
         /// </summary>
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted(VisualStudioApp app) {
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\ErrorProjectDeleteFile.sln"));
+
+            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 2);
+
+            Console.WriteLine("Deleting file");
+            project.ProjectItems.Item("Program.py").Delete();
+
+            app.WaitForTaskListItems(typeof(SVsErrorList), 0);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 0);
+        }
+
+        /// <summary>
+        /// Make sure deleting a file w/ errors clears the error list
+        /// </summary>
+        public void ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted(VisualStudioApp app) {
+            var project = app.OpenProject(app.CopyProjectForTest(@"TestData\ErrorProjectDeleteFile.sln"));
+            project.ProjectItems.Item("Program.py").Open();
 
             app.WaitForTaskListItems(typeof(SVsErrorList), 7);
             app.WaitForTaskListItems(typeof(SVsTaskList), 2);

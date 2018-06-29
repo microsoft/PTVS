@@ -25,10 +25,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
+        public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -37,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return new SignatureHelp();
+                return Task.FromResult(new SignatureHelp());
             }
 
             IEnumerable<IOverloadResult> overloads;
@@ -59,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                     TraceMessage($"No signatures found in {uri} at {@params.position}");
-                    return new SignatureHelp();
+                    return Task.FromResult(new SignatureHelp());
                 }
             }
 
@@ -82,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            return sh;
+            return Task.FromResult(sh);
         }
 
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
@@ -113,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
-            var formatSetting = _clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
+            var formatSetting = _clientCaps?.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
             si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
             foreach (var p in si.parameters) {
                 p.documentation = GetMarkupContent(p.documentation.value, formatSetting);

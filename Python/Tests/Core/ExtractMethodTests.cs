@@ -669,7 +669,7 @@ def f():
         /// Test cases which make sure we have the right ranges for each statement when doing extract method
         /// and that we don't mess up the code before/after the statement.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4088
         public async Task StatementTests() {
             await SuccessTest("b",
 @"def f():

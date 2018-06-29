@@ -14,15 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading;
+using System;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal sealed class LanguageServerSettings {
-        private int _completionTimeout = Timeout.Infinite;
-        public bool SuppressAdvancedMembers { get; set; }
-        public int CompletionTimeout => _completionTimeout;
+    internal class LanguageServerSettings {
+        public AutoCompleteSettings autoComplete;
+        public DiagnosticsSettings diagnostics;
 
-        public void SetCompletionTimeout(int? timeout)
-            => _completionTimeout = timeout.HasValue ? timeout.Value : _completionTimeout;
+        [Serializable]
+        internal class AutoCompleteSettings {
+            public bool showAdvancedMembers;
+        }
+
+        [Serializable]
+        internal class DiagnosticsSettings {
+            public DiagnosticSeverity unresolvedImports;
+        }
+    }
+
+    internal static class LanguageServerSettingsExtensions {
+        public static bool Show(this DiagnosticSeverity severity) => severity != DiagnosticSeverity.Unspecified;
     }
 }

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -80,9 +81,29 @@ namespace AnalysisTests {
             ));
         }
 
-        private static PythonAnalysis CreateAnalysis() {
-            return CreateAnalysis(PythonPaths.Versions.OrderByDescending(p => p.Version).FirstOrDefault());
+        private static PythonVersion Latest => PythonPaths.Versions.OrderByDescending(p => p.Version).FirstOrDefault();
+        private static PythonAnalysis CreateAnalysis() => CreateAnalysis(Latest);
+
+        private static readonly Lazy<string> _typeShedPath = new Lazy<string>(FindTypeShedForTest);
+        private static string TypeShedPath => _typeShedPath.Value;
+        private static string FindTypeShedForTest() {
+            var candidate = Environment.GetEnvironmentVariable("_TESTDATA_TYPESHED");
+            if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "stdlib", "2and3"))) {
+                return candidate;
+            }
+
+            var root = TestData.GetPath();
+
+            for (string previousRoot = null; root != previousRoot; previousRoot = root, root = PathUtils.GetParent(root)) {
+                candidate = Path.Combine(root, "typeshed");
+                if (Directory.Exists(Path.Combine(candidate, "stdlib", "2and3"))) {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
+
 
         #region Test cases
 
@@ -246,7 +267,7 @@ namespace AnalysisTests {
 R_str = r_str()
 R_object = r_object()
 R_A1 = A()
-R_A2 = A.r_A()
+R_A2 = A().r_A()
 R_A3 = R_A1.r_A()");
                     entry.WaitForAnalysis();
 
@@ -257,9 +278,9 @@ R_A3 = R_A1.r_A()");
 
                     entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
                     entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
-                    entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
+                    entry.AssertIsInstance("R_A1", "A");
+                    entry.AssertIsInstance("R_A2", "A");
+                    entry.AssertIsInstance("R_A3", "A");
                     entry.AssertDescription("R_A1", "A");
                     entry.AssertDescription("R_A2", "A");
                     entry.AssertDescription("R_A3", "A");
@@ -411,7 +432,7 @@ class BankAccount(object):
                     var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                     var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                    interp.ModuleNamesChanged += (s, e) => evt.Set();
+                    interp.ModuleNamesChanged += (s, e) => evt.SetIfNotDisposed();
 
                     analysis.Analyzer.SetSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
@@ -422,6 +443,76 @@ class BankAccount(object):
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
                     Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_NoStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
+                    analysis.SetTypeStubSearchPath();
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method");
+                    analysis.AssertNotHasAttr("c", "typed_method", "typed_method_2");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_MergeStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = false });
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method", "typed_method");
+                    analysis.AssertNotHasAttr("c", "typed_method_2");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_MergeStubsPath() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetTypeStubSearchPath(TestData.GetPath("TestData\\AstAnalysis\\Stubs"));
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "untyped_method", "inferred_method", "typed_method_2");
+                    analysis.AssertNotHasAttr("c", "typed_method");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstTypeStubPaths_ExclusiveStubs() {
+            using (var analysis = CreateAnalysis()) {
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath("TestData\\AstAnalysis"));
+                    analysis.AddModule("test-module", "import Package.Module\n\nc = Package.Module.Class()");
+
+                    analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = true });
+                    analysis.SetTypeStubSearchPath(TestData.GetPath("TestData\\AstAnalysis\\Stubs"));
+                    analysis.ReanalyzeAll();
+                    analysis.AssertHasAttr("c", "typed_method_2");
+                    analysis.AssertNotHasAttr("c", "untyped_method", "inferred_method", "typed_method");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
@@ -488,10 +579,10 @@ class BankAccount(object):
                     var math = analysis.GetValue<AnalysisValue>("math");
                     Assert.IsNotNull(math);
 
-                    var inf = analysis.GetValue<ConstantInfo>("inf");
+                    var inf = analysis.GetValue<NumericInstanceInfo>("inf");
                     Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
 
-                    var nan = analysis.GetValue<ConstantInfo>("nan");
+                    var nan = analysis.GetValue<NumericInstanceInfo>("nan");
                     Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
@@ -503,6 +594,9 @@ class BankAccount(object):
 
         #region Black-box sanity tests
         // "Do we crash?"
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV37() => AstBuiltinScrape(PythonPaths.Python37_x64 ?? PythonPaths.Python37);
 
         [TestMethod, Priority(0)]
         public void AstBuiltinScrapeV36() => AstBuiltinScrape(PythonPaths.Python36_x64 ?? PythonPaths.Python36);
@@ -585,6 +679,131 @@ class BankAccount(object):
                 }
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV37x64() => AstNativeBuiltinScrape(PythonPaths.Python37_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV36x64() => AstNativeBuiltinScrape(PythonPaths.Python36_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV35x64() => AstNativeBuiltinScrape(PythonPaths.Python35_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV34x64() => AstNativeBuiltinScrape(PythonPaths.Python34_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV33x64() => AstNativeBuiltinScrape(PythonPaths.Python33_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV32x64() => AstNativeBuiltinScrape(PythonPaths.Python32_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV31x64() => AstNativeBuiltinScrape(PythonPaths.Python31_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV27x64() => AstNativeBuiltinScrape(PythonPaths.Python27_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV26x64() => AstNativeBuiltinScrape(PythonPaths.Python26_x64);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV37x86() => AstNativeBuiltinScrape(PythonPaths.Python37);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV36x86() => AstNativeBuiltinScrape(PythonPaths.Python36);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV35x86() => AstNativeBuiltinScrape(PythonPaths.Python35);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV34x86() => AstNativeBuiltinScrape(PythonPaths.Python34);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV33x86() => AstNativeBuiltinScrape(PythonPaths.Python33);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV32x86() => AstNativeBuiltinScrape(PythonPaths.Python32);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV31x86() => AstNativeBuiltinScrape(PythonPaths.Python31);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV27x86() => AstNativeBuiltinScrape(PythonPaths.Python27);
+
+        [TestMethod, Priority(0)]
+        public void AstNativeBuiltinScrapeV26x86() => AstNativeBuiltinScrape(PythonPaths.Python26);
+
+
+        private void AstNativeBuiltinScrape(PythonVersion version) {
+            AstScrapedPythonModule.KeepAst = true;
+            version.AssertInstalled();
+            using (var analysis = CreateAnalysis(version)) {
+                try {
+                    var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                    var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                    var ctxt = interp.CreateModuleContext();
+
+                    var dllsDir = PathUtils.GetAbsoluteDirectoryPath(fact.Configuration.PrefixPath, "DLLs");
+                    if (!Directory.Exists(dllsDir)) {
+                        Assert.Inconclusive("Configuration does not have DLLs");
+                    }
+
+                    var report = new List<string>();
+                    var permittedImports = fact.GetLanguageVersion().Is2x() ?
+                        new[] { interp.BuiltinModuleName, "exceptions" } :
+                        new[] { interp.BuiltinModuleName };
+
+                    foreach (var pyd in PathUtils.EnumerateFiles(dllsDir, "*", recurse: false).Where(ModulePath.IsPythonFile)) {
+                        var mp = ModulePath.FromFullPath(pyd);
+                        if (mp.IsDebug) {
+                            continue;
+                        }
+
+                        Console.WriteLine("Importing {0} from {1}", mp.ModuleName, mp.SourceFile);
+                        var mod = interp.ImportModule(mp.ModuleName);
+                        Assert.IsInstanceOfType(mod, typeof(AstScrapedPythonModule));
+                        mod.Imported(ctxt);
+
+                        var modPath = fact.GetCacheFilePath(pyd);
+                        Assert.IsTrue(File.Exists(modPath), "No cache file created");
+                        _moduleCache = File.ReadAllText(modPath);
+
+                        var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
+                        foreach (var err in errors) {
+                            Console.WriteLine(err);
+                        }
+                        Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
+
+                        var ast = ((AstScrapedPythonModule)mod).Ast;
+
+                        
+                        var imports = ((Ast.SuiteStatement)ast.Body).Statements
+                            .OfType<Ast.ImportStatement>()
+                            .SelectMany(s => s.Names)
+                            .Select(n => n.MakeString())
+                            .Except(permittedImports)
+                            .ToArray();
+
+                        // We expect no imports (after excluding builtins)
+                        report.AddRange(imports.Select(n => $"{mp.ModuleName} imported {n}"));
+
+                        _moduleCache = null;
+                    }
+
+                    AssertUtil.ContainsExactly(report);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV37() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V37);
+            await FullStdLibTest(v);
+        }
+
 
         [TestMethod, TestCategory("60s"), Priority(0)]
         public async Task FullStdLibV36() {
@@ -743,11 +962,224 @@ y = g()");
 
                     analysis.AssertIsInstance("x", BuiltinTypeId.Int);
                     analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+                    var sigs = analysis.GetSignatures("f").ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(1, sigs[0].Parameters.Length);
+                    var p = sigs[0].Parameters[0];
+                    Assert.AreEqual("p", p.Name);
+                    Assert.AreEqual("int", p.Type);
+                    Assert.AreEqual("", p.DefaultValue ?? "");
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
             }
         }
+        #endregion
+
+        #region Type Shed tests
+
+        [TestMethod, Priority(0)]
+        public void TypeShedElementTree() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import xml.etree.ElementTree as ET
+
+e = ET.Element()
+e2 = e.makeelement()
+iterfind = e.iterfind
+l = iterfind()");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertHasParameters("ET.Element", "tag", "attrib", "**extra");
+                    analysis.AssertHasParameters("e.makeelement", "tag", "attrib");
+                    analysis.AssertHasParameters("iterfind", "path", "namespaces");
+                    analysis.AssertIsInstance("l", BuiltinTypeId.List);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedChildModules() {
+            string[] expected;
+
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetLimits(new AnalysisLimits() { UseTypeStubPackages = false });
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    expected = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    Assert.AreNotEqual(0, expected.Length);
+                    AssertUtil.ContainsAtLeast(expected, "parse", "request");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import urllib");
+                    analysis.WaitForAnalysis();
+
+                    var mods = analysis.Analyzer.GetModuleMembers(entry.AnalysisContext, new[] { "urllib" }, false)
+                        .Select(m => m.Name)
+                        .OrderBy(n => n)
+                        .ToArray();
+                    AssertUtil.ArrayEquals(expected, mods);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedSysExcInfo() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import sys
+
+e1, e2, e3 = sys.exc_info()");
+                    analysis.WaitForAnalysis();
+
+                    var funcs = analysis.GetValues("sys.exc_info").SelectMany(f => f.Overloads).ToArray();
+                    AssertUtil.ContainsExactly(
+                        funcs.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "exc_info()->[tuple[type, BaseException, None]]",
+                        "exc_info()->[tuple]"
+                    );
+
+                    analysis.AssertIsInstance("e1", BuiltinTypeId.Type);
+                    analysis.AssertIsInstance("e2", "BaseException");
+                    analysis.AssertIsInstance("e3", BuiltinTypeId.NoneType);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedJsonMakeScanner() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import _json
+
+scanner = _json.make_scanner()");
+                    analysis.WaitForAnalysis();
+
+                    var overloads = analysis.GetSignatures("scanner");
+                    AssertUtil.ContainsExactly(
+                        overloads.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "__call__(string:str=,index:int=)->[tuple[None, int]]"
+                    );
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedSysInfo() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                analysis.SetLimits(new AnalysisLimits { UseTypeStubPackages = true, UseTypeStubPackagesExclusively = true });
+                try {
+                    var entry = analysis.AddModule("test-module", @"import sys
+
+l_1 = sys.argv
+
+s_1 = sys.argv[0]
+s_2 = next(iter(sys.argv))
+s_3 = sys.stdout.encoding
+
+f_1 = sys.stdout.write
+f_2 = sys.__stdin__.read
+
+i_1 = sys.flags.debug
+i_2 = sys.flags.quiet
+i_3 = sys.implementation.version.major
+i_4 = sys.getsizeof(None)
+i_5 = sys.getwindowsversion().platform_version[0]
+");
+                    analysis.WaitForAnalysis();
+
+                    analysis.AssertIsInstance("l_1", BuiltinTypeId.List);
+
+                    analysis.AssertIsInstance("s_1", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("s_2", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("s_3", BuiltinTypeId.Str);
+
+                    analysis.AssertIsInstance("f_1", BuiltinTypeId.BuiltinMethodDescriptor);
+                    analysis.AssertIsInstance("f_2", BuiltinTypeId.BuiltinMethodDescriptor);
+
+                    analysis.AssertIsInstance("i_1", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_2", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_3", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_4", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("i_5", BuiltinTypeId.Int);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeStubConditionalDefine() {
+            var seen = new HashSet<PythonLanguageVersion>();
+
+            var code = @"import sys
+
+if sys.version_info < (2, 7):
+    LT_2_7 : bool = ...
+if sys.version_info <= (2, 7):
+    LE_2_7 : bool = ...
+if sys.version_info > (2, 7):
+    GT_2_7 : bool = ...
+if sys.version_info >= (2, 7):
+    GE_2_7 : bool = ...
+
+";
+
+            var fullSet = new[] { "LT_2_7", "LE_2_7", "GT_2_7", "GE_2_7" };
+
+            foreach (var ver in PythonPaths.Versions) {
+                if (!seen.Add(ver.Version)) {
+                    continue;
+                }
+
+                Console.WriteLine("Testing with {0}", ver.InterpreterPath);
+
+                var interpreter = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(ver.Version.ToVersion()).CreateInterpreter();
+                var entry = PythonModuleLoader.FromStream(interpreter, new MemoryStream(Encoding.ASCII.GetBytes(code)), "testmodule.pyi", ver.Version);
+
+                var expected = new List<string>();
+                if (ver.Version.Is3x()) {
+                    expected.Add("GT_2_7");
+                    expected.Add("GE_2_7");
+                } else if (ver.Version == PythonLanguageVersion.V27) {
+                    expected.Add("GE_2_7");
+                    expected.Add("LE_2_7");
+                } else {
+                    expected.Add("LT_2_7");
+                    expected.Add("LE_2_7");
+                }
+
+                AssertUtil.CheckCollection(
+                    entry.GetMemberNames(null).Where(n => n.EndsWithOrdinal("2_7")),
+                    expected,
+                    fullSet.Except(expected)
+                );
+            }
+        }
+
         #endregion
     }
 }

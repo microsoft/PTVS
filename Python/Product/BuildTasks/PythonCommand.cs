@@ -155,6 +155,15 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string WarningRegex { get; set; }
 
         /// <summary>
+        /// A regular expression used to detect message messages in the output. If not set, message detection is disabled.
+        /// </summary>
+        /// <remarks>
+        /// Only valid when <see cref="ExecuteIn"/> is set to <c>"output"</c>.
+        /// See documentation for <see cref="ErrorRegex"/> for a detailed description of the regular expression format.
+        /// </remarks>
+        public string MessageRegex { get; set; }
+
+        /// <summary>
         /// A list of package requirements for this command, in setuptools format. If any package from this list is not installed,
         /// pip will be used to install it before running the command.
         /// </summary>
@@ -169,6 +178,7 @@ namespace Microsoft.PythonTools.BuildTasks {
         public const string ExecuteInKey = "ExecuteIn";
         public const string ErrorRegexKey = "ErrorRegex";
         public const string WarningRegexKey = "WarningRegex";
+        public const string MessageRegexKey = "MessageRegex";
         public const string RequiredPackagesKey = "RequiredPackages";
 
         public const string ExecuteInRepl = "repl";
@@ -193,7 +203,7 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         public override bool Execute() {
             if (!ExecuteInOutput.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase) &&
-                !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex))) {
+                !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex) && string.IsNullOrEmpty(MessageRegex))) {
                 Log.LogError("ErrorRegex and WarningRegex are only valid for ExecuteIn='output'");
                 return false;
             }
@@ -206,6 +216,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                 { ExecuteInKey, ExecuteIn ?? "" },
                 { ErrorRegexKey, ErrorRegex ?? "" },
                 { WarningRegexKey, WarningRegex ?? "" },
+                { MessageRegexKey, MessageRegex ?? "" },
                 { RequiredPackagesKey, RequiredPackages != null ? string.Join(";", RequiredPackages) : "" }
             });
 

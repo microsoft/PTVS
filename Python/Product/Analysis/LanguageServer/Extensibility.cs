@@ -14,15 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
+using System;
+using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonTuple: AstPythonBuiltinType {
-        public AstPythonTuple(string name, IEnumerable<IPythonType> types): 
-            base(name, BuiltinTypeId.Tuple) {
-            Types = types;
+namespace Microsoft.PythonTools.Analysis.LanguageServer.Extensibility {
+    public sealed class CompletionEventArgs : EventArgs {
+        public CompletionEventArgs(ModuleAnalysis analysis, PythonAst tree, SourceLocation location, CompletionList initialCompletionList) {
+            Analysis = analysis;
+            Tree = tree;
+            Location = location;
+            CompletionList = initialCompletionList;
         }
 
-        public IEnumerable<IPythonType> Types { get; }
+        public ModuleAnalysis Analysis { get; }
+        public PythonAst Tree { get; }
+        public SourceLocation Location { get; }
+
+        public CompletionList CompletionList;
     }
 }

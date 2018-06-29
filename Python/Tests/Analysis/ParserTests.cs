@@ -1995,8 +1995,8 @@ namespace AnalysisTests {
                 ParseErrors(
                     "FromImportStmtV2.py",
                     version,
-                    new ErrorInfo("import * only allowed at module level", 14, 2, 5, 31, 2, 22),
-                    new ErrorInfo("import * only allowed at module level", 49, 5, 5, 66, 5, 22)
+                    new ErrorInfo("import * only allowed at module level", 30, 2, 21, 31, 2, 22),
+                    new ErrorInfo("import * only allowed at module level", 65, 5, 21, 66, 5, 22)
                 );
             }
         }

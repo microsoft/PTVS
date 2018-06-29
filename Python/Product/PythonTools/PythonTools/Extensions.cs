@@ -57,6 +57,8 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
+        internal static readonly char[] QuoteChars = { '"', '\'' };
+
         internal static bool IsAppxPackageableProject(this ProjectNode projectNode) {
             var appxProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.AppxPackage);
             var containerProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.WindowsAppContainer);
@@ -113,20 +115,11 @@ namespace Microsoft.PythonTools {
             var snapshot = buffer.CurrentSnapshot;
             var triggerPoint = session.GetTriggerPoint(buffer);
 
-            var span = snapshot.GetApplicableSpan(triggerPoint, session.IsCompleteWordMode());
+            var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
             if (span != null) {
                 return span;
             }
             return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
-        }
-
-        /// <summary>
-        /// Returns the applicable span at the provided position.
-        /// </summary>
-        /// <returns>A tracking span, or null if there is no token at the
-        /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, ITrackingPoint point, bool completeWord) {
-            return snapshot.GetApplicableSpan(point.GetPosition(snapshot), completeWord);
         }
 
         /// <summary>
@@ -165,7 +158,7 @@ namespace Microsoft.PythonTools {
                 if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
                     // Handle "'contents of strin|g"
                     var text = lastToken.Span.GetText();
-                    var span = StringLiteralCompletionList.GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
+                    var span = GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
 
                     return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
                 }
@@ -196,6 +189,26 @@ namespace Microsoft.PythonTools {
             }
 
             return null;
+        }
+
+        internal static Span? GetStringContentSpan(string text, int globalStart = 0) {
+            var firstQuote = text.IndexOfAny(QuoteChars);
+            var lastQuote = text.LastIndexOfAny(QuoteChars) - 1;
+            if (firstQuote < 0 || lastQuote < 0) {
+                return null;
+            }
+
+            if (firstQuote + 2 < text.Length &&
+                text[firstQuote + 1] == text[firstQuote] && text[firstQuote + 2] == text[firstQuote]) {
+                firstQuote += 2;
+
+                lastQuote -= 2;
+            }
+
+            return new Span(
+                globalStart + firstQuote + 1,
+                (lastQuote >= firstQuote ? lastQuote : text.Length) - firstQuote
+            );
         }
 
         public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {

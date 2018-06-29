@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override string GetModuleDocumentation(ModuleReference modRef) {
             var prefix = modRef.AnalysisModule?.PythonType?.IsBuiltin == true ? "built-in module " : "module ";
-            var contents = $"{prefix} {modRef.Name}";
+            var contents = $"{prefix}{modRef.Name}";
             var doc = modRef.Module?.Documentation;
             if (!string.IsNullOrEmpty(doc)) {
                 doc = LimitLines(modRef.Module.Documentation);
@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return FromDocAndDescription(value, prefix);
         }
         protected override string MakeClassDocumentation(AnalysisValue value) => FromDocAndDescription(value, string.Empty);
+        protected override string MakeConstantDocumentation(AnalysisValue value) => value.Description;
 
         private string FromDocAndDescription(AnalysisValue value, string prefix) {
             var sb = new StringBuilder();

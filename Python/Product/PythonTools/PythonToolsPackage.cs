@@ -89,6 +89,7 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonDiagnosticsOptionsPage), "Python Tools", "Diagnostics", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [ProvideOptionPage(typeof(PythonExperimentalOptionsPage), "Python Tools", "Experimental", 115, 130, false)]
+    [ProvideOptionPage(typeof(LanguageServerOptionsPage), "Python Tools", "Language Server", 115, 131, false)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,12 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
+using System;
+using System.ComponentModel;
 
-namespace Microsoft.PythonTools.Interpreter {
-    public interface IPythonSequenceType : IPythonType {
-        IEnumerable<IPythonType> IndexTypes {
-            get;
-        }
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
+    [AttributeUsage(AttributeTargets.All)]
+    internal sealed class DefaultJsonAttribute : DefaultValueAttribute {
+        public static readonly object DummyValue = new object();
+        public DefaultJsonAttribute() : base(DummyValue) {}
     }
 }

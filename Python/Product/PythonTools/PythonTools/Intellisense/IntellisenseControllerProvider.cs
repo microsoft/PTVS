@@ -47,6 +47,11 @@ namespace Microsoft.PythonTools.Intellisense {
             new Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>>();
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
+            if (textView.Roles.Contains("DEBUGVIEW")) {
+                // TODO: Determine the context for this view and attach to the correct analyzer
+                return null;
+            }
+
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView);

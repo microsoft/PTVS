@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
   <PropertyGroup>
@@ -19,31 +19,28 @@
   </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
-    <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
-    <ProjectReference Include="..\AnalysisVsc\AnalysisVsc.csproj" />
+    <ProjectReference Include="../../Analysis\AnalysisNetStandard.csproj" />
+    <ProjectReference Include="../AnalysisVsc/AnalysisVsc.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Nuget.CommandLine" Version="4.5.1" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- .NET Core publishing -->
   <PropertyGroup>
-    <AnalysisEngineName>python-analysis</AnalysisEngineName>
-    <NugetPackageName>$(AnalysisEngineName)-vscode</NugetPackageName>
+    <AnalysisEngineName>Python-Analysis</AnalysisEngineName>
+    <NugetPackageName>$(AnalysisEngineName)-VSCode</NugetPackageName>
     <DotNetPublish>true</DotNetPublish>
   </PropertyGroup>
   <ItemGroup>
     <TargetOS Include="win-x86" />
     <TargetOS Include="win-x64" />
     <TargetOS Include="osx-x64" />
-    <TargetOS Include="centos-x64" />
-    <TargetOS Include="debian-x64" />
-    <TargetOS Include="ubuntu-x64" />
-    <TargetOS Include="fedora-x64" />
-    <TargetOS Include="opensuse-x64" />
-    <TargetOS Include="ol-x64" />
-    <TargetOS Include="rhel-x64" />
+    <TargetOS Include="linux-x64" />
   </ItemGroup>
   <ItemGroup>
     <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.PythonTools.VsCode.dll" />
@@ -51,35 +48,24 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <CallTarget Targets="PackPlatformSpecificFolders" />
-    <CallTarget Targets="PackNetcoreDependentFolder" />
-    <CallTarget Targets="Sha512" />
   </Target>
   <Target Name="PackPlatformSpecificFolders">
-    <Exec Command="dotnet publish --no-restore ..\AnalysisVsc\AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
+    <Exec Command="dotnet publish --no-restore ../AnalysisVsc/AnalysisVsc.csproj -c $(Configuration) -r %(TargetOS.Identity) /p:OutputPath=$(DotNetPublishPath)%(TargetOS.Identity) /p:DotNetPublish=1" />
     <!-- Copy over signed binaries to the target since .NET MSBuild does not support MS Signing -->
-    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
+    <Copy SourceFiles="@(EngineSignedFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
     <!-- Copy nuspec to platform folders -->
-    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)publish" />
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)publish\$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)\$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)\$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
+    <Copy SourceFiles="@(NuspecSourceFiles)" DestinationFolder="$(DotNetPublishPath)%(TargetOS.Identity)" />
+    <Exec Command="mkdir $(DotNetPublishNugetPath)" ContinueOnError="true" />
+    <Exec Command="mkdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" ContinueOnError="true" />
+    <Exec Command="$(NugetExe) pack $(DotNetPublishPath)%(TargetOS.Identity)/$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath)%(TargetOS.Identity) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
+    <Move SourceFiles="$(DotNetPublishNugetPath)%(TargetOS.Identity)/$(NugetPackageName).$(NugetPackageVersion).nupkg" DestinationFiles="$(DotNetPublishNugetPath)/$(NugetPackageName)-%(TargetOS.Identity).$(NugetPackageVersion).nupkg" />
     <Exec Command="rmdir $(DotNetPublishNugetPath)%(TargetOS.Identity)" />
   </Target>
-  <Target Name="PackNetcoreDependentFolder">
-    <Exec Command="$(NugetExe) pack $(OutputPath)$(NugetPackageName).nuspec -OutputDirectory $(DotNetPublishNugetPath) -Version $(NugetPackageVersion) -NoPackageAnalysis" />
-  </Target>
   <ItemGroup>
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName).$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x86.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-win-x64.$(NugetPackageVersion).nupkg" />
     <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-osx-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-centos-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-debian-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-ubuntu-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-fedora-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-opensuse-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-ol-x64.$(NugetPackageVersion).nupkg" />
-    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-rhel-x64.$(NugetPackageVersion).nupkg" />
+    <NugetPackages Include="$(DotNetPublishNugetPath)\$(NugetPackageName)-linux-x64.$(NugetPackageVersion).nupkg" />
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="@(NugetPackages)">
@@ -97,7 +83,7 @@
       <Using Namespace="System.Security.Cryptography" />
       <Code Type="Fragment" Language="cs">
         <![CDATA[
-                  var prefix = "python-analysis-vscode";
+                  var prefix = "Python-Analysis-VSCode";
 
                   using (var sha = SHA512.Create())              
                   using (var tsFile = new StreamWriter(OutputFile.ItemSpec, false)) {
@@ -126,7 +112,7 @@
       </Code>
     </Task>
   </UsingTask>
-  <Target Name="Sha512">
-    <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)\analysisEngineHashes.ts" />
+  <Target Name="Sha512" AfterTargets="SignFiles">
+    <GenerateHash InputFiles="@(NugetPackages)" OutputFile="$(DotNetPublishNugetPath)/analysisEngineHashes.ts" />
   </Target>
 </Project>

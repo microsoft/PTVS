@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private static readonly DependencyPropertyKey ShowSecurityWarningPropertyKey = DependencyProperty.RegisterReadOnly(
-            "IsPotentialOldSSL",
+            "ShowSecurityWarning",
             typeof(bool),
             typeof(PipEnvironmentView),
             new PropertyMetadata(true)

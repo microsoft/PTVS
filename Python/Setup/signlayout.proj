@@ -45,6 +45,7 @@
         Microsoft.PythonTools.Workspace.dll;
         Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
+        AnacondaInstallLauncher.exe;
         "/>
 
     <ManagedFiles Include="

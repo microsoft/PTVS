@@ -14,24 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Interpreter {
-    sealed class NoInterpretersFactory : IPythonInterpreterFactory {
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-        public NoInterpretersFactory() {
-            Configuration = new InterpreterConfiguration(
-                InterpreterRegistryConstants.NoInterpretersFactoryId,
-                Strings.NoInterpretersDescription,
-                uiMode: InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
-            );
-        }
-
-        public InterpreterConfiguration Configuration { get; }
-
-        public void NotifyImportNamesChanged() { }
-
-        public IPythonInterpreter CreateInterpreter() {
-            return new NoInterpretersInterpreter();
-        }
+namespace Microsoft.PythonTools.Analysis.LanguageServer {
+    /// <summary>
+    /// Implemented on a class that can create a language server extension.
+    /// This class must have a default constructor.
+    /// </summary>
+    public interface ILanguageServerExtensionProvider {
+        /// <summary>
+        /// Called when the extension is loaded for a language server.
+        /// </summary>
+        Task<ILanguageServerExtension> CreateAsync(
+            IServer server,
+            IReadOnlyDictionary<string, object> properties,
+            CancellationToken cancellationToken
+        );
     }
-
 }

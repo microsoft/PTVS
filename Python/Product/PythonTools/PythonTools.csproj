@@ -194,7 +194,7 @@
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -312,6 +312,16 @@
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
     <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
+    <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />
+    <Compile Include="PythonTools\Options\LanguageServerOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\LanguageServerOptionsControl.Designer.cs">
+      <DependentUpon>LanguageServerOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\LanguageServerOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -380,7 +390,6 @@
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
@@ -633,7 +642,6 @@
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />
@@ -644,7 +652,6 @@
     <Compile Include="PythonTools\Intellisense\SignatureHelpSource.cs" />
     <Compile Include="PythonTools\Intellisense\SignatureHelpSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\SnapshotCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\StringLiteralCompletionList.cs" />
     <Compile Include="PythonTools\Options\PythonDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -961,6 +968,7 @@
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\LanguageServerOptionsControl.resx" />
     <EmbeddedResource Include="PythonTools\Options\PythonExperimentalOptionsControl.resx">
       <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
