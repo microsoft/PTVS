@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Intellisense;
 
@@ -25,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     internal sealed class EditorFiles {
         private readonly ConcurrentDictionary<Uri, EditorFile> _files = new ConcurrentDictionary<Uri, EditorFile>();
         private readonly Server _server;
-        private readonly SingleThreadSynchronizationContext _syncContext;
+        private readonly SynchronizationContext _syncContext;
 
         public EditorFiles(Server server) {
             _server = server;
@@ -46,15 +47,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     internal sealed class EditorFile {
         private readonly Server _server;
-        private readonly SingleThreadSynchronizationContext _syncContext;
+        private readonly SynchronizationContext _syncContext;
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
         private readonly object _lock = new object();
 
         private IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
-        private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedDiagnostics;
+        private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedParseDiagnostics;
+        private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedAnalysisDiagnostics;
         private bool _ignoreDiagnosticsVersion;
 
-        public EditorFile(Server server, SingleThreadSynchronizationContext syncContext) {
+        public EditorFile(Server server, SynchronizationContext syncContext) {
             _server = server;
             _syncContext = syncContext;
         }
@@ -65,8 +67,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             IsOpen = true;
             _ignoreDiagnosticsVersion = true;
 
-            if (_lastReportedDiagnostics != null) {
-                PublishDiagnostics(_lastReportedDiagnostics);
+            if (_lastReportedAnalysisDiagnostics != null) {
+                PublishDiagnostics(_lastReportedAnalysisDiagnostics ?? _lastReportedParseDiagnostics ?? Array.Empty<PublishDiagnosticsEventArgs>());
             }
         }
 
@@ -145,23 +147,30 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             lock (_lock) {
                 var last = _parseBufferDiagnostics;
+                var lastPublishedAnalysisVersion = _lastReportedAnalysisDiagnostics?.FirstOrDefault()._version;
+
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
-
-                        diags = diags ?? new List<PublishDiagnosticsEventArgs>();
-                        diags.Add(new PublishDiagnosticsEventArgs {
-                            uri = kv.Key,
-                            diagnostics = kv.Value.Diagnostics,
-                            _version = kv.Value.Version
-                        });
+                        // Verify that this version is newer than the last published one so
+                        // parse diagnostics does not overwrite analysis of the same version.
+                        if (!lastPublishedAnalysisVersion.HasValue || lastPublishedAnalysisVersion.Value < kv.Value.Version) {
+                            diags = diags ?? new List<PublishDiagnosticsEventArgs>();
+                            diags.Add(new PublishDiagnosticsEventArgs {
+                                uri = kv.Key,
+                                diagnostics = kv.Value.Diagnostics,
+                                _version = kv.Value.Version
+                            });
+                        }
                     }
                 }
                 _ignoreDiagnosticsVersion = false;
-            }
-            if (diags != null) {
-                PublishDiagnostics(diags);
+                _lastReportedParseDiagnostics = diags ?? _lastReportedParseDiagnostics;
+
+                if (diags != null) {
+                    PublishDiagnostics(diags);
+                }
             }
         }
 
@@ -185,26 +194,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return;
             }
 
-            if (pythonProjectEntry is IDocument doc) {
-                lock (_lock) {
-                    if (_parseBufferDiagnostics.TryGetValue(0, out var lastVersion)) {
-                        diags = diags.Concat(lastVersion.Diagnostics).ToArray();
+            lock (_lock) {
+                if (pythonProjectEntry is IDocument doc) {
+                    if (_lastReportedParseDiagnostics != null) {
+                        diags = diags.Concat(_lastReportedParseDiagnostics.SelectMany(d => d.diagnostics)).ToArray();
                     }
                 }
-            }
 
-            var lastDiagnostics = _lastReportedDiagnostics?.FirstOrDefault();
-            PublishDiagnostics(new[] { new PublishDiagnosticsEventArgs {
-                uri = pythonProjectEntry.DocumentUri,
-                diagnostics = diags,
-                _version = version >= 0
-                    ? version
-                    : lastDiagnostics != null ? lastDiagnostics._version : 0
-            }});
+                var lastPublishedVersion = _lastReportedAnalysisDiagnostics?.FirstOrDefault()?._version;
+                version = version >= 0 ? version : (lastPublishedVersion.HasValue ? lastPublishedVersion.Value : 0);
+
+                _lastReportedAnalysisDiagnostics = new[] { new PublishDiagnosticsEventArgs {
+                    uri = pythonProjectEntry.DocumentUri,
+                    diagnostics = diags,
+                    _version = version
+                }};
+
+                PublishDiagnostics(_lastReportedAnalysisDiagnostics);
+            }
         }
 
         private void PublishDiagnostics(IEnumerable<PublishDiagnosticsEventArgs> args) {
-            _lastReportedDiagnostics = args;
             _syncContext.Post(_ => {
                 foreach (var a in args) {
                     if (!ShouldHideDiagnostics) {

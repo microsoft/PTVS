@@ -17,9 +17,6 @@
 // #define WAIT_FOR_DEBUGGER
 
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using Microsoft.PythonTools.VsCode.Services;
 using Newtonsoft.Json;
