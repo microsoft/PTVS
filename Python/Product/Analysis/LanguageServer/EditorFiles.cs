@@ -175,26 +175,28 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void UpdateAnalysisDiagnostics(IProjectEntry projectEntry, int version) {
-            var diags = _server.Analyzer.GetDiagnostics(projectEntry);
-            for (var i = 0; i < diags.Count; i++) {
-                diags[i].severity = _server.Settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
-            }
-
-            var severity = _server.Settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
-            var pythonProjectEntry = projectEntry as IPythonProjectEntry;
-            var parse = pythonProjectEntry?.GetCurrentParse();
-
-            if (parse != null && severity != DiagnosticSeverity.Unspecified) {
-                var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
-                parse.Tree.Walk(walker);
-                diags = diags.Concat(walker.Diagnostics).ToArray();
-            }
-
-            if (!diags.Any() && version >= 0) {
-                return;
-            }
-
             lock (_lock) {
+                var diags = _server.Analyzer.GetDiagnostics(projectEntry);
+                var settings = _server.Settings;
+
+                for (var i = 0; i < diags.Count; i++) {
+                    diags[i].severity = settings.analysis.GetEffectiveSeverity(diags[i].code, diags[i].severity);
+                }
+
+                var severity = settings.analysis.GetEffectiveSeverity(ErrorMessages.UnresolvedImportCode, DiagnosticSeverity.Warning);
+                var pythonProjectEntry = projectEntry as IPythonProjectEntry;
+                var parse = pythonProjectEntry?.GetCurrentParse();
+
+                if (parse != null && severity != DiagnosticSeverity.Unspecified) {
+                    var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
+                    parse.Tree.Walk(walker);
+                    diags = diags.Concat(walker.Diagnostics).ToArray();
+                }
+
+                if (!diags.Any() && version >= 0) {
+                    return;
+                }
+
                 if (pythonProjectEntry is IDocument doc) {
                     if (_lastReportedParseDiagnostics != null) {
                         diags = diags.Concat(_lastReportedParseDiagnostics.SelectMany(d => d.diagnostics)).ToArray();
