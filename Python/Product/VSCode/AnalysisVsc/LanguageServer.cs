@@ -124,10 +124,11 @@ namespace Microsoft.PythonTools.VsCode {
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
 
-            settings.analysis.errors = GetSetting(analysis, "errors", Array.Empty<string>());
-            settings.analysis.warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
-            settings.analysis.information = GetSetting(analysis, "information", Array.Empty<string>());
-            settings.analysis.disabled = GetSetting(analysis, "disabled", Array.Empty<string>());
+            var errors = GetSetting(analysis, "errors", Array.Empty<string>());
+            var warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
+            var information = GetSetting(analysis, "information", Array.Empty<string>());
+            var disabled = GetSetting(analysis, "disabled", Array.Empty<string>());
+            settings.analysis.SetErrorSeverityOptions(errors, warnings, information, disabled);
 
             await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
 

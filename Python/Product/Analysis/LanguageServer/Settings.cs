@@ -20,24 +20,19 @@ using System.Collections.Generic;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class LanguageServerSettings {
         public class PythonAnalysisOptions {
+            private Dictionary<string, DiagnosticSeverity> _map = new Dictionary<string, DiagnosticSeverity>();
+
             public bool openFilesOnly;
-            public string[] errors = Array.Empty<string>();
-            public string[] warnings = Array.Empty<string>();
-            public string[] information = Array.Empty<string>();
-            public string[] disabled = Array.Empty<string>();
+            public string[] errors { get; } = Array.Empty<string>();
+            public string[] warnings { get; } = Array.Empty<string>();
+            public string[] information { get; } = Array.Empty<string>();
+            public string[] disabled { get; } = Array.Empty<string>();
 
-            private Dictionary<string, DiagnosticSeverity> _map;
+            public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity)
+                => _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
 
-            public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity) {
-                Init();
-                return _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
-            }
-
-            private void Init() {
-                if (_map != null) {
-                    return;
-                }
-                _map = new Dictionary<string, DiagnosticSeverity>();
+            public void SetErrorSeverityOptions(string[] errors, string[] warnings, string[] information, string[] disabled) {
+                _map.Clear();
                 // disabled > error > warning > information
                 foreach (var x in information) {
                     _map[x] = DiagnosticSeverity.Information;
