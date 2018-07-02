@@ -73,13 +73,6 @@ namespace Microsoft.PythonTools.Infrastructure {
                 // Unknown error prevented writing to the log
             }
 
-            try {
-                ActivityLog.LogError(Strings.ProductTitle, message);
-            } catch (InvalidOperationException) {
-                // Activity Log is unavailable.
-                logFile = null;
-            }
-
             bool alreadySeen = true;
             var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
             lock (_displayedMessages) {
