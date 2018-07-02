@@ -47,11 +47,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     break;
                 }
                 while (_queue.TryDequeue(out var t)) {
-                    try {
-                        t.Item1(t.Item2);
-                    } catch (Exception ex) {
-                        _logger?.TraceMessage($"Exception processing request: {ex.Message}");
-                    }
+                    t.Item1(t.Item2);
                 }
                 _workAvailable.Reset();
             }

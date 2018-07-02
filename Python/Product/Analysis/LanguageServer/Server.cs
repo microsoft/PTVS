@@ -68,19 +68,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal readonly ParseQueue _parseQueue;
         private readonly Dictionary<IDocument, VolatileCounter> _pendingParse;
         private readonly VolatileCounter _pendingAnalysisEnqueue;
-
-        // Uri does not consider #fragment for equality
-        private readonly EditorFiles _editorFiles;
+        private readonly ConcurrentDictionary<string, ILanguageServerExtension> _extensions;
 
         internal ClientCapabilities _clientCaps;
 
+        // Uri does not consider #fragment for equality
+        private readonly EditorFiles _editorFiles;
         private bool _traceLogging;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
-
-        private readonly ConcurrentDictionary<string, ILanguageServerExtension> _extensions;
-
         // If null, all files must be added manually
         private string _rootDir;
+        private CancellationTokenSource _cts = new CancellationTokenSource();
 
         public static InformationDisplayOptions DisplayOptions { get; private set; } = new InformationDisplayOptions {
             preferredFormat = MarkupKind.PlainText,
@@ -114,7 +112,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var ext in _extensions.Values) {
                 (ext as IDisposable)?.Dispose();
             }
+            Analyzer?.Dispose();
             _queue.Dispose();
+            _cts.Dispose();
         }
 
         public void TraceMessage(IFormattable message) {
@@ -126,6 +126,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             await DoInitializeAsync(@params);
+            _cts.Token.ThrowIfCancellationRequested();
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -151,9 +152,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
         }
         public override Task Shutdown() {
-            Analyzer?.Dispose();
-            Analyzer = null;
             ProjectFiles.Clear();
+            _cts.Cancel();
             return Task.CompletedTask;
         }
 
@@ -178,6 +178,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 entry = await AddFileAsync(@params.textDocument.uri, null, cookie);
             }
 
+            _cts.Token.ThrowIfCancellationRequested();
+
             if ((doc = entry as IDocument) != null) {
                 EnqueueItem(doc);
             }
@@ -191,6 +193,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
+                _cts.Token.ThrowIfCancellationRequested();
                 switch (c.type) {
                     case FileChangeType.Created:
                         entry = await LoadFileAsync(c.uri);
@@ -254,6 +257,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 // re-analyze all of the modules when we get a new set of modules loaded...
                 foreach (var entry in Analyzer.ModulesByFilename) {
+                    _cts.Token.ThrowIfCancellationRequested();
                     _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
                 }
             }
@@ -335,6 +339,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params) {
             Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            _cts.Token.ThrowIfCancellationRequested();
+
             _clientCaps = @params.capabilities;
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             Analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
@@ -642,10 +648,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return false;
             }
 
-            if (!newSettings.analysis.errors.Intersect(oldSettings.analysis.errors).Any() ||
-                !newSettings.analysis.warnings.Intersect(oldSettings.analysis.warnings).Any() ||
-                !newSettings.analysis.information.Intersect(oldSettings.analysis.information).Any() ||
-                !newSettings.analysis.disabled.Intersect(oldSettings.analysis.disabled).Any()) {
+            if (!newSettings.analysis.errors.SetEquals(oldSettings.analysis.errors) ||
+                !newSettings.analysis.warnings.SetEquals(oldSettings.analysis.warnings) ||
+                !newSettings.analysis.information.SetEquals(oldSettings.analysis.information) ||
+                !newSettings.analysis.disabled.SetEquals(oldSettings.analysis.disabled)) {
                 _editorFiles.UpdateDiagnostics();
             }
             return false;
