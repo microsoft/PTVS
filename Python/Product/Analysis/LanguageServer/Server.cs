@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private ReloadModulesQueueItem _reloadModulesQueueItem;
         // If null, all files must be added manually
         private string _rootDir;
-        private CancellationTokenSource _cts = new CancellationTokenSource();
+        private bool _disposed;
 
         public static InformationDisplayOptions DisplayOptions { get; private set; } = new InformationDisplayOptions {
             preferredFormat = MarkupKind.PlainText,
@@ -112,9 +112,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             foreach (var ext in _extensions.Values) {
                 (ext as IDisposable)?.Dispose();
             }
+            ProjectFiles.Dispose();
             Analyzer?.Dispose();
             _queue.Dispose();
-            _cts.Dispose();
+            _disposed = true;
         }
 
         public void TraceMessage(IFormattable message) {
@@ -125,8 +126,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
+            ThrowIfDisposed();
             await DoInitializeAsync(@params);
-            _cts.Token.ThrowIfCancellationRequested();
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -152,12 +153,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             };
         }
         public override Task Shutdown() {
+            ThrowIfDisposed();
             ProjectFiles.Clear();
-            _cts.Cancel();
             return Task.CompletedTask;
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
+            ThrowIfDisposed();
             TraceMessage($"Opening document {@params.textDocument.uri}");
 
             _editorFiles.Open(@params.textDocument.uri);
@@ -178,14 +180,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 entry = await AddFileAsync(@params.textDocument.uri, null, cookie);
             }
 
-            _cts.Token.ThrowIfCancellationRequested();
-
             if ((doc = entry as IDocument) != null) {
                 EnqueueItem(doc);
             }
         }
 
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
+            ThrowIfDisposed();
             var openedFile = _editorFiles.GetDocument(@params.textDocument.uri);
             openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
         }
@@ -193,7 +194,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
             IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
-                _cts.Token.ThrowIfCancellationRequested();
+                ThrowIfDisposed();
                 switch (c.type) {
                     case FileChangeType.Created:
                         entry = await LoadFileAsync(c.uri);
@@ -219,6 +220,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+            ThrowIfDisposed();
             _editorFiles.Close(@params.textDocument.uri);
 
             var doc = ProjectFiles.GetEntry(@params.textDocument.uri) as IDocument;
@@ -234,6 +236,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
         public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+            ThrowIfDisposed();
             if (Analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
                 return;
@@ -257,13 +260,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 // re-analyze all of the modules when we get a new set of modules loaded...
                 foreach (var entry in Analyzer.ModulesByFilename) {
-                    _cts.Token.ThrowIfCancellationRequested();
                     _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
                 }
             }
         }
 
         public override Task<object> ExecuteCommand(ExecuteCommandParams @params) {
+            ThrowIfDisposed();
             Command(new CommandEventArgs {
                 command = @params.command,
                 arguments = @params.arguments
@@ -338,9 +341,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private async Task DoInitializeAsync(InitializeParams @params) {
+            ThrowIfDisposed();
             Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
-            _cts.Token.ThrowIfCancellationRequested();
 
+            ThrowIfDisposed();
             _clientCaps = @params.capabilities;
             _traceLogging = _clientCaps?.python?.traceLogging ?? false;
             Analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
@@ -460,7 +464,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath, IAnalysisCookie cookie = null) {
             var item = ProjectFiles.GetEntry(documentUri, throwIfMissing: false);
-
             if (item != null) {
                 return item;
             }
@@ -535,6 +538,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+            ThrowIfDisposed();
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
                 Task<IAnalysisCookie> cookieTask;
@@ -570,6 +574,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnDocumentChangeProcessingComplete(IDocument doc, VersionCookie vc, bool enqueueForAnalysis, AnalysisPriority priority, IDisposable disposeWhenEnqueued) {
+            ThrowIfDisposed();
             try {
                 if (vc != null) {
                     foreach (var kv in vc.GetAllParts(doc.DocumentUri)) {
@@ -601,7 +606,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void OnPythonEntryNewAnalysis(IPythonProjectEntry pythonProjectEntry) {
+            ThrowIfDisposed();
             TraceMessage($"Received new analysis for {pythonProjectEntry.DocumentUri}");
+
             var version = 0;
             var parse = pythonProjectEntry.GetCurrentParse();
             if (_clientCaps?.python?.analysisUpdates ?? false) {
@@ -655,6 +662,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _editorFiles.UpdateDiagnostics();
             }
             return false;
+        }
+
+        private void ThrowIfDisposed() {
+            if(_disposed) {
+                throw new ObjectDisposedException(nameof(Server));
+            }
         }
         #endregion
     }
