@@ -5644,6 +5644,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A reference to &apos;mscorlib&apos; was added to this project..
+        /// </summary>
+        public static string UpgradedMscorlibReference {
+            get {
+                return ResourceManager.GetString("UpgradedMscorlibReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This project has had old build references removed and may no longer work with prior PTVS versions..
         /// </summary>
         public static string UpgradedRemoveCommonProps {

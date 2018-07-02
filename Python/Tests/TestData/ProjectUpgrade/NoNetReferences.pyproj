@@ -29,26 +29,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Name>mscorlib</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="PresentationCore, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Name>PresentationCore</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Name>PresentationFramework</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Name>WindowsBase</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xaml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-      <Name>System.Xaml</Name>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="IronPython|2.7-32" />

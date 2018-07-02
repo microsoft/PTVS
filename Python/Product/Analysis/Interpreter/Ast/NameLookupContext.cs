@@ -445,7 +445,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return type;
             }
 
-            Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
+#if DEBUG
+            var implements = string.Join(", ", new[] { value.GetType().FullName }.Concat(value.GetType().GetInterfaces().Select(i => i.Name)));
+            Debug.Fail("Unhandled type() value: " + implements);
+#endif
             return null;
         }
 
