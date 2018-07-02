@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public void Open(Uri documentUri) {
             IsOpen = true;
+            // Force update of the diagnostics if reporting of issues in closed files was turned off.
             _ignoreDiagnosticsVersion = true;
 
             if (_lastReportedAnalysisDiagnostics != null) {
@@ -148,22 +149,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             lock (_lock) {
                 var last = _parseBufferDiagnostics;
-                var lastPublishedAnalysisVersion = _lastReportedAnalysisDiagnostics?.FirstOrDefault()._version;
 
                 foreach (var kv in vc.GetAllParts(documentUri)) {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
-                        // Verify that this version is newer than the last published one so
-                        // parse diagnostics does not overwrite analysis of the same version.
-                        if (!lastPublishedAnalysisVersion.HasValue || lastPublishedAnalysisVersion.Value < kv.Value.Version) {
                             diags = diags ?? new List<PublishDiagnosticsEventArgs>();
                             diags.Add(new PublishDiagnosticsEventArgs {
                                 uri = kv.Key,
                                 diagnostics = kv.Value.Diagnostics,
                                 _version = kv.Value.Version
                             });
-                        }
                     }
                 }
                 _ignoreDiagnosticsVersion = false;

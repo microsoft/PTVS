@@ -19,15 +19,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -65,6 +63,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
         private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
         private readonly Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>> _diagnostics = new Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>>();
+
+        public const string PythonAnalysisSource = "Python (analysis)";
 
         /// <summary>
         /// Creates a new analyzer that is ready for use.
@@ -633,7 +633,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool EnableDiagnostics { get; set; }
 
-        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, string code = null, string source = null) {
+        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, string code = null) {
             if (!EnableDiagnostics) {
                 return;
             }
@@ -647,7 +647,7 @@ namespace Microsoft.PythonTools.Analysis {
                     range = node.GetSpan(unit.ProjectEntry.Tree),
                     severity = severity,
                     code = code,
-                    source = source ?? "Python"
+                    source = PythonAnalysisSource
                 };
             }
         }
