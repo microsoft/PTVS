@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public EditorFiles(Server server) {
             _server = server;
-            _syncContext = new SingleThreadSynchronizationContext(server);
+            _syncContext = new SingleThreadSynchronizationContext();
         }
 
         public EditorFile GetDocument(Uri uri) => _files.GetOrAdd(uri, _ => new EditorFile(_server, _syncContext));

@@ -17,7 +17,7 @@
 // #define WAIT_FOR_DEBUGGER
 
 using System;
-using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.VsCode.Services;
 using Newtonsoft.Json;
 using StreamJsonRpc;
@@ -33,16 +33,15 @@ namespace Microsoft.PythonTools.VsCode {
                 using (var cout = Console.OpenStandardOutput())
                 using (var server = new LanguageServer())
                 using (var rpc = new JsonRpc(cout, cin, server)) {
-                    var ui = new UIService(rpc);
-                    rpc.SynchronizationContext = new SingleThreadSynchronizationContext(ui);
+                    rpc.SynchronizationContext = new SingleThreadSynchronizationContext();
                     rpc.JsonSerializer.Converters.Add(new UriConverter());
 
-                    services.AddService(ui);
+                    services.AddService(new UIService(rpc));
                     services.AddService(new TelemetryService(rpc));
                     var token = server.Start(services, rpc);
                     rpc.StartListening();
 
-                    // Wait for the "shutdown" request.
+                    // Wait for the "exit" request, it will terminate the process.
                     token.WaitHandle.WaitOne();
                 }
             }

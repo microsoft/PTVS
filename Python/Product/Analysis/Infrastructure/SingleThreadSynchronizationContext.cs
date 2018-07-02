@@ -19,15 +19,13 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Analysis.LanguageServer {
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
     internal class SingleThreadSynchronizationContext : SynchronizationContext, IDisposable {
         private readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _queue = new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
         private readonly ManualResetEventSlim _workAvailable = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly ILogger _logger;
 
-        public SingleThreadSynchronizationContext(ILogger logger = null) {
-            _logger = logger;
+        public SingleThreadSynchronizationContext() {
             Task.Run(() => QueueWorker());
         }
 

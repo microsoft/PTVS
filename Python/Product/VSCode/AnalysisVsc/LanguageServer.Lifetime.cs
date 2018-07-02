@@ -30,6 +30,7 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.VsCode {
     public partial class LanguageServer {
         private InitializeParams _initParams;
+        private bool _shutdown;
 
         [JsonRpcMethod("initialize")]
         public Task<InitializeResult> Initialize(JToken token) {
@@ -45,12 +46,19 @@ namespace Microsoft.PythonTools.VsCode {
             => _server.Initialized(token.ToObject<InitializedParams>());
 
         [JsonRpcMethod("shutdown")]
-        public Task Shutdown() => _server.Shutdown();
+        public async Task Shutdown() {
+            // Shutdown, but do not exit.
+            // https://microsoft.github.io/language-server-protocol/specification#shutdown
+            await _server.Shutdown();
+            _shutdown = true;
+        }
 
         [JsonRpcMethod("exit")]
         public async Task Exit() {
             await _server.Exit();
             _sessionTokenSource.Cancel();
+            // Per https://microsoft.github.io/language-server-protocol/specification#exit
+            Environment.Exit(_shutdown ? 0 : 1);
         }
 
         private Task LoadDirectoryFiles() {
