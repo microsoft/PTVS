@@ -58,8 +58,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 yield break;
             }
 
-            foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
-                if (m.Values.Any(v => v.DeclaringModule == entry)) {
+            var all = analysis.GetAllAvailableMembers(SourceLocation.None, opts);
+            foreach (var m in all) {
+                if (m.Values.Any(v => v.DeclaringModule == entry || v.Locations.Any(l => l.DocumentUri == entry.DocumentUri))) {
                     if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
                         yield return m;
                     }
