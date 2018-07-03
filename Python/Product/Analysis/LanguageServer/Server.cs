@@ -358,6 +358,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             SetSearchPaths(@params.initializationOptions.searchPaths);
             SetTypeStubSearchPaths(@params.initializationOptions.typeStubSearchPaths);
+
+            _analyzer.Interpreter.ModuleNamesChanged += Interpreter_ModuleNamesChanged;
+        }
+
+        private void Interpreter_ModuleNamesChanged(object sender, EventArgs e) {
+            _analyzer.Modules.ReInit();
+            foreach (var entry in _analyzer.ModulesByFilename) {
+                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+            }
         }
 
         private T ActivateObject<T>(string assemblyName, string typeName, Dictionary<string, object> properties) {
