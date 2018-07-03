@@ -215,7 +215,7 @@ namespace AnalysisTests {
 
             var newVersion = -1;
             var code = (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out newVersion).ReadToEnd();
-            return Tuple.Create(code, -1);
+            return Tuple.Create(code, newVersion);
         }
 
         [TestMethod, Priority(0)]
