@@ -171,10 +171,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IDisposable Members
         public void Dispose() {
+            _disposed = true;
             Stop();
             _workEvent.Dispose();
             _cancel.Dispose();
-            _disposed = true;
         }
 
         #endregion

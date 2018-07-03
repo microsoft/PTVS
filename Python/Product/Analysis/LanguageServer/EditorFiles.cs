@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private readonly List<DidChangeTextDocumentParams> _pendingChanges = new List<DidChangeTextDocumentParams>();
         private readonly object _lock = new object();
 
-        private IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
+        private readonly IDictionary<int, BufferVersion> _parseBufferDiagnostics = new Dictionary<int, BufferVersion>();
         private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedParseDiagnostics;
         private IEnumerable<PublishDiagnosticsEventArgs> _lastReportedAnalysisDiagnostics;
         private bool _ignoreDiagnosticsVersion;
@@ -154,12 +154,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     var part = _server.ProjectFiles.GetPart(kv.Key);
                     if (!last.TryGetValue(part, out var lastVersion) || lastVersion.Version < kv.Value.Version || _ignoreDiagnosticsVersion) {
                         last[part] = kv.Value;
-                            diags = diags ?? new List<PublishDiagnosticsEventArgs>();
-                            diags.Add(new PublishDiagnosticsEventArgs {
-                                uri = kv.Key,
-                                diagnostics = kv.Value.Diagnostics,
-                                _version = kv.Value.Version
-                            });
+                        diags = diags ?? new List<PublishDiagnosticsEventArgs>();
+                        diags.Add(new PublishDiagnosticsEventArgs {
+                            uri = kv.Key,
+                            diagnostics = kv.Value.Diagnostics,
+                            _version = kv.Value.Version
+                        });
                     }
                 }
                 _ignoreDiagnosticsVersion = false;
@@ -184,6 +184,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 var pythonProjectEntry = projectEntry as IPythonProjectEntry;
                 var parse = pythonProjectEntry?.GetCurrentParse();
 
+                // TODO: move this to the normal analysis process
                 if (parse != null && severity != DiagnosticSeverity.Unspecified) {
                     var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
                     parse.Tree.Walk(walker);

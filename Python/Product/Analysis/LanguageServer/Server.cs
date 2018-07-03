@@ -72,7 +72,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         internal ClientCapabilities _clientCaps;
 
-        // Uri does not consider #fragment for equality
         private readonly EditorFiles _editorFiles;
         private bool _traceLogging;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
