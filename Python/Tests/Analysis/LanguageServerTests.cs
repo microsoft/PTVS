@@ -89,7 +89,6 @@ namespace AnalysisTests {
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = properties
                     },
-                    asyncStartup = false,
                     testEnvironment = true
                 },
                 capabilities = new ClientCapabilities {
@@ -351,16 +350,34 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public async Task CompletionInStatements() {
+        public async Task CompletionInWithStatement() {
             var s = await CreateServer();
-            var u = await AddModule(s, "for f in l: pass\nwith x as y: pass");
+            Uri u;
 
-            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 10));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 12));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 6));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 11));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 13));
+            u = await AddModule(s, "with x as y, z as w: pass");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 17));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 20));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 21));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x as ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -821,12 +838,31 @@ datetime.datetime.now().day
             if (this is LanguageServerTests_V2) {
                 await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             } else {
-                await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+                await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             }
             await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
 
             if (!(this is LanguageServerTests_V2)) {
                 await AssertHover(s, mod, new SourceLocation(2, 28), "datetime.datetime.now().day: int*", new[] { "int" }, new SourceSpan(2, 1, 2, 28));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FromImportHover() {
+            using (var s = await CreateServer()) {
+                var mod = await AddModule(s, @"from os import path as p\n");
+                await AssertHover(s, mod, new SourceLocation(1, 7), "built-in module os*", null, new SourceSpan(1, 6, 1, 8));
+                await AssertHover(s, mod, new SourceLocation(1, 17), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 16, 1, 20));
+                await AssertHover(s, mod, new SourceLocation(1, 25), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 24, 1, 25));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FromImportRelativeHover() {
+            using (var s = await CreateServer()) {
+                var mod1 = await AddModule(s, @"from . import mod2\n", "mod1");
+                var mod2 = await AddModule(s, @"def foo():\n  pass\n", "mod2");
+                await AssertHover(s, mod1, new SourceLocation(1, 16), "built-in module mod2", null, new SourceSpan(1, 15, 1, 19));
             }
         }
 
@@ -877,12 +913,12 @@ datetime.datetime.now().day
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Error;unexpected token '/';Python;0;6;7",
-                "Error;invalid parameter;Python;0;6;7",
-                "Error;unexpected token '<newline>';Python;0;8;4",
-                "Error;unexpected indent;Python;1;4;9",
-                "Error;unexpected token 'text';Python;1;10;14",
-                "Error;unexpected token '<dedent>';Python;1;14;0"
+                "Error;unexpected token '/';Python (parser);0;6;7",
+                "Error;invalid parameter;Python (parser);0;6;7",
+                "Error;unexpected token '<newline>';Python (parser);0;8;4",
+                "Error;unexpected indent;Python (parser);1;4;9",
+                "Error;unexpected token 'text';Python (parser);1;10;14",
+                "Error;unexpected token '<dedent>';Python (parser);1;14;0"
             );
         }
 
@@ -917,7 +953,7 @@ datetime.datetime.now().day
                 if (tc == DiagnosticSeverity.Unspecified) {
                     AssertUtil.ContainsExactly(messages);
                 } else {
-                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;2;0;1");
+                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python (parser);2;0;1");
                 }
 
                 await s.UnloadFileAsync(mod);
@@ -934,9 +970,9 @@ datetime.datetime.now().day
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Warning;unknown variable 'y';Python;0;0;1",
-                "Warning;unknown variable 'x';Python;1;0;1",
-                "Error;unexpected token 'x';Python;1;2;3"
+                "Warning;unknown variable 'y';Python (analysis);0;0;1",
+                "Warning;unknown variable 'x';Python (analysis);1;0;1",
+                "Error;unexpected token 'x';Python (parser);1;2;3"
             );
         }
 

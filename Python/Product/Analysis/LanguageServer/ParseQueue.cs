@@ -29,7 +29,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     class ParseQueue {
-        public const string PythonParserSource = "Python";
+        public const string PythonParserSource = "Python (parser)";
         private const string TaskCommentSource = "Task comment";
 
         private readonly ConcurrentDictionary<Uri, ParseTask> _parsing;

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override Task<Reference[]> FindReferences(ReferencesParams @params) {
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"References in {uri} at {@params.position}");
 
@@ -41,20 +41,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (@params.context?.includeDeclaration ?? false) {
                 var index = tree.LocationToIndex(@params.position);
-                var w = new ImportedModuleNameWalker(entry, index);
+                var w = new ImportedModuleNameWalker(entry, index, tree);
                 tree.Walk(w);
 
-                foreach (var n in w.ImportedModules) {
-                    if(_analyzer.Modules.TryImport(n, out var modRef)) {
-                        // Return a module reference
-                        extras.AddRange(modRef.AnalysisModule.Locations
-                            .Select(l => new Reference {
-                                uri = l.DocumentUri,
-                                range = l.Span,
-                                _version = version?.Version,
-                                _kind = ReferenceKind.Definition
-                            })
-                            .ToArray());
+                if (w.ImportedType != null) {
+                    @params._expr = w.ImportedType.Name;
+                } else {
+                    foreach (var n in w.ImportedModules) {
+                        if (Analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
+                            // Return a module reference
+                            extras.AddRange(modRef.AnalysisModule.Locations
+                                .Select(l => new Reference {
+                                    uri = l.DocumentUri,
+                                    range = l.Span,
+                                    _version = version?.Version,
+                                    _kind = ReferenceKind.Definition
+                                })
+                                .ToArray());
+                        }
                     }
                 }
             }
@@ -109,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private sealed class ReferenceComparer : IEqualityComparer<Reference> {
             public static readonly IEqualityComparer<Reference> Instance = new ReferenceComparer();
             private ReferenceComparer() { }
-            public bool Equals(Reference x, Reference y) 
+            public bool Equals(Reference x, Reference y)
                 => x.uri == y.uri && (SourceLocation)x.range.start == y.range.start;
 
             public int GetHashCode(Reference obj)

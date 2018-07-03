@@ -110,6 +110,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public SourceSpan? ApplicableSpan { get; set; }
 
         public bool? ShouldCommitByDefault { get; set; }
+        public bool? ShouldAllowSnippets { get; set; }
 
         public Node Node { get; private set; }
         public Node Statement => _statement;
@@ -519,12 +520,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private IEnumerable<CompletionItem> GetCompletionsInWithStatement() {
             if (Statement is WithStatement ws) {
-                foreach (var item in ws.Items.MaybeEnumerate()) {
-                    if (item.Variable != null) {
-                        if (Index < item.Variable.StartIndex) {
-                            return null;
-                        } else if (Index <= item.Variable.EndIndex) {
+                if (Index > ws.HeaderIndex && ws.HeaderIndex > ws.StartIndex) {
+                    return null;
+                }
+
+                foreach (var item in ws.Items.Reverse().MaybeEnumerate()) {
+                    if (item.AsIndex > item.StartIndex) {
+                        if (Index > item.AsIndex + 2) {
                             return Empty;
+                        } else if (Index >= item.AsIndex) {
+                            ApplicableSpan = new SourceSpan(Tree.IndexToLocation(item.AsIndex), Tree.IndexToLocation(item.AsIndex + 2));
+                            return Once(AsKeywordCompletion);
+                        }
+                    }
+                    if (item.ContextManager != null && !(item.ContextManager is ErrorExpression)) {
+                        if (Index > item.ContextManager.EndIndex && item.ContextManager.EndIndex > item.ContextManager.StartIndex) {
+                            return Once(AsKeywordCompletion);
+                        } else if (Index >= item.ContextManager.StartIndex) {
+                            return null;
                         }
                     }
                 }
@@ -633,6 +646,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             // Allow keywords in function body (we'd have a different statement if we were deeper)
             if (statement is FunctionDefinition fd && index >= fd.HeaderIndex) {
                 return true;
+            }
+            // Allow keywords within with blocks, but not in their definition
+            if (statement is WithStatement ws) {
+                return index >= ws.HeaderIndex || index <= ws.KeywordEndIndex;
             }
             return false;
         }
@@ -747,6 +764,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         );
                     }
                 }
+                ShouldAllowSnippets = true;
             }
 
             _log.TraceMessage($"Completing all names");

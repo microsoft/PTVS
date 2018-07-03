@@ -2342,7 +2342,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
 
-            var header = GetEnd();
+            var header = PeekToken(TokenKind.Colon) ? GetEnd() : -1;
             Statement body = ParseSuite();
 
             WithStatement ret = new WithStatement(items.ToArray(), body, isAsync);

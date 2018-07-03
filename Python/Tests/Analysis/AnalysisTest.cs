@@ -2869,11 +2869,11 @@ k = 2
 ";
             var entry = ProcessText(text);
             entry.AssertReferences("a", text.IndexOf("a["),
-                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(2, 8, VariableType.Definition),
                 new VariableLocation(3, 9, VariableType.Reference)
             );
             entry.AssertReferences("k", text.IndexOf("k["),
-                new VariableLocation(2, 11, VariableType.Definition),
+                new VariableLocation(2, 13, VariableType.Definition),
                 new VariableLocation(4, 9, VariableType.Reference)
             );
             entry.AssertReferences("a", text.IndexOf("#out"),
@@ -3630,7 +3630,7 @@ class C(object):
             entry.AssertIsInstance("x", text.IndexOf("abc.fob"), BuiltinTypeId.List, BuiltinTypeId.Str, BuiltinTypeId.Tuple);
 
             AssertUtil.ContainsExactly(
-                entry.GetMemberNames("x", text.IndexOf("abc.fob")),
+                entry.GetMemberNames("x", text.IndexOf("abc.fob"), GetMemberOptions.IntersectMultipleResults),
                 entry.StrMembers.Intersect(entry.ListMembers)
             );
         }
@@ -4138,7 +4138,7 @@ x = D().g(C(), 42)
             var entry = ProcessText(text);
             entry.AssertHasAttrExact("other", text.IndexOf("other.g"), "g", "__doc__", "__class__");
             entry.AssertIsInstance("x", BuiltinTypeId.List, BuiltinTypeId.Str);
-            entry.AssertHasAttrExact("x", entry.ListMembers.Intersect(entry.StrMembers).ToArray());
+            entry.AssertHasAttrExact("x", entry.ListMembers.Union(entry.StrMembers).ToArray());
         }
 
         [TestMethod, Priority(0)]
@@ -6229,7 +6229,7 @@ c = C2()
 ";
 
             var entry = ProcessText(text);
-            entry.AssertNotHasAttr("c", "fob", "oar");
+            AssertUtil.DoesntContain(entry.GetMemberNames("c", 0, GetMemberOptions.IntersectMultipleResults), new[] { "fob", "oar" });
         }
 
         [TestMethod, Priority(0)]
@@ -6896,10 +6896,10 @@ def f():
                 new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg.HIJ" },
             }) {
                 var entry = ProcessTextV3(item.Code);
-                var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index);
+                var walker = new ImportedModuleNameWalker(item.Base, string.Empty, item.Index, null);
                 entry.Modules[entry.DefaultModule].Tree.Walk(walker);
 
-                Assert.AreEqual(item.Expected, walker.ImportedModules.First());
+                Assert.AreEqual(item.Expected, walker.ImportedModules.FirstOrDefault()?.Name);
             }
         }
 

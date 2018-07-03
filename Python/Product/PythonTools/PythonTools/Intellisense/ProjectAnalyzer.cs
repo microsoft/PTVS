@@ -529,10 +529,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
-                // give the task a chance to exit
-                if (_processingTask?.Wait(1000) == false) {
-                    Debug.Fail("Message processing task did not exit");
-                }
+                // give the task a chance to exit cleanly
+                _processingTask?.Wait(1000);
 
                 try {
                     if (!_analysisProcess.WaitForExit(500)) {
@@ -704,16 +702,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 "ProjectAnalyzer"
             );
 
-            process.Exited += OnAnalysisProcessExited;
             if (process.HasExited) {
                 _stdErr.Append(process.StandardError.ReadToEnd());
-                OnAnalysisProcessExited(process, EventArgs.Empty);
+                OnAnalysisProcessExited();
             } else {
                 Task.Run(async () => {
                     try {
                         while (!process.HasExited) {
                             var line = await process.StandardError.ReadLineAsync();
                             if (line == null) {
+                                OnAnalysisProcessExited();
                                 break;
                             }
                             _stdErr.AppendLine(line);
@@ -786,7 +784,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return conn;
         }
 
-        private void OnAnalysisProcessExited(object sender, EventArgs e) {
+        private void OnAnalysisProcessExited() {
             _processExitedCancelSource.Cancel();
             if (!_disposing) {
                 _abnormalAnalysisExit?.Invoke(

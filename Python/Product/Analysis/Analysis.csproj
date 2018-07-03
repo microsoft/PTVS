@@ -73,6 +73,7 @@
     <Compile Include="Infrastructure\PathEqualityComparer.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\ProcessHelper.cs" />
+    <Compile Include="Infrastructure\SingleThreadSynchronizationContext.cs" />
     <Compile Include="Infrastructure\StringBuilderExtensions.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
@@ -104,15 +105,14 @@
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonIterables.cs" />
-    <Compile Include="Interpreter\Ast\AstPythonMultipleTypes.cs" />
-    <Compile Include="Interpreter\Ast\AstPythonMultipleModules.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
+    <Compile Include="Interpreter\Ast\AstTypingModule.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
-    <Compile Include="LanguageServer\CodeActionProvider.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\DocumentationBuilder.cs" />
+    <Compile Include="LanguageServer\EditorFiles.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Extensibility.cs" />
     <Compile Include="LanguageServer\ILanguageServerExtension.cs" />
@@ -130,7 +130,6 @@
     <Compile Include="LanguageServer\Server.SignatureHelp.cs" />
     <Compile Include="LanguageServer\Server.WorkspaceSymbols.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
-    <Compile Include="LanguageServer\OpenFiles.cs" />
     <Compile Include="LanguageServer\ParseQueue.cs" />
     <Compile Include="LanguageServer\ProjectFiles.cs" />
     <Compile Include="LanguageServer\RestTextConverter.cs" />
@@ -174,7 +173,6 @@
     <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
-    <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
     <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
@@ -469,6 +467,12 @@
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="typing-stub.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

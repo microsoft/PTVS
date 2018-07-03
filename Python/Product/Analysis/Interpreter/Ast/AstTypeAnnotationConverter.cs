@@ -34,10 +34,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         /// a multi-member object if possible.
         /// </summary>
         private static IPythonType AsIPythonType(IMember m) {
-            if (m is IPythonMultipleMembers mm) {
-                return new AstPythonMultipleTypes(mm.Members.OfType<IPythonType>()).Trim();
+            if (m is IPythonType t) {
+                return t;
             }
-            return m as IPythonType;
+
+            if (m is IPythonMultipleMembers mm) {
+                return AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members);
+            }
+
+            return null;
         }
 
         public override IPythonType Finalize(IPythonType type) {
@@ -71,8 +76,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override IPythonType LookupName(string name) {
             var m = _scope.LookupNameInScopes(name, NameLookupContext.LookupOptions.Global | NameLookupContext.LookupOptions.Builtins);
             if (m is IPythonMultipleMembers mm) {
-                m = mm.Members.OfType<IPythonType>().FirstOrDefault<IMember>() ??
-                    mm.Members.OfType<IPythonModule>().FirstOrDefault();
+                m = (IMember)AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members) ??
+                    AstPythonMultipleMembers.CreateAs<IPythonModule>(mm.Members);
             }
             if (m is IPythonModule mod) {
                 // Wrap the module in an IPythonType interface
@@ -101,7 +106,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (args == null || args.Count == 0 || baseType == null) {
                 return baseType;
             }
-            if (baseType.DeclaringModule?.Name != "typing" && !(baseType is NameType) && !(baseType is UnionType) && !(baseType is ModuleType)) {
+
+            if (!AstTypingModule.IsTypingType(baseType) && !(baseType is NameType)) {
                 return baseType;
             }
 
@@ -124,8 +130,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return Finalize(args.FirstOrDefault()) ?? _scope._unknownType;
                 case "Union":
                     return MakeUnion(args);
+                case "ByteString":
+                    return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
                 case "Type":
                     return _scope.Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+                case "Any":
+                    return baseType;
                 // TODO: Other types
                 default:
                     Trace.TraceWarning("Unhandled generic: typing.{0}", baseType.Name);

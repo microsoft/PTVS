@@ -27,6 +27,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public static string UsedBeforeAssignment(string name) => "unknown variable '{0}'".FormatUI(name);
 
         public static string UnresolvedImportCode { get; } = "unresolved-import";
-        public static string UnresolvedImport(string name) => "Unable to resolve '{0}'. IntelliSense may be missing for this module '{0}'".FormatUI(name);
+        public static string UnresolvedImport(string name) => "Unable to resolve '{0}'. IntelliSense may be missing for this module.".FormatUI(name);
     }
 }

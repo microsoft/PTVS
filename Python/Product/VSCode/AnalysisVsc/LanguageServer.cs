@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.VsCode {
         private IUIService _ui;
         private ITelemetryService _telemetry;
         private JsonRpc _rpc;
+        private bool _filesLoaded;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
@@ -109,18 +110,33 @@ namespace Microsoft.PythonTools.VsCode {
 
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
-        public Task DidChangeConfiguration(JToken token) {
-            var @params = token.ToObject<DidChangeConfigurationParams>();
-            if (!(@params.settings is JObject rootSection)) {
-                return Task.CompletedTask;
+        public async Task DidChangeConfiguration(JToken token) {
+            var settings = new LanguageServerSettings();
+
+            var rootSection = token["settings"];
+            var pythonSection = rootSection?["python"];
+            if(pythonSection == null) {
+                return;
             }
 
-            if (!rootSection.TryGetValue("python", out var pythonSection)) {
-                return Task.CompletedTask;
-            }
+            var autoComplete = pythonSection["autoComplete"];
+            settings.completion.showAdvancedMembers = GetSetting(autoComplete, "showAdvancedMembers", true);
 
-            var settings = pythonSection.ToObject<LanguageServerSettings>();
-            return _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
+            var analysis = pythonSection["analysis"];
+            settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+
+            var errors = GetSetting(analysis, "errors", Array.Empty<string>());
+            var warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
+            var information = GetSetting(analysis, "information", Array.Empty<string>());
+            var disabled = GetSetting(analysis, "disabled", Array.Empty<string>());
+            settings.analysis.SetErrorSeverityOptions(errors, warnings, information, disabled);
+
+            await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
+
+            if (!_filesLoaded) {
+                await LoadDirectoryFiles();
+                _filesLoaded = true;
+            }
         }
 
         [JsonRpcMethod("workspace/didChangeWatchedFiles")]
@@ -318,5 +334,15 @@ namespace Microsoft.PythonTools.VsCode {
         #endregion
 
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
+
+        private T GetSetting<T>(JToken section, string settingName, T defaultValue) {
+            var value = section?[settingName];
+            try {
+                return value != null ? value.ToObject<T>() : defaultValue;
+            } catch(JsonException ex) {
+                _server.LogMessage(MessageType.Warning, $"Exception retrieving setting '{settingName}': {ex.Message}");
+            }
+            return defaultValue;
+        }
     }
 }

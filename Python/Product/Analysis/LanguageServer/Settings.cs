@@ -15,24 +15,44 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    internal class LanguageServerSettings {
-        public AutoCompleteSettings autoComplete;
-        public DiagnosticsSettings diagnostics;
+    public sealed class LanguageServerSettings {
+        public class PythonAnalysisOptions {
+            private Dictionary<string, DiagnosticSeverity> _map = new Dictionary<string, DiagnosticSeverity>();
 
-        [Serializable]
-        internal class AutoCompleteSettings {
-            public bool showAdvancedMembers;
+            public bool openFilesOnly;
+            public string[] errors { get; } = Array.Empty<string>();
+            public string[] warnings { get; } = Array.Empty<string>();
+            public string[] information { get; } = Array.Empty<string>();
+            public string[] disabled { get; } = Array.Empty<string>();
+
+            public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity)
+                => _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
+
+            public void SetErrorSeverityOptions(string[] errors, string[] warnings, string[] information, string[] disabled) {
+                _map.Clear();
+                // disabled > error > warning > information
+                foreach (var x in information) {
+                    _map[x] = DiagnosticSeverity.Information;
+                }
+                foreach (var x in warnings) {
+                    _map[x] = DiagnosticSeverity.Warning;
+                }
+                foreach (var x in errors) {
+                    _map[x] = DiagnosticSeverity.Error;
+                }
+                foreach (var x in disabled) {
+                    _map[x] = DiagnosticSeverity.Unspecified;
+                }
+            }
         }
+        public readonly PythonAnalysisOptions analysis = new PythonAnalysisOptions();
 
-        [Serializable]
-        internal class DiagnosticsSettings {
-            public DiagnosticSeverity unresolvedImports;
+        public class PythonCompletionOptions {
+            public bool showAdvancedMembers = true;
         }
-    }
-
-    internal static class LanguageServerSettingsExtensions {
-        public static bool Show(this DiagnosticSeverity severity) => severity != DiagnosticSeverity.Unspecified;
+        public readonly PythonCompletionOptions completion = new PythonCompletionOptions();
     }
 }

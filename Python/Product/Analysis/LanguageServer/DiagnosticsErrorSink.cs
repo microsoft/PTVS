@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
             var d = new Diagnostic {
-                code = errorCode,
+                code = "E{0}".FormatInvariant(errorCode),
                 message = message,
                 source = _source,
                 severity = GetSeverity(severity),
