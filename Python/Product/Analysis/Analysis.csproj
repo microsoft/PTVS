@@ -73,6 +73,7 @@
     <Compile Include="Infrastructure\PathEqualityComparer.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\ProcessHelper.cs" />
+    <Compile Include="Infrastructure\SingleThreadSynchronizationContext.cs" />
     <Compile Include="Infrastructure\StringBuilderExtensions.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
@@ -135,7 +136,6 @@
     <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
     <Compile Include="LanguageServer\Settings.cs" />
-    <Compile Include="LanguageServer\SingleThreadSynchronizationContext.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
     <Compile Include="ModuleResolver.cs" />

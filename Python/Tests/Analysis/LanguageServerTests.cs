@@ -844,7 +844,7 @@ datetime.datetime.now().day
             if (this is LanguageServerTests_V2) {
                 await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             } else {
-                await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+                await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             }
             await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
 
@@ -858,8 +858,8 @@ datetime.datetime.now().day
             using (var s = await CreateServer()) {
                 var mod = await AddModule(s, @"from os import path as p\n");
                 await AssertHover(s, mod, new SourceLocation(1, 7), "built-in module os*", null, new SourceSpan(1, 6, 1, 8));
-                await AssertHover(s, mod, new SourceLocation(1, 17), "path: path", new[] { "path" }, new SourceSpan(1, 16, 1, 20));
-                await AssertHover(s, mod, new SourceLocation(1, 25), "p: path", new[] { "path" }, new SourceSpan(1, 24, 1, 25));
+                await AssertHover(s, mod, new SourceLocation(1, 17), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 16, 1, 20));
+                await AssertHover(s, mod, new SourceLocation(1, 25), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 24, 1, 25));
             }
         }
 
@@ -919,12 +919,12 @@ datetime.datetime.now().day
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Error;unexpected token '/';Python;0;6;7",
-                "Error;invalid parameter;Python;0;6;7",
-                "Error;unexpected token '<newline>';Python;0;8;4",
-                "Error;unexpected indent;Python;1;4;9",
-                "Error;unexpected token 'text';Python;1;10;14",
-                "Error;unexpected token '<dedent>';Python;1;14;0"
+                "Error;unexpected token '/';Python (parser);0;6;7",
+                "Error;invalid parameter;Python (parser);0;6;7",
+                "Error;unexpected token '<newline>';Python (parser);0;8;4",
+                "Error;unexpected indent;Python (parser);1;4;9",
+                "Error;unexpected token 'text';Python (parser);1;10;14",
+                "Error;unexpected token '<dedent>';Python (parser);1;14;0"
             );
         }
 
@@ -959,7 +959,7 @@ datetime.datetime.now().day
                 if (tc == DiagnosticSeverity.Unspecified) {
                     AssertUtil.ContainsExactly(messages);
                 } else {
-                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;2;0;1");
+                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python (parser);2;0;1");
                 }
 
                 await s.UnloadFileAsync(mod);
@@ -976,9 +976,9 @@ datetime.datetime.now().day
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Warning;unknown variable 'y';Python;0;0;1",
-                "Warning;unknown variable 'x';Python;1;0;1",
-                "Error;unexpected token 'x';Python;1;2;3"
+                "Warning;unknown variable 'y';Python (analysis);0;0;1",
+                "Warning;unknown variable 'x';Python (analysis);1;0;1",
+                "Error;unexpected token 'x';Python (parser);1;2;3"
             );
         }
 
