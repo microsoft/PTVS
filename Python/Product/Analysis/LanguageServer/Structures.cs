@@ -184,6 +184,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct VersionedTextDocumentIdentifier {
         public Uri uri;
         public int? version;
+        public int? _fromVersion;
     }
 
     [Serializable]
