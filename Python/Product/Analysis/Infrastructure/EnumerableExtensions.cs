@@ -49,10 +49,10 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             return source.Where(NotNull);
         }
 
-        public static bool SetEquals<T>(this IEnumerable<T> source, IEnumerable<T> other, IComparer<T> comparer = null) where T : class {
-            var set1 = new HashSet<T>(source);
-            var set2 = new HashSet<T>(other);
-            return set1.SetEquals(set2, comparer);
+        public static bool SetEquals<T>(this IEnumerable<T> source, IEnumerable<T> other, IEqualityComparer<T> comparer = null) where T : class {
+            var set1 = new HashSet<T>(source, comparer);
+            var set2 = new HashSet<T>(other, comparer);
+            return set1.SetEquals(set2);
         }
     }
 }
