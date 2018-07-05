@@ -281,6 +281,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// should be loaded into the Python analysis engine.
         /// </summary>
         public string[] includeFiles = Array.Empty<string>();
+
+        /// <summary>
+        /// Client expects analysis progress updates, including notifications
+        /// when analysis is complete for a particular document version.
+        /// </summary>
+        public bool analysisUpdates;
+
+        /// <summary>
+        /// Enables an even higher level of logging via the logMessage event.
+        /// This will likely have a performance impact.
+        /// </summary>
+        public bool traceLogging;
     }
 
     [Serializable]
@@ -484,18 +496,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// </summary>
     [Serializable]
     public class PythonClientCapabilities {
-        /// <summary>
-        /// Client expects analysis progress updates, including notifications
-        /// when analysis is complete for a particular document version.
-        /// </summary>
-        public bool? analysisUpdates;
-
-        /// <summary>
-        /// Enables an even higher level of logging via the logMessage event.
-        /// This will likely have a performance impact.
-        /// </summary>
-        public bool? traceLogging;
-
         /// <summary>
         /// Disables automatic analysis of all files under the root URI.
         /// </summary>

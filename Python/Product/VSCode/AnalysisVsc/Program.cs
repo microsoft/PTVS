@@ -14,7 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-// #define WAIT_FOR_DEBUGGER
+#define WAIT_FOR_DEBUGGER
 
 using System;
 using Microsoft.PythonTools.Analysis.Infrastructure;
@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.VsCode {
                     rpc.JsonSerializer.Converters.Add(new UriConverter());
 
                     services.AddService(new UIService(rpc));
+                    services.AddService(new ProgressService(rpc));
                     services.AddService(new TelemetryService(rpc));
                     var token = server.Start(services, rpc);
                     rpc.StartListening();

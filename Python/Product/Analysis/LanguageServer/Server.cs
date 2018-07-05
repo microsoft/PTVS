@@ -74,6 +74,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private readonly EditorFiles _editorFiles;
         private bool _traceLogging;
+        private bool _analysisUpdates;
         private ReloadModulesQueueItem _reloadModulesQueueItem;
         // If null, all files must be added manually
         private string _rootDir;
@@ -326,6 +327,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
         }
 
+        public event EventHandler<AnalysisQueuedEventArgs> OnAnalysisQueued;
+        private void AnalysisQueued(Uri uri) {
+            TraceMessage($"Analysis queued for {uri}");
+            OnAnalysisQueued?.Invoke(this, new AnalysisQueuedEventArgs { uri = uri });
+        }
+
         public void SetSearchPaths(IEnumerable<string> searchPaths) => Analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());
         public void SetTypeStubSearchPaths(IEnumerable<string> typeStubSearchPaths) => Analyzer.SetTypeStubPaths(typeStubSearchPaths.MaybeEnumerate());
 
@@ -345,9 +352,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
-            _traceLogging = _clientCaps?.python?.traceLogging ?? false;
-            Analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
+            _traceLogging = @params.initializationOptions.traceLogging;
+            _analysisUpdates = @params.initializationOptions.analysisUpdates;
 
+            Analyzer.EnableDiagnostics = _clientCaps?.python?.liveLinting ?? false;
             _reloadModulesQueueItem = new ReloadModulesQueueItem(Analyzer);
 
             if (@params.initializationOptions.displayOptions != null) {
@@ -552,6 +560,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     cookieTask = _parseQueue.Enqueue(doc, Analyzer.LanguageVersion);
                 }
 
+                AnalysisQueued(doc.DocumentUri);
                 // The call must be fire and forget, but should not be yielding.
                 // It is called from DidChangeTextDocument which must fully finish
                 // since otherwise Complete() may come before the change is enqueued
@@ -610,7 +619,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var version = 0;
             var parse = pythonProjectEntry.GetCurrentParse();
-            if (_clientCaps?.python?.analysisUpdates ?? false) {
+            if (_analysisUpdates) {
                 if (parse?.Cookie is VersionCookie vc && vc.Versions.Count > 0) {
                     foreach (var kv in vc.GetAllParts(pythonProjectEntry.DocumentUri)) {
                         AnalysisComplete(kv.Key, kv.Value.Version);
