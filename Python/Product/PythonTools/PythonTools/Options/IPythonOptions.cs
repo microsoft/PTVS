@@ -55,6 +55,11 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
+
+        bool UseLegacyDebugger {
+            get;
+            set;
+        }
     }
 
     [Guid("77179244-BBD7-4AA2-B27B-F2CCC679953A")]

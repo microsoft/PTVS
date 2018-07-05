@@ -117,6 +117,16 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        bool IPythonOptions.UseLegacyDebugger {
+            get {
+                return _pyService.DebuggerOptions.UseLegacyDebugger;
+            }
+            set {
+                _pyService.DebuggerOptions.UseLegacyDebugger = value;
+                _pyService.DebuggerOptions.Save();
+            }
+        }
+
         #endregion
 
         #region IPythonIntellisenseOptions Members

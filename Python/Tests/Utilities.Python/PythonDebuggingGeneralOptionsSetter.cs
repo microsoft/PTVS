@@ -28,6 +28,7 @@ namespace TestUtilities.Python {
         private readonly bool? _teeStandardOutput;
         private readonly bool? _waitOnAbnormalExit;
         private readonly bool? _waitOnNormalExit;
+        private readonly bool? _useLegacyDebugger;
 
         public PythonDebuggingGeneralOptionsSetter(
             DTE dte,
@@ -36,7 +37,8 @@ namespace TestUtilities.Python {
             Severity? indentationInconsistencySeverity = null,
             bool? teeStandardOutput = null,
             bool? waitOnAbnormalExit = null,
-            bool? waitOnNormalExit = null
+            bool? waitOnNormalExit = null,
+            bool? useLegacyDebugger = null
         ) {
             _dte = dte;
             var options = GetOptions();
@@ -71,6 +73,10 @@ namespace TestUtilities.Python {
                 options.WaitOnNormalExit = waitOnNormalExit.Value;
             }
 
+            if (useLegacyDebugger.HasValue) {
+                _useLegacyDebugger = options.UseLegacyDebugger;
+                options.UseLegacyDebugger = useLegacyDebugger.Value;
+            }
         }
 
 
@@ -99,6 +105,10 @@ namespace TestUtilities.Python {
 
             if (_waitOnNormalExit.HasValue) {
                 options.WaitOnNormalExit = _waitOnNormalExit.Value;
+            }
+
+            if (_useLegacyDebugger.HasValue) {
+                options.UseLegacyDebugger = _useLegacyDebugger.Value;
             }
         }
 

@@ -1534,7 +1534,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This debug REPL feature is not supported with the experimental debugger..
+        ///   Looks up a localized string similar to This debug REPL feature is only supported with the legacy debugger..
         /// </summary>
         public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
             get {
@@ -2058,7 +2058,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disable the experimental debugger.
+        ///   Looks up a localized string similar to Enable the legacy debugger.
         /// </summary>
         public static string DisableExperimentalDebugger {
             get {
@@ -3907,7 +3907,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disable the experimental debugger.
+        ///   Looks up a localized string similar to Enable the legacy debugger.
         /// </summary>
         public static string PtvsdDisableCaption {
             get {
@@ -3916,7 +3916,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page..
+        ///   Looks up a localized string similar to Future debugging sessions will use the legacy debugger. You can change this setting back in Tools &gt; Options &gt; Python &gt; Debugging page..
         /// </summary>
         public static string PtvsdDisableSubtext {
             get {
@@ -3925,7 +3925,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments..
+        ///   Looks up a localized string similar to To debug this Python environment use the legacy debugger instead. It is likely using an older version of Python, see the documentation for a list of supported Python versions and environment types..
         /// </summary>
         public static string PtvsdIncompatibleEnvMessage {
             get {
@@ -3934,7 +3934,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Debugger is incompatible with this environment.
+        ///   Looks up a localized string similar to Debugger does not support this Python environment.
         /// </summary>
         public static string PtvsdIncompatibleEnvTitle {
             get {
@@ -3952,7 +3952,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package..
+        ///   Looks up a localized string similar to View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package..
         /// </summary>
         public static string PtvsdLearnMoreSubtext {
             get {
