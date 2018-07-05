@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 range = span,
                 severity = _severity,
                 code = ErrorMessages.UnresolvedImportCode,
-                source = "Python"
+                source = PythonAnalyzer.PythonAnalysisSource
             };
         }
 
