@@ -1552,7 +1552,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
-                        version = version
+                        version = version,
+                        _fromVersion = Math.Max(version - 1, 0)
                     },
                     contentChanges = changes.ToArray()
                 });

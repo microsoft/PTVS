@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _server.TraceMessage($"Received changes for {uri}");
 
                 var docVersion = Math.Max(doc.GetDocumentVersion(part), 0);
-                var fromVersion = Math.Max(@params.textDocument.version - 1 ?? docVersion, 0);
+                var fromVersion = Math.Max(@params.textDocument._fromVersion ?? docVersion, 0);
 
                 if (fromVersion > docVersion && @params.contentChanges?.Any(c => c.range == null) != true) {
                     // Expected from version hasn't been seen yet, and there are no resets in this
