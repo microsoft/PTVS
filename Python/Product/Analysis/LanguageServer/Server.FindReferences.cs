@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override Task<Reference[]> FindReferences(ReferencesParams @params) {
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"References in {uri} at {@params.position}");
 
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     @params._expr = w.ImportedType.Name;
                 } else {
                     foreach (var n in w.ImportedModules) {
-                        if (_analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
+                        if (Analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
                             // Return a module reference
                             extras.AddRange(modRef.AnalysisModule.Locations
                                 .Select(l => new Reference {

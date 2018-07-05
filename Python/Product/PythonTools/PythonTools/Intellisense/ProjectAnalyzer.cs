@@ -702,16 +702,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 "ProjectAnalyzer"
             );
 
-            process.Exited += OnAnalysisProcessExited;
             if (process.HasExited) {
                 _stdErr.Append(process.StandardError.ReadToEnd());
-                OnAnalysisProcessExited(process, EventArgs.Empty);
+                OnAnalysisProcessExited();
             } else {
                 Task.Run(async () => {
                     try {
                         while (!process.HasExited) {
                             var line = await process.StandardError.ReadLineAsync();
                             if (line == null) {
+                                OnAnalysisProcessExited();
                                 break;
                             }
                             _stdErr.AppendLine(line);
@@ -784,7 +784,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return conn;
         }
 
-        private void OnAnalysisProcessExited(object sender, EventArgs e) {
+        private void OnAnalysisProcessExited() {
             _processExitedCancelSource.Cancel();
             if (!_disposing) {
                 _abnormalAnalysisExit?.Invoke(

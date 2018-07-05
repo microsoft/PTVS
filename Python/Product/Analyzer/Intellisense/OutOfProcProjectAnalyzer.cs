@@ -263,7 +263,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
                             analysisUpdates = true,
-                            completionsTimeout = 5000,
                             manualFileLoad = !request.analyzeAllFiles,
                             traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
@@ -1583,7 +1582,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Project.Limits = new AnalysisLimits(Options.analysisLimits);
             _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
             _server._parseQueue.TaskCommentMap = Options.commentTokens;
-            _server._analyzer.SetTypeStubPaths(Options.typeStubPaths);
+            _server.Analyzer.SetTypeStubPaths(Options.typeStubPaths);
 
             return new Response();
         }
@@ -1674,7 +1673,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// This is for public consumption only and should not be used within
         /// <see cref="OutOfProcProjectAnalyzer"/>.
         /// </remarks>
-        public PythonAnalyzer Project => _server._analyzer;
+        public PythonAnalyzer Project => _server.Analyzer;
 
         private void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
             _connection.SendEventAsync(
