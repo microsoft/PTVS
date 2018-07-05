@@ -544,5 +544,53 @@ namespace PythonToolsTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void MscorlibReferenceUpgrade() {
+            // IronPython projects typically require mscorlib reference.
+            // We'll add it if there are any other .NET references
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            foreach (var testCase in new[] {
+                new { Name = "NoNetReferences.pyproj", Expected = 0 },
+                new { Name = "HasMscorlib.pyproj", Expected = 0 },
+                new { Name = "NoMscorlib.pyproj", Expected = 1 },
+            }) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
+
+                var project = TestData.GetPath("TestData\\ProjectUpgrade\\" + testCase.Name);
+                using (FileUtils.Backup(project)) {
+
+                    var hr = upgrade.UpgradeProject(
+                        project,
+                        0u,  // no backups
+                        null,
+                        out newLocation,
+                        null,
+                        out actual,
+                        out factoryGuid
+                    );
+
+                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+                    Console.WriteLine(File.ReadAllText(project));
+
+                    if (testCase.Expected != 0) {
+                        AssertUtil.Contains(
+                            File.ReadAllText(project),
+                            "<Reference Include=\"mscorlib"
+                        );
+                    }
+                    Assert.AreEqual(Guid.Empty, factoryGuid);
+                }
+            }
+        }
     }
 }
