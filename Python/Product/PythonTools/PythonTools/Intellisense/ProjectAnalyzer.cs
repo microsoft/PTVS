@@ -258,10 +258,9 @@ namespace Microsoft.PythonTools.Intellisense {
             initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
 
             var lso = _services.Python.LanguageServerOptions;
-            if (!string.IsNullOrEmpty(lso.TypeShedPath)) {
-                _analysisOptions.typeStubPaths = new[] { lso.TypeShedPath };
-            }
             lso.Changed += LanguageServerOptions_Changed;
+
+            _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
 
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
@@ -324,7 +323,34 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void LanguageServerOptions_Changed(object sender, EventArgs e) {
-            AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
+            var lso = sender as Options.LanguageServerOptions;
+            if (lso == null) {
+                return;
+            }
+
+            _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
+
+            SendRequestAsync(new AP.SetAnalysisOptionsRequest {
+                options = _analysisOptions
+            }).HandleAllExceptions(_services.Site, GetType()).DoNotWait();
+        }
+
+        private static string[] GetTypeStubPaths(Options.LanguageServerOptions lso) {
+            if (lso.SuppressTypeShed) {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(lso.TypeShedPath)) {
+                var license = PythonToolsInstallPath.TryGetFile("Typeshed\\LICENSE", typeof(VsProjectAnalyzer).Assembly);
+                if (string.IsNullOrEmpty(license)) {
+                    return null;
+                }
+                return new[] { PathUtils.GetParent(license) };
+            } else if (Directory.Exists(lso.TypeShedPath)) {
+                return new[] { lso.TypeShedPath };
+            }
+
+            return null;
         }
 
         internal IServiceProvider Site => _services.Site;
