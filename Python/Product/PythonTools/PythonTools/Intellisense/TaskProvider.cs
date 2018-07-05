@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Conversion Functions
 
-        public bool IsValid => _squiggle && !string.IsNullOrEmpty(ErrorType);
+        public bool ShowSquiggle => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
             if (_rawSpan.Start >= _rawSpan.End || _spanTranslator == null) {
@@ -140,12 +140,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal TaskProviderItem FromDiagnostic(
             IServiceProvider site,
             Diagnostic diagnostic,
-            DiagnosticSeverity severity,
             VSTASKCATEGORY category,
             bool squiggle
         ) {
             var priority = VSTASKPRIORITY.TP_LOW;
-            switch (severity) {
+            switch (diagnostic.severity) {
                 case DiagnosticSeverity.Error:
                     priority = VSTASKPRIORITY.TP_HIGH;
                     break;
@@ -618,18 +617,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 lock (_errorSources) {
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (var kv in _errorSources) {
-                        List<TaskProviderItem> items;
                         buffers.UnionWith(kv.Value);
 
                         lock (_itemsLock) {
-                            if (!_items.TryGetValue(kv.Key, out items)) {
+                            if (!_items.TryGetValue(kv.Key, out var items)) {
                                 continue;
                             }
 
                             foreach (var item in items) {
-                                if (item.IsValid && item.TextBuffer != null) {
-                                    List<TaskProviderItem> itemList;
-                                    if (!bufferToErrorList.TryGetValue(item.TextBuffer, out itemList)) {
+                                if (item.ShowSquiggle && item.TextBuffer != null) {
+                                    if (!bufferToErrorList.TryGetValue(item.TextBuffer, out var itemList)) {
                                         bufferToErrorList[item.TextBuffer] = itemList = new List<TaskProviderItem>();
                                     }
 
@@ -994,8 +991,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int GetCategory(out uint pCategory) {
-            pCategory = 0;
-            return VSConstants.E_NOTIMPL;
+            switch (Priority) {
+                case VSTASKPRIORITY.TP_HIGH:
+                    pCategory = (uint)__VSERRORCATEGORY.EC_ERROR;
+                    break;
+                case VSTASKPRIORITY.TP_NORMAL:
+                    pCategory = (uint)__VSERRORCATEGORY.EC_WARNING;
+                    break;
+                case VSTASKPRIORITY.TP_LOW:
+                    pCategory = (uint)__VSERRORCATEGORY.EC_MESSAGE;
+                    break;
+                default:
+                    pCategory = 0;
+                    break;
+            }
+            return VSConstants.S_OK;
         }
     }
 
@@ -1071,10 +1081,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _tokens = newTokens;
 
-            var tokensChanged = TokensChanged;
-            if (tokensChanged != null) {
-                tokensChanged(this, EventArgs.Empty);
-            }
+            TokensChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

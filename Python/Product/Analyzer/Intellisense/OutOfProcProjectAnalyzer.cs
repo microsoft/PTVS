@@ -57,11 +57,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private bool _isDisposed;
 
-        // Moniker strings allow the task provider to distinguish between
-        // different sources of items for the same file.
-        private const string ParserTaskMoniker = "Parser";
-        internal const string UnresolvedImportMoniker = "UnresolvedImport";
-
         private readonly Connection _connection;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {

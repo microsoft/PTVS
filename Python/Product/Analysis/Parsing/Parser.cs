@@ -4965,7 +4965,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static TextReader ReadStreamWithEncoding(Stream stream, PythonLanguageVersion version) {
             var defaultEncoding = version.Is3x() ? new UTF8Encoding(false) : DefaultEncoding;
-            return GetStreamReaderWithEncoding(stream, defaultEncoding, null);
+            return GetStreamReaderWithEncoding(stream, defaultEncoding, ErrorSink.Null);
         }
 
         /// <summary>
