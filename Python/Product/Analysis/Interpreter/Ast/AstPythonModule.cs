@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ast.Walk(walker);
             walker.Complete();
 
-            ParseErrors = parseErrors.ToArray();
+            ParseErrors = parseErrors?.ToArray();
         }
 
         internal void AddChildModule(string name, IPythonModule module) {
