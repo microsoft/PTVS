@@ -323,14 +323,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public event EventHandler<AnalysisCompleteEventArgs> OnAnalysisComplete;
         private void AnalysisComplete(Uri uri, int version) {
-            TraceMessage($"Analysis complete for {uri} at version {version}");
-            OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
+            if (_analysisUpdates) {
+                TraceMessage($"Analysis complete for {uri} at version {version}");
+                OnAnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs { uri = uri, version = version });
+            }
         }
 
         public event EventHandler<AnalysisQueuedEventArgs> OnAnalysisQueued;
         private void AnalysisQueued(Uri uri) {
-            TraceMessage($"Analysis queued for {uri}");
-            OnAnalysisQueued?.Invoke(this, new AnalysisQueuedEventArgs { uri = uri });
+            if (_analysisUpdates) {
+                TraceMessage($"Analysis queued for {uri}");
+                OnAnalysisQueued?.Invoke(this, new AnalysisQueuedEventArgs { uri = uri });
+            }
         }
 
         public void SetSearchPaths(IEnumerable<string> searchPaths) => Analyzer.SetSearchPaths(searchPaths.MaybeEnumerate());

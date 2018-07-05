@@ -72,6 +72,7 @@ namespace Microsoft.PythonTools.VsCode {
                 .Add(() => _server.OnApplyWorkspaceEdit -= OnApplyWorkspaceEdit)
                 .Add(() => _server.OnRegisterCapability -= OnRegisterCapability)
                 .Add(() => _server.OnUnregisterCapability -= OnUnregisterCapability)
+                .Add(() => _server.OnAnalysisQueued -= OnAnalysisQueued)
                 .Add(() => _server.OnAnalysisComplete -= OnAnalysisComplete);
 
             return _sessionTokenSource.Token;
