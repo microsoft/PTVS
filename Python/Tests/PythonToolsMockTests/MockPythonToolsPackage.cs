@@ -83,11 +83,10 @@ namespace PythonToolsMockTests {
             if (SuppressTaskProvider) {
                 return null;
             }
-            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
             if (typeof(ErrorTaskProvider).IsEquivalentTo(type) || typeof(ErrorTaskProvider).GUID == type.GUID) {
-                return new ErrorTaskProvider(container, null, errorProvider);
+                return ErrorTaskProvider.CreateService(container, typeof(ErrorTaskProvider));
             } else if (typeof(CommentTaskProvider).IsEquivalentTo(type) || typeof(CommentTaskProvider).GUID == type.GUID) {
-                return new CommentTaskProvider(container, null, errorProvider);
+                return CommentTaskProvider.CreateService(container, typeof(CommentTaskProvider));
             } else {
                 return null;
             }

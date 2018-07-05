@@ -80,10 +80,10 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly HashSet<AnalysisEntry> _hasParseErrors = new HashSet<AnalysisEntry>();
         internal readonly object _hasParseErrorsLock = new object();
 
-        private const string ParserTaskMoniker = "Python (parser)";
-        private const string AnalyzerTaskMoniker = "Python (analysis)";
+        internal const string ParserTaskMoniker = "Python (parser)";
+        internal const string AnalyzerTaskMoniker = "Python (analysis)";
         internal const string InvalidEncodingMoniker = "InvalidEncoding";
-        private const string TaskCommentMoniker = "Task comment";
+        internal const string TaskCommentMoniker = "Task comment";
         internal bool _analysisComplete;
 
         private AP.AnalysisOptions _analysisOptions;
@@ -1125,6 +1125,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task<AnalysisEntry> AnalyzeFileAsync(
             Uri uri,
+            string path,
             bool isTemporaryFile = false,
             bool suppressErrorList = false
         ) {
@@ -1142,8 +1143,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return entry;
             }
 
-            string path = null;
-            if (uri.IsFile) {
+            if (string.IsNullOrEmpty(path) && uri.IsFile) {
                 path = uri.LocalPath;
             }
 
@@ -1536,6 +1536,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entry.Path == null) {
                 return;
             }
+            bi?.Trace("OnDiagnostics", diagnostics.diagnostics?.Length ?? 0);
 
             // Update the warn-on-launch state for this entry
             var hasErrors = diagnostics.diagnostics.MaybeEnumerate()

@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     class TaskProviderItem {
+        private readonly string _moniker;
         private readonly string _message;
         private readonly SourceSpan _rawSpan;
         private readonly VSTASKPRIORITY _priority;
@@ -50,6 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal TaskProviderItem(
             IServiceProvider serviceProvider,
+            string moniker,
             string message,
             SourceSpan rawSpan,
             VSTASKPRIORITY priority,
@@ -59,6 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
             int fromVersion
         ) {
             _serviceProvider = serviceProvider;
+            _moniker = moniker;
             _message = message;
             _rawSpan = rawSpan;
             _spanTranslator = spanTranslator;
@@ -106,7 +109,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgeInclusive
             );
 
-            tagger.CreateTagSpan(tagSpan, new ErrorTag(ErrorType, _message));
+            tagger.CreateTagSpan(tagSpan, new ErrorTagWithMoniker(ErrorType, _message, _moniker));
         }
 
         public ITextBuffer TextBuffer => _spanTranslator?.TextBuffer;
@@ -124,6 +127,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
+    }
+
+    sealed class ErrorTagWithMoniker : ErrorTag {
+        public ErrorTagWithMoniker(string errorType, object toolTipContent, string moniker) : base(errorType, toolTipContent) {
+            Moniker = moniker;
+        }
+
+        public string Moniker { get; }
     }
 
     sealed class TaskProviderItemFactory {
@@ -155,6 +166,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new TaskProviderItem(
                 site,
+                diagnostic.source,
                 diagnostic.message,
                 diagnostic.range,
                 priority,
@@ -311,7 +323,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public AbortMessage() : base() { }
 
             public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
-                throw new OperationCanceledException();
+                // Indicates that we should stop work immediately and not try to recover
+                throw new ObjectDisposedException(nameof(TaskProvider));
             }
         }
     }
@@ -319,6 +332,7 @@ namespace Microsoft.PythonTools.Intellisense {
     class TaskProvider : IVsTaskProvider, IDisposable {
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
+        private readonly HashSet<string> _monikers;
         private readonly object _itemsLock = new object();
         private uint _cookie;
         private readonly IVsTaskList _taskList;
@@ -329,22 +343,18 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Queue<WorkerMessage> _workerQueue = new Queue<WorkerMessage>();
         private readonly ManualResetEventSlim _workerQueueChanged = new ManualResetEventSlim();
 
-        public TaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider) {
+        public TaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider, IEnumerable<string> monikers) {
             _serviceProvider = serviceProvider;
             _items = new Dictionary<EntryKey, List<TaskProviderItem>>();
             _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
+            _monikers = new HashSet<string>(monikers.MaybeEnumerate(), StringComparer.OrdinalIgnoreCase);
 
             _taskList = taskList;
             _errorProvider = errorProvider;
         }
 
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
 #if DEBUG
-        private static bool Quiet = true;
+        private static bool Quiet = false;
 #endif
 
         [Conditional("DEBUG")]
@@ -356,35 +366,20 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        private void Dispose(bool disposing) {
-            if (disposing) {
-                var worker = _worker;
-                if (worker != null) {
-                    Log("Sending abort... {0}", DateTime.Now);
-                    lock (_workerQueue) {
-                        _workerQueue.Clear();
-                        _workerQueue.Enqueue(WorkerMessage.Abort());
-                        _workerQueueChanged.Set();
-                    }
-                    Log("Waiting for abort... {0}", DateTime.Now);
-                    bool stopped = worker.Join(10000);
-                    Log("Done Waiting for abort... {0} {1}", DateTime.Now, stopped);
-                    Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
-                }
-
-                lock (_itemsLock) {
-                    _items.Clear();
-                }
-                if (_taskList != null) {
-                    _taskList.UnregisterTaskProvider(_cookie);
-                }
-
+        public virtual void Dispose() {
+            try {
+                // Disposing the main wait object will terminate the thread
+                // as best as we can
                 _workerQueueChanged.Dispose();
+            } catch (ObjectDisposedException) {
             }
-        }
 
-        ~TaskProvider() {
-            Dispose(false);
+            lock (_itemsLock) {
+                _items.Clear();
+            }
+            if (_taskList != null) {
+                _taskList.UnregisterTaskProvider(_cookie);
+            }
         }
 
         public uint Cookie {
@@ -497,7 +492,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     WorkerWorker();
                 } catch (OperationCanceledException) {
-                    Log("Operation cancellled... {0}", DateTime.Now);
+                    Log("Operation canceled... {0}", DateTime.Now);
 
                 } catch (ObjectDisposedException ex) {
                     Trace.TraceError(ex.ToString());
@@ -646,7 +641,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 using (tagger.Update()) {
                     if (buffers.Remove(kv.Key)) {
-                        tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
+                        tagger.RemoveTagSpans(span => 
+                            _monikers.Contains((span.Tag as ErrorTagWithMoniker)?.Moniker) &&
+                            span.Span.TextBuffer == kv.Key
+                        );
                     }
 
                     foreach (var taskProviderItem in kv.Value) {
@@ -659,7 +657,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Clear tags for any remaining buffers.
                 foreach (var buffer in buffers) {
                     var tagger = _errorProvider.GetErrorTagger(buffer);
-                    tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
+                    tagger.RemoveTagSpans(span =>
+                        _monikers.Contains((span.Tag as ErrorTagWithMoniker)?.Moniker) &&
+                        span.Span.TextBuffer == buffer
+                    );
                 }
             }
 
@@ -678,12 +679,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void SendMessage(WorkerMessage message) {
-            lock (_workerQueue) {
-                _workerQueue.Enqueue(message);
-                _workerQueueChanged.Set();
-            }
+            try {
+                lock (_workerQueue) {
+                    _workerQueue.Enqueue(message);
+                    _workerQueueChanged.Set();
+                }
 
-            StartWorker();
+                StartWorker();
+            } catch (ObjectDisposedException) {
+            }
         }
 
         #endregion
@@ -1010,8 +1014,8 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class ErrorTaskProvider : TaskProvider {
-        internal ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
-            : base(serviceProvider, taskList, errorProvider) {
+        internal ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider, IEnumerable<string> monikers)
+            : base(serviceProvider, taskList, errorProvider, monikers) {
         }
 
         public static object CreateService(IServiceProvider container, Type serviceType) {
@@ -1019,7 +1023,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 var errorList = container.GetService(typeof(SVsErrorList)) as IVsTaskList;
                 var model = container.GetComponentModel();
                 var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                return new ErrorTaskProvider(container, errorList, errorProvider);
+                return new ErrorTaskProvider(container, errorList, errorProvider, new[] {
+                    VsProjectAnalyzer.ParserTaskMoniker,
+                    VsProjectAnalyzer.AnalyzerTaskMoniker,
+                    VsProjectAnalyzer.InvalidEncodingMoniker,
+                });
             }
             return null;
         }
@@ -1028,8 +1036,8 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class CommentTaskProvider : TaskProvider, IVsTaskListEvents {
         private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
 
-        internal CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
-            : base(serviceProvider, taskList, errorProvider) {
+        internal CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider, IEnumerable<string> monikers)
+            : base(serviceProvider, taskList, errorProvider, monikers) {
             RefreshTokens();
         }
 
@@ -1038,7 +1046,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var errorList = container.GetService(typeof(SVsTaskList)) as IVsTaskList;
                 var model = container.GetComponentModel();
                 var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                return new CommentTaskProvider(container, errorList, errorProvider);
+                return new CommentTaskProvider(container, errorList, errorProvider, new[] { VsProjectAnalyzer.TaskCommentMoniker });
             }
             return null;
         }

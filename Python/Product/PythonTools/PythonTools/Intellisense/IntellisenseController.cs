@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bool suppressErrorList = textView.Properties.ContainsProperty(SuppressErrorLists);
-            var entry = await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, isTemporaryFile, suppressErrorList);
+            var entry = await vsAnalyzer.AnalyzeFileAsync(bufferInfo.DocumentUri, bufferInfo.Filename, isTemporaryFile, suppressErrorList);
             if (entry != null && followDefaultEnvironment) {
                 entry.Properties[FollowDefaultEnvironment] = true;
             }
@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         oldAnalyzer.Dispose();
                     }
 
-                    var newEntry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, true, bi.Buffer.Properties.ContainsProperty(SuppressErrorLists));
+                    var newEntry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, bi.Filename, true, bi.Buffer.Properties.ContainsProperty(SuppressErrorLists));
                     newEntry.Properties[FollowDefaultEnvironment] = true;
                     bi.TrySetAnalysisEntry(newEntry, null);
                 }
