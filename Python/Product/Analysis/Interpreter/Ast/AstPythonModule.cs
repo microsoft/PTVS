@@ -63,8 +63,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string moduleFullName
         ) {
             PythonAst ast;
+            var sink = KeepParseErrors ? new CollectingErrorSink() : ErrorSink.Null;
             var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
-                StubFile = fileName.EndsWithOrdinal(".pyi", ignoreCase: true)
+                StubFile = fileName.EndsWithOrdinal(".pyi", ignoreCase: true),
+                ErrorSink = sink
             });
             ast = parser.ParseFile();
 
@@ -72,7 +74,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 moduleFullName ?? ModulePath.FromFullPath(fileName, isPackage: IsPackageCheck).FullName,
                 interpreter,
                 ast,
-                fileName
+                fileName,
+                (sink as CollectingErrorSink)?.Errors.Select(e => "{0} ({1}): {2}".FormatUI(fileName ?? "(builtins)", e.Span, e.Message))
             );
         }
 
@@ -91,6 +94,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private static bool IsPackageCheck(string path) {
             return ModulePath.IsImportable(PathUtils.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
         }
+
+        internal static bool KeepParseErrors = false;
     }
 
     sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
@@ -110,7 +115,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _members = new Dictionary<string, IMember>();
         }
 
-        internal AstPythonModule(string moduleName, IPythonInterpreter interpreter, PythonAst ast, string filePath) {
+        internal AstPythonModule(string moduleName, IPythonInterpreter interpreter, PythonAst ast, string filePath, IEnumerable<string> parseErrors) {
             Name = moduleName;
             _documentation = ast.Documentation;
             FilePath = filePath;
@@ -130,6 +135,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, DocumentUri, _members, true, true);
             ast.Walk(walker);
             walker.Complete();
+
+            ParseErrors = parseErrors.ToArray();
         }
 
         internal void AddChildModule(string name, IPythonModule module) {
@@ -168,6 +175,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IModuleContext AnalysisContext => null;
         public bool IsAnalyzed => true;
         public void Analyze(CancellationToken cancel) { }
+
+        public IEnumerable<string> ParseErrors { get; }
 
         private static IEnumerable<string> GetChildModules(string filePath, string prefix, IPythonInterpreter interpreter) {
             if (interpreter == null || string.IsNullOrEmpty(filePath)) {
