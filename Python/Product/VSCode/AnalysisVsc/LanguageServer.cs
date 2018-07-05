@@ -91,7 +91,10 @@ namespace Microsoft.PythonTools.VsCode {
             if (remaining > 0) {
                 using (var p = _progress.BeginProgress()) {
                     while (remaining > 0) {
-                        await p.Report($"Analyzing workspace, {remaining} items remaining...");
+                        var items = remaining > 1 ? "items" : "item";
+                        // TODO: in localization this needs to be two different messages 
+                        // since not all languages allow sentence construction.
+                        await p.Report($"Analyzing workspace, {remaining} {items} remaining...");
                         await Task.Delay(100);
                         remaining = _server.EstimateRemainingWork();
                     }
