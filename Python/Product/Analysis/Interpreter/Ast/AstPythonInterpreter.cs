@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void AddUnimportableModule(string moduleName) {
-            _modules[moduleName] = new SentinelModule(moduleName, false);
+            _modules[moduleName] = new SentinelModule(moduleName, this, false);
         }
 
         public event EventHandler ModuleNamesChanged;

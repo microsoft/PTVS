@@ -19,15 +19,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
+        private readonly IPythonInterpreter _interpreter;
         private readonly Thread _thread;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
-        public SentinelModule(string name, bool importing) {
+        public SentinelModule(string name, IPythonInterpreter interpreter, bool importing) {
             _thread = Thread.CurrentThread;
+            _interpreter = interpreter;
             Name = name;
             if (importing) {
                 _semaphore = new SemaphoreSlim(0, 1000);
@@ -36,12 +39,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
+        public async Task<IPythonModule> WaitForImportAsync(IPythonInterpreter interpreter, CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
             }
-            if (_thread == Thread.CurrentThread) {
+            if (_thread == Thread.CurrentThread || _interpreter == interpreter) {
                 return this;
             }
 

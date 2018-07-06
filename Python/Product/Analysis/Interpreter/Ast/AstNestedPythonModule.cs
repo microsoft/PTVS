@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
             if (mod == null) {
-                mod = new SentinelModule(_importNames.FirstOrDefault() ?? "<unknown>", false);
+                mod = new SentinelModule(_importNames.FirstOrDefault() ?? "<unknown>", _interpreter, false);
             }
 
             return Interlocked.CompareExchange(ref _module, mod, null) ?? mod;
