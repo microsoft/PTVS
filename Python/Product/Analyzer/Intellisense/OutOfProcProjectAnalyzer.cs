@@ -743,7 +743,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.FormatCodeResponse() {
                 version = version,
                 changes = selectedCode.ReplaceByLines(
-                    walker.Target.StartIncludingLeadingWhiteSpace.Line,
+                    walker.Target.StartIncludingLeadingWhiteSpace,
                     body.ToCodeString(ast, request.options),
                     request.newLine
                 ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()
