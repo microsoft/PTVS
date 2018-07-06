@@ -219,7 +219,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 locatedVariable.Location = new EncodedLocation(unit, node);
                 locatedVariable.DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             } else {
+                var oldVariable = variable;
                 variable = AddVariable(name, new LocatedVariableDef(unit.ProjectEntry, new EncodedLocation(unit, node)));
+                oldVariable?.CopyTo(variable);
             }
 
             if (addRef) {

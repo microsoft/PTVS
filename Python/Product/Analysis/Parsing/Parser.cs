@@ -1648,22 +1648,10 @@ namespace Microsoft.PythonTools.Parsing {
         private string SetPrivatePrefix(string name) {
             string oldPrefix = _privatePrefix;
 
-            _privatePrefix = GetPrivatePrefix(name);
+            // Remove any leading underscores before saving the prefix
+            _privatePrefix = name?.TrimStart('_');
 
             return oldPrefix;
-        }
-
-        internal static string GetPrivatePrefix(string name) {
-            // Remove any leading underscores before saving the prefix
-            if (name != null) {
-                for (int i = 0; i < name.Length; i++) {
-                    if (name[i] != '_') {
-                        return name.Substring(i);
-                    }
-                }
-            }
-            // Name consists of '_'s only, no private prefix mapping
-            return null;
         }
 
         private ErrorExpression Error(string verbatimImage = null, Expression preceeding = null) {
