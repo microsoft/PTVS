@@ -253,13 +253,13 @@ namespace Microsoft.PythonTools.Intellisense {
                             maxDocumentationTextLength = 1024,
                             trimDocumentationText = true,
                             maxDocumentationLines = 100
-                        }
+                        },
+                        analysisUpdates = true,
+                        traceLogging = request.traceLogging,
                     },
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
-                            analysisUpdates = true,
                             manualFileLoad = !request.analyzeAllFiles,
-                            traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
                         },
                         textDocument = new LS.TextDocumentClientCapabilities {

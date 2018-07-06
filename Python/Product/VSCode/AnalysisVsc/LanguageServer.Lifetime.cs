@@ -42,8 +42,10 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         [JsonRpcMethod("initialized")]
-        public Task Initialized(JToken token) 
-            => _server.Initialized(token.ToObject<InitializedParams>());
+        public async Task Initialized(JToken token) { 
+            await _server.Initialized(token.ToObject<InitializedParams>());
+            _rpc.NotifyAsync("python/languageServerStarted").DoNotWait();
+        }
 
         [JsonRpcMethod("shutdown")]
         public async Task Shutdown() {

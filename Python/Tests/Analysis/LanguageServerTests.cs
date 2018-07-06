@@ -89,13 +89,13 @@ namespace AnalysisTests {
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = properties
                     },
-                    testEnvironment = true
+                    testEnvironment = true,
+                    analysisUpdates = true,
+                    traceLogging = true,
                 },
                 capabilities = new ClientCapabilities {
                     python = new PythonClientCapabilities {
-                        analysisUpdates = true,
                         liveLinting = true,
-                        traceLogging = true
                     }
                 }
             });

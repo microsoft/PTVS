@@ -43,12 +43,15 @@ namespace Microsoft.PythonTools.VsCode {
         private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
         private ITelemetryService _telemetry;
+        private IProgressService _progress;
         private JsonRpc _rpc;
         private bool _filesLoaded;
+        private Task _progressReportingTask;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
             _telemetry = services.GetService<ITelemetryService>();
+            _progress = services.GetService<IProgressService>();
             _rpc = rpc;
 
             _server.OnLogMessage += OnLogMessage;
@@ -58,6 +61,8 @@ namespace Microsoft.PythonTools.VsCode {
             _server.OnApplyWorkspaceEdit += OnApplyWorkspaceEdit;
             _server.OnRegisterCapability += OnRegisterCapability;
             _server.OnUnregisterCapability += OnUnregisterCapability;
+            _server.OnAnalysisQueued += OnAnalysisQueued;
+            _server.OnAnalysisComplete += OnAnalysisComplete;
 
             _disposables
                 .Add(() => _server.OnLogMessage -= OnLogMessage)
@@ -66,9 +71,36 @@ namespace Microsoft.PythonTools.VsCode {
                 .Add(() => _server.OnPublishDiagnostics -= OnPublishDiagnostics)
                 .Add(() => _server.OnApplyWorkspaceEdit -= OnApplyWorkspaceEdit)
                 .Add(() => _server.OnRegisterCapability -= OnRegisterCapability)
-                .Add(() => _server.OnUnregisterCapability -= OnUnregisterCapability);
+                .Add(() => _server.OnUnregisterCapability -= OnUnregisterCapability)
+                .Add(() => _server.OnAnalysisQueued -= OnAnalysisQueued)
+                .Add(() => _server.OnAnalysisComplete -= OnAnalysisComplete);
 
             return _sessionTokenSource.Token;
+        }
+
+        private void OnAnalysisQueued(object sender, AnalysisQueuedEventArgs e) => HandleAnalysisQueueEvent();
+        private void OnAnalysisComplete(object sender, AnalysisCompleteEventArgs e) => HandleAnalysisQueueEvent();
+
+        private void HandleAnalysisQueueEvent()
+            => _progressReportingTask = _progressReportingTask ?? ProgressWorker();
+
+        private async Task ProgressWorker() {
+            await Task.Delay(1000);
+
+            var remaining = _server.EstimateRemainingWork();
+            if (remaining > 0) {
+                using (var p = _progress.BeginProgress()) {
+                    while (remaining > 0) {
+                        var items = remaining > 1 ? "items" : "item";
+                        // TODO: in localization this needs to be two different messages 
+                        // since not all languages allow sentence construction.
+                        await p.Report($"Analyzing workspace, {remaining} {items} remaining...");
+                        await Task.Delay(100);
+                        remaining = _server.EstimateRemainingWork();
+                    }
+                }
+            }
+            _progressReportingTask = null;
         }
 
         public void Dispose() {
@@ -77,7 +109,7 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         [JsonObject]
-        class PublishDiagnosticsParams {
+        private class PublishDiagnosticsParams {
             [JsonProperty]
             public Uri uri;
             [JsonProperty]
@@ -115,7 +147,7 @@ namespace Microsoft.PythonTools.VsCode {
 
             var rootSection = token["settings"];
             var pythonSection = rootSection?["python"];
-            if(pythonSection == null) {
+            if (pythonSection == null) {
                 return;
             }
 
@@ -189,8 +221,8 @@ namespace Microsoft.PythonTools.VsCode {
                     changes.Push(CreateDidChangeTextDocumentParams(@params, version, contentChanges));
                     contentChanges = new Stack<TextDocumentContentChangedEvent>();
                     version--;
-                } 
-                
+                }
+
                 contentChanges.Push(contentChange);
                 previousRange = range;
             }
@@ -202,7 +234,7 @@ namespace Microsoft.PythonTools.VsCode {
             return changes;
         }
 
-        private static DidChangeTextDocumentParams CreateDidChangeTextDocumentParams(DidChangeTextDocumentParams @params, int version, Stack<TextDocumentContentChangedEvent> contentChanges) 
+        private static DidChangeTextDocumentParams CreateDidChangeTextDocumentParams(DidChangeTextDocumentParams @params, int version, Stack<TextDocumentContentChangedEvent> contentChanges)
             => new DidChangeTextDocumentParams {
                 _enqueueForAnalysis = @params._enqueueForAnalysis,
                 contentChanges = contentChanges.ToArray(),
@@ -339,7 +371,7 @@ namespace Microsoft.PythonTools.VsCode {
             var value = section?[settingName];
             try {
                 return value != null ? value.ToObject<T>() : defaultValue;
-            } catch(JsonException ex) {
+            } catch (JsonException ex) {
                 _server.LogMessage(MessageType.Warning, $"Exception retrieving setting '{settingName}': {ex.Message}");
             }
             return defaultValue;
