@@ -446,7 +446,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedParse(int version) {
             lock (_lock) {
-                Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version));
+                Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version) ? "expected" : "unexpected");
                 var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
                 foreach (var i in toRemove) {
                     Debug.WriteLine($"Skipped parse for version {i}");
@@ -459,7 +459,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedAnalysis(int version) {
             lock (_lock) {
-                Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version));
+                Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version) ? "expected" : "unexpected");
 
                 var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
                 foreach (var i in toRemove) {
@@ -748,7 +748,7 @@ namespace Microsoft.PythonTools.Editor {
             );
         }
 
-        private void Trace(string eventName, params object[] args) {
+        internal void Trace(string eventName, params object[] args) {
             _traceLog?.Log(eventName, args);
         }
 
