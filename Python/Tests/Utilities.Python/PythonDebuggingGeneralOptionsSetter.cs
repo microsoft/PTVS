@@ -112,6 +112,6 @@ namespace TestUtilities.Python {
             }
         }
 
-        private IPythonOptions GetOptions() => (IPythonOptions)_dte.GetObject("VsPython");
+        private IPythonOptions2 GetOptions() => (IPythonOptions2)_dte.GetObject("VsPython");
     }
 }

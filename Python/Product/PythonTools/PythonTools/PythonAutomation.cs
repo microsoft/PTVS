@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools {
     /// can be fetched using Dte.GetObject("VsPython").
     /// </summary>
     [ComVisible(true)]
-    public sealed class PythonAutomation : IVsPython, IPythonOptions, IPythonIntellisenseOptions {
+    public sealed class PythonAutomation : IVsPython, IPythonOptions2, IPythonIntellisenseOptions {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
         private AutomationInteractiveOptions _interactiveOptions;
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        bool IPythonOptions.UseLegacyDebugger {
+        bool IPythonOptions2.UseLegacyDebugger {
             get {
                 return _pyService.DebuggerOptions.UseLegacyDebugger;
             }

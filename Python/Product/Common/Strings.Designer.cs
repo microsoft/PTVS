@@ -2058,15 +2058,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable the legacy debugger.
-        /// </summary>
-        public static string DisableExperimentalDebugger {
-            get {
-                return ResourceManager.GetString("DisableExperimentalDebugger", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {
@@ -3907,7 +3898,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable the legacy debugger.
+        ///   Looks up a localized string similar to Use the legacy debugger.
         /// </summary>
         public static string PtvsdDisableCaption {
             get {
@@ -3916,7 +3907,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Future debugging sessions will use the legacy debugger. You can change this setting back in Tools &gt; Options &gt; Python &gt; Debugging page..
+        ///   Looks up a localized string similar to Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the &apos;Use legacy debugger&apos; option..
         /// </summary>
         public static string PtvsdDisableSubtext {
             get {
@@ -3925,7 +3916,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To debug this Python environment use the legacy debugger instead. It is likely using an older version of Python, see the documentation for a list of supported Python versions and environment types..
+        ///   Looks up a localized string similar to To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our &lt;a href=&quot;https://aka.ms/upgradeptvsd&quot;&gt;documentation&lt;/a&gt; for a list of supported Python versions and environment types..
         /// </summary>
         public static string PtvsdIncompatibleEnvMessage {
             get {

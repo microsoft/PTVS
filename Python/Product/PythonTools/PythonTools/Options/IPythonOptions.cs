@@ -55,7 +55,10 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
+    }
 
+    [Guid("0AC0FBE6-C711-46DB-9856-0DD169E1EB9E")]
+    public interface IPythonOptions2 : IPythonOptions {
         bool UseLegacyDebugger {
             get;
             set;
