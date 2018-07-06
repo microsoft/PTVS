@@ -192,10 +192,10 @@ namespace Microsoft.PythonTools.Debugger {
                 } else {
                     var pyService = provider.GetPythonToolsService();
                     // Set the Python debugger
-                    dti.Info.clsidCustom = pyService.ExperimentalOptions.UseVsCodeDebugger ? DebugAdapterLauncher.VSCodeDebugEngine : AD7Engine.DebugEngineGuid;
+                    dti.Info.clsidCustom = pyService.DebuggerOptions.UseLegacyDebugger ? AD7Engine.DebugEngineGuid : DebugAdapterLauncher.VSCodeDebugEngine;
                     dti.Info.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
 
-                    if (pyService.ExperimentalOptions.UseVsCodeDebugger) {
+                    if (!pyService.DebuggerOptions.UseLegacyDebugger) {
                         dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config);
                     }
                 }
