@@ -17,6 +17,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis {
     class Deque<T> : IEnumerable, ICollection {
@@ -29,9 +31,24 @@ namespace Microsoft.PythonTools.Analysis {
             Clear();
         }
 
+#if DEBUG
+        internal SynchronizationContext SynchronizationContext { get; set; }
+
+        private void AssertContext() {
+            var ctx = SynchronizationContext.Current;
+            Debug.Assert(ctx == SynchronizationContext);
+        }
+#else
+        [Conditional("DEBUG")]
+        private void AssertContext() { }
+#endif
+
+
         #region core deque APIs
 
         public void Append(T x) {
+            AssertContext();
+
             _version++;
 
             if (_itemCnt == _data.Length) {
@@ -46,6 +63,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void AppendLeft(T x) {
+            AssertContext();
+
             _version++;
 
             if (_itemCnt == _data.Length) {
@@ -62,6 +81,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Clear() {
+            AssertContext();
+
             _version++;
 
             _head = _tail = 0;
@@ -70,6 +91,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T Pop() {
+            AssertContext();
+
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
             }
@@ -88,6 +111,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T PopLeft() {
+            AssertContext();
+
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
             }
@@ -106,6 +131,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Remove(T value) {
+            AssertContext();
 
             int found = -1;
             int startVersion = _version;
