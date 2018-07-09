@@ -19,19 +19,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private readonly IPythonInterpreter _interpreter;
-        private readonly Thread _thread;
+        private readonly AsyncLocal<string> _name = new AsyncLocal<string>();
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
-        public SentinelModule(string name, IPythonInterpreter interpreter, bool importing) {
-            _thread = Thread.CurrentThread;
-            _interpreter = interpreter;
-            Name = name;
+        public SentinelModule(string name, bool importing) {
+            _name.Value = name;
             if (importing) {
                 _semaphore = new SemaphoreSlim(0, 1000);
             } else {
@@ -39,12 +35,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public async Task<IPythonModule> WaitForImportAsync(IPythonInterpreter interpreter, CancellationToken cancellationToken) {
+        public async Task<IPythonModule> WaitForImportAsync(string name, CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
             }
-            if (_thread == Thread.CurrentThread || _interpreter == interpreter) {
+            if (name == _name.Value) {
+                // Prevent reentrancy on the same module
                 return this;
             }
 
@@ -67,7 +64,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public string Name { get; }
+        public string Name => _name.Value;
         public string Documentation => null;
         public PythonMemberType MemberType => PythonMemberType.Module;
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
