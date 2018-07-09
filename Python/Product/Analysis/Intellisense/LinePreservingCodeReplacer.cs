@@ -29,15 +29,17 @@ namespace Microsoft.PythonTools.Intellisense {
     class LinePreservingCodeReplacer {
         private readonly string _newLine;
         private readonly Line[] _newLines, _oldLines;
+        private readonly SourceLocation _start;
         
-        private LinePreservingCodeReplacer(int startLine, string oldCode, string newCode, string newLine) {
+        private LinePreservingCodeReplacer(SourceLocation start, string oldCode, string newCode, string newLine) {
             _newLine = newLine;
-            _oldLines = GetLines(oldCode, startLine);
-            _newLines = GetLines(newCode, startLine);
+            _start = start;
+            _oldLines = GetLines(oldCode, start.Line);
+            _newLines = GetLines(newCode, start.Line);
         }
 
-        public static IReadOnlyList<DocumentChange> Replace(int startLine, string oldCode, string newCode, string newLine = "\r\n") {
-            return new LinePreservingCodeReplacer(startLine, oldCode, newCode, newLine).ReplaceCode();
+        public static IReadOnlyList<DocumentChange> Replace(SourceLocation start, string oldCode, string newCode, string newLine = "\r\n") {
+            return new LinePreservingCodeReplacer(start, oldCode, newCode, newLine).ReplaceCode();
         }
 
         private static Line[] GetLines(string source, int startLine) 
@@ -67,6 +69,17 @@ namespace Microsoft.PythonTools.Intellisense {
                         edits.Add(Delete(diff.OldStart + length, diff.OldEnd));
                     } else if (diff.NewLength > length) {
                         edits.Add(Insert(diff.OldStart + length, diff.NewStart + length, diff.NewEnd));
+                    }
+                }
+            }
+
+            if (_start.Column > 1) {
+                foreach (var e in edits) {
+                    if (e.ReplacedSpan.End.Line == _start.Line) {
+                        e.ReplacedSpan = new SourceSpan(e.ReplacedSpan.Start, e.ReplacedSpan.End.AddColumns(_start.Column - 1));
+                    }
+                    if (e.ReplacedSpan.Start.Line == _start.Line) {
+                        e.ReplacedSpan = new SourceSpan(e.ReplacedSpan.Start.AddColumns(_start.Column - 1), e.ReplacedSpan.End);
                     }
                 }
             }
@@ -125,8 +138,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Replaces a range of text with new text attempting only modifying lines which changed 
         /// and doing so in a single edit.
         /// </summary>
-        public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, int startLine, string newCode, string newLine = "\r\n") {
-            return LinePreservingCodeReplacer.Replace(startLine, oldCode, newCode, newLine);
+        public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, SourceLocation start, string newCode, string newLine = "\r\n") {
+            return LinePreservingCodeReplacer.Replace(start, oldCode, newCode, newLine);
         }
     }
 }

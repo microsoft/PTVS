@@ -53,6 +53,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
         public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
 
+        public static bool operator >(Position p1, Position p2) => p1.line > p2.line || p1.line == p2.line && p1.character > p2.character;
+        public static bool operator <(Position p1, Position p2) => p1.line < p2.line || p1.line == p2.line && p1.character < p2.character;
+
         public override string ToString() => ((SourceLocation)this).ToString();
     }
 
@@ -182,6 +185,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct VersionedTextDocumentIdentifier {
         public Uri uri;
         public int? version;
+        public int? _fromVersion;
     }
 
     [Serializable]
@@ -277,6 +281,18 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// should be loaded into the Python analysis engine.
         /// </summary>
         public string[] includeFiles = Array.Empty<string>();
+
+        /// <summary>
+        /// Client expects analysis progress updates, including notifications
+        /// when analysis is complete for a particular document version.
+        /// </summary>
+        public bool analysisUpdates;
+
+        /// <summary>
+        /// Enables an even higher level of logging via the logMessage event.
+        /// This will likely have a performance impact.
+        /// </summary>
+        public bool traceLogging;
     }
 
     [Serializable]
@@ -480,18 +496,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// </summary>
     [Serializable]
     public class PythonClientCapabilities {
-        /// <summary>
-        /// Client expects analysis progress updates, including notifications
-        /// when analysis is complete for a particular document version.
-        /// </summary>
-        public bool? analysisUpdates;
-
-        /// <summary>
-        /// Enables an even higher level of logging via the logMessage event.
-        /// This will likely have a performance impact.
-        /// </summary>
-        public bool? traceLogging;
-
         /// <summary>
         /// Disables automatic analysis of all files under the root URI.
         /// </summary>

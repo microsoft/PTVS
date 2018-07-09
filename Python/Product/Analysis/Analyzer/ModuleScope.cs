@@ -14,9 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class ModuleScope : InterpreterScope {

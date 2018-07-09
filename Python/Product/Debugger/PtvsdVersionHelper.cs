@@ -108,6 +108,7 @@ namespace Microsoft.PythonTools.Debugger {
                         Content = content,
                         AllowCancellation = true,
                         MainIcon = isError ? TaskDialogIcon.Error : TaskDialogIcon.Warning,
+                        EnableHyperlinks = true,
                     };
 
                     var disable = new TaskDialogButton(Strings.PtvsdDisableCaption, Strings.PtvsdDisableSubtext);

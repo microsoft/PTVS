@@ -1012,8 +1012,11 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 // Try and acquire the lock before disposing. This helps avoid
                 // some (non-fatal) exceptions.
-                _reloadLock.Wait(TimeSpan.FromSeconds(10));
-                _reloadLock.Dispose();
+                try {
+                    _reloadLock.Wait(TimeSpan.FromSeconds(10));
+                    _reloadLock.Dispose();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 

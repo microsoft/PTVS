@@ -26,14 +26,18 @@ namespace Microsoft.PythonTools.Options {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Label typeShedPathLabel;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LanguageServerOptionsControl));
-            System.Windows.Forms.Label label1;
+            System.Windows.Forms.GroupBox groupBox1;
             this._tooltips = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.typeShedPathTextBox = new System.Windows.Forms.TextBox();
             this.browseTypeShedPathButton = new System.Windows.Forms.Button();
+            this.suppressTypeShedCheckbox = new System.Windows.Forms.CheckBox();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             typeShedPathLabel = new System.Windows.Forms.Label();
-            label1 = new System.Windows.Forms.Label();
+            groupBox1 = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel1.SuspendLayout();
+            groupBox1.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // typeShedPathLabel
@@ -44,10 +48,7 @@ namespace Microsoft.PythonTools.Options {
             // tableLayoutPanel1
             // 
             resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
-            this.tableLayoutPanel1.Controls.Add(typeShedPathLabel, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.typeShedPathTextBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.browseTypeShedPathButton, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(label1, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(groupBox1, 0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // typeShedPathTextBox
@@ -63,11 +64,29 @@ namespace Microsoft.PythonTools.Options {
             this.browseTypeShedPathButton.UseVisualStyleBackColor = true;
             this.browseTypeShedPathButton.Click += new System.EventHandler(this.browseTypeShedPathButton_Click);
             // 
-            // label1
+            // suppressTypeShedCheckbox
             // 
-            resources.ApplyResources(label1, "label1");
-            this.tableLayoutPanel1.SetColumnSpan(label1, 3);
-            label1.Name = "label1";
+            resources.ApplyResources(this.suppressTypeShedCheckbox, "suppressTypeShedCheckbox");
+            this.tableLayoutPanel2.SetColumnSpan(this.suppressTypeShedCheckbox, 3);
+            this.suppressTypeShedCheckbox.Name = "suppressTypeShedCheckbox";
+            this.suppressTypeShedCheckbox.UseVisualStyleBackColor = true;
+            this.suppressTypeShedCheckbox.CheckedChanged += new System.EventHandler(this.suppressTypeShedCheckbox_CheckedChanged);
+            // 
+            // groupBox1
+            // 
+            resources.ApplyResources(groupBox1, "groupBox1");
+            groupBox1.Controls.Add(this.tableLayoutPanel2);
+            groupBox1.Name = "groupBox1";
+            groupBox1.TabStop = false;
+            // 
+            // tableLayoutPanel2
+            // 
+            resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
+            this.tableLayoutPanel2.Controls.Add(this.suppressTypeShedCheckbox, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.browseTypeShedPathButton, 2, 1);
+            this.tableLayoutPanel2.Controls.Add(this.typeShedPathTextBox, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(typeShedPathLabel, 0, 1);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // LanguageServerOptionsControl
             // 
@@ -77,6 +96,10 @@ namespace Microsoft.PythonTools.Options {
             this.Name = "LanguageServerOptionsControl";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -86,5 +109,7 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox typeShedPathTextBox;
         private System.Windows.Forms.Button browseTypeShedPathButton;
+        private System.Windows.Forms.CheckBox suppressTypeShedCheckbox;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
     }
 }

@@ -24,14 +24,12 @@ namespace TestUtilities.Python {
         private readonly bool? _noDatabaseFactory;
         private readonly bool? _autoDetectCondaEnvironments;
         private readonly bool? _useCondaPackageManager;
-        private readonly bool? _useVsCodeDebugger;
 
         public PythonExperimentalGeneralOptionsSetter(
             PythonToolsService pyService,
             bool? noDatabaseFactory = null,
             bool? autoDetectCondaEnvironments = null,
-            bool? useCondaPackageManager = null,
-            bool? useVsCodeDebugger = null
+            bool? useCondaPackageManager = null
         ) {
             _pyService = pyService;
             var options = _pyService.ExperimentalOptions;
@@ -50,11 +48,6 @@ namespace TestUtilities.Python {
                 _useCondaPackageManager = options.UseCondaPackageManager;
                 options.UseCondaPackageManager = useCondaPackageManager.Value;
             }
-
-            if (useVsCodeDebugger.HasValue) {
-                _useVsCodeDebugger = options.UseVsCodeDebugger;
-                options.UseVsCodeDebugger = useVsCodeDebugger.Value;
-            }
         }
 
         public void Dispose() {
@@ -70,10 +63,6 @@ namespace TestUtilities.Python {
 
             if (_useCondaPackageManager.HasValue) {
                 options.UseCondaPackageManager = _useCondaPackageManager.Value;
-            }
-
-            if (_useVsCodeDebugger.HasValue) {
-                options.UseVsCodeDebugger = _useVsCodeDebugger.Value;
             }
         }
     }

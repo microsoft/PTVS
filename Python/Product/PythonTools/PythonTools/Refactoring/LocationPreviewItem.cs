@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     return;
                 }
 
-                if (!GetSpanWithPrefix(text, origName, locationInfo, "_" + prefix, newName, out start, out length)) {
+                if (!GetSpanWithPrefix(text, origName, locationInfo, prefix, newName, out start, out length)) {
                     // Not renaming a prefixed name
                     Debug.Fail("Failed to find '{0}' in '{1}'".FormatInvariant(origName, text));
                     return;

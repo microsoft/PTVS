@@ -622,6 +622,9 @@ class BankAccount(object):
         [TestMethod, Priority(0)]
         public void AstBuiltinScrapeV26() => AstBuiltinScrape(PythonPaths.Python26_x64 ?? PythonPaths.Python26);
 
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeIPy27() => AstBuiltinScrape(PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27);
+
 
         private void AstBuiltinScrape(PythonVersion version) {
             AstScrapedPythonModule.KeepAst = true;
@@ -877,6 +880,13 @@ class BankAccount(object):
             );
         }
 
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibIPy27() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.IsIronPython);
+            await FullStdLibTest(v);
+        }
+
+
         private async Task FullStdLibTest(PythonVersion v, params string[] skipModules) {
             v.AssertInstalled();
             var factory = new AstPythonInterpreterFactory(v.Configuration, new InterpreterFactoryCreationOptions {
@@ -890,7 +900,10 @@ class BankAccount(object):
                 "matplotlib.backends._backend_gdk",
                 "matplotlib.backends._backend_gtkagg",
                 "matplotlib.backends._gtkagg",
+                "test.test_pep3131",
+                "test.test_unicode_identifiers"
             });
+            skip.UnionWith(modules.Select(m => m.FullName).Where(n => n.StartsWith("test.badsyntax") || n.StartsWith("test.bad_coding")));
 
             bool anySuccess = false;
             bool anyExtensionSuccess = false, anyExtensionSeen = false;
@@ -898,6 +911,7 @@ class BankAccount(object):
 
             using (var analyzer = new PythonAnalysis(factory)) {
                 try {
+                    PythonModuleLoader.KeepParseErrors = true;
                     var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
                     var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
@@ -920,11 +934,12 @@ class BankAccount(object):
                         anyExtensionSeen |= modName.IsNativeExtension;
                         if (mod == null) {
                             Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
-                        } else if (mod is AstScrapedPythonModule smod) {
-                            if (smod.ParseErrors?.Any() ?? false) {
+                        } else if (mod is AstScrapedPythonModule aspm) {
+                            var errors = aspm.ParseErrors.MaybeEnumerate().ToArray();
+                            if (errors.Any()) {
                                 anyParseError = true;
                                 Trace.TraceError("Parse errors in {0}", modName.SourceFile);
-                                foreach (var e in smod.ParseErrors) {
+                                foreach (var e in errors) {
                                     Trace.TraceError(e);
                                 }
                             } else {
@@ -932,14 +947,29 @@ class BankAccount(object):
                                 anyExtensionSuccess |= modName.IsNativeExtension;
                                 mod.GetMemberNames(analyzer.ModuleContext).ToList();
                             }
-                        } else if (mod is AstPythonModule) {
-                            // pass
+                        } else if (mod is AstPythonModule apm) {
+                            var filteredErrors = apm.ParseErrors.MaybeEnumerate().Where(e => !e.Contains("encoding problem")).ToArray();
+                            if (filteredErrors.Any()) {
+                                // Do not fail due to errors in installed packages
+                                if (!apm.FilePath.Contains("site-packages")) {
+                                    anyParseError = true;
+                                }
+                                Trace.TraceError("Parse errors in {0}", modName.SourceFile);
+                                foreach (var e in filteredErrors) {
+                                    Trace.TraceError(e);
+                                }
+                            } else {
+                                anySuccess = true;
+                                anyExtensionSuccess |= modName.IsNativeExtension;
+                                mod.GetMemberNames(analyzer.ModuleContext).ToList();
+                            }
                         } else {
                             Trace.TraceError("imported {0} as type {1}", modName.ModuleName, mod.GetType().FullName);
                         }
                     }
                 } finally {
                     _analysisLog = analyzer.GetLogContent(CultureInfo.InvariantCulture);
+                    PythonModuleLoader.KeepParseErrors = false;
                 }
             }
             Assert.IsTrue(anySuccess, "failed to import any modules at all");

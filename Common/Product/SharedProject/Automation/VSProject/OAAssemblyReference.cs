@@ -120,6 +120,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 return BaseReferenceNode.ResolvedAssembly.Version.Revision;
             }
         }
+
+        public override bool Resolved => (null != BaseReferenceNode.ResolvedAssembly);
+
         public override bool StrongName {
             get {
                 if ((null == BaseReferenceNode.ResolvedAssembly) ||

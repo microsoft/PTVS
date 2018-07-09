@@ -89,13 +89,13 @@ namespace AnalysisTests {
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = properties
                     },
-                    testEnvironment = true
+                    testEnvironment = true,
+                    analysisUpdates = true,
+                    traceLogging = true,
                 },
                 capabilities = new ClientCapabilities {
                     python = new PythonClientCapabilities {
-                        analysisUpdates = true,
                         liveLinting = true,
-                        traceLogging = true
                     }
                 }
             });
@@ -197,29 +197,23 @@ namespace AnalysisTests {
             int finalVersion,
             params DocumentChange[] e
         ) {
-            var parseStart = new TaskCompletionSource<object>();
-            EventHandler<ParseCompleteEventArgs> handler = null;
-            handler = (sender, ev) => {
-                if (ev.uri == document) {
-                    parseStart.TrySetResult(null);
-                    ((Server)sender).OnParseComplete -= handler;
-                }
-            };
-            s.OnParseComplete += handler;
+
+            var parseComplete = EventTaskSources.Server.OnParseComplete.Create(s);
 
             s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
                     uri = document,
-                    version = finalVersion
+                    version = finalVersion,
                 },
                 contentChanges = e.Select(c => new TextDocumentContentChangedEvent {
                     range = c.WholeBuffer ? null : (Range?)c.ReplacedSpan,
                     text = c.InsertedText
                 }).ToArray()
             });
-            await parseStart.Task;
 
-            int newVersion = -1;
+            await parseComplete;
+
+            var newVersion = -1;
             var code = (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out newVersion).ReadToEnd();
             return Tuple.Create(code, newVersion);
         }

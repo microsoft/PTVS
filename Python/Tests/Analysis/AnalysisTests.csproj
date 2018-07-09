@@ -62,6 +62,7 @@
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
+    <Compile Include="EventTaskSources.cs" />
     <Compile Include="ExpressionFinderTests.cs" />
     <Compile Include="FunctionBodyAnalysisTests.cs" />
     <Compile Include="LanguageServerTests.cs" />

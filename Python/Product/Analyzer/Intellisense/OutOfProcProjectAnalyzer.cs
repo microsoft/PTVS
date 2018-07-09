@@ -57,11 +57,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private bool _isDisposed;
 
-        // Moniker strings allow the task provider to distinguish between
-        // different sources of items for the same file.
-        private const string ParserTaskMoniker = "Parser";
-        internal const string UnresolvedImportMoniker = "UnresolvedImport";
-
         private readonly Connection _connection;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {
@@ -258,13 +253,13 @@ namespace Microsoft.PythonTools.Intellisense {
                             maxDocumentationTextLength = 1024,
                             trimDocumentationText = true,
                             maxDocumentationLines = 100
-                        }
+                        },
+                        analysisUpdates = true,
+                        traceLogging = request.traceLogging,
                     },
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
-                            analysisUpdates = true,
                             manualFileLoad = !request.analyzeAllFiles,
-                            traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
                         },
                         textDocument = new LS.TextDocumentClientCapabilities {
@@ -748,7 +743,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.FormatCodeResponse() {
                 version = version,
                 changes = selectedCode.ReplaceByLines(
-                    walker.Target.StartIncludingLeadingWhiteSpace.Line,
+                    walker.Target.StartIncludingLeadingWhiteSpace,
                     body.ToCodeString(ast, request.options),
                     request.newLine
                 ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()
@@ -1552,7 +1547,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
-                        version = version
+                        version = version,
+                        _fromVersion = Math.Max(version - 1, 0)
                     },
                     contentChanges = changes.ToArray()
                 });
