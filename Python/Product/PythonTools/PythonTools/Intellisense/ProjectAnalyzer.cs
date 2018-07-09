@@ -1733,6 +1733,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 name = name,
                 body = requestParams
             }).ConfigureAwait(false);
+            if (r == null) {
+                return defaultValue;
+            }
             if (!string.IsNullOrEmpty(r.error)) {
                 Debug.WriteLine($"Request failed: {r.error}");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, r.error);
