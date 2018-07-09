@@ -82,7 +82,6 @@ namespace Microsoft.PythonTools.Refactoring {
 
                 if (!GetSpanWithPrefix(text, origName, locationInfo, prefix, newName, out start, out length)) {
                     // Not renaming a prefixed name
-                    Debug.Fail("Failed to find '{0}' in '{1}'".FormatInvariant(origName, text));
                     return null;
                 }
             }
@@ -119,7 +118,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var cmp = CultureInfo.InvariantCulture.CompareInfo;
             try {
-                if (cmp.Compare(text, start, length, origName, 0, origName.Length) == 0) {
+                if (length == origName.Length && cmp.Compare(text, start, length, origName, 0, origName.Length) == 0) {
                     // Name matches, so return the span
                     return true;
                 }
