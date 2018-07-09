@@ -498,7 +498,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             CancellationToken cancellationToken
         ) {
             IPythonModule module = null;
-            bool isCelery = name == "celery";
             if (string.IsNullOrEmpty(name)) {
                 return TryImportModuleResult.ModuleNotFound;
             }
