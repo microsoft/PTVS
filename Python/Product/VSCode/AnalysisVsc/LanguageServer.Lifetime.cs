@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Analysis.LanguageServer;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode {
+namespace Microsoft.Python.LanguageServer.Implementation {
     public partial class LanguageServer {
         private InitializeParams _initParams;
         private bool _shutdown;

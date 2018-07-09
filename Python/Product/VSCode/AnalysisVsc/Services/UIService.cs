@@ -20,7 +20,7 @@ using Microsoft.DsTools.Core.Services.Shell;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode.Services {
+namespace Microsoft.Python.LanguageServer.Services {
     public sealed class UIService : IUIService, ILogger {
         private readonly JsonRpc _rpc;
         public UIService(JsonRpc rpc) {

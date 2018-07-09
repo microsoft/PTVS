@@ -33,7 +33,7 @@
   <!-- .NET Core publishing -->
   <PropertyGroup>
     <LanguageServerName>Python-Language-Server</LanguageServerName>
-    <NugetPackageName>$(LanguageServerName)-VSCode</NugetPackageName>
+    <NugetPackageName>$(LanguageServerName)</NugetPackageName>
     <DotNetPublish>true</DotNetPublish>
   </PropertyGroup>
   <ItemGroup>
@@ -43,7 +43,7 @@
     <TargetOS Include="linux-x64" />
   </ItemGroup>
   <ItemGroup>
-    <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.Python.LanguageServer.VsCode.dll" />
+    <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)Microsoft.Python.LanguageServer.dll" />
     <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />
   </ItemGroup>
   <Target Name="AfterBuild">

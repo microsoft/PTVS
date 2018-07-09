@@ -17,7 +17,7 @@
 using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Services;
 
-namespace Microsoft.PythonTools.VsCode.Commands {
+namespace Microsoft.Python.LanguageServer.Commands {
     internal interface ICommand {
         Task<object> ExecuteAsync(IServiceContainer services, params object[] args);
     }

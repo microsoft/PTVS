@@ -1,8 +1,8 @@
 ﻿<Project>
     <PropertyGroup>
         <TargetFramework>netcoreapp2.1</TargetFramework>
-        <RootNamespace>Microsoft.PythonTools.VsCode</RootNamespace>
-        <AssemblyName>Microsoft.Python.LanguageServer.VsCode</AssemblyName>
+        <RootNamespace>Microsoft.Python.LanguageServer</RootNamespace>
+        <AssemblyName>Microsoft.Python.LanguageServer</AssemblyName>
     </PropertyGroup>
     <Import Project="..\..\NetStandard.settings" />
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -17,7 +17,7 @@
       <None Remove="obj\**" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="Python-Language-Server-VSCode.nuspec">
+        <Content Include="Python-Language-Server.nuspec">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
