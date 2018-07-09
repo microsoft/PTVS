@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// True to add <paramref name="node"/> as a reference of the
         /// imported value.
         /// </param>
-        private void ImportModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, string importAs, Node node, bool addRef) {
+        private void FinishImportModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, string importAs, Node node, bool addRef) {
             if (AssignImportedModuleOrMember(
                 importAs,
                 GetImportedModuleOrMember(module, attribute, node, addRef, importAs),
@@ -392,14 +392,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             fullImpName[fullImpName.Length - 1] = varName;
 
                             // Don't add references to "*" node
-                            ImportModuleOrMember(modRef, fullImpName, varName, nameNode, false);
+                            FinishImportModuleOrMember(modRef, fullImpName, varName, nameNode, false);
                         }
                     }
                 } else {
                     fullImpName[fullImpName.Length - 1] = impName;
 
                     var varName = asNames[i]?.Name ?? impName;
-                    ImportModuleOrMember(modRef, fullImpName, varName, nameNode, true);
+                    FinishImportModuleOrMember(modRef, fullImpName, varName, nameNode, true);
                 }
             }
 
@@ -545,7 +545,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // "import fob.oar as baz" is handled as
                 // baz = import_module('fob.oar')
                 if (asName != null) {
-                    ImportModuleOrMember(modRef, bits, asName.Name, asName, true);
+                    FinishImportModuleOrMember(modRef, bits, asName.Name, asName, true);
                     continue;
                 }
 
@@ -555,7 +555,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var name = curName.Names[0];
                 // Should be able to just get the module, as we only just imported it
                 if (ProjectState.Modules.TryGetImportedModule(name.Name, out modRef)) {
-                    ImportModuleOrMember(modRef, null, name.Name, name, true);
+                    FinishImportModuleOrMember(modRef, null, name.Name, name, true);
                     continue;
                 }
 
