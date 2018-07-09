@@ -2974,17 +2974,21 @@ from baz import abc2 as abc";
             state.AssertReferences(oarMod, "abc1", oarText.IndexOf("abc1"),
                 new VariableLocation(1, 1, VariableType.Value),
                 new VariableLocation(1, 7, VariableType.Definition),
+                new VariableLocation(1, 17, VariableType.Reference, "oarbaz"),
                 new VariableLocation(1, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(bazMod, "abc2", bazText.IndexOf("abc2"),
                 new VariableLocation(5, 1, VariableType.Value),
                 new VariableLocation(5, 7, VariableType.Definition),
+                new VariableLocation(2, 17, VariableType.Reference, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz")
             );
             state.AssertReferences(fobMod, "abc", 0,
                 new VariableLocation(1, 1, VariableType.Value, "oar"),
                 new VariableLocation(5, 1, VariableType.Value, "baz"),
-                new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),
+                new VariableLocation(1, 17, VariableType.Reference, "oarbaz"),
+                new VariableLocation(1, 25, VariableType.Reference, "oarbaz"),    // as
+                new VariableLocation(2, 17, VariableType.Reference, "oarbaz"),
                 new VariableLocation(2, 25, VariableType.Reference, "oarbaz"),    // as
                 new VariableLocation(2, 20, VariableType.Reference, "fob"),    // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")     // call
@@ -3018,6 +3022,66 @@ f = fn()");
                 new VariableLocation(6, 5, VariableType.Reference, "oar")
             );
             state.AssertReferences(oarMod, "fn", 0,
+                new VariableLocation(4, 1, VariableType.Value, "fob"),
+                new VariableLocation(4, 5, VariableType.Definition, "fob"),
+                new VariableLocation(7, 5, VariableType.Reference, "oar")
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportAsReferences() {
+            var state = CreateAnalyzer();
+            var fobMod = state.AddModule("fob", @"
+CONSTANT = 1
+class Class: pass
+def fn(): pass");
+            var oarMod = state.AddModule("oar", @"from fob import CONSTANT as CO, Class as Cl, fn as f
+
+
+
+x = CO
+c = Cl()
+g = f()");
+
+            state.ReanalyzeAll();
+
+            state.AssertReferences(oarMod, "CO", 0,
+                new VariableLocation(1, 17, VariableType.Reference, "oar"),
+                new VariableLocation(1, 29, VariableType.Reference, "oar"),
+                new VariableLocation(2, 1, VariableType.Definition, "fob"),
+                new VariableLocation(5, 5, VariableType.Reference, "oar")
+            );
+            state.AssertReferences(oarMod, "Cl", 0,
+                new VariableLocation(1, 33, VariableType.Reference, "oar"),
+                new VariableLocation(1, 42, VariableType.Reference, "oar"),
+                new VariableLocation(3, 1, VariableType.Value, "fob"),
+                new VariableLocation(3, 7, VariableType.Definition, "fob"),
+                new VariableLocation(6, 5, VariableType.Reference, "oar")
+            );
+            state.AssertReferences(oarMod, "f", 0,
+                new VariableLocation(1, 46, VariableType.Reference, "oar"),
+                new VariableLocation(1, 52, VariableType.Reference, "oar"),
+                new VariableLocation(4, 1, VariableType.Value, "fob"),
+                new VariableLocation(4, 5, VariableType.Definition, "fob"),
+                new VariableLocation(7, 5, VariableType.Reference, "oar")
+            );
+
+            state.AssertReferences(fobMod, "CONSTANT", 0,
+                new VariableLocation(1, 17, VariableType.Reference, "oar"),
+                new VariableLocation(1, 29, VariableType.Reference, "oar"),
+                new VariableLocation(2, 1, VariableType.Definition, "fob"),
+                new VariableLocation(5, 5, VariableType.Reference, "oar")
+            );
+            state.AssertReferences(fobMod, "Class", 0,
+                new VariableLocation(1, 33, VariableType.Reference, "oar"),
+                new VariableLocation(1, 42, VariableType.Reference, "oar"),
+                new VariableLocation(3, 1, VariableType.Value, "fob"),
+                new VariableLocation(3, 7, VariableType.Definition, "fob"),
+                new VariableLocation(6, 5, VariableType.Reference, "oar")
+            );
+            state.AssertReferences(fobMod, "fn", 0,
+                new VariableLocation(1, 46, VariableType.Reference, "oar"),
+                new VariableLocation(1, 52, VariableType.Reference, "oar"),
                 new VariableLocation(4, 1, VariableType.Value, "fob"),
                 new VariableLocation(4, 5, VariableType.Definition, "fob"),
                 new VariableLocation(7, 5, VariableType.Reference, "oar")
