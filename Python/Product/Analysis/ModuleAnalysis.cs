@@ -1157,7 +1157,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
             if (privatePrefix != null && name.StartsWithOrdinal(privatePrefix) && !name.EndsWithOrdinal("__")) {
                 // private prefix inside of the class, filter out the prefix.
-                return name.Substring(privatePrefix.Length - 2);
+                return name.Substring(privatePrefix.Length);
             } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {
                 return name;
             }
@@ -1176,7 +1176,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetPrivatePrefix(InterpreterScope scope) {
             string classScopePrefix = GetPrivatePrefixClassName(scope);
             if (classScopePrefix != null) {
-                return "_" + classScopePrefix + "__";
+                return "_" + classScopePrefix;
             }
             return null;
         }

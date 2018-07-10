@@ -236,12 +236,17 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public void RemoveModule(IProjectEntry entry) => RemoveModule(entry, null);
+
         /// <summary>
         /// Removes the specified project entry from the current analysis.
         /// 
         /// This method is thread safe.
         /// </summary>
-        public void RemoveModule(IProjectEntry entry) {
+        /// <param name="entry">The entry to remove.</param>
+        /// <param name="onImporter">Action to perform on each module that
+        /// had imported the one being removed.</param>
+        public void RemoveModule(IProjectEntry entry, Action<IPythonProjectEntry> onImporter) {
             if (entry == null) {
                 throw new ArgumentNullException(nameof(entry));
             }
@@ -253,7 +258,6 @@ namespace Microsoft.PythonTools.Analysis {
                 importers = GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
             }
 
-
             if (!string.IsNullOrEmpty(entry.FilePath) && _modulesByFilename.TryRemove(entry.FilePath, out var moduleInfo)) {
                 lock (_modulesWithUnresolvedImportsLock) {
                     _modulesWithUnresolvedImports.Remove(moduleInfo);
@@ -263,10 +267,14 @@ namespace Microsoft.PythonTools.Analysis {
             entry.RemovedFromProject();
             ClearDiagnostics(entry);
 
+            if (onImporter == null) {
+                onImporter = e => e.Analyze(CancellationToken.None, enqueueOnly: true);
+            }
+
             if (!string.IsNullOrEmpty(pyEntry?.ModuleName)) {
                 Modules.TryRemove(pyEntry.ModuleName, out var _);
                 foreach (var e in importers.MaybeEnumerate()) {
-                    e.Analyze(CancellationToken.None, enqueueOnly: true);
+                    onImporter(e);
                 }
             }
         }
@@ -1013,8 +1021,11 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 // Try and acquire the lock before disposing. This helps avoid
                 // some (non-fatal) exceptions.
-                _reloadLock.Wait(TimeSpan.FromSeconds(10));
-                _reloadLock.Dispose();
+                try {
+                    _reloadLock.Wait(TimeSpan.FromSeconds(10));
+                    _reloadLock.Dispose();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 

@@ -81,14 +81,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var funcType = ProcessFunctionDecorators(ddg);
             EnsureParameterZero();
 
-            var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
+            _declUnit.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
 
             // Set the scope to within the function
             ddg.Scope = Scope;
 
             Ast.Body.Walk(ddg);
 
-            v.AddTypes(this, funcType);
+            _declUnit.Scope.AssignVariable(Ast.Name, Ast.NameExpression, this, funcType);
         }
 
 
