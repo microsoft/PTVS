@@ -73,6 +73,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (members.Length == 1) {
                 return members[0];
+            } else if (members.Length == 0) {
+                return null;
             }
 
             if (members.All(m => m is IPythonFunction)) {
