@@ -87,7 +87,7 @@ namespace AnalysisTests {
         private static readonly Lazy<string> _typeShedPath = new Lazy<string>(FindTypeShedForTest);
         private static string TypeShedPath => _typeShedPath.Value;
         private static string FindTypeShedForTest() {
-            var candidate = Environment.GetEnvironmentVariable("_TESTDATA_TYPESHED");
+            var candidate = Path.Combine(PathUtils.GetParent(typeof(AstPythonInterpreterFactory).Assembly.Location), "Typeshed");
             if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "stdlib", "2and3"))) {
                 return candidate;
             }
