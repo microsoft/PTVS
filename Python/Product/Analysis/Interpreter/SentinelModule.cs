@@ -29,7 +29,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public SentinelModule(string name, bool importing) {
             Name = name;
             if (importing) {
-                _asyncLocal = new AsyncLocal<SentinelModule>() { Value = this };
                 _semaphore = new SemaphoreSlim(0, 1000);
             } else {
                 _realModule = this;
