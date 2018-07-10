@@ -22,13 +22,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private readonly AsyncLocal<string> _name = new AsyncLocal<string>();
+        private AsyncLocal<SentinelModule> _asyncLocal;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
-            _name.Value = name;
+            Name = name;
             if (importing) {
+                _asyncLocal = new AsyncLocal<SentinelModule>() { Value = this };
                 _semaphore = new SemaphoreSlim(0, 1000);
             } else {
                 _realModule = this;
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (mod != null) {
                 return mod;
             }
-            if (name == _name.Value) {
+            if (_asyncLocal?.Value == this) {
                 // Prevent reentrancy on the same module
                 return this;
             }
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public string Name => _name.Value;
+        public string Name { get; }
         public string Documentation => null;
         public PythonMemberType MemberType => PythonMemberType.Module;
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
