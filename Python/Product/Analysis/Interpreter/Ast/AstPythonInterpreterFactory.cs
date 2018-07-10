@@ -484,6 +484,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public sealed class TryImportModuleContext {
+            public string ModuleName { get; set; }
             public IPythonInterpreter Interpreter { get; set; }
             public ConcurrentDictionary<string, IPythonModule> ModuleCache { get; set; }
             public IPythonModule BuiltinModule { get; set; }

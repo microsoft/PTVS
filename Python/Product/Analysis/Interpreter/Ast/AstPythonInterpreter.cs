@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using static Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
@@ -195,7 +196,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return names.MaybeEnumerate().ToArray();
         }
 
-        public IPythonModule ImportModule(string name) {
+        public async Task<IPythonModule> ImportModuleAsync(string name) {
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
@@ -204,12 +205,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return _builtinModule;
             }
 
-            var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
+            var ctxt = new TryImportModuleContext {
+                ModuleName = name,
                 Interpreter = this,
                 ModuleCache = _modules,
                 BuiltinModule = _builtinModule,
                 FindModuleInUserSearchPathAsync = FindModuleInUserSearchPathAsync,
-                TypeStubPaths = _analyzer.Limits.UseTypeStubPackages ? _analyzer.GetTypeStubPaths() : null, 
+                TypeStubPaths = _analyzer.Limits.UseTypeStubPackages ? _analyzer.GetTypeStubPaths() : null,
                 MergeTypeStubPackages = !_analyzer.Limits.UseTypeStubPackagesExclusively
             };
 
@@ -220,18 +222,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 // possible, but if all else fails then we'll abort and treat it as an
                 // error.
                 // (And if we've got a debugger attached, don't time out at all.)
-                Task<AstPythonInterpreterFactory.TryImportModuleResult> impTask;
+                AstPythonInterpreterFactory.TryImportModuleResult result;
 #if DEBUG
                 if (Debugger.IsAttached) {
-                    impTask = _factory.TryImportModuleAsync(name, ctxt, CancellationToken.None);
+                    result = await _factory.TryImportModuleAsync(name, ctxt, CancellationToken.None);
                 } else {
 #endif
                     var cts = new CancellationTokenSource(5000);
-                    impTask = _factory.TryImportModuleAsync(name, ctxt, cts.Token);
                     try {
-                        if (!impTask.Wait(10000)) {
-                            throw new OperationCanceledException();
-                        }
+                        result = await _factory.TryImportModuleAsync(name, ctxt, cts.Token);
                     } catch (OperationCanceledException) {
                         _log.Log(TraceLevel.Error, "ImportTimeout", name);
                         Debug.Fail("Import timeout");
@@ -240,8 +239,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 #if DEBUG
                 }
 #endif
-
-                var result = impTask.Result;
                 switch (result.Status) {
                     case AstPythonInterpreterFactory.TryImportModuleResultCode.Success:
                         return result.Module;
@@ -261,6 +258,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
+        public IPythonModule ImportModule(string name) {
+            Task<IPythonModule> impTask = ImportModuleAsync(name);
+            if (!impTask.Wait(10000)) {
+                return null;
+            }
+            return impTask.Result;
+        }
 
         public void Initialize(PythonAnalyzer state) {
             if (_analyzer != null) {

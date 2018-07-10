@@ -93,12 +93,12 @@ namespace Microsoft.PythonTools.Analysis {
             ModuleReference res;
             bool firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                var mod = await _interpreter.ImportModuleAsync(name).ConfigureAwait(false);
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(mod), name);
                 firstImport = true;
             }
             if (res != null && res.Module == null) {
-                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                var mod = await _interpreter.ImportModuleAsync(name).ConfigureAwait(false);
                 res.Module = GetBuiltinModule(mod);
             }
             if (firstImport && res != null && res.Module != null && _analyzer != null) {
