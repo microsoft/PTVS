@@ -23,14 +23,13 @@ using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private AsyncLocal<SentinelModule> _asyncLocal;
+        private readonly SynchronizationContext _creator = SynchronizationContext.Current;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
             Name = name;
             if (importing) {
-                _asyncLocal = new AsyncLocal<SentinelModule>() { Value = this };
                 _semaphore = new SemaphoreSlim(0, 1000);
             } else {
                 _realModule = this;
@@ -42,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (mod != null) {
                 return mod;
             }
-            if (_asyncLocal?.Value == this) {
+            if (_creator == SynchronizationContext.Current) {
                 // Prevent reentrancy on the same module
                 return this;
             }
