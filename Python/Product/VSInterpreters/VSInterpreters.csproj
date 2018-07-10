@@ -85,7 +85,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interpreter\IProjectContextProvider.cs" />
-    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
     <Compile Include="Interpreter\ICondaEnvironmentManagerUI.cs" />
     <Compile Include="Interpreter\ICondaEnvironmentManager.cs" />
     <Compile Include="Interpreter\CondaEnvironmentManager.cs" />

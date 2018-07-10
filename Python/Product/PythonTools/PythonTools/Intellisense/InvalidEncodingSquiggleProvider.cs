@@ -67,6 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         new List<TaskProviderItem> {
                             new TaskProviderItem(
                                 Services.Site,
+                                VsProjectAnalyzer.InvalidEncodingMoniker,
                                 message,
                                 span,
                                 VSTASKPRIORITY.TP_NORMAL,

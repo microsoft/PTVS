@@ -71,8 +71,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
                         if (!curLocations.Contains(variable.Location)) {
                             try {
-                                var item = new LocationPreviewItem(_analyzer, fileItem, variable.Location, variable.Type);
-                                if (item.Length > 0) {
+                                var item = LocationPreviewItem.Create(_analyzer, fileItem, variable.Location, variable.Type);
+                                if (item != null && item.Length > 0) {
                                     fileItem.Items.Add(item);
                                     curLocations.Add(variable.Location);
                                 }

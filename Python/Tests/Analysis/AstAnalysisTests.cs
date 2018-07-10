@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -266,7 +267,7 @@ namespace AnalysisTests {
 R_str = r_str()
 R_object = r_object()
 R_A1 = A()
-R_A2 = A.r_A()
+R_A2 = A().r_A()
 R_A3 = R_A1.r_A()");
                     entry.WaitForAnalysis();
 
@@ -277,9 +278,9 @@ R_A3 = R_A1.r_A()");
 
                     entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
                     entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
-                    entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
-                    entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
+                    entry.AssertIsInstance("R_A1", "A");
+                    entry.AssertIsInstance("R_A2", "A");
+                    entry.AssertIsInstance("R_A3", "A");
                     entry.AssertDescription("R_A1", "A");
                     entry.AssertDescription("R_A2", "A");
                     entry.AssertDescription("R_A3", "A");
@@ -621,6 +622,9 @@ class BankAccount(object):
         [TestMethod, Priority(0)]
         public void AstBuiltinScrapeV26() => AstBuiltinScrape(PythonPaths.Python26_x64 ?? PythonPaths.Python26);
 
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeIPy27() => AstBuiltinScrape(PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27);
+
 
         private void AstBuiltinScrape(PythonVersion version) {
             AstScrapedPythonModule.KeepAst = true;
@@ -876,6 +880,13 @@ class BankAccount(object):
             );
         }
 
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibIPy27() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.IsIronPython);
+            await FullStdLibTest(v);
+        }
+
+
         private async Task FullStdLibTest(PythonVersion v, params string[] skipModules) {
             v.AssertInstalled();
             var factory = new AstPythonInterpreterFactory(v.Configuration, new InterpreterFactoryCreationOptions {
@@ -889,7 +900,10 @@ class BankAccount(object):
                 "matplotlib.backends._backend_gdk",
                 "matplotlib.backends._backend_gtkagg",
                 "matplotlib.backends._gtkagg",
+                "test.test_pep3131",
+                "test.test_unicode_identifiers"
             });
+            skip.UnionWith(modules.Select(m => m.FullName).Where(n => n.StartsWith("test.badsyntax") || n.StartsWith("test.bad_coding")));
 
             bool anySuccess = false;
             bool anyExtensionSuccess = false, anyExtensionSeen = false;
@@ -897,6 +911,7 @@ class BankAccount(object):
 
             using (var analyzer = new PythonAnalysis(factory)) {
                 try {
+                    PythonModuleLoader.KeepParseErrors = true;
                     var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
                     var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
@@ -919,11 +934,12 @@ class BankAccount(object):
                         anyExtensionSeen |= modName.IsNativeExtension;
                         if (mod == null) {
                             Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
-                        } else if (mod is AstScrapedPythonModule smod) {
-                            if (smod.ParseErrors?.Any() ?? false) {
+                        } else if (mod is AstScrapedPythonModule aspm) {
+                            var errors = aspm.ParseErrors.MaybeEnumerate().ToArray();
+                            if (errors.Any()) {
                                 anyParseError = true;
                                 Trace.TraceError("Parse errors in {0}", modName.SourceFile);
-                                foreach (var e in smod.ParseErrors) {
+                                foreach (var e in errors) {
                                     Trace.TraceError(e);
                                 }
                             } else {
@@ -931,14 +947,29 @@ class BankAccount(object):
                                 anyExtensionSuccess |= modName.IsNativeExtension;
                                 mod.GetMemberNames(analyzer.ModuleContext).ToList();
                             }
-                        } else if (mod is AstPythonModule) {
-                            // pass
+                        } else if (mod is AstPythonModule apm) {
+                            var filteredErrors = apm.ParseErrors.MaybeEnumerate().Where(e => !e.Contains("encoding problem")).ToArray();
+                            if (filteredErrors.Any()) {
+                                // Do not fail due to errors in installed packages
+                                if (!apm.FilePath.Contains("site-packages")) {
+                                    anyParseError = true;
+                                }
+                                Trace.TraceError("Parse errors in {0}", modName.SourceFile);
+                                foreach (var e in filteredErrors) {
+                                    Trace.TraceError(e);
+                                }
+                            } else {
+                                anySuccess = true;
+                                anyExtensionSuccess |= modName.IsNativeExtension;
+                                mod.GetMemberNames(analyzer.ModuleContext).ToList();
+                            }
                         } else {
                             Trace.TraceError("imported {0} as type {1}", modName.ModuleName, mod.GetType().FullName);
                         }
                     }
                 } finally {
                     _analysisLog = analyzer.GetLogContent(CultureInfo.InvariantCulture);
+                    PythonModuleLoader.KeepParseErrors = false;
                 }
             }
             Assert.IsTrue(anySuccess, "failed to import any modules at all");
@@ -1048,16 +1079,37 @@ l = iterfind()");
 e1, e2, e3 = sys.exc_info()");
                     analysis.WaitForAnalysis();
 
-                    var funcs = analysis.GetValues("sys.exc_info").ToArray();
+                    var funcs = analysis.GetValues("sys.exc_info").SelectMany(f => f.Overloads).ToArray();
                     AssertUtil.ContainsExactly(
-                        funcs.SelectMany(f => f.Overloads).Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
-                        "exc_info()->[tuple of type, BaseException, None]",
+                        funcs.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "exc_info()->[tuple[type, BaseException, None]]",
                         "exc_info()->[tuple]"
                     );
 
                     analysis.AssertIsInstance("e1", BuiltinTypeId.Type);
                     analysis.AssertIsInstance("e2", "BaseException");
                     analysis.AssertIsInstance("e3", BuiltinTypeId.NoneType);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeShedJsonMakeScanner() {
+            using (var analysis = CreateAnalysis(Latest)) {
+                analysis.SetTypeStubSearchPath(TypeShedPath);
+                try {
+                    var entry = analysis.AddModule("test-module", @"import _json
+
+scanner = _json.make_scanner()");
+                    analysis.WaitForAnalysis();
+
+                    var overloads = analysis.GetSignatures("scanner");
+                    AssertUtil.ContainsExactly(
+                        overloads.Select(o => o.ToString()).Select(s => s.Remove(s.IndexOf("'''"))),
+                        "__call__(string:str=,index:int=)->[tuple[None, int]]"
+                    );
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
@@ -1106,6 +1158,55 @@ i_5 = sys.getwindowsversion().platform_version[0]
                 } finally {
                     _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeStubConditionalDefine() {
+            var seen = new HashSet<PythonLanguageVersion>();
+
+            var code = @"import sys
+
+if sys.version_info < (2, 7):
+    LT_2_7 : bool = ...
+if sys.version_info <= (2, 7):
+    LE_2_7 : bool = ...
+if sys.version_info > (2, 7):
+    GT_2_7 : bool = ...
+if sys.version_info >= (2, 7):
+    GE_2_7 : bool = ...
+
+";
+
+            var fullSet = new[] { "LT_2_7", "LE_2_7", "GT_2_7", "GE_2_7" };
+
+            foreach (var ver in PythonPaths.Versions) {
+                if (!seen.Add(ver.Version)) {
+                    continue;
+                }
+
+                Console.WriteLine("Testing with {0}", ver.InterpreterPath);
+
+                var interpreter = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(ver.Version.ToVersion()).CreateInterpreter();
+                var entry = PythonModuleLoader.FromStream(interpreter, new MemoryStream(Encoding.ASCII.GetBytes(code)), "testmodule.pyi", ver.Version);
+
+                var expected = new List<string>();
+                if (ver.Version.Is3x()) {
+                    expected.Add("GT_2_7");
+                    expected.Add("GE_2_7");
+                } else if (ver.Version == PythonLanguageVersion.V27) {
+                    expected.Add("GE_2_7");
+                    expected.Add("LE_2_7");
+                } else {
+                    expected.Add("LT_2_7");
+                    expected.Add("LE_2_7");
+                }
+
+                AssertUtil.CheckCollection(
+                    entry.GetMemberNames(null).Where(n => n.EndsWithOrdinal("2_7")),
+                    expected,
+                    fullSet.Except(expected)
+                );
             }
         }
 

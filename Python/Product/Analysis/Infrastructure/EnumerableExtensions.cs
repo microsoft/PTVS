@@ -20,6 +20,9 @@ using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     static class EnumerableExtensions {
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source) 
+            => source == null || !source.Any();
+
         public static T[] MaybeEnumerate<T>(this T[] source) {
             return source ?? Array.Empty<T>();
         }
@@ -44,6 +47,12 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
 
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> source) where T : class {
             return source.Where(NotNull);
+        }
+
+        public static bool SetEquals<T>(this IEnumerable<T> source, IEnumerable<T> other, IEqualityComparer<T> comparer = null) where T : class {
+            var set1 = new HashSet<T>(source, comparer);
+            var set2 = new HashSet<T>(other, comparer);
+            return set1.SetEquals(set2);
         }
     }
 }

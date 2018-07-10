@@ -194,7 +194,7 @@
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -306,6 +306,7 @@
     <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
@@ -390,7 +391,6 @@
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />

@@ -49,6 +49,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private static bool Active => _log != null;
+
         public static void Flush() {
             _log?.Flush();
         }
@@ -75,25 +77,25 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public static void Enqueue(Deque<AnalysisUnit> deque, AnalysisUnit unit) {
-            if (Output != null) {
+            if (Active) {
                 Add("E", IdDispenser.GetId(unit), deque.Count);
             }
         }
 
         public static void Dequeue(Deque<AnalysisUnit> deque, AnalysisUnit unit) {
-            if (Output != null) {
+            if (Active) {
                 Add("D", IdDispenser.GetId(unit), deque.Count);
             }
         }
 
         public static void NewUnit(AnalysisUnit unit) {
-            if (Output != null) {
+            if (Active) {
                 Add("N", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
             }
         }
 
         public static void UpdateUnit(AnalysisUnit unit) {
-            if (Output != null) {
+            if (Active) {
                 Add("U", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
             }
         }

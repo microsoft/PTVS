@@ -24,10 +24,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override Task<CompletionList> Completion(CompletionParams @params) {
             var uri = @params.textDocument.uri;
-            // Make sure document is enqueued for processing
-            var openFile = _openFiles.GetDocument(uri);
-
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+ 
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
@@ -39,14 +37,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var opts = GetOptions(@params.context);
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this,
-                () => entry.ReadDocument(_projectFiles.GetPart(uri), out _));
+                () => entry.ReadDocument(ProjectFiles.GetPart(uri), out _));
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
             if (members == null) {
                 TraceMessage($"Do not trigger at {@params.position} in {uri}");
                 return Task.FromResult(new CompletionList());
             }
 
-            if (_settings.SuppressAdvancedMembers) {
+            if (!Settings.completion.showAdvancedMembers) {
                 members = members.Where(m => !m.label.StartsWith("__"));
             }
 
@@ -59,7 +57,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var res = new CompletionList {
                 items = members.ToArray(),
                 _expr = ctxt.ParentExpression?.ToCodeString(tree, CodeFormattingOptions.Traditional),
-                _commitByDefault = ctxt.ShouldCommitByDefault
+                _commitByDefault = ctxt.ShouldCommitByDefault,
+                _allowSnippet = ctxt.ShouldAllowSnippets
             };
 
             SourceLocation trigger = @params.position;

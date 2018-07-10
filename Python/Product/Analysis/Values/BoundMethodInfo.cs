@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<OverloadResult> Overloads {
             get {
                 foreach (var p in Function.Overloads) {
-                    yield return p.Parameters.Length > 0 ? p.WithNewParameters(p.Parameters.Skip(1).ToArray()) : p;
+                    yield return p.Parameters.Length > 0 ? p.WithoutLeadingParameters(1) : p;
                 }
             }
         }

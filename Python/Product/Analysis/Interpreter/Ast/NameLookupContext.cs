@@ -301,6 +301,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var type = GetTypeFromValue(GetValueFromExpression(expr.Target));
             if (type != null && type != _unknownType) {
+                if (AstTypingModule.IsTypingType(type)) {
+                    return type;
+                }
+
                 switch (type.TypeId) {
                     case BuiltinTypeId.Bytes:
                         if (Ast.LanguageVersion.Is3x()) {
@@ -330,19 +334,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            var left = GetValueFromExpression(expr.TrueExpression);
-            var right = GetValueFromExpression(expr.FalseExpression);
-            if (left?.MemberType == PythonMemberType.Unknown) {
-                left = null;
-            }
-            if (right?.MemberType == PythonMemberType.Unknown) {
-                right = null;
-            }
-
-            if (left != null && right != null && left != right) {
-                return new AstPythonMultipleMembers(new[] { left, right });
-            }
-            return left ?? right;
+            return AstPythonMultipleMembers.Combine(
+                GetValueFromExpression(expr.TrueExpression),
+                GetValueFromExpression(expr.FalseExpression)
+            );
         }
 
         private IMember GetValueFromCallable(CallExpression expr, LookupOptions options) {
@@ -413,8 +408,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return type;
             }
 
-            if (value is IPythonType) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+            switch (value.MemberType) {
+                case PythonMemberType.Class:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+                case PythonMemberType.Delegate:
+                case PythonMemberType.DelegateInstance:
+                case PythonMemberType.Function:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+                case PythonMemberType.Method:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
+                case PythonMemberType.Enum:
+                case PythonMemberType.EnumInstance:
+                    break;
+                case PythonMemberType.Module:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+                case PythonMemberType.Namespace:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Object);
+                case PythonMemberType.Event:
+                    break;
             }
 
             IPythonFunction f;
@@ -427,30 +438,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             }
 
-            if (value is IBuiltinProperty) {
+            if (value is IBuiltinProperty prop) {
+                return prop.Type ?? Interpreter.GetBuiltinType(BuiltinTypeId.Property);
+            } else if (value.MemberType == PythonMemberType.Property) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Property);
             }
 
-            if (value is IPythonModule) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+            if (value is IPythonMethodDescriptor) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
             }
 
-            if (value is IPythonMultipleMembers) {
-                type = null;
-                foreach (var t in GetTypesFromValue(value)) {
-                    if (type == null) {
-                        type = t;
-                    } else if (t == null) {
-                    } else if (t.MemberType == PythonMemberType.Module ||
-                        (t.MemberType == PythonMemberType.Class && type.MemberType != PythonMemberType.Module) ||
-                        (t.MemberType == PythonMemberType.Function && type.MemberType != PythonMemberType.Class)) {
-                        type = t;
-                    }
-                }
-                return type;
+            if (value is IPythonMultipleMembers mm) {
+                return AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members);
             }
 
-            Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
+            if (value is IPythonType) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+            }
+
+#if DEBUG
+            var implements = string.Join(", ", new[] { value.GetType().FullName }.Concat(value.GetType().GetInterfaces().Select(i => i.Name)));
+            Debug.Fail("Unhandled type() value: " + implements);
+#endif
             return null;
         }
 
@@ -511,13 +520,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
-        public IMember GetInScope(string name) {
-            if (_scopes.Count == 0) {
+        public IMember GetInScope(string name, Dictionary<string, IMember> scope = null) {
+            if (scope == null && _scopes.Count == 0) {
                 return null;
             }
 
             IMember obj;
-            if (_scopes.Peek().TryGetValue(name, out obj)) {
+            if ((scope ?? _scopes.Peek()).TryGetValue(name, out obj)) {
                 return obj;
             }
             return null;
@@ -528,12 +537,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 (value as IPythonConstant)?.Type?.TypeId == BuiltinTypeId.Unknown;
         }
 
-        public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
+        public void SetInScope(string name, IMember value, bool mergeWithExisting = true, Dictionary<string, IMember> scope = null) {
             Debug.Assert(_scopes.Count > 0);
             if (value == null && _scopes.Count == 0) {
                 return;
             }
-            var s = _scopes.Peek();
+            var s = scope ?? _scopes.Peek();
             if (value == null) {
                 s.Remove(name);
                 return;
