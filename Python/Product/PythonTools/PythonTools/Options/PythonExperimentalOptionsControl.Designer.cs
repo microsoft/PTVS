@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this._condaEnvironments = new System.Windows.Forms.CheckBox();
             this._condaPackageManager = new System.Windows.Forms.CheckBox();
-            this._useVsCodeDebugger = new System.Windows.Forms.CheckBox();
             this._mustRestartLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
@@ -46,7 +45,6 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._condaEnvironments, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._condaPackageManager, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this._useVsCodeDebugger, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
@@ -63,13 +61,6 @@ namespace Microsoft.PythonTools.Options {
             this._condaPackageManager.AutoEllipsis = true;
             this._condaPackageManager.Name = "_condaPackageManager";
             this._condaPackageManager.UseVisualStyleBackColor = true;
-            // 
-            // _useVsCodeDebugger
-            // 
-            resources.ApplyResources(this._useVsCodeDebugger, "_useVsCodeDebugger");
-            this._useVsCodeDebugger.AutoEllipsis = true;
-            this._useVsCodeDebugger.Name = "_useVsCodeDebugger";
-            this._useVsCodeDebugger.UseVisualStyleBackColor = true;
             // 
             // _mustRestartLabel
             // 
@@ -96,6 +87,5 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.Label _mustRestartLabel;
         private System.Windows.Forms.CheckBox _condaEnvironments;
         private System.Windows.Forms.CheckBox _condaPackageManager;
-        private System.Windows.Forms.CheckBox _useVsCodeDebugger;
     }
 }
