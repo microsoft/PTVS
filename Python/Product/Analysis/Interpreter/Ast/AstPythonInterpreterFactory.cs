@@ -522,7 +522,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         // importing on the current thread or the module is not
                         // really being imported.
                         try {
-                            module = await smod.WaitForImportAsync(name, cancellationToken);
+                            module = await smod.WaitForImportAsync(cancellationToken);
                         } catch (OperationCanceledException) {
                             _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
                             return TryImportModuleResult.Timeout;

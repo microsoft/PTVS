@@ -71,11 +71,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static async Task<PythonAnalyzer> CreateAsync(
             IPythonInterpreterFactory factory,
+            CancellationToken token,
             IPythonInterpreter interpreter = null
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {
-                await res.ReloadModulesAsync().ConfigureAwait(false);
+                await res.ReloadModulesAsync(token).ConfigureAwait(false);
                 var r = res;
                 res = null;
                 return r;
@@ -93,7 +94,7 @@ namespace Microsoft.PythonTools.Analysis {
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {
-                res.ReloadModulesAsync().WaitAndUnwrapExceptions();
+                res.ReloadModulesAsync(CancellationToken.None).WaitAndUnwrapExceptions();
                 var r = res;
                 res = null;
                 return r;
@@ -133,12 +134,12 @@ namespace Microsoft.PythonTools.Analysis {
             AnalysisLog.NewUnit(_evalUnit);
         }
 
-        private async Task LoadKnownTypesAsync() {
+        private async Task LoadKnownTypesAsync(CancellationToken token) {
             _itemCache.Clear();
 
             var fallback = new FallbackBuiltinModule(_langVersion);
 
-            var moduleRef = await Modules.TryImportAsync(_builtinName).ConfigureAwait(false);
+            var moduleRef = await Modules.TryImportAsync(_builtinName, token).ConfigureAwait(false);
             if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
@@ -166,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// This method should be called on the analysis thread and is usually invoked
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
-        public async Task ReloadModulesAsync() {
+        public async Task ReloadModulesAsync(CancellationToken token) {
             if (!_reloadLock.Wait(0)) {
                 // If we don't lock immediately, wait for the current reload to
                 // complete and then return.
@@ -179,7 +180,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
 
-                await LoadKnownTypesAsync().ConfigureAwait(false);
+                await LoadKnownTypesAsync(token).ConfigureAwait(false);
 
                 _interpreter.Initialize(this);
 
@@ -939,7 +940,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (_builtinModule == null) {
                 Debug.Fail("Used analyzer without reloading modules");
-                ReloadModulesAsync().WaitAndUnwrapExceptions();
+                ReloadModulesAsync(cancel).WaitAndUnwrapExceptions();
             }
 
             var ddg = new DDG();

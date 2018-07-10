@@ -160,7 +160,7 @@ namespace DjangoTests {
             );
 
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
+            PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact, CancellationToken.None).WaitAndUnwrapExceptions();
             DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
             djangoAnalyzer.Register(analyzer);
 

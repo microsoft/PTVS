@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private AsyncLocal<SentinelModule> _asyncLocal;
+        private readonly SynchronizationContext _creator = SynchronizationContext.Current;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
@@ -36,12 +36,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public async Task<IPythonModule> WaitForImportAsync(string name, CancellationToken cancellationToken) {
+        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
             }
-            if (_asyncLocal?.Value == this) {
+            if (_creator == SynchronizationContext.Current) {
                 // Prevent reentrancy on the same module
                 return this;
             }

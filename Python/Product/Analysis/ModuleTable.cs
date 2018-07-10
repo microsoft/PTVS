@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -89,16 +90,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// may be valid and should not be replaced, but it is an unresolved
         /// reference.
         /// </returns>
-        public async Task<ModuleReference> TryImportAsync(string name) {
+        public async Task<ModuleReference> TryImportAsync(string name, CancellationToken token) {
             ModuleReference res;
             bool firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                var mod = await _interpreter.ImportModuleAsync(name, token).ConfigureAwait(false);
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(mod), name);
                 firstImport = true;
             }
             if (res != null && res.Module == null) {
-                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                var mod = await _interpreter.ImportModuleAsync(name, token).ConfigureAwait(false);
                 res.Module = GetBuiltinModule(mod);
             }
             if (firstImport && res != null && res.Module != null && _analyzer != null) {
