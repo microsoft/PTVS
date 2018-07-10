@@ -24,7 +24,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using static Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
@@ -205,8 +204,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return _builtinModule;
             }
 
-            var ctxt = new TryImportModuleContext {
-                ModuleName = name,
+            var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
                 Interpreter = this,
                 ModuleCache = _modules,
                 BuiltinModule = _builtinModule,
