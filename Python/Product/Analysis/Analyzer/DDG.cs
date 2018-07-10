@@ -276,7 +276,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// <paramref name="attribute"/> contains one element.
         /// </param>
         /// <returns>The imported member, or null.</returns>
-        private IAnalysisSet GetImportedModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, Node node, bool addRef, string linkToName) {
+        private IAnalysisSet GetImportedModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, bool addRef, Node node, NameExpression nameReference, string linkToName) {
             if (module?.Module == null) {
                 return null;
             }
@@ -285,13 +285,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return module.AnalysisModule;
             }
 
-            var value = module.Module.GetModuleMember(node, _unit, attribute[0], addRef, Scope, attribute.Count == 1 ? linkToName : null);
-            foreach (var n in attribute.Skip(1)) {
-                if (value.IsNullOrEmpty()) {
-                    return null;
+            var value = module.Module.GetModuleMember(node, _unit, attribute[0], addRef, Scope, linkToName);
+
+            if (attribute.Count == 1) {
+                if (nameReference != null) {
+                    module.Module.GetModuleMember(nameReference, _unit, attribute[0], addRef);
                 }
-                value = value.GetMember(node, _unit, n);
+            } else {
+                foreach (var n in attribute.Skip(1)) {
+                    if (value.IsNullOrEmpty()) {
+                        return null;
+                    }
+                    value = value.GetMember(node, _unit, n);
+                }
             }
+
             return value.IsNullOrEmpty() ? null : value;
         }
 
@@ -309,8 +317,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// imported member.
         /// </param>
         /// <returns>The variable for the imported member.</returns>
-        private bool AssignImportedModuleOrMember(string name, IAnalysisSet value, Node node, bool addRef) {
+        private bool AssignImportedModuleOrMember(string name, IAnalysisSet value, bool addRef, Node node, NameExpression nameReference) {
             var v = Scope.CreateVariable(node, _unit, name, addRef);
+            if (addRef && nameReference != null) {
+                v.AddReference(nameReference, _unit);
+            }
             v.IsAlwaysAssigned = true;
 
             if (!value.IsNullOrEmpty() && v.AddTypes(_unit, value)) {
@@ -342,12 +353,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// True to add <paramref name="node"/> as a reference of the
         /// imported value.
         /// </param>
-        private void FinishImportModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, string importAs, Node node, bool addRef) {
+        private void FinishImportModuleOrMember(ModuleReference module, IReadOnlyList<string> attribute, string name, bool addRef, Node node, NameExpression nameReference) {
             if (AssignImportedModuleOrMember(
-                importAs,
-                GetImportedModuleOrMember(module, attribute, node, addRef, importAs),
+                name,
+                GetImportedModuleOrMember(module, attribute, addRef, node, nameReference, attribute?.Count == 1 ? name : null),
+                addRef,
                 node,
-                addRef
+                nameReference
             )) {
                 // Imports into our global scope need to enqueue modules that have imported us
                 if (Scope == GlobalScope.Scope) {
@@ -379,7 +391,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             int len = Math.Min(node.Names.Count, asNames.Count);
             for (int i = 0; i < len; i++) {
-                var nameNode = asNames[i] ?? node.Names[i];
                 var impName = node.Names[i].Name;
 
                 if (string.IsNullOrEmpty(impName)) {
@@ -392,14 +403,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             fullImpName[fullImpName.Length - 1] = varName;
 
                             // Don't add references to "*" node
-                            FinishImportModuleOrMember(modRef, fullImpName, varName, nameNode, false);
+                            FinishImportModuleOrMember(modRef, fullImpName, varName, false, node.Names[i], null);
                         }
                     }
                 } else {
                     fullImpName[fullImpName.Length - 1] = impName;
 
                     var varName = asNames[i]?.Name ?? impName;
-                    FinishImportModuleOrMember(modRef, fullImpName, varName, nameNode, true);
+                    FinishImportModuleOrMember(modRef, fullImpName, varName, true, node.Names[i], asNames[i]);
                 }
             }
 
@@ -545,7 +556,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // "import fob.oar as baz" is handled as
                 // baz = import_module('fob.oar')
                 if (asName != null) {
-                    FinishImportModuleOrMember(modRef, bits, asName.Name, asName, true);
+                    FinishImportModuleOrMember(modRef, bits, asName.Name, true, node.Names.LastOrDefault(), asName);
                     continue;
                 }
 
@@ -555,7 +566,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var name = curName.Names[0];
                 // Should be able to just get the module, as we only just imported it
                 if (ProjectState.Modules.TryGetImportedModule(name.Name, out modRef)) {
-                    FinishImportModuleOrMember(modRef, null, name.Name, name, true);
+                    FinishImportModuleOrMember(modRef, null, name.Name, true, name, null);
                     continue;
                 }
 
