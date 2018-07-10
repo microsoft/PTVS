@@ -23,14 +23,11 @@ using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private readonly IPythonInterpreter _interpreter;
-        private readonly Thread _thread;
+        private readonly SynchronizationContext _creator = SynchronizationContext.Current;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
-        public SentinelModule(string name, IPythonInterpreter interpreter, bool importing) {
-            _thread = Thread.CurrentThread;
-            _interpreter = interpreter;
+        public SentinelModule(string name, bool importing) {
             Name = name;
             if (importing) {
                 _semaphore = new SemaphoreSlim(0, 1000);
@@ -39,12 +36,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public async Task<IPythonModule> WaitForImportAsync(IPythonInterpreter interpreter, CancellationToken cancellationToken) {
+        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
             }
-            if (_thread == Thread.CurrentThread || _interpreter == interpreter) {
+            if (_creator == SynchronizationContext.Current) {
+                // Prevent reentrancy on the same module
                 return this;
             }
 

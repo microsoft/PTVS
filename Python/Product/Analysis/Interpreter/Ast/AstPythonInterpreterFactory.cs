@@ -523,7 +523,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         // importing on the current thread or the module is not
                         // really being imported.
                         try {
-                            module = await smod.WaitForImportAsync(context?.Interpreter, cancellationToken);
+                            module = await smod.WaitForImportAsync(cancellationToken);
                         } catch (OperationCanceledException) {
                             _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
                             return TryImportModuleResult.Timeout;
@@ -537,7 +537,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
 
                 // Set up a sentinel so we can detect recursive imports
-                sentinalValue = new SentinelModule(name, context?.Interpreter, true);
+                sentinalValue = new SentinelModule(name, true);
                 if (!modules.TryAdd(name, sentinalValue)) {
                     // Try to get the new module, in case we raced with a .Clear()
                     if (modules.TryGetValue(name, out module) && !(module is SentinelModule)) {
