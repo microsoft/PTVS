@@ -405,6 +405,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _modules[name];
         }
 
+        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token)
+            => Task.FromResult(ImportModule(name));
+
         public IPythonModule ImportModule(string name) {
             if (string.IsNullOrWhiteSpace(name)) {
                 return null;

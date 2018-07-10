@@ -39,7 +39,7 @@ namespace TestUtilities.Python {
             _modules[name] = module;
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
-        
+
         /// <summary>
         /// Removes a module. If <c>retainName</c> is true, keeps returning
         /// the module name from <see cref="GetModuleNames"/>.
@@ -64,6 +64,9 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler ModuleNamesChanged;
+
+        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token)
+            => Task.FromResult(ImportModule(name));
 
         public IPythonModule ImportModule(string name) {
             IPythonModule res;

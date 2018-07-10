@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 
@@ -69,7 +70,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns an IPythonModule for a given module name. Returns null if
         /// the module does not exist. The import is performed asynchronously.
         /// </summary>
-        Task<IPythonModule> ImportModuleAsync(string name);
+        Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token);
         
         /// <summary>
         /// Provides interpreter-specific information which can be associated

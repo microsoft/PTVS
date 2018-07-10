@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
-                var task = Task.Run(() => _analyzer.ReloadModulesAsync(), cancel);
+                var task = Task.Run(() => _analyzer.ReloadModulesAsync(cancel), cancel);
                 try {
                     task.WaitAndUnwrapExceptions();
                     currentTcs.TrySetResult(true);
@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             ThrowIfDisposed();
-            await DoInitializeAsync(@params);
+            await DoInitializeAsync(@params, CancellationToken);
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -350,9 +350,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return entry;
         }
 
-        private async Task DoInitializeAsync(InitializeParams @params) {
+        private async Task DoInitializeAsync(InitializeParams @params, CancellationToken token) {
             ThrowIfDisposed();
-            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter, token);
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
@@ -420,7 +420,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return default(T);
         }
 
-        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter) {
+        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter, CancellationToken token) {
             var factory = ActivateObject<IPythonInterpreterFactory>(interpreter.assembly, interpreter.typeName, interpreter.properties)
                 ?? new AstPythonInterpreterFactory(interpreter.properties);
 
@@ -431,7 +431,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
-            return await PythonAnalyzer.CreateAsync(factory, interp);
+            return await PythonAnalyzer.CreateAsync(factory, token, interp);
         }
 
         private IEnumerable<ModulePath> GetImportNames(Uri document) {
