@@ -34,7 +34,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override void Post(SendOrPostCallback d, object state) {
-            _queue.Enqueue(new AnalysisItem(d, state), AnalysisPriority.High);
+            try {
+                _queue.Enqueue(new AnalysisItem(d, state), AnalysisPriority.High);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         public override void Send(SendOrPostCallback d, object state) {
@@ -42,8 +45,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 _waitEvent = new AutoResetEvent(false);
             }
             var waitable = new WaitableAnalysisItem(d, state);
-            _queue.Enqueue(waitable, AnalysisPriority.High);
-            _waitEvent.WaitOne();
+            try {
+                _queue.Enqueue(waitable, AnalysisPriority.High);
+                _waitEvent.WaitOne();
+            } catch (ObjectDisposedException) {
+            }
         }
 
         class AnalysisItem : IAnalyzable {
