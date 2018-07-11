@@ -71,12 +71,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static async Task<PythonAnalyzer> CreateAsync(
             IPythonInterpreterFactory factory,
-            CancellationToken token,
-            IPythonInterpreter interpreter = null
+            IPythonInterpreter interpreter = null,
+            CancellationToken? token = null
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {
-                await res.ReloadModulesAsync(token).ConfigureAwait(false);
+                await res.ReloadModulesAsync(token ?? CancellationToken.None).ConfigureAwait(false);
                 var r = res;
                 res = null;
                 return r;

@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             }
 
             using (var factory = new Interpreter.Ast.AstPythonInterpreterFactory(config, creationOpts))
-            using (var analyzer = PythonAnalyzer.CreateAsync(factory, CancellationToken.None).WaitAndUnwrapExceptions()) {
+            using (var analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                 var modules = new Dictionary<string, IPythonProjectEntry>();
                 var state = new State();
 
