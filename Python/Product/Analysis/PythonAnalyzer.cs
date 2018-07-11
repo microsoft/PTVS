@@ -72,11 +72,11 @@ namespace Microsoft.PythonTools.Analysis {
         public static async Task<PythonAnalyzer> CreateAsync(
             IPythonInterpreterFactory factory,
             IPythonInterpreter interpreter = null,
-            CancellationToken? token = null
+            CancellationToken token = default(CancellationToken)
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {
-                await res.ReloadModulesAsync(token ?? CancellationToken.None).ConfigureAwait(false);
+                await res.ReloadModulesAsync(token).ConfigureAwait(false);
                 var r = res;
                 res = null;
                 return r;
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// This method should be called on the analysis thread and is usually invoked
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
-        public async Task ReloadModulesAsync(CancellationToken? token = null) {
+        public async Task ReloadModulesAsync(CancellationToken token = default(CancellationToken)) {
             if (!_reloadLock.Wait(0)) {
                 // If we don't lock immediately, wait for the current reload to
                 // complete and then return.
@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
 
-                await LoadKnownTypesAsync(token ?? CancellationToken.None).ConfigureAwait(false);
+                await LoadKnownTypesAsync(token).ConfigureAwait(false);
 
                 _interpreter.Initialize(this);
 
