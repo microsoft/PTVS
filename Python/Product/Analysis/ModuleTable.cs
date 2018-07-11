@@ -93,13 +93,15 @@ namespace Microsoft.PythonTools.Analysis {
         public async Task<ModuleReference> TryImportAsync(string name, CancellationToken token) {
             ModuleReference res;
             bool firstImport = false;
+
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                var mod = await _interpreter.ImportModuleAsync(name, token).ConfigureAwait(false);
+                var mod = await ImportModuleAsync(name, token).ConfigureAwait(false);
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(mod), name);
                 firstImport = true;
             }
+
             if (res != null && res.Module == null) {
-                var mod = await _interpreter.ImportModuleAsync(name, token).ConfigureAwait(false);
+                var mod = await ImportModuleAsync(name, token).ConfigureAwait(false);
                 res.Module = GetBuiltinModule(mod);
             }
             if (firstImport && res != null && res.Module != null && _analyzer != null) {
@@ -109,6 +111,17 @@ namespace Microsoft.PythonTools.Analysis {
                 return null;
             }
             return res;
+        }
+
+        private async Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token) {
+            var interpreter2 = _interpreter as IPythonInterpreter2;
+            IPythonModule mod;
+            if (interpreter2 != null) {
+                mod = await interpreter2.ImportModuleAsync(name, token).ConfigureAwait(false);
+            } else {
+                mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+            }
+            return mod;
         }
 
         /// <summary>

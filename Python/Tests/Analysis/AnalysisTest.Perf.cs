@@ -224,7 +224,7 @@ import System
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var projectState = new PythonAnalyzer(fact, fact.CreateInterpreter());
-            projectState.ReloadModulesAsync(cancel.HasValue ? cancel.Value : CancellationToken.None).WaitAndUnwrapExceptions();
+            projectState.ReloadModulesAsync(cancel ?? CancellationToken.None).WaitAndUnwrapExceptions();
 
             projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
 

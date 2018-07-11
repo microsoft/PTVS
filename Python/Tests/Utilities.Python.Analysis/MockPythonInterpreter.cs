@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockPythonInterpreter : IPythonInterpreter {
+    public class MockPythonInterpreter : IPythonInterpreter2 {
         public readonly Dictionary<string, IPythonModule> _modules;
         public readonly HashSet<string> _moduleNames;
         public bool IsDatabaseInvalid;

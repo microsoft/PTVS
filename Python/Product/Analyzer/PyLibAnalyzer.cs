@@ -1252,7 +1252,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 using (var factory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(_version, outDir))
-                using (var projectState = PythonAnalyzer.CreateAsync(factory, CancellationToken.None).WaitAndUnwrapExceptions()) {
+                using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
                     if (_updater != null) {
                         projectState.SetQueueReporting(itemsInQueue => {
