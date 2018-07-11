@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public void NotifyImportNamesChanged() { }
     }
 
-    sealed class AnalysisOnlyInterpreter : IPythonInterpreter {
+    sealed class AnalysisOnlyInterpreter : IPythonInterpreter2 {
         private IBuiltinPythonModule _builtins;
 
         public AnalysisOnlyInterpreter(IPythonInterpreterFactory factory) {

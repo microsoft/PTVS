@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    internal class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
+    internal class AstPythonInterpreter : IPythonInterpreter2, IModuleContext, ICanFindModuleMembers {
         private readonly AstPythonInterpreterFactory _factory;
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
