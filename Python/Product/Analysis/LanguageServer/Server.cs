@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        public async Task ReloadModulesAsync() {
+        public override async Task ReloadModulesAsync() {
             // Make sure reload modules is executed on the analyzer thread.
             var task = _reloadModulesQueueItem.Task;
             _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
