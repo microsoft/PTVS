@@ -249,7 +249,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IPythonModule ImportModule(string name) {
-            var token = Debugger.IsAttached ? CancellationToken.None : new CancellationTokenSource(5000).Token;
+            var token = new CancellationTokenSource(5000).Token;
+#if DEBUG
+            token = Debugger.IsAttached ? CancellationToken.None : token;
+#endif
             var impTask = ImportModuleAsync(name, token);
             if (!impTask.Wait(10000)) {
                 return null;
