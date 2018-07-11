@@ -48,5 +48,15 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> source) where T : class {
             return source.Where(NotNull);
         }
+
+        public static bool SetEquals<T>(this IEnumerable<T> source, IEnumerable<T> other, IEqualityComparer<T> comparer = null) where T : class {
+            var set1 = new HashSet<T>(source, comparer);
+            var set2 = new HashSet<T>(other, comparer);
+            return set1.SetEquals(set2);
+        }
+
+        private static T GetKey<T, U>(KeyValuePair<T, U> keyValue) => keyValue.Key;
+
+        public static IEnumerable<T> Keys<T, U>(this IEnumerable<KeyValuePair<T, U>> source) => source.Select(GetKey);
     }
 }

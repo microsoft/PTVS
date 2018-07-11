@@ -19,6 +19,10 @@ __version__ = "3.2"
 
 import sys
 
+# HACK: macOS sets __cached__ to None for __main__
+# but site.main() cannot handle it. So we force it to a str.
+__cached__ = ''
+
 if 'site' in sys.modules:
     raise RuntimeError('script must be run with -S')
 

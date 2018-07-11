@@ -57,6 +57,14 @@ namespace Microsoft.PythonTools.Options {
         }
     }
 
+    [Guid("0AC0FBE6-C711-46DB-9856-0DD169E1EB9E")]
+    public interface IPythonOptions2 : IPythonOptions {
+        bool UseLegacyDebugger {
+            get;
+            set;
+        }
+    }
+
     [Guid("77179244-BBD7-4AA2-B27B-F2CCC679953A")]
     public interface IPythonIntellisenseOptions {
         bool AddNewLineAtEndOfFullyTypedWord { get; set; }

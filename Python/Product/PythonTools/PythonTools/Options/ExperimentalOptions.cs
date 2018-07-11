@@ -21,18 +21,12 @@ namespace Microsoft.PythonTools.Options {
     public sealed class ExperimentalOptions {
         internal ExperimentalOptions(PythonToolsService service) {
             Load();
-            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
-        }
-
-        private void OnUseVsCodeDebuggerChanged(object sender, EventArgs e) {
-            UseVsCodeDebugger = EO.GetUseVsCodeDebugger();
         }
 
         public void Load() {
             NoDatabaseFactory = EO.GetNoDatabaseFactory();
             AutoDetectCondaEnvironments = EO.GetAutoDetectCondaEnvironments();
             UseCondaPackageManager = EO.GetUseCondaPackageManager();
-            UseVsCodeDebugger = EO.GetUseVsCodeDebugger();
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -40,7 +34,6 @@ namespace Microsoft.PythonTools.Options {
             EO.NoDatabaseFactory = NoDatabaseFactory;
             EO.AutoDetectCondaEnvironments = AutoDetectCondaEnvironments;
             EO.UseCondaPackageManager = UseCondaPackageManager;
-            EO.UseVsCodeDebugger = UseVsCodeDebugger;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -48,7 +41,6 @@ namespace Microsoft.PythonTools.Options {
             NoDatabaseFactory = false;
             AutoDetectCondaEnvironments = false;
             UseCondaPackageManager = false;
-            UseVsCodeDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -69,11 +61,5 @@ namespace Microsoft.PythonTools.Options {
         /// True to use conda for package management when available.
         /// </summary>
         public bool UseCondaPackageManager { get; set; }
-
-        /// <summary>
-        /// True to use a debugger built to run on VS Code Debug Adapter Host
-        /// </summary>
-        public bool UseVsCodeDebugger { get; set; }
-
     }
 }

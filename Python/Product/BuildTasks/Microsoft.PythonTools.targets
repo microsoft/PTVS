@@ -208,7 +208,9 @@ permissions and limitations under the License.
   <!-- Build system compatibility -->
 
   <PropertyGroup>
-    <BypassFrameworkInstallChecks Condition="'$(TargetFrameworkVersion)' == ''">true</BypassFrameworkInstallChecks>
+    <BypassFrameworkInstallChecks>true</BypassFrameworkInstallChecks>
+    <DisableRarCache>true</DisableRarCache>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
   </PropertyGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
@@ -228,13 +230,6 @@ permissions and limitations under the License.
   </Target>
 
   <Target Name="BuiltProjectOutputGroupDependencies" Returns=""  />
-
-  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" />
-  <Target Name="GetTargetFrameworkDirectories" Returns="" />
-  <Target Name="GetTargetFrameworkMoniker" Returns="" />
-  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
-  <Target Name="ResolveAssemblyReferences" />
-  <Target Name="GetReferenceAssemblyPaths" />
 
   <Target Name="GenerateManifests" Returns="" />
   <Target Name="AddDatabasesToSourceManifest" Returns="" />

@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools {
                     { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory },
                     { "AutoDetectCondaEnvironments", ExperimentalOptions.AutoDetectCondaEnvironments },
                     { "UseCondaPackageManager", ExperimentalOptions.UseCondaPackageManager },
-                    { "UseVsCodeDebugger", ExperimentalOptions.UseVsCodeDebugger }
+                    { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
                 });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));

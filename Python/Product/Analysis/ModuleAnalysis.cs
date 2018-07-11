@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (value is MultipleMemberInfo mmi) {
                 if (mmi.Push()) {
                     try {
-                        return mmi.Members.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                        return mmi.Members.Aggregate(set, (a, v) => ResolveAndAdd(unit, a, v));
                     } finally {
                         mmi.Pop();
                     }
@@ -1157,7 +1157,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
             if (privatePrefix != null && name.StartsWithOrdinal(privatePrefix) && !name.EndsWithOrdinal("__")) {
                 // private prefix inside of the class, filter out the prefix.
-                return name.Substring(privatePrefix.Length - 2);
+                return name.Substring(privatePrefix.Length);
             } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {
                 return name;
             }
@@ -1176,7 +1176,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetPrivatePrefix(InterpreterScope scope) {
             string classScopePrefix = GetPrivatePrefixClassName(scope);
             if (classScopePrefix != null) {
-                return "_" + classScopePrefix + "__";
+                return "_" + classScopePrefix;
             }
             return null;
         }

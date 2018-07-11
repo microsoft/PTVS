@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var startingVersion = rightBuffer.CurrentSnapshot;
 
-            VsProjectAnalyzer.ApplyChanges(changes, rightBuffer, buffer.LocationTracker, atVersion);
+            VsProjectAnalyzer.ApplyChanges(changes, rightBuffer, new LocationTracker(startingVersion), startingVersion.Version.VersionNumber);
 
             var textChanges = startingVersion.Version.Changes;
             int minPos = startingVersion.Length, maxPos = 0;

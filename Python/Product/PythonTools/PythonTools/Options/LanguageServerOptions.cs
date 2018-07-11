@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>
@@ -30,19 +31,23 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public string TypeShedPath { get; set; }
+        public bool SuppressTypeShed { get; set; }
 
         public void Load() {
             TypeShedPath = _pyService.LoadString(nameof(TypeShedPath), Category);
+            SuppressTypeShed = _pyService.LoadBool(nameof(SuppressTypeShed), Category) ?? false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _pyService.SaveString(nameof(TypeShedPath), Category, TypeShedPath);
+            _pyService.SaveBool(nameof(SuppressTypeShed), Category, SuppressTypeShed);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             TypeShedPath = string.Empty;
+            SuppressTypeShed = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 

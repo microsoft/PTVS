@@ -30,6 +30,7 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.VsCode {
     public partial class LanguageServer {
         private InitializeParams _initParams;
+        private bool _shutdown;
 
         [JsonRpcMethod("initialize")]
         public Task<InitializeResult> Initialize(JToken token) {
@@ -43,16 +44,23 @@ namespace Microsoft.PythonTools.VsCode {
         [JsonRpcMethod("initialized")]
         public async Task Initialized(JToken token) { 
             await _server.Initialized(token.ToObject<InitializedParams>());
-            await LoadDirectoryFiles();
+            _rpc.NotifyAsync("python/languageServerStarted").DoNotWait();
         }
 
         [JsonRpcMethod("shutdown")]
-        public Task Shutdown() => _server.Shutdown();
+        public async Task Shutdown() {
+            // Shutdown, but do not exit.
+            // https://microsoft.github.io/language-server-protocol/specification#shutdown
+            await _server.Shutdown();
+            _shutdown = true;
+        }
 
         [JsonRpcMethod("exit")]
         public async Task Exit() {
             await _server.Exit();
             _sessionTokenSource.Cancel();
+            // Per https://microsoft.github.io/language-server-protocol/specification#exit
+            Environment.Exit(_shutdown ? 0 : 1);
         }
 
         private Task LoadDirectoryFiles() {
@@ -68,7 +76,8 @@ namespace Microsoft.PythonTools.VsCode {
             }
 
             var matcher = new Matcher();
-            matcher.AddIncludePatterns(_initParams.initializationOptions.includeFiles ?? new[] { "**/*" });
+            var included = _initParams.initializationOptions.includeFiles;
+            matcher.AddIncludePatterns(included != null && included.Length > 0 ? included : new[] { "**/*" });
             matcher.AddExcludePatterns(_initParams.initializationOptions.excludeFiles ?? Enumerable.Empty<string>());
 
             var dib = new DirectoryInfoWrapper(new DirectoryInfo(rootDir));

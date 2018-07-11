@@ -408,8 +408,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return type;
             }
 
-            if (value is IPythonType) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+            switch (value.MemberType) {
+                case PythonMemberType.Class:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+                case PythonMemberType.Delegate:
+                case PythonMemberType.DelegateInstance:
+                case PythonMemberType.Function:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+                case PythonMemberType.Method:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
+                case PythonMemberType.Enum:
+                case PythonMemberType.EnumInstance:
+                    break;
+                case PythonMemberType.Module:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+                case PythonMemberType.Namespace:
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.Object);
+                case PythonMemberType.Event:
+                    break;
             }
 
             IPythonFunction f;
@@ -422,30 +438,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             }
 
-            if (value is IBuiltinProperty) {
+            if (value is IBuiltinProperty prop) {
+                return prop.Type ?? Interpreter.GetBuiltinType(BuiltinTypeId.Property);
+            } else if (value.MemberType == PythonMemberType.Property) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Property);
             }
 
-            if (value is IPythonModule) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+            if (value is IPythonMethodDescriptor) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
             }
 
-            if (value is IPythonMultipleMembers) {
-                type = null;
-                foreach (var t in GetTypesFromValue(value)) {
-                    if (type == null) {
-                        type = t;
-                    } else if (t == null) {
-                    } else if (t.MemberType == PythonMemberType.Module ||
-                        (t.MemberType == PythonMemberType.Class && type.MemberType != PythonMemberType.Module) ||
-                        (t.MemberType == PythonMemberType.Function && type.MemberType != PythonMemberType.Class)) {
-                        type = t;
-                    }
-                }
-                return type;
+            if (value is IPythonMultipleMembers mm) {
+                return AstPythonMultipleMembers.CreateAs<IPythonType>(mm.Members);
             }
 
-            Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
+            if (value is IPythonType) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+            }
+
+#if DEBUG
+            var implements = string.Join(", ", new[] { value.GetType().FullName }.Concat(value.GetType().GetInterfaces().Select(i => i.Name)));
+            Debug.Fail("Unhandled type() value: " + implements);
+#endif
             return null;
         }
 

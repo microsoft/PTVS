@@ -65,6 +65,7 @@
     <Content Include="Microsoft.PythonTools.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="TestTargets\README.txt" />
     <Content Include="Microsoft.PythonTools.Web.targets">

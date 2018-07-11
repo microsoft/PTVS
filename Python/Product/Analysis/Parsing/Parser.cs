@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Parsing {
         private bool _fromFutureAllowed;
         private string _privatePrefix;
         private bool _parsingStarted, _allowIncomplete;
-        private bool _inLoop, _inFinally, _isGenerator;
+        private bool _inLoop, _inFinally, _isGenerator, _inGeneratorExpression;
         private List<IndexSpan> _returnsWithValue;
         private int _errorCode;
         private readonly bool _verbatim;                            // true if we're in verbatim mode and the ASTs can be turned back into source code, preserving white space / comments
@@ -1315,6 +1315,10 @@ namespace Microsoft.PythonTools.Parsing {
                     // v3.5:
                 } else if (_langVersion >= PythonLanguageVersion.V35 && name.Name == "generator_stop") {
                     // No behavior change, but we don't want to display an error
+
+                    // v3.7
+                } else if (_langVersion >= PythonLanguageVersion.V37 && name.Name == "annotations") {
+                    _languageFeatures |= FutureOptions.Annotations;
                 } else {
                     string strName = name.Name;
 
@@ -1644,22 +1648,10 @@ namespace Microsoft.PythonTools.Parsing {
         private string SetPrivatePrefix(string name) {
             string oldPrefix = _privatePrefix;
 
-            _privatePrefix = GetPrivatePrefix(name);
+            // Remove any leading underscores before saving the prefix
+            _privatePrefix = name?.TrimStart('_');
 
             return oldPrefix;
-        }
-
-        internal static string GetPrivatePrefix(string name) {
-            // Remove any leading underscores before saving the prefix
-            if (name != null) {
-                for (int i = 0; i < name.Length; i++) {
-                    if (name[i] != '_') {
-                        return name.Substring(i);
-                    }
-                }
-            }
-            // Name consists of '_'s only, no private prefix mapping
-            return null;
         }
 
         private ErrorExpression Error(string verbatimImage = null, Expression preceeding = null) {
@@ -3053,7 +3045,10 @@ namespace Microsoft.PythonTools.Parsing {
 
         private Expression ParseAwaitExpr() {
             if (_langVersion >= PythonLanguageVersion.V35) {
-                if (AllowAsyncAwaitSyntax && MaybeEat(TokenKind.KeywordAwait)) {
+                var allowed = AllowAsyncAwaitSyntax ||
+                    (_langVersion >= PythonLanguageVersion.V37 && _inGeneratorExpression);
+
+                if (allowed && MaybeEat(TokenKind.KeywordAwait)) {
                     var start = GetStart();
                     string whitespace = _tokenWhiteSpace;
                     var res = new AwaitExpression(ParseAwaitExpr());
@@ -3566,7 +3561,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if (MaybeEat(TokenKind.Assign)) {               //  Keyword argument
                     a = FinishKeywordArgument(e);
-                } else if (PeekTokenForOrAsyncFor) {    //  Generator expression
+                } else if (PeekTokenForOrAsyncForToStartGenerator) {    //  Generator expression
                     var genExpr = ParseGeneratorExpression(e);
                     AddIsAltForm(genExpr);
                     a = new Arg(genExpr);
@@ -3894,7 +3889,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (MaybeEat(TokenKind.Comma)) {
                         // "(" expression "," ...
                         ret = FinishExpressionListAsExpr(expr);
-                    } else if (PeekTokenForOrAsyncFor) {
+                    } else if (PeekTokenForOrAsyncForToStartGenerator) {
                         // "(" expression "for" ...
                         if (expr is StarredExpression) {
                             ReportSyntaxError(expr.StartIndex, expr.EndIndex, "iterable unpacking cannot be used in comprehension");
@@ -3928,9 +3923,16 @@ namespace Microsoft.PythonTools.Parsing {
         //
         //  "[async] for" has NOT been eaten before entering this method
         private Expression ParseGeneratorExpression(Expression expr, string rightParenWhiteSpace = null) {
-            ComprehensionIterator[] iters = ParseCompIter();
+            GeneratorExpression ret;
+            var prevIn = _inGeneratorExpression;
+            _inGeneratorExpression = true;
+            try {
+                ComprehensionIterator[] iters = ParseCompIter();
 
-            GeneratorExpression ret = new GeneratorExpression(expr, iters);
+                ret = new GeneratorExpression(expr, iters);
+            } finally {
+                _inGeneratorExpression = prevIn;
+            }
 
             ret.SetLoc(expr.StartIndex, GetEnd());
             return ret;
@@ -4197,8 +4199,25 @@ namespace Microsoft.PythonTools.Parsing {
 
         private bool PeekTokenForOrAsyncFor {
             get {
-                return PeekToken(Tokens.KeywordForToken) ||
-                    (AllowAsyncAwaitSyntax && PeekToken(Tokens.KeywordAsyncToken) && PeekToken2()?.Kind == TokenKind.KeywordFor);
+                if (PeekToken(Tokens.KeywordForToken)) {
+                    return true;
+                }
+                if (AllowAsyncAwaitSyntax || (_langVersion >= PythonLanguageVersion.V37 && _inGeneratorExpression)) {
+                    return PeekToken(Tokens.KeywordAsyncToken) && PeekToken2()?.Kind == TokenKind.KeywordFor;
+                }
+                return false;
+            }
+        }
+
+        private bool PeekTokenForOrAsyncForToStartGenerator {
+            get {
+                var prevIn = _inGeneratorExpression;
+                _inGeneratorExpression = true;
+                try {
+                    return PeekTokenForOrAsyncFor;
+                } finally {
+                    _inGeneratorExpression = prevIn;
+                }
             }
         }
 
@@ -4934,7 +4953,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static TextReader ReadStreamWithEncoding(Stream stream, PythonLanguageVersion version) {
             var defaultEncoding = version.Is3x() ? new UTF8Encoding(false) : DefaultEncoding;
-            return GetStreamReaderWithEncoding(stream, defaultEncoding, null);
+            return GetStreamReaderWithEncoding(stream, defaultEncoding, ErrorSink.Null);
         }
 
         /// <summary>

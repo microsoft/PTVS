@@ -29,8 +29,9 @@ namespace Microsoft.PythonTools.Options {
             this._waitOnNormalExit = new System.Windows.Forms.CheckBox();
             this._teeStdOut = new System.Windows.Forms.CheckBox();
             this._breakOnSystemExitZero = new System.Windows.Forms.CheckBox();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this._debugStdLib = new System.Windows.Forms.CheckBox();
+            this._useLegacyDebugger = new System.Windows.Forms.CheckBox();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -69,6 +70,20 @@ namespace Microsoft.PythonTools.Options {
             this._breakOnSystemExitZero.Name = "_breakOnSystemExitZero";
             this._breakOnSystemExitZero.UseVisualStyleBackColor = true;
             // 
+            // _debugStdLib
+            // 
+            resources.ApplyResources(this._debugStdLib, "_debugStdLib");
+            this._debugStdLib.AutoEllipsis = true;
+            this._debugStdLib.Name = "_debugStdLib";
+            this._debugStdLib.UseVisualStyleBackColor = true;
+            // 
+            // _useLegacyDebugger
+            // 
+            resources.ApplyResources(this._useLegacyDebugger, "_useLegacyDebugger");
+            this._useLegacyDebugger.AutoEllipsis = true;
+            this._useLegacyDebugger.Name = "_useLegacyDebugger";
+            this._useLegacyDebugger.UseVisualStyleBackColor = true;
+            // 
             // tableLayoutPanel2
             // 
             resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
@@ -78,14 +93,8 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._teeStdOut, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._breakOnSystemExitZero, 0, 4);
             this.tableLayoutPanel2.Controls.Add(this._debugStdLib, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this._useLegacyDebugger, 0, 6);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            // 
-            // _debugStdLib
-            // 
-            resources.ApplyResources(this._debugStdLib, "_debugStdLib");
-            this._debugStdLib.AutoEllipsis = true;
-            this._debugStdLib.Name = "_debugStdLib";
-            this._debugStdLib.UseVisualStyleBackColor = true;
             // 
             // PythonDebuggingOptionsControl
             // 
@@ -108,6 +117,7 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _teeStdOut;
         private System.Windows.Forms.CheckBox _breakOnSystemExitZero;
         private System.Windows.Forms.CheckBox _debugStdLib;
+        private System.Windows.Forms.CheckBox _useLegacyDebugger;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
     }
 }
