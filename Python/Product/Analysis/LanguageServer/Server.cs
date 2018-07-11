@@ -253,15 +253,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
-                // Make sure reload modules is executed on the analyzer thread.
-                var task = _reloadModulesQueueItem.Task;
-                _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
-                await task;
+                await ReloadModulesAsync();
+            }
+        }
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var entry in Analyzer.ModulesByFilename) {
-                    _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
-                }
+        public async Task ReloadModulesAsync() {
+            // Make sure reload modules is executed on the analyzer thread.
+            var task = _reloadModulesQueueItem.Task;
+            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+            await task;
+
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var entry in Analyzer.ModulesByFilename) {
+                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
 
