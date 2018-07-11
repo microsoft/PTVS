@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override bool Equals(object obj) {
             if (obj is BuiltinNamespace<MemberContainerType> bn && GetType() == bn.GetType()) {
-                return _type.Equals(bn._type);
+                return _type != null &&_type.Equals(bn._type);
             }
             return false;
         }
