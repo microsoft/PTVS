@@ -16,9 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
@@ -208,14 +205,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     [Serializable]
     public class MarkupContent {
-        public MarkupKind kind;
+        public string kind;
         public string value;
 
         public static implicit operator MarkupContent(string text) => new MarkupContent { kind = MarkupKind.PlainText, value = text };
     }
 
     public class InformationDisplayOptions {
-        public MarkupKind preferredFormat;
+        public string preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
@@ -369,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 public bool commitCharactersSupport;
 
-                public MarkupKind[] documentationFormat;
+                public string[] documentationFormat;
             }
             public CompletionItemCapabilities? completionItem;
 
@@ -404,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             /// Client supports the follow content formats for the content
             /// property.The order describes the preferred format of the client.
             /// </summary>
-            public MarkupKind[] contentFormat;
+            public string[] contentFormat;
         }
         public HoverCapabilities? hover;
 
@@ -417,7 +414,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ///  Client supports the follow content formats for the documentation
                 /// property.The order describes the preferred format of the client.
                 /// </summary>
-                public MarkupKind[] documentationFormat;
+                public string[] documentationFormat;
 
                 /// <summary>
                 /// When true, the label in the returned signature information will
@@ -862,5 +859,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public DocumentFilter? documentSelector;
         public string firstTriggerCharacter;
         public string[] moreTriggerCharacters;
+    }
+    public static class MarkupKind {
+        public const string PlainText = "plaintext";
+        public const string Markdown = "markdown";
     }
 }
