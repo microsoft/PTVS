@@ -169,6 +169,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public int AnalysisPending => _analysisPending;
 
+        internal SynchronizationContext SynchronizationContext { get; private set; }
+
         #region IDisposable Members
         public void Dispose() {
             _disposed = true;
@@ -195,7 +197,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void Worker(object threadStarted) {
             try {
-                SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
+                SynchronizationContext = new AnalysisSynchronizationContext(this);
+                SynchronizationContext.SetSynchronizationContext(SynchronizationContext);
             } finally {
                 ((AutoResetEvent)threadStarted).Set();
             }

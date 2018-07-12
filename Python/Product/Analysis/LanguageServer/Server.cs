@@ -52,9 +52,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
-                var task = Task.Run(() => _analyzer.ReloadModulesAsync(), cancel);
                 try {
-                    task.WaitAndUnwrapExceptions();
+                    _analyzer.ReloadModulesAsync().WaitAndUnwrapExceptions();
                     currentTcs.TrySetResult(true);
                 } catch (OperationCanceledException oce) {
                     currentTcs.TrySetCanceled(oce.CancellationToken);
@@ -288,12 +287,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Task<bool> UnloadFileAsync(Uri documentUri) {
             var entry = RemoveEntry(documentUri);
             if (entry != null) {
-                if (entry is IPythonProjectEntry pyEntry) {
-                    foreach (var e in Analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false)) {
-                        _queue.Enqueue(e, AnalysisPriority.Normal);
-                    }
-                }
-                Analyzer.RemoveModule(entry);
+                Analyzer.RemoveModule(entry, e => _queue.Enqueue(e, AnalysisPriority.Normal));
                 return Task.FromResult(true);
             }
 
@@ -431,7 +425,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
-            return await PythonAnalyzer.CreateAsync(factory, interp);
+            var analyzer = await PythonAnalyzer.CreateAsync(factory, interp);
+#if DEBUG
+            // Make Deque aware of the only thread that should be modifying its state
+            analyzer.Queue.SynchronizationContext = _queue.SynchronizationContext;
+#endif
+            return analyzer;
         }
 
         private IEnumerable<ModulePath> GetImportNames(Uri document) {
