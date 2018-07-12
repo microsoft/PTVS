@@ -253,11 +253,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 #if DEBUG
             token = Debugger.IsAttached ? CancellationToken.None : token;
 #endif
-            var impTask = ImportModuleAsync(name, token);
-            if (!impTask.Wait(10000)) {
-                return null;
+            try {
+                var impTask = ImportModuleAsync(name, token);
+                if (impTask.Wait(10000)) {
+                    return impTask.Result;
+                }
+            } catch (AggregateException ex) {
+                throw ex.InnerException != null ? ex.InnerException : ex;
             }
-            return impTask.Result;
+            return null;
         }
 
         public void Initialize(PythonAnalyzer state) {
