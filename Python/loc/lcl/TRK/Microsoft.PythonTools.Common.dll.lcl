@@ -1452,10 +1452,13 @@
       </Item>
       <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Val><![CDATA[This debug REPL feature is only supported with the legacy debugger.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bu hata ayıklama REPL özelliği deneysel hata ayıklayıcısıyla desteklenmiyor.]]></Val>
+            <Val><![CDATA[Bu hata ayıklama REPL özelliği yalnızca eski hata ayıklayıcısıyla desteklenir.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2830,23 +2833,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Val><![CDATA[There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Lütfen deneysel hata ayıklayıcıyı kullanmak için Python ortamınızda 'pip install --upgrade ptvsd --pre' komutunu çalıştırın]]></Val>
+            <Val><![CDATA[Geçerli ortamdan ptvsd yüklenirken bir sorun oluştu. Lütfen ptvsd'yi yükseltin veya kaldırın.]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ImportError: ptvsd not found]]></Val>
+          <Val><![CDATA[Debugger package could not be loaded]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ImportError: ptvsd bulunamadı]]></Val>
+            <Val><![CDATA[Hata ayıklayıcı paketi yüklenemedi]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3285,9 +3285,21 @@
       </Item>
       <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geçerli ortamda eski bir ptvsd sürümü (sürüm {0}) yüklü ancak Visual Studio'ya dahil edilen sürüm {1}. En yeni işlevleri kullanmak için lütfen ptvsd'yi yükseltin veya kaldırın]]></Val>
+            <Val><![CDATA[Geçerli ortamda eski bir ptvsd sürümü (sürüm {0}) yüklü, ancak Visual Studio sürüm {1} ile gelir. En yeni işlevleri kullanmak için lütfen ptvsd'yi yükseltin veya kaldırın.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger package is outdated]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hata ayıklayıcı paketi güncel değil]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3778,6 +3790,75 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Proje MSBuild'i desteklemiyor]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Use the legacy debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eski hata ayıklayıcısı kullanılıyor]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Disable the experimental debugger]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Gelecekte hata ayıklama oturumları eski hata ayıklayıcısını kullanacak. Bu ayarı Araçlar, Seçenekler, Python, Hata Ayıklama sayfasından 'Eski hata ayıklayıcısını kullan' seçeneğini değiştirerek de değiştirebilirsiniz.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our <a href="https://aka.ms/upgradeptvsd">documentation</a> for a list of supported Python versions and environment types.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bu Python ortamında hata ayıklamak için lütfen eski hata ayıklayıcısını kullanın. Eski Python sürümleri desteklenmez. Desteklenen Python sürümlerinin ve ortam türlerinin listesi için <a href="https://aka.ms/upgradeptvsd">belgelerimize</a> bakın.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger does not support this Python environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hata ayıklayıcı bu Python ortamını desteklemiyor]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Learn more]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Daha fazla bilgi]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Desteklenen Python ortamları ve ptvsd hata ayıklayıcısı paketini yükseltme veya kaldırma hakkındaki belgeleri görüntüleyin.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5436,6 +5517,15 @@
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Bir ortam başvurusu yükseltilemedi. Projeniz için bir ortam seçmek üzere lütfen Python Ortamları öğesini Çözüm Gezgini'nde inceleyin.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UpgradedMscorlibReference" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A reference to 'mscorlib' was added to this project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bu projeye bir 'mscorlib' başvurusu eklendi.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

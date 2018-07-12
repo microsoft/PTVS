@@ -129,7 +129,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (!ForEval && !IsInQueue && !_suppressEnqueue) {
                 State.Queue.Append(this);
                 AnalysisLog.Enqueue(State.Queue, this);
-                this.IsInQueue = true;
+                IsInQueue = true;
+
+                if (DeclaringModule?.Scope == Scope) {
+                    DeclaringModule.ModuleDefinition.EnqueueDependents();
+                }
             }
         }
 
@@ -424,8 +428,8 @@ namespace Microsoft.PythonTools.Analysis {
             ddg.WalkBody(Ast.Body, classInfo.AnalysisUnit);
 
             ddg.SetCurrentUnit(_outerUnit);
-            var v = _outerUnit.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
-            v.AddTypes(this, ProcessClassDecorators(ddg, classInfo));
+            _outerUnit.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
+            _outerUnit.Scope.AssignVariable(Ast.Name, Ast.NameExpression, this, ProcessClassDecorators(ddg, classInfo));
         }
 
         private IAnalysisSet ProcessClassDecorators(DDG ddg, ClassInfo classInfo) {

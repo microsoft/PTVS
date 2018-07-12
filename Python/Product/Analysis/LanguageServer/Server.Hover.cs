@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override Task<Hover> Hover(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"Hover in {uri} at {@params.position}");
 
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     var sb = new StringBuilder();
                     var span = SourceSpan.Invalid;
                     foreach (var n in w.ImportedModules) {
-                        if (_analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
+                        if (Analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
                             if (sb.Length > 0) {
                                 sb.AppendLine();
                                 sb.AppendLine();

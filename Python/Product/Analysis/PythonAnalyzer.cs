@@ -19,15 +19,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -65,6 +63,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
         private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
         private readonly Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>> _diagnostics = new Dictionary<IProjectEntry, Dictionary<Node, LanguageServer.Diagnostic>>();
+
+        public const string PythonAnalysisSource = "Python (analysis)";
 
         /// <summary>
         /// Creates a new analyzer that is ready for use.
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
 
-                await LoadKnownTypesAsync().ConfigureAwait(false);
+                await LoadKnownTypesAsync();
 
                 _interpreter.Initialize(this);
 
@@ -235,12 +235,17 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public void RemoveModule(IProjectEntry entry) => RemoveModule(entry, null);
+
         /// <summary>
         /// Removes the specified project entry from the current analysis.
         /// 
         /// This method is thread safe.
         /// </summary>
-        public void RemoveModule(IProjectEntry entry) {
+        /// <param name="entry">The entry to remove.</param>
+        /// <param name="onImporter">Action to perform on each module that
+        /// had imported the one being removed.</param>
+        public void RemoveModule(IProjectEntry entry, Action<IPythonProjectEntry> onImporter) {
             if (entry == null) {
                 throw new ArgumentNullException(nameof(entry));
             }
@@ -252,7 +257,6 @@ namespace Microsoft.PythonTools.Analysis {
                 importers = GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
             }
 
-
             if (!string.IsNullOrEmpty(entry.FilePath) && _modulesByFilename.TryRemove(entry.FilePath, out var moduleInfo)) {
                 lock (_modulesWithUnresolvedImportsLock) {
                     _modulesWithUnresolvedImports.Remove(moduleInfo);
@@ -262,10 +266,14 @@ namespace Microsoft.PythonTools.Analysis {
             entry.RemovedFromProject();
             ClearDiagnostics(entry);
 
+            if (onImporter == null) {
+                onImporter = e => e.Analyze(CancellationToken.None, enqueueOnly: true);
+            }
+
             if (!string.IsNullOrEmpty(pyEntry?.ModuleName)) {
                 Modules.TryRemove(pyEntry.ModuleName, out var _);
                 foreach (var e in importers.MaybeEnumerate()) {
-                    e.Analyze(CancellationToken.None, enqueueOnly: true);
+                    onImporter(e);
                 }
             }
         }
@@ -633,7 +641,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool EnableDiagnostics { get; set; }
 
-        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, object code = null, string source = null) {
+        public void AddDiagnostic(Node node, AnalysisUnit unit, string message, LanguageServer.DiagnosticSeverity severity, string code = null) {
             if (!EnableDiagnostics) {
                 return;
             }
@@ -647,7 +655,7 @@ namespace Microsoft.PythonTools.Analysis {
                     range = node.GetSpan(unit.ProjectEntry.Tree),
                     severity = severity,
                     code = code,
-                    source = source ?? "Python"
+                    source = PythonAnalysisSource
                 };
             }
         }
@@ -671,7 +679,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        public void ClearDiagnostic(Node node, AnalysisUnit unit, object code = null) {
+        public void ClearDiagnostic(Node node, AnalysisUnit unit, string code = null) {
             if (!EnableDiagnostics) {
                 return;
             }
@@ -1012,8 +1020,11 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 // Try and acquire the lock before disposing. This helps avoid
                 // some (non-fatal) exceptions.
-                _reloadLock.Wait(TimeSpan.FromSeconds(10));
-                _reloadLock.Dispose();
+                try {
+                    _reloadLock.Wait(TimeSpan.FromSeconds(10));
+                    _reloadLock.Dispose();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 

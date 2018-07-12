@@ -368,9 +368,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int version { get; set; }
     }
 
+    public sealed class AnalysisQueuedEventArgs : EventArgs {
+        public Uri uri { get; set; }
+    }
+
     public sealed class AnalysisCompleteEventArgs : EventArgs {
         public Uri uri { get; set; }
         public int version { get; set; }
     }
-
 }

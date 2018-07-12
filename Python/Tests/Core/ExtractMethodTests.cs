@@ -1709,7 +1709,7 @@ async def f():
 
                 var bi = services.GetBufferInfo(buffer);
                 bi.ParseImmediately = true;
-                var entry = await analyzer.AnalyzeFileAsync(bi.DocumentUri);
+                var entry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, bi.Filename);
                 Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
                 var bp = entry.GetOrCreateBufferParser(services);
                 bp.AddBuffer(buffer);

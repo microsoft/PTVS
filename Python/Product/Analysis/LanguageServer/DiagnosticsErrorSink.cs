@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
             var d = new Diagnostic {
-                code = errorCode,
+                code = "E{0}".FormatInvariant(errorCode),
                 message = message,
                 source = _source,
                 severity = GetSeverity(severity),
@@ -53,15 +53,19 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 source = _source
             };
 
+            bool found = false;
             foreach (var kv in _taskCommentMap.MaybeEnumerate().OrderByDescending(kv => kv.Key.Length)) {
                 if (text.IndexOfOrdinal(kv.Key, ignoreCase: true) >= 0) {
                     d.code = kv.Key;
                     d.severity = kv.Value;
+                    found = true;
                     break;
                 }
             }
 
-            _onDiagnostic(d);
+            if (found) {
+                _onDiagnostic(d);
+            }
         }
 
         internal static DiagnosticSeverity GetSeverity(Severity severity) {

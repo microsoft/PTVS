@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides a single threaded analysis queue.  Items can be enqueued into the
     /// analysis at various priorities.  
     /// </summary>
-    sealed class AnalysisQueue : IDisposable {
+    internal sealed class AnalysisQueue : IDisposable {
         private readonly Thread _workThread;
         private readonly AutoResetEvent _workEvent;
         private readonly object _queueLock = new object();
@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private CancellationTokenSource _cancel;
         private bool _isAnalyzing;
         private int _analysisPending;
+        private bool _disposed;
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
@@ -46,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _cancel = new CancellationTokenSource();
 
             _queue = new List<IAnalyzable>[PriorityCount];
-            for (int i = 0; i < PriorityCount; i++) {
+            for (var i = 0; i < PriorityCount; i++) {
                 _queue[i] = new List<IAnalyzable>();
             }
 
@@ -56,13 +57,13 @@ namespace Microsoft.PythonTools.Intellisense {
             _workThread.IsBackground = true;
 
             // start the thread, wait for our synchronization context to be created
-            using (AutoResetEvent threadStarted = new AutoResetEvent(false)) {
+            using (var threadStarted = new AutoResetEvent(false)) {
                 _workThread.Start(threadStarted);
                 threadStarted.WaitOne();
             }
         }
 
-        sealed class WaitAnalyzableTask : IAnalyzable {
+        private sealed class WaitAnalyzableTask : IAnalyzable {
             private readonly TaskCompletionSource<object> _tcs;
 
             public WaitAnalyzableTask() {
@@ -97,7 +98,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
-            int iPri = (int)priority;
+            ThrowIfDisposed();
+            var iPri = (int)priority;
 
             if (iPri < 0 || iPri > _queue.Length) {
                 throw new ArgumentException("priority");
@@ -105,11 +107,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             lock (_queueLock) {
                 // see if we have the item in the queue anywhere...
-                for (int i = 0; i < _queue.Length; i++) {
+                for (var i = 0; i < _queue.Length; i++) {
                     if (_queue[i].Remove(item)) {
                         Interlocked.Decrement(ref _analysisPending);
 
-                        AnalysisPriority oldPri = (AnalysisPriority)i;
+                        var oldPri = (AnalysisPriority)i;
 
                         if (oldPri > priority) {
                             // if it was at a higher priority then our current
@@ -165,15 +167,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public int AnalysisPending {
-            get {
-                return _analysisPending;
-            }
-        }
+        public int AnalysisPending => _analysisPending;
+
+        internal SynchronizationContext SynchronizationContext { get; private set; }
 
         #region IDisposable Members
-
         public void Dispose() {
+            _disposed = true;
             Stop();
             _workEvent.Dispose();
             _cancel.Dispose();
@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         private IAnalyzable GetNextItem(out AnalysisPriority priority) {
-            for (int i = PriorityCount - 1; i >= 0; i--) {
+            for (var i = PriorityCount - 1; i >= 0; i--) {
                 if (_queue[i].Count > 0) {
                     var res = _queue[i][0];
                     _queue[i].RemoveAt(0);
@@ -197,7 +197,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void Worker(object threadStarted) {
             try {
-                SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
+                SynchronizationContext = new AnalysisSynchronizationContext(this);
+                SynchronizationContext.SetSynchronizationContext(SynchronizationContext);
             } finally {
                 ((AutoResetEvent)threadStarted).Set();
             }
@@ -225,7 +226,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     try {
                         var groupable = workItem as IGroupableAnalysisProjectEntry;
                         if (groupable != null) {
-                            bool added = _enqueuedGroups.Add(groupable.AnalysisGroup);
+                            var added = _enqueuedGroups.Add(groupable.AnalysisGroup);
                             if (added) {
                                 Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
                             }
@@ -274,7 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public event EventHandler AnalysisAborted;
 
-        sealed class GroupAnalysis : IAnalyzable {
+        private sealed class GroupAnalysis : IAnalyzable {
             private readonly IGroupableAnalysisProject _project;
             private readonly AnalysisQueue _queue;
 
@@ -291,6 +292,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             #endregion
+        }
+
+        private void ThrowIfDisposed() {
+            if (_disposed) {
+                throw new ObjectDisposedException(nameof(AnalysisQueue));
+            }
         }
     }
 }
