@@ -52,9 +52,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
-                var task = Task.Run(() => _analyzer.ReloadModulesAsync(cancel), cancel);
                 try {
-                    task.WaitAndUnwrapExceptions();
+                    _analyzer.ReloadModulesAsync(cancel).WaitAndUnwrapExceptions();
                     currentTcs.TrySetResult(true);
                 } catch (OperationCanceledException oce) {
                     currentTcs.TrySetCanceled(oce.CancellationToken);
@@ -127,8 +126,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             ThrowIfDisposed();
-            await DoInitializeAsync(@params, CancellationToken);
-
+            using (AllowRequestCancellation()) {
+                await DoInitializeAsync(@params, CancellationToken);
+            }
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {

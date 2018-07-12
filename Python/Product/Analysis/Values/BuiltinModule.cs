@@ -16,8 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -25,6 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
         private readonly MemberReferences _references = new MemberReferences();
         private readonly IPythonModule _interpreterModule;
+        private Dictionary<string, IAnalysisSet> _childModules;
 
         public BuiltinModule(IPythonModule module, PythonAnalyzer projectState)
             : base(module, projectState) {
@@ -33,9 +36,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IPythonModule InterpreterModule => _interpreterModule;
 
+        public void AddChildModule(string memberName, AnalysisValue module) {
+            if (_childModules == null) {
+                _childModules = new Dictionary<string, IAnalysisSet>();
+            }
+            if (_childModules.TryGetValue(memberName, out var existing)) {
+                _childModules[memberName] = existing.Add(module);
+            } else {
+                _childModules[memberName] = module;
+            }
+        }
+
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // Must unconditionally call the base implementation of GetMember
             var res = base.GetMember(node, unit, name);
+            if (_childModules != null && _childModules.TryGetValue(name, out var child)) {
+                res = res.Union(child);
+            }
             if (res.Count > 0) {
                 _references.AddReference(node, unit, name);
             }
@@ -44,15 +61,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
-            if (_specializedValues != null) {
-                foreach (var value in _specializedValues) {
-                    IAnalysisSet existing;
-                    if (!res.TryGetValue(value.Key, out existing)) {
-                        res[value.Key] = value.Value;
-                    } else {
-                        var newSet = existing.Union(value.Value, canMutate: false);
-                        res[value.Key] = newSet;
-                    }
+            foreach (var value in _specializedValues.MaybeEnumerate().Concat(_childModules.MaybeEnumerate())) {
+                if (!res.TryGetValue(value.Key, out var existing)) {
+                    res[value.Key] = value.Value;
+                } else {
+                    res[value.Key] = existing.Union(value.Value);
                 }
             }
             return res;
@@ -75,7 +88,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #endregion
 
         internal IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _type.GetMemberNames(moduleContext);
+            return _type.GetMemberNames(moduleContext)
+                .Union(_specializedValues.MaybeEnumerate().Keys())
+                .Union(_childModules.MaybeEnumerate().Keys());
         }
 
         public IModule GetChildPackage(IModuleContext context, string name) {
@@ -83,13 +98,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (mem != null) {
                 return ProjectState.GetAnalysisValueFromObjects(mem) as IModule;
             }
+            if (_childModules != null && _childModules.TryGetValue(name, out var child)) {
+                return child as IModule ?? MultipleMemberInfo.Create(child.Where(m => m is IModule)) as IModule;
+            }
             return null;
         }
 
         public IEnumerable<KeyValuePair<string, AnalysisValue>> GetChildrenPackages(IModuleContext context) {
-            foreach (var name in _type.GetChildrenModules()) {
-                yield return new KeyValuePair<string, AnalysisValue>(name, ProjectState.GetAnalysisValueFromObjects(_type.GetMember(context, name)));
-            }
+            return _type.GetChildrenModules().Union(_childModules.MaybeEnumerate().Keys())
+                .Select(name => new KeyValuePair<string, AnalysisValue>(name, ProjectState.GetAnalysisValueFromObjects(_type.GetMember(context, name))));
         }
 
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
