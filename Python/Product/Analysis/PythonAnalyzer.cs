@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis {
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {
-                await res.ReloadModulesAsync(token ?? CancellationToken.None).ConfigureAwait(false);
+                await res.ReloadModulesAsync(token).ConfigureAwait(false);
                 var r = res;
                 res = null;
                 return r;
