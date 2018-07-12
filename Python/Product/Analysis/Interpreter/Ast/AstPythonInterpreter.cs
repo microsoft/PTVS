@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    internal class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
+    internal class AstPythonInterpreter : IPythonInterpreter2, IModuleContext, ICanFindModuleMembers {
         private readonly AstPythonInterpreterFactory _factory;
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
@@ -253,11 +253,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 #if DEBUG
             token = Debugger.IsAttached ? CancellationToken.None : token;
 #endif
-            var impTask = ImportModuleAsync(name, token);
-            if (!impTask.Wait(10000)) {
-                return null;
+            try {
+                var impTask = ImportModuleAsync(name, token);
+                if (impTask.Wait(10000)) {
+                    return impTask.Result;
+                }
+            } catch (AggregateException ex) {
+                throw ex.InnerException ?? ex;
             }
-            return impTask.Result;
+            return null;
         }
 
         public void Initialize(PythonAnalyzer state) {

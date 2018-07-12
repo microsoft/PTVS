@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (value is MultipleMemberInfo mmi) {
                 if (mmi.Push()) {
                     try {
-                        return mmi.Members.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                        return mmi.Members.Aggregate(set, (a, v) => ResolveAndAdd(unit, a, v));
                     } finally {
                         mmi.Pop();
                     }

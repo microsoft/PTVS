@@ -430,30 +430,28 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var candidates = ModuleResolver.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute).ToArray();
             foreach (var name in candidates) {
-                if (ProjectState.Modules.TryImport(name, out moduleRef)) {
-                    _unit.DeclaringModule.AddModuleReference(moduleRef);
-                    return true;
-                }
-            }
+                ModuleReference modRef;
 
-            foreach (var name in candidates) {
-                moduleRef = null;
-                foreach (var part in ModulePath.GetParents(name, includeFullName: true)) {
-                    if (ProjectState.Modules.TryImport(part, out var mref)) {
-                        moduleRef = mref;
-                        if (part.Length < name.Length) {
-                            moduleRef.Module?.Imported(_unit);
-                        }
-                    } else if (moduleRef != null) {
-                        Debug.Assert(moduleRef.Name.Length + 1 < name.Length, $"Expected {name} to be a child of {moduleRef.Name}");
-                        if (moduleRef.Name.Length + 1 < name.Length) {
-                            remainingParts = name.Substring(moduleRef.Name.Length + 1).Split('.');
-                        }
-                        _unit.DeclaringModule.AddModuleReference(moduleRef);
-                        return true;
-                    } else {
+                bool gotAllParents = true;
+                AnalysisValue lastParent = null;
+                remainingParts = name.Split('.');
+                foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
+                    if (!ProjectState.Modules.TryImport(part, out modRef)) {
+                        gotAllParents = false;
                         break;
                     }
+                    moduleRef = modRef;
+                    (lastParent as BuiltinModule)?.AddChildModule(remainingParts[0], moduleRef.AnalysisModule);
+                    lastParent = moduleRef.AnalysisModule;
+                    remainingParts = remainingParts.Skip(1).ToArray();
+                }
+
+                if (gotAllParents && ProjectState.Modules.TryImport(name, out modRef)) {
+                    moduleRef = modRef;
+                    (lastParent as BuiltinModule)?.AddChildModule(remainingParts[0], moduleRef.AnalysisModule);
+                    _unit.DeclaringModule.AddModuleReference(moduleRef);
+                    remainingParts = null;
+                    return true;
                 }
             }
 
@@ -564,14 +562,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // import_module('fob.oar')
                 // fob = import_module('fob')
                 var name = curName.Names[0];
-                // Should be able to just get the module, as we only just imported it
-                if (ProjectState.Modules.TryGetImportedModule(name.Name, out modRef)) {
-                    FinishImportModuleOrMember(modRef, null, name.Name, true, name, null);
-                    continue;
+
+                if (modRef?.Module != null) {
+                    // Should be able to just get the module, as we only just imported it
+                    if (ProjectState.Modules.TryGetImportedModule(name.Name, out modRef)) {
+                        FinishImportModuleOrMember(modRef, null, name.Name, true, name, null);
+                        continue;
+                    }
+
+                    Debug.Fail($"Failed to get module {name.Name} we just imported");
                 }
 
-                Debug.Fail("Failed to get module we just imported");
-                Scope.CreateEphemeralVariable(name, _unit, name.Name, false);
+                Scope.CreateEphemeralVariable(name, _unit, name.Name, true);
             }
             return true;
         }

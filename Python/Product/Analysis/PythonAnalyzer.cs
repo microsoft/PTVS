@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
 
-                await LoadKnownTypesAsync(token).ConfigureAwait(false);
+                await LoadKnownTypesAsync(token);
 
                 _interpreter.Initialize(this);
 
