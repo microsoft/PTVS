@@ -54,5 +54,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             var set2 = new HashSet<T>(other, comparer);
             return set1.SetEquals(set2);
         }
+
+        private static T GetKey<T, U>(KeyValuePair<T, U> keyValue) => keyValue.Key;
+
+        public static IEnumerable<T> Keys<T, U>(this IEnumerable<KeyValuePair<T, U>> source) => source.Select(GetKey);
     }
 }

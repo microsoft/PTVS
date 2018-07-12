@@ -28,8 +28,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
         public IList<string> GetModuleNames() { return new string[0]; }
         public event EventHandler ModuleNamesChanged { add { } remove { } }
-        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token)
-            => Task.FromResult(ImportModule(name));
         public IPythonModule ImportModule(string name) { return null; }
         public IModuleContext CreateModuleContext() { return null; }
     }

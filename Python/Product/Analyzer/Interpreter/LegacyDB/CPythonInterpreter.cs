@@ -97,8 +97,6 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             return fromDb;
         }
 
-        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token) => Task.FromResult(ImportModule(name));
-
         public IPythonModule ImportModule(string name) {
             var mod = _typeDb?.GetModule(name);
             if (mod == null) {

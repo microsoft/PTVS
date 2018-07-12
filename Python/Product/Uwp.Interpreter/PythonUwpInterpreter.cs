@@ -78,9 +78,6 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
             return new List<string>(_typeDb.GetModuleNames());
         }
 
-        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token)
-            => Task.FromResult(ImportModule(name));
-
         public IPythonModule ImportModule(string name) {
             if (_typeDb == null) {
                 return null;
