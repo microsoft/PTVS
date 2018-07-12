@@ -44,7 +44,7 @@
     <TargetOS Include="linux-x64" />
   </ItemGroup>
   <ItemGroup>
-    <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)$(LanguageServerBinaryName).dll;$(OutputPath)$(LanguageServerBinaryName).exe" />
+    <EngineSignedFiles Include="$(OutputPath)Microsoft.Python.Analysis.Engine.dll;$(OutputPath)$(LanguageServerBinaryName).dll" />
     <NuspecSourceFiles Include="$(OutputPath)$(NugetPackageName).nuspec" />
   </ItemGroup>
   <Target Name="AfterBuild">
