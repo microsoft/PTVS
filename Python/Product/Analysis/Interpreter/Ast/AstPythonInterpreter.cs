@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return impTask.Result;
                 }
             } catch (AggregateException ex) {
-                throw ex.InnerException != null ? ex.InnerException : ex;
+                throw ex.InnerException ?? ex;
             }
             return null;
         }
