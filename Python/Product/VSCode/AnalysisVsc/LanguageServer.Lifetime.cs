@@ -37,7 +37,6 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             var p = token.ToObject<InitializeParams>();
             MonitorParentProcess(p);
 
-            _initParams = p;
             return _server.Initialize(p);
         }
 
