@@ -75,5 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         event EventHandler<PublishDiagnosticsEventArgs> OnPublishDiagnostics;
         void PublishDiagnostics(PublishDiagnosticsEventArgs e);
+
+        Task ReloadModulesAsync();
     }
 }

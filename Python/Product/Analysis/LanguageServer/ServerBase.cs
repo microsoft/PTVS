@@ -124,9 +124,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task<WorkspaceEdit> Rename(RenameParams @params) => throw new NotImplementedException();
 
+        public virtual Task ReloadModulesAsync() => Task.CompletedTask;
         #endregion
 
-        #region Server Requests
+            #region Server Requests
 
         public event EventHandler<ShowMessageEventArgs> OnShowMessage;
 
