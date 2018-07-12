@@ -18,14 +18,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.DsTools.Core.Disposables;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.Python.LanguageServer {
-    sealed class PathsWatcher: IDisposable {
+    internal sealed class PathsWatcher : IDisposable {
         private readonly DisposableBag _disposableBag = new DisposableBag(nameof(PathsWatcher));
-        private readonly Action<FileSystemEventArgs> _onChanged;
+        private SingleThreadSynchronizationContext _syncContext = new SingleThreadSynchronizationContext();
+        private readonly Action _onChanged;
+        private readonly object _lock = new object();
 
-        public PathsWatcher(string[] paths, Action<FileSystemEventArgs> onChanged) {
+        private Timer _throttleTimer;
+        private bool _changedSinceLastTick;
+
+        public PathsWatcher(string[] paths, Action onChanged) {
             if (paths?.Length == 0) {
                 return;
             }
@@ -39,6 +46,10 @@ namespace Microsoft.Python.LanguageServer {
                 fsw.IncludeSubdirectories = true;
                 fsw.EnableRaisingEvents = true;
 
+                fsw.Changed += OnChanged;
+                fsw.Created += OnChanged;
+                fsw.Deleted += OnChanged;
+
                 _disposableBag
                     .Add(() => fsw.Changed -= OnChanged)
                     .Add(() => fsw.Created -= OnChanged)
@@ -47,12 +58,26 @@ namespace Microsoft.Python.LanguageServer {
             }
         }
 
-        private void OnChanged(object sender, FileSystemEventArgs e) => _onChanged(e);
-
-        public void Dispose() {
-            _disposableBag.ThrowIfDisposed();
-            _disposableBag.TryDispose();
+        private void OnChanged(object sender, FileSystemEventArgs e) {
+            // Throttle calls so we don't get flooded with requests
+            // if there is massive change to the file structure.
+            lock (_lock) {
+                _changedSinceLastTick = true;
+                _throttleTimer = _throttleTimer ?? new Timer(TimerProc, null, 500, 500);
+            }
         }
+
+        private void TimerProc(object o) {
+            lock (_lock) {
+                if (!_changedSinceLastTick && _throttleTimer != null) {
+                    _syncContext.Post(s => _onChanged(), null);
+                    _throttleTimer.Dispose();
+                    _throttleTimer = null;
+                }
+                _changedSinceLastTick = false;
+            }
+        }
+        public void Dispose() => _disposableBag.TryDispose();
 
         private IEnumerable<string> ReduceToCommonRoots(string[] paths) {
             if (paths.Length == 0) {

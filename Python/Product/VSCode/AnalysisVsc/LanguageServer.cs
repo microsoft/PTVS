@@ -105,6 +105,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         public void Dispose() {
+            _pathsWatcher?.Dispose();
             _disposables.TryDispose();
             _server.Dispose();
         }
@@ -163,7 +164,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             if (watchSearchPaths) {
                 _pathsWatcher = new PathsWatcher(
                     _initParams.initializationOptions.searchPaths, 
-                    e => _server.ReloadModulesAsync().DoNotWait()
+                    () => _server.ReloadModulesAsync().DoNotWait()
                  );
             }
 
