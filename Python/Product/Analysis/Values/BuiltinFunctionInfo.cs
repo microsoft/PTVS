@@ -153,19 +153,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength >= MergeStrength.ToObject) {
                 return ns is BuiltinFunctionInfo || ns is FunctionInfo || ns == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
             }
-            return base.UnionEquals(ns, strength);
+            return Function.Equals((ns as BuiltinFunctionInfo)?.Function);
         }
 
         internal override int UnionHashCode(int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.UnionHashCode(strength);
             }
-            return base.UnionHashCode(strength);
+            return Function.GetHashCode();
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
+            }
+            if (Function.Equals((ns as BuiltinFunctionInfo)?.Function)) {
+                return this;
             }
             return base.UnionMergeTypes(ns, strength);
         }

@@ -352,8 +352,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             if (node.Names != null) {
-                foreach (var name in node.Names) {
-                    if (name != null && !string.IsNullOrEmpty(name.Name)) {
+                for (int i = 0; i < node.Names.Count; ++i) {
+                    var name = node.Names[i];
+                    var asName = (i < node.AsNames?.Count) ? node.AsNames[i] : null;
+                    if (!string.IsNullOrEmpty(asName?.Name)) {
+                        _head.Names.Add(Tuple.Create(asName.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
+                        _head.Names.Add(Tuple.Create(asName.Name, Span.FromBounds(asName.StartIndex, asName.EndIndex)));
+                    } else if (!string.IsNullOrEmpty(name?.Name)) {
                         _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
                     }
                 }
