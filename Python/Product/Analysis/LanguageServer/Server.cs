@@ -126,8 +126,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             ThrowIfDisposed();
-            await DoInitializeAsync(@params, CancellationToken);
-
+            using (AllowRequestCancellation()) {
+                await DoInitializeAsync(@params, CancellationToken);
+            }
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {

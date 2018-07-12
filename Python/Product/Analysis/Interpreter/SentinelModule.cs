@@ -41,7 +41,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 return mod;
             }
             if (_creator == SynchronizationContext.Current) {
-                // Prevent reentrancy on the same module
+                // If we're trying to import the same module again from the same analyzer,
+                // there is no point waiting to see if the first import finishes,
+                // so just return the sentinel object immediately.
                 return this;
             }
 
