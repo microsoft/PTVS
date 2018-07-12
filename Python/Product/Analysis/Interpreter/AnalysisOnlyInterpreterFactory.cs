@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
@@ -64,12 +66,10 @@ namespace Microsoft.PythonTools.Interpreter {
             return new AnalysisOnlyInterpreter(this);
         }
 
-        public void NotifyImportNamesChanged() {
-            
-        }
+        public void NotifyImportNamesChanged() { }
     }
 
-    sealed class AnalysisOnlyInterpreter : IPythonInterpreter {
+    sealed class AnalysisOnlyInterpreter : IPythonInterpreter2 {
         private IBuiltinPythonModule _builtins;
 
         public AnalysisOnlyInterpreter(IPythonInterpreterFactory factory) {
@@ -94,6 +94,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             return Array.Empty<string>();
         }
+
+        public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token) => Task.FromResult(ImportModule(name));
 
         public IPythonModule ImportModule(string name) {
             if (_builtins != null && _builtins.Name == name) {
