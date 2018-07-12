@@ -19,7 +19,7 @@ using Microsoft.DsTools.Core.Services.Shell;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode.Services {
+namespace Microsoft.Python.LanguageServer.Services {
     public sealed class ProgressService : IProgressService {
         private readonly JsonRpc _rpc;
         public ProgressService(JsonRpc rpc) {

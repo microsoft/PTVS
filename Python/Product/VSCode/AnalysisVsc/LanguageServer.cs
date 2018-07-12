@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode {
+namespace Microsoft.Python.LanguageServer.Implementation {
     /// <summary>
     /// VS Code language server protocol implementation to use with StreamJsonRpc
     /// https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.VsCode {
     /// </summary>
     public sealed partial class LanguageServer : IDisposable {
         private readonly DisposableBag _disposables = new DisposableBag(nameof(LanguageServer));
-        private readonly Server _server = new Server();
+        private readonly PythonTools.Analysis.LanguageServer.Server _server = new PythonTools.Analysis.LanguageServer.Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
         private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
