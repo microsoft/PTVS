@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task Exit() => Task.CompletedTask;
 
-        public virtual void CancelRequest()  => Volatile.Read(ref _lock)?.Cancel();
+        public virtual void CancelRequest() => Volatile.Read(ref _lock)?.Cancel();
 
         public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
@@ -124,6 +124,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task<WorkspaceEdit> Rename(RenameParams @params) => throw new NotImplementedException();
 
+        public virtual Task ReloadModulesAsync(CancellationToken token) => Task.CompletedTask;
         #endregion
 
         #region Server Requests

@@ -34,11 +34,10 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         [JsonRpcMethod("initialize")]
         public Task<InitializeResult> Initialize(JToken token) {
-            var p = token.ToObject<InitializeParams>();
-            MonitorParentProcess(p);
+            _initParams = token.ToObject<InitializeParams>();
+            MonitorParentProcess(_initParams);
 
-            _initParams = p;
-            return _server.Initialize(p);
+            return _server.Initialize(_initParams);
         }
 
         [JsonRpcMethod("initialized")]

@@ -191,10 +191,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     diags = diags.Concat(walker.Diagnostics).ToArray();
                 }
 
-                if (!diags.Any() && version >= 0) {
-                    return;
-                }
-
                 if (pythonProjectEntry is IDocument doc) {
                     if (_lastReportedParseDiagnostics != null) {
                         diags = diags.Concat(_lastReportedParseDiagnostics.SelectMany(d => d.diagnostics)).ToArray();

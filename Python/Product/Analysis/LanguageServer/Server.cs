@@ -253,6 +253,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
+                await ReloadModulesAsync(CancellationToken);
+            }
+        }
+
+        public override async Task ReloadModulesAsync(CancellationToken token) {
+            using (AllowRequestCancellation()) {
+                LogMessage(MessageType.Info, "Reloading modules...");
+
                 // Make sure reload modules is executed on the analyzer thread.
                 var task = _reloadModulesQueueItem.Task;
                 _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
@@ -677,7 +685,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void ThrowIfDisposed() {
-            if(_disposed) {
+            if (_disposed) {
                 throw new ObjectDisposedException(nameof(Server));
             }
         }
