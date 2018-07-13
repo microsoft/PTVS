@@ -427,10 +427,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
             var analyzer = await PythonAnalyzer.CreateAsync(factory, interp, token);
-#if DEBUG
-            // Make Deque aware of the only thread that should be modifying its state
-            analyzer.Queue.SynchronizationContext = _queue.SynchronizationContext;
-#endif
             return analyzer;
         }
 

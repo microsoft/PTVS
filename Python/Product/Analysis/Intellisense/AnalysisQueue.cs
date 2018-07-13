@@ -28,6 +28,9 @@ namespace Microsoft.PythonTools.Intellisense {
     /// analysis at various priorities.  
     /// </summary>
     internal sealed class AnalysisQueue : IDisposable {
+        private static readonly AsyncLocal<AnalysisQueue> _current = new AsyncLocal<AnalysisQueue>();
+        public static AnalysisQueue Current => _current.Value;
+
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups;
         private readonly PriorityProducerConsumer<QueueItem> _ppc;
         private readonly Task _consumerTask;
@@ -44,7 +47,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _ppc = new PriorityProducerConsumer<QueueItem>(4, excludeDuplicates: true, comparer: QueueItemComparer.Instance);
             _disposeToken = DisposeToken.Create<AnalysisQueue>();
             _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
-
             _consumerTask = Task.Run(ConsumerLoop);
         }
 
@@ -56,7 +58,9 @@ namespace Microsoft.PythonTools.Intellisense {
             while (!_ppc.IsDisposed) {
                 try {
                     var item = await ConsumeAsync();
+                    _current.Value = this;
                     await item.Handler(_disposeToken.CancellationToken);
+                    _current.Value = null;
                 } catch (OperationCanceledException) when (_disposeToken.IsDisposed)  {
                     return;
                 } catch (Exception ex) when (!ex.IsCriticalException())  {
