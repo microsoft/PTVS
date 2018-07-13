@@ -253,11 +253,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
-                await ReloadModulesAsync();
+                using (AllowRequestCancellation()) {
+                    await ReloadModulesAsync(CancellationToken);
+                }
             }
         }
 
-        public override async Task ReloadModulesAsync() {
+        public override async Task ReloadModulesAsync(CancellationToken token) {
             LogMessage(MessageType.Info, "Reloading modules...");
 
             // Make sure reload modules is executed on the analyzer thread.
