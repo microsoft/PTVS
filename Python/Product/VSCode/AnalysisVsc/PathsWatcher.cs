@@ -20,12 +20,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.DsTools.Core.Disposables;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.Python.LanguageServer {
     internal sealed class PathsWatcher : IDisposable {
         private readonly DisposableBag _disposableBag = new DisposableBag(nameof(PathsWatcher));
-        private SingleThreadSynchronizationContext _syncContext = new SingleThreadSynchronizationContext();
         private readonly Action _onChanged;
         private readonly object _lock = new object();
 
@@ -70,7 +68,7 @@ namespace Microsoft.Python.LanguageServer {
         private void TimerProc(object o) {
             lock (_lock) {
                 if (!_changedSinceLastTick && _throttleTimer != null) {
-                    _syncContext.Post(s => _onChanged(), null);
+                    ThreadPool.QueueUserWorkItem(_ => _onChanged());
                     _throttleTimer.Dispose();
                     _throttleTimer = null;
                 }
