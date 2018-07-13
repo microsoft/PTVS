@@ -70,7 +70,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.15.0" Condition="$(VSTarget) == '15.0'" />
+    <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Threading">
       <SpecificVersion>False</SpecificVersion>
