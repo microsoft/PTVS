@@ -4910,9 +4910,7 @@ min(a, D())
             }
 
             var cancelSource = new CancellationTokenSource();
-            var task = Task.Run(() => {
-                new AnalysisTest().AnalyzeDir(Path.Combine(ver.PrefixPath, "Lib"), ver.Version, cancel: cancelSource.Token);
-            }, cancelSource.Token);
+            var task = Task.Run(() => new AnalysisTest().AnalyzeDir(Path.Combine(ver.PrefixPath, "Lib"), ver.Version, cancel: cancelSource.Token));
 
             // Allow 10 seconds for parsing to complete and analysis to start
             cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
