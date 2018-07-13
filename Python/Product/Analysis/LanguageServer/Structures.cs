@@ -860,7 +860,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string firstTriggerCharacter;
         public string[] moreTriggerCharacters;
     }
-    public static class MarkupKind {
+    internal static class MarkupKind {
         public const string PlainText = "plaintext";
         public const string Markdown = "markdown";
     }

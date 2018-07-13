@@ -253,23 +253,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
-                using (AllowRequestCancellation()) {
-                    await ReloadModulesAsync(CancellationToken);
-                }
+                await ReloadModulesAsync(CancellationToken);
             }
         }
 
         public override async Task ReloadModulesAsync(CancellationToken token) {
-            LogMessage(MessageType.Info, "Reloading modules...");
+            using (AllowRequestCancellation()) {
+                LogMessage(MessageType.Info, "Reloading modules...");
 
-            // Make sure reload modules is executed on the analyzer thread.
-            var task = _reloadModulesQueueItem.Task;
-            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
-            await task;
+                // Make sure reload modules is executed on the analyzer thread.
+                var task = _reloadModulesQueueItem.Task;
+                _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+                await task;
 
-            // re-analyze all of the modules when we get a new set of modules loaded...
-            foreach (var entry in Analyzer.ModulesByFilename) {
-                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+                // re-analyze all of the modules when we get a new set of modules loaded...
+                foreach (var entry in Analyzer.ModulesByFilename) {
+                    _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+                }
             }
         }
 
@@ -685,7 +685,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void ThrowIfDisposed() {
-            if(_disposed) {
+            if (_disposed) {
                 throw new ObjectDisposedException(nameof(Server));
             }
         }
