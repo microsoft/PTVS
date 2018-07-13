@@ -47,6 +47,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private JsonRpc _rpc;
         private bool _filesLoaded;
         private Task _progressReportingTask;
+        private PathsWatcher _pathsWatcher;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
@@ -104,6 +105,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         public void Dispose() {
+            _pathsWatcher?.Dispose();
             _disposables.TryDispose();
             _server.Dispose();
         }
@@ -156,6 +158,15 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+
+            _pathsWatcher?.Dispose();
+            var watchSearchPaths = GetSetting(analysis, "watchSearchPaths", true);
+            if (watchSearchPaths) {
+                _pathsWatcher = new PathsWatcher(
+                    _initParams.initializationOptions.searchPaths, 
+                    () => _server.ReloadModulesAsync().DoNotWait()
+                 );
+            }
 
             var errors = GetSetting(analysis, "errors", Array.Empty<string>());
             var warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
