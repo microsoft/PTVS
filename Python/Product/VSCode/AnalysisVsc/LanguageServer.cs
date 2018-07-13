@@ -376,10 +376,6 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #endregion
 
-        #region Custom
-        [JsonRpcMethod("python/reloadModules")]
-        public Task ReloadModules() => _server.ReloadModulesAsync();
-        #endregion
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
 
         private T GetSetting<T>(JToken section, string settingName, T defaultValue) {
