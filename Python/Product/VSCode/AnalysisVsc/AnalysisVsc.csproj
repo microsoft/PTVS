@@ -17,11 +17,6 @@
       <None Remove="obj\**" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="Python-Language-Server.nuspec">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-    <ItemGroup>
         <PackageReference Include="MicroBuild.Core" Version="0.3.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -30,8 +25,16 @@
         <PackageReference Include="NewtonSoft.Json" Version="10.0.1" />
         <PackageReference Include="StreamJsonRpc" Version="1.4.102-beta" />
     </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\..\Analysis\AnalysisNetStandard.csproj" />
+    <ItemGroup Condition="$(AnalysisReference) == ''">
+        <ProjectReference Include="../../Analysis/AnalysisNetStandard.csproj" />
+    </ItemGroup>
+    <ItemGroup Condition="$(AnalysisReference) != ''">
+        <Reference Include="Microsoft.Python.Analysis.Engine">
+            <HintPath>$(AnalysisReference)/Microsoft.Python.Analysis.Engine.dll</HintPath>
+        </Reference>
+        <Content Include="$(AnalysisReference)/**/*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
     <Import Project="..\..\NetStandard.targets" />

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Python-Language-Server</id>
-    <version>0.1.0</version>
+    <id>Python-Language-Server$os$</id>
+    <version>$version$</version>
     <title>Python Language Server</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
