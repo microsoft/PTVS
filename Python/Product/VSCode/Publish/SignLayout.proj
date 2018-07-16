@@ -1,0 +1,50 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  
+  <Import Project="..\..\ProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <PropertyGroup Condition="$(BinariesPath) != ''">
+    <BinariesOutputPath Condition="HasTrailingSlash($(BinariesPath))">$(BinariesPath)</BinariesOutputPath>
+    <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesPath))">$(BinariesPath)\</BinariesOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>$(BinariesOutputPath)</OutputPath>
+    <OutDir>$(BinariesOutputPath)</OutDir>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ManagedFiles Include="
+        Microsoft.Python.Analysis.Engine.dll;
+        Microsoft.Python.LanguageServer.dll;
+        Microsoft.Python.LanguageServer.exe;
+        "/>
+
+    <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <Authenticode>Microsoft</Authenticode>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+
+    <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <Authenticode>Microsoft</Authenticode>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+    <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+  </Target>
+
+  <Target Name="ListFiles">
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)) - %(SignedPath)', '
+')" Importance="high" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
+</Project>
