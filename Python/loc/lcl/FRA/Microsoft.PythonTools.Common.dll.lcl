@@ -1452,10 +1452,13 @@
       </Item>
       <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Val><![CDATA[This debug REPL feature is only supported with the legacy debugger.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Cette fonctionnalité REPL de débogage n'est pas prise en charge avec le débogueur expérimental.]]></Val>
+            <Val><![CDATA[Cette fonctionnalité REPL de débogage est prise en charge avec le débogueur hérité uniquement.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1986,15 +1989,6 @@
           <Val><![CDATA[Text Files (*.txt)|*.txt|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Fichiers texte (*.txt)|*.txt|Tous les fichiers (*.*)|*.*]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";DisableExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Disable the experimental debugger]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Désactiver le débogueur expérimental]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3801,37 +3795,49 @@
       </Item>
       <Item ItemId=";PtvsdDisableCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Disable the experimental debugger]]></Val>
+          <Val><![CDATA[Use the legacy debugger]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Désactiver le débogueur expérimental]]></Val>
+            <Val><![CDATA[Utiliser le débogueur hérité]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Disable the experimental debugger]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PtvsdDisableSubtext" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
+          <Val><![CDATA[Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Les futures sessions de débogage n'utiliseront pas le débogueur expérimental. Vous pouvez également changer ce paramètre dans la page Outils/Options/Python/Expérimental.]]></Val>
+            <Val><![CDATA[Les prochaines sessions de débogage utiliseront le débogueur hérité. Vous pouvez également changer ce paramètre dans Outils, Options, Python, Débogage en changeant l'option 'Utiliser le débogueur hérité'.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PtvsdIncompatibleEnvMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
+          <Val><![CDATA[To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our <a href="https://aka.ms/upgradeptvsd">documentation</a> for a list of supported Python versions and environment types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Le débogueur expérimental n'est pas compatible avec cet environnement Python. Consultez la documentation pour obtenir une liste des environnements Python pris en charge.]]></Val>
+            <Val><![CDATA[Pour déboguer cet environnement Python, utilisez le débogueur hérité. Des versions antérieures de Python ne sont pas prises en charge. Consultez notre <a href="https://aka.ms/upgradeptvsd">documentation</a> pour obtenir une liste des versions Python et des types d'environnement pris en charge.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PtvsdIncompatibleEnvTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
+          <Val><![CDATA[Debugger does not support this Python environment]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Le débogueur n'est pas compatible avec cet environnement]]></Val>
+            <Val><![CDATA[Le débogueur ne prend pas en charge cet environnement Python]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3846,10 +3852,13 @@
       </Item>
       <Item ItemId=";PtvsdLearnMoreSubtext" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          <Val><![CDATA[View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Consultez la documentation de votre navigateur web sur des environnements Python pris en charge et découvrez comment mettre à niveau ou désinstaller le package du débogueur ptvsd.]]></Val>
+            <Val><![CDATA[Consultez la documentation sur les environnements Python pris en charge et découvrez comment mettre à niveau ou désinstaller le package du débogueur ptvsd.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5508,6 +5517,15 @@
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Impossible de mettre à niveau une référence d'environnement. Vérifiez l'élément Environnements Python dans l'Explorateur de solutions et sélectionnez un environnement pour votre projet.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UpgradedMscorlibReference" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A reference to 'mscorlib' was added to this project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Une référence à 'mscorlib' a été ajoutée à ce projet.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

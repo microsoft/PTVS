@@ -776,7 +776,7 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(@"TestData\XamlProject.sln");
 
             var references = project.ProjectItems.Item("References");
-            foreach (var pf in new[] { references.ProjectItems.Item("PresentationFramework"), references.ProjectItems.Item(1) }) {
+            foreach (var pf in new[] { references.ProjectItems.Item("PresentationFramework"), references.ProjectItems.Item(3) }) {
                 Assert.AreEqual("PresentationFramework", pf.Name);
                 Assert.AreEqual(typeof(OAReferenceItem), pf.GetType());
                 AssertError<InvalidOperationException>(() => pf.Delete());

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -75,5 +76,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         event EventHandler<PublishDiagnosticsEventArgs> OnPublishDiagnostics;
         void PublishDiagnostics(PublishDiagnosticsEventArgs e);
+
+        Task ReloadModulesAsync(CancellationToken token);
     }
 }

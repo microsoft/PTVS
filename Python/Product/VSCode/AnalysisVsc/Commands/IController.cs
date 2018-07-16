@@ -16,7 +16,7 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.VsCode.Commands {
+namespace Microsoft.Python.LanguageServer.Commands {
     internal interface IController {
         Task<object> ExecuteAsync(string command, params object[] args);
     }
