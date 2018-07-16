@@ -29,10 +29,10 @@ namespace Microsoft.PythonTools.Analysis {
         private static IEqualityComparer<T> _comparer = EqualityComparer<T>.Default;
 
         public Deque() {
-            Clear();
 #if DEBUG
             _scope = AnalysisQueue.Current;
 #endif
+            Clear();
         }
 
 #if DEBUG

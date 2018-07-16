@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups;
         private readonly PriorityProducerConsumer<QueueItem> _ppc;
         private readonly Task _consumerTask;
-        private readonly DisposeToken _disposeToken;
 
         public event EventHandler AnalysisStarted;
         public event EventHandler AnalysisComplete;
@@ -45,7 +44,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal AnalysisQueue() {
             _ppc = new PriorityProducerConsumer<QueueItem>(4, excludeDuplicates: true, comparer: QueueItemComparer.Instance);
-            _disposeToken = DisposeToken.Create<AnalysisQueue>();
             _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
             _consumerTask = Task.Run(ConsumerLoop);
         }
@@ -59,9 +57,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     var item = await ConsumeAsync();
                     _current.Value = this;
-                    await item.Handler(_disposeToken.CancellationToken);
+                    await item.Handler(_ppc.CancellationToken);
                     _current.Value = null;
-                } catch (OperationCanceledException) when (_disposeToken.IsDisposed)  {
+                } catch (OperationCanceledException) when (_ppc.IsDisposed)  {
                     return;
                 } catch (Exception ex) when (!ex.IsCriticalException())  {
                     UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(ex, false));
@@ -71,7 +69,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<QueueItem> ConsumeAsync() {
-            var task = _ppc.ConsumeAsync(_disposeToken.CancellationToken);
+            var task = _ppc.ConsumeAsync(_ppc.CancellationToken);
             if (!task.IsCompleted) {
                 await Task.WhenAny(task, Task.Delay(50));
                 if (!task.IsCompleted) {
@@ -95,11 +93,16 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Queues the specified work to run in analysis queue.
         /// Exceptions are rethrown to the caller and don't affect queue processing loop.
         /// </summary>
-        /// <param name="handler">The work to execute</param>
+        /// <param name="function">The work to execute</param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public Task ExecuteInQueueAsync(Func<CancellationToken, Task> handler, AnalysisPriority priority) {
-            var item = new ExecuteInQueueAsyncItem<bool>(handler);
+        public Task ExecuteInQueueAsync(Func<CancellationToken, Task> function, AnalysisPriority priority) {
+            // If we are inside the queue already, simply call the function
+            if (Current == this) {
+                return function(_ppc.CancellationToken);
+            }
+
+            var item = new ExecuteInQueueAsyncItem<bool>(function);
             Enqueue(item, item.Handler, priority);
             return item.Task;
         }
@@ -108,11 +111,16 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Queues the specified work to run in analysis queue.
         /// Exceptions are rethrown to the caller and don't affect queue processing loop.
         /// </summary>
-        /// <param name="handler">The work to execute</param>
+        /// <param name="function">The work to execute</param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public Task<T> ExecuteInQueueAsync<T>(Func<CancellationToken, Task<T>> handler, AnalysisPriority priority) {
-            var item = new ExecuteInQueueAsyncItem<T>(handler);
+        public Task<T> ExecuteInQueueAsync<T>(Func<CancellationToken, Task<T>> function, AnalysisPriority priority) {
+            // If we are inside the queue already, simply call the function
+            if (Current == this) {
+                return function(_ppc.CancellationToken);
+            }
+
+            var item = new ExecuteInQueueAsyncItem<T>(function);
             Enqueue(item, item.Handler, priority);
             return item.Task;
         }
@@ -137,7 +145,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void Dispose() {
-            if (_disposeToken.TryMarkDisposed()) {
+            if (!_ppc.IsDisposed) {
                 _ppc.Dispose();
                 RaiseEventOnThreadPool(AnalysisAborted);
             }

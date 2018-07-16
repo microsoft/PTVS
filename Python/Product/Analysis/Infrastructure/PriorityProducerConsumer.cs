@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         private int _firstAvailablePriority;
 
         public bool IsDisposed => _disposeToken.IsDisposed;
+        public CancellationToken CancellationToken => _disposeToken.CancellationToken;
 
         public int Count {
             get {

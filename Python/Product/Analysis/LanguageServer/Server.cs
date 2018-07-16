@@ -347,7 +347,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params, CancellationToken token) {
             ThrowIfDisposed();
-            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter, token);
+            Analyzer = await _queue.ExecuteInQueueAsync(ct => CreateAnalyzer(@params.initializationOptions.interpreter, token), AnalysisPriority.High);
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
