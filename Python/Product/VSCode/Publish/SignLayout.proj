@@ -2,48 +2,45 @@
   <PropertyGroup>
     <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
   </PropertyGroup>
-  
+
   <Import Project="..\..\ProjectBefore.settings" />
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
 
-  <PropertyGroup Condition="$(BinariesPath) != ''">
-    <BinariesOutputPath Condition="HasTrailingSlash($(BinariesPath))">$(BinariesPath)</BinariesOutputPath>
-    <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesPath))">$(BinariesPath)\</BinariesOutputPath>
-  </PropertyGroup>
-
   <PropertyGroup>
-    <OutputPath>$(BinariesOutputPath)</OutputPath>
-    <OutDir>$(BinariesOutputPath)</OutDir>
+    <OutputPath Condition="$(OutputPath) == ''">$(OutDir)</OutputPath>
+    <OutDir Condition="$(OutDir) == ''">$(OutputPath)</OutDir>
+
+    <SignEngine Condition="$(SignEngine) == ''">false</SignEngine>
+    <SignServer Condition="$(SignServer) == ''">false</SignServer>
+    <SignPackage Condition="$(SignPackage) == ''">false</SignPackage>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <ManagedFiles Include="
-        Microsoft.Python.Analysis.Engine.dll;
-        Microsoft.Python.LanguageServer.dll;
-        Microsoft.Python.LanguageServer.exe;
-        "/>
 
-    <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+  <ItemGroup Condition="$(SignEngine)">
+    <FilesToSign Include="$(OutputPath)\Microsoft.Python.Analysis.Engine.dll">
       <Authenticode>Microsoft</Authenticode>
-      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
-      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
-    </FilesToSign>
-
-    <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
-      <Authenticode>Microsoft</Authenticode>
-      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
-      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
   </ItemGroup>
 
-  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
-    <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
-  </Target>
+  <ItemGroup Condition="$(SignServer)">
+    <FilesToSign Include="$(OutputPath)\Microsoft.Python.LanguageServer.dll">
+      <Authenticode>Microsoft</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(OutputPath)\Microsoft.Python.LanguageServer" Condition="Exists('$(OutputPath)\Microsoft.Python.LanguageServer')">
+      <Authenticode>Microsoft</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(OutputPath)\Microsoft.Python.LanguageServer.exe" Condition="Exists('$(OutputPath)\Microsoft.Python.LanguageServer.exe')">
+      <Authenticode>Microsoft</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
 
-  <Target Name="ListFiles">
-    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
-    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)) - %(SignedPath)', '
-')" Importance="high" />
+  <ItemGroup Condition="$(SignPackage)">
+    <FilesToSign Include="$(OutputPath)\Python-Language-Server-*.nupkg">
+      <Authenticode>NuGet</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="_ListFiles" BeforeTargets="SignFiles">
+    <Message Text="Signing Files: @(FilesToSign,'%0A')" Importance="high" />
   </Target>
 
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
