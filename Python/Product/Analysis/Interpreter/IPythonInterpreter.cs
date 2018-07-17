@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -59,8 +61,8 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler ModuleNamesChanged;
 
         /// <summary>
-        /// Returns an IPythonModule for a given module name. Returns null if
-        /// the module does not exist.
+        /// Synchronous variant of <see ref="IPythonInterpreter2.ImportModuleAsync">.
+        /// Waits for the async import completion using timeouts.
         /// </summary>
         IPythonModule ImportModule(string name);
 
@@ -71,5 +73,13 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Interpreters can return null if they have no per-module state.
         /// </summary>
         IModuleContext CreateModuleContext();
+    }
+
+    public interface IPythonInterpreter2: IPythonInterpreter {
+        /// <summary>
+        /// Returns an IPythonModule for a given module name. Returns null if
+        /// the module does not exist. The import is performed asynchronously.
+        /// </summary>
+        Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token);
     }
 }

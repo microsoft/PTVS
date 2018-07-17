@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 var currentTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<bool>());
                 try {
-                    _analyzer.ReloadModulesAsync().WaitAndUnwrapExceptions();
+                    _analyzer.ReloadModulesAsync(cancel).WaitAndUnwrapExceptions();
                     currentTcs.TrySetResult(true);
                 } catch (OperationCanceledException oce) {
                     currentTcs.TrySetCanceled(oce.CancellationToken);
@@ -126,8 +126,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override async Task<InitializeResult> Initialize(InitializeParams @params) {
             ThrowIfDisposed();
-            await DoInitializeAsync(@params);
-
+            using (AllowRequestCancellation()) {
+                await DoInitializeAsync(@params, CancellationToken);
+            }
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {
@@ -252,6 +253,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
+                await ReloadModulesAsync(CancellationToken);
+            }
+        }
+
+        public override async Task ReloadModulesAsync(CancellationToken token) {
+            using (AllowRequestCancellation()) {
+                LogMessage(MessageType.Info, "Reloading modules...");
+
                 // Make sure reload modules is executed on the analyzer thread.
                 var task = _reloadModulesQueueItem.Task;
                 _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
@@ -344,9 +353,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return entry;
         }
 
-        private async Task DoInitializeAsync(InitializeParams @params) {
+        private async Task DoInitializeAsync(InitializeParams @params, CancellationToken token) {
             ThrowIfDisposed();
-            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter, token);
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
@@ -414,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return default(T);
         }
 
-        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter) {
+        private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter, CancellationToken token) {
             var factory = ActivateObject<IPythonInterpreterFactory>(interpreter.assembly, interpreter.typeName, interpreter.properties)
                 ?? new AstPythonInterpreterFactory(interpreter.properties);
 
@@ -425,7 +434,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
-            var analyzer = await PythonAnalyzer.CreateAsync(factory, interp);
+            var analyzer = await PythonAnalyzer.CreateAsync(factory, interp, token);
 #if DEBUG
             // Make Deque aware of the only thread that should be modifying its state
             analyzer.Queue.SynchronizationContext = _queue.SynchronizationContext;
@@ -676,7 +685,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void ThrowIfDisposed() {
-            if(_disposed) {
+            if (_disposed) {
                 throw new ObjectDisposedException(nameof(Server));
             }
         }

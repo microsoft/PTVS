@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode {
+namespace Microsoft.Python.LanguageServer.Implementation {
     /// <summary>
     /// VS Code language server protocol implementation to use with StreamJsonRpc
     /// https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.VsCode {
     /// </summary>
     public sealed partial class LanguageServer : IDisposable {
         private readonly DisposableBag _disposables = new DisposableBag(nameof(LanguageServer));
-        private readonly Server _server = new Server();
+        private readonly PythonTools.Analysis.LanguageServer.Server _server = new PythonTools.Analysis.LanguageServer.Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
         private readonly RestTextConverter _textConverter = new RestTextConverter();
         private IUIService _ui;
@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.VsCode {
         private JsonRpc _rpc;
         private bool _filesLoaded;
         private Task _progressReportingTask;
+        private PathsWatcher _pathsWatcher;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.VsCode {
         }
 
         public void Dispose() {
+            _pathsWatcher?.Dispose();
             _disposables.TryDispose();
             _server.Dispose();
         }
@@ -156,6 +158,15 @@ namespace Microsoft.PythonTools.VsCode {
 
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+
+            _pathsWatcher?.Dispose();
+            var watchSearchPaths = GetSetting(analysis, "watchSearchPaths", true);
+            if (watchSearchPaths) {
+                _pathsWatcher = new PathsWatcher(
+                    _initParams.initializationOptions.searchPaths, 
+                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait()
+                 );
+            }
 
             var errors = GetSetting(analysis, "errors", Array.Empty<string>());
             var warnings = GetSetting(analysis, "warnings", Array.Empty<string>());

@@ -17,12 +17,12 @@
 // #define WAIT_FOR_DEBUGGER
 
 using System;
+using Microsoft.Python.LanguageServer.Services;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.VsCode.Services;
 using Newtonsoft.Json;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode {
+namespace Microsoft.Python.LanguageServer.Server {
     internal static class Program {
         public static void Main(string[] args) {
             CheckDebugMode();
@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.VsCode {
 
                 using (var cin = Console.OpenStandardInput())
                 using (var cout = Console.OpenStandardOutput())
-                using (var server = new LanguageServer())
+                using (var server = new Implementation.LanguageServer())
                 using (var rpc = new JsonRpc(cout, cin, server)) {
                     rpc.SynchronizationContext = new SingleThreadSynchronizationContext();
                     rpc.JsonSerializer.Converters.Add(new UriConverter());
