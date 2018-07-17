@@ -1,5 +1,3 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(PackagesPath)MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" Condition="$(MicroBuildPluginDirectory) == '' and Exists('$(PackagesPath)MicroBuild.Core.0.3.0\build\MicroBuild.Core.props')" />
-  <Import Project="$(PackagesPath)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="$(MicroBuildPluginDirectory) == '' and Exists('$(PackagesPath)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
-  <Import Project="$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.props" Condition="$(MicroBuildPluginDirectory) == '' and Exists('$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.props')" />
+  <Import Project="$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.props" Condition="Exists('$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.props')" />
 </Project>
