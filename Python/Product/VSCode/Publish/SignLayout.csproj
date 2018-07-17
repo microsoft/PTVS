@@ -32,7 +32,6 @@
 
   <ItemGroup Condition="$(SignServer)">
     <SignFiles Include="$(OutputPath)\Microsoft.Python.LanguageServer.dll" />
-    <SignFiles Include="$(OutputPath)\Microsoft.Python.LanguageServer" Condition="Exists('$(OutputPath)\Microsoft.Python.LanguageServer')" />
     <SignFiles Include="$(OutputPath)\Microsoft.Python.LanguageServer.exe" Condition="Exists('$(OutputPath)\Microsoft.Python.LanguageServer.exe')" />
   </ItemGroup>
 
