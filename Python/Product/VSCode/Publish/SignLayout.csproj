@@ -1,6 +1,6 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <NoWarn>2008;$(NoWarn)</NoWarn>
   </PropertyGroup>
   <Import Project="..\..\NetStandard.settings" />
