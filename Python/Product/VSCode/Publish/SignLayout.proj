@@ -39,8 +39,12 @@
     </FilesToSign>
   </ItemGroup>
 
-  <Target Name="_ListFiles" BeforeTargets="SignFiles">
+  <Target Name="_CheckFiles" BeforeTargets="SignFiles">
     <Message Text="Signing Files: @(FilesToSign,'%0A')" Importance="high" />
+    <ItemGroup>
+      <_Missing Include="@(FilesToSign)" Condition="!Exists(%(FullPath))" />
+    </ItemGroup>
+    <Error Condition="@(_Missing) != ''" Text="Following files are missing: @(_Missing,'%0A')" />
   </Target>
 
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
