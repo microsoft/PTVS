@@ -21,29 +21,32 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     sealed class CompletionResult {
-        private readonly string _completion;
-        private readonly PythonMemberType _memberType;
-        private readonly string _name, _doc;
         private readonly AP.CompletionValue[] _values;
 
         internal CompletionResult(string name, PythonMemberType memberType) {
-            _name = name;
-            _completion = name;
-            _memberType = memberType;
+            MergeKey = name;
+            Name = name;
+            Completion = name;
+            MemberType = memberType;
         }
 
-        internal CompletionResult(string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
-            _name = name;
-            _memberType = memberType;
-            _completion = completion;
-            _doc = doc;
+        internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
+            MergeKey = mergeKey;
+            Name = name;
+            MemberType = memberType;
+            Completion = completion;
+            Documentation = doc;
             _values = values;
         }
 
-        public string Completion => _completion;
-        public string Documentation => _doc;
-        public PythonMemberType MemberType => _memberType;
-        public string Name => _name;
+        public string Completion { get; }
+        public string Documentation { get; }
+        public PythonMemberType MemberType { get; }
+        public string Name { get; }
+        /// <summary>
+        /// Items with the same merge key may be merged together.
+        /// </summary>
+        public string MergeKey { get; }
 
         internal AP.CompletionValue[] Values => _values ?? Array.Empty<AP.CompletionValue>();
     }
