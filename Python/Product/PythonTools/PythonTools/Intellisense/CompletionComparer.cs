@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -30,11 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// the end of the list.
         /// </summary>
         public static readonly CompletionComparer UnderscoresLast = new CompletionComparer(true);
-        /// <summary>
-        /// A CompletionComparer that determines whether
-        /// <see cref="MemberResult" /> structures are equal.
-        /// </summary>
-        public static readonly IEqualityComparer<CompletionResult> MemberEquality = UnderscoresLast;
+
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the start of the list.
@@ -85,39 +82,44 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Compares two <see cref="MemberResult"/> structures using their
+        /// Compares two <see cref="CompletionResult"/> structures using their
         /// names.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
         public int Compare(CompletionResult x, CompletionResult y) {
-            int i = Compare(x.Completion, y.Completion);
-            return i == 0 ? 0 : Compare(x.Name, y.Name);
+            return Compare(x.Name, y.Name);
         }
 
         /// <summary>
-        /// Compares two <see cref="MemberResult"/> structures for equality.
+        /// Compares two <see cref="CompletionResult"/> structures for equality.
         /// </summary>
         public bool Equals(CompletionResult x, CompletionResult y) {
-            return x.Name.Equals(y.Name) || x.Completion.Equals(y.Completion);
+            return x.Name.Equals(y.Name);
         }
 
         /// <summary>
-        /// Gets the hash code for a <see cref="MemberResult"/> structure.
+        /// Gets the hash code for a <see cref="CompletionResult"/> structure.
         /// </summary>
         public int GetHashCode(CompletionResult obj) {
-            if (obj.Name.Length < obj.Completion.Length && obj.Completion.StartsWithOrdinal(obj.Name)) {
-                return obj.Name.GetHashCode();
-            } else if (obj.Name.Length > obj.Completion.Length && obj.Name.StartsWith(obj.Completion)) {
-                return obj.Completion.GetHashCode();
-            }
-            for (int i = 0; i < obj.Name.Length && i < obj.Completion.Length; ++i) {
-                if (obj.Name[i] != obj.Completion[i]) {
-                    return obj.Name.Substring(0, i).GetHashCode();
-                }
-            }
             return obj.Name.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// A comparer for use with <see cref="Enumerable.Union{TSource}(IEnumerable{TSource}, IEnumerable{TSource}, IEqualityComparer{TSource})"/>
+    /// to eliminate duplicate items with the same <see cref="CompletionResult.MergeKey"/>.
+    /// </summary>
+    class CompletionMergeKeyComparer : IEqualityComparer<CompletionResult> {
+        public static readonly CompletionMergeKeyComparer Instance = new CompletionMergeKeyComparer();
+
+        public bool Equals(CompletionResult x, CompletionResult y) {
+            return x.MergeKey.Equals(y.MergeKey);
+        }
+
+        public int GetHashCode(CompletionResult obj) {
+            return obj.MergeKey.GetHashCode();
         }
     }
 }

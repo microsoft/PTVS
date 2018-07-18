@@ -103,8 +103,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 ? ((SourceSpan)completions._applicableSpan.Value).ToSnapshotSpan(_snapshot)
                 : new SnapshotSpan(point, 0);
             _span = bufferInfo.CurrentSnapshot.CreateTrackingSpan(snapshotSpan, SpanTrackingMode.EdgeInclusive);
-
             var members = completions.items.MaybeEnumerate().Select(c => new CompletionResult(
+                // if a method stub generation (best guess by comparing length),
+                // merge entry based on label, for everything else, use insertion text
+                c.filterText ?? ((c.insertText ?? c.label).Length > c.label.Length ? c.label : c.insertText ?? c.label),
                 c.label,
                 c.insertText ?? c.label,
                 c.documentation?.value,
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (_services.Python.InteractiveOptions.LiveCompletionsOnly) {
                     members = replMembers ?? Array.Empty<CompletionResult>();
                 } else if (replMembers != null) {
-                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                    members = members.Union(replMembers, CompletionMergeKeyComparer.Instance);
                 }
             }
 
@@ -127,7 +129,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (expansions != null) {
                     // Expansions should come first, so that they replace our keyword
                     // completions with the more detailed snippets.
-                    members = expansions.Union(members, CompletionComparer.MemberEquality);
+                    members = expansions.Union(members, CompletionMergeKeyComparer.Instance);
                 }
             }
 
