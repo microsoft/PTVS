@@ -21,7 +21,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     partial class Server {
-        public async Task LoadExtension(PythonAnalysisExtensionParams extension, CancellationToken cancellationToken) {
+        public Task LoadExtension(PythonAnalysisExtensionParams extension) => LoadExtension(extension, CancellationToken.None);
+
+        internal async Task LoadExtension(PythonAnalysisExtensionParams extension, CancellationToken cancellationToken) {
             var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
             if (provider == null) {
                 LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
