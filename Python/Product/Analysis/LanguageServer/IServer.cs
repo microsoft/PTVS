@@ -20,11 +20,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public interface IServer {
-        Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        Task<InitializeResult> Initialize(InitializeParams @params);
         Task Initialized(InitializedParams @params);
         Task Shutdown();
         Task Exit();
-        Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        void CancelRequest();
+        Task DidChangeConfiguration(DidChangeConfigurationParams @params);
         Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params);
         Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params);
         Task<object> ExecuteCommand(ExecuteCommandParams @params);
@@ -34,12 +35,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         Task<TextEdit[]> WillSaveWaitUntilTextDocument(WillSaveTextDocumentParams @params);
         Task DidSaveTextDocument(DidSaveTextDocumentParams @params);
         Task DidCloseTextDocument(DidCloseTextDocumentParams @params);
-        Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        Task<CompletionList> Completion(CompletionParams @params);
         Task<CompletionItem> CompletionItemResolve(CompletionItem item);
-        Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Hover> Hover(TextDocumentPositionParams @params);
         Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params);
-        Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken));
-        Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params);
+        Task<Reference[]> FindReferences(ReferencesParams @params);
         Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params);
         Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params);
         Task<Command[]> CodeAction(CodeActionParams @params);

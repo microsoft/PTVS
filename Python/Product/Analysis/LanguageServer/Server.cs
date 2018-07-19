@@ -124,7 +124,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #region Client message handling
-        public override async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
+        public override Task<InitializeResult> Initialize(InitializeParams @params) => Initialize(@params, CancellationToken.None);
+
+        internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             await DoInitializeAsync(@params, cancellationToken);
 

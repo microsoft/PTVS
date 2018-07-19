@@ -25,7 +25,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) => FindReferences(@params, CancellationToken.None);
+
+        internal Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 

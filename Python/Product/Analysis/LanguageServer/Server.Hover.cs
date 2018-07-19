@@ -31,7 +31,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
         private DocumentationBuilder _displayTextBuilder;
 
-        public override Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) => Hover(@params, CancellationToken.None);
+
+        internal Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 

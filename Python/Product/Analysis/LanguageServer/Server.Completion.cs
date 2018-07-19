@@ -23,7 +23,9 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
+        public override Task<CompletionList> Completion(CompletionParams @params) => Completion(@params, CancellationToken.None);
+
+        internal Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
  
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);

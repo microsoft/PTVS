@@ -22,15 +22,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase : IServer {
         #region Client Requests
 
-        public abstract Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken = default(CancellationToken));
+        public abstract Task<InitializeResult> Initialize(InitializeParams @params);
 
         public virtual Task Initialized(InitializedParams @params) => Task.CompletedTask;
 
         public virtual Task Shutdown() => Task.CompletedTask;
 
         public virtual Task Exit() => Task.CompletedTask;
+        
+        public virtual void CancelRequest() {} // Does nothing
 
-        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken = default(CancellationToken)) => Task.CompletedTask;
+        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
         public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
 
@@ -50,17 +52,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task DidCloseTextDocument(DidCloseTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
+        public virtual Task<CompletionList> Completion(CompletionParams @params) => throw new NotImplementedException();
 
         public virtual Task<CompletionItem> CompletionItemResolve(CompletionItem item) => throw new NotImplementedException();
 
-        public virtual Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
+        public virtual Task<Hover> Hover(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
         public virtual Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
+        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
+        public virtual Task<Reference[]> FindReferences(ReferencesParams @params) => throw new NotImplementedException();
 
         public virtual Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
