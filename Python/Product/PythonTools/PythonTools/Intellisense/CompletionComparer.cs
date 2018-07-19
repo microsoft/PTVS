@@ -92,20 +92,31 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="y"></param>
         /// <returns></returns>
         public int Compare(CompletionResult x, CompletionResult y) {
-            return Compare(x.Name, y.Name);
+            int i = Compare(x.Completion, y.Completion);
+            return i == 0 ? 0 : Compare(x.Name, y.Name);
         }
 
         /// <summary>
         /// Compares two <see cref="MemberResult"/> structures for equality.
         /// </summary>
         public bool Equals(CompletionResult x, CompletionResult y) {
-            return x.Name.Equals(y.Name);
+            return x.Name.Equals(y.Name) || x.Completion.Equals(y.Completion);
         }
 
         /// <summary>
         /// Gets the hash code for a <see cref="MemberResult"/> structure.
         /// </summary>
         public int GetHashCode(CompletionResult obj) {
+            if (obj.Name.Length < obj.Completion.Length && obj.Completion.StartsWithOrdinal(obj.Name)) {
+                return obj.Name.GetHashCode();
+            } else if (obj.Name.Length > obj.Completion.Length && obj.Name.StartsWith(obj.Completion)) {
+                return obj.Completion.GetHashCode();
+            }
+            for (int i = 0; i < obj.Name.Length && i < obj.Completion.Length; ++i) {
+                if (obj.Name[i] != obj.Completion[i]) {
+                    return obj.Name.Substring(0, i).GetHashCode();
+                }
+            }
             return obj.Name.GetHashCode();
         }
     }

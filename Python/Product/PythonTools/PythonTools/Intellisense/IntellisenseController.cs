@@ -966,6 +966,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (triggerChar == ' ' || triggerChar == '.') {
                 var bi = _textView.TextBuffer.TryGetInfo();
+                if (bi == null) {
+                    bi = _textView.MapDownToPythonBuffer(_textView.Caret.Position.BufferPosition)?.Snapshot.TextBuffer.TryGetInfo();
+                }
                 var bp = bi?.AnalysisEntry?.TryGetBufferParser();
                 if (bp != null) {
                     await bp.EnsureCodeSyncedAsync(bi.Buffer);
