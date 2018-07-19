@@ -236,7 +236,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
 
-        public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
+        public override Task DidChangeConfiguration(DidChangeConfigurationParams @params) => DidChangeConfiguration(@params, CancellationToken.None);
+
+        internal async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             if (Analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
