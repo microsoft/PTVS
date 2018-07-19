@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -24,7 +25,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) => FindReferences(@params, CancellationToken.None);
+
+        internal Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -36,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(Array.Empty<Reference>());
             }
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version);
+            tree = GetParseTree(entry, uri, cancellationToken, out var version);
             var extras = new List<Reference>();
 
             if (@params.context?.includeDeclaration ?? false) {

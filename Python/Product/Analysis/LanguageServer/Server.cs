@@ -124,11 +124,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #region Client message handling
-        public override async Task<InitializeResult> Initialize(InitializeParams @params) {
+        public override Task<InitializeResult> Initialize(InitializeParams @params) => Initialize(@params, CancellationToken.None);
+
+        internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
-            using (AllowRequestCancellation()) {
-                await DoInitializeAsync(@params, CancellationToken);
-            }
+            await DoInitializeAsync(@params, cancellationToken);
+
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {
@@ -235,7 +236,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
 
-        public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+        public override Task DidChangeConfiguration(DidChangeConfigurationParams @params) => DidChangeConfiguration(@params, CancellationToken.None);
+
+        internal async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             if (Analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
@@ -253,23 +256,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
-                await ReloadModulesAsync(CancellationToken);
+                await ReloadModulesAsync(cancellationToken);
             }
         }
 
         public override async Task ReloadModulesAsync(CancellationToken token) {
-            using (AllowRequestCancellation()) {
-                LogMessage(MessageType.Info, "Reloading modules...");
+            LogMessage(MessageType.Info, "Reloading modules...");
 
-                // Make sure reload modules is executed on the analyzer thread.
-                var task = _reloadModulesQueueItem.Task;
-                _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
-                await task;
+            // Make sure reload modules is executed on the analyzer thread.
+            var task = _reloadModulesQueueItem.Task;
+            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+            await task;
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var entry in Analyzer.ModulesByFilename) {
-                    _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
-                }
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var entry in Analyzer.ModulesByFilename) {
+                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
 

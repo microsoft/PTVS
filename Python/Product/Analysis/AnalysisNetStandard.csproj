@@ -4,15 +4,12 @@
     <RootNamespace>Microsoft.PythonTools.Analysis</RootNamespace>
     <AssemblyName>Microsoft.Python.Analysis.Engine</AssemblyName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup>
     <!-- 
       1701, 1702 - "You may need to supply assembly policy"
       1998 - "This async method lacks 'await'"
     -->
-    <NoWarn>1701;1702;1998</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <NoWarn>1701;1702;1998</NoWarn>
+    <NoWarn>1701;1702;1998;$(NoWarn)</NoWarn>
   </PropertyGroup>
   <Import Project="..\NetStandard.settings" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -21,8 +18,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Python2" version="2.7.14" Condition="'$(OS)' == 'Windows_NT'" />
-    <PackageReference Include="Python" version="3.6.4" Condition="'$(OS)' == 'Windows_NT'" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="get_search_paths.py">
@@ -32,6 +27,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="typing-stub.pyi">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Typeshed\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
