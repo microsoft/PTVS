@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var members = completions.items.MaybeEnumerate().Select(c => new CompletionResult(
                 // if a method stub generation (best guess by comparing length),
                 // merge entry based on label, for everything else, use insertion text
-                c.filterText ?? ((c.insertText ?? c.label).Length > c.label.Length ? c.label : c.insertText ?? c.label),
+                c.filterText ?? (c.insertText != null && c.insertText.Length <= c.label.Length ? c.insertText : c.label),
                 c.label,
                 c.insertText ?? c.label,
                 c.documentation?.value,

@@ -24,17 +24,17 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly AP.CompletionValue[] _values;
 
         internal CompletionResult(string name, PythonMemberType memberType) {
-            MergeKey = name;
+            MergeKey = name ?? throw new ArgumentNullException(nameof(name));
             Name = name;
             Completion = name;
             MemberType = memberType;
         }
 
         internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
-            MergeKey = mergeKey;
-            Name = name;
+            MergeKey = mergeKey ?? throw new ArgumentNullException(nameof(mergeKey));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Completion = completion ?? throw new ArgumentNullException(nameof(completion));
             MemberType = memberType;
-            Completion = completion;
             Documentation = doc;
             _values = values;
         }
