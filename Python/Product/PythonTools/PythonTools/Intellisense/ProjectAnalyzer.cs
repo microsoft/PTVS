@@ -1550,11 +1550,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 var pyErrors = diagnostics.diagnostics.MaybeEnumerate()
                     .GroupBy(d => d.source);
 
-                if (!pyErrors.Any()) {
-                    errorTask?.Clear(entry.Path, ParserTaskMoniker);
-                    errorTask?.Clear(entry.Path, AnalyzerTaskMoniker);
-                    commentTask?.Clear(entry.Path, TaskCommentMoniker);
-                } else {
+                var errorMonikers = new HashSet<string> { ParserTaskMoniker, AnalyzerTaskMoniker };
+                var commentMonikers = new HashSet<string> { TaskCommentMoniker };
+
+                if (pyErrors.Any()) {
                     var factory = new TaskProviderItemFactory(bi?.LocationTracker, diagnostics.version);
                     foreach (var g in pyErrors) {
                         Debug.Assert(g.Key == ParserTaskMoniker || g.Key == AnalyzerTaskMoniker || g.Key == TaskCommentMoniker, $"Unexpected source {g.Key}");
@@ -1569,10 +1568,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         if (isComment) {
                             commentTask?.ReplaceItems(entry.Path, g.Key, items);
+                            commentMonikers.Remove(g.Key);
                         } else {
                             errorTask?.ReplaceItems(entry.Path, g.Key, items);
+                            errorMonikers.Remove(g.Key);
                         }
                     }
+                }
+
+                foreach (var moniker in errorMonikers) {
+                    errorTask?.Clear(entry.Path, moniker);
+                }
+                foreach (var moniker in commentMonikers) {
+                    commentTask?.Clear(entry.Path, moniker);
                 }
             }
 
