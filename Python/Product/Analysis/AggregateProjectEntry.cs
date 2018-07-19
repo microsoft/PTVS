@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void RemovedFromProject() {
             _aggregating.Clear();
-            _next.Clear();
+            _next?.Clear();
             _version = -1;
         }
 
