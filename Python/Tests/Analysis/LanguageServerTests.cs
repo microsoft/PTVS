@@ -645,7 +645,7 @@ mc
             await s.LoadExtension(new PythonAnalysisExtensionParams {
                 assembly = typeof(TestCompletionHookProvider).Assembly.FullName,
                 typeName = typeof(TestCompletionHookProvider).FullName
-            });
+            }, CancellationToken.None);
 
             await AssertCompletion(s, u, new[] { "*real", "*imag" }, new[] { "real" }, new Position { line = 1, character = 2 });
         }
@@ -1026,7 +1026,7 @@ datetime.datetime.now().day
                 assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
                 typeName = typeof(GetAllExtensionProvider).FullName,
                 properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId.Int.ToString() }
-            });
+            }, CancellationToken.None);
 
             List<string> res;
             var cmd = new ExtensionCommandParams {
@@ -1046,7 +1046,7 @@ datetime.datetime.now().day
                 assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
                 typeName = typeof(GetAllExtensionProvider).FullName,
                 properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId_Str.ToString() }
-            });
+            }, CancellationToken.None);
 
             cmd.command = BuiltinTypeId_Str.ToString();
             res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;

@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
@@ -33,11 +34,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private bool _shutdown;
 
         [JsonRpcMethod("initialize")]
-        public Task<InitializeResult> Initialize(JToken token) {
+        public Task<InitializeResult> Initialize(JToken token, CancellationToken cancellationToken) {
             _initParams = token.ToObject<InitializeParams>();
             MonitorParentProcess(_initParams);
 
-            return _server.Initialize(_initParams);
+            return _server.Initialize(_initParams, cancellationToken);
         }
 
         [JsonRpcMethod("initialized")]

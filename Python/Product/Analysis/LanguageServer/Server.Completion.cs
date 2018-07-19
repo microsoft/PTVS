@@ -16,19 +16,20 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<CompletionList> Completion(CompletionParams @params) {
+        public override Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
             var uri = @params.textDocument.uri;
  
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
+            tree = GetParseTree(entry, uri, cancellationToken, out var version) ?? tree;
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");

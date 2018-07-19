@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         };
         private DocumentationBuilder _displayTextBuilder;
 
-        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
+        public override Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
@@ -42,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 return Task.FromResult(EmptyHover);
             }
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
+            tree = GetParseTree(entry, uri, cancellationToken, out var version) ?? tree;
 
             Expression expr;
             SourceSpan? exprSpan;

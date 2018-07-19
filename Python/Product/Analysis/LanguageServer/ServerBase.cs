@@ -20,47 +20,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase : IServer {
-        private RequestLock _lock;
-
-        private sealed class RequestLock : IDisposable {
-            public readonly ServerBase Owner;
-            public readonly CancellationTokenSource CancellationTokenSource;
-
-            public CancellationToken Token => CancellationTokenSource.Token;
-            public void Cancel() => CancellationTokenSource.Cancel();
-
-            public RequestLock(ServerBase owner, int millisecondsTimeout) {
-                CancellationTokenSource = millisecondsTimeout > 0 ?
-                    new CancellationTokenSource(millisecondsTimeout) :
-                    new CancellationTokenSource();
-
-                Owner = owner;
-                if (Interlocked.CompareExchange(ref Owner._lock, this, null) != null) {
-                    throw new InvalidOperationException("currently processing another request");
-                }
-            }
-
-            public void Dispose() {
-                CancellationTokenSource.Dispose();
-                Interlocked.CompareExchange(ref Owner._lock, null, this);
-            }
-        }
-
-        /// <summary>
-        /// Should be used in a using() statement around any requests that support
-        /// cancellation or timeout.
-        /// </summary>
-        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => new RequestLock(this, millisecondsTimeout);
-
-        /// <summary>
-        /// Get this token at the start of request processing and abort when it
-        /// is marked as cancelled.
-        /// </summary>
-        protected CancellationToken CancellationToken => Volatile.Read(ref _lock)?.Token ?? CancellationToken.None;
-
         #region Client Requests
 
-        public abstract Task<InitializeResult> Initialize(InitializeParams @params);
+        public abstract Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken = default(CancellationToken));
 
         public virtual Task Initialized(InitializedParams @params) => Task.CompletedTask;
 
@@ -68,9 +30,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task Exit() => Task.CompletedTask;
 
-        public virtual void CancelRequest() => Volatile.Read(ref _lock)?.Cancel();
-
-        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
+        public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken = default(CancellationToken)) => Task.CompletedTask;
 
         public virtual Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) => Task.CompletedTask;
 
@@ -90,17 +50,17 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task DidCloseTextDocument(DidCloseTextDocumentParams @params) => Task.CompletedTask;
 
-        public virtual Task<CompletionList> Completion(CompletionParams @params) => throw new NotImplementedException();
+        public virtual Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
 
         public virtual Task<CompletionItem> CompletionItemResolve(CompletionItem item) => throw new NotImplementedException();
 
-        public virtual Task<Hover> Hover(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
 
         public virtual Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
-        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) => throw new NotImplementedException();
+        public virtual Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
 
-        public virtual Task<Reference[]> FindReferences(ReferencesParams @params) => throw new NotImplementedException();
+        public virtual Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken = default(CancellationToken)) => throw new NotImplementedException();
 
         public virtual Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
