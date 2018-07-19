@@ -20,6 +20,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase : IServer {
+        /// <summary>
+        /// Doesn't do anything. Left here for legacy purpores
+        /// </summary>
+        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => EmptyDisposable.Instance;
+
         #region Client Requests
 
         public abstract Task<InitializeResult> Initialize(InitializeParams @params);
@@ -147,5 +152,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
 
         #endregion
+
+        /// <summary>
+	    /// Represents a disposable that does nothing on disposal.
+	    /// </summary>
+	    private sealed class EmptyDisposable : IDisposable {
+            /// <summary>
+            /// Singleton default disposable.
+            /// </summary>
+            public static EmptyDisposable Instance { get; } = new EmptyDisposable();
+
+            private EmptyDisposable() { }
+
+            /// <summary>
+            /// Does nothing.
+            /// </summary>
+            public void Dispose() { }
+        }  
     }
 }
