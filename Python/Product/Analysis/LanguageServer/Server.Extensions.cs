@@ -16,36 +16,38 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     partial class Server {
-        public async Task LoadExtension(PythonAnalysisExtensionParams extension) {
-            using (AllowRequestCancellation()) {
-                var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
-                if (provider == null) {
-                    LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
-                    return;
-                }
-                var ext = await provider.CreateAsync(this, extension.properties ?? new Dictionary<string, object>(), CancellationToken);
-                if (ext == null) {
-                    LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} returned null");
-                    return;
-                }
+        public Task LoadExtension(PythonAnalysisExtensionParams extension) => LoadExtension(extension, CancellationToken.None);
 
-                string n = null;
-                try {
-                    n = ext.Name;
-                } catch (NotImplementedException) {
-                } catch (NotSupportedException) {
-                }
+        internal async Task LoadExtension(PythonAnalysisExtensionParams extension, CancellationToken cancellationToken) {
+            var provider = ActivateObject<ILanguageServerExtensionProvider>(extension.assembly, extension.typeName, null);
+            if (provider == null) {
+                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} failed to load");
+                return;
+            }
 
-                if (!string.IsNullOrEmpty(n)) {
-                    _extensions.AddOrUpdate(n, ext, (_, previous) => {
-                        (previous as IDisposable)?.Dispose();
-                        return ext;
-                    });
-                }
+            var ext = await provider.CreateAsync(this, extension.properties ?? new Dictionary<string, object>(), cancellationToken);
+            if (ext == null) {
+                LogMessage(MessageType.Error, $"Extension provider {extension.assembly} {extension.typeName} returned null");
+                return;
+            }
+
+            string n = null;
+            try {
+                n = ext.Name;
+            } catch (NotImplementedException) {
+            } catch (NotSupportedException) {
+            }
+
+            if (!string.IsNullOrEmpty(n)) {
+                _extensions.AddOrUpdate(n, ext, (_, previous) => {
+                    (previous as IDisposable)?.Dispose();
+                    return ext;
+                });
             }
         }
 

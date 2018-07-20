@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Django.Analysis {
         public DjangoUrl() { }
 
         public DjangoUrl(string urlName, string urlRegex) {
-            Name = urlName;
-            _urlRegex = urlRegex;
+            Name = urlName ?? throw new ArgumentNullException(nameof(urlName));
+            _urlRegex = urlRegex ?? throw new ArgumentNullException(nameof(urlRegex));
 
             ParseUrlRegex();
         }

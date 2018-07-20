@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -92,9 +93,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 _options.MemberOptions,
                 triggerChar == '\0' ? Analysis.LanguageServer.CompletionTriggerKind.Invoked : Analysis.LanguageServer.CompletionTriggerKind.TriggerCharacter,
                 triggerChar == '\0' ? null : triggerChar.ToString()
-            ), "GetCompletions.GetMembers");
+            ), "GetCompletions.GetMembers", null, pyReplEval?.Analyzer == null ? 1 : 5);
 
-            if (completions?.items == null) {
+            if (completions == null) {
                 return null;
             }
 
@@ -102,8 +103,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 ? ((SourceSpan)completions._applicableSpan.Value).ToSnapshotSpan(_snapshot)
                 : new SnapshotSpan(point, 0);
             _span = bufferInfo.CurrentSnapshot.CreateTrackingSpan(snapshotSpan, SpanTrackingMode.EdgeInclusive);
-
-            var members = completions.items.Select(c => new CompletionResult(
+            var members = completions.items.MaybeEnumerate().Select(c => new CompletionResult(
+                // if a method stub generation (best guess by comparing length),
+                // merge entry based on label, for everything else, use insertion text
+                c.filterText ?? (c.insertText != null && c.insertText.Length <= c.label.Length ? c.insertText : c.label),
                 c.label,
                 c.insertText ?? c.label,
                 c.documentation?.value,
@@ -113,8 +116,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (pyReplEval?.Analyzer != null && (string.IsNullOrEmpty(completions._expr) || pyReplEval.Analyzer.ShouldEvaluateForCompletion(completions._expr))) {
                 var replMembers = pyReplEval.GetMemberNames(completions._expr ?? "");
-                if (replMembers != null) {
-                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
+
+                if (_services.Python.InteractiveOptions.LiveCompletionsOnly) {
+                    members = replMembers ?? Array.Empty<CompletionResult>();
+                } else if (replMembers != null) {
+                    members = members.Union(replMembers, CompletionMergeKeyComparer.Instance);
                 }
             }
 
@@ -123,7 +129,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (expansions != null) {
                     // Expansions should come first, so that they replace our keyword
                     // completions with the more detailed snippets.
-                    members = expansions.Union(members, CompletionComparer.MemberEquality);
+                    members = expansions.Union(members, CompletionMergeKeyComparer.Instance);
                 }
             }
 

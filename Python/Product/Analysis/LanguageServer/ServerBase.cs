@@ -20,43 +20,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase : IServer {
-        private RequestLock _lock;
-
-        private sealed class RequestLock : IDisposable {
-            public readonly ServerBase Owner;
-            public readonly CancellationTokenSource CancellationTokenSource;
-
-            public CancellationToken Token => CancellationTokenSource.Token;
-            public void Cancel() => CancellationTokenSource.Cancel();
-
-            public RequestLock(ServerBase owner, int millisecondsTimeout) {
-                CancellationTokenSource = millisecondsTimeout > 0 ?
-                    new CancellationTokenSource(millisecondsTimeout) :
-                    new CancellationTokenSource();
-
-                Owner = owner;
-                if (Interlocked.CompareExchange(ref Owner._lock, this, null) != null) {
-                    throw new InvalidOperationException("currently processing another request");
-                }
-            }
-
-            public void Dispose() {
-                CancellationTokenSource.Dispose();
-                Interlocked.CompareExchange(ref Owner._lock, null, this);
-            }
-        }
-
         /// <summary>
-        /// Should be used in a using() statement around any requests that support
-        /// cancellation or timeout.
+        /// Doesn't do anything. Left here for legacy purpores
         /// </summary>
-        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => new RequestLock(this, millisecondsTimeout);
-
-        /// <summary>
-        /// Get this token at the start of request processing and abort when it
-        /// is marked as cancelled.
-        /// </summary>
-        protected CancellationToken CancellationToken => Volatile.Read(ref _lock)?.Token ?? CancellationToken.None;
+        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => EmptyDisposable.Instance;
 
         #region Client Requests
 
@@ -67,8 +34,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public virtual Task Shutdown() => Task.CompletedTask;
 
         public virtual Task Exit() => Task.CompletedTask;
-
-        public virtual void CancelRequest() => Volatile.Read(ref _lock)?.Cancel();
+        
+        public virtual void CancelRequest() {} // Does nothing
 
         public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
@@ -185,5 +152,22 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
 
         #endregion
+
+        /// <summary>
+	    /// Represents a disposable that does nothing on disposal.
+	    /// </summary>
+	    private sealed class EmptyDisposable : IDisposable {
+            /// <summary>
+            /// Singleton default disposable.
+            /// </summary>
+            public static EmptyDisposable Instance { get; } = new EmptyDisposable();
+
+            private EmptyDisposable() { }
+
+            /// <summary>
+            /// Does nothing.
+            /// </summary>
+            public void Dispose() { }
+        }  
     }
 }
