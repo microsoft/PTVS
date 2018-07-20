@@ -25,6 +25,27 @@ using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
+    // Very simple Maybe "monad" to handle file number definitions
+    public struct Maybe<T>
+    {
+        public readonly static Maybe<T> None = new Maybe<T>();
+        public T Value;
+        public bool HasValue;
+
+        public Maybe(T value) {
+            Value = value;
+            HasValue = true;
+        }
+
+        public override string ToString()
+        {
+            if (!HasValue) {
+                return "<None>";
+            }
+            return Value.ToString();
+        }
+    }
+
     public class VTuneInvoker {
         // In Linux, make sure to run: 
         // source $(VTUNE_INSTALL_PATH)/amplxe-vars.sh
