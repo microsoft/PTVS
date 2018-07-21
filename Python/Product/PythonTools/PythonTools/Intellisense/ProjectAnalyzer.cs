@@ -192,13 +192,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _interpreterFactory = factory ?? throw new ArgumentNullException(nameof(factory));
-            var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            if (withDb != null) {
-                withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
-            }
-
             _toString = $"<{GetType().Name}:{_interpreterFactory.Configuration.Id}:unstarted>";
-
 
             _analysisOptions = new AP.AnalysisOptions {
                 indentationInconsistencySeverity = Severity.Ignore,
@@ -519,11 +513,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _disposing = true;
 
             Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetCanceled();
-
-            var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            if (withDb != null) {
-                withDb.NewDatabaseAvailable -= Factory_NewDatabaseAvailable;
-            }
 
             foreach (var path in _projectFiles.Keys) {
                 _services.ErrorTaskProvider?.Clear(path, ParserTaskMoniker);

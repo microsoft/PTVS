@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using IOPath = System.IO.Path;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
@@ -67,10 +68,11 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
             }
 
-            _factory = Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
-                version,
-                new[] { dbDir }.Concat(paths).ToArray()
+            _factory = new AstPythonInterpreterFactory(
+                new InterpreterConfiguration($"AnalysisOnly|{version}", $"Analysis Only {version}", version: version, uiMode: InterpreterUIMode.Normal),
+                new InterpreterFactoryCreationOptions { WatchFileSystem = false }
             );
+
             Path = dbDir;
             _interpreter = _factory.CreateInterpreter();
             _context = _interpreter.CreateModuleContext();

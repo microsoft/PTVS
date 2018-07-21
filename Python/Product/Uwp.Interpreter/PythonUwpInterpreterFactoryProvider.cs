@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
@@ -289,12 +290,15 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
             }
 
             private bool SetPythonUwpInterpreterFactory(InterpreterConfiguration config) {
-                var factory = Factory as PythonUwpInterpreterFactory;
+                var factory = Factory as AstPythonInterpreterFactory;
                 if (factory != null && factory.Configuration.Equals(config)) {
                     // No updates.
                     return false;
                 } else {
-                    Factory = new PythonUwpInterpreterFactory(config);
+                    Factory = new AstPythonInterpreterFactory(
+                        config,
+                        new InterpreterFactoryCreationOptions() { WatchFileSystem = true }
+                    );
                     return true;
                 }
             }

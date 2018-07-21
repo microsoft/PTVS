@@ -48,13 +48,11 @@ namespace PythonToolsMockTests {
         [TestInitialize]
         public void OnTestInitialized() {
             MockPythonToolsPackage.SuppressTaskProvider = true;
-            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
         }
 
         [TestCleanup]
         public void OnTestCleanup() {
             MockPythonToolsPackage.SuppressTaskProvider = false;
-            GlobalInterpreterOptions.SuppressFileSystemWatchers = false;
         }
 
         [TestMethod, Priority(0)]

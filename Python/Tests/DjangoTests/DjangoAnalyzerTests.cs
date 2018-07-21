@@ -22,13 +22,11 @@ using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -147,16 +145,10 @@ namespace DjangoTests {
         }
 
         private DjangoAnalyzer AnalyzerTest(string path) {
-            string djangoDbPath = TestData.GetPath("TestData\\DjangoDB");
-            Assert.IsTrue(
-                PythonTypeDatabase.IsDatabaseVersionCurrent(djangoDbPath),
-                "TestData\\DjangoDB needs updating."
-            );
-
-            var testFact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
-                new Version(2, 7),
-                TestData.GetPath("CompletionDB"),
-                djangoDbPath
+            var version = new Version(2, 7);
+            var testFact = new AstPythonInterpreterFactory(
+                new InterpreterConfiguration($"AnalysisOnly|{version}", $"Analysis Only {version}", version: version, uiMode: InterpreterUIMode.Normal),
+                new InterpreterFactoryCreationOptions { WatchFileSystem = false }
             );
 
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();

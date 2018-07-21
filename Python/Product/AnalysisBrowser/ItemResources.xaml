@@ -59,19 +59,6 @@
         </Border>
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type l:RawView}">
-        <StackPanel Orientation="Horizontal">
-            <Border Background="{StaticResource RawBackground}"
-                    BorderBrush="{StaticResource RawBorder}"
-                    Style="{StaticResource ItemBorder}">
-                <TextBlock Text="{Binding Name,Mode=OneTime}" />
-            </Border>
-            <TextBlock Text="{Binding Value,Mode=OneTime}"
-                       VerticalAlignment="Center"
-                       Margin="3" />
-        </StackPanel>
-    </DataTemplate>
-
     <DataTemplate DataType="{x:Type l:ClassView}">
         <Border Background="{StaticResource ClassBackground}"
                 BorderBrush="{StaticResource ClassBorder}"

@@ -17,32 +17,8 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
-        public IronPythonInterpreterFactory(InterpreterConfiguration config, InterpreterFactoryCreationOptions options)
-            : base(config, options) { }
-
-        private IronPythonInterpreterFactory(Dictionary<string, object> properties)
-            : base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)){
-        }
-
-        public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
-            return new IronPythonInterpreter(factory);
-        }
-
-        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
-            assembly = GetType().Assembly.Location;
-            typeName = GetType().FullName;
-            properties = Configuration.ToDictionary();
-            foreach (var kv in CreationOptions.ToDictionary()) {
-                properties[kv.Key] = kv.Value;
-            }
-            return true;
-        }
-    }
-
     class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory {
         public IronPythonAstInterpreterFactory(InterpreterConfiguration config, InterpreterFactoryCreationOptions options)
             : base(config, options) {

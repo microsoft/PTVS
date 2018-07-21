@@ -889,15 +889,6 @@ namespace Microsoft.PythonTools {
                    (snapshot[0] == '%' || snapshot[0] == '$'); // IPython and normal repl commands
         }
 
-        internal static bool IsAnalysisCurrent(this IPythonInterpreterFactory factory) {
-            var interpFact = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            if (interpFact != null) {
-                return interpFact.IsCurrent;
-            }
-
-            return true;
-        }
-
         internal static bool IsOpenGrouping(this ClassificationSpan span) {
             return span.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Grouping) &&
                 span.Span.Length == 1 &&

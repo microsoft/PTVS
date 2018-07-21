@@ -27,15 +27,14 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this._showOutputWindowForVirtualEnvCreate = new System.Windows.Forms.CheckBox();
             this._showOutputWindowForPackageInstallation = new System.Windows.Forms.CheckBox();
-            this._autoAnalysis = new System.Windows.Forms.CheckBox();
+            this._elevatePip = new System.Windows.Forms.CheckBox();
+            this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
+            this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
+            this._invalidEncodingWarning = new System.Windows.Forms.CheckBox();
             this._indentationInconsistentLabel = new System.Windows.Forms.Label();
             this._indentationInconsistentCombo = new System.Windows.Forms.ComboBox();
-            this._elevatePip = new System.Windows.Forms.CheckBox();
-            this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
-            this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
-            this._invalidEncodingWarning = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,7 +44,6 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForVirtualEnvCreate, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
@@ -69,13 +67,20 @@ namespace Microsoft.PythonTools.Options {
             this._showOutputWindowForPackageInstallation.Name = "_showOutputWindowForPackageInstallation";
             this._showOutputWindowForPackageInstallation.UseVisualStyleBackColor = true;
             // 
-            // _autoAnalysis
+            // _elevatePip
             // 
-            resources.ApplyResources(this._autoAnalysis, "_autoAnalysis");
-            this._autoAnalysis.AutoEllipsis = true;
-            this.tableLayoutPanel3.SetColumnSpan(this._autoAnalysis, 2);
-            this._autoAnalysis.Name = "_autoAnalysis";
-            this._autoAnalysis.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this._elevatePip, "_elevatePip");
+            this.tableLayoutPanel3.SetColumnSpan(this._elevatePip, 2);
+            this._elevatePip.Name = "_elevatePip";
+            this._elevatePip.UseVisualStyleBackColor = true;
+            // 
+            // _clearGlobalPythonPath
+            // 
+            resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
+            this._clearGlobalPythonPath.AutoEllipsis = true;
+            this.tableLayoutPanel3.SetColumnSpan(this._clearGlobalPythonPath, 2);
+            this._clearGlobalPythonPath.Name = "_clearGlobalPythonPath";
+            this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
             // 
             // _updateSearchPathsForLinkedFiles
             // 
@@ -84,6 +89,21 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.SetColumnSpan(this._updateSearchPathsForLinkedFiles, 2);
             this._updateSearchPathsForLinkedFiles.Name = "_updateSearchPathsForLinkedFiles";
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
+            // 
+            // _unresolvedImportWarning
+            // 
+            resources.ApplyResources(this._unresolvedImportWarning, "_unresolvedImportWarning");
+            this._unresolvedImportWarning.AutoEllipsis = true;
+            this.tableLayoutPanel3.SetColumnSpan(this._unresolvedImportWarning, 2);
+            this._unresolvedImportWarning.Name = "_unresolvedImportWarning";
+            this._unresolvedImportWarning.UseVisualStyleBackColor = true;
+            // 
+            // _invalidEncodingWarning
+            // 
+            resources.ApplyResources(this._invalidEncodingWarning, "_invalidEncodingWarning");
+            this.tableLayoutPanel3.SetColumnSpan(this._invalidEncodingWarning, 2);
+            this._invalidEncodingWarning.Name = "_invalidEncodingWarning";
+            this._invalidEncodingWarning.UseVisualStyleBackColor = true;
             // 
             // _indentationInconsistentLabel
             // 
@@ -102,29 +122,6 @@ namespace Microsoft.PythonTools.Options {
             resources.GetString("_indentationInconsistentCombo.Items2")});
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             // 
-            // _elevatePip
-            // 
-            resources.ApplyResources(this._elevatePip, "_elevatePip");
-            this.tableLayoutPanel3.SetColumnSpan(this._elevatePip, 2);
-            this._elevatePip.Name = "_elevatePip";
-            this._elevatePip.UseVisualStyleBackColor = true;
-            // 
-            // _unresolvedImportWarning
-            // 
-            resources.ApplyResources(this._unresolvedImportWarning, "_unresolvedImportWarning");
-            this._unresolvedImportWarning.AutoEllipsis = true;
-            this.tableLayoutPanel3.SetColumnSpan(this._unresolvedImportWarning, 2);
-            this._unresolvedImportWarning.Name = "_unresolvedImportWarning";
-            this._unresolvedImportWarning.UseVisualStyleBackColor = true;
-            // 
-            // _clearGlobalPythonPath
-            // 
-            resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
-            this._clearGlobalPythonPath.AutoEllipsis = true;
-            this.tableLayoutPanel3.SetColumnSpan(this._clearGlobalPythonPath, 2);
-            this._clearGlobalPythonPath.Name = "_clearGlobalPythonPath";
-            this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
-            // 
             // _resetSuppressDialog
             // 
             resources.ApplyResources(this._resetSuppressDialog, "_resetSuppressDialog");
@@ -132,13 +129,6 @@ namespace Microsoft.PythonTools.Options {
             this._resetSuppressDialog.Name = "_resetSuppressDialog";
             this._resetSuppressDialog.UseVisualStyleBackColor = true;
             this._resetSuppressDialog.Click += new System.EventHandler(this._resetSuppressDialog_Click);
-            // 
-            // _invalidEncodingWarning
-            // 
-            resources.ApplyResources(this._invalidEncodingWarning, "_invalidEncodingWarning");
-            this.tableLayoutPanel3.SetColumnSpan(this._invalidEncodingWarning, 2);
-            this._invalidEncodingWarning.Name = "_invalidEncodingWarning";
-            this._invalidEncodingWarning.UseVisualStyleBackColor = true;
             // 
             // PythonGeneralOptionsControl
             // 
@@ -158,7 +148,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.CheckBox _showOutputWindowForVirtualEnvCreate;
         private System.Windows.Forms.CheckBox _showOutputWindowForPackageInstallation;
-        private System.Windows.Forms.CheckBox _autoAnalysis;
         private System.Windows.Forms.CheckBox _updateSearchPathsForLinkedFiles;
         private System.Windows.Forms.Label _indentationInconsistentLabel;
         private System.Windows.Forms.ComboBox _indentationInconsistentCombo;

@@ -41,21 +41,6 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 _module = _interpreter.ImportModule(Name);
             }
 
-            if (File.Exists(_idbPath)) {
-                yield return RawView.FromFile(_idbPath);
-            }
-
-            var cpm = _module as Interpreter.LegacyDB.CPythonModule;
-            if (cpm != null) {
-                cpm.EnsureLoaded();
-            }
-
-            if (cpm != null && cpm._hiddenMembers != null) {
-                foreach (var keyValue in cpm._hiddenMembers) {
-                    yield return MemberView.Make(_context, keyValue.Key, keyValue.Value);
-                }
-            }
-
             foreach (var memberName in _module.GetMemberNames(_context)) {
                 yield return MemberView.Make(_context, _module, memberName);
             }

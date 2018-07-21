@@ -33,7 +33,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
-            if (factory is IronPythonInterpreterFactory || factory is IronPythonAstInterpreterFactory) {
+            if (factory is IronPythonAstInterpreterFactory) {
                 try {
                     pm = new PipPackageManager(factory, Commands, 0);
                 } catch (NotSupportedException) {

@@ -29,7 +29,6 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -330,10 +329,7 @@ namespace PythonToolsUITests {
                         )
                     ));
                     var view = list.Environments.Single();
-                    Assert.IsFalse(
-                        list.CanExecute(DBExtension.StartRefreshDB, view),
-                        string.Format("Should not be able to refresh DB for {0}", invalidPath)
-                    );
+                    Assert.IsTrue(view.IsBroken, $"'{invalidPath ?? "<null>"}' should be detected as broken");
                 }
             }
         }
@@ -354,76 +350,10 @@ namespace PythonToolsUITests {
                         version.Configuration
                     ));
                     var view = list.Environments.Single();
-                    Assert.IsTrue(
-                        list.CanExecute(DBExtension.StartRefreshDB, view),
-                        string.Format("Cannot refresh DB for {0}", version.InterpreterPath)
-                    );
+                    Assert.IsFalse(view.IsBroken, $"'{version.PrefixPath}' should not be detected as broken");
                 }
             }
         }
-
-        [TestMethod, Priority(0)]
-        public void RefreshDBStates() {
-            using (var fact = new MockPythonInterpreterFactory(
-                MockInterpreterConfiguration(
-                    PythonPaths.Versions.First().InterpreterPath
-                ),
-                true
-            ))
-            using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
-                list.CreateDBExtension = true;
-
-                var mockService = new MockInterpreterOptionsService();
-                mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
-                list.InitializeEnvironments(mockService, mockService);
-                var view = list.Environments.Single();
-
-                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
-                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
-
-                list.Execute(DBExtension.StartRefreshDB, view, CancellationTokens.After15s).GetAwaiter().GetResult();
-                for (int retries = 10; retries > 0 && !wpf.Invoke(() => view.IsRefreshingDB); --retries) {
-                    Thread.Sleep(200);
-                }
-
-                Assert.IsTrue(wpf.Invoke(() => view.IsRefreshingDB));
-                Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
-
-                fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), false);
-                for (int retries = 10; retries > 0 && wpf.Invoke(() => view.IsRefreshingDB); --retries) {
-                    Thread.Sleep(1000);
-                }
-
-                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
-                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
-
-                list.Execute(DBExtension.StartRefreshDB, view, CancellationTokens.After15s).GetAwaiter().GetResult();
-
-                Assert.IsTrue(wpf.Invoke(() => view.IsRefreshingDB));
-                Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
-
-                fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), true);
-                for (int retries = 10; retries > 0 && wpf.Invoke(() => view.IsRefreshingDB); --retries) {
-                    Thread.Sleep(1000);
-                }
-
-                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
-                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
-                Assert.IsTrue(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
-                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
-            }
-        }
-
 
         [TestMethod, Priority(0)]
         public void InstalledFactories() {
@@ -995,9 +925,6 @@ namespace PythonToolsUITests {
             }
 
             public void Dispose() {
-                if (_window != null) {
-                    _proxy.Invoke(() => _window.Dispose());
-                }
             }
 
             public ToolWindow Window {
@@ -1005,12 +932,6 @@ namespace PythonToolsUITests {
             }
 
             private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e) {
-                if (CreateDBExtension) {
-                    var withDb = e.View.Factory as PythonInterpreterFactoryWithDatabase;
-                    if (withDb != null && !string.IsNullOrEmpty(withDb.DatabasePath)) {
-                        e.View.Extensions.Add(new DBExtensionProvider(withDb));
-                    }
-                }
                 if (CreatePipExtension) {
                     var pm = Service.GetPackageManagers(e.View.Factory).FirstOrDefault();
                     if (pm != null) {
@@ -1025,7 +946,6 @@ namespace PythonToolsUITests {
                 }
             }
 
-            public bool CreateDBExtension { get; set; }
             public bool CreatePipExtension { get; set; }
 
             public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
@@ -1037,12 +957,6 @@ namespace PythonToolsUITests {
                     return _proxy.Invoke(() => Window.OptionsService);
                 }
             }
-
-            //public IInterpreterRegistryService Interpreters {
-            //    get {
-            //        return _proxy.Invoke(() => Window.Interpreters);
-            //    }
-            //}
 
             public List<EnvironmentView> Environments {
                 get {
