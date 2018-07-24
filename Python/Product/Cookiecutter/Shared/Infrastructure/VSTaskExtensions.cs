@@ -97,7 +97,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
         /// that return true from <see cref="IsCriticalException"/>, which are
-        /// rethrown.
+        /// rethrown and <see cref="OperationCanceledException"/> is always ignored.
         /// </summary>
         public static T WaitAndHandleAllExceptions<T>(
             this Task<T> task,
@@ -115,7 +115,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
         /// <summary>
         /// Logs all exceptions from a task except those that return true from
-        /// <see cref="IsCriticalException"/>, which are rethrown.
+        /// <see cref="IsCriticalException"/>, which are rethrown and
+        /// <see cref="OperationCanceledException"/> is always ignored.
         /// If an exception is thrown, <c>default(T)</c> is returned.
         /// </summary>
         public static async Task<T> HandleAllExceptions<T>(
@@ -131,11 +132,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             try {
                 result = await task;
             } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+                if (task.IsFaulted) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
 
-                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
+                    ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
+                }
             }
             return result;
         }
@@ -143,7 +146,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
         /// that return true from <see cref="IsCriticalException"/>, which are
-        /// rethrown.
+        /// rethrown and <see cref="OperationCanceledException"/> is always ignored.
         /// </summary>
         public static void WaitAndHandleAllExceptions(
             this Task task,
@@ -161,7 +164,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
         /// <summary>
         /// Logs all exceptions from a task except those that return true from
-        /// <see cref="IsCriticalException"/>, which are rethrown.
+        /// <see cref="IsCriticalException"/>, which are rethrown and
+        /// <see cref="OperationCanceledException"/> is always ignored.
         /// </summary>
         public static async Task HandleAllExceptions(
             this Task task,
@@ -175,11 +179,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             try {
                 await task;
             } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+                if (task.IsFaulted) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
 
-                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
+                    ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
+                }
             }
         }
     }
