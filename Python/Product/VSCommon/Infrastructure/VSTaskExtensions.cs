@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
         /// that return true from <see cref="IsCriticalException"/>, which are
-        /// rethrown and <see cref="OperationCanceledException"/> is always ignored.
+        /// rethrown, and <see cref="OperationCanceledException"/>, which is always ignored.
         /// </summary>
         public static T WaitAndHandleAllExceptions<T>(
             this Task<T> task,
@@ -118,8 +118,8 @@ namespace Microsoft.PythonTools.Infrastructure {
 
         /// <summary>
         /// Logs all exceptions from a task except those that return true from
-        /// <see cref="IsCriticalException"/>, which are rethrown and
-        /// <see cref="OperationCanceledException"/> is always ignored.
+        /// <see cref="IsCriticalException"/>, which are rethrown, and
+        /// <see cref="OperationCanceledException"/>, which is always ignored.
         /// If an exception is thrown, <c>default(T)</c> is returned.
         /// </summary>
         public static async Task<T> HandleAllExceptions<T>(
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
         /// that return true from <see cref="IsCriticalException"/>, which are
-        /// rethrown and <see cref="OperationCanceledException"/> is always ignored.
+        /// rethrown, and <see cref="OperationCanceledException"/>, which is always ignored.
         /// </summary>
         public static void WaitAndHandleAllExceptions(
             this Task task,
@@ -167,8 +167,8 @@ namespace Microsoft.PythonTools.Infrastructure {
 
         /// <summary>
         /// Logs all exceptions from a task except those that return true from
-        /// <see cref="IsCriticalException"/>, which are rethrown and
-        /// <see cref="OperationCanceledException"/> is always ignored.
+        /// <see cref="IsCriticalException"/>, which are rethrown, and
+        /// <see cref="OperationCanceledException"/>, which is always ignored.
         /// </summary>
         public static async Task HandleAllExceptions(
             this Task task,
