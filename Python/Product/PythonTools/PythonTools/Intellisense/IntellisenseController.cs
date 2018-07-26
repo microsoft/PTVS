@@ -241,7 +241,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (entry == null) {
-                    Debug.Fail($"Failed to analyze {buffer.DocumentUri}");
+                    if (!_services.Python.LanguageServerOptions.ServerDisabled) {
+                        Debug.Fail($"Failed to analyze {buffer.DocumentUri}");
+                    }
                     return;
                 }
 
