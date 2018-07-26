@@ -279,7 +279,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (!AppendPreConnectionOutput(e)) {
                         try {
                             _eval.WriteError(FixNewLines(e.Data));
-                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        } catch (Exception ex) when (!ex.IsCriticalException() &&
+                            (_eval.CurrentWindow.TextView.VisualElement.Dispatcher?.HasShutdownStarted ?? true)) {
                         }
                     }
                 }
@@ -290,7 +291,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (!AppendPreConnectionOutput(e)) {
                         try {
                             _eval.WriteOutput(FixNewLines(e.Data));
-                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        } catch (Exception ex) when (!ex.IsCriticalException() &&
+                            (_eval.CurrentWindow.TextView.VisualElement.Dispatcher?.HasShutdownStarted ?? true)) {
                         }
                     }
                 }
