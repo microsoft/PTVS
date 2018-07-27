@@ -243,6 +243,12 @@ namespace DebuggerUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void StartWithDebuggingModuleAsScript() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingModuleAsScript), UseVsCodeDebugger, Interpreter);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void WebProjectLauncherNoStartupFile() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.WebProjectLauncherNoStartupFile), UseVsCodeDebugger, Interpreter);
         }

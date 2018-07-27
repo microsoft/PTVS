@@ -1390,7 +1390,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified and script arguments are empty. If you want to launch a module, specify &apos;-m &gt;modulename&lt;&apos; for the script arguments..
         /// </summary>
         public static string DebugLaunchScriptNameMissing {
             get {

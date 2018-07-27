@@ -914,6 +914,20 @@ namespace DebuggerUITests {
             }
         }
 
+        public void StartWithDebuggingModuleAsScript(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
+                var project = OpenProjectAndBreak(app, @"TestData\DebugModuleAsScript.sln", "testmodule\\__main__.py", 4, setStartupItem: false);
+                var mainPath = Path.Combine(PathUtils.GetParent(project.FullName), "testmodule", "__main__.py");
+                var expectedSysArgv = $"['{mainPath.Replace("\\", "\\\\")}', '-arg1']";
+                WaitForDebugOutput(app, text => text.Contains(expectedSysArgv));
+
+                app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+            }
+        }
+
         public void WebProjectLauncherNoStartupFile(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
@@ -927,7 +941,7 @@ namespace DebuggerUITests {
 
                 foreach (var cmd in new[] { "Debug.Start", "Debug.StartWithoutDebugging" }) {
                     app.Dte.ExecuteCommand(cmd);
-                    app.CheckMessageBox("The project cannot be launched because the startup file is not specified.");
+                    app.CheckMessageBox(Strings.DebugLaunchScriptNameMissing);
                 }
             }
         }

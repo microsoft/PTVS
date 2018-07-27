@@ -90,7 +90,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static string GetArgs(LaunchConfiguration config) {
             var args = string.Join(" ", new[] {
-                    config.InterpreterArguments,
                     config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s)));
@@ -138,13 +137,16 @@ namespace Microsoft.PythonTools.Debugger {
             return jsonObj.ToString();
         }
 
-        public static void RequireStartupFile(LaunchConfiguration config) {
-            if (string.IsNullOrEmpty(config.ScriptName)) {
+        public static void RequireStartupFileOrScriptArguments(LaunchConfiguration config) {
+            if (!string.IsNullOrEmpty(config.ScriptName)) {
+                // If script name is specified, then it should exist
+                if (!File.Exists(config.ScriptName)) {
+                    throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptName));
+                }
+            } else if (string.IsNullOrEmpty(config.ScriptArguments)) {
+                // No script name, so script arguments must be specified
+                // ex: -m flask run
                 throw new NoStartupFileException(Strings.DebugLaunchScriptNameMissing);
-            }
-
-            if (!File.Exists(config.ScriptName)) {
-                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptName));
             }
         }
 

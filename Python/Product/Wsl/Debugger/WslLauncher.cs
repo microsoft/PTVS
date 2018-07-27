@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {
-            DebugLaunchHelper.RequireStartupFile(config);
+            DebugLaunchHelper.RequireStartupFileOrScriptArguments(config);
 
             if (debug) {
                 StartWithDebugger(config);
