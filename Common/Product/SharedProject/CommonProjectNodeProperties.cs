@@ -45,7 +45,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return Node.Site.GetUIThread().Invoke(() => {
                     try {
                         var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
-                        if (res != null && !Path.IsPathRooted(res)) {
+                        if (!string.IsNullOrEmpty(res) && !Path.IsPathRooted(res)) {
                             res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
                         }
                         return res;
@@ -57,12 +57,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 Node.Site.GetUIThread().Invoke(() => {
-                    this.Node.ProjectMgr.SetProjectProperty(
-                        CommonConstants.StartupFile,
-                        CommonUtils.GetRelativeFilePath(
+                    string startupFile = string.IsNullOrEmpty(value)
+                        ? null
+                        : CommonUtils.GetRelativeFilePath(
                             Node.ProjectMgr.ProjectHome,
                             Path.Combine(Node.ProjectMgr.ProjectHome, value)
-                        )
+                        );
+                    Node.ProjectMgr.SetProjectProperty(
+                        CommonConstants.StartupFile,
+                        startupFile
                     );
                 });
             }
