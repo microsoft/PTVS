@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal static IEnumerable<string> GetModuleNamesFromImport(string importingFromModuleName, string importingFromFilePath, FromImportStatement node) {
             var root = node.Root.MakeString();
 
-            if (!string.IsNullOrEmpty(root) && root.StartsWith(".")) {
+            if (!string.IsNullOrEmpty(root) && root.StartsWithOrdinal(".")) {
                 return root.All(c => c == '.')
                     ? node.Names.Where(n => !string.IsNullOrEmpty(n.Name)).Select(n => n.Name)
                     : ResolvePotentialModuleNames(importingFromModuleName, importingFromFilePath, root, node.ForceAbsolute);
