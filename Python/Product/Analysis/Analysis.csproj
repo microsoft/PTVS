@@ -76,6 +76,7 @@
     <Compile Include="Infrastructure\SingleThreadSynchronizationContext.cs" />
     <Compile Include="Infrastructure\StringBuilderExtensions.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
+    <Compile Include="Infrastructure\TaskCompletionSourceExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\UriEqualityComparer.cs" />
