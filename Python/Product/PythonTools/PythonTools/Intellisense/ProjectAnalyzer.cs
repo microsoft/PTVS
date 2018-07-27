@@ -678,7 +678,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #else
             var testOption = "";
 #endif
-            var psi = new ProcessStartInfo(libAnalyzer, testOption + "/interactive /comment \"" + comment + "\"");
+            var psi = new ProcessStartInfo(libAnalyzer, testOption + "/comment \"" + comment + "\"");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
