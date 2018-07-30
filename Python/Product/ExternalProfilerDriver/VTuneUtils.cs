@@ -16,6 +16,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,6 +28,19 @@ namespace ExternalProfilerDriver
         public static IEnumerable<T> Emit<T>(T element)
         {
           return Enumerable.Repeat(element, 1);
+        }
+
+        /// <summary>
+        /// Finds file name <param>fname</param> under directory <param>rootDir</param> (recursively)
+        /// </summary>
+        public static string FindFileInDir(string fname, string rootDir)
+        {
+            var candidates = Directory.GetFiles(rootDir, fname, SearchOption.AllDirectories);
+            if (candidates.Length <= 0) {
+                throw new FileNotFoundException($"Cannot find file {fname} under directory {rootDir}");
+            } else {
+                return candidates[0];
+            }
         }
     }
 
