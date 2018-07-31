@@ -887,7 +887,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Invalid remote debugging endpoint URI]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[원격 디버깅 끝점 URI가 잘못되었습니다.]]></Val>
+            <Val><![CDATA[원격 디버깅 엔드포인트 URI가 잘못되었습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
