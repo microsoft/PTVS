@@ -96,7 +96,19 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     }
     #endif
 
-    class FunctionSourceLocation
+    class SymbolReaderException : System.Exception
+    {
+        public SymbolReaderException()
+        {
+            /* empty */
+        }
+
+        public SymbolReaderException(string message): base(message)
+        {
+            /* empty */
+        }
+    }
+    public class FunctionSourceLocation
     {
         public string Function { get; set; }
         public string SourceFile { get; set; }
