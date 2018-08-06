@@ -22,42 +22,38 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
+        public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
             foreach (var entry in ProjectFiles.All) {
                 members = members.Concat(
-                    GetModuleVariables(entry as IPythonProjectEntry, opts, @params.query)
+                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query)
                 );
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return Task.FromResult(members.Select(m => ToSymbolInformation(m)).ToArray());
+            return members.Select(ToSymbolInformation).ToArray();
         }
 
-        public override Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
+        public override async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            var members = GetModuleVariables(entry as IPythonProjectEntry, opts, string.Empty);
-            return Task.FromResult(members
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty);
+            return members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
-                .Select(m => ToSymbolInformation(m))
-                .ToArray());
+                .Select(ToSymbolInformation)
+                .ToArray();
         }
 
-        private static IEnumerable<MemberResult> GetModuleVariables(
-            IPythonProjectEntry entry,
-            GetMemberOptions opts,
-            string prefix
-        ) {
-            var analysis = entry?.Analysis;
-            if (analysis == null) {
-                yield break;
-            }
+        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix) {
+            var analysis = entry != null ? await entry.GetAnalysisAsync(waitingTimeout: 50) : null;
+            return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
+        }
 
+        private static IEnumerable<MemberResult> GetModuleVariables(IProjectEntry entry, GetMemberOptions opts, string prefix, ModuleAnalysis analysis) {
             var all = analysis.GetAllAvailableMembers(SourceLocation.None, opts);
             foreach (var m in all) {
                 if (m.Values.Any(v => v.DeclaringModule == entry || v.Locations.Any(l => l.DocumentUri == entry.DocumentUri))) {

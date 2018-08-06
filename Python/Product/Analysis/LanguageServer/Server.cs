@@ -189,13 +189,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             ThrowIfDisposed();
             var openedFile = _editorFiles.GetDocument(@params.textDocument.uri);
-            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
+            openedFile.DidChangeTextDocument(@params, true);
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
-            IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
                 ThrowIfDisposed();
+                IProjectEntry entry;
                 switch (c.type) {
                     case FileChangeType.Created:
                         entry = await LoadFileAsync(c.uri);
@@ -557,7 +557,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+        internal void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             ThrowIfDisposed();
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
@@ -571,6 +571,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     TraceMessage($"Parsing document {doc.DocumentUri}");
                     cookieTask = _parseQueue.Enqueue(doc, Analyzer.LanguageVersion);
+                }
+
+                if (doc is ProjectEntry entry) {
+                    entry.ResetCompleteAnalysis();
                 }
 
                 AnalysisQueued(doc.DocumentUri);
