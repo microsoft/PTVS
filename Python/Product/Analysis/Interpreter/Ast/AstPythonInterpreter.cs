@@ -204,6 +204,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return _builtinModule;
             }
 
+            Debug.Assert(_analyzer != null);
+
             var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
                 Interpreter = this,
                 ModuleCache = _modules,
