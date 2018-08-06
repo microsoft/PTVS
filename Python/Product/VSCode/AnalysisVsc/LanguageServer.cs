@@ -159,7 +159,8 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             if (watchSearchPaths) {
                 _pathsWatcher = new PathsWatcher(
                     _initParams.initializationOptions.searchPaths, 
-                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait()
+                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait(),
+                    _server
                  );
             }
 
