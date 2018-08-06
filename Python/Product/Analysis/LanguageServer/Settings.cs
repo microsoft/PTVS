@@ -28,6 +28,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public string[] information { get; } = Array.Empty<string>();
             public string[] disabled { get; } = Array.Empty<string>();
 
+            public int diagnosticPublishDelay = 1000;
+
             public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity)
                 => _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;
 
