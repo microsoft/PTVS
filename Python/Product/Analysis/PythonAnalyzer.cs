@@ -178,10 +178,9 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 _interpreterFactory.NotifyImportNamesChanged();
                 _modules.ReInit();
+                _interpreter.Initialize(this);
 
                 await LoadKnownTypesAsync();
-
-                _interpreter.Initialize(this);
 
                 foreach (var mod in _modulesByFilename.Values) {
                     mod.Clear();
