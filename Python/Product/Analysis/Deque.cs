@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis {
     class Deque<T> : IEnumerable, ICollection {
@@ -28,26 +29,27 @@ namespace Microsoft.PythonTools.Analysis {
         private static IEqualityComparer<T> _comparer = EqualityComparer<T>.Default;
 
         public Deque() {
+#if DEBUG
+            _scope = AnalysisQueue.Current;
+#endif
             Clear();
         }
 
 #if DEBUG
-        internal SynchronizationContext SynchronizationContext { get; set; }
-
-        private void AssertContext() {
-            var ctx = SynchronizationContext.Current;
-            Debug.Assert(ctx == SynchronizationContext);
+        private readonly AnalysisQueue _scope;
+        private void AssertScope() {
+            Debug.Assert(_scope == AnalysisQueue.Current);
         }
 #else
         [Conditional("DEBUG")]
-        private void AssertContext() { }
+        private void AssertScope() { }
 #endif
 
 
         #region core deque APIs
 
         public void Append(T x) {
-            AssertContext();
+            AssertScope();
 
             _version++;
 
@@ -63,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void AppendLeft(T x) {
-            AssertContext();
+            AssertScope();
 
             _version++;
 
@@ -81,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Clear() {
-            AssertContext();
+            AssertScope();
 
             _version++;
 
@@ -91,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T Pop() {
-            AssertContext();
+            AssertScope();
 
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
@@ -111,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T PopLeft() {
-            AssertContext();
+            AssertScope();
 
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
@@ -131,7 +133,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Remove(T value) {
-            AssertContext();
+            AssertScope();
 
             int found = -1;
             int startVersion = _version;

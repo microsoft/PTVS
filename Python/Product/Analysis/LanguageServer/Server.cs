@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params, CancellationToken token) {
             ThrowIfDisposed();
-            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter, token);
+            Analyzer = await _queue.ExecuteInQueueAsync(ct => CreateAnalyzer(@params.initializationOptions.interpreter, token), AnalysisPriority.High);
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
@@ -436,10 +436,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
             var analyzer = await PythonAnalyzer.CreateAsync(factory, interp, token);
-#if DEBUG
-            // Make Deque aware of the only thread that should be modifying its state
-            analyzer.Queue.SynchronizationContext = _queue.SynchronizationContext;
-#endif
             return analyzer;
         }
 

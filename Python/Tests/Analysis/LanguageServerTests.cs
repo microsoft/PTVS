@@ -909,7 +909,6 @@ datetime.datetime.now().day
             var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
             var s = await CreateServer((string)null, null, diags);
             var u = await AddModule(s, "def f(/)\n    error text\n");
-            await s.WaitForCompleteAnalysisAsync();
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
@@ -966,7 +965,6 @@ datetime.datetime.now().day
             var s = await CreateServer((Uri)null, null, diags);
 
             var u = await AddModule(s, "y\nx x");
-            await s.WaitForCompleteAnalysisAsync();
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
