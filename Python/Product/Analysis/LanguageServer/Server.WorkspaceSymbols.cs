@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
@@ -53,16 +54,37 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
         }
 
-        private static IEnumerable<MemberResult> GetModuleVariables(IProjectEntry entry, GetMemberOptions opts, string prefix, ModuleAnalysis analysis) {
+        private static IEnumerable<MemberResult> GetModuleVariables(ProjectEntry entry, GetMemberOptions opts, string prefix, ModuleAnalysis analysis) {
             var all = analysis.GetAllAvailableMembers(SourceLocation.None, opts);
-            foreach (var m in all) {
-                if (m.Values.Any(v => v.DeclaringModule == entry || v.Locations.Any(l => l.DocumentUri == entry.DocumentUri))) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
-                        yield return m;
+            return all
+                .Where(m => {
+                    if (m.Values.Any(v => v.DeclaringModule == entry || v.Locations.Any(l => l.DocumentUri == entry.DocumentUri))) {
+                        if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
+                            return true;
+                        }
                     }
+                    return false;
+                })
+            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts));
+        }
+
+        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
+            foreach (var c in scope.Children) {
+                var res = GetScopeVariables(analysis, scope, opts);
+                foreach (var m in res) {
+                    yield return m;
                 }
             }
         }
+
+        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
+            var res1 = analysis.GetAllAvailableMembersFromScope(scope, opts);
+            foreach (var m in res1) {
+                yield return m;
+            }
+            var res2 = GetChildScopesVariables(analysis, scope, opts);
+        }
+
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
