@@ -171,6 +171,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     if (n != null) {
                         if (n.Name == "typing") {
                             Scope.SetInScope(n.Name, new AstTypingModule(), scope: _typingScope);
+                        } else if (n.Name == _module.Name) {
+                            Scope.SetInScope(n.Name, _module);
                         } else {
                             Scope.SetInScope(n.Name, new AstNestedPythonModule(
                                 _interpreter,
@@ -217,6 +219,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 mod = new AstTypingModule();
                 scope = _typingScope;
                 warnAboutUnknownValues = false;
+            } else if (modName == _module.Name) {
+                mod = _module;
             }
 
             mod = mod ?? new AstNestedPythonModule(

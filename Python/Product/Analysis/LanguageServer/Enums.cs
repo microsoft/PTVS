@@ -34,13 +34,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         Verbose
     }
 
-    public enum MarkupKind {
-        [SerializeAs("plaintext")]
-        PlainText,
-        [SerializeAs("markdown")]
-        Markdown
-    }
-
     public enum SymbolKind {
         None = 0,
         File = 1,

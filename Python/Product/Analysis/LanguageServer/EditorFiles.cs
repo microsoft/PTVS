@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _syncContext.Post(_ => HideDiagnostics(documentUri), null);
         }
 
-        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, Action<IDocument> enqueueAction) {
+        public void DidChangeTextDocument(DidChangeTextDocumentParams @params, bool enqueueForParsing) {
             var changes = @params.contentChanges;
             if (changes == null || changes.Length == 0) {
                 return;
@@ -134,12 +134,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
                 if (next.HasValue) {
-                    DidChangeTextDocument(next.Value, null);
+                    DidChangeTextDocument(next.Value, false);
                 }
             } finally {
-                if (enqueueAction != null) {
+                if (enqueueForParsing) {
                     _server.TraceMessage($"Applied changes to {uri}");
-                    enqueueAction(doc);
+                    _server.EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true);
                 }
             }
         }
@@ -189,10 +189,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     var walker = new ImportStatementWalker(parse.Tree, pythonProjectEntry, _server.Analyzer, severity);
                     parse.Tree.Walk(walker);
                     diags = diags.Concat(walker.Diagnostics).ToArray();
-                }
-
-                if (!diags.Any() && version >= 0) {
-                    return;
                 }
 
                 if (pythonProjectEntry is IDocument doc) {

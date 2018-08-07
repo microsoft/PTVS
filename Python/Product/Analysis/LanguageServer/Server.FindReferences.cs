@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -24,19 +25,21 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<Reference[]> FindReferences(ReferencesParams @params) {
+        public override Task<Reference[]> FindReferences(ReferencesParams @params) => FindReferences(@params, CancellationToken.None);
+
+        internal async Task<Reference[]> FindReferences(ReferencesParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"References in {uri} at {@params.position}");
 
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(50, cancellationToken) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(Array.Empty<Reference>());
+                return Array.Empty<Reference>();
             }
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version);
+            tree = GetParseTree(entry, uri, cancellationToken, out var version);
             var extras = new List<Reference>();
 
             if (@params.context?.includeDeclaration ?? false) {
@@ -97,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .Select(g => g.OrderByDescending(r => (SourceLocation)r.range.end).ThenBy(r => (int?)r._kind ?? int.MaxValue).First())
                 .ToArray();
 
-            return Task.FromResult(res);
+            return res;
         }
 
         private static ReferenceKind ToReferenceKind(VariableType type) {

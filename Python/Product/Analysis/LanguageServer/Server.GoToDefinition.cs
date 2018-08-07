@@ -15,11 +15,14 @@
 // permissions and limitations under the License.
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override async Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) {
+        public override Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params) => GotoDefinition(@params, CancellationToken.None);
+
+        internal async Task<Reference[]> GotoDefinition(TextDocumentPositionParams @params, CancellationToken cancellationToken) {
             var references = await FindReferences(new ReferencesParams {
                 textDocument = @params.textDocument,
                 position = @params.position,
@@ -27,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     includeDeclaration = true,
                     _includeValues = true
                 }
-            });
+            }, cancellationToken);
             return references.Where(r => r._kind == ReferenceKind.Definition && r.uri != null).ToArray();
         }
     }

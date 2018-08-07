@@ -47,6 +47,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private JsonRpc _rpc;
         private bool _filesLoaded;
         private Task _progressReportingTask;
+        private PathsWatcher _pathsWatcher;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
@@ -104,6 +105,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         public void Dispose() {
+            _pathsWatcher?.Dispose();
             _disposables.TryDispose();
             _server.Dispose();
         }
@@ -135,14 +137,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             => _rpc.NotifyWithParameterObjectAsync("client/unregisterCapability", e.@params).DoNotWait();
         #endregion
 
-        #region Cancellation
-        [JsonRpcMethod("cancelRequest")]
-        public void CancelRequest() => _server.CancelRequest();
-        #endregion
-
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
-        public async Task DidChangeConfiguration(JToken token) {
+        public async Task DidChangeConfiguration(JToken token, CancellationToken cancellationToken) {
             var settings = new LanguageServerSettings();
 
             var rootSection = token["settings"];
@@ -157,13 +154,22 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
 
+            _pathsWatcher?.Dispose();
+            var watchSearchPaths = GetSetting(analysis, "watchSearchPaths", true);
+            if (watchSearchPaths) {
+                _pathsWatcher = new PathsWatcher(
+                    _initParams.initializationOptions.searchPaths, 
+                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait()
+                 );
+            }
+
             var errors = GetSetting(analysis, "errors", Array.Empty<string>());
             var warnings = GetSetting(analysis, "warnings", Array.Empty<string>());
             var information = GetSetting(analysis, "information", Array.Empty<string>());
             var disabled = GetSetting(analysis, "disabled", Array.Empty<string>());
             settings.analysis.SetErrorSeverityOptions(errors, warnings, information, disabled);
 
-            await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings });
+            await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings }, cancellationToken);
 
             if (!_filesLoaded) {
                 await LoadDirectoryFiles();
@@ -262,9 +268,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #region Editor features
         [JsonRpcMethod("textDocument/completion")]
-        public async Task<CompletionList> Completion(JToken token) {
+        public async Task<CompletionList> Completion(JToken token, CancellationToken cancellationToken) {
             await IfTestWaitForAnalysisCompleteAsync();
-            return await _server.Completion(ToObject<CompletionParams>(token));
+            return await _server.Completion(ToObject<CompletionParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("completionItem/resolve")]
@@ -272,9 +278,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
            => _server.CompletionItemResolve(ToObject<CompletionItem>(token));
 
         [JsonRpcMethod("textDocument/hover")]
-        public async Task<Hover> Hover(JToken token) {
+        public async Task<Hover> Hover(JToken token, CancellationToken cancellationToken) {
             await IfTestWaitForAnalysisCompleteAsync();
-            return await _server.Hover(ToObject<TextDocumentPositionParams>(token));
+            return await _server.Hover(ToObject<TextDocumentPositionParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/signatureHelp")]
@@ -284,15 +290,15 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         [JsonRpcMethod("textDocument/definition")]
-        public async Task<Reference[]> GotoDefinition(JToken token) {
+        public async Task<Reference[]> GotoDefinition(JToken token, CancellationToken cancellationToken) {
             await IfTestWaitForAnalysisCompleteAsync();
-            return await _server.GotoDefinition(ToObject<TextDocumentPositionParams>(token));
+            return await _server.GotoDefinition(ToObject<TextDocumentPositionParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/references")]
-        public async Task<Reference[]> FindReferences(JToken token) {
+        public async Task<Reference[]> FindReferences(JToken token, CancellationToken cancellationToken) {
             await IfTestWaitForAnalysisCompleteAsync();
-            return await _server.FindReferences(ToObject<ReferencesParams>(token));
+            return await _server.FindReferences(ToObject<ReferencesParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/documentHighlight")]
@@ -360,8 +366,8 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #region Extensions
         [JsonRpcMethod("python/loadExtension")]
-        public Task LoadExtension(JToken token)
-            => _server.LoadExtension(ToObject<PythonAnalysisExtensionParams>(token));
+        public Task LoadExtension(JToken token, CancellationToken cancellationToken)
+            => _server.LoadExtension(ToObject<PythonAnalysisExtensionParams>(token), cancellationToken);
 
         #endregion
 

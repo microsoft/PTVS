@@ -124,11 +124,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #region Client message handling
-        public override async Task<InitializeResult> Initialize(InitializeParams @params) {
+        public override Task<InitializeResult> Initialize(InitializeParams @params) => Initialize(@params, CancellationToken.None);
+
+        internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
-            using (AllowRequestCancellation()) {
-                await DoInitializeAsync(@params, CancellationToken);
-            }
+            await DoInitializeAsync(@params, cancellationToken);
+
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {
@@ -188,13 +189,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override void DidChangeTextDocument(DidChangeTextDocumentParams @params) {
             ThrowIfDisposed();
             var openedFile = _editorFiles.GetDocument(@params.textDocument.uri);
-            openedFile.DidChangeTextDocument(@params, doc => EnqueueItem(doc, enqueueForAnalysis: @params._enqueueForAnalysis ?? true));
+            openedFile.DidChangeTextDocument(@params, true);
         }
 
         public override async Task DidChangeWatchedFiles(DidChangeWatchedFilesParams @params) {
-            IProjectEntry entry;
             foreach (var c in @params.changes.MaybeEnumerate()) {
                 ThrowIfDisposed();
+                IProjectEntry entry;
                 switch (c.type) {
                     case FileChangeType.Created:
                         entry = await LoadFileAsync(c.uri);
@@ -235,7 +236,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
 
-        public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+        public override Task DidChangeConfiguration(DidChangeConfigurationParams @params) => DidChangeConfiguration(@params, CancellationToken.None);
+
+        internal async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             if (Analyzer == null) {
                 LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
@@ -253,15 +256,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (reanalyze) {
-                // Make sure reload modules is executed on the analyzer thread.
-                var task = _reloadModulesQueueItem.Task;
-                _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
-                await task;
+                await ReloadModulesAsync(cancellationToken);
+            }
+        }
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var entry in Analyzer.ModulesByFilename) {
-                    _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
-                }
+        public override async Task ReloadModulesAsync(CancellationToken token) {
+            LogMessage(MessageType.Info, "Reloading modules...");
+
+            // Make sure reload modules is executed on the analyzer thread.
+            var task = _reloadModulesQueueItem.Task;
+            _queue.Enqueue(_reloadModulesQueueItem, AnalysisPriority.Normal);
+            await task;
+
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var entry in Analyzer.ModulesByFilename) {
+                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
 
@@ -544,7 +553,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        private void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
+        internal void EnqueueItem(IDocument doc, AnalysisPriority priority = AnalysisPriority.Normal, bool enqueueForAnalysis = true) {
             ThrowIfDisposed();
             var pending = _pendingAnalysisEnqueue.Incremented();
             try {
@@ -558,6 +567,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     TraceMessage($"Parsing document {doc.DocumentUri}");
                     cookieTask = _parseQueue.Enqueue(doc, Analyzer.LanguageVersion);
+                }
+
+                if (doc is ProjectEntry entry) {
+                    entry.ResetCompleteAnalysis();
                 }
 
                 AnalysisQueued(doc.DocumentUri);
@@ -673,7 +686,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private void ThrowIfDisposed() {
-            if(_disposed) {
+            if (_disposed) {
                 throw new ObjectDisposedException(nameof(Server));
             }
         }

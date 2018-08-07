@@ -14,39 +14,40 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        private static Hover EmptyHover = new Hover {
+        private static readonly Hover EmptyHover = new Hover {
             contents = new MarkupContent { kind = MarkupKind.PlainText, value = string.Empty }
         };
+
         private DocumentationBuilder _displayTextBuilder;
 
-        public override Task<Hover> Hover(TextDocumentPositionParams @params) {
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) => Hover(@params, CancellationToken.None);
+
+        internal async Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"Hover in {uri} at {@params.position}");
 
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(50, cancellationToken) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(EmptyHover);
+                return EmptyHover;
             }
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
+            tree = GetParseTree(entry, uri, cancellationToken, out var version) ?? tree;
 
             Expression expr;
             SourceSpan? exprSpan;
-            Analyzer.InterpreterScope scope = null;
 
             var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
             expr = finder.GetExpression(@params.position) as Expression;
@@ -54,13 +55,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (expr == null) {
                 TraceMessage($"No hover info found in {uri} at {@params.position}");
-                return Task.FromResult(EmptyHover);
+                return EmptyHover;
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
 
             // First try values from expression. This works for the import statement most of the time.
-            var values = analysis.GetValues(expr, @params.position, scope).ToList();
+            var values = analysis.GetValues(expr, @params.position, null).ToList();
             if (values.Count == 0) {
                 // See if this is hover over import statement
                 var index = tree.LocationToIndex(@params.position);
@@ -83,10 +84,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                         }
                     }
                     if (sb.Length > 0) {
-                        return Task.FromResult(new Hover {
+                        return new Hover {
                             contents = sb.ToString(),
                             range = span
-                        });
+                        };
                     }
                 }
             }
@@ -111,10 +112,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     _version = version?.Version,
                     _typeNames = names
                 };
-                return Task.FromResult(res);
+                return res;
             }
 
-            return Task.FromResult(EmptyHover);
+            return EmptyHover;
         }
 
         private static string GetFullTypeName(AnalysisValue value) {

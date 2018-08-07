@@ -277,7 +277,10 @@ namespace Microsoft.PythonTools.Repl {
             private void StdErrReceived(object sender, DataReceivedEventArgs e) {
                 if (e.Data != null) {
                     if (!AppendPreConnectionOutput(e)) {
-                        _eval.WriteError(FixNewLines(e.Data));
+                        try {
+                            _eval.WriteError(FixNewLines(e.Data));
+                        } catch (Exception ex) when (!ex.IsCriticalException() && HasShutdownStarted()) {
+                        }
                     }
                 }
             }
@@ -285,9 +288,16 @@ namespace Microsoft.PythonTools.Repl {
             private void StdOutReceived(object sender, DataReceivedEventArgs e) {
                 if (e.Data != null) {
                     if (!AppendPreConnectionOutput(e)) {
-                        _eval.WriteOutput(FixNewLines(e.Data));
+                        try {
+                            _eval.WriteOutput(FixNewLines(e.Data));
+                        } catch (Exception ex) when (!ex.IsCriticalException() && HasShutdownStarted()) {
+                        }
                     }
                 }
+            }
+
+            private bool HasShutdownStarted() {
+                return _eval.CurrentWindow.TextView.VisualElement.Dispatcher?.HasShutdownStarted ?? true;
             }
 
             private bool AppendPreConnectionOutput(DataReceivedEventArgs e) {

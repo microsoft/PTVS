@@ -25,16 +25,16 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        public override Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
+        public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
             var uri = @params.textDocument.uri;
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"Signatures in {uri} at {@params.position}");
 
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(waitingTimeout: 50) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new SignatureHelp());
+                return new SignatureHelp();
             }
 
             IEnumerable<IOverloadResult> overloads;
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 } else {
                     TraceMessage($"No signatures found in {uri} at {@params.position}");
-                    return Task.FromResult(new SignatureHelp());
+                    return new SignatureHelp();
                 }
             }
 
@@ -74,12 +74,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ? activeSignature
                 : (sigs.Length > 0 ? 0 : -1);
 
-            var sh = new SignatureHelp {
+            return new SignatureHelp {
                 signatures = sigs,
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            return Task.FromResult(sh);
         }
 
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
