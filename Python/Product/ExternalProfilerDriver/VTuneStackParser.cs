@@ -70,15 +70,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     }
 
     static class VTuneStackParser {
-        public static IEnumerable<string> ReadFromFile(string filePath) {
-            string line;
-            using (var reader = File.OpenText(filePath)) {
-                while ((line = reader.ReadLine()) != null) {
-                    yield return line;
-                }
-            }
-        }
-
         public static string RemovePrePosComma(string str) {
             if (str.Length > 0) {
                 if (str[0] == '"') { str = str.Substring(1, str.Length - 1); }

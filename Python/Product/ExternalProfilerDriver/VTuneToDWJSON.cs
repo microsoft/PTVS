@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Net;
 
 using Newtonsoft.Json;
 
@@ -30,6 +31,10 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public BaseSizeTuple(long _base, long _size) {
             Base = _base;
             Size = _size;
+        }
+        override public string ToString()
+        {
+            return $"({this.Base},{this.Size})";
         }
     }
 
@@ -42,6 +47,42 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 yield return new BaseSizeTuple(_current, _size);
                 _current += _size + 1;
             }
+        }
+    }
+
+    public class FuncInfo
+    {
+        public string FunctionName { get; set; }
+        public string SourceFile { get; set; }
+        public long? LineNumber { get; set; }
+        public long? Base { get; set; }
+        public long? Size { get; set; }
+        
+        public FuncInfo(string _functionname, string _sourceFile = "", long? _lineNumber = null, long? _base = null, long? _size = null)
+        {
+            FunctionName = _functionname;
+            SourceFile = _sourceFile;
+            LineNumber = _lineNumber;
+            Base = _base;
+            Size = _size;
+        }
+
+        override public string ToString()
+        {
+            return $"Function {this.FunctionName}, @ {this.SourceFile}:{this.LineNumber} and assigned Base/Size {this.Base}/{this.Size}";
+        }
+    }
+    
+    public class FuncInfoComparer : IEqualityComparer<FuncInfo>
+    {
+        public bool Equals(FuncInfo x, FuncInfo y)
+        {
+            return x.FunctionName == y.FunctionName && x.SourceFile == y.SourceFile;
+        }
+ 
+        public int GetHashCode(FuncInfo obj)
+        {
+            return (obj.FunctionName + obj.SourceFile).GetHashCode();
         }
     }
 
@@ -137,7 +178,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     //duration = new LongInt(0, 10000)
                     duration = duration
                 },
-                name = "machine-name",
+                name = Dns.GetHostName() ?? "machine-name",
                 processor = new ProcessorSpec {
                     logicalCount = 4,
                     speedInMHz = 2670,
@@ -155,7 +196,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
 
         public static IEnumerable<SampleWithTrace> ParseFromFile(string filename) {
-            var samples = VTuneStackParser.ReadFromFile(filename)
+            var samples = Utils.ReadFromFile(filename)
                                           .Skip(1)
                                           .Select(s => String.Join(",", s.Split(',')
                                           .Select(VTuneStackParser.RemovePrePosComma)))
@@ -174,7 +215,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
             LongInt durationli = TraceUtils.ToNanoseconds(timeTotal);
 
-            var cpuRecords = VTuneStackParser.ReadFromFile(filename)
+            var cpuRecords = Utils.ReadFromFile(filename)
                                             .Skip(2)
                                             .ParseCPURecords();
             /*
@@ -209,6 +250,106 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 writer.WriteLine(json);
             }
         }
+
+        /// <summary>
+        /// Creates a two-level dictionary from a stream of <cref>SampleWithTrace</cref>.
+        /// The "primary" (top-level) key is the module name, and the lower-level key
+        /// is the function name (function -> (sourcefile, base, size))
+        /// </summary>
+        public static Dictionary< string, Dictionary< string, FuncInfo > > ModuleFuncDictFromSamples(IEnumerable<SampleWithTrace> samples)
+        {
+            var modFunDictionary = samples.SelectMany(sm => sm.AllSamples())
+                                              .Select(p => new { Module = p.Module, Function = p.Function, SourceFile = p.SourceFile })
+                                              .GroupBy(t => t.Module)
+                                              .Select(g => new { Module = g.Key, 
+                                                                 Functions = g.Select(gg => new FuncInfo(gg.Function, gg.SourceFile)).Distinct(new FuncInfoComparer()),
+                                                               });
+
+            var mfdd = modFunDictionary.ToDictionary(r => r.Module, 
+                                                     r => r.Functions.ToDictionary(
+                                                         rr => rr.FunctionName,
+                                                         rr => rr
+                                                     ));
+
+            return mfdd;
+        }
+
+        public static Dictionary<string, List<SourceFileId>> SourceFilesByModule(Dictionary< string, Dictionary< string, FuncInfo > > modfun)
+        {
+
+            var modFile = modfun.Select( mfs => new { Module = mfs.Key, 
+                                                      FilesId = mfs.Value.Values.Select(fi => fi.SourceFile).Distinct().Where(f => File.Exists(f))
+                                                                         .Zip(Enumerable.Range(1, int.MaxValue), (x, y) => new SourceFileId(x, y) )
+                                                                         .ToList()
+                                                    })
+                                .Where(mfi => mfi.FilesId.Count > 0)
+                                .ToDictionary(mfi => mfi.Module, mfi => mfi.FilesId)
+                                ;
+
+            return modFile;
+        }
+
+        /// <summary>
+        /// Translates a two-level module -> func -> FuncInfo dictionary to the dwjson data model
+        /// </summary>
+        public static IEnumerable<ModuleSpec> ModFunToTrace(Dictionary< string, Dictionary< string, FuncInfo > > modfun)
+        {
+            var mfiles = SourceFilesByModule(modfun);
+            var mfilesDWJSON = mfiles.Select(kv => new { Module = kv.Key, 
+                                                         Files = kv.Value.Select(fi => new FileIDMapSpec {id = fi.Id, file = fi.SourceFile}).ToList()
+                                                       })
+                                     .ToDictionary(k => k.Module, v => v.Files);
+                                     
+            /*
+            This means that, to find the id that has been assigned to a filename in this structure we need something like:
+            var idx = mfilesDWJSON[<module>].FindIndex(fi => fi.file == <filename>);
+            var y = mfilesDWJSON[<module>][x];
+            */
+            
+            // Generate LineSpecs for each function in the module
+            List<ModuleSpec> modulesInTrace = new List<ModuleSpec>();
+            foreach (var mf in modfun.Select(mfd => new { Module = mfd.Key, Fnames = mfd.Value.Select(ffi => ffi.Value).ToList()})) {
+
+                ModuleSpec currentModule = new ModuleSpec {
+                    name = mf.Module
+                };
+                List<FunctionSpec> funcsInCurrentModule = new List<FunctionSpec>();
+                foreach (var ff in mf.Fnames) {
+                    //FunctionSpec currrent = new FunctionSpec (ff.FunctionName, ff.Base, ff.Size);
+                    FunctionSpec current = new FunctionSpec (ff.FunctionName, 0,0);
+
+                    // look up information on function
+                    if (mfilesDWJSON.ContainsKey(mf.Module)) {
+                        int idx = mfilesDWJSON[mf.Module].FindIndex(fi => fi.file == ff.SourceFile);
+                        if (idx >= 0) {
+                            var idForFun = mfilesDWJSON[mf.Module][idx].id;
+                            LineSpec found = new LineSpec {
+                                fileId = idForFun,
+                                offset = 10,
+                                lineBegin = (int)(ff.LineNumber ?? 0),
+                                lineEnd = (int)(ff.LineNumber ?? 1),
+                                columnBegin = 0,
+                                columnEnd = 1
+                            };
+                            current.lines = Utils.Emit<LineSpec>(found).ToList();
+                        }
+                    }
+                    funcsInCurrentModule.Add(current);
+                }
+                currentModule.ranges = funcsInCurrentModule;
+                if (mfilesDWJSON.ContainsKey(currentModule.name)) { // maybe should use the description used thus far
+                    currentModule.fileIdMapping = mfilesDWJSON[currentModule.name];
+                }
+                modulesInTrace.Add(currentModule);
+            }
+
+#if false
+                string json = JsonConvert.SerializeObject(modulesInTrace, Formatting.Indented, new JsonSerializerSettings {
+                    NullValueHandling = NullValueHandling.Ignore});
+#endif
+
+            return modulesInTrace;
+        }
     }
 
     public class AddressTranslator {
@@ -224,4 +365,15 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             return new LongInt(0, modindex[module].l + modfundict[module][function].Base + 1);
         }
     }
+
+    public class SourceFileId
+    {
+            public string SourceFile { get; set; }
+            public int Id { get; set; }
+            public SourceFileId(string _sourceFile, int _id) {
+                SourceFile = _sourceFile;
+                Id = _id;
+            }
+    }
+   
 }

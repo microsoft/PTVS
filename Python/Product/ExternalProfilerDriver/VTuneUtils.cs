@@ -19,9 +19,9 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
-namespace ExternalProfilerDriver
-{
+namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     public static class Utils
     {
         // from an idea in https://github.com/dotnet/corefx/issues/3093
@@ -41,6 +41,39 @@ namespace ExternalProfilerDriver
             } else {
                 return candidates[0];
             }
+        }
+
+        public static IEnumerable<string> ReadFromFile(string filePath)
+        {
+            string line;
+            using (var reader = File.OpenText(filePath))
+            {
+                while ((line = reader.ReadLine()) != null)
+                {
+                    yield return line;
+                }
+            }
+        }
+
+        public static IEnumerable<string> QuickExecute(string cmd, string args)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(cmd)
+            {
+                UseShellExecute = false,
+                Arguments = args,
+                RedirectStandardOutput = true
+            };
+
+            Process process = new Process
+            {
+                StartInfo = psi,
+            };
+
+            process.Start();
+            while (!process.StandardOutput.EndOfStream) {
+                yield return process.StandardOutput.ReadLine();
+            }
+            process.WaitForExit();
         }
     }
 

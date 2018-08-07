@@ -65,6 +65,7 @@
     <Compile Include="VTuneCPUUtilizationParser.cs" />
     <Compile Include="VTuneStackParser.cs" />
     <Compile Include="VTuneToDWJSON.cs" />
+    <Compile Include="VTuneUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
