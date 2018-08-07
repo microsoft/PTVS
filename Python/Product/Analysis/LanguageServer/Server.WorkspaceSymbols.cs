@@ -69,8 +69,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
-            foreach (var c in scope.Children) {
-                var res = GetScopeVariables(analysis, scope, opts);
+            foreach (var childScope in scope.Children) {
+                var res = GetScopeVariables(analysis, childScope, opts);
                 foreach (var m in res) {
                     yield return m;
                 }
@@ -78,11 +78,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
-            var res1 = analysis.GetAllAvailableMembersFromScope(scope, opts);
-            foreach (var m in res1) {
+            var res = analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
+            foreach (var m in res) {
                 yield return m;
             }
-            var res2 = GetChildScopesVariables(analysis, scope, opts);
         }
 
 
