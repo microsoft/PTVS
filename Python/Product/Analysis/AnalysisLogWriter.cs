@@ -219,6 +219,7 @@ namespace Microsoft.PythonTools.Analysis {
                         }
                     }
                 }
+            } catch (IOException) {
             } finally {
                 try {
                     _dumping.Release();
