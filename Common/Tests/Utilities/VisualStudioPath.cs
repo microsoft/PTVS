@@ -38,9 +38,9 @@ namespace TestUtilities {
                 var path = current.ResolvePath(current.GetProductPath());
                 return Path.GetDirectoryName(path);
             } catch (COMException) {
-                var path = Environment.GetEnvironmentVariable($"VisualStudio_{AssemblyVersionInfo.VSVersion}");
+                var path = Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}");
                 if (string.IsNullOrEmpty(path)) {
-                    path = Environment.GetEnvironmentVariable("VisualStudio");
+                    path = Environment.GetEnvironmentVariable("VisualStudio_IDE");
                 }
                 return path;
             }
