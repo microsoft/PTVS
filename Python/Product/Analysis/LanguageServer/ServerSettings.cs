@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public sealed class LanguageServerSettings {
+    public class ServerSettings {
         public class PythonAnalysisOptions {
             private Dictionary<string, DiagnosticSeverity> _map = new Dictionary<string, DiagnosticSeverity>();
 
@@ -27,8 +27,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public string[] warnings { get; } = Array.Empty<string>();
             public string[] information { get; } = Array.Empty<string>();
             public string[] disabled { get; } = Array.Empty<string>();
-
-            public int diagnosticPublishDelay = 1000;
 
             public DiagnosticSeverity GetEffectiveSeverity(string code, DiagnosticSeverity defaultSeverity)
                 => _map.TryGetValue(code, out var severity) ? severity : defaultSeverity;

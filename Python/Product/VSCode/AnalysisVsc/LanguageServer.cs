@@ -166,9 +166,10 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
-            settings.analysis.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
+            settings.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
 
-            _idleTimeTracker = new IdleTimeTracker(settings.analysis.diagnosticPublishDelay, PublishPendingDiagnostics);
+            _idleTimeTracker?.Dispose();
+            _idleTimeTracker = new IdleTimeTracker(settings.diagnosticPublishDelay, PublishPendingDiagnostics);
 
             _pathsWatcher?.Dispose();
             var watchSearchPaths = GetSetting(analysis, "watchSearchPaths", true);
