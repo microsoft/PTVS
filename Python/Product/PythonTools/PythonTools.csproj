@@ -715,17 +715,17 @@
   <ItemGroup>
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
+    <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
+    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
+    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoInterpreters.htmlsrc" />
-    <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\blue.vstheme" />
     <None Include="Theme\light.vstheme" />
     <None Include="Theme\additionalcontrast.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <None Include="Theme\Repl\Microsoft.PythonTools.theme.v14.0.pkgdef" />
-    <None Include="Theme\Repl\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\Repl\dark.vstheme" />
     <None Include="Theme\Repl\blue.vstheme" />
     <None Include="Theme\Repl\light.vstheme" />
