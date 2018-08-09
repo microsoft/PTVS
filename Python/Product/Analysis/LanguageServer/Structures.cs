@@ -290,6 +290,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// This will likely have a performance impact.
         /// </summary>
         public bool traceLogging;
+
+        /// <summary>
+        /// If true, analyzer will be created asynchronously. Used in VS Code.
+        /// </summary>
+        public bool asyncStartup;
     }
 
     [Serializable]

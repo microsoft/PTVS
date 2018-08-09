@@ -397,6 +397,8 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #endregion
 
+        internal Task CompleteInitialization() => _server.CompleteInitialization;
+
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
 
         private T GetSetting<T>(JToken section, string settingName, T defaultValue) {

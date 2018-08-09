@@ -24,7 +24,11 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         private readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _queue = new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
         private readonly ManualResetEventSlim _workAvailable = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly Func<Task> _beforeExecWorkItem;
 
+        public SingleThreadSynchronizationContext(Func<Task> beforeExecWorkItem) : this() {
+            _beforeExecWorkItem = beforeExecWorkItem;
+        }
         public SingleThreadSynchronizationContext() {
             Task.Run(() => QueueWorker());
         }
@@ -45,6 +49,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                     break;
                 }
                 while (_queue.TryDequeue(out var t)) {
+                    if(_beforeExecWorkItem != null) {
+                        _beforeExecWorkItem().Wait(_cts.Token);
+                    }
                     t.Item1(t.Item2);
                 }
                 _workAvailable.Reset();
