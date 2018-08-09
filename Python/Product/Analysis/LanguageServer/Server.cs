@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         internal PythonAnalyzer Analyzer { get; private set; }
-        internal LanguageServerSettings Settings { get; private set; } = new LanguageServerSettings();
+        internal ServerSettings Settings { get; private set; } = new ServerSettings();
         internal ProjectFiles ProjectFiles { get; } = new ProjectFiles();
 
         public void Dispose() {
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var reanalyze = true;
             if (@params.settings != null) {
-                if (@params.settings is LanguageServerSettings settings) {
+                if (@params.settings is ServerSettings settings) {
                     reanalyze = HandleConfigurationChanges(settings);
                 } else {
                     LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private async Task DoInitializeAsync(InitializeParams @params, CancellationToken token) {
             ThrowIfDisposed();
-            Analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter, token);
+            Analyzer = await _queue.ExecuteInQueueAsync(ct => CreateAnalyzer(@params.initializationOptions.interpreter, token), AnalysisPriority.High);
 
             ThrowIfDisposed();
             _clientCaps = @params.capabilities;
@@ -436,10 +436,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             LogMessage(MessageType.Info, $"Created {interp.GetType().FullName} instance from {factory.GetType().FullName}");
 
             var analyzer = await PythonAnalyzer.CreateAsync(factory, interp, token);
-#if DEBUG
-            // Make Deque aware of the only thread that should be modifying its state
-            analyzer.Queue.SynchronizationContext = _queue.SynchronizationContext;
-#endif
             return analyzer;
         }
 
@@ -667,7 +663,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
-        private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
+        private bool HandleConfigurationChanges(ServerSettings newSettings) {
             var oldSettings = Settings;
             Settings = newSettings;
 

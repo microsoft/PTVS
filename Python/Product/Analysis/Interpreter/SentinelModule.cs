@@ -19,14 +19,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class SentinelModule : IPythonModule {
-        private readonly SynchronizationContext _creator = SynchronizationContext.Current;
+        private readonly AnalysisQueue _scope;
         private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
+            _scope = AnalysisQueue.Current;
             Name = name;
             if (importing) {
                 _semaphore = new SemaphoreSlim(0, 1000);
@@ -40,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (mod != null) {
                 return mod;
             }
-            if (_creator == SynchronizationContext.Current) {
+            if (_scope == AnalysisQueue.Current) {
                 // If we're trying to import the same module again from the same analyzer,
                 // there is no point waiting to see if the first import finishes,
                 // so just return the sentinel object immediately.

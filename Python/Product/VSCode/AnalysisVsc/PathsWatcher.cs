@@ -43,13 +43,20 @@ namespace Microsoft.Python.LanguageServer {
             var list = new List<FileSystemWatcher>();
             var reduced = ReduceToCommonRoots(paths);
             foreach (var p in reduced) {
-                if(!Directory.Exists(p)) {
+                try {
+                    if (!Directory.Exists(p)) {
+                        continue;
+                    }
+                } catch(IOException ex) {
+                    _log.TraceMessage($"Unable to access directory {p}, exception {ex.Message}");
                     continue;
                 }
+
                 try {
-                    var fsw = new FileSystemWatcher(p);
-                    fsw.IncludeSubdirectories = true;
-                    fsw.EnableRaisingEvents = true;
+                    var fsw = new FileSystemWatcher(p) {
+                        IncludeSubdirectories = true,
+                        EnableRaisingEvents = true
+                    };
 
                     fsw.Changed += OnChanged;
                     fsw.Created += OnChanged;
