@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -51,12 +50,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            // Check if method returns self
-            var returnType = _method.ReturnTypes.GetInstanceType();
-            if (args.Length > 0 && returnType.FirstOrDefault() is BuiltinInstanceInfo biif && biif.PythonType == _method.Function?.DeclaringType) {
-                return args[0]; //  Return actual self (i.e. derived class)
-            }
-            return returnType;
+            return _method.ReturnTypes.GetInstanceType();
         }
 
         public override IEnumerable<OverloadResult> Overloads {
