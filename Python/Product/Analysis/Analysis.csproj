@@ -136,7 +136,7 @@
     <Compile Include="LanguageServer\RestTextConverter.cs" />
     <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
-    <Compile Include="LanguageServer\Settings.cs" />
+    <Compile Include="LanguageServer\ServerSettings.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="LanguageServer\VolatileCounter.cs" />
     <Compile Include="ModuleResolver.cs" />
