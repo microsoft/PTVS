@@ -295,14 +295,7 @@ namespace Microsoft.PythonTools.Analysis {
             return new BuiltinFunctionOverloadResult(_projectState, Name, _overload, skipCount, _fallbackDoc);
         }
 
-        public override string Documentation {
-            get {
-                if (_docTask != null) {
-                    _docTask.Wait(200);
-                }
-                return _doc;
-            }
-        }
+        public override string Documentation => _doc;
 
         private void Calculate() {
             // initially fill in w/ a string saying we don't yet have the documentation
@@ -316,8 +309,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void DocCalculator() {
-            var doc = new StringBuilder();
-            if (!string.IsNullOrEmpty(_overload.Documentation)) {
+            StringBuilder doc = new StringBuilder();
+            if (!String.IsNullOrEmpty(_overload.Documentation)) {
                 doc.AppendLine(_overload.Documentation);
             }
 
