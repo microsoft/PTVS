@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         internal PythonAnalyzer Analyzer { get; private set; }
-        internal LanguageServerSettings Settings { get; private set; } = new LanguageServerSettings();
+        internal ServerSettings Settings { get; private set; } = new ServerSettings();
         internal ProjectFiles ProjectFiles { get; } = new ProjectFiles();
 
         public void Dispose() {
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var reanalyze = true;
             if (@params.settings != null) {
-                if (@params.settings is LanguageServerSettings settings) {
+                if (@params.settings is ServerSettings settings) {
                     reanalyze = HandleConfigurationChanges(settings);
                 } else {
                     LogMessage(MessageType.Error, "change configuration notification sent unsupported settings");
@@ -663,7 +663,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return tree;
         }
 
-        private bool HandleConfigurationChanges(LanguageServerSettings newSettings) {
+        private bool HandleConfigurationChanges(ServerSettings newSettings) {
             var oldSettings = Settings;
             Settings = newSettings;
 
