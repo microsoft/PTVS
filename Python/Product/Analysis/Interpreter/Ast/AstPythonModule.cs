@@ -265,6 +265,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                             return line.Substring(quote.Length, line.Length - 2 * quote.Length).Trim();
                         }
                         var sb = new StringBuilder();
+                        // Handle '''Text right here
+                        line = line.Substring(quote.Length).Trim();
+                        if (!string.IsNullOrEmpty(line)) {
+                            sb.AppendLine(line);
+                        }
                         while (true) {
                             line = sr.ReadLine();
                             if (line == null || line.EndsWithOrdinal(quote)) {
