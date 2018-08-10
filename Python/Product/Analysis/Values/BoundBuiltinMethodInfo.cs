@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
