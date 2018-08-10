@@ -213,13 +213,13 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         #region TextDocument
         [JsonRpcMethod("textDocument/didOpen")]
         public Task DidOpenTextDocument(JToken token) {
-            _idleTimeTracker.NotifyUserActivity();
+            _idleTimeTracker?.NotifyUserActivity();
             return _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
         }
 
         [JsonRpcMethod("textDocument/didChange")]
         public void DidChangeTextDocument(JToken token) {
-            _idleTimeTracker.NotifyUserActivity();
+            _idleTimeTracker?.NotifyUserActivity();
 
             var @params = ToObject<DidChangeTextDocumentParams>(token);
             var version = @params.textDocument.version;
@@ -281,13 +281,13 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         [JsonRpcMethod("textDocument/didSave")]
         public Task DidSaveTextDocument(JToken token) {
-            _idleTimeTracker.NotifyUserActivity();
+            _idleTimeTracker?.NotifyUserActivity();
             return _server.DidSaveTextDocument(ToObject<DidSaveTextDocumentParams>(token));
         }
 
         [JsonRpcMethod("textDocument/didClose")]
         public Task DidCloseTextDocument(JToken token) {
-            _idleTimeTracker.NotifyUserActivity();
+            _idleTimeTracker?.NotifyUserActivity();
             return _server.DidCloseTextDocument(ToObject<DidCloseTextDocumentParams>(token));
         }
         #endregion
