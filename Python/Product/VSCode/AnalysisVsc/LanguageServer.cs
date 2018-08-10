@@ -153,6 +153,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
         public async Task DidChangeConfiguration(JToken token, CancellationToken cancellationToken) {
+            // Change configuration comes right after the initialization
+            await _server.CompleteInitialization;
+
             var settings = new LanguageServerSettings();
 
             var rootSection = token["settings"];
