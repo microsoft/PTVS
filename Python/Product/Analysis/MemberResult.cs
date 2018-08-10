@@ -18,12 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using System.IO;
 using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
@@ -68,9 +66,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
         #endregion
 
-        public MemberResult FilterCompletion(string completion) {
-            return new MemberResult(Name, completion, Values, MemberType);
-        }
+        public MemberResult FilterCompletion(string completion) => new MemberResult(Name, completion, Values, MemberType);
 
         public string Name { get; }
         public string Completion { get; }
