@@ -133,6 +133,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public override int GetHashCode() => new { hc1 = GetType()?.GetHashCode() ?? 0, hc2 = _type?.GetHashCode() ?? 0 }.GetHashCode();
+        public override int GetHashCode() => new { hc1 = GetType().GetHashCode(), hc2 = _type?.GetHashCode() }.GetHashCode();
     }
 }
