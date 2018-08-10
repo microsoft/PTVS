@@ -80,22 +80,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts));
         }
 
-        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
-            foreach (var childScope in scope.Children) {
-                var res = GetScopeVariables(analysis, childScope, opts);
-                foreach (var m in res) {
-                    yield return m;
-                }
-            }
-        }
+        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
+            => scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts));
 
-        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts) {
-            var res = analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
-            foreach (var m in res) {
-                yield return m;
-            }
-        }
-
+        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
+            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
