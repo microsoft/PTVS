@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public sealed class LanguageServerSettings {
+    public class ServerSettings {
         public class PythonAnalysisOptions {
             private Dictionary<string, DiagnosticSeverity> _map = new Dictionary<string, DiagnosticSeverity>();
 

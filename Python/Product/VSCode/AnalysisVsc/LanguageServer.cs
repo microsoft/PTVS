@@ -41,18 +41,24 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private readonly PythonTools.Analysis.LanguageServer.Server _server = new PythonTools.Analysis.LanguageServer.Server();
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
         private readonly RestTextConverter _textConverter = new RestTextConverter();
+        private readonly Dictionary<Uri, Diagnostic[]> _pendingDiagnostic = new Dictionary<Uri, Diagnostic[]>();
+        private readonly object _lock = new object();
+
         private IUIService _ui;
         private ITelemetryService _telemetry;
         private IProgressService _progress;
+
         private JsonRpc _rpc;
         private bool _filesLoaded;
         private Task _progressReportingTask;
         private PathsWatcher _pathsWatcher;
+        private IdleTimeTracker _idleTimeTracker;
 
         public CancellationToken Start(IServiceContainer services, JsonRpc rpc) {
             _ui = services.GetService<IUIService>();
             _telemetry = services.GetService<ITelemetryService>();
             _progress = services.GetService<IProgressService>();
+
             _rpc = rpc;
 
             _server.OnLogMessage += OnLogMessage;
@@ -122,13 +128,20 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private void OnTelemetry(object sender, TelemetryEventArgs e) => _telemetry.SendTelemetry(e.value);
         private void OnShowMessage(object sender, ShowMessageEventArgs e) => _ui.ShowMessage(e.message, e.type);
         private void OnLogMessage(object sender, LogMessageEventArgs e) => _ui.LogMessage(e.message, e.type);
+
         private void OnPublishDiagnostics(object sender, PublishDiagnosticsEventArgs e) {
-            var parameters = new PublishDiagnosticsParams {
-                uri = e.uri,
-                diagnostics = e.diagnostics.ToArray()
-            };
-            _rpc.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
+            lock (_lock) {
+                // If list is empty (errors got fixed), publish immediately,
+                // otherwise throttle so user does not get spurious squiggles
+                // while typing normally.
+                var diags = e.diagnostics.ToArray();
+                _pendingDiagnostic[e.uri] = diags;
+                if(diags.Length == 0) {
+                    PublishPendingDiagnostics();
+                }
+            }
         }
+
         private void OnApplyWorkspaceEdit(object sender, ApplyWorkspaceEditEventArgs e)
             => _rpc.NotifyWithParameterObjectAsync("workspace/applyEdit", e.@params).DoNotWait();
         private void OnRegisterCapability(object sender, RegisterCapabilityEventArgs e)
@@ -153,13 +166,18 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
             var analysis = pythonSection["analysis"];
             settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
+            settings.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
+
+            _idleTimeTracker?.Dispose();
+            _idleTimeTracker = new IdleTimeTracker(settings.diagnosticPublishDelay, PublishPendingDiagnostics);
 
             _pathsWatcher?.Dispose();
             var watchSearchPaths = GetSetting(analysis, "watchSearchPaths", true);
             if (watchSearchPaths) {
                 _pathsWatcher = new PathsWatcher(
-                    _initParams.initializationOptions.searchPaths, 
-                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait()
+                    _initParams.initializationOptions.searchPaths,
+                    () => _server.ReloadModulesAsync(CancellationToken.None).DoNotWait(),
+                    _server
                  );
             }
 
@@ -194,11 +212,15 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #region TextDocument
         [JsonRpcMethod("textDocument/didOpen")]
-        public Task DidOpenTextDocument(JToken token)
-           => _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
+        public Task DidOpenTextDocument(JToken token) {
+            _idleTimeTracker.NotifyUserActivity();
+            return _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/didChange")]
         public void DidChangeTextDocument(JToken token) {
+            _idleTimeTracker.NotifyUserActivity();
+
             var @params = ToObject<DidChangeTextDocumentParams>(token);
             var version = @params.textDocument.version;
             if (version == null || @params.contentChanges.IsNullOrEmpty()) {
@@ -258,12 +280,16 @@ namespace Microsoft.Python.LanguageServer.Implementation {
            => _server.WillSaveWaitUntilTextDocument(ToObject<WillSaveTextDocumentParams>(token));
 
         [JsonRpcMethod("textDocument/didSave")]
-        public Task DidSaveTextDocument(JToken token)
-           => _server.DidSaveTextDocument(ToObject<DidSaveTextDocumentParams>(token));
+        public Task DidSaveTextDocument(JToken token) {
+            _idleTimeTracker.NotifyUserActivity();
+            return _server.DidSaveTextDocument(ToObject<DidSaveTextDocumentParams>(token));
+        }
 
         [JsonRpcMethod("textDocument/didClose")]
-        public Task DidCloseTextDocument(JToken token)
-           => _server.DidCloseTextDocument(ToObject<DidCloseTextDocumentParams>(token));
+        public Task DidCloseTextDocument(JToken token) {
+            _idleTimeTracker.NotifyUserActivity();
+            return _server.DidCloseTextDocument(ToObject<DidCloseTextDocumentParams>(token));
+        }
         #endregion
 
         #region Editor features
@@ -381,6 +407,50 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 _server.LogMessage(MessageType.Warning, $"Exception retrieving setting '{settingName}': {ex.Message}");
             }
             return defaultValue;
+        }
+
+        private void PublishPendingDiagnostics() {
+            List<KeyValuePair<Uri, Diagnostic[]>> list;
+
+            lock (_lock) {
+                list = _pendingDiagnostic.ToList();
+                _pendingDiagnostic.Clear();
+            }
+
+            foreach (var kvp in list) {
+                var parameters = new PublishDiagnosticsParams {
+                    uri = kvp.Key,
+                    diagnostics = kvp.Value
+                };
+                _rpc.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
+            }
+        }
+
+        private sealed class IdleTimeTracker : IDisposable {
+            private readonly int _delay;
+            private readonly Action _action;
+            private Timer _timer;
+            private DateTime _lastActivityTime;
+
+            public IdleTimeTracker(int msDelay, Action action) {
+                _delay = msDelay;
+                _action = action;
+                _timer = new Timer(OnTimer, this, 50, 50);
+                NotifyUserActivity();
+            }
+
+            public void NotifyUserActivity()  => _lastActivityTime = DateTime.Now;
+
+            public void Dispose() {
+                _timer?.Dispose();
+                _timer = null;
+            }
+
+            private void OnTimer(object state) {
+                if ((DateTime.Now - _lastActivityTime).TotalMilliseconds >= _delay && _timer != null) {
+                    _action();
+                }
+            }
         }
     }
 }

@@ -1641,9 +1641,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__doc__" ||
                 nameExpr.Name == "__name__";
         }
-
-        internal Task WaitForCompleteAnalysis() => _server.WaitForCompleteAnalysisAsync();
-
+        
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
 
         internal IPythonInterpreter Interpreter => Project?.Interpreter;

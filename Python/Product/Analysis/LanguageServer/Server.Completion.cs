@@ -25,26 +25,27 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override Task<CompletionList> Completion(CompletionParams @params) => Completion(@params, CancellationToken.None);
 
-        internal Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken) {
+        internal async Task<CompletionList> Completion(CompletionParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
  
             ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
             TraceMessage($"Completions in {uri} at {@params.position}");
 
             tree = GetParseTree(entry, uri, cancellationToken, out var version) ?? tree;
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(50, cancellationToken) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
-                return Task.FromResult(new CompletionList());
+                return new CompletionList();
             }
 
             var opts = GetOptions(@params.context);
             var ctxt = new CompletionAnalysis(analysis, tree, @params.position, opts, _displayTextBuilder, this,
                 () => entry.ReadDocument(ProjectFiles.GetPart(uri), out _));
+
             var members = ctxt.GetCompletionsFromString(@params._expr) ?? ctxt.GetCompletions();
             if (members == null) {
                 TraceMessage($"Do not trigger at {@params.position} in {uri}");
-                return Task.FromResult(new CompletionList());
+                return new CompletionList();
             }
 
             if (!Settings.completion.showAdvancedMembers) {
@@ -102,7 +103,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     LogMessage(MessageType.Error, $"Error while post-processing completions: {ex}");
                 }
             }
-            return Task.FromResult(res);
+            return res;
         }
 
         public override Task<CompletionItem> CompletionItemResolve(CompletionItem item) {

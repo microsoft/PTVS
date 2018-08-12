@@ -71,6 +71,7 @@
     <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ParserEncodingTests.cs" />
     <Compile Include="PathEqualityComparerTests.cs" />
+    <Compile Include="PriorityProducerConsumerTest.cs" />
     <Compile Include="ProcessHelperTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="MutateStdLibTest.cs" />

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
-    enum AnalysisPriority {
-        High,
-        Normal,
-        Low,
-        None,
+using Microsoft.PythonTools.Analysis.LanguageServer;
+
+namespace Microsoft.Python.LanguageServer.Implementation {
+    public sealed class LanguageServerSettings: ServerSettings {
+        public int diagnosticPublishDelay = 1000;
     }
 }

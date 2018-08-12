@@ -20,17 +20,20 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.DsTools.Core.Disposables;
+using ILogger = Microsoft.PythonTools.Analysis.LanguageServer.ILogger;
 
 namespace Microsoft.Python.LanguageServer {
     internal sealed class PathsWatcher : IDisposable {
         private readonly DisposableBag _disposableBag = new DisposableBag(nameof(PathsWatcher));
         private readonly Action _onChanged;
         private readonly object _lock = new object();
+        private readonly ILogger _log;
 
         private Timer _throttleTimer;
         private bool _changedSinceLastTick;
 
-        public PathsWatcher(string[] paths, Action onChanged) {
+        public PathsWatcher(string[] paths, Action onChanged, ILogger log) {
+            _log = log;
             if (paths?.Length == 0) {
                 return;
             }
@@ -40,19 +43,33 @@ namespace Microsoft.Python.LanguageServer {
             var list = new List<FileSystemWatcher>();
             var reduced = ReduceToCommonRoots(paths);
             foreach (var p in reduced) {
-                var fsw = new FileSystemWatcher(p);
-                fsw.IncludeSubdirectories = true;
-                fsw.EnableRaisingEvents = true;
+                try {
+                    if (!Directory.Exists(p)) {
+                        continue;
+                    }
+                } catch(IOException ex) {
+                    _log.TraceMessage($"Unable to access directory {p}, exception {ex.Message}");
+                    continue;
+                }
 
-                fsw.Changed += OnChanged;
-                fsw.Created += OnChanged;
-                fsw.Deleted += OnChanged;
+                try {
+                    var fsw = new FileSystemWatcher(p) {
+                        IncludeSubdirectories = true,
+                        EnableRaisingEvents = true
+                    };
 
-                _disposableBag
-                    .Add(() => fsw.Changed -= OnChanged)
-                    .Add(() => fsw.Created -= OnChanged)
-                    .Add(() => fsw.Deleted -= OnChanged)
-                    .Add(fsw);
+                    fsw.Changed += OnChanged;
+                    fsw.Created += OnChanged;
+                    fsw.Deleted += OnChanged;
+
+                    _disposableBag
+                        .Add(() => fsw.Changed -= OnChanged)
+                        .Add(() => fsw.Created -= OnChanged)
+                        .Add(() => fsw.Deleted -= OnChanged)
+                        .Add(fsw);
+                } catch(ArgumentException ex) {
+                    _log.TraceMessage($"Unable to create file watcher for {p}, exception {ex.Message}");
+                }
             }
         }
 

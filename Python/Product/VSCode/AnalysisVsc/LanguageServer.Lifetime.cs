@@ -53,12 +53,14 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             // https://microsoft.github.io/language-server-protocol/specification#shutdown
             await _server.Shutdown();
             _shutdown = true;
+            _idleTimeTracker.Dispose();
         }
 
         [JsonRpcMethod("exit")]
         public async Task Exit() {
             await _server.Exit();
             _sessionTokenSource.Cancel();
+            _idleTimeTracker.Dispose();
             // Per https://microsoft.github.io/language-server-protocol/specification#exit
             Environment.Exit(_shutdown ? 0 : 1);
         }
