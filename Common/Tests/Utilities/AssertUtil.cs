@@ -199,14 +199,17 @@ namespace TestUtilities
 
         [System.Diagnostics.DebuggerStepThrough]
         public static void DoesntContain<T>(IEnumerable<T> source, IEnumerable<T> value) {
+            var contains = new List<T>();
             foreach (var v in source) {
                 foreach (var v2 in value) {
                     if (v.Equals(v2)) {
-                        Assert.Fail(String.Format("{0} contains {1}", MakeText(source), value));
+                        contains.Add(v2);
                     }
                 }
             }
-
+            if (contains.Any()) {
+                Assert.Fail(String.Format("{0} contains {1}", MakeText(source), MakeText(contains)));
+            }
         }
 
         [System.Diagnostics.DebuggerStepThrough]

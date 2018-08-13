@@ -73,17 +73,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             result = await _serviceProvider.GetUIThread().InvokeTask(async () => {
-                try {
-                    UpdatePropertiesFromProjectMoniker();
-                } catch (NoInterpretersException ex) {
-                    WriteError(ex.ToString());
-                } catch (MissingInterpreterException ex) {
-                    WriteError(ex.ToString());
-                } catch (IOException ex) {
-                    WriteError(ex.ToString());
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    WriteError(ex.ToUnhandledExceptionMessage(GetType()));
-                }
+                UpdatePropertiesFromProjectMoniker();
 
                 var remoteProcess = _process as PythonRemoteProcess;
 

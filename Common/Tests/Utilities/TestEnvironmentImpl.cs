@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace TestUtilities {
         private readonly string _binPath = typeof(TestEnvironmentImpl).Assembly.GetAssemblyDirectory();
 
         public TestEnvironmentImpl AddAssemblyResolvePaths(params string[] paths) {
-            _assemblyLoader.AddPaths(paths);
+            _assemblyLoader.AddPaths(paths.Where(n => !string.IsNullOrEmpty(n)).ToArray());
             return this;
         }
 

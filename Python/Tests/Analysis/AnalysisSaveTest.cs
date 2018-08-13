@@ -112,7 +112,7 @@ Aliased = test.Aliased
 
                 var list = newMod.Analysis.GetValuesByIndex("list_of_int", pos).First();
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("list_of_int", pos), "list of int");
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str, str, str");
 
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "type int");
 
@@ -168,9 +168,7 @@ FunctionNoRetType = test.FunctionNoRetType
 Overloaded = test.Overloaded
 ";
                 var newMod = newPs.NewModule("baz", codeText);
-                int pos = codeText.LastIndexOf('\n');
-
-                var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
+                var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(0, GetMemberOptions.None);
 
                 Assert.AreEqual(
                     "class test.Aliased\r\nclass doc\r\n\r\nAliased(fob)\r\nfunction doc",

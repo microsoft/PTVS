@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     res.Add(new CompletionResult(
                         e.shortcut,
                         e.shortcut,
+                        e.shortcut,
                         e.description,
                         PythonMemberType.CodeSnippet,
                         null

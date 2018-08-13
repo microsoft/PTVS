@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly HashSet<string> _validFactories = new HashSet<string>();
 
         private IPythonInterpreterFactory _active;
+        private readonly IPythonToolsLogger _logger;
 
         private IReadOnlyList<IPackageManager> _activePackageManagers;
         private readonly System.Threading.Timer _reanalyzeProjectNotification;
@@ -100,6 +101,8 @@ namespace Microsoft.PythonTools.Project {
             if (_services == null) {
                 throw new InvalidOperationException("Unable to initialize services");
             }
+
+            _logger = _services.Python.Logger;
 
             _vsProjectContext = _services.ComponentModel.GetService<VsProjectContextProvider>();
 
@@ -162,7 +165,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                Site.GetPythonToolsService().Logger?.LogEvent(PythonLogEvent.VirtualEnvironments, _validFactories.Count);
+                _logger?.LogEvent(PythonLogEvent.VirtualEnvironments, _validFactories.Count);
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -1156,8 +1159,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void AnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
-            var logger = Site.GetPythonToolsService().Logger;
-            if (logger == null) {
+            if (_logger == null) {
                 return;
             }
 
@@ -1167,7 +1169,7 @@ namespace Microsoft.PythonTools.Project {
                 .AppendLine(" ------ STD ERR ------ ")
                 .Append(e.StdErr)
                 .AppendLine(" ------ END STD ERR ------ ");
-            logger.LogEvent(
+            _logger.LogEvent(
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );

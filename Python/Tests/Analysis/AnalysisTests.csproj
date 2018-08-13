@@ -11,14 +11,14 @@
         <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
-    <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
+    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
       <PropertyGroup>
-        <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
         <FileUpgradeFlags>
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
+        <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -62,7 +62,7 @@
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
-    <Compile Include="DotNetAnalysis\Generics.cs" />
+    <Compile Include="EventTaskSources.cs" />
     <Compile Include="ExpressionFinderTests.cs" />
     <Compile Include="FunctionBodyAnalysisTests.cs" />
     <Compile Include="LanguageServerTests.cs" />
@@ -71,6 +71,7 @@
     <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ParserEncodingTests.cs" />
     <Compile Include="PathEqualityComparerTests.cs" />
+    <Compile Include="PriorityProducerConsumerTest.cs" />
     <Compile Include="ProcessHelperTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="MutateStdLibTest.cs" />

@@ -21,12 +21,8 @@ namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         internal static readonly LocationInfo[] Empty = new LocationInfo[0];
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
-
-        public LocationInfo(string path, Uri documentUri, int line, int column) {
-            FilePath = path;
-            DocumentUri = documentUri;
-            StartLine = line;
-            StartColumn = column;
+        public LocationInfo(string path, Uri documentUri, int line, int column) :
+             this(path, documentUri, line, column, null, null) {
         }
 
         public LocationInfo(string path, Uri documentUri, int line, int column, int? endLine, int? endColumn) {

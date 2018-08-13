@@ -55,7 +55,7 @@ namespace TestUtilities.UI {
                             ),
                             new PropertyCondition(
                                 AutomationElement.NameProperty,
-                                "Test List"
+                                "Tests View"
                             )
                         )
                     );

@@ -20,8 +20,8 @@ using Microsoft.DsTools.Core.Services.Shell;
 using Microsoft.PythonTools.Analysis.LanguageServer;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode.Services {
-    public sealed class UIService : IUIService {
+namespace Microsoft.Python.LanguageServer.Services {
+    public sealed class UIService : IUIService, ILogger {
         private readonly JsonRpc _rpc;
         public UIService(JsonRpc rpc) {
             _rpc = rpc;
@@ -59,5 +59,6 @@ namespace Microsoft.PythonTools.VsCode.Services {
 
         public Task SetStatusBarMessage(string message) 
             => _rpc.NotifyWithParameterObjectAsync("window/setStatusBarMessage", message);
+        public void TraceMessage(IFormattable message) => LogMessage(message.ToString(), MessageType.Info);
     }
 }

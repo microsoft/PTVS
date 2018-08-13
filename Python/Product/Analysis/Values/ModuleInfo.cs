@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal void AddUnresolvedModule(string relativeModuleName, bool absoluteImports) {
-            _unresolvedModules.UnionWith(PythonAnalyzer.ResolvePotentialModuleNames(_projectEntry, relativeModuleName, absoluteImports));
+            _unresolvedModules.UnionWith(ModuleResolver.ResolvePotentialModuleNames(_projectEntry, relativeModuleName, absoluteImports));
             _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, true);
         }
 
@@ -127,11 +127,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public IModuleContext InterpreterContext {
-            get {
-                return _context;
-            }
-        }
+        public IModuleContext InterpreterContext => _context;
 
         public ModuleInfo ParentPackage {
             get { return _parentPackage; }
@@ -194,7 +190,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IEnumerable<ModuleReference> ModuleReferences => _referencedModules;
-
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             lock (this) {
                 if (_specialized == null) {
@@ -306,15 +301,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override string ToString() {
-            return "Module " + base.ToString();
-        }
-
-        public override string ShortDescription {
-            get {
-                return "Python module " + Name;
-            }
-        }
+        public override string ToString()  => $"Module {base.ToString()}";
+        public override string ShortDescription => $"Python module {Name}";
 
         public override string Description {
             get {
@@ -338,15 +326,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<LocationInfo> Locations {
-            get {
-                return new[] { new LocationInfo(ProjectEntry.FilePath, ProjectEntry.DocumentUri, 1, 1) };
-            }
-        }
+        public override IEnumerable<LocationInfo> Locations 
+             => new[] { new LocationInfo(ProjectEntry.FilePath, ProjectEntry.DocumentUri, 1, 1) };
 
-        public override IPythonType PythonType {
-            get { return this.ProjectEntry.ProjectState.Types[BuiltinTypeId.Module]; }
-        }
+        public override IPythonType PythonType
+            => ProjectEntry.ProjectState.Types[BuiltinTypeId.Module];
 
         internal override BuiltinTypeId TypeId => BuiltinTypeId.Module;
 
@@ -360,8 +344,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #endregion
-
-
 
         public IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
             var importedValue = Scope.CreateVariable(node, unit, name, addRef);

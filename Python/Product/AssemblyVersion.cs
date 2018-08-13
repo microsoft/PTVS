@@ -31,6 +31,9 @@ class AssemblyVersionInfo {
 #if DEV15
     public const string VSMajorVersion = "15";
     public const string VSName = "2017";
+#elif DEV16
+    public const string VSMajorVersion = "16";
+    public const string VSName = "2019";
 #else
 #error Unrecognized VS Version.
 #endif

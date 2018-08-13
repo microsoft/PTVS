@@ -80,7 +80,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            var walker = new AstAnalysisWalker(interpreter, ast, this, null, null, _members, false, true);
+#if DEBUG
+            var fact = (interpreter as AstPythonInterpreter)?.Factory as AstPythonInterpreterFactory;
+            var filePath = fact?.GetCacheFilePath(fact?.Configuration.InterpreterPath ?? "python.exe");
+            const bool includeLocations = true;
+#else
+            string filePath = null;
+            const bool includeLocations = false;
+#endif
+
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, null, _members, includeLocations, true);
             walker.CreateBuiltinTypes = true;
             walker.Scope.SuppressBuiltinLookup = true;
             return walker;

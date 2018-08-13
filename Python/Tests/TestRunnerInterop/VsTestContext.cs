@@ -213,13 +213,16 @@ namespace TestRunnerInterop {
 
             var rootDir = GetDirectoryAboveContaningFile(Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location), "build.root");
             if (!string.IsNullOrEmpty(rootDir)) {
+                if (Directory.Exists(Path.Combine(rootDir, "TestData"))) {
+                    return rootDir;
+                }
                 candidate = Path.Combine(rootDir, "Python", "Tests");
                 if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
                     return candidate;
                 }
             }
 
-            return null;
+            throw new InvalidOperationException("Cannot locate TestData directory from " + typeof(VsTestContext).Assembly.Location);
         }
 
     }

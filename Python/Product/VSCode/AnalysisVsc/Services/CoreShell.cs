@@ -19,7 +19,7 @@ using Microsoft.DsTools.Core.Diagnostics;
 using Microsoft.DsTools.Core.Services;
 using Microsoft.DsTools.Core.Services.Shell;
 
-namespace Microsoft.PythonTools.VsCode.Services {
+namespace Microsoft.Python.LanguageServer.Services {
     internal sealed class CoreShell : ICoreShell, IDisposable {
         private static CoreShell _instance;
 

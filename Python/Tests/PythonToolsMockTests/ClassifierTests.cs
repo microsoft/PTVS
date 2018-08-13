@@ -112,6 +112,7 @@ abc = True
             // module.
             var code = @"import abc as x
 from os import name_not_in_os
+from datetime import datetime as DATETIME
 
 abc
 x
@@ -119,8 +120,8 @@ os
 name_not_in_os
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
-                helper.CheckAstClassifierSpans("kiki kiki i i i i");
-                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
+                helper.CheckAstClassifierSpans("kiki kiki kikiki i i i i");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<datetime>c<datetime>c<DATETIME>m<x>");
             }
         }
 
@@ -136,7 +137,7 @@ MyClassType = type(mc)
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
-                helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<type>");
+                helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<MyClassType>c<type>");
             }
         }
 

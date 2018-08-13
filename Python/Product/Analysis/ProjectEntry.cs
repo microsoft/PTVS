@@ -17,11 +17,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -40,6 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
+        private TaskCompletionSource<ModuleAnalysis> _analysisTcs;
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
@@ -56,8 +59,10 @@ namespace Microsoft.PythonTools.Analysis {
             DocumentUri = documentUri ?? MakeDocumentUri(filePath);
             FilePath = filePath;
             Cookie = cookie;
+
             MyScope = new ModuleInfo(ModuleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(null, MyScope.Scope);
+
             _buffers = new SortedDictionary<int, DocumentBuffer> { [0] = new DocumentBuffer() };
             if (Cookie is InitialContentCookie c) {
                 _buffers[0].Reset(c.Version, c.Content);
@@ -131,6 +136,37 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        internal Task<ModuleAnalysis> GetAnalysisAsync(int waitingTimeout = -1, CancellationToken cancellationToken = default(CancellationToken)) {
+            Task<ModuleAnalysis> task;
+            lock (this) {
+                task = _analysisTcs.Task;
+            }
+
+            if (task.IsCompleted || waitingTimeout == -1 && !cancellationToken.CanBeCanceled) {
+                return task;
+            }
+
+            var timeoutTask = Task.Delay(waitingTimeout, cancellationToken).ContinueWith(t => {
+                lock (this) {
+                    return Analysis;
+                }
+            }, cancellationToken);
+
+            return Task.WhenAny(timeoutTask, _analysisTcs.Task).Unwrap();
+        }
+
+        internal void SetCompleteAnalysis() {
+            lock (this) {
+                _analysisTcs.TrySetResultOnThreadPool(Analysis);
+            }
+        }
+
+        internal void ResetCompleteAnalysis() {
+            lock (this) {
+                _analysisTcs = new TaskCompletionSource<ModuleAnalysis>();
+            }
+        }
+
         public void SetCurrentParse(PythonAst tree, IAnalysisCookie cookie, bool notify = true) {
             lock (this) {
                 Tree = tree;
@@ -186,6 +222,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsAnalyzed => Analysis != null;
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
+#if DEBUG
+            Debug.Assert(Monitor.IsEntered(this));      
+#endif
             var parse = GetCurrentParse();
             var tree = parse?.Tree;
             var cookie = parse?.Cookie;
@@ -222,17 +261,19 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, MyScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
+            MyScope.Scope.Children = new List<InterpreterScope>();
+            MyScope.Scope.ClearNodeScopes();
+            MyScope.Scope.ClearNodeValues();
+            MyScope.Scope.ClearLinkedVariables();
+            MyScope.Scope.ClearVariables();
+            MyScope.ClearUnresolvedModules();
+            _unit.State.ClearDiagnostics(this);
+
             MyScope.EnsureModuleVariables(_unit.State);
 
             foreach (var value in MyScope.Scope.AllVariables) {
                 value.Value.EnqueueDependents();
             }
-
-            MyScope.Scope.Children = new List<InterpreterScope>();
-            MyScope.Scope.ClearNodeScopes();
-            MyScope.Scope.ClearNodeValues();
-            MyScope.ClearUnresolvedModules();
-            _unit.State.ClearDiagnostics(this);
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit, tree);

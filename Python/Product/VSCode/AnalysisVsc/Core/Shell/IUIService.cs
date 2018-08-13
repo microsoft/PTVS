@@ -6,9 +6,7 @@ using Microsoft.PythonTools.Analysis.LanguageServer;
 
 namespace Microsoft.DsTools.Core.Services.Shell {
     /// <summary>
-    /// Basic shell provides access to services such as 
-    /// composition container, export provider, global VS IDE
-    /// services and so on.
+    /// Service that represents the application user interface.
     /// </summary>
     public interface IUIService {
         /// <summary>

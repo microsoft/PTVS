@@ -19,52 +19,52 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class SentinelModule : IPythonModule, IDisposable {
-        private readonly Thread _thread;
-        private volatile ManualResetEventSlim _event;
+    sealed class SentinelModule : IPythonModule {
+        private readonly AnalysisQueue _scope;
+        private readonly SemaphoreSlim _semaphore;
         private volatile IPythonModule _realModule;
 
         public SentinelModule(string name, bool importing) {
-            _thread = Thread.CurrentThread;
+            _scope = AnalysisQueue.Current;
             Name = name;
-            if (!importing) {
+            if (importing) {
+                _semaphore = new SemaphoreSlim(0, 1000);
+            } else {
                 _realModule = this;
             }
         }
 
-        public IPythonModule WaitForImport(int millisecondsTimeout) {
+        public async Task<IPythonModule> WaitForImportAsync(CancellationToken cancellationToken) {
             var mod = _realModule;
             if (mod != null) {
                 return mod;
             }
-            if (_thread == Thread.CurrentThread) {
+            if (_scope == AnalysisQueue.Current) {
+                // If we're trying to import the same module again from the same analyzer,
+                // there is no point waiting to see if the first import finishes,
+                // so just return the sentinel object immediately.
                 return this;
             }
 
-            var evt = _event;
-            if (evt == null) {
-                evt = new ManualResetEventSlim();
-                evt = Interlocked.CompareExchange(ref _event, evt, null) ?? evt;
+            try {
+                await _semaphore.WaitAsync(cancellationToken);
+                _semaphore.Release();
+            } catch (ObjectDisposedException) {
+                throw new OperationCanceledException();
             }
-
-            if (!evt.Wait(millisecondsTimeout)) {
-                return _realModule;
-            }
-
-            return _realModule ?? this;
+            return _realModule;
         }
 
         public void Complete(IPythonModule module) {
-            _realModule = module;
-            _event?.Set();
-        }
-
-        public void Dispose() {
-            var evt = Interlocked.Exchange(ref _event, null);
-            if (evt != null) {
-                evt.Dispose();
+            if (_realModule == null) {
+                _realModule = module;
+                // Release all the waiters at once (unless we have more
+                // than than 1000 threads trying to import at once, which
+                // should never happen)
+                _semaphore.Release(1000);
             }
         }
 

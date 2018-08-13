@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -56,11 +57,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private bool _isDisposed;
 
-        // Moniker strings allow the task provider to distinguish between
-        // different sources of items for the same file.
-        private const string ParserTaskMoniker = "Parser";
-        internal const string UnresolvedImportMoniker = "UnresolvedImport";
-
         private readonly Connection _connection;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {
@@ -69,7 +65,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _server.OnAnalysisComplete += OnAnalysisComplete;
             _server.OnLogMessage += Server_OnLogMessage;
             _server.OnPublishDiagnostics += OnPublishDiagnostics;
-            _server.OnFileFound += OnFileFound;
             _server._queue.AnalysisComplete += AnalysisQueue_Complete;
             _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -134,7 +129,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
                 case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
                 case AP.FileUpdateRequest.Command: response = await UpdateContent((AP.FileUpdateRequest)request); break;
-                case AP.UnresolvedImportsRequest.Command: response = GetUnresolvedImports((AP.UnresolvedImportsRequest)request); break;
                 case AP.AddImportRequest.Command: response = AddImportRequest((AP.AddImportRequest)request); break;
                 case AP.IsMissingImportRequest.Command: response = IsMissingImport((AP.IsMissingImportRequest)request); break;
                 case AP.AvailableImportsRequest.Command: response = AvailableImports((AP.AvailableImportsRequest)request); break;
@@ -259,14 +253,13 @@ namespace Microsoft.PythonTools.Intellisense {
                             maxDocumentationTextLength = 1024,
                             trimDocumentationText = true,
                             maxDocumentationLines = 100
-                        }
+                        },
+                        analysisUpdates = true,
+                        traceLogging = request.traceLogging,
                     },
                     capabilities = new LS.ClientCapabilities {
                         python = new LS.PythonClientCapabilities {
-                            analysisUpdates = true,
-                            completionsTimeout = 5000,
                             manualFileLoad = !request.analyzeAllFiles,
-                            traceLogging = request.traceLogging,
                             liveLinting = request.liveLinting
                         },
                         textDocument = new LS.TextDocumentClientCapabilities {
@@ -750,7 +743,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.FormatCodeResponse() {
                 version = version,
                 changes = selectedCode.ReplaceByLines(
-                    walker.Target.StartIncludingLeadingWhiteSpace.Line,
+                    walker.Target.StartIncludingLeadingWhiteSpace,
                     body.ToCodeString(ast, request.options),
                     request.newLine
                 ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()
@@ -923,31 +916,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     (constExpr.Value is string || constExpr.Value is AsciiString);
         }
 
-        private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
-            var entry = GetPythonEntry(request.documentUri);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-
-            var bufferVersion = GetPythonBuffer(request.documentUri);
-            if (bufferVersion.Ast == null) {
-                return IncorrectBufferId(request.documentUri);
-            }
-
-            var walker = new ImportStatementWalker(
-                bufferVersion.Ast,
-                entry,
-                Analyzer
-            );
-
-            bufferVersion.Ast.Walk(walker);
-
-            return new AP.UnresolvedImportsResponse() {
-                unresolved = walker.Imports.ToArray(),
-                version = bufferVersion.Version
-            };
-        }
-
         private IPythonProjectEntry GetPythonEntry(Uri documentUri) {
             if (documentUri == null) {
                 return null;
@@ -977,98 +945,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private struct VersionedAst {
             public PythonAst Ast;
             public int Version;
-        }
-
-        class ImportStatementWalker : PythonWalker {
-            public readonly List<AP.UnresolvedImport> Imports = new List<AP.UnresolvedImport>();
-
-            readonly IPythonProjectEntry _entry;
-            readonly PythonAnalyzer _analyzer;
-            private readonly PythonAst _ast;
-
-            public ImportStatementWalker(PythonAst ast, IPythonProjectEntry entry, PythonAnalyzer analyzer) {
-                _ast = ast;
-                _entry = entry;
-                _analyzer = analyzer;
-            }
-
-            public override bool Walk(FromImportStatement node) {
-                var name = node.Root.MakeString();
-                if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                    Imports.Add(MakeUnresolvedImport(name, node.Root));
-                }
-                return base.Walk(node);
-            }
-
-            private AP.UnresolvedImport MakeUnresolvedImport(string name, Node spanNode) {
-                var span = spanNode.GetSpan(_ast);
-                return new AP.UnresolvedImport() {
-                    name = name,
-                    startLine = span.Start.Line,
-                    startColumn = span.Start.Column,
-                    endLine = span.End.Line,
-                    endColumn = span.End.Column,
-                };
-            }
-
-            public override bool Walk(ImportStatement node) {
-                foreach (var nameNode in node.Names) {
-                    var name = nameNode.MakeString();
-                    if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                        Imports.Add(MakeUnresolvedImport(name, nameNode));
-                    }
-                }
-                return base.Walk(node);
-            }
-
-            private static bool IsImportError(Expression expr) {
-                var name = expr as NameExpression;
-                if (name != null) {
-                    return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError";
-                }
-
-                var tuple = expr as TupleExpression;
-                if (tuple != null) {
-                    return tuple.Items.Any(IsImportError);
-                }
-
-                return false;
-            }
-
-            private static bool ShouldWalkNormally(TryStatement node) {
-                if (node.Handlers == null) {
-                    return true;
-                }
-
-                foreach (var handler in node.Handlers) {
-                    if (handler.Test == null || IsImportError(handler.Test)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            public override bool Walk(TryStatement node) {
-                if (ShouldWalkNormally(node)) {
-                    return base.Walk(node);
-                }
-
-                // Don't walk 'try' body, but walk everything else
-                if (node.Handlers != null) {
-                    foreach (var handler in node.Handlers) {
-                        handler.Walk(this);
-                    }
-                }
-                if (node.Else != null) {
-                    node.Else.Walk(this);
-                }
-                if (node.Finally != null) {
-                    node.Finally.Walk(this);
-                }
-
-                return false;
-            }
         }
 
         private Response GetOutliningRegions(AP.OutliningRegionsRequest request) {
@@ -1272,7 +1148,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.AnalysisReference {
                 documentUri = r.uri,
-                file = _server.GetEntry(r.uri, throwIfMissing: false)?.FilePath,
+                file = (_server.GetEntry(r.uri, throwIfMissing: false)?.FilePath) ?? r.uri?.LocalPath,
                 startLine = range.Start.Line,
                 startColumn = range.Start.Column,
                 endLine = range.End.Line,
@@ -1671,7 +1547,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
                     textDocument = new LS.VersionedTextDocumentIdentifier {
                         uri = request.documentUri,
-                        version = version
+                        version = version,
+                        _fromVersion = Math.Max(version - 1, 0)
                     },
                     contentChanges = changes.ToArray()
                 });
@@ -1701,9 +1578,11 @@ namespace Microsoft.PythonTools.Intellisense {
             Project.Limits = new AnalysisLimits(Options.analysisLimits);
             _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
             _server._parseQueue.TaskCommentMap = Options.commentTokens;
+            _server.Analyzer.SetTypeStubPaths(Options.typeStubPaths);
 
             return new Response();
         }
+
 
         public AP.AnalysisOptions Options { get; set; }
 
@@ -1762,9 +1641,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__doc__" ||
                 nameExpr.Name == "__name__";
         }
-
-        internal Task WaitForCompleteAnalysis() => _server.WaitForCompleteAnalysisAsync();
-
+        
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
 
         internal IPythonInterpreter Interpreter => Project?.Interpreter;
@@ -1790,7 +1667,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// This is for public consumption only and should not be used within
         /// <see cref="OutOfProcProjectAnalyzer"/>.
         /// </remarks>
-        public PythonAnalyzer Project => _server._analyzer;
+        public PythonAnalyzer Project => _server.Analyzer;
 
         private void OnPublishDiagnostics(object sender, LS.PublishDiagnosticsEventArgs e) {
             _connection.SendEventAsync(
@@ -1809,14 +1686,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     version = e.version
                 }
             ).DoNotWait();
-        }
-
-        private void OnFileFound(object sender, LS.FileFoundEventArgs e) {
-            // Send a notification for this file
-            _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = e.uri,
-                filename = _server.GetEntry(e.uri, throwIfMissing: false)?.FilePath
-            }).DoNotWait();
         }
 
 

@@ -17,6 +17,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis {
     class Deque<T> : IEnumerable, ICollection {
@@ -26,12 +29,28 @@ namespace Microsoft.PythonTools.Analysis {
         private static IEqualityComparer<T> _comparer = EqualityComparer<T>.Default;
 
         public Deque() {
+#if DEBUG
+            _scope = AnalysisQueue.Current;
+#endif
             Clear();
         }
+
+#if DEBUG
+        private readonly AnalysisQueue _scope;
+        private void AssertScope() {
+            Debug.Assert(_scope == AnalysisQueue.Current);
+        }
+#else
+        [Conditional("DEBUG")]
+        private void AssertScope() { }
+#endif
+
 
         #region core deque APIs
 
         public void Append(T x) {
+            AssertScope();
+
             _version++;
 
             if (_itemCnt == _data.Length) {
@@ -46,6 +65,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void AppendLeft(T x) {
+            AssertScope();
+
             _version++;
 
             if (_itemCnt == _data.Length) {
@@ -62,6 +83,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Clear() {
+            AssertScope();
+
             _version++;
 
             _head = _tail = 0;
@@ -70,6 +93,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T Pop() {
+            AssertScope();
+
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
             }
@@ -88,6 +113,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public T PopLeft() {
+            AssertScope();
+
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
             }
@@ -106,6 +133,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Remove(T value) {
+            AssertScope();
 
             int found = -1;
             int startVersion = _version;

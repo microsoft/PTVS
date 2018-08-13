@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 // Based on https://github.com/Microsoft/vscode-python/blob/master/src/client/common/markdown/restTextConverter.ts
 
@@ -164,7 +165,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return true; // Drop generated content.
             }
             var trimmed = line.Trim();
-            if (trimmed.StartsWith("..") && trimmed.IndexOf("::", StringComparison.Ordinal) > 0) {
+            if (trimmed.StartsWithOrdinal("..") && trimmed.IndexOf("::", StringComparison.Ordinal) > 0) {
                 // Ignore lines likes .. sectionauthor:: John Doe.
                 return true;
             }
@@ -187,12 +188,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         private bool HandleSectionHeader(string[] lines, int i) {
             var line = lines[i];
-            if (i < lines.Length - 1 && (lines[i + 1].StartsWith("==="))) {
+            if (i < lines.Length - 1 && (lines[i + 1].StartsWithOrdinal("==="))) {
                 // Section title -> heading level 3.
                 _md.Add($"### {Cleanup(line)}");
                 return true;
             }
-            if (i < lines.Length - 1 && (lines[i + 1].StartsWith("---"))) {
+            if (i < lines.Length - 1 && (lines[i + 1].StartsWithOrdinal("---"))) {
                 // Subsection title -> heading level 4.
                 _md.Add($"#### {Cleanup(line)}");
                 return true;
@@ -206,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             // Literal blocks begin with `::`. Such as sequence like
             // '... as shown below::' that is followed by a preformatted text.
-            if (line.Length > 2 && !line.StartsWith("..")) {
+            if (line.Length > 2 && !line.StartsWithOrdinal("..")) {
                 // Ignore lines likes .. autosummary:: John Doe.
                 // Trim trailing : so :: turns into :.
                 _md.Add(line.Substring(0, line.Length - 1));

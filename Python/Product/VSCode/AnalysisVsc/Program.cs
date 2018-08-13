@@ -17,14 +17,12 @@
 // #define WAIT_FOR_DEBUGGER
 
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.LanguageServer;
-using Microsoft.PythonTools.VsCode.Services;
+using Microsoft.Python.LanguageServer.Services;
+using Microsoft.PythonTools.Analysis.Infrastructure;
+using Newtonsoft.Json;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode {
+namespace Microsoft.Python.LanguageServer.Server {
     internal static class Program {
         public static void Main(string[] args) {
             CheckDebugMode();
@@ -33,17 +31,18 @@ namespace Microsoft.PythonTools.VsCode {
 
                 using (var cin = Console.OpenStandardInput())
                 using (var cout = Console.OpenStandardOutput())
-                using (var server = new LanguageServer())
+                using (var server = new Implementation.LanguageServer())
                 using (var rpc = new JsonRpc(cout, cin, server)) {
-                    var ui = new UIService(rpc);
-                    rpc.SynchronizationContext = new SingleThreadSynchronizationContext(ui);
+                    rpc.SynchronizationContext = new SingleThreadSynchronizationContext();
+                    rpc.JsonSerializer.Converters.Add(new UriConverter());
 
-                    services.AddService(ui);
+                    services.AddService(new UIService(rpc));
+                    services.AddService(new ProgressService(rpc));
                     services.AddService(new TelemetryService(rpc));
                     var token = server.Start(services, rpc);
                     rpc.StartListening();
 
-                    // Wait for the "shutdown" request.
+                    // Wait for the "exit" request, it will terminate the process.
                     token.WaitHandle.WaitOne();
                 }
             }
@@ -60,43 +59,38 @@ namespace Microsoft.PythonTools.VsCode {
             }
 #endif
         }
+    }
 
-        private sealed class SingleThreadSynchronizationContext : SynchronizationContext, IDisposable {
-            private readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _queue = new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
-            private readonly UIService _ui;
-            private readonly ManualResetEventSlim _workAvailable = new ManualResetEventSlim(false);
-            private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-
-            public SingleThreadSynchronizationContext(UIService ui) {
-                _ui = ui;
-                Task.Run(() => QueueWorker());
+    sealed class UriConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) => objectType == typeof(Uri);
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            if (reader.TokenType == JsonToken.String) {
+                var str = (string)reader.Value;
+                return new Uri(str.Replace("%3A", ":"));
             }
 
-            public override void Post(SendOrPostCallback d, object state) {
-                _queue.Enqueue(new Tuple<SendOrPostCallback, object>(d, state));
-                _workAvailable.Set();
+            if (reader.TokenType == JsonToken.Null) {
+                return null;
             }
 
-            public void Dispose() {
-                _cts.Cancel();
+            throw new InvalidOperationException($"UriConverter: unsupported token type {reader.TokenType}");
+        }
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            if (null == value) {
+                writer.WriteNull();
+                return;
             }
 
-            private void QueueWorker() {
-                while(true) {
-                    _workAvailable.Wait(_cts.Token);
-                    if(_cts.IsCancellationRequested) {
-                        break;
-                    }
-                    while(_queue.TryDequeue(out var t)) {
-                        try {
-                            t.Item1(t.Item2);
-                        } catch(Exception ex) {
-                            _ui.LogMessage($"Exception processing request: {ex.Message}", MessageType.Error);
-                        }
-                    }
-                    _workAvailable.Reset();
-                }
+            if (value is Uri) {
+                var uri = ((Uri)value);
+                var scheme = uri.Scheme;
+                var str = uri.ToString();
+                str = uri.Scheme + "://" + str.Substring(scheme.Length + 3).Replace(":", "%3A").Replace('\\', '/');
+                writer.WriteValue(str);
+                return;
             }
+
+            throw new InvalidOperationException($"UriConverter: unsupported value type {value.GetType()}");
         }
     }
 }
