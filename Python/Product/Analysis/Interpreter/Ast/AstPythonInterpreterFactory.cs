@@ -566,6 +566,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 module = ImportFromCache(name, context);
             }
 
+            // Also search for type stub packages if enabled and we are not a blacklisted module
+            if (module != null && context?.TypeStubPaths != null && module.Name != "typing") {
+                var tsModule = await ImportFromTypeStubsAsync(module.Name, context, cancellationToken);
+                if (tsModule != null) {
+                    if (context.MergeTypeStubPackages) {
+                        module = AstPythonMultipleMembers.CombineAs<IPythonModule>(module, tsModule);
+                    } else {
+                        module = tsModule;
+                    }
+                }
+            }
+
             if (modules != null) {
                 if (sentinalValue == null) {
                     _log?.Log(TraceLevel.Error, "RetryImport", name, "sentinalValue==null");
@@ -586,18 +598,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return TryImportModuleResult.NeedRetry;
                 }
                 sentinalValue.Complete(module);
-            }
-
-            // Also search for type stub packages if enabled and we are not a blacklisted module
-            if (module != null && context?.TypeStubPaths != null && module.Name != "typing") {
-                var tsModule = await ImportFromTypeStubsAsync(module.Name, context, cancellationToken);
-                if (tsModule != null) {
-                    if (context.MergeTypeStubPackages) {
-                        module = AstPythonMultipleMembers.CombineAs<IPythonModule>(module, tsModule);
-                    } else {
-                        module = tsModule;
-                    }
-                }
             }
 
             return new TryImportModuleResult(module);
