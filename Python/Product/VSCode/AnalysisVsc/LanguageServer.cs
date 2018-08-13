@@ -215,9 +215,10 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #region TextDocument
         [JsonRpcMethod("textDocument/didOpen")]
-        public Task DidOpenTextDocument(JToken token) {
+        public async Task DidOpenTextDocument(JToken token) {
             _idleTimeTracker.NotifyUserActivity();
-            return _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
+            await _server.CompleteInitialization;
+            await _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
         }
 
         [JsonRpcMethod("textDocument/didChange")]
@@ -399,8 +400,6 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             => _server.LoadExtension(ToObject<PythonAnalysisExtensionParams>(token), cancellationToken);
 
         #endregion
-
-        internal Task CompleteInitialization() => _server.CompleteInitialization;
 
         private T ToObject<T>(JToken token) => token.ToObject<T>(_rpc.JsonSerializer);
 
