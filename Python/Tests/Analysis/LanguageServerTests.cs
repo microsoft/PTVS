@@ -381,6 +381,15 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInWithStatementDerivedClass() {
+            using (var s = await CreateServer()) {
+                var u = await AddModule(s, "with open(x) as fs:\n  fs. ");
+                await AssertCompletion(s, u, new[] { "read", "write" }, Enumerable.Empty<string>(), new SourceLocation(2, 6));
+                await s.UnloadFileAsync(u);
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInImport() {
             var s = await CreateServer();
             var u = await AddModule(s, "import unittest.case as C, unittest\nfrom unittest.case import TestCase as TC, TestCase");
