@@ -123,5 +123,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override bool Equals(object obj) {
+            if (obj is BuiltinNamespace<MemberContainerType> bn && GetType() == bn.GetType()) {
+                if (_type != null) {
+                    return _type.Equals(bn._type);
+                }
+                return bn._type == null;
+            }
+            return false;
+        }
+
+        public override int GetHashCode() => new { hc1 = GetType().GetHashCode(), hc2 = _type?.GetHashCode() }.GetHashCode();
     }
 }

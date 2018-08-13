@@ -594,7 +594,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal virtual bool IsAssigned => _dependencies.Any(d => d.Value._assignments.Count != 0);
+        internal virtual bool IsAlwaysAssigned { get; set; }
+
+        internal virtual bool IsAssigned => IsAlwaysAssigned || _dependencies.Any(d => d.Value._assignments.Count != 0);
 
 #if VARDEF_STATS
         internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();

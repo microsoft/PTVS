@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public const int UnknownDocument = 1;
         public const int UnsupportedDocumentType = 2;
         public const int MismatchedVersion = 3;
+        public const int UnknownExtension = 4;
 
         public int Code => (int)Data["Code"];
 
@@ -76,6 +77,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     public sealed class TelemetryEventArgs : EventArgs {
         public object value { get; set; }
+    }
+
+    public sealed class CommandEventArgs: EventArgs {
+        public string command;
+        public object[] arguments;
     }
 
     [Serializable]
@@ -334,6 +340,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? _version;
     }
 
+    [Serializable]
+    public class PythonAnalysisExtensionParams {
+        public string assembly;
+        public string typeName;
+        public Dictionary<string, object> properties;
+    }
+
+    [Serializable]
+    public class ExtensionCommandParams {
+        public string extensionName;
+        public string command;
+        public Dictionary<string, object> properties;
+    }
+
+    [Serializable]
+    public class ExtensionCommandResult {
+        public IReadOnlyDictionary<string, object> properties;
+    }
+
     public sealed class FileFoundEventArgs : EventArgs {
         public Uri uri { get; set; }
     }
@@ -343,9 +368,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int version { get; set; }
     }
 
+    public sealed class AnalysisQueuedEventArgs : EventArgs {
+        public Uri uri { get; set; }
+    }
+
     public sealed class AnalysisCompleteEventArgs : EventArgs {
         public Uri uri { get; set; }
         public int version { get; set; }
     }
-
 }

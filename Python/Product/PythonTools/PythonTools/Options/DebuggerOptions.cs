@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class DebuggerOptions {
@@ -32,6 +33,11 @@ namespace Microsoft.PythonTools.Options {
         internal DebuggerOptions(PythonToolsService service) {
             _service = service;
             Load();
+            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
+        }
+
+        private void OnUseVsCodeDebuggerChanged(object sender, EventArgs e) {
+            UseLegacyDebugger = !EO.GetUseVsCodeDebugger();
         }
 
         public void Load() {
@@ -41,6 +47,7 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = _service.LoadBool(TeeStandardOutSetting, Category) ?? true;
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
+            UseLegacyDebugger = !EO.GetUseVsCodeDebugger();
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -51,6 +58,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(TeeStandardOutSetting, Category, TeeStandardOutput);
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
+            EO.UseVsCodeDebugger = !UseLegacyDebugger;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -61,6 +69,7 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = true;
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
+            UseLegacyDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -119,6 +128,14 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         /// <remarks>New in 1.1</remarks>
         public bool DebugStdLib {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// True to use the legacy debugger.
+        /// </summary>
+        public bool UseLegacyDebugger {
             get;
             set;
         }

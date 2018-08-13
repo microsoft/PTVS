@@ -482,20 +482,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool? failed;
         }
 
-        public sealed class UnresolvedImportsRequest : Request<UnresolvedImportsResponse> {
-            public const string Command = "unresolvedImports";
-
-            public override string command => Command;
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-        }
-
-        public sealed class UnresolvedImportsResponse : Response {
-            public int version = -1;
-            public UnresolvedImport[] unresolved;
-        }
-
         public sealed class UnresolvedImport {
             public string name;
             public int startLine, endLine, startColumn, endColumn;
@@ -635,20 +621,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public class EnqueueFileResponse : Response {
             [JsonConverter(typeof(UriJsonConverter))]
             public Uri documentUri;
-        }
-
-        public sealed class ChildFileAnalyzed : Event {
-            public const string Name = "childFileAnalyzed";
-
-            /// <summary>
-            /// The filename which got added
-            /// </summary>
-            public string filename;
-
-            [JsonConverter(typeof(UriJsonConverter))]
-            public Uri documentUri;
-
-            public override string name => Name;
         }
 
         public class GetModulesRequest : Request<CompletionsResponse> {
@@ -845,6 +817,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public Dictionary<string, LS.DiagnosticSeverity> commentTokens;
             public Dictionary<string, int> analysisLimits;
             public LS.MessageType? traceLevel;
+            public string[] typeStubPaths;
         }
 
 

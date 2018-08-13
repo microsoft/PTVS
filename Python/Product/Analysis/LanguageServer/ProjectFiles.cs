@@ -24,17 +24,36 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    sealed class ProjectFiles {
+    internal sealed class ProjectFiles : IDisposable {
         private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
+        private bool _disposed;
 
         public void Clear() => _projectFiles.Clear();
-        public IProjectEntry GetOrAddEntry(Uri documentUri, IProjectEntry entry) => _projectFiles.GetOrAdd(documentUri, entry);
-        public IProjectEntry RemoveEntry(Uri documentUri) => _projectFiles.TryRemove(documentUri, out var entry) ? entry : null;
-        public IEnumerable<IProjectEntry> All => _projectFiles.Values;
-        public IEnumerable<string> GetLoadedFiles() => _projectFiles.Keys.Select(k => k.AbsoluteUri);
+        public IProjectEntry GetOrAddEntry(Uri documentUri, IProjectEntry entry) {
+            ThrowIfDisposed();
+            return _projectFiles.GetOrAdd(documentUri, entry);
+        }
+
+        public IProjectEntry RemoveEntry(Uri documentUri) {
+            ThrowIfDisposed();
+            return _projectFiles.TryRemove(documentUri, out var entry) ? entry : null;
+        }
+        public IEnumerable<IProjectEntry> All {
+            get {
+                ThrowIfDisposed();
+                return _projectFiles.Values;
+            }
+        }
+
+        public IEnumerable<string> GetLoadedFiles() {
+            ThrowIfDisposed();
+            return _projectFiles.Keys.Select(k => k.AbsoluteUri);
+        }
 
         public IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
         public IProjectEntry GetEntry(Uri documentUri, bool throwIfMissing = true) {
+            ThrowIfDisposed();
+
             IProjectEntry entry = null;
             if ((documentUri == null || !_projectFiles.TryGetValue(documentUri, out entry)) && throwIfMissing) {
                 throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
@@ -43,6 +62,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public void GetAnalysis(TextDocumentIdentifier document, Position position, int? expectedVersion, out ProjectEntry entry, out PythonAst tree) {
+            ThrowIfDisposed();
+
             entry = GetEntry(document) as ProjectEntry;
             if (entry == null) {
                 throw new LanguageServerException(LanguageServerException.UnsupportedDocumentType, "unsupported document");
@@ -58,7 +79,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
+        public void Dispose() {
+            _disposed = true;
+        }
+
         internal int GetPart(Uri documentUri) {
+            ThrowIfDisposed();
+
             var f = documentUri.Fragment;
             int i;
             if (string.IsNullOrEmpty(f) ||
@@ -67,6 +94,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 i = 0;
             }
             return i;
+        }
+        private void ThrowIfDisposed() {
+            if (_disposed) {
+                throw new ObjectDisposedException(nameof(ProjectFiles));
+            }
         }
     }
 }

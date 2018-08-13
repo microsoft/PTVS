@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Python-Language-Server$os$</id>
+    <version>$version$</version>
+    <title>Python Language Server</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <licenseUrl>https://github.com/Microsoft/vscode-python/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Microsoft/vscode-python</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Python Language Server</description>
+    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <copyright>Copyright (c) 2018</copyright>
+    <tags>Python;VS Code</tags>
+  </metadata>
+  <files>
+    <file src="**/*" exclude="nuget/*;*.pdb;Python-Language-Server.nuspec" />
+</files>
+</package>

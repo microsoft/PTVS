@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
@@ -41,9 +40,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then unloads it, ensuring that the solution is created with a single project.
         /// </summary>
-        public void DebugPythonProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 StartHelloWorldAndBreak(app);
 
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
@@ -54,9 +54,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads a project with the startup file in a subdirectory, ensuring that syspath is correct when debugging.
         /// </summary>
-        public void DebugPythonProjectSubFolderStartupFileSysPath(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonProjectSubFolderStartupFileSysPath(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var sln = app.CopyProjectForTest(@"TestData\SysPath.sln");
                 var project = app.OpenProject(sln);
 
@@ -77,9 +78,10 @@ namespace DebuggerUITests {
         /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
         /// this test may also fail.
         /// </summary>
-        public void DebugPythonProjectWithAndWithoutClearingPythonPath(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonProjectWithAndWithoutClearingPythonPath(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var sysPathSln = app.CopyProjectForTest(@"TestData\SysPath.sln");
                 var helloWorldSln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
                 var testDataPath = Path.Combine(PathUtils.GetParent(helloWorldSln), "HelloWorld").Replace("\\", "\\\\");
@@ -108,17 +110,23 @@ namespace DebuggerUITests {
         /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
-        public void DebugPythonCustomInterpreter(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonCustomInterpreter(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
-                var interpreter = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-                interpreter.AssertInstalled();
-
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
                 var project = app.OpenProject(sln, "Program.py");
-                var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
+                var interpreterFolder = PathUtils.GetParent(sln);
+                var interpreterPath = Path.Combine(interpreterFolder, "Interpreter.exe");
 
-                File.Copy(interpreter.InterpreterPath, interpreterPath, true);
+                var defaultInterpreter = app.OptionsService.DefaultInterpreter;
+                File.Copy(defaultInterpreter.Configuration.InterpreterPath, interpreterPath, true);
+                if (defaultInterpreter.Configuration.Version >= new Version(3, 0)) {
+                    foreach (var sourceDll in FileUtils.EnumerateFiles(defaultInterpreter.Configuration.PrefixPath, "python*.dll", recurse: false)) {
+                        var targetDll = Path.Combine(interpreterFolder, Path.GetFileName(sourceDll));
+                        File.Copy(sourceDll, targetDll, true);
+                    }
+                }
 
                 app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 1);
                 app.Dte.ExecuteCommand("Debug.Start");
@@ -136,9 +144,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Tests using a custom interpreter path that doesn't exist
         /// </summary>
-        public void DebugPythonCustomInterpreterMissing(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonCustomInterpreterMissing(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
                 var project = app.OpenProject(sln, "Program.py");
                 var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
@@ -154,9 +163,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void PendingBreakPointLocation(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void PendingBreakPointLocation(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var sln = app.CopyProjectForTest(@"TestData\DebuggerProject.sln");
                 var project = app.OpenProject(sln, "BreakpointInfo.py");
                 var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
@@ -182,9 +192,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void BoundBreakpoint(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void BoundBreakpoint(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "BreakpointInfo.py", 2);
 
                 var pendingBp = (Breakpoint3)app.Dte.Debugger.Breakpoints.Item(1);
@@ -214,9 +225,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void Step(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void Step(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "SteppingTest.py", 1);
                 app.Dte.Debugger.StepOver(true);
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -229,9 +241,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void ShowCallStackOnCodeMap(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void ShowCallStackOnCodeMap(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
 
                 app.Dte.ExecuteCommand("Debug.ShowCallStackonCodeMap");
@@ -288,9 +301,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void Step3(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void Step3(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
                 app.Dte.Debugger.StepOut(true);
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -303,9 +317,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void Step5(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void Step5(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "SteppingTest5.py", 5);
                 app.Dte.Debugger.StepInto(true);
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -318,7 +333,7 @@ namespace DebuggerUITests {
             }
         }
 
-        public void SetNextLine(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void SetNextLine(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             if (useVsCodeDebugger) {
                 // https://github.com/Microsoft/ptvsd/issues/18
                 // This is not implemented in the experimental debugger
@@ -326,7 +341,8 @@ namespace DebuggerUITests {
                 return;
             }
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = OpenDebuggerProjectAndBreak(app, "SetNextLine.py", 7);
 
                 var doc = app.Dte.Documents.Item("SetNextLine.py");
@@ -386,9 +402,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then terminates the process while we're at a breakpoint.
         /// </summary>
-        public void TerminateProcess(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void TerminateProcess(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 StartHelloWorldAndBreak(app);
 
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
@@ -403,9 +420,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and makes sure we get the correct module.
         /// </summary>
-        public void EnumModules(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void EnumModules(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 StartHelloWorldAndBreak(app);
 
                 var modules = ((Process3)app.Dte.Debugger.CurrentProcess).Modules;
@@ -423,9 +441,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void MainThread(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void MainThread(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 StartHelloWorldAndBreak(app);
 
                 var thread = ((Thread2)app.Dte.Debugger.CurrentThread);
@@ -441,9 +460,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void ExpressionEvaluation(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void ExpressionEvaluation(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 OpenDebuggerProject(app, "Program.py");
 
                 app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 14);
@@ -523,7 +543,7 @@ namespace DebuggerUITests {
             }
         }
 
-        public void SimpleException(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void SimpleException(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             if (useVsCodeDebugger) {
                 // https://github.com/Microsoft/ptvsd/issues/312
                 // https://github.com/Microsoft/ptvsd/issues/194
@@ -531,20 +551,22 @@ namespace DebuggerUITests {
                 return;
             }
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 ExceptionTest(app, "SimpleException.py", "Exception Thrown", "Exception", "Exception", 3);
             }
         }
 
-        public void SimpleException2(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void SimpleException2(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 string exceptionDescription = useVsCodeDebugger ? "ValueError('bad value',)" : "ValueError: bad value";
                 ExceptionTest(app, "SimpleException2.py", "Exception Thrown", exceptionDescription, "ValueError", 3);
             }
         }
 
-        public void SimpleExceptionUnhandled(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void SimpleExceptionUnhandled(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             if (useVsCodeDebugger) {
                 // This should be done as part of just my code and the fix for hiding debugger
                 // https://github.com/Microsoft/ptvsd/issues/194
@@ -552,15 +574,17 @@ namespace DebuggerUITests {
                 Assert.Inconclusive();
                 return;
             }
+            using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonDebuggingGeneralOptionsSetter(app.Dte, waitOnAbnormalExit: false)) {
                 ExceptionTest(app, "SimpleExceptionUnhandled.py", "Exception User-Unhandled", "ValueError: bad value", "ValueError", 2);
             }
         }
 
         // https://github.com/Microsoft/PTVS/issues/275
-        public void ExceptionInImportLibNotReported(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void ExceptionInImportLibNotReported(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger))
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger))
             using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProjectAndBreak(app, "ImportLibException.py", 2);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
@@ -568,9 +592,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void Breakpoints(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void Breakpoints(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 OpenDebuggerProjectAndBreak(app, "BreakpointTest2.py", 3);
                 var debug3 = (Debugger3)app.Dte.Debugger;
                 Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -584,9 +609,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void BreakpointsDisable(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void BreakpointsDisable(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
                 var debug3 = (Debugger3)app.Dte.Debugger;
                 Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -606,9 +632,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void BreakpointsDisableReenable(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void BreakpointsDisableReenable(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var debug3 = (Debugger3)app.Dte.Debugger;
                 OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
                 Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -664,10 +691,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure the presence of errors causes F5 to prevent running w/o a confirmation.
         /// </summary>
-        public void LaunchWithErrorsDontRun(PythonVisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void LaunchWithErrorsDontRun(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) 
-            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, promptBeforeRunningWithBuildErrorSetting: true)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger, promptBeforeRunningWithBuildErrorSetting: true)) {
                 var sln = app.CopyProjectForTest(@"TestData\ErrorProject.sln");
                 var project = app.OpenProject(sln);
                 var projectDir = PathUtils.GetParent(project.FullName);
@@ -697,9 +724,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debugging, with script but no project.
         /// </summary>
-        public void StartWithDebuggingNoProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithDebuggingNoProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
                 app.DeleteAllBreakPoints();
@@ -719,9 +747,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script but no project.
         /// </summary>
-        public void StartWithoutDebuggingNoProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithoutDebuggingNoProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var tempFolder = TestData.GetTempPath();
                 string scriptFilePath = Path.Combine(tempFolder, "CreateFile1.py");
                 string resultFilePath = Path.Combine(tempFolder, "File1.txt");
@@ -740,9 +769,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debugging, with script not in project.
         /// </summary>
-        public void StartWithDebuggingNotInProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithDebuggingNotInProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
                 OpenDebuggerProject(app);
@@ -761,9 +791,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script not in project.
         /// </summary>
-        public void StartWithoutDebuggingNotInProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithoutDebuggingNotInProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var tempFolder = TestData.GetTempPath();
                 string scriptFilePath = Path.Combine(tempFolder, "CreateFile2.py");
                 string resultFilePath = Path.Combine(tempFolder, "File2.txt");
@@ -782,9 +813,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debuggging, with script in project.
         /// </summary>
-        public void StartWithDebuggingInProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithDebuggingInProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var proj = OpenDebuggerProject(app);
                 var projDir = PathUtils.GetParent(proj.FullName);
                 var scriptFilePath = Path.Combine(projDir, "Program.py");
@@ -803,9 +835,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debuggging, with script in subfolder project.
         /// </summary>
-        public void StartWithDebuggingSubfolderInProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithDebuggingSubfolderInProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var proj = OpenDebuggerProject(app);
                 var projDir = PathUtils.GetParent(proj.FullName);
                 var scriptFilePath = Path.Combine(projDir, "Sub", "paths.py");
@@ -832,9 +865,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debuggging, with script in project.
         /// </summary>
-        public void StartWithoutDebuggingInProject(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithoutDebuggingInProject(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var proj = OpenDebuggerProject(app);
                 var projDir = PathUtils.GetParent(proj.FullName);
                 var scriptFilePath = Path.Combine(projDir, "CreateFile3.py");
@@ -851,9 +885,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debugging, no script.
         /// </summary>
-        public void StartWithDebuggingNoScript(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithDebuggingNoScript(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 try {
                     app.ExecuteCommand("Python.StartWithDebugging");
                 } catch (COMException e) {
@@ -866,9 +901,10 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, no script.
         /// </summary>
-        public void StartWithoutDebuggingNoScript(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void StartWithoutDebuggingNoScript(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 try {
                     app.ExecuteCommand("Python.StartWithoutDebugging");
                 } catch (COMException e) {
@@ -878,9 +914,10 @@ namespace DebuggerUITests {
             }
         }
 
-        public void WebProjectLauncherNoStartupFile(VisualStudioApp app, bool useVsCodeDebugger, DotNotWaitOnNormalExit optionSetter) {
+        public void WebProjectLauncherNoStartupFile(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (new PythonExperimentalGeneralOptionsSetter(pyService, useVsCodeDebugger: useVsCodeDebugger)) {
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.EmptyWebProjectTemplate,
@@ -918,7 +955,7 @@ namespace DebuggerUITests {
             Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
-        private static void ExceptionTest(VisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
+        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
             var debug3 = (Debugger3)app.Dte.Debugger;
             using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProject(app, filename);
@@ -999,6 +1036,29 @@ namespace DebuggerUITests {
             }
 
             Assert.AreEqual(mode, app.Dte.Debugger.CurrentMode);
+        }
+
+        class EmptyDisposable : IDisposable {
+            public void Dispose() {
+            }
+        }
+
+        private static IDisposable SelectDefaultInterpreter(PythonVisualStudioApp app, string pythonVersion) {
+            if (string.IsNullOrEmpty(pythonVersion)) {
+                // Test wants to use the existing global default
+                return new EmptyDisposable();
+            }
+
+            return app.SelectDefaultInterpreter(FindInterpreter(pythonVersion));
+        }
+
+        private static PythonVersion FindInterpreter(string pythonVersion) {
+            var interpreter = PythonPaths.GetVersionsByName(pythonVersion).FirstOrDefault();
+            if (interpreter == null) {
+                Assert.Inconclusive($"Interpreter '{pythonVersion}' not installed.");
+            }
+
+            return interpreter;
         }
         #endregion
 

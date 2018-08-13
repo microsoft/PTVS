@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -25,21 +26,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized ClassInfo for sequence types.
     /// </summary>
     abstract class SequenceBuiltinClassInfo : BuiltinClassInfo {
-        protected readonly IAnalysisSet _indexTypes;
+        protected readonly IAnalysisSet[] _indexTypes;
 
         public SequenceBuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {
             var seqType = classObj as IPythonSequenceType;
             if (seqType != null && seqType.IndexTypes != null) {
-                _indexTypes = projectState.GetAnalysisSetFromObjects(seqType.IndexTypes).GetInstanceType();
+                _indexTypes = seqType.IndexTypes.Select(projectState.GetAnalysisValueFromObjects).Select(AnalysisValueSetExtensions.GetInstanceType).ToArray();
             } else {
-                _indexTypes = AnalysisSet.Empty;
+                _indexTypes = Array.Empty<IAnalysisSet>();
             }
         }
 
-        internal IAnalysisSet IndexTypes {
-            get { return _indexTypes; }
-        }
+        internal IReadOnlyList<IAnalysisSet> IndexTypes => _indexTypes;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
@@ -51,8 +50,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 List<IAnalysisSet> seqTypes = new List<IAnalysisSet>();
                 foreach (var type in args[0]) {
-                    SequenceInfo seqInfo = type as SequenceInfo;
-                    if (seqInfo != null) {
+                    if (type is SequenceInfo seqInfo) {
                         for (int i = 0; i < seqInfo.IndexTypes.Length; i++) {
                             if (seqTypes.Count == i) {
                                 seqTypes.Add(seqInfo.IndexTypes[i].Types);
@@ -78,29 +76,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.Call(node, unit, args, keywordArgNames);
         }
 
-        private static string GetInstanceShortDescription(AnalysisValue ns) {
-            var bci = ns as BuiltinClassInfo;
-            if (bci != null) {
-                return bci.Instance.ShortDescription;
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, _type.Name);
+            if (_indexTypes == null || _indexTypes.Length == 0) {
+                yield break;
             }
-            return ns.ShortDescription;
-        }
-
-        protected string MakeDescription(string typeName) {
-            if (_indexTypes == null || _indexTypes.Count == 0) {
-                return typeName;
-            } else if (_indexTypes.Count == 1) {
-                return typeName + " of " + GetInstanceShortDescription(_indexTypes.First());
-            } else if (_indexTypes.Count < 4) {
-                return typeName + " of {" + string.Join(", ", _indexTypes.Select(GetInstanceShortDescription)) + "}";
-            } else {
-                return typeName + " of multiple types";
-            }
-        }
-
-        public override string ShortDescription {
-            get {
-                return MakeDescription(_type.Name);
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " of ");
+            string prefix = null;
+            foreach (var kv in _indexTypes.Take(6).SelectMany(t => t.GetRichDescriptions(prefix: prefix, unionPrefix: "{", unionSuffix: "}"))) {
+                yield return kv;
+                prefix = ", ";
             }
         }
 

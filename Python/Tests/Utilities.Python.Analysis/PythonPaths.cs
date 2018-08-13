@@ -212,6 +212,20 @@ namespace TestUtilities {
                 if (Jython27 != null) yield return Jython27;
             }
         }
+
+        /// <summary>
+        /// Get the installed Python versions that match the specified name expression and filter.
+        /// </summary>
+        /// <param name="nameExpr">Name or '|' separated list of names that match the fields on <c>PythonPaths</c>. Ex: "Python36", "Python36|Python36_x64"</param>
+        /// <param name="filter">Additional filter.</param>
+        /// <returns>Installed Python versions that match the names and filter.</returns>
+        public static PythonVersion[] GetVersionsByName(string nameExpr, Predicate<PythonVersion> filter = null) {
+            return nameExpr
+                .Split('|')
+                .Select(v => typeof(PythonPaths).GetField(v, BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as PythonVersion)
+                .Where(v => v != null && (filter != null ? filter(v) : true))
+                .ToArray();
+        }
     }
 
     public class PythonVersion {

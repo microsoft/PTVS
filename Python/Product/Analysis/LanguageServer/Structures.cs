@@ -50,6 +50,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
         public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
 
+        public static bool operator >(Position p1, Position p2) => p1.line > p2.line || p1.line == p2.line && p1.character > p2.character;
+        public static bool operator <(Position p1, Position p2) => p1.line < p2.line || p1.line == p2.line && p1.character < p2.character;
+
         public override string ToString() => ((SourceLocation)this).ToString();
     }
 
@@ -70,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct Diagnostic {
+    public class Diagnostic {
         /// <summary>
         /// The range at which the message applies.
         /// </summary>
@@ -83,9 +86,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public DiagnosticSeverity severity;
 
         /// <summary>
-        /// The diagnostic's code (number or string). Can be omitted.
+        /// The diagnostic's code (string, such as 'unresolved-import'). Can be omitted.
+        /// <seealso cref="Analyzer.ErrorMessages"/>
         /// </summary>
-        public object code;
+        public string code;
 
         /// <summary>
         /// A human-readable string describing the source of this
@@ -178,6 +182,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct VersionedTextDocumentIdentifier {
         public Uri uri;
         public int? version;
+        public int? _fromVersion;
     }
 
     [Serializable]
@@ -200,14 +205,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     [Serializable]
     public class MarkupContent {
-        public MarkupKind kind;
+        public string kind;
         public string value;
 
         public static implicit operator MarkupContent(string text) => new MarkupContent { kind = MarkupKind.PlainText, value = text };
     }
 
     public class InformationDisplayOptions {
-        public MarkupKind preferredFormat;
+        public string preferredFormat;
         public bool trimDocumentationLines;
         public int maxDocumentationLineLength;
         public bool trimDocumentationText;
@@ -219,7 +224,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// Required layout for the initializationOptions member of initializeParams
     /// </summary>
     [Serializable]
-    public struct PythonInitializationOptions {
+    public class PythonInitializationOptions {
         [Serializable]
         public struct Interpreter {
             /// <summary>
@@ -236,18 +241,56 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             public string version;
         }
         public Interpreter interpreter;
-        public string[] searchPaths;
+
+        /// <summary>
+        /// Paths to search when attempting to resolve module imports.
+        /// </summary>
+        public string[] searchPaths = Array.Empty<string>();
+
+        /// <summary>
+        /// Secondary paths to search when resolving modules. Not supported by all
+        /// factories. In generaly, only source files will be discovered, and their
+        /// contents will be merged with the initial module.
+        /// </summary>
+        public string[] typeStubSearchPaths = Array.Empty<string>();
+
+        /// <summary>
+        /// Indicates that analysis engine is running in a test environment.
+        /// Causes initialization and analysis sequences to fully
+        /// complete before information requests such as hover or
+        /// completion can be processed.
+        /// </summary>
         public bool testEnvironment;
+
         /// <summary>
         /// Controls tooltip display appearance. Different between VS and VS Code.
         /// </summary>
-        public InformationDisplayOptions displayOptions;
-        /// <summary>
-        /// If true, analyzer will be created asynchronously. Used in VS Code.
-        /// </summary>
-        public bool asyncStartup;
-    }
+        public InformationDisplayOptions displayOptions = new InformationDisplayOptions();
 
+        /// <summary>
+        /// Glob pattern of files and folders to exclude from loading
+        /// into the Python analysis engine.
+        /// </summary>
+        public string[] excludeFiles = Array.Empty<string>();
+
+        /// <summary>
+        /// Glob pattern of files and folders under the root folder that
+        /// should be loaded into the Python analysis engine.
+        /// </summary>
+        public string[] includeFiles = Array.Empty<string>();
+
+        /// <summary>
+        /// Client expects analysis progress updates, including notifications
+        /// when analysis is complete for a particular document version.
+        /// </summary>
+        public bool analysisUpdates;
+
+        /// <summary>
+        /// Enables an even higher level of logging via the logMessage event.
+        /// This will likely have a performance impact.
+        /// </summary>
+        public bool traceLogging;
+    }
 
     [Serializable]
     public class WorkspaceClientCapabilities {
@@ -323,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
                 public bool commitCharactersSupport;
 
-                public MarkupKind[] documentationFormat;
+                public string[] documentationFormat;
             }
             public CompletionItemCapabilities? completionItem;
 
@@ -358,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             /// Client supports the follow content formats for the content
             /// property.The order describes the preferred format of the client.
             /// </summary>
-            public MarkupKind[] contentFormat;
+            public string[] contentFormat;
         }
         public HoverCapabilities? hover;
 
@@ -371,7 +414,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ///  Client supports the follow content formats for the documentation
                 /// property.The order describes the preferred format of the client.
                 /// </summary>
-                public MarkupKind[] documentationFormat;
+                public string[] documentationFormat;
 
                 /// <summary>
                 /// When true, the label in the returned signature information will
@@ -451,24 +494,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     [Serializable]
     public class PythonClientCapabilities {
         /// <summary>
-        /// Client expects analysis progress updates, including notifications
-        /// when analysis is complete for a particular document version.
-        /// </summary>
-        public bool? analysisUpdates;
-
-        /// <summary>
-        /// Number of milliseconds of synchronous wait to allow during request
-        /// for completions.
-        /// </summary>
-        public int? completionsTimeout;
-
-        /// <summary>
-        /// Enables an even higher level of logging via the logMessage event.
-        /// This will likely have a performance impact.
-        /// </summary>
-        public bool? traceLogging;
-
-        /// <summary>
         /// Disables automatic analysis of all files under the root URI.
         /// </summary>
         public bool? manualFileLoad;
@@ -486,7 +511,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public object experimental;
         public PythonClientCapabilities python;
     }
-
 
     [Serializable]
     public struct CompletionOptions {
@@ -636,7 +660,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionList {
+    public class CompletionList {
         /// <summary>
         /// This list is not complete. Further typing should result in recomputing
         /// this list.
@@ -665,13 +689,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     [Serializable]
-    public struct CompletionItem {
+    public class CompletionItem {
         public string label;
         public CompletionItemKind kind;
         public string detail;
         public MarkupContent documentation;
         public string sortText;
         public string filterText;
+        public bool? preselect; // VS Code 1.25+
         public string insertText;
         public InsertTextFormat insertTextFormat;
         public TextEdit? textEdit;
@@ -834,5 +859,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public DocumentFilter? documentSelector;
         public string firstTriggerCharacter;
         public string[] moreTriggerCharacters;
+    }
+    internal static class MarkupKind {
+        public const string PlainText = "plaintext";
+        public const string Markdown = "markdown";
     }
 }

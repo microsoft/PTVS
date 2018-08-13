@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -28,8 +27,8 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.LegacyDB {
-    class CPythonInterpreter : IPythonInterpreter {
-        readonly Version _langVersion;
+    internal class CPythonInterpreter : IPythonInterpreter {
+        private readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb, _searchPathDb;
         private readonly object _searchPathDbLock = new object();
@@ -172,7 +171,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         private async Task UpdateSearchPathPackagesAsync(CancellationToken cancellationToken) {
             var packageDict = new Dictionary<string, string>();
 
-            foreach(var searchPath in _searchPaths.MaybeEnumerate()) {
+            foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 IReadOnlyCollection<string> packages = null;
@@ -181,7 +180,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
                 } else if (Directory.Exists(searchPath)) {
                     packages = await GetPackagesFromDirectoryAsync(searchPath, cancellationToken);
                 }
-                foreach(var package in packages.MaybeEnumerate()) {
+                foreach (var package in packages.MaybeEnumerate()) {
                     packageDict[package] = searchPath;
                 }
             }
@@ -240,7 +239,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             var mod = db.GetModule(package.FullName);
 
             if (!package.IsSpecialName) {
-                int i = package.FullName.LastIndexOf('.');
+                var i = package.FullName.LastIndexOf('.');
                 if (i >= 1) {
                     var parent = package.FullName.Remove(i);
                     var parentMod = db.GetModule(parent) as AstPythonModule;
@@ -260,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             return mod;
         }
 
-        class GetModuleCallable {
+        private class GetModuleCallable {
             private readonly HashSet<string> _packages;
 
             public GetModuleCallable(HashSet<string> packages) {

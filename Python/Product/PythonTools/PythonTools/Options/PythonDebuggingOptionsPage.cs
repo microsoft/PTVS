@@ -14,14 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Parsing;
+using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonDebuggingOptionsPage : PythonDialogPage {
         private PythonDebuggingOptionsControl _window;
+
+        public PythonDebuggingOptionsPage() {
+            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
+        }
+
+        private void OnUseVsCodeDebuggerChanged(object sender, System.EventArgs e) {
+            // Synchronize UI with backing properties.
+            _window?.SyncControlWithPageSettings(PyService);
+        }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {

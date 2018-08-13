@@ -68,6 +68,14 @@ filename = sys.argv[0]
 # fix sys.path to be the script file dir
 sys.path[0] = ''
 
+if not bundled_ptvsd and (sys.platform == 'cli' or sys.version_info < (2, 7) or
+    (sys.version_info >= (3, 0) and sys.version_info < (3, 4))):
+    # This is experimental debugger incompatibility. Exit immediately.
+    # This process will be killed by VS since it does not see a debugger
+    # connect to it. The exit code we will get there will be wrong.
+    # 687: ERROR_DLL_MIGHT_BE_INCOMPATIBLE
+    sys.exit(687)
+
 # Load the debugger package
 try:
     ptvs_lib_path = None

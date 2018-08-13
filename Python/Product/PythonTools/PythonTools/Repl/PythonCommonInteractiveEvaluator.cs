@@ -333,33 +333,50 @@ namespace Microsoft.PythonTools.Repl {
 
         protected abstract Task ExecuteStartupScripts(string scriptsPath);
 
-        internal void UpdatePropertiesFromProjectMoniker() {
-            if (_projectWithHookedEvents != null) {
-                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
-                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
-                _projectWithHookedEvents = null;
-            }
+        internal Task<ExecutionResult> UpdatePropertiesFromProjectMonikerAsync() {
+            return _serviceProvider.GetUIThread().InvokeAsync(UpdatePropertiesFromProjectMoniker);
+        }
 
-            AssociatedProjectHasChanged = false;
-            var pyProj = GetAssociatedPythonProject();
-            if (pyProj == null) {
-                return;
-            }
+        internal ExecutionResult UpdatePropertiesFromProjectMoniker() {
+            try {
+                if (_projectWithHookedEvents != null) {
+                    _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                    _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                    _projectWithHookedEvents = null;
+                }
 
-            if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
-                Configuration = pyProj.GetLaunchConfigurationOrThrow();
-                if (Configuration?.Interpreter != null) {
-                    try {
-                        ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        ScriptsPath = null;
+                AssociatedProjectHasChanged = false;
+                var pyProj = GetAssociatedPythonProject();
+                if (pyProj == null) {
+                    return ExecutionResult.Success;
+                }
+
+                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
+                    Configuration = pyProj.GetLaunchConfigurationOrThrow();
+                    if (Configuration?.Interpreter != null) {
+                        try {
+                            ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                            ScriptsPath = null;
+                        }
                     }
                 }
-            }
 
-            _projectWithHookedEvents = pyProj;
-            pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
-            pyProj._searchPaths.Changed += Project_ConfigurationChanged;
+                _projectWithHookedEvents = pyProj;
+                pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
+                pyProj._searchPaths.Changed += Project_ConfigurationChanged;
+
+                return ExecutionResult.Success;
+            } catch (NoInterpretersException) {
+                WriteError(Strings.NoInterpretersAvailable);
+            } catch (MissingInterpreterException ex) {
+                WriteError(ex.ToString());
+            } catch (IOException ex) {
+                WriteError(ex.ToString());
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                WriteError(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+            return ExecutionResult.Failure;
         }
 
         private void Project_ConfigurationChanged(object sender, EventArgs e) {
@@ -385,6 +402,9 @@ namespace Microsoft.PythonTools.Repl {
             provider.MustBeCalledFromUIThread();
 
             var root = provider.GetPythonToolsService().InteractiveOptions.Scripts;
+            if (Path.GetInvalidPathChars().Any(c => root.Contains(c))) {
+                throw new DirectoryNotFoundException(root);
+            }
 
             if (string.IsNullOrEmpty(root)) {
                 try {
@@ -401,6 +421,10 @@ namespace Microsoft.PythonTools.Repl {
 
             string candidate;
             if (!string.IsNullOrEmpty(displayName)) {
+                foreach (var c in Path.GetInvalidFileNameChars()) {
+                    displayName = displayName.Replace(c, '_');
+                }
+
                 try {
                     candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
                 } catch (ArgumentException argEx) {
@@ -546,12 +570,14 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Success;
         }
 
-        public Task<ExecutionResult> ResetAsync(bool initialize = true) {
-            return ResetWorkerAsync(initialize, false);
+        public async Task<ExecutionResult> ResetAsync(bool initialize = true) {
+            await UpdatePropertiesFromProjectMonikerAsync();
+            return await ResetWorkerAsync(initialize, false);
         }
 
-        public Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
-            return ResetWorkerAsync(initialize, quiet);
+        public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
+            await UpdatePropertiesFromProjectMonikerAsync();
+            return await ResetWorkerAsync(initialize, quiet);
         }
 
         protected abstract Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet);

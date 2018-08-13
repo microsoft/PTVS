@@ -1452,10 +1452,13 @@
       </Item>
       <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Val><![CDATA[This debug REPL feature is only supported with the legacy debugger.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Эта функция REPL отладки не поддерживается в экспериментальном отладчике.]]></Val>
+            <Val><![CDATA[Функция отладки REPL поддерживается только в устаревшем отладчике.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2830,23 +2833,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Val><![CDATA[There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Для использования экспериментального отладчика в своей среде Python выполните команду "pip install --upgrade ptvsd --pre"]]></Val>
+            <Val><![CDATA[Произошла ошибка при загрузке пакета ptvsd из текущей среды. Обновите или удалите пакет ptvsd.]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ImportError: ptvsd not found]]></Val>
+          <Val><![CDATA[Debugger package could not be loaded]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ошибка импорта: не удалось найти ptvsd]]></Val>
+            <Val><![CDATA[Не удалось загрузить пакет отладчика]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3285,9 +3285,21 @@
       </Item>
       <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В текущей среде установлена старая версия ptvsd ({0}), но в состав Visual Studio входит версия {1}. Обновите или удалите ptvsd, чтобы получить доступ к новейшим функциям.]]></Val>
+            <Val><![CDATA[В текущей среде установлена старая версия ptvsd ({0}), но в состав Visual Studio входит версия {1}. Обновите или удалите ptvsd, чтобы получить доступ к новейшим функциям.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger package is outdated]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Пакет отладчика устарел]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3778,6 +3790,75 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Проект не поддерживает MSBuild.]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Use the legacy debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Использование устаревшего отладчика]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Disable the experimental debugger]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[В последующих сеансах отладки будет использоваться устаревший отладчик. Вы можете изменить этот параметр на странице "Отладка": последовательно выберите пункты "Инструменты", "Параметры", "Python" и измените параметр "Использовать устаревший отладчик".]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our <a href="https://aka.ms/upgradeptvsd">documentation</a> for a list of supported Python versions and environment types.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Для отладки этой среды Python используйте устаревший отладчик. Более старые версии Python не поддерживаются. Список поддерживаемых версий и типов среды Python см. в <a href="https://aka.ms/upgradeptvsd">документации</a>.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger does not support this Python environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Отладчик не поддерживает эту среду Python]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Learn more]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Дополнительные сведения]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Просмотрите документацию о поддерживаемых средах Python и том, как обновить или удалить пакет отладчика ptvsd.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5436,6 +5517,15 @@
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Не удалось обновить ссылку среды. Проверьте элемент "Среды Python" в обозревателе решений, чтобы выбрать среду для проекта.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UpgradedMscorlibReference" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A reference to 'mscorlib' was added to this project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[В этот проект была добавлена ссылка на "mscorlib".]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

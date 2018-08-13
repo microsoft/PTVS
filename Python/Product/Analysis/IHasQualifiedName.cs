@@ -35,4 +35,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// </exception>
         KeyValuePair<string, string> FullyQualifiedNamePair { get; }
     }
+
+    static class QualifiedNameExtensions {
+        public static string CombineNames(this KeyValuePair<string, string> qualifiedNamePair, string sep = ".") {
+            if (string.IsNullOrEmpty(qualifiedNamePair.Key)) {
+                return qualifiedNamePair.Value;
+            }
+            return qualifiedNamePair.Key + sep + qualifiedNamePair.Value;
+        }
+    }
 }

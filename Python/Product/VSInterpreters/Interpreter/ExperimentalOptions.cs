@@ -87,7 +87,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static bool UseVsCodeDebugger {
             get => _useVsCodeDebugger.Value;
-            set => SetBooleanFlag(UseVsCodeDebuggerKey, value);
+            set {
+                SetBooleanFlag(UseVsCodeDebuggerKey, value);
+                UseVsCodeDebuggerChanged?.Invoke(null, EventArgs.Empty);
+            }
         }
+
+        public static event EventHandler UseVsCodeDebuggerChanged;
     }
 }

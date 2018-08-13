@@ -18,9 +18,11 @@ extern alias analysis;
 extern alias pythontools;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using analysis::Microsoft.PythonTools.Analysis;
 using analysis::Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -56,7 +58,7 @@ namespace PythonToolsMockTests {
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // os
-                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"), Location(1, 8));
+                await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"));
             }
         }
 
@@ -68,7 +70,7 @@ sys.version
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // sys
-                await helper.CheckDefinitionLocations(14, 3, Location(1, 8));
+                await helper.CheckDefinitionLocations(14, 3, null);
 
                 // version
                 await helper.CheckDefinitionLocations(18, 7, null);
@@ -89,7 +91,7 @@ obj
             using (var helper = new NavigableHelper(code, Version)) {
                 // ClassBase
                 await helper.CheckDefinitionLocations(57, 9, Location(1, 1), Location(1, 7));
-                
+
                 // ClassDerived
                 await helper.CheckDefinitionLocations(88, 12, Location(4, 1), Location(4, 7));
 
@@ -117,12 +119,12 @@ my_func(2, param2=False)
                 // param1
                 await helper.CheckDefinitionLocations(12, 6, Location(1, 13));
                 await helper.CheckDefinitionLocations(47, 6, Location(1, 13));
-                
+
                 // param2
                 await helper.CheckDefinitionLocations(20, 6, Location(1, 21));
                 await helper.CheckDefinitionLocations(66, 6, Location(1, 21));
                 await helper.CheckDefinitionLocations(100, 6, Location(1, 21));
-                
+
                 // my_func
                 await helper.CheckDefinitionLocations(4, 7, Location(1, 1), Location(1, 5));
                 await helper.CheckDefinitionLocations(77, 7, Location(1, 1), Location(1, 5));
@@ -183,11 +185,11 @@ print(obj._my_attr_val)
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // my_attr
-                await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(8, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(8, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(152, 7, Location(4, 5), Location(8, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(229, 7, Location(4, 5), Location(8, 5), Location(9, 9), Location(13, 5));
-                await helper.CheckDefinitionLocations(252, 7, Location(4, 5), Location(8, 5), Location(9, 9), Location(13, 5));
+                await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(152, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(229, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9), Location(13, 5));
+                await helper.CheckDefinitionLocations(252, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9), Location(13, 5));
 
                 // val
                 await helper.CheckDefinitionLocations(166, 3, Location(9, 23));
@@ -233,6 +235,9 @@ res = my_var * 10
             public NavigableHelper(string code, PythonVersion version) {
                 var factory = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions() { WatchFileSystem = false });
                 _view = new PythonEditor("", version.Version, factory: factory);
+                if (_view.Analyzer.IsAnalyzing) {
+                    _view.Analyzer.WaitForCompleteAnalysis(_ => true);
+                }
                 _view.Text = code;
             }
 
@@ -248,13 +253,21 @@ res = my_var * 10
                 var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
                 Console.WriteLine("Finding definition of \"{0}\"", snapshotSpan.GetText());
                 var actualLocations = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, snapshotSpan.Start);
+
+                Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
+                foreach (var actualLocation in actualLocations) {
+                    Console.WriteLine($"file={actualLocation.Location.DocumentUri},line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
+                }
+
+                // Check that any real locations are not our test files. These may be included in debug builds,
+                // but we don't want to be testing them.
+                // Fake paths are from our tests, so always include them.
+                actualLocations = actualLocations
+                    .Where(v => !File.Exists(v.Location.FilePath) || !PathUtils.IsSubpathOf(PathUtils.GetParent(typeof(IAnalysisVariable).Assembly.Location), v.Location.FilePath))
+                    .ToArray();
+
                 if (expectedLocations != null) {
                     Assert.IsNotNull(actualLocations);
-
-                    Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
-                    foreach (var actualLocation in actualLocations) {
-                        Console.WriteLine($"file={actualLocation.Location.DocumentUri},line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
-                    }
 
                     Assert.AreEqual(expectedLocations.Length, actualLocations.Length, "incorrect number of locations");
                     for (int i = 0; i < expectedLocations.Length; i++) {

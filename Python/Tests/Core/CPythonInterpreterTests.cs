@@ -112,7 +112,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4226
         public void ImportFromZipFile() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");

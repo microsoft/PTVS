@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         private RestTextConverter _restTextConverter = new RestTextConverter();
 
-        private MarkupContent GetMarkupContent(string plainTextContent, IEnumerable<MarkupKind> preferences) {
+        private MarkupContent GetMarkupContent(string plainTextContent, IEnumerable<string> preferences) {
             if(string.IsNullOrEmpty(plainTextContent)) {
                 return string.Empty;
             }
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return plainTextContent;
         }
 
-        private MarkupKind SelectBestMarkup(IEnumerable<MarkupKind> requested, params MarkupKind[] supported) {
+        private string SelectBestMarkup(IEnumerable<string> requested, params string[] supported) {
             if (requested == null) {
                 return supported.First();
             }

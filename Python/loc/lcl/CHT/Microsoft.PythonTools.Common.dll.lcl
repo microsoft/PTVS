@@ -1452,10 +1452,13 @@
       </Item>
       <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          <Val><![CDATA[This debug REPL feature is only supported with the legacy debugger.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[實驗性偵錯工具不支援這項偵錯 REPL 功能。]]></Val>
+            <Val><![CDATA[僅舊版偵錯工具支援此偵錯 REPL 功能。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2830,23 +2833,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please run 'pip install --upgrade ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
+          <Val><![CDATA[There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[請在您的 Python 環境中執行 'pip install --upgrade ptvsd --pre'，以使用實驗性偵錯工具]]></Val>
+            <Val><![CDATA[從目前環境中載入 ptvsd 時發生錯誤。請升級或解除安裝 ptvsd。]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Please 'pip install ptvsd --pre' in your Python environment to use the experimental debugger]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdFailedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ImportPtvsdModuleNotFoundTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ImportError: ptvsd not found]]></Val>
+          <Val><![CDATA[Debugger package could not be loaded]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[匯入錯誤: 找不到 ptvsd]]></Val>
+            <Val><![CDATA[無法載入偵錯工具套件]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3285,9 +3285,21 @@
       </Item>
       <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[您在目前的環境中安裝了舊版的 ptvsd (版本{0})，但版本{1} 是 Visual Studio 隨附的版本。請升級或解除安裝 ptvsd，以使用最新的功能]]></Val>
+            <Val><![CDATA[您目前的環境安裝了舊版 ptvsd (版本 {0})，但 Visual Studio 隨附版本 {1}。請升級或解除安裝 ptvsd 以取得最新功能。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger package is outdated]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[偵錯工具套件已過期]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3778,6 +3790,75 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[專案不支援 MSBuild]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Use the legacy debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[使用舊版偵錯工具]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Disable the experimental debugger]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdDisableSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未來的偵錯工作階段會使用舊版偵錯工具。您也可以變更 [使用舊版偵錯工具]5D; 選項，在 [工具]5D;、[選項]5D;、[Python]5D;、[偵錯頁面]5D; 變更此設定。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvMessage" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our <a href="https://aka.ms/upgradeptvsd">documentation</a> for a list of supported Python versions and environment types.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[若要偵錯這個 Python 環境，請使用舊版偵錯工具。不支援較舊的 Python 版本。如需支援的 Python 版本和環境類型清單，請參閱我們的<a href="https://aka.ms/upgradeptvsd">文件</a>。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdIncompatibleEnvTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Debugger does not support this Python environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[偵錯工具不支援這個 Python 環境]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Learn more]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[深入了解]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PtvsdLearnMoreSubtext" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[檢視文件，了解支援的 Python 環境及如何升級或解除安裝 ptvsd 偵錯工具套件。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5436,6 +5517,15 @@
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[無法升級環境參考。請於方案總管中檢閱 Python 環境項目，以為專案選取環境。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UpgradedMscorlibReference" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A reference to 'mscorlib' was added to this project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[對 'mscorlib' 的參考已新增至此專案。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

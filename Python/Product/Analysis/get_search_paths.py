@@ -19,10 +19,15 @@ __version__ = "3.2"
 
 import sys
 
+# HACK: macOS sets __cached__ to None for __main__
+# but site.main() cannot handle it. So we force it to a str.
+__cached__ = ''
+
 if 'site' in sys.modules:
     raise RuntimeError('script must be run with -S')
 
 BEFORE_SITE = list(sys.path)
+
 import site
 try:
     site.main()
@@ -58,10 +63,10 @@ for prefix in [
 BEFORE_SITE.discard(None)
 AFTER_SITE.discard(None)
 
-for p in sorted(BEFORE_SITE):
+for p in sys.path:
+    p = clean(p)
     if os.path.isdir(p):
-        print("%s|stdlib|" % p)
-
-for p in sorted(AFTER_SITE - BEFORE_SITE):
-    if os.path.isdir(p):
-        print("%s||" % p)
+        if p in BEFORE_SITE:
+            print("%s|stdlib|" % p)
+        elif p in AFTER_SITE:
+            print("%s||" % p)

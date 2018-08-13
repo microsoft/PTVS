@@ -275,6 +275,7 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock
+                Style="{StaticResource InfoText}"
                 Grid.Column="0"
                 Margin="6"
                 HorizontalAlignment="Left"

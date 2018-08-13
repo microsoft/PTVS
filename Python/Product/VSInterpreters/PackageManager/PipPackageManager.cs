@@ -599,7 +599,7 @@ namespace Microsoft.PythonTools.Interpreter {
             string cachePath = null;
 
             if (_factory is Ast.AstPythonInterpreterFactory astFactory) {
-                paths = await astFactory.GetSearchPathsAsync();
+                paths = await astFactory.GetSearchPathsAsync(CancellationToken.None);
             } else if (_factory is LegacyDB.PythonInterpreterFactoryWithDatabase dbFactory) {
                 cachePath = PathUtils.GetAbsoluteFilePath(dbFactory.DatabasePath, "database.path");
             }

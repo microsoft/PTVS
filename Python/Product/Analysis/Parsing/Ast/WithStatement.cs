@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-    public class WithStatement : Statement {
+    public class WithStatement : Statement, IMaybeAsyncStatement {
         private readonly WithItem[] _items;
         private int? _keywordEndIndex;
 
