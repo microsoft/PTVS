@@ -2893,6 +2893,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string GeneralPaneName {
+            get {
+                return ResourceManager.GetString("GeneralPaneName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  (global default).
         /// </summary>
         public static string GlobalDefaultSuffix {
