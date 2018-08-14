@@ -45,6 +45,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
     "Microsoft.PythonTools.RunElevated",
+    "ExternalProfilerDriver",
     "Microsoft.PythonTools.TestAdapter",
     "Microsoft.PythonTools.TestAdapter.Analysis",
     "Microsoft.PythonTools.TestAdapter.Executor",
