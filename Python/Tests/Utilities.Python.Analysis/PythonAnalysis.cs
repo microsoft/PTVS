@@ -192,6 +192,10 @@ namespace TestUtilities.Python {
             _analyzer.SetSearchPaths(paths);
         }
 
+        public void SetTypeStubSearchPath(params string[] paths) {
+            _analyzer.SetTypeStubPaths(paths);
+        }
+
         public void ReanalyzeAll(CancellationToken? cancel = null) {
             foreach (var entry in _entries.Values) {
                 entry.Analyze(CancellationToken.None, true);
@@ -227,12 +231,12 @@ namespace TestUtilities.Python {
 
         #region Get Analysis Results
 
-        public IEnumerable<string> GetMemberNames(string exprText, int index = 0, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+        public IEnumerable<string> GetMemberNames(string exprText, int index = 0, GetMemberOptions options = GetMemberOptions.None) {
             return GetMemberNames(_entries[DefaultModule], exprText, index, options);
         }
 
-        public IEnumerable<string> GetMemberNames(IPythonProjectEntry module, string exprText, int index = 0, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
-            return module.Analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Name);
+        public IEnumerable<string> GetMemberNames(IPythonProjectEntry module, string exprText, int index = 0, GetMemberOptions options = GetMemberOptions.None) {
+            return module.Analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Completion);
         }
 
         public IEnumerable<IPythonType> GetTypes(string exprText, int index = 0) {
@@ -400,37 +404,22 @@ namespace TestUtilities.Python {
 
         #region Assert Analysis Results
 
-        public void AssertHasAttr(string expr, params string[] attrs) {
-            AssertHasAttr(_entries[DefaultModule], expr, 0, attrs);
-        }
-
-        public void AssertHasAttr(string expr, int index, params string[] attrs) {
-            AssertHasAttr(_entries[DefaultModule], expr, index, attrs);
-        }
+        public void AssertHasAttr(string expr, params string[] attrs) => AssertHasAttr(_entries[DefaultModule], expr, 0, attrs);
+        public void AssertHasAttr(string expr, int index, params string[] attrs) => AssertHasAttr(_entries[DefaultModule], expr, index, attrs);
 
         public void AssertHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs) {
             AssertUtil.ContainsAtLeast(GetMemberNames(module, expr, index), attrs);
         }
 
-        public void AssertNotHasAttr(string expr, params string[] attrs) {
-            AssertNotHasAttr(_entries[DefaultModule], expr, 0, attrs);
-        }
-
-        public void AssertNotHasAttr(string expr, int index, params string[] attrs) {
-            AssertNotHasAttr(_entries[DefaultModule], expr, index, attrs);
-        }
+        public void AssertNotHasAttr(string expr, params string[] attrs) => AssertNotHasAttr(_entries[DefaultModule], expr, 0, attrs);
+        public void AssertNotHasAttr(string expr, int index, params string[] attrs) => AssertNotHasAttr(_entries[DefaultModule], expr, index, attrs);
 
         public void AssertNotHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs) {
             AssertUtil.DoesntContain(GetMemberNames(module, expr, index), attrs);
         }
 
-        public void AssertHasAttrExact(string expr, params string[] attrs) {
-            AssertHasAttrExact(_entries[DefaultModule], expr, 0, attrs);
-        }
-
-        public void AssertHasAttrExact(string expr, int index, params string[] attrs) {
-            AssertHasAttrExact(_entries[DefaultModule], expr, index, attrs);
-        }
+        public void AssertHasAttrExact(string expr, params string[] attrs) => AssertHasAttrExact(_entries[DefaultModule], expr, 0, attrs);
+        public void AssertHasAttrExact(string expr, int index, params string[] attrs) => AssertHasAttrExact(_entries[DefaultModule], expr, index, attrs);
 
         public void AssertHasAttrExact(IPythonProjectEntry module, string expr, int index, params string[] attrs) {
             AssertUtil.ContainsExactly(GetMemberNames(module, expr, index), attrs);

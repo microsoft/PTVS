@@ -221,6 +221,12 @@ namespace Microsoft.PythonTools.Analysis {
 #if DESKTOP
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
 #endif
+
+            // These are also specially handled in Function
+            SpecializeFunction("abc", "abstractmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractclassmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractstaticmethod", IdentityDecorator);
+            SpecializeFunction("abc", "abstractproperty", IdentityDecorator);
         }
 
         internal static IAnalysisSet GetArg(
@@ -472,7 +478,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             wrapper.SetMember(node, unit, "__wrapped__", wrapped);
-            
+
             var assignedItems = (assigned != null) ?
                 IterateStringConstants(unit, assigned.IndexTypes) :
                 new[] { "__module__", "__name__", "__qualname__", "__doc__", "__annotations__" };
@@ -519,7 +525,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return AnalysisSet.Empty;
                 }
 
-                var newArgs = new [] {
+                var newArgs = new[] {
                     args[0],
                     args.Length > 1 ? args[1] : AnalysisSet.Empty,
                     args.Length > 2 ? args[2] : AnalysisSet.Empty
@@ -576,7 +582,7 @@ namespace Microsoft.PythonTools.Analysis {
             var mode = GetArg(args, keywordArgNames, "mode", 1);
 
             bool bytes = false;
-            foreach(var m in (mode?.GetConstantValueAsString()).MaybeEnumerate()) {
+            foreach (var m in (mode?.GetConstantValueAsString()).MaybeEnumerate()) {
                 if (m.Contains("b")) {
                     bytes = true;
                     break;
@@ -584,7 +590,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             ModuleReference modRef;
-            if(!unit.State.Modules.TryImport("io", out modRef)) {
+            if (!unit.State.Modules.TryImport("io", out modRef)) {
                 return unit.State.ClassInfos[BuiltinTypeId.Object].Instance;
             }
 
@@ -690,5 +696,6 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 #endif
+
     }
 }

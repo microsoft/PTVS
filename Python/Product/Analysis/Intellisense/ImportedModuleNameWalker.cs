@@ -16,60 +16,79 @@
 
 using System;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
+    sealed class NamedLocation {
+        public string Name { get; set; }
+        public SourceSpan SourceSpan { get; set; }
+    }
+
     class ImportedModuleNameWalker : PythonWalkerWithLocation {
-        private readonly string[] _module;
+        private readonly string _importingFromModuleName;
+        private readonly string _importingFromFilePath;
+        private readonly PythonAst _ast;
 
-        public ImportedModuleNameWalker(string module, int location) : base(location) {
-            _module = module?.Split('.') ?? Array.Empty<string>();
+        public ImportedModuleNameWalker(IPythonProjectEntry entry, int location, PythonAst ast) :
+            this(entry.ModuleName, entry.FilePath, location, ast) {
+        }
+        public ImportedModuleNameWalker(string importingFromModuleName, string importingFromFilePath, int location, PythonAst ast) : base(location) {
+            _importingFromModuleName = importingFromModuleName;
+            _importingFromFilePath = importingFromFilePath;
+            _ast = ast;
         }
 
-        public string ImportedName { get; private set; } = null;
-
-        private bool SetName(RelativeModuleName importName) {
-            if (importName == null ||
-                (importName.DotCount - 1) > _module.Length ||
-                importName.Names?.Any() != true) {
-                return false;
-            }
-
-            var names = _module
-                .Take(_module.Length - (importName.DotCount - 1))
-                .Concat(importName.Names.Select(n => n.Name))
-                .ToList();
-
-            ImportedName = string.Join(".", names);
-
-            return true;
-        }
-
-        private void SetName(DottedName importNames) {
-            if (SetName(importNames as RelativeModuleName)) {
-                return;
-            }
-
-            ImportedName = importNames.MakeString();
-        }
+        public NamedLocation[] ImportedModules { get; private set; } = Array.Empty<NamedLocation>();
+        public NamedLocation ImportedType { get; private set; }
 
         public override bool Walk(FromImportStatement node) {
-            if (node.Root.StartIndex <= Location && Location <= node.Root.EndIndex) {
-                SetName(node.Root);
+            if (node.StartIndex <= Location && Location <= node.EndIndex) {
+                var nameNode = node.Names.MaybeEnumerate().Where(n => n.StartIndex <= Location && Location <= n.EndIndex).FirstOrDefault();
+                if (nameNode != null && node.AsNames != null) {
+                    var index = node.Names.IndexOf(nameNode);
+                    if (index < node.AsNames.Count && node.AsNames[index] != null) {
+                        ImportedType = GetNamedLocation(node.AsNames[index]);
+                        return false;
+                    }
+                }
+
+                var modName = node.Root.MakeString();
+                // See if we can resolve relative names
+                var candidates = ModuleResolver.ResolvePotentialModuleNames(_importingFromModuleName, _importingFromFilePath, modName, node.ForceAbsolute).ToArray();
+                if (candidates.Length == 1 && string.IsNullOrEmpty(candidates[0]) && node.Names != null && node.Names.Any()) {
+                    // Did not resolve to anything. Happens at the top of the workspace
+                    // in VS Code when using 'from . import a'
+                    ImportedModules = new[] { GetNamedLocation(node.Names.First()) };
+                } else if (candidates.Length > 0) {
+                    ImportedModules = candidates.Select(c => GetNamedLocation(c, node.Root)).ToArray();
+                } else {
+                    ImportedModules = new[] { GetNamedLocation(modName, node.Root) };
+                }
             }
             return false;
         }
 
         public override bool Walk(ImportStatement node) {
-            foreach (var n in node.Names.MaybeEnumerate()) {
-                if (n.StartIndex <= Location && Location <= n.EndIndex) {
-                    SetName(n);
-                    break;
+            if (node.StartIndex <= Location && Location <= node.EndIndex) {
+                var nameNode = node.Names.MaybeEnumerate().Where(n => n.StartIndex <= Location && Location <= n.EndIndex).FirstOrDefault();
+                if (nameNode != null) {
+                    ImportedModules = new[] { GetNamedLocation(nameNode.MakeString(), nameNode) };
                 }
             }
-
             return false;
         }
+
+
+        private NamedLocation GetNamedLocation(NameExpression node) => GetNamedLocation(node.Name, node);
+
+        private NamedLocation GetNamedLocation(string name, Node node)
+            => new NamedLocation { Name = name, SourceSpan = GetSourceSpan(node) };
+
+        private SourceSpan GetSourceSpan(Node n)
+            => _ast != null
+            ? new SourceSpan(_ast.IndexToLocation(n.StartIndex), _ast.IndexToLocation(n.EndIndex))
+            : default(SourceSpan);
     }
 }

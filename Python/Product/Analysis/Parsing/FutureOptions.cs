@@ -43,6 +43,10 @@ namespace Microsoft.PythonTools.Parsing {
         /// String Literals should be parsed as Unicode strings
         /// </summary>
         UnicodeLiterals = 0x2000,
+        /// <summary>
+        /// Annotations should be stored as strings and not evaluated
+        /// </summary>
+        Annotations = 0x4000,
     }
 
 }

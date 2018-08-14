@@ -284,11 +284,11 @@ namespace Microsoft.PythonTools {
                     EnsureCapacity(snapshot.LineCount);
 
                     foreach (var change in e.Changes) {
-                        var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
+                        var line = snapshot.GetLineNumberFromPosition(change.NewPosition) + 1;
                         if (change.LineCountDelta > 0) {
-                            InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
+                            InsertLines(line, change.LineCountDelta);
                         } else if (change.LineCountDelta < 0) {
-                            DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
+                            DeleteLines(line, Math.Min(-change.LineCountDelta, _map.Length - line));
                         }
 
                         ApplyChanges(new SnapshotSpan(snapshot, change.NewSpan), lazyTokenizer);

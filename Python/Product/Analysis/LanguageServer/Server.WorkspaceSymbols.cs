@@ -14,50 +14,77 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
-            foreach (var entry in _projectFiles.All) {
+            foreach (var entry in ProjectFiles.All) {
                 members = members.Concat(
-                    GetModuleVariables(entry as IPythonProjectEntry, opts, @params.query)
+                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query, 50)
                 );
             }
 
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
-            return members.Select(m => ToSymbolInformation(m)).ToArray();
+            return members.Select(ToSymbolInformation).ToArray();
         }
 
-        private static IEnumerable<MemberResult> GetModuleVariables(
-            IPythonProjectEntry entry,
-            GetMemberOptions opts,
-            string prefix
-        ) {
-            var analysis = entry?.Analysis;
-            if (analysis == null) {
-                yield break;
-            }
+        public override async Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) {
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
+            var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
-                if (m.Values.Any(v => v.DeclaringModule == entry)) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
-                        yield return m;
-                    }
+            await WaitForEntryAnalysisComplete(entry, 1000);
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
+            
+            return members
+                .GroupBy(mr => mr.Name)
+                .Select(g => g.First())
+                .Select(ToSymbolInformation)
+                .ToArray();
+        }
+
+        private Task WaitForEntryAnalysisComplete(IProjectEntry entry, int timeout) {
+            var cts = new CancellationTokenSource(timeout);
+            return Task.Run(async () => {
+                while (!entry.IsAnalyzed && !cts.IsCancellationRequested) {
+                    await Task.Delay(100);
                 }
-            }
+            });
         }
+
+        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout) {
+            var analysis = entry != null ? await entry.GetAnalysisAsync(timeout) : null;
+            return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
+        }
+
+        private static IEnumerable<MemberResult> GetModuleVariables(ProjectEntry entry, GetMemberOptions opts, string prefix, ModuleAnalysis analysis) {
+            var all = analysis.GetAllAvailableMembers(SourceLocation.None, opts);
+            return all
+                .Where(m => {
+                    if (m.Values.Any(v => v.DeclaringModule == entry || v.Locations.Any(l => l.DocumentUri == entry.DocumentUri))) {
+                        if (string.IsNullOrEmpty(prefix) || m.Name.StartsWithOrdinal(prefix, ignoreCase: true)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts));
+        }
+
+        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
+            => scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts));
+
+        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
+            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
@@ -69,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
             if (loc != null) {
                 res.location = new Location {
-                    uri = new Uri(PathUtils.NormalizePath(loc.FilePath), UriKind.RelativeOrAbsolute),
+                    uri = loc.DocumentUri,
                     range = new SourceSpan(
                         new SourceLocation(loc.StartLine, loc.StartColumn),
                         new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)

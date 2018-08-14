@@ -16,9 +16,9 @@
 
 namespace Microsoft.PythonTools.Intellisense {
     enum AnalysisPriority {
-        None,
-        Low,
-        Normal,
         High,
+        Normal,
+        Low,
+        None,
     }
 }

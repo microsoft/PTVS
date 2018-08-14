@@ -91,8 +91,8 @@ namespace TestUtilities.Python {
                 serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
                 serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
             } else {
-                serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
-                serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+                serviceProvider.AddService(typeof(ErrorTaskProvider), ErrorTaskProvider.CreateService, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), CommentTaskProvider.CreateService, true);
             }
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
@@ -130,17 +130,5 @@ namespace TestUtilities.Python {
             }
             return services;
         }
-
-        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
-            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
-            if (type == typeof(ErrorTaskProvider)) {
-                return new ErrorTaskProvider(container, null, errorProvider);
-            } else if (type == typeof(CommentTaskProvider)) {
-                return new CommentTaskProvider(container, null, errorProvider);
-            } else {
-                return null;
-            }
-        }
-
     }
 }

@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal Expression GetExpressionForText(string exprText, SourceLocation location, out InterpreterScope scope, out PythonAst exprTree) {
+            exprTree = null;
             scope = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scope);
             exprTree = GetAstFromText(exprText, privatePrefix);
@@ -77,7 +78,6 @@ namespace Microsoft.PythonTools.Analysis {
             if (expr == null) {
                 return Enumerable.Empty<AnalysisValue>();
             }
-
             return GetValues(expr, location, scope);
         }
 
@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (value is MultipleMemberInfo mmi) {
                 if (mmi.Push()) {
                     try {
-                        return mmi.Members.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                        return mmi.Members.Aggregate(set, (a, v) => ResolveAndAdd(unit, a, v));
                     } finally {
                         mmi.Pop();
                     }
@@ -206,6 +206,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal VariablesResult GetVariables(Expression expr, SourceLocation location, string originalText = null, InterpreterScope scope = null) {
             scope = scope ?? FindScope(location);
+
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var tree = unit.Tree;
 
@@ -385,7 +386,7 @@ namespace Microsoft.PythonTools.Analysis {
             var errorWalker = new ErrorWalker();
             expr.Walk(errorWalker);
             if (errorWalker.HasError) {
-                return null;
+                return Enumerable.Empty<MemberResult>();
             }
 
             // Special handling for `__import__('module.name')`
@@ -402,7 +403,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
-
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var u = unit.CopyForEval();
 
@@ -488,6 +488,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             scope = scope ?? FindScope(location);
+
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
@@ -513,8 +514,19 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // Take nearly-equivalent overloads and merge them, retaining the maximum
-            // possible information.
-            return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
+            // possible information. And if we have any overloads that are all */** args,
+            // only return them if we don't have any more precise overloads.
+            var specific = new List<OverloadResult>();
+            var generic = new List<OverloadResult>();
+            foreach (var overload in result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge)) {
+                if (overload.Parameters.Any() && overload.Parameters.All(p => p.Name.StartsWithOrdinal("*"))) {
+                    generic.Add(overload);
+                } else {
+                    specific.Add(overload);
+                }
+            }
+
+            return specific.Any() ? specific : generic;
         }
 
         /// <summary>
@@ -522,9 +534,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// specified location.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
-            return GetDefinitionTree(_unit.Tree.IndexToLocation(index));
-        }
+        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) 
+            => GetDefinitionTree(_unit.Tree.IndexToLocation(index));
 
         /// <summary>
         /// Gets the hierarchy of class and function definitions at the
@@ -535,8 +546,8 @@ namespace Microsoft.PythonTools.Analysis {
         public IEnumerable<MemberResult> GetDefinitionTree(SourceLocation location) {
             try {
                 return FindScope(location).EnumerateTowardsGlobal
-                    .Select(s => new MemberResult(s.Name, s.GetMergedAnalysisValues()))
-                    .ToList();
+                        .Select(s => new MemberResult(s.Name, s.GetMergedAnalysisValues()))
+                        .ToList();
             } catch (Exception) {
                 // TODO: log exception
                 Debug.Fail("Failed to find scope. Bad state in analysis");
@@ -588,7 +599,7 @@ namespace Microsoft.PythonTools.Analysis {
                     } else if ((builtinClass = baseClass as BuiltinClassInfo) != null) {
                         source = builtinClass.GetAllMembers(InterpreterContext)
                             .SelectMany(kv => kv.Value)
-                            .Where(child => child != null && 
+                            .Where(child => child != null &&
                                 (child.MemberType == PythonMemberType.Function ||
                                  child.MemberType == PythonMemberType.Method));
                     } else {
@@ -664,25 +675,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             // collect variables from user defined scopes
             var scope = FindScope(location);
-            foreach (var s in scope.EnumerateTowardsGlobal) {
-                var scopeResult = new Dictionary<string, List<AnalysisValue>>();
-                foreach (var kvp in s.GetAllMergedVariables()) {
-                    var vars = kvp.Value.TypesNoCopy;
-                    if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
-                        continue;
-                    }
-                    if (scopeResult.TryGetValue(kvp.Key, out var values)) {
-                        values.AddRange(vars);
-                    } else {
-                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
-                    }
-                    values.Add(new SyntheticDefinitionInfo(
-                        kvp.Key,
-                        null,
-                        kvp.Value.Definitions.Select(e => e.GetLocationInfo())
-                    ));
-                }
 
+            foreach (var s in scope.EnumerateTowardsGlobal) {
+                var scopeResult = GetAllAvailableAnalysisValuesFromScope(s, options);
                 foreach (var kvp in scopeResult) {
                     // deliberately overwrite variables from outer scopes
                     result[kvp.Key] = kvp.Value;
@@ -697,6 +692,40 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        internal IEnumerable<MemberResult> GetAllAvailableMembersFromScope(InterpreterScope scope, GetMemberOptions options) {
+            var result = new Dictionary<string, IEnumerable<AnalysisValue>>();
+            var scopeResult = GetAllAvailableAnalysisValuesFromScope(scope, options);
+            foreach (var kvp in scopeResult) {
+                result[kvp.Key] = kvp.Value;
+            }
+
+            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
+            if (options.StatementKeywords() || options.ExpressionKeywords()) {
+                res = GetKeywordMembers(options, scope).Union(res);
+            }
+            return res;
+        }
+
+        private Dictionary<string, List<AnalysisValue>> GetAllAvailableAnalysisValuesFromScope(InterpreterScope scope, GetMemberOptions options) {
+            var scopeResult = new Dictionary<string, List<AnalysisValue>>();
+            foreach (var kvp in scope.GetAllMergedVariables()) {
+                var vars = kvp.Value.TypesNoCopy;
+                if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
+                    continue;
+                }
+                if (scopeResult.TryGetValue(kvp.Key, out var values)) {
+                    values.AddRange(vars);
+                } else {
+                    scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
+                }
+                values.Add(new SyntheticDefinitionInfo(
+                    kvp.Key,
+                    null,
+                    kvp.Value.Definitions.Select(e => e.GetLocationInfo())
+                ));
+            }
+            return scopeResult;
+        }
 
         private bool IsExceptionType(string name, IAnalysisSet values) {
             if (name.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -718,7 +747,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             IEnumerable<string> keywords = null;
-            
+
             if (options.ExpressionKeywords()) {
                 // keywords available in any context
                 keywords = PythonKeywords.Expression(ProjectState.LanguageVersion);
@@ -942,9 +971,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// </param>
         /// <remarks>New in 2.2</remarks>
         public PythonAst GetAstFromText(string exprText, SourceLocation location) {
-            var scopes = FindScope(location);
-            var privatePrefix = GetPrivatePrefixClassName(scopes);
-
+            var scope = FindScope(location);
+            var privatePrefix = GetPrivatePrefixClassName(scope);
             return GetAstFromText(exprText, privatePrefix);
         }
 
@@ -1023,7 +1051,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
             var children = parent.Children;
-
             var index = tree.LocationToIndex(location);
 
             InterpreterScope candidate = null;
@@ -1146,7 +1173,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
             if (privatePrefix != null && name.StartsWithOrdinal(privatePrefix) && !name.EndsWithOrdinal("__")) {
                 // private prefix inside of the class, filter out the prefix.
-                return name.Substring(privatePrefix.Length - 2);
+                return name.Substring(privatePrefix.Length);
             } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {
                 return name;
             }
@@ -1165,7 +1192,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetPrivatePrefix(InterpreterScope scope) {
             string classScopePrefix = GetPrivatePrefixClassName(scope);
             if (classScopePrefix != null) {
-                return "_" + classScopePrefix + "__";
+                return "_" + classScopePrefix;
             }
             return null;
         }

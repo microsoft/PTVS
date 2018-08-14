@@ -56,6 +56,7 @@ namespace AnalysisTests {
         internal static readonly PythonLanguageVersion[] V33AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V33).ToArray();
         internal static readonly PythonLanguageVersion[] V35AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V35).ToArray();
         internal static readonly PythonLanguageVersion[] V36AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V36).ToArray();
+        internal static readonly PythonLanguageVersion[] V37AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V37).ToArray();
 
         #region Test Cases
 
@@ -1995,8 +1996,8 @@ namespace AnalysisTests {
                 ParseErrors(
                     "FromImportStmtV2.py",
                     version,
-                    new ErrorInfo("import * only allowed at module level", 14, 2, 5, 31, 2, 22),
-                    new ErrorInfo("import * only allowed at module level", 49, 5, 5, 66, 5, 22)
+                    new ErrorInfo("import * only allowed at module level", 30, 2, 21, 31, 2, 22),
+                    new ErrorInfo("import * only allowed at module level", 65, 5, 21, 66, 5, 22)
                 );
             }
         }
@@ -2610,6 +2611,21 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AsyncForComprehension() {
+            foreach (var version in V37AndUp) {
+                var ast = ParseFileNoErrors("AsyncFor37.py", version);
+                CheckAst(
+                    ast,
+                    CheckSuite(
+                        CheckFuncDef("test1", NoParameters, CheckSuite(
+                            CheckReturnStmt(CheckGeneratorComp(Fob, AsyncCompFor(Fob, CheckListExpr())))
+                        )),
+                        CheckFuncDef("test2", NoParameters, CheckSuite(
+                            CheckReturnStmt(CheckGeneratorComp(Fob, CompFor(Fob, CheckListExpr()), CompIf(CheckAwaitExpression(Fob))))
+                        ))
+                    )
+                );
+            }
+
             foreach (var version in V36AndUp) {
                 var ast = ParseFileNoErrors("AsyncFor.py", version);
                 CheckAst(

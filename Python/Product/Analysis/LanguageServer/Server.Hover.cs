@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -22,40 +24,30 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
-        private static Hover EmptyHover = new Hover {
+        private static readonly Hover EmptyHover = new Hover {
             contents = new MarkupContent { kind = MarkupKind.PlainText, value = string.Empty }
         };
+
         private DocumentationBuilder _displayTextBuilder;
 
-        public override async Task<Hover> Hover(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
+        public override Task<Hover> Hover(TextDocumentPositionParams @params) => Hover(@params, CancellationToken.None);
 
+        internal async Task<Hover> Hover(TextDocumentPositionParams @params, CancellationToken cancellationToken) {
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"Hover in {uri} at {@params.position}");
 
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(50, cancellationToken) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
                 return EmptyHover;
             }
 
-            tree = GetParseTree(entry, uri, CancellationToken, out var version) ?? tree;
-
-            var index = tree.LocationToIndex(@params.position);
-            var w = new ImportedModuleNameWalker(entry.ModuleName, index);
-            tree.Walk(w);
-            if (!string.IsNullOrEmpty(w.ImportedName) &&
-                _analyzer.Modules.TryImport(w.ImportedName, out var modRef)) {
-                var doc = _displayTextBuilder.GetModuleDocumentation(modRef);
-                return new Hover { contents = doc };
-            }
+            tree = GetParseTree(entry, uri, cancellationToken, out var version) ?? tree;
 
             Expression expr;
             SourceSpan? exprSpan;
-            Analyzer.InterpreterScope scope = null;
 
             var finder = new ExpressionFinder(tree, GetExpressionOptions.Hover);
             expr = finder.GetExpression(@params.position) as Expression;
@@ -67,29 +59,63 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             TraceMessage($"Getting hover for {expr.ToCodeString(tree, CodeFormattingOptions.Traditional)}");
-            var values = analysis.GetValues(expr, @params.position, scope).ToList();
 
-            string originalExpr;
-            if (expr is ConstantExpression || expr is ErrorExpression) {
-                originalExpr = null;
-            } else {
-                originalExpr = @params._expr?.Trim();
-                if (string.IsNullOrEmpty(originalExpr)) {
-                    originalExpr = expr.ToCodeString(tree, CodeFormattingOptions.Traditional);
+            // First try values from expression. This works for the import statement most of the time.
+            var values = analysis.GetValues(expr, @params.position, null).ToList();
+            if (values.Count == 0) {
+                // See if this is hover over import statement
+                var index = tree.LocationToIndex(@params.position);
+                var w = new ImportedModuleNameWalker(entry, index, tree);
+                tree.Walk(w);
+
+                if (w.ImportedType != null) {
+                    values = analysis.GetValues(w.ImportedType.Name, @params.position).ToList();
+                } else {
+                    var sb = new StringBuilder();
+                    var span = SourceSpan.Invalid;
+                    foreach (var n in w.ImportedModules) {
+                        if (Analyzer.Modules.TryGetImportedModule(n.Name, out var modRef) && modRef.AnalysisModule != null) {
+                            if (sb.Length > 0) {
+                                sb.AppendLine();
+                                sb.AppendLine();
+                            }
+                            sb.Append(_displayTextBuilder.GetModuleDocumentation(modRef));
+                            span = span.IsValid ? span.Union(n.SourceSpan) : n.SourceSpan;
+                        }
+                    }
+                    if (sb.Length > 0) {
+                        return new Hover {
+                            contents = sb.ToString(),
+                            range = span
+                        };
+                    }
                 }
             }
 
-            var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
+            if (values.Count > 0) {
+                string originalExpr;
+                if (expr is ConstantExpression || expr is ErrorExpression) {
+                    originalExpr = null;
+                } else {
+                    originalExpr = @params._expr?.Trim();
+                    if (string.IsNullOrEmpty(originalExpr)) {
+                        originalExpr = expr.ToCodeString(tree, CodeFormattingOptions.Traditional);
+                    }
+                }
 
-            var res = new Hover {
-                contents = GetMarkupContent(
-                    _displayTextBuilder.GetDocumentation(values, originalExpr),
-                    _clientCaps.textDocument?.hover?.contentFormat),
-                range = exprSpan,
-                _version = version,
-                _typeNames = names
-            };
-            return res;
+                var names = values.Select(GetFullTypeName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToArray();
+                var res = new Hover {
+                    contents = GetMarkupContent(
+                        _displayTextBuilder.GetDocumentation(values, originalExpr),
+                        _clientCaps.textDocument?.hover?.contentFormat),
+                    range = exprSpan,
+                    _version = version?.Version,
+                    _typeNames = names
+                };
+                return res;
+            }
+
+            return EmptyHover;
         }
 
         private static string GetFullTypeName(AnalysisValue value) {

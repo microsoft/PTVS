@@ -81,14 +81,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var funcType = ProcessFunctionDecorators(ddg);
             EnsureParameterZero();
 
-            var v = ddg.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
+            _declUnit.Scope.AddLocatedVariable(Ast.Name, Ast.NameExpression, this);
 
             // Set the scope to within the function
             ddg.Scope = Scope;
 
             Ast.Body.Walk(ddg);
 
-            v.AddTypes(this, funcType);
+            _declUnit.Scope.AssignVariable(Ast.Name, Ast.NameExpression, this, funcType);
         }
 
 
@@ -102,6 +102,37 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             get {
                 return ((FunctionScope)Scope).ReturnValue;
             }
+        }
+
+        private bool ProcessAbstractDecorators(IAnalysisSet decorator) {
+            var res = false;
+
+            // Only handle these if they are specialized
+            foreach (var d in decorator.OfType<SpecializedCallable>()) {
+                if (d.DeclaringModule?.ModuleName != "abc") {
+                    continue;
+                }
+
+                switch (d.Name) {
+                    case "abstractmethod":
+                        res = true;
+                        break;
+                    case "abstractstaticmethod":
+                        Function.IsStatic = true;
+                        res = true;
+                        break;
+                    case "abstractclassmethod":
+                        Function.IsClassMethod = true;
+                        res = true;
+                        break;
+                    case "abstractproperty":
+                        Function.IsProperty = true;
+                        res = true;
+                        break;
+                }
+            }
+
+            return res;
         }
 
         internal IAnalysisSet ProcessFunctionDecorators(DDG ddg) {
@@ -121,6 +152,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         } else if (decorator.Contains(State.ClassInfos[BuiltinTypeId.ClassMethod])) {
                             // TODO: Warn if IsStatic is set
                             Function.IsClassMethod = true;
+                        } else if (ProcessAbstractDecorators(decorator)) {
+                            // No-op
                         } else {
                             Expression nextExpr;
                             if (!_decoratorCalls.TryGetValue(d, out nextExpr)) {

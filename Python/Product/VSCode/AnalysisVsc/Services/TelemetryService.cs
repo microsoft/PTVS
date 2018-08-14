@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.VsCode.Core.Shell;
 using StreamJsonRpc;
 
-namespace Microsoft.PythonTools.VsCode.Services {
+namespace Microsoft.Python.LanguageServer.Services {
     public sealed class TelemetryService : ITelemetryService {
         private readonly JsonRpc _rpc;
         public TelemetryService(JsonRpc rpc) {

@@ -23,12 +23,15 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
+    class AstPythonType : IPythonType, IMemberContainer, ILocatedMember, IHasQualifiedName {
         private readonly string _name;
         protected readonly Dictionary<string, IMember> _members;
         private IList<IPythonType> _mro;
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
+
+        [ThreadStatic]
+        private static HashSet<AstPythonType> _processing;
 
         public AstPythonType(string name): this(name, new Dictionary<string, IMember>(), Array.Empty<LocationInfo>()) { }
 
@@ -78,7 +81,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (Bases.Count > 0) {
                     _members["__base__"] = Bases[0];
                 }
-                _members["__bases__"] = new AstPythonSequence(interpreter?.GetBuiltinType(BuiltinTypeId.Tuple), DeclaringModule, Bases);
+                _members["__bases__"] = new AstPythonSequence(
+                    interpreter?.GetBuiltinType(BuiltinTypeId.Tuple),
+                    DeclaringModule,
+                    Bases,
+                    interpreter?.GetBuiltinType(BuiltinTypeId.TupleIterator)
+                );
             }
         }
 
@@ -179,6 +187,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IEnumerable<LocationInfo> Locations { get; }
 
+        public string FullyQualifiedName => FullyQualifiedNamePair.CombineNames();
+        public KeyValuePair<string, string> FullyQualifiedNamePair => new KeyValuePair<string, string>(DeclaringModule.Name, Name);
+
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;
             lock (_members) {
@@ -192,18 +203,41 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         member = _members[name] = new AstPythonSequence(
                             (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.Tuple),
                             DeclaringModule,
-                            Mro
+                            Mro,
+                            (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.TupleIterator)
                         );
                         return member;
                 }
             }
-            foreach (var m in Mro.Skip(1)) {
-                member = m.GetMember(context, name);
-                if (member != null) {
-                    return member;
+            if (Push()) {
+                try {
+                    foreach (var m in Mro.Reverse()) {
+                        if (m == this) {
+                            return member;
+                        }
+                        member = member ?? m.GetMember(context, name);
+                    }
+                } finally {
+                    Pop();
                 }
             }
             return null;
+        }
+
+        private bool Push() {
+            if (_processing == null) {
+                _processing = new HashSet<AstPythonType> { this };
+                return true;
+            } else {
+                return _processing.Add(this);
+            }
+        }
+
+        private void Pop() {
+            _processing.Remove(this);
+            if (_processing.Count == 0) {
+                _processing = null;
+            }
         }
 
         public IPythonFunction GetConstructors() => GetMember(null, "__init__") as IPythonFunction;

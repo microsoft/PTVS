@@ -128,7 +128,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory NoInterpretersValue {
             get {
                 if (_noInterpretersValue == null) {
-                    _noInterpretersValue = new NoInterpretersFactory();
+                    // Our default value is analysis-only for 3.6, since that is the default
+                    // Python we would have shipped with VS.
+                    _noInterpretersValue = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6), Strings.NoInterpretersDescription);
                 }
                 return _noInterpretersValue;
             }

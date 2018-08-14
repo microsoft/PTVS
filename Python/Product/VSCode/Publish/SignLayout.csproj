@@ -1,0 +1,56 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NoWarn>2008;$(NoWarn)</NoWarn>
+  </PropertyGroup>
+  <Import Project="..\..\NetStandard.settings" />
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <SignEngine Condition="$(SignEngine) == ''">false</SignEngine>
+    <SignServer Condition="$(SignServer) == ''">false</SignServer>
+    <SignPackage Condition="$(SignPackage) == ''">false</SignPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Nuget.CommandLine" Version="4.5.1" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <Target Name="CoreCompile" />
+  <Target Name="CopyFilesToOutputDirectory" />
+
+  <ItemGroup Condition="$(SignEngine)">
+    <SignFiles Include="$(OutputPath)\Microsoft.Python.Analysis.Engine.dll" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(SignServer)">
+    <SignFiles Include="$(OutputPath)\Microsoft.Python.LanguageServer.dll" />
+    <SignFiles Include="$(OutputPath)\Microsoft.Python.LanguageServer.exe" Condition="Exists('$(OutputPath)\Microsoft.Python.LanguageServer.exe')" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(SignPackage)">
+    <SignFiles Include="$(OutputPath)\Python-Language-Server-*.nupkg" />
+  </ItemGroup>
+
+  <Target Name="_CheckFiles" BeforeTargets="SignFiles">
+    <Message Text="Signing Files: @(SignFiles,'%0A')" Importance="high" />
+    <ItemGroup>
+      <_Missing Include="@(SignFiles)" Condition="!Exists(%(FullPath))" />
+      <FilesToSign Remove="@(FilesToSign)" />
+      <FilesToSign Include="@(SignFiles)">
+        <Authenticode Condition="%(Extension) == '.nupkg'">NuGet</Authenticode>
+        <Authenticode Condition="%(Extension) != '.nupkg'">Microsoft</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+    <Error Condition="@(_Missing) != ''" Text="Following files are missing: @(_Missing,'%0A')" />
+  </Target>
+
+  <Import Project="..\..\NetStandard.targets" />
+</Project>

@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis.LanguageServer.Extensibility;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -59,6 +60,7 @@ namespace AnalysisTests {
         }
 
         protected virtual PythonVersion Default => DefaultV3;
+        protected virtual BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Unicode;
 
         public Task<Server> CreateServer() {
             return CreateServer((Uri)null, Default);
@@ -87,14 +89,13 @@ namespace AnalysisTests {
                         typeName = typeof(AstPythonInterpreterFactory).FullName,
                         properties = properties
                     },
-                    asyncStartup = false,
-                    testEnvironment = true
+                    testEnvironment = true,
+                    analysisUpdates = true,
+                    traceLogging = true,
                 },
                 capabilities = new ClientCapabilities {
                     python = new PythonClientCapabilities {
-                        analysisUpdates = true,
                         liveLinting = true,
-                        traceLogging = true
                     }
                 }
             });
@@ -104,11 +105,22 @@ namespace AnalysisTests {
             }
 
             if (rootUri != null) {
-                await s.WaitForDirectoryScanAsync().ConfigureAwait(false);
+                await LoadFromDirectoryAsync(s, rootUri.LocalPath).ConfigureAwait(false);
                 await s.WaitForCompleteAnalysisAsync().ConfigureAwait(false);
             }
 
             return s;
+        }
+
+        private async Task LoadFromDirectoryAsync(Server s, string rootDir) {
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir)) {
+                await LoadFromDirectoryAsync(s, dir);
+            }
+            foreach (var file in PathUtils.EnumerateFiles(rootDir)) {
+                if (ModulePath.IsPythonSourceFile(file)) {
+                    await s.LoadFileAsync(new Uri(file));
+                }
+            }
         }
 
         private void Server_OnLogMessage(object sender, LogMessageEventArgs e) {
@@ -185,29 +197,23 @@ namespace AnalysisTests {
             int finalVersion,
             params DocumentChange[] e
         ) {
-            var parseStart = new TaskCompletionSource<object>();
-            EventHandler<ParseCompleteEventArgs> handler = null;
-            handler = (sender, ev) => {
-                if (ev.uri == document) {
-                    parseStart.TrySetResult(null);
-                    ((Server)sender).OnParseComplete -= handler;
-                }
-            };
-            s.OnParseComplete += handler;
+
+            var parseComplete = EventTaskSources.Server.OnParseComplete.Create(s);
 
             s.DidChangeTextDocument(new DidChangeTextDocumentParams {
                 textDocument = new VersionedTextDocumentIdentifier {
                     uri = document,
-                    version = finalVersion
+                    version = finalVersion,
                 },
                 contentChanges = e.Select(c => new TextDocumentContentChangedEvent {
                     range = c.WholeBuffer ? null : (Range?)c.ReplacedSpan,
                     text = c.InsertedText
                 }).ToArray()
             });
-            await parseStart.Task;
 
-            int newVersion = -1;
+            await parseComplete;
+
+            var newVersion = -1;
             var code = (s.GetEntry(document) as IDocument)?.ReadDocument(s.GetPart(document), out newVersion).ReadToEnd();
             return Tuple.Create(code, newVersion);
         }
@@ -234,6 +240,55 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public async Task CompletionInForStatement() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "for  ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for  x ");
+            await AssertCompletion(s, u, new[] { "for" }, new string[0], new SourceLocation(1, 4));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 6));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            // TODO: Fix parser to parse "for x i" as ForStatement and not ForStatement+ExpressionStatement
+            //u = await AddModule(s, "for x i");
+            //await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 8), applicableSpan: new SourceSpan(1, 7, 1, 8));
+            //await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 7));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(1, 9));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(1, 10));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "def f():\n    for ");
+            await AssertNoCompletion(s, u, new SourceLocation(2, 9));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "def f():\n    for x in ");
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 11));
+            await AssertCompletion(s, u, new[] { "in" }, new[] { "for", "abs" }, new SourceLocation(2, 13));
+            await AssertCompletion(s, u, new[] { "abs", "x" }, new string[0], new SourceLocation(2, 14));
+            await s.UnloadFileAsync(u);
+
+            if (!(this is LanguageServerTests_V2)) {
+                u = await AddModule(s, "async def f():\n    async for x in ");
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 5));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 10));
+                await AssertCompletion(s, u, new[] { "async", "for" }, new string[0], new SourceLocation(2, 14));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 15));
+                await s.UnloadFileAsync(u);
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task CompletionInFunctionDefinition() {
             var s = await CreateServer();
             var u = await AddModule(s, "def f(a, b:int, c=2, d:float=None): pass");
@@ -250,6 +305,23 @@ namespace AnalysisTests {
             await AssertNoCompletion(s, u, new SourceLocation(1, 35));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 36));
 
+            if (this is LanguageServerTests_V2) {
+                u = await AddModule(s, "@dec\ndef  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 4));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 5));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 6));
+            } else {
+                u = await AddModule(s, "@dec\nasync   def  f(): pass");
+                await AssertAnyCompletion(s, u, new SourceLocation(1, 1));
+                await AssertCompletion(s, u, new[] { "abs" }, new[] { "def" }, new SourceLocation(1, 2));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 1));
+                await AssertCompletion(s, u, new[] { "def" }, new string[0], new SourceLocation(2, 12));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 13));
+                await AssertNoCompletion(s, u, new SourceLocation(2, 14));
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -278,16 +350,34 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public async Task CompletionInStatements() {
+        public async Task CompletionInWithStatement() {
             var s = await CreateServer();
-            var u = await AddModule(s, "for f in l: pass\nwith x as y: pass");
+            Uri u;
 
-            await AssertNoCompletion(s, u, new SourceLocation(1, 5));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 10));
-            await AssertAnyCompletion(s, u, new SourceLocation(1, 12));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 6));
-            await AssertNoCompletion(s, u, new SourceLocation(2, 11));
-            await AssertAnyCompletion(s, u, new SourceLocation(2, 13));
+            u = await AddModule(s, "with x as y, z as w: pass");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 14));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 17));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 20));
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 21));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "with x as ");
+            await AssertAnyCompletion(s, u, new SourceLocation(1, 6));
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abs", "dir" }, new SourceLocation(1, 8));
+            await AssertNoCompletion(s, u, new SourceLocation(1, 11));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -306,10 +396,24 @@ namespace AnalysisTests {
             await AssertCompletion(s, u, new[] { "abc", "unittest" }, new[] { "abs", "dir" }, new SourceLocation(2, 6));
             await AssertCompletion(s, u, new[] { "case" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 15));
             await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 20));
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 22), applicableSpan: new SourceSpan(2, 20, 2, 26));
             await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 27));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(2, 36));
             await AssertNoCompletion(s, u, new SourceLocation(2, 39));
             await AssertCompletion(s, u, new[] { "TestCase" }, new[] { "abs", "dir", "case" }, new SourceLocation(2, 44));
+
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "from unittest.case imp\n\npass");
+            await AssertCompletion(s, u, new[] { "import" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 22), applicableSpan: new SourceSpan(1, 20, 1, 23));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "import unittest.case a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 23), applicableSpan: new SourceSpan(1, 22, 1, 23));
+            await s.UnloadFileAsync(u);
+            u = await AddModule(s, "from unittest.case import TestCase a\n\npass");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "abc", "unittest", "abs", "dir" }, new SourceLocation(1, 37), applicableSpan: new SourceSpan(1, 36, 1, 37));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
@@ -332,6 +436,12 @@ namespace AnalysisTests {
 
             u = await AddModule(s, "@");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 2));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\n");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
+
+            u = await AddModule(s, "import unittest\n\n@unittest.\ndef f(): pass");
+            await AssertCompletion(s, u, new[] { "TestCase", "skip", "skipUnless" }, new[] { "abs", "def" }, new SourceLocation(3, 11));
         }
 
         [TestMethod, Priority(0)]
@@ -339,32 +449,77 @@ namespace AnalysisTests {
             var s = await CreateServer();
             var u = await AddModule(s, "raise ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
+            await s.UnloadFileAsync(u);
 
             if (!(this is LanguageServerTests_V2)) {
                 u = await AddModule(s, "raise Exception from ");
                 await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(1, 7));
                 await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 17));
                 await AssertAnyCompletion(s, u, new SourceLocation(1, 22));
+                await s.UnloadFileAsync(u);
+
+                u = await AddModule(s, "raise Exception fr");
+                await AssertCompletion(s, u, new[] { "from" }, new[] { "Exception", "def", "abs" }, new SourceLocation(1, 19), applicableSpan: new SourceSpan(1, 17, 1, 19));
+                await s.UnloadFileAsync(u);
             }
 
             u = await AddModule(s, "raise Exception, x, y");
             await AssertAnyCompletion(s, u, new SourceLocation(1, 17));
             await AssertAnyCompletion(s, u, new SourceLocation(1, 20));
+            await s.UnloadFileAsync(u);
         }
 
         [TestMethod, Priority(0)]
         public async Task CompletionInExcept() {
             var s = await CreateServer();
-            var u = await AddModule(s, "try:\n    pass\nexcept ");
+            Uri u;
+            u = await AddModule(s, "try:\n    pass\nexcept ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept (");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 9));
+            await s.UnloadFileAsync(u);
 
             u = await AddModule(s, "try:\n    pass\nexcept Exception  as ");
             await AssertCompletion(s, u, new[] { "Exception", "ValueError" }, new[] { "def", "abs" }, new SourceLocation(3, 8));
             await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 18));
             await AssertNoCompletion(s, u, new SourceLocation(3, 22));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexc");
+            await AssertCompletion(s, u, new[] { "except", "def", "abs" }, new string[0], new SourceLocation(3, 3));
+            await s.UnloadFileAsync(u);
+
+            u = await AddModule(s, "try:\n    pass\nexcept Exception a");
+            await AssertCompletion(s, u, new[] { "as" }, new[] { "Exception", "def", "abs" }, new SourceLocation(3, 19), applicableSpan: new SourceSpan(3, 18, 3, 19));
+            await s.UnloadFileAsync(u);
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionAfterDot() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = 1\nx. n\nx.(  )\nx(x.  )\nx.  \nx  ");
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 4));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(2, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(3, 3));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(4, 5));
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new[] { "abs" }, new SourceLocation(5, 4));
+            await AssertCompletion(s, u, new[] { "abs" }, new[] { "real", "imag" }, new SourceLocation(6, 2));
+            await AssertNoCompletion(s, u, new SourceLocation(6, 3));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionAfterAssign() {
+            var s = await CreateServer();
+            Uri u;
+
+            u = await AddModule(s, "x = x\ny = ");
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(1, 5));
+            await AssertCompletion(s, u, new[] { "x", "abs" }, null, new SourceLocation(2, 5));
         }
 
         [TestMethod, Priority(0)]
@@ -445,12 +600,54 @@ mc
             );
 
             await s.UnloadFileAsync(mod2);
+            await s.WaitForCompleteAnalysisAsync();
 
             await AssertCompletion(s, mod1,
                 position: new Position { line = 2, character = 5 },
                 contains: new string[0],
                 excludes: new[] { "value" }
             );
+        }
+
+
+        class TestCompletionHookProvider : ILanguageServerExtensionProvider {
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new TestCompletionHook(server));
+            }
+
+            class TestCompletionHook : ILanguageServerExtension {
+                public TestCompletionHook(IServer server) {
+                    if (server is Server s) {
+                        s.PostProcessCompletion += Server_PostProcessCompletion;
+                    } else {
+                        server.LogMessage(MessageType.Error, "Only Python language server is supported");
+                    }
+                }
+                public string Name => null;
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) => null;
+                private void Server_PostProcessCompletion(object sender, CompletionEventArgs e) {
+                    Assert.IsNotNull(e.Tree);
+                    Assert.IsNotNull(e.Analysis);
+                    for (int i = 0; i < e.CompletionList.items.Length; ++i) {
+                        e.CompletionList.items[i].insertText = "*" + e.CompletionList.items[i].insertText;
+                    }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task CompletionHook() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 123\nx.");
+
+            await AssertCompletion(s, u, new[] { "real", "imag" }, new string[0], new Position { line = 1, character = 2 });
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(TestCompletionHookProvider).Assembly.FullName,
+                typeName = typeof(TestCompletionHookProvider).FullName
+            });
+
+            await AssertCompletion(s, u, new[] { "*real", "*imag" }, new[] { "real" }, new Position { line = 1, character = 2 });
         }
 
         [TestMethod, Priority(0)]
@@ -641,12 +838,31 @@ datetime.datetime.now().day
             if (this is LanguageServerTests_V2) {
                 await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             } else {
-                await AssertHover(s, mod, new SourceLocation(2, 11), "datetime.datetime:*", new[] { "datetime", "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
+                await AssertHover(s, mod, new SourceLocation(2, 11), "class datetime.datetime*", new[] { "datetime.datetime" }, new SourceSpan(2, 1, 2, 18));
             }
             await AssertHover(s, mod, new SourceLocation(2, 20), "datetime.datetime.now: bound built-in method now*", null, new SourceSpan(2, 1, 2, 22));
 
             if (!(this is LanguageServerTests_V2)) {
                 await AssertHover(s, mod, new SourceLocation(2, 28), "datetime.datetime.now().day: int*", new[] { "int" }, new SourceSpan(2, 1, 2, 28));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FromImportHover() {
+            using (var s = await CreateServer()) {
+                var mod = await AddModule(s, @"from os import path as p\n");
+                await AssertHover(s, mod, new SourceLocation(1, 7), "built-in module os*", null, new SourceSpan(1, 6, 1, 8));
+                await AssertHover(s, mod, new SourceLocation(1, 17), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 16, 1, 20));
+                await AssertHover(s, mod, new SourceLocation(1, 25), "built-in module posixpath*", new[] { "posixpath" }, new SourceSpan(1, 24, 1, 25));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task FromImportRelativeHover() {
+            using (var s = await CreateServer()) {
+                var mod1 = await AddModule(s, @"from . import mod2\n", "mod1");
+                var mod2 = await AddModule(s, @"def foo():\n  pass\n", "mod2");
+                await AssertHover(s, mod1, new SourceLocation(1, 16), "built-in module mod2", null, new SourceSpan(1, 15, 1, 19));
             }
         }
 
@@ -693,16 +909,15 @@ datetime.datetime.now().day
             var diags = new Dictionary<Uri, PublishDiagnosticsEventArgs>();
             var s = await CreateServer((string)null, null, diags);
             var u = await AddModule(s, "def f(/)\n    error text\n");
-            await s.WaitForCompleteAnalysisAsync();
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Error;unexpected token '/';Python;0;6;7",
-                "Error;invalid parameter;Python;0;6;7",
-                "Error;unexpected token '<newline>';Python;0;8;4",
-                "Error;unexpected indent;Python;1;4;9",
-                "Error;unexpected token 'text';Python;1;10;14",
-                "Error;unexpected token '<dedent>';Python;1;14;0"
+                "Error;unexpected token '/';Python (parser);0;6;7",
+                "Error;invalid parameter;Python (parser);0;6;7",
+                "Error;unexpected token '<newline>';Python (parser);0;8;4",
+                "Error;unexpected indent;Python (parser);1;4;9",
+                "Error;unexpected token 'text';Python (parser);1;10;14",
+                "Error;unexpected token '<dedent>';Python (parser);1;14;0"
             );
         }
 
@@ -737,7 +952,7 @@ datetime.datetime.now().day
                 if (tc == DiagnosticSeverity.Unspecified) {
                     AssertUtil.ContainsExactly(messages);
                 } else {
-                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python;2;0;1");
+                    AssertUtil.ContainsExactly(messages, $"{tc};inconsistent whitespace;Python (parser);2;0;1");
                 }
 
                 await s.UnloadFileAsync(mod);
@@ -750,15 +965,96 @@ datetime.datetime.now().day
             var s = await CreateServer((Uri)null, null, diags);
 
             var u = await AddModule(s, "y\nx x");
-            await s.WaitForCompleteAnalysisAsync();
 
             AssertUtil.ContainsExactly(
                 GetDiagnostics(diags, u),
-                "Warning;unknown variable 'y';Python;0;0;1",
-                "Warning;unknown variable 'x';Python;1;0;1",
-                "Error;unexpected token 'x';Python;1;2;3"
+                "Warning;unknown variable 'y';Python (analysis);0;0;1",
+                "Warning;unknown variable 'x';Python (analysis);1;0;1",
+                "Error;unexpected token 'x';Python (parser);1;2;3"
             );
         }
+
+        class GetAllExtensionProvider : ILanguageServerExtensionProvider {
+            public Task<ILanguageServerExtension> CreateAsync(IServer server, IReadOnlyDictionary<string, object> properties, CancellationToken cancellationToken) {
+                return Task.FromResult<ILanguageServerExtension>(new GetAllExtension((Server)server, properties));
+            }
+
+            private class GetAllExtension : ILanguageServerExtension {
+                private readonly BuiltinTypeId _typeId;
+                private readonly Server _server;
+
+                public GetAllExtension(Server server, IReadOnlyDictionary<string, object> properties) {
+                    _server = server;
+                    if (!Enum.TryParse((string)properties["typeid"], out _typeId)) {
+                        throw new ArgumentException("typeid was not valid");
+                    }
+                }
+
+                public string Name => "getall";
+
+                public IReadOnlyDictionary<string, object> ExecuteCommand(string command, IReadOnlyDictionary<string, object> properties) {
+                    if (properties == null) {
+                        return null;
+                    }
+
+                    // Very bad code, but good for testing. Copy/paste at your own risk!
+                    var entry = _server.GetEntry(new Uri((string)properties["uri"])) as IPythonProjectEntry;
+                    var location = new SourceLocation((int)properties["line"], (int)properties["column"]);
+
+                    if (command == _typeId.ToString()) {
+                        var res = new List<string>();
+                        foreach (var m in entry.Analysis.GetAllAvailableMembers(location)) {
+                            if (m.Values.Any(v => v.MemberType == PythonMemberType.Constant && v.TypeId == _typeId)) {
+                                res.Add(m.Name);
+                            }
+                        }
+                        return new Dictionary<string, object> { ["names"] = res };
+                    }
+                    return null;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task ExtensionCommand() {
+            var s = await CreateServer();
+            var u = await AddModule(s, "x = 1\ny = 2\nz = 'abc'");
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId.Int.ToString() }
+            });
+
+            List<string> res;
+            var cmd = new ExtensionCommandParams {
+                extensionName = "getall",
+                command = "Int",
+                properties = new Dictionary<string, object> { ["uri"] = u.AbsoluteUri, ["line"] = 1, ["column"] = 1 }
+            };
+
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsExactly(res, "x", "y");
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+
+            await s.LoadExtension(new PythonAnalysisExtensionParams {
+                assembly = typeof(GetAllExtensionProvider).Assembly.FullName,
+                typeName = typeof(GetAllExtensionProvider).FullName,
+                properties = new Dictionary<string, object> { ["typeid"] = BuiltinTypeId_Str.ToString() }
+            });
+
+            cmd.command = BuiltinTypeId_Str.ToString();
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNotNull(res);
+            AssertUtil.ContainsAtLeast(res, "z", "__name__", "__file__");
+            cmd.command = "Int";
+            res = (await s.ExtensionCommand(cmd)).properties?["names"] as List<string>;
+            Assert.IsNull(res);
+        }
+
 
         private static IEnumerable<string> GetDiagnostics(Dictionary<Uri, PublishDiagnosticsEventArgs> events, Uri uri) {
             return events[uri].diagnostics
@@ -766,7 +1062,7 @@ datetime.datetime.now().day
                 .Select(d => $"{d.severity};{d.message};{d.source};{d.range.start.line};{d.range.start.character};{d.range.end.character}");
         }
 
-        public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null) {
+        public static async Task AssertCompletion(Server s, TextDocumentIdentifier document, IEnumerable<string> contains, IEnumerable<string> excludes, Position? position = null, CompletionContext? context = null, Func<CompletionItem, string> cmpKey = null, string expr = null, Range? applicableSpan = null) {
             var res = await s.Completion(new CompletionParams {
                 textDocument = document,
                 position = position ?? new Position(),
@@ -781,6 +1077,9 @@ datetime.datetime.now().day
                 contains,
                 excludes
             );
+            if (applicableSpan.HasValue) {
+                Assert.AreEqual(applicableSpan, res._applicableSpan);
+            }
         }
 
         private static void DumpDetails(CompletionList completions) {
@@ -866,5 +1165,7 @@ datetime.datetime.now().day
     [TestClass]
     public class LanguageServerTests_V2 : LanguageServerTests {
         protected override PythonVersion Default => DefaultV2;
+        protected override BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Bytes;
+
     }
 }

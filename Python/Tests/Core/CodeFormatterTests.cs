@@ -75,6 +75,31 @@ class Oar(object):
         }
 
         [TestMethod, Priority(0)]
+        public async Task TestCodeFormattingMidLineSelection() {
+            var input = @"
+def f(x):
+    f( x+1)
+    pass
+";
+
+            string selection = "x+1";
+
+            string expected = @"
+def f(x):
+    f( x + 1)
+    pass
+";
+
+            var options = new CodeFormattingOptions() {
+                SpacesAroundBinaryOperators = true,
+                // Even though true, we aren't formatting the call, so it shouldn't apply
+                SpaceWithinCallParens = true
+            };
+
+            await CodeFormattingTest(input, selection, expected, " x + 1", options);
+        }
+
+        [TestMethod, Priority(0)]
         public async Task TestCodeFormattingEndOfFile() {
             var input = @"print('Hello World')
 

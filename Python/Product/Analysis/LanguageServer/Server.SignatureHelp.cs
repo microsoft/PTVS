@@ -26,15 +26,12 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
         public override async Task<SignatureHelp> SignatureHelp(TextDocumentPositionParams @params) {
-            await _analyzerCreationTask;
-            await IfTestWaitForAnalysisCompleteAsync();
-
             var uri = @params.textDocument.uri;
-            _projectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            ProjectFiles.GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
 
             TraceMessage($"Signatures in {uri} at {@params.position}");
 
-            var analysis = entry?.Analysis;
+            var analysis = entry != null ? await entry.GetAnalysisAsync(waitingTimeout: 50) : null;
             if (analysis == null) {
                 TraceMessage($"No analysis found for {uri}");
                 return new SignatureHelp();
@@ -77,12 +74,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 ? activeSignature
                 : (sigs.Length > 0 ? 0 : -1);
 
-            var sh = new SignatureHelp {
+            return new SignatureHelp {
                 signatures = sigs,
                 activeSignature = activeSignature,
                 activeParameter = activeParameter
             };
-            return sh;
         }
 
         private SignatureInformation ToSignatureInformation(IOverloadResult overload) {
@@ -113,7 +109,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             si.documentation = string.IsNullOrEmpty(overload.Documentation) ? null : overload.Documentation;
-            var formatSetting = _clientCaps.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
+            var formatSetting = _clientCaps?.textDocument?.signatureHelp?.signatureInformation?.documentationFormat;
             si.documentation = GetMarkupContent(si.documentation.value, formatSetting);
             foreach (var p in si.parameters) {
                 p.documentation = GetMarkupContent(p.documentation.value, formatSetting);

@@ -20,7 +20,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Services;
 
-namespace Microsoft.PythonTools.VsCode.Commands {
+namespace Microsoft.Python.LanguageServer.Commands {
     internal sealed class Controller : IController {
         private static readonly Dictionary<string, ICommand> _commands = new Dictionary<string, ICommand> {
         };

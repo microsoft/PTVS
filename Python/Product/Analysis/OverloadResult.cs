@@ -43,6 +43,10 @@ namespace Microsoft.PythonTools.Analysis {
             return new OverloadResult(newParameters, Name, Documentation, ReturnType);
         }
 
+        internal virtual OverloadResult WithoutLeadingParameters(int skipCount = 1) {
+            return new OverloadResult(_parameters.Skip(skipCount).ToArray(), Name, Documentation, _returnType);
+        }
+
         private static string Longest(string x, string y) {
             if (x == null) {
                 return y;
@@ -243,6 +247,9 @@ namespace Microsoft.PythonTools.Analysis {
         private IReadOnlyList<string> _returnTypes;
         private static readonly string _calculating = "Documentation is still being calculated, please try again soon.";
 
+        // Used by ToString to ensure docs have completed
+        private Task _docTask;
+
         internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, Func<string> fallbackDoc, params ParameterResult[] extraParams)
             : base(null, name, null, null) {
             _fallbackDoc = fallbackDoc;
@@ -250,7 +257,7 @@ namespace Microsoft.PythonTools.Analysis {
             _extraParameters = extraParams;
             _removedParams = removedParams;
             _projectState = state;
-            _returnTypes = Array.Empty<string>();
+            _returnTypes = GetInstanceDescriptions(state, overload.ReturnType).OrderBy(n => n).Distinct().ToArray();
 
             Calculate();
         }
@@ -259,16 +266,18 @@ namespace Microsoft.PythonTools.Analysis {
             : this(state, name, overload, removedParams, null, extraParams) {
         }
 
-        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, IPythonFunctionOverload overload, int removedParams, string name, Func<string> fallbackDoc, params ParameterResult[] extraParams)
-            : base(null, name, null, null) {
-            _overload = overload;
-            _extraParameters = extraParams;
-            _removedParams = removedParams;
-            _projectState = state;
-            _fallbackDoc = fallbackDoc;
-            _returnTypes = Array.Empty<string>();
-
-            Calculate();
+        private static IEnumerable<string> GetInstanceDescriptions(PythonAnalyzer state, IEnumerable<IPythonType> type) {
+            foreach (var t in type) {
+                var av = state.GetAnalysisValueFromObjects(t);
+                var inst = av?.GetInstanceType();
+                if (inst.IsUnknown()) {
+                    yield return t.Name;
+                } else {
+                    foreach (var d in inst.GetShortDescriptions()) {
+                        yield return d;
+                    }
+                }
+            }
         }
 
         internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {
@@ -276,23 +285,39 @@ namespace Microsoft.PythonTools.Analysis {
                 _projectState,
                 Name,
                 _overload,
-                0,
+                _overload.GetParameters()?.Length ?? 0,
                 _fallbackDoc,
                 newParameters
             );
         }
 
-        public override string Documentation => _doc;
+        internal override OverloadResult WithoutLeadingParameters(int skipCount = 1) {
+            return new BuiltinFunctionOverloadResult(_projectState, Name, _overload, skipCount, _fallbackDoc);
+        }
+
+        public override string Documentation {
+            get {
+                if (_docTask != null) {
+                    _docTask.Wait(200);
+                }
+                return _doc;
+            }
+        }
 
         private void Calculate() {
             // initially fill in w/ a string saying we don't yet have the documentation
             _doc = _calculating;
-            Task.Factory.StartNew(DocCalculator).DoNotWait();
+            _docTask = Task.Factory.StartNew(DocCalculator);
+        }
+
+        public override string ToString() {
+            _docTask?.Wait();
+            return base.ToString();
         }
 
         private void DocCalculator() {
-            StringBuilder doc = new StringBuilder();
-            if (!String.IsNullOrEmpty(_overload.Documentation)) {
+            var doc = new StringBuilder();
+            if (!string.IsNullOrEmpty(_overload.Documentation)) {
                 doc.AppendLine(_overload.Documentation);
             }
 
@@ -317,6 +342,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 _doc = doc.ToString();
             }
+            _docTask = null;
         }
 
         public override ParameterResult[] Parameters {

@@ -131,19 +131,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             return await _serviceProvider.GetUIThread().InvokeTask(async () => {
-                try {
-                    UpdatePropertiesFromProjectMoniker();
-                } catch (NoInterpretersException) {
-                    WriteError(Strings.NoInterpretersAvailable);
-                    return null;
-                } catch (MissingInterpreterException ex) {
-                    WriteError(ex.ToString());
-                    return null;
-                } catch (IOException ex) {
-                    WriteError(ex.ToString());
-                    return null;
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    WriteError(ex.ToUnhandledExceptionMessage(GetType()));
+                if (!UpdatePropertiesFromProjectMoniker().IsSuccessful) {
                     return null;
                 }
 

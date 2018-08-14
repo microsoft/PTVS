@@ -22,17 +22,13 @@ using Microsoft.PythonTools.Analysis;
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunctionOverload : IPythonFunctionOverload, ILocatedMember {
         private readonly IReadOnlyList<IParameterInfo> _parameters;
-        private readonly IList<IPythonType> _returnType;
 
         public AstPythonFunctionOverload(
             IEnumerable<IParameterInfo> parameters,
-            LocationInfo loc, 
-            IList<IPythonType> returnType
+            LocationInfo loc
         ) {
             _parameters = parameters?.ToArray() ?? throw new ArgumentNullException(nameof(parameters));
             Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
-            // Do not copy returnType - it will be mutated by the walker that passed it in
-            _returnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
         }
 
         internal void SetDocumentation(string doc) {
@@ -42,10 +38,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Documentation = doc;
         }
 
+        internal List<IPythonType> ReturnTypes { get; } = new List<IPythonType>();
+
         public string Documentation { get; private set; }
         public string ReturnDocumentation { get; }
         public IParameterInfo[] GetParameters() => _parameters.ToArray();
-        public IList<IPythonType> ReturnType => _returnType.Where(v => v.TypeId != BuiltinTypeId.Unknown).ToArray();
+        public IList<IPythonType> ReturnType => ReturnTypes.Where(v => v.TypeId != BuiltinTypeId.Unknown).ToArray();
         public IEnumerable<LocationInfo> Locations { get; }
     }
 }

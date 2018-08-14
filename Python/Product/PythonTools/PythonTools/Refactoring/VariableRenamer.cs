@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 .Where(n => !string.IsNullOrEmpty(n))
                 .FirstOrDefault() ?? analysis.Expression;
 
-            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWithOrdinal("_" + analysis.PrivatePrefix)) {
+            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWithOrdinal(analysis.PrivatePrefix)) {
                 originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
                 privatePrefix = analysis.PrivatePrefix;
             }
@@ -115,30 +115,6 @@ namespace Microsoft.PythonTools.Refactoring {
                     ErrorHandler.ThrowOnFailure(engine.ApplyChanges());
                 }
             }
-        }
-
-        private async Task<List<AnalysisVariable>> GetKeywordParameters(string expr, string originalName) {
-            List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
-            if (expr.IndexOf('.')  == -1) {
-                // let's check if we'r re-naming a keyword argument...
-                ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = await _uiThread.InvokeTask(() => _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span))
-                    .ConfigureAwait(false);
-
-                foreach (var sig in sigs.Signatures) {
-                    PythonSignature overloadRes = sig as PythonSignature;
-                    if (overloadRes != null) {
-                        foreach (PythonParameter param in overloadRes.Parameters) {
-                            // UNDONE: Need to get parameter references some other way
-                            //if (param.Name == originalName && param.Variables != null) {
-                            //    paramVars.AddRange(param.Variables);
-                            //}
-                        }
-                    }
-                }
-            }
-
-            return paramVars;
         }
 
         private bool IsModuleName(IRenameVariableInput input) {

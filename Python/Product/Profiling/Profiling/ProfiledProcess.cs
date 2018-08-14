@@ -159,7 +159,11 @@ namespace Microsoft.PythonTools.Profiling {
                 }
 
                 using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
+#if DEV16
+                    var path = key?.GetValue("CollectionToolsDir16") as string;
+#else
                     var path = key?.GetValue("CollectionToolsDir") as string;
+#endif
                     if (!string.IsNullOrEmpty(path)) {
                         if (_arch == ProcessorArchitecture.Amd64) {
                             path = PathUtils.GetAbsoluteDirectoryPath(path, "x64");

@@ -207,6 +207,10 @@ namespace Microsoft.PythonTools.Commands {
             /// if it forms a complete statement.
             /// </summary>
             private async Task ProcessQueuedInputAsync() {
+                if (_pendingInputs.First == null) {
+                    return;
+                }
+
                 var textView = _window.TextView;
                 var eval = _window.GetPythonEvaluator();
 

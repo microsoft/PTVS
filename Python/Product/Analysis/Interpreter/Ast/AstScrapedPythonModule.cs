@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();
+            _scraped = false;
         }
 
         public string Name { get; }
@@ -94,7 +95,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
 
-            ModulePath mp = AstPythonInterpreterFactory.FindModuleAsync(factory, _filePath)
+            ModulePath mp = AstPythonInterpreterFactory.FindModuleAsync(factory, _filePath, CancellationToken.None)
                 .WaitAndUnwrapExceptions();
             if (string.IsNullOrEmpty(mp.FullName)) {
                 return null;
@@ -113,7 +114,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            return new AstAnalysisWalker(interpreter, ast, this, _filePath, null, _members, false, true);
+#if DEBUG
+            // In debug builds we let you F12 to the scraped file
+            var filePath = string.IsNullOrEmpty(_filePath)
+                ? null
+                : ((interpreter as AstPythonInterpreter)?.Factory as AstPythonInterpreterFactory)?.GetCacheFilePath(_filePath);
+            var uri = string.IsNullOrEmpty(filePath) ? null : new Uri(filePath);
+            const bool includeLocations = true;
+#else
+            const string filePath = null;
+            const Uri uri = null;
+            const bool includeLocations = false;
+#endif
+            return new AstAnalysisWalker(interpreter, ast, this, filePath, uri, _members, includeLocations, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
@@ -132,7 +145,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_scraped) {
                 return;
             }
-            _scraped = true;
+            Debugger.NotifyOfCrossThreadDependency();
 
             var interp = context as AstPythonInterpreter;
             var fact = interp?.Factory as AstPythonInterpreterFactory;
@@ -142,6 +155,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var code = LoadCachedCode(interp);
             bool needCache = code == null;
+
+            _scraped = true;
 
             if (needCache) {
                 if (!File.Exists(fact.Configuration.InterpreterPath)) {

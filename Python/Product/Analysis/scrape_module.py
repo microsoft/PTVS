@@ -17,7 +17,7 @@
 from __future__ import print_function
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "15.7"
+__version__ = "15.8"
 
 import ast
 import keyword
@@ -79,6 +79,8 @@ STATICMETHOD_TYPES = ()
 CLASSMETHOD_TYPES = type(float.fromhex),
 PROPERTY_TYPES = type(int.real), type(property.fget)
 
+INVALID_ARGNAMES = set(keyword.kwlist) | set(('None', 'True', 'False'))
+
 # These full names are known to be lies. When we encounter
 # them while scraping a module, assume that we need to write
 # out the full type rather than including them by reference.
@@ -86,8 +88,10 @@ LIES_ABOUT_MODULE = frozenset([
     builtins.__name__ + ".weakcallableproxy",
     builtins.__name__ + ".weakproxy",
     builtins.__name__ + ".weakref",
+    "ctypes.ArgumentError",
     "os.stat_result",
     "os.statvfs_result",
+    "xml.parsers.expat.ExpatError",
 
     "numpy.broadcast",
     "numpy.busdaycalendar",
@@ -96,7 +100,28 @@ LIES_ABOUT_MODULE = frozenset([
     "numpy.flatiter",
     "numpy.ndarray",
     "numpy.nditer",
+
+    # These modules contain multiple members that lie about their
+    # module. Always write out all members of these in full.
+    "_asyncio.*",
+    "_bsddb.*",
+    "_decimal.*",
+    "_elementtree.*",
+    "_socket.*",
+    "_sqlite3.*",
+    "_ssl.*",
+    "_testmultiphase.*",
 ])
+
+# These type names cause conflicts with their values, so
+# we need to forcibly rename them.
+SYS_INFO_TYPES = frozenset((
+    "float_info",
+    "hash_info",
+    "int_info",
+    "thread_info",
+    "version_info",
+))
 
 VALUE_REPR_FIX = {
     float('inf'): "float('inf')",
@@ -115,6 +140,11 @@ def safe_callable(v):
         return hasattr(v, '__call__')
     except Exception:
         return False
+
+def safe_module_name(n):
+    if n:
+        return '_mod_' + n.replace('.', '_')
+    return n
 
 class Signature(object):
     # These two dictionaries start with Python 3 values.
@@ -290,7 +320,7 @@ class Signature(object):
             self.restype = 'pass'
 
         #Special case for 'with' statement and built-ins like open() or memoryview
-        if state.module and name == '__enter__':
+        if name == '__enter__' and self.restype == 'pass':
             self.restype = 'return self'
 
     def __str__(self):
@@ -339,23 +369,23 @@ class Signature(object):
             return
 
         argn = []
-        seen_names = set(keyword.kwlist)
+        seen_names = set(INVALID_ARGNAMES)
         defaults = list(defaults)
+        default_set = set(defaults)
         for a in args.args:
-            if defaults:
-                if defaults[0] == a:
-                    defaults.pop()
-                else:
-                    argn.extend(defaults)
-                    defaults = []
+            if a in default_set:
+                default_set.discard(a)
             argn.append(self._make_unique_name(a, seen_names))
-        if defaults and not argn:
-            argn.extend(defaults)
+        if default_set:
+            argn[:0] = [a for a in defaults if a in default_set]
 
         if getattr(args, 'varargs', None):
             argn.append('*' + args.varargs)
         if getattr(args, 'varkw', None):
             argn.append('**' + args.varkw)
+
+        if argn and argn[-1] in ('*', '**'):
+            argn[-1] += self._make_unique_name('_', seen_names)
 
         return self.name + '(' + ', '.join(argn) + ')'
 
@@ -406,7 +436,10 @@ class Signature(object):
         if typeName.startswith('int'):
             return "return 1"
         if typeName.startswith('long'):
-            return "return 1L"
+            if sys.version_info[0] < 3:
+                return "return 1L"
+            else:
+                return "return 1"
         if typeName.startswith('list'):
             return "return list()"
         if typeName.startswith('dict'):
@@ -507,39 +540,45 @@ class Signature(object):
 
     def _parse_format_arg(self, name, args, defaults):
         defaults = list(defaults)
-        seen_names = set(keyword.kwlist)
+        default_set = set(defaults)
+        seen_names = set(INVALID_ARGNAMES)
         parts = [name or '<function>', '(']
+        arg_parts = []
         any_default = False
 
         for a_names, a_ann, a_def, a_opt in args:
             if not a_names:
                 continue
             a_name = ''.join(a_names)
-            if defaults:
-                if a_name != defaults[0]:
-                    for n in defaults:
-                       parts.append(n)
-                       parts.append(', ')
-                    defaults = []
-                else:
-                    defaults.pop(0)
+            if a_name in default_set:
+                default_set.discard(a_name)
 
-            parts.append(self._make_unique_name(a_name, seen_names))
+            arg_parts.append(self._make_unique_name(a_name, seen_names))
             if self._can_eval(''.join(a_ann)):
-                parts.append(': ')
-                parts.extend(a_ann)
+                arg_parts.append(': ')
+                arg_parts.extend(a_ann)
             if self._can_eval(''.join(a_def)):
-                parts.append('=')
-                parts.extend(a_def)
+                arg_parts.append('=')
+                arg_parts.extend(a_def)
                 any_default = True
             elif a_opt[0] or (any_default and '*' not in a_name and '**' not in a_name):
-                parts.append('=None')
+                arg_parts.append('=None')
                 any_default = True
             if a_name.startswith('*'):
                 any_default = True
-            parts.append(', ')
+            arg_parts.append(', ')
+
+        if default_set:
+            for a in defaults:
+                if a in default_set:
+                    parts.append(a)
+                    parts.append(', ')
+        parts.extend(arg_parts)
         if parts[-1] == ', ':
             parts.pop()
+        if parts and parts[-1] in ('*', '**'):
+            parts[-1] += self._make_unique_name('_', seen_names)
+
         parts.append(')')
 
         return ''.join(parts)
@@ -556,6 +595,7 @@ class Signature(object):
             return
 
         name = None
+        seen_open_paren = False
         args = [([], [], [], [False])]
         optional = False
 
@@ -564,7 +604,7 @@ class Signature(object):
             if tt == tokenize.NAME:
                 if name is None:
                     name = s
-                else:
+                elif seen_open_paren:
                     args[-1][0].append(s)
                     args[-1][3][0] = optional
             elif tt in (tokenize.STAR, tokenize.DOUBLESTAR):
@@ -581,7 +621,11 @@ class Signature(object):
                 optional = True
             elif tt == tokenize.RSQB:
                 optional = False
-            elif s == '...':
+            elif tt == tokenize.LPAR:
+                seen_open_paren = True
+            elif tt == tokenize.RPAR:
+                break
+            elif s in ('->', '...'):
                 return
 
         if name and (allow_name_mismatch or name == self.name):
@@ -648,23 +692,11 @@ class MemberInfo(object):
         if issubclass(value_type, type):
             self.need_imports, type_name = self._get_typename(value, module)
             if '.' in type_name:
-                self.literal = type_name
+                m, s, n = type_name.rpartition('.')
+                self.literal = safe_module_name(m) + s + n
             else:
                 self.scope_name = self.type_name = type_name
-                try:
-                    bases = getattr(value, '__bases__', ())
-                except Exception:
-                    pass
-                else:
-                    self.bases = []
-                    self.need_imports = list(self.need_imports)
-                    for ni, t in (self._get_typename(b, module) for b in bases):
-                        if not t:
-                            continue
-                        if t == type_name and module in ni:
-                            continue
-                        self.bases.append(t)
-                        self.need_imports.extend(ni)
+                self._collect_bases(value, module, self.type_name)
 
         elif safe_callable(value):
             dec = ()
@@ -679,6 +711,7 @@ class MemberInfo(object):
                 self.signature = Signature(name, value, scope, scope_alias=scope_alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
+                self._collect_bases(value_type, module, self.type_name)
             if isinstance(value, float) and repr(value) == 'nan':
                 self.literal = "float('nan')"
             try:
@@ -687,6 +720,22 @@ class MemberInfo(object):
                 pass
         elif not self.literal:
             self.literal = 'None'
+
+    def _collect_bases(self, value_type, module, type_name):
+        try:
+            bases = getattr(value_type, '__bases__', ())
+        except Exception:
+            pass
+        else:
+            self.bases = []
+            self.need_imports = list(self.need_imports)
+            for ni, t in (self._get_typename(b, module) for b in bases):
+                if not t:
+                    continue
+                if t == type_name and module in ni:
+                    continue
+                self.bases.append(t)
+                self.need_imports.extend(ni)
 
     @classmethod
     def _get_typename(cls, value_type, in_module):
@@ -698,33 +747,44 @@ class MemberInfo(object):
             if sys.version_info[0] == 2 and module == 'exceptions' and in_module == builtins.__name__:
                 module = builtins.__name__
 
+            # Special workaround for IronPython types that include their module name
+            if in_module and type_name.startswith(in_module + '.'):
+                type_name = type_name[len(in_module) + 1:]
+                module = in_module
+
             if module and module != '<unknown>':
                 if module == in_module:
                     return (module,), type_name
 
                 fullname = module + '.' + type_name
-                if fullname in LIES_ABOUT_MODULE:
+
+                if in_module and (fullname in LIES_ABOUT_MODULE or (in_module + '.*') in LIES_ABOUT_MODULE):
                     # Treat the type as if it came from the current module
                     return (in_module,), type_name
 
                 return (module,), fullname
+
             return (), type_name
         except Exception:
             warnings.warn('could not get type of ' + repr(value_type), InspectWarning)
+            raise
             return (), None
 
     def _str_from_literal(self, lit):
         return self.name + ' = ' + lit
 
     def _str_from_typename(self, type_name):
-        return self.name + ' = ' + type_name + '()'
+        mod_name, sep, name = type_name.rpartition('.')
+        return self.name + ' = ' + safe_module_name(mod_name) + sep + name + '()'
 
     def _str_from_value(self, v):
         return self.name + ' = ' + repr(v)
 
     def _lines_with_members(self):
         if self.bases:
-            yield 'class ' + self.name + '(' + ','.join(self.bases) + '):'
+            split_bases = [n.rpartition('.') for n in self.bases]
+            bases = ','.join((safe_module_name(n[0]) + n[1] + n[2]) for n in split_bases)
+            yield 'class ' + self.name + '(' + bases + '):'
         else:
             yield 'class ' + self.name + ':'
         if self.documentation:
@@ -775,15 +835,15 @@ class MemberInfo(object):
 
 
 MODULE_MEMBER_SUBSTITUTE = {
-    '__builtins__': MemberInfo('__builtins__', {}),
+    '__builtins__': MemberInfo('__builtins__', None, literal='{}'),
     '__spec__': None,
     '__loader__': None,
 }
 
 CLASS_MEMBER_SUBSTITUTE = {
-    '__bases__': MemberInfo('__bases__', ()),
-    '__mro__': MemberInfo('__mro__', ()),
-    '__dict__': MemberInfo('__dict__', {}),
+    '__bases__': MemberInfo('__bases__', None, literal='()'),
+    '__mro__': MemberInfo('__mro__', None, literal='()'),
+    '__dict__': MemberInfo('__dict__', None, literal='{}'),
     '__doc__': None,
     '__new__': None,
 }
@@ -851,6 +911,12 @@ class ScrapeState(object):
 
     def collect_top_level_members(self):
         self._collect_members(self.module, self.members, MODULE_MEMBER_SUBSTITUTE, None)
+
+        if self.module_name == 'sys':
+            sysinfo = [m for m in self.members if m.type_name in SYS_INFO_TYPES]
+            for m in sysinfo:
+                self.members.append(MemberInfo(m.name, None, literal="__" + m.name + "()"))
+                m.name = m.scope_name = m.type_name = '__' + m.type_name
 
         m_names = set(m.name for m in self.members)
         undeclared = []
@@ -977,7 +1043,7 @@ class ScrapeState(object):
 
         if imports:
             for mod in sorted(imports):
-                print("import " + mod, file=out)
+                print("import " + mod + " as " + safe_module_name(mod), file=out)
             print("", file=out)
 
         for value in self.members:
@@ -1189,7 +1255,7 @@ def add_builtin_objects(state):
         "__Bool__.from_bytes": "(bytes, byteorder, *, signed=False)",
         "__Int__.from_bytes": "(bytes, byteorder, *, signed=False)",
         "__Float__.fromhex": "(string)",
-        "__Dict__.get": "(self, key, d=Unknown())",
+        "__Dict__.get": "(self, key, d=None)",
         "__Property__.getter": "(self, func)",
         "hex": "(self)",
         "__List__.insert": "(self, index, value)",
@@ -1233,9 +1299,9 @@ def add_builtin_objects(state):
         "__Bytes__.partition": "(self, sep)",
         "__Unicode__.partition": "(self, sep)",
         "__List__.pop": "(self, index=-1)",
-        "__Dict__.pop": "(self, k, d=Unknown())",
+        "__Dict__.pop": "(self, k, d=None)",
         "__Set__.pop": "(self)",
-        "__Dict__.popitem": "(self, k, d=Unknown())",
+        "__Dict__.popitem": "(self, k, d=None)",
         "__List__.remove": "(self, value)",
         "__Set__.remove": "(self, elem)",
         "replace": "(self, old, new, count=-1)",

@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools {
 
         private static readonly Regex InterestingApplicationLogEntries = new Regex(
             @"^Application: (devenv\.exe|.+?Python.+?\.exe|ipy(64)?\.exe)",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled
         );
 
         public DiagnosticsProvider(IServiceProvider serviceProvider) {

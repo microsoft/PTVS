@@ -19,44 +19,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public abstract class ServerBase {
-        private RequestLock _lock;
-
-        private sealed class RequestLock : IDisposable {
-            public readonly ServerBase Owner;
-            public readonly CancellationTokenSource CancellationTokenSource;
-
-            public CancellationToken Token => CancellationTokenSource.Token;
-            public void Cancel() => CancellationTokenSource.Cancel();
-
-            public RequestLock(ServerBase owner, int millisecondsTimeout) {
-                CancellationTokenSource = millisecondsTimeout > 0 ?
-                    new CancellationTokenSource(millisecondsTimeout) :
-                    new CancellationTokenSource();
-
-                Owner = owner;
-                if (Interlocked.CompareExchange(ref Owner._lock, this, null) != null) {
-                    throw new InvalidOperationException("currently processing another request");
-                }
-            }
-
-            public void Dispose() {
-                CancellationTokenSource.Dispose();
-                Interlocked.CompareExchange(ref Owner._lock, null, this);
-            }
-        }
-
+    public abstract class ServerBase : IServer {
         /// <summary>
-        /// Should be used in a using() statement around any requests that support
-        /// cancellation or timeout.
+        /// Doesn't do anything. Left here for legacy purpores
         /// </summary>
-        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => new RequestLock(this, millisecondsTimeout);
-
-        /// <summary>
-        /// Get this token at the start of request processing and abort when it
-        /// is marked as cancelled.
-        /// </summary>
-        protected CancellationToken CancellationToken => Volatile.Read(ref _lock)?.Token ?? CancellationToken.None;
+        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => EmptyDisposable.Instance;
 
         #region Client Requests
 
@@ -67,8 +34,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public virtual Task Shutdown() => Task.CompletedTask;
 
         public virtual Task Exit() => Task.CompletedTask;
-
-        public virtual void CancelRequest()  => Volatile.Read(ref _lock)?.Cancel();
+        
+        public virtual void CancelRequest() {} // Does nothing
 
         public virtual Task DidChangeConfiguration(DidChangeConfigurationParams @params) => Task.CompletedTask;
 
@@ -124,24 +91,28 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public virtual Task<WorkspaceEdit> Rename(RenameParams @params) => throw new NotImplementedException();
 
+        public virtual Task ReloadModulesAsync(CancellationToken token) => Task.CompletedTask;
         #endregion
 
         #region Server Requests
 
         public event EventHandler<ShowMessageEventArgs> OnShowMessage;
 
-        protected void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
+        public void ShowMessage(MessageType type, string message) => OnShowMessage?.Invoke(this, new ShowMessageEventArgs { type = type, message = message });
 
         public event EventHandler<LogMessageEventArgs> OnLogMessage;
 
-        protected void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
+        public void LogMessage(MessageType type, string message) => OnLogMessage?.Invoke(this, new LogMessageEventArgs { type = type, message = message });
+
 
         public event EventHandler<TelemetryEventArgs> OnTelemetry;
+        public void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
 
-        protected void Telemetry(TelemetryEventArgs e) => OnTelemetry?.Invoke(this, e);
+        public event EventHandler<CommandEventArgs> OnCommand;
+        public void Command(CommandEventArgs e) => OnCommand?.Invoke(this, e);
 
         public event EventHandler<RegisterCapabilityEventArgs> OnRegisterCapability;
-        protected Task RegisterCapability(RegistrationParams @params) {
+        public Task RegisterCapability(RegistrationParams @params) {
             var evt = OnRegisterCapability;
             if (evt == null) {
                 return Task.CompletedTask;
@@ -154,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
 
         public event EventHandler<UnregisterCapabilityEventArgs> OnUnregisterCapability;
-        protected Task UnregisterCapability(UnregistrationParams @params) {
+        public Task UnregisterCapability(UnregistrationParams @params) {
             var evt = OnUnregisterCapability;
             if (evt == null) {
                 return Task.CompletedTask;
@@ -166,7 +137,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<ApplyWorkspaceEditEventArgs> OnApplyWorkspaceEdit;
-        protected Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
+        public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEdit(ApplyWorkspaceEditParams @params) {
             var evt = OnApplyWorkspaceEdit;
             if (evt == null) {
                 return Task.FromResult((ApplyWorkspaceEditResponse)null);
@@ -178,8 +149,25 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public event EventHandler<PublishDiagnosticsEventArgs> OnPublishDiagnostics;
-        protected void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
+        public void PublishDiagnostics(PublishDiagnosticsEventArgs e) => OnPublishDiagnostics?.Invoke(this, e);
 
         #endregion
+
+        /// <summary>
+	    /// Represents a disposable that does nothing on disposal.
+	    /// </summary>
+	    private sealed class EmptyDisposable : IDisposable {
+            /// <summary>
+            /// Singleton default disposable.
+            /// </summary>
+            public static EmptyDisposable Instance { get; } = new EmptyDisposable();
+
+            private EmptyDisposable() { }
+
+            /// <summary>
+            /// Does nothing.
+            /// </summary>
+            public void Dispose() { }
+        }  
     }
 }

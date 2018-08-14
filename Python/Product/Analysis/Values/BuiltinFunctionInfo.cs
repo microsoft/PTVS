@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription {
+    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription, IHasQualifiedName {
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
         private readonly Lazy<IAnalysisSet> _returnTypes;
@@ -142,25 +142,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override PythonMemberType MemberType => Function.MemberType;
+
+        public string FullyQualifiedName => FullyQualifiedNamePair.CombineNames();
+        public KeyValuePair<string, string> FullyQualifiedNamePair => (Function as IHasQualifiedName)?.FullyQualifiedNamePair ??
+            new KeyValuePair<string, string>(DeclaringModule?.ModuleName, Name);
+
         public override ILocatedMember GetLocatedMember() => Function as ILocatedMember;
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return ns is BuiltinFunctionInfo || ns is FunctionInfo || ns == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
             }
-            return base.UnionEquals(ns, strength);
+            return Function.Equals((ns as BuiltinFunctionInfo)?.Function);
         }
 
         internal override int UnionHashCode(int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.UnionHashCode(strength);
             }
-            return base.UnionHashCode(strength);
+            return Function.GetHashCode();
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
+            }
+            if (Function.Equals((ns as BuiltinFunctionInfo)?.Function)) {
+                return this;
             }
             return base.UnionMergeTypes(ns, strength);
         }

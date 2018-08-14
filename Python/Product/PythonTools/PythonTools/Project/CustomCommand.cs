@@ -104,8 +104,8 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_errorListProvider != null) {
                     _errorListProvider.Dispose();
+                }
             }
-        }
         }
 
         private static uint AddNamedCommand(IServiceProvider provider, string name, string tooltipText = null) {
@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Project {
                     // the intended one.
                     asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => assembly == a.GetName().Name);
                 }
-                
+
                 asm = asm ?? System.Reflection.Assembly.Load(asmName);
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonProject projectNode
         ) {
             var label = project.GetPropertyValue("PythonCommandsDisplayLabel") ?? string.Empty;
-            
+
             var match = _customCommandLabelRegex.Match(label);
             if (match.Success) {
                 label = LoadResourceFromAssembly(
@@ -267,7 +267,7 @@ namespace Microsoft.PythonTools.Project {
 
         public Task ExecuteAsync(object parameter) {
             var task = ExecuteWorker((parameter as PythonProjectNode) ?? _project);
-            
+
             // Ensure the exception is observed.
             // The caller can check task.Exception to do their own reporting.
             task.ContinueWith(t => {
@@ -309,16 +309,17 @@ namespace Microsoft.PythonTools.Project {
             private readonly IVsHierarchy _hierarchy;
             private readonly string _workingDirectory;
             private readonly ErrorListProvider _errorListProvider;
-            private readonly Regex _errorRegex, _warningRegex;
+            private readonly Regex _errorRegex, _warningRegex, _messageRegex;
             private readonly IServiceProvider _serviceProvider;
 
-            public ErrorListRedirector(IServiceProvider serviceProvider, IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex) {
+            public ErrorListRedirector(IServiceProvider serviceProvider, IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex, Regex messageRegex) {
                 _serviceProvider = serviceProvider;
                 _hierarchy = hierarchy;
                 _workingDirectory = workingDirectory;
                 _errorListProvider = errorListProvider;
                 _errorRegex = errorRegex;
                 _warningRegex = warningRegex;
+                _messageRegex = messageRegex;
             }
 
             public override void WriteErrorLine(string s) {
@@ -327,7 +328,7 @@ namespace Microsoft.PythonTools.Project {
 
             public override void WriteLine(string s) {
                 var errorCategory = TaskErrorCategory.Error;
-                foreach (var regex in new[] { _errorRegex, _warningRegex }) {
+                foreach (var regex in new[] { _errorRegex, _warningRegex, _messageRegex }) {
                     if (regex != null) {
                         var m = regex.Match(s);
                         if (m.Success) {
@@ -349,7 +350,12 @@ namespace Microsoft.PythonTools.Project {
                         }
                     }
 
-                    errorCategory = TaskErrorCategory.Warning;
+                    if (errorCategory == TaskErrorCategory.Error) {
+                        errorCategory = TaskErrorCategory.Warning;
+                    } else {
+                        errorCategory = TaskErrorCategory.Message;
+                    }
+
                 }
             }
 
@@ -571,6 +577,11 @@ namespace Microsoft.PythonTools.Project {
                 startInfo.WarningRegex = new Regex(warningRegex);
             }
 
+            string messageRegex = item.GetMetadata(CreatePythonCommandItem.MessageRegexKey);
+            if (!string.IsNullOrEmpty(messageRegex)) {
+                startInfo.MessageRegex = new Regex(messageRegex);
+            }
+
             startInfo.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
 
             Debug.Assert(!string.IsNullOrEmpty(startInfo.WorkingDirectory));
@@ -611,7 +622,7 @@ namespace Microsoft.PythonTools.Project {
                 ReplId + executeIn.Substring(4),
                 _project.GetInterpreterFactory().Configuration
             );
-            
+
             var model = _project.Site.GetComponentModel();
             var replProvider = model.GetService<InteractiveWindowProvider>();
             if (replProvider == null) {
@@ -698,8 +709,8 @@ namespace Microsoft.PythonTools.Project {
 
         private async void RunInOutput(IPythonProject project, CommandStartInfo startInfo) {
             Redirector redirector = OutputWindowRedirector.GetGeneral(project.Site);
-            if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null) {
-                redirector = new TeeRedirector(redirector, new ErrorListRedirector(_project.Site, project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
+            if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null || startInfo.MessageRegex != null) {
+                redirector = new TeeRedirector(redirector, new ErrorListRedirector(_project.Site, project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex, startInfo.MessageRegex));
             }
             redirector.ShowAndActivate();
 
@@ -739,7 +750,7 @@ namespace Microsoft.PythonTools.Project {
         public IDictionary<string, string> EnvironmentVariables;
         public string ExecuteIn;
         public string TargetType;
-        public Regex ErrorRegex, WarningRegex;
+        public Regex ErrorRegex, WarningRegex, MessageRegex;
         public string[] RequiredPackages;
 
         public CommandStartInfo(InterpreterConfiguration interpreter) {
