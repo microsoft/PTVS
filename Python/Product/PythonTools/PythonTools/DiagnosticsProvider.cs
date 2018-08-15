@@ -235,19 +235,6 @@ namespace Microsoft.PythonTools {
             }
             writer.WriteLine();
 
-            string globalAnalysisLog = Interpreter.LegacyDB.PythonTypeDatabase.GlobalLogFilename;
-            if (File.Exists(globalAnalysisLog)) {
-                writer.WriteLine("Global Analysis:");
-                try {
-                    writer.WriteLine(File.ReadAllText(globalAnalysisLog));
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    writer.WriteLine("Error reading the global analysis log.");
-                    writer.WriteLine("Please wait for analysis to complete and try again.");
-                    writer.WriteLine(ex.ToString());
-                }
-            }
-            writer.WriteLine();
-
             if (includeAnalysisLog) {
                 writer.WriteLine("Environment Analysis Logs: ");
                 foreach (var provider in knownProviders) {

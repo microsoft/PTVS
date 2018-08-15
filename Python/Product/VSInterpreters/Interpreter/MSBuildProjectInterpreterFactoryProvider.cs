@@ -17,10 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -32,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// MSBuild factory provider.
     /// 
     /// The MSBuild factory provider consuems the relevant IProjectContextProvider to find locations
-    /// for MSBuild proejcts.  The IProjectContextProvider can provide either MSBuild.Project items
+    /// for MSBuild projects.  The IProjectContextProvider can provide either MSBuild.Project items
     /// or strings which are paths to MSBuild project files.
     /// 
     /// The MSBuild interpreter factory provider ID is "MSBuild".  The interpreter IDs are in the
@@ -475,23 +473,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             protected override void CreateFactory() {
-                if (!ExperimentalOptions.NoDatabaseFactory) {
-                    _factory = new LegacyDB.CPythonInterpreterFactory(
-                        Config,
-                        new InterpreterFactoryCreationOptions {
-                            WatchFileSystem = true,
-                            DatabasePath = DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 0)
-                        }
-                    );
-                } else {
-                    _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                        Config,
-                        new InterpreterFactoryCreationOptions {
-                            WatchFileSystem = true,
-                            DatabasePath = DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 1)
-                        }
-                    );
-                }
+                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                    Config,
+                    new InterpreterFactoryCreationOptions {
+                        WatchFileSystem = true,
+                    }
+                );
             }
 
             public override bool Equals(object obj) {

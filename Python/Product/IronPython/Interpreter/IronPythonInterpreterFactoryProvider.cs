@@ -161,10 +161,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 lock (this) {
                     if (_interpreterX64 == null) {
                         var config = GetConfiguration(InterpreterArchitecture.x64);
-                        var opts = GetCreationOptions(_site, config, out var noDb);
-                        _interpreterX64 = noDb ?
-                            (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
-                            new IronPythonInterpreterFactory(config, opts);
+                        var opts = GetCreationOptions(_site, config);
+                        _interpreterX64 = (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts);
                     }
                 }
             }
@@ -175,10 +173,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 lock (this) {
                     if (_interpreter == null) {
                         var config = GetConfiguration(InterpreterArchitecture.x86);
-                        var opts = GetCreationOptions(_site, config, out var noDb);
-                        _interpreter = noDb ?
-                            (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
-                            new IronPythonInterpreterFactory(config, opts);
+                        var opts = GetCreationOptions(_site, config);
+                        _interpreter = (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts);
                     }
                 }
             }
@@ -247,18 +243,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             );
         }
 
-        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config, out bool noDatabase) {
-            if (ExperimentalOptions.NoDatabaseFactory) {
-                noDatabase = true;
-                return new InterpreterFactoryCreationOptions {
-                    DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(site, config, 1),
-                };
-            } else {
-                noDatabase = false;
-                return new InterpreterFactoryCreationOptions {
-                    DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(config, PythonTools.Interpreter.LegacyDB.PythonTypeDatabase.FormatVersion)
-                };
-            }
+        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config) {
+            return new InterpreterFactoryCreationOptions {};
         }
     }
 }
