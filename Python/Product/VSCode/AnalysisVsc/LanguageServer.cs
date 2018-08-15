@@ -477,6 +477,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             private const int DocumentChangePriority = 2;
             private const int DefaultPriority = 3;
             private readonly PriorityProducerConsumer<QueueItem> _ppc;
+            private bool _isEmpty;
 
             public Prioritizer() {
                 _ppc = new PriorityProducerConsumer<QueueItem>(4);
@@ -486,7 +487,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             private async Task ConsumerLoop() {
                 while (!_ppc.IsDisposed) {
                     try {
-                        var item = await _ppc.ConsumeAsync();
+                        var consumeTask = _ppc.ConsumeAsync();
+                        Volatile.Write(ref _isEmpty, !consumeTask.IsCompleted);
+                        var item = await consumeTask;
+                        Volatile.Write(ref _isEmpty, false);
+
                         if (item.IsAwaitable) {
                             var disposable = new PrioritizerDisposable(_ppc.CancellationToken);
                             item.SetResult(disposable);
@@ -510,7 +515,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 => Enqueue(DocumentChangePriority, true, cancellationToken);
 
             public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) {
-                if (_ppc.Count == 0) {
+                if (Volatile.Read(ref _isEmpty)) {
                     return Task.CompletedTask;
                 }
 
