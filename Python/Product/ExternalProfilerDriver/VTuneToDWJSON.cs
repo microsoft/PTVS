@@ -190,7 +190,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 modules = mods.ToList()
             };
 
-            string json = JsonConvert.SerializeObject(trace, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(trace, Formatting.Indented, new JsonSerializerSettings {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             File.WriteAllText(outfname, json);
 
             return total;
@@ -243,7 +245,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 counters = vts
             };
 
-            string json = JsonConvert.SerializeObject(trace, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(trace, Formatting.Indented, new JsonSerializerSettings {
+                NullValueHandling = NullValueHandling.Ignore
+            });
 
             // var fs = new FileStream(@"C:\users\perf\Sample2.counters", FileMode.Create);
             var fs = new FileStream(outfname, FileMode.Create);
