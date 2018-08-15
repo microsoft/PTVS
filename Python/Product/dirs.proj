@@ -47,7 +47,6 @@
     <ProjectFile Include="Django\Django.csproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 
-    <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
 
