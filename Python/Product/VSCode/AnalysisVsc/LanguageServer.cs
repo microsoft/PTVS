@@ -487,15 +487,12 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             private async Task ConsumerLoop() {
                 while (!_ppc.IsDisposed) {
                     try {
-                        var consumeTask = _ppc.ConsumeAsync();
-                        Volatile.Write(ref _isEmpty, !consumeTask.IsCompleted);
-                        var item = await consumeTask;
-                        Volatile.Write(ref _isEmpty, false);
+                        var item = await _ppc.ConsumeAsync();
 
                         if (item.IsAwaitable) {
                             var disposable = new PrioritizerDisposable(_ppc.CancellationToken);
                             item.SetResult(disposable);
-                            await disposable;
+                            await disposable.Task;
                         } else {
                             item.SetResult(EmptyDisposable.Instance);
                         }
@@ -514,14 +511,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             public Task<IDisposable> DocumentChangePriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
                 => Enqueue(DocumentChangePriority, true, cancellationToken);
 
-            public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) {
-                if (Volatile.Read(ref _isEmpty)) {
-                    return Task.CompletedTask;
-                }
+            public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
+                => Enqueue(DefaultPriority, false, cancellationToken);
 
-                return Enqueue(DefaultPriority, false, cancellationToken);
-            }
-            
             private Task<IDisposable> Enqueue(int priority, bool isAwaitable, CancellationToken cancellationToken = default(CancellationToken)) {
                 var item = new QueueItem(isAwaitable, cancellationToken);
                 _ppc.Produce(item, priority);
@@ -530,12 +522,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
             private struct QueueItem {
                 private readonly TaskCompletionSource<IDisposable> _tcs;
-                public Task<IDisposable> Task { get; }
+                public Task<IDisposable> Task => _tcs.Task;
                 public bool IsAwaitable { get; }
 
                 public QueueItem(bool isAwaitable, CancellationToken cancellationToken) {
                     _tcs = new TaskCompletionSource<IDisposable>();
-                    Task = _tcs.Task;
                     IsAwaitable = isAwaitable;
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
                 }
@@ -551,7 +542,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
                 }
 
-                public TaskAwaiter GetAwaiter() => ((Task)_tcs.Task).GetAwaiter();
+                public Task Task => _tcs.Task;
                 public void Dispose() => _tcs.TrySetResult(0);
             }
 
