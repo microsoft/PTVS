@@ -33,7 +33,6 @@ namespace Microsoft.Python.LanguageServer.Server {
                 using (var cout = Console.OpenStandardOutput())
                 using (var server = new Implementation.LanguageServer())
                 using (var rpc = new JsonRpc(cout, cin, server)) {
-                    rpc.SynchronizationContext = new SingleThreadSynchronizationContext();
                     rpc.JsonSerializer.Converters.Add(new UriConverter());
 
                     services.AddService(new UIService(rpc));
