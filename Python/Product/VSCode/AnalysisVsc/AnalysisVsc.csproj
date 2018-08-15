@@ -23,7 +23,7 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="2.1.0" />
         <PackageReference Include="NewtonSoft.Json" Version="10.0.1" />
-        <PackageReference Include="StreamJsonRpc" Version="1.4.102-beta" />
+        <PackageReference Include="StreamJsonRpc" Version="1.4.121" />
     </ItemGroup>
     <ItemGroup Condition="$(AnalysisReference) == ''">
         <ProjectReference Include="../../Analysis/AnalysisNetStandard.csproj" />
