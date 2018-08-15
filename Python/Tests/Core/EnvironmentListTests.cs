@@ -166,11 +166,14 @@ namespace PythonToolsUITests {
                 )
             });
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var ct = cts.Token;
             ExceptionDispatchInfo edi = null;
 
             EventHandler interpretersChanged = (s, e) => {
+                if (ct.IsCancellationRequested) {
+                    return;
+                }
                 Task.Run(() => {
                     try {
                         foreach (var f in factories) {
@@ -192,12 +195,12 @@ namespace PythonToolsUITests {
 
             var t1 = Task.Run(() => {
                 while (!ct.IsCancellationRequested) {
+                    provider.RemoveAllFactories();
                     provider.AddFactory(factories.First());
                     Thread.Sleep(50);
                     if (edi != null) {
                         edi.Throw();
                     }
-                    provider.RemoveAllFactories();
                 }
             }, ct);
             var t2 = Task.Run(() => {
