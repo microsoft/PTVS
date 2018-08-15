@@ -208,8 +208,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         [JsonRpcMethod("workspace/symbol")]
-        public async Task<SymbolInformation[]> WorkspaceSymbols(JToken token) {
+        public async Task<SymbolInformation[]> WorkspaceSymbols(JToken token, CancellationToken cancellationToken) {
             await _prioritizer.DefaultPriorityAsync();
+            await WaitForCompleteAnalysisAsync(cancellationToken);
             return await _server.WorkspaceSymbols(token.ToObject<WorkspaceSymbolParams>());
         }
 
@@ -354,6 +355,8 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         [JsonRpcMethod("textDocument/documentSymbol")]
         public async Task<SymbolInformation[]> DocumentSymbol(JToken token, CancellationToken cancellationToken) {
             await _prioritizer.DefaultPriorityAsync(cancellationToken);
+            // This call is also used by VSC document outline and it needs correct information
+            await WaitForCompleteAnalysisAsync(cancellationToken);
             return await _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
         }
 
@@ -471,13 +474,31 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             }
         }
 
+        private Task WaitForCompleteAnalysisAsync(CancellationToken token) {
+            var tcs = new TaskCompletionSource<object>();
+            var t = _server.WaitForCompleteAnalysisAsync();
+            Task.Run(async () => {
+                try {
+                    while (!t.IsCompleted) {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(100);
+                    }
+                    tcs.TrySetResult(null);
+                } catch (OperationCanceledException) {
+                    tcs.TrySetCanceled();
+                } catch(Exception ex) when (!ex.IsCriticalException()) {
+                    tcs.TrySetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
         private class Prioritizer : IDisposable {
             private const int InitializePriority = 0;
             private const int ConfigurationPriority = 1;
             private const int DocumentChangePriority = 2;
             private const int DefaultPriority = 3;
             private readonly PriorityProducerConsumer<QueueItem> _ppc;
-            private bool _isEmpty;
 
             public Prioritizer() {
                 _ppc = new PriorityProducerConsumer<QueueItem>(4);

@@ -42,9 +42,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            await WaitForCompleteAnalysisAsync();
             var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
-            
             return members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
