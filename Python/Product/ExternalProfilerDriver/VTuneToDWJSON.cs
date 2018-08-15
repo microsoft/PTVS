@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Net;
 
 using Newtonsoft.Json;
 
@@ -30,6 +31,11 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public BaseSizeTuple(long _base, long _size) {
             Base = _base;
             Size = _size;
+        }
+
+        override public string ToString()
+        {
+            return $"({this.Base},{this.Size})";
         }
     }
 
@@ -42,6 +48,42 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 yield return new BaseSizeTuple(_current, _size);
                 _current += _size + 1;
             }
+        }
+    }
+
+    public class FuncInfo
+    {
+        public string FunctionName { get; set; }
+        public string SourceFile { get; set; }
+        public long? LineNumber { get; set; }
+        public long? Base { get; set; }
+        public long? Size { get; set; }
+        
+        public FuncInfo(string _functionname, string _sourceFile = "", long? _lineNumber = null, long? _base = null, long? _size = null)
+        {
+            FunctionName = _functionname;
+            SourceFile = _sourceFile;
+            LineNumber = _lineNumber;
+            Base = _base;
+            Size = _size;
+        }
+
+        override public string ToString()
+        {
+            return $"Function {this.FunctionName}, @ {this.SourceFile}:{this.LineNumber} and assigned Base/Size {this.Base}/{this.Size}";
+        }
+    }
+    
+    public class FuncInfoComparer : IEqualityComparer<FuncInfo>
+    {
+        public bool Equals(FuncInfo x, FuncInfo y)
+        {
+            return x.FunctionName == y.FunctionName && x.SourceFile == y.SourceFile;
+        }
+ 
+        public int GetHashCode(FuncInfo obj)
+        {
+            return (obj.FunctionName + obj.SourceFile).GetHashCode();
         }
     }
 
@@ -137,7 +179,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     //duration = new LongInt(0, 10000)
                     duration = duration
                 },
-                name = "machine-name",
+                name = Dns.GetHostName() ?? "machine-name",
                 processor = new ProcessorSpec {
                     logicalCount = 4,
                     speedInMHz = 2670,
@@ -155,11 +197,11 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
 
         public static IEnumerable<SampleWithTrace> ParseFromFile(string filename) {
-            var samples = VTuneStackParser.ReadFromFile(filename)
-                                          .Skip(1)
-                                          .Select(s => String.Join(",", s.Split(',')
-                                          .Select(VTuneStackParser.RemovePrePosComma)))
-                                          .ParseFromStream();
+            var samples = Utils.ReadFromFile(filename)
+                               .Skip(1)
+                               .Select(s => String.Join(",", s.Split(',')
+                               .Select(VTuneStackParser.RemovePrePosComma)))
+                               .ParseFromStream();
             return samples;
         }
 
@@ -174,9 +216,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
             LongInt durationli = TraceUtils.ToNanoseconds(timeTotal);
 
-            var cpuRecords = VTuneStackParser.ReadFromFile(filename)
-                                            .Skip(2)
-                                            .ParseCPURecords();
+            var cpuRecords = Utils.ReadFromFile(filename)
+                                  .Skip(2)
+                                  .ParseCPURecords();
             /*
             CPUUtilRecord first = cpuRecords.First();
             CPUUtilRecord last = cpuRecords.Last();

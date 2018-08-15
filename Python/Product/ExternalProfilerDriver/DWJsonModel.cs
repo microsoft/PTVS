@@ -60,11 +60,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public IList<LongInt> frameIPs { get; set; }
     }
 
-    class FunctionSpec {
+    public class FunctionSpec {
         public string name { get; set; }
         [JsonProperty("base")]
         public LongInt @base { get; set; }
         public LongInt size { get; set; }
+        public IList<LineSpec> lines { get; set; }
 
         public FunctionSpec(string _name, long _base, long _size) {
             name = _name;
@@ -73,7 +74,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    class ModuleSpec {
+    public class ModuleSpec {
         public string name { get; set; }
         public int id { get; set; }
         public LongInt begin { get; set; }
@@ -82,6 +83,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public LongInt @base { get; set; }
         public LongInt size { get; set; }
         public IList<FunctionSpec> ranges { get; set; }
+        public IList<FileIDMapSpec> fileIdMapping { get; set; }
 
         public ModuleSpec() {
             /* empty */
@@ -96,6 +98,22 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             name = _name;
             ranges = _ranges.ToList();
         }
+    }
+
+    public class LineSpec
+    {
+      public int fileId      { get; set; }
+      public int offset      { get; set; } 
+      public int lineBegin   {get; set; } 
+      public int lineEnd     {get; set; } 
+      public int columnBegin {get; set; } 
+      public int columnEnd   {get; set; } 
+    }
+
+    public class FileIDMapSpec
+    {
+        public int id { get; set; }
+        public string file { get; set; }
     }
 
     class ThreadSpec {
