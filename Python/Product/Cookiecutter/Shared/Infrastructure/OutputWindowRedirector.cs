@@ -58,7 +58,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// not be found or created.</exception>
         public static OutputWindowRedirector GetGeneral(IServiceProvider provider) {
             if (_generalPane == null) {
-                _generalPane = Get(provider, VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General");
+                _generalPane = Get(provider, VSConstants.OutputWindowPaneGuid.GeneralPane_guid, Strings.Settings_General_Category);
             }
             return _generalPane;
         }
