@@ -487,15 +487,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             private async Task ConsumerLoop() {
                 while (!_ppc.IsDisposed) {
                     try {
-                        var consumeTask = _ppc.ConsumeAsync();
-                        Volatile.Write(ref _isEmpty, !consumeTask.IsCompleted);
-                        var item = await consumeTask;
-                        Volatile.Write(ref _isEmpty, false);
-
-                        if (item.IsAwaitable) {
+                        var item = await _ppc.ConsumeAsync();
+                        if (item.CompleteBeforeNext) {
                             var disposable = new PrioritizerDisposable(_ppc.CancellationToken);
                             item.SetResult(disposable);
-                            await disposable;
+                            disposable.Task.Wait(_ppc.CancellationToken);
                         } else {
                             item.SetResult(EmptyDisposable.Instance);
                         }
@@ -515,10 +511,6 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 => Enqueue(DocumentChangePriority, true, cancellationToken);
 
             public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) {
-                if (Volatile.Read(ref _isEmpty)) {
-                    return Task.CompletedTask;
-                }
-
                 return Enqueue(DefaultPriority, false, cancellationToken);
             }
             
@@ -531,12 +523,12 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             private struct QueueItem {
                 private readonly TaskCompletionSource<IDisposable> _tcs;
                 public Task<IDisposable> Task { get; }
-                public bool IsAwaitable { get; }
+                public bool CompleteBeforeNext { get; }
 
-                public QueueItem(bool isAwaitable, CancellationToken cancellationToken) {
+                public QueueItem(bool completeBeforeNext, CancellationToken cancellationToken) {
                     _tcs = new TaskCompletionSource<IDisposable>();
                     Task = _tcs.Task;
-                    IsAwaitable = isAwaitable;
+                    CompleteBeforeNext = completeBeforeNext;
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
                 }
 
@@ -545,13 +537,13 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
             private class PrioritizerDisposable : IDisposable {
                 private readonly TaskCompletionSource<int> _tcs;
+                public Task Task => _tcs.Task;
 
                 public PrioritizerDisposable(CancellationToken cancellationToken) {
                     _tcs = new TaskCompletionSource<int>();
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
                 }
 
-                public TaskAwaiter GetAwaiter() => ((Task)_tcs.Task).GetAwaiter();
                 public void Dispose() => _tcs.TrySetResult(0);
             }
 

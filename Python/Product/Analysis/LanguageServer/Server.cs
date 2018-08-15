@@ -127,32 +127,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public override Task<InitializeResult> Initialize(InitializeParams @params) => Initialize(@params, CancellationToken.None);
 
         internal InitializeResult GetInitializeResult() => new InitializeResult {
-                capabilities = new ServerCapabilities {
-                    textDocumentSync = new TextDocumentSyncOptions {
-                        openClose = true,
-                        change = TextDocumentSyncKind.Incremental
-                    },
-                    completionProvider = new CompletionOptions {
-                        triggerCharacters = new[] { "." }
-                    },
-                    hoverProvider = true,
-                    signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
-                    definitionProvider = true,
-                    referencesProvider = true,
-                    workspaceSymbolProvider = true,
-                    documentSymbolProvider = true,
-                    executeCommandProvider = new ExecuteCommandOptions {
-                        commands = new[] {
+            capabilities = new ServerCapabilities {
+                textDocumentSync = new TextDocumentSyncOptions {
+                    openClose = true,
+                    change = TextDocumentSyncKind.Incremental
+                },
+                completionProvider = new CompletionOptions {
+                    triggerCharacters = new[] { "." }
+                },
+                hoverProvider = true,
+                signatureHelpProvider = new SignatureHelpOptions { triggerCharacters = new[] { "(,)" } },
+                definitionProvider = true,
+                referencesProvider = true,
+                workspaceSymbolProvider = true,
+                documentSymbolProvider = true,
+                executeCommandProvider = new ExecuteCommandOptions {
+                    commands = new[] {
                             completionItemCommand
                         }
-                    }
                 }
-            };
+            }
+        };
 
         internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             await DoInitializeAsync(@params, cancellationToken);
-
             return GetInitializeResult();
         }
 
