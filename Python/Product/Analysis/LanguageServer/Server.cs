@@ -126,11 +126,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         #region Client message handling
         public override Task<InitializeResult> Initialize(InitializeParams @params) => Initialize(@params, CancellationToken.None);
 
-        internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
-            ThrowIfDisposed();
-            await DoInitializeAsync(@params, cancellationToken);
-
-            return new InitializeResult {
+        internal InitializeResult GetInitializeResult() => new InitializeResult {
                 capabilities = new ServerCapabilities {
                     textDocumentSync = new TextDocumentSyncOptions {
                         openClose = true,
@@ -152,7 +148,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                 }
             };
+
+        internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
+            ThrowIfDisposed();
+            await DoInitializeAsync(@params, cancellationToken);
+
+            return GetInitializeResult();
         }
+
         public override Task Shutdown() {
             ThrowIfDisposed();
             ProjectFiles.Clear();

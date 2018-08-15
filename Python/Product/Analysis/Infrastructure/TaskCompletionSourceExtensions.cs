@@ -19,8 +19,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     internal static class TaskCompletionSourceExtensions {
-        public static void TrySetResultOnThreadPool<T>(this TaskCompletionSource<T> taskCompletionSource, T result) 
-            => ThreadPool.QueueUserWorkItem(new TrySetResultStateAction<T>(taskCompletionSource, result).Invoke);
+        public static void TrySetResultOnThreadPool<T>(this TaskCompletionSource<T> taskCompletionSource, T result) {
+            if (!taskCompletionSource.Task.IsCompleted) {
+                ThreadPool.QueueUserWorkItem(new TrySetResultStateAction<T>(taskCompletionSource, result).Invoke);
+            }
+        }
 
         public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken) 
             => taskCompletionSource.RegisterForCancellation(-1, cancellationToken);

@@ -289,7 +289,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// Enables an even higher level of logging via the logMessage event.
         /// This will likely have a performance impact.
         /// </summary>
-        public bool traceLogging;
+        public bool traceLogging; 
+        
+        /// <summary> 
+        /// If true, analyzer will be created asynchronously. Used in VS Code. 
+        /// </summary> 
+        public bool asyncStartup; 
     }
 
     [Serializable]
