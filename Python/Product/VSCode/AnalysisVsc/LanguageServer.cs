@@ -488,11 +488,10 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 while (!_ppc.IsDisposed) {
                     try {
                         var item = await _ppc.ConsumeAsync();
-
                         if (item.IsAwaitable) {
                             var disposable = new PrioritizerDisposable(_ppc.CancellationToken);
                             item.SetResult(disposable);
-                            await disposable;
+                            await disposable.Task;
                         } else {
                             item.SetResult(EmptyDisposable.Instance);
                         }
@@ -525,7 +524,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 public Task<IDisposable> Task => _tcs.Task;
                 public bool IsAwaitable { get; }
 
-                public QueueItem(bool completeBeforeNext, CancellationToken cancellationToken) {
+                public QueueItem(bool isAwaitable, CancellationToken cancellationToken) {
                     _tcs = new TaskCompletionSource<IDisposable>();
                     IsAwaitable = isAwaitable;
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
@@ -542,6 +541,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                     _tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(_tcs.Task);
                 }
 
+                public Task Task => _tcs.Task;
                 public void Dispose() => _tcs.TrySetResult(0);
             }
 
