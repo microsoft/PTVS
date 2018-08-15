@@ -474,12 +474,12 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private class Prioritizer : IDisposable {
             private const int InitializePriority = 0;
             private const int ConfigurationPriority = 1;
-            private const int DocumentChangePriority = 1;
-            private const int DefaultPriority = 2;
+            private const int DocumentChangePriority = 2;
+            private const int DefaultPriority = 3;
             private readonly PriorityProducerConsumer<QueueItem> _ppc;
 
             public Prioritizer() {
-                _ppc = new PriorityProducerConsumer<QueueItem>(3);
+                _ppc = new PriorityProducerConsumer<QueueItem>(4);
                 Task.Run(ConsumerLoop);
             }
 
