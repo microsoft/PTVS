@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>16.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Import Project="..\ProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.LiveShare</AssemblyName>
+    <ProjectGuid>{4065A3C8-0E5E-42AC-9D94-509AA90C90E9}</ProjectGuid>
+    <UseVSSDK>false</UseVSSDK>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <DeployExtension>false</DeployExtension>
+    <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Analysis\Analysis.csproj">
+      <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
+      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
+      <Name>PythonTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Cascade.LanguageServices.Common">
+      <Version>0.3.536</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Cascade.Contracts">
+      <Version>0.3.536</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PythonLanguageClient.cs" />
+    <Compile Include="PythonLanguageClientFactory.cs" />
+    <Compile Include="PythonLanguageServiceProviderCallback.cs" />
+  </ItemGroup>
+  <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
+       but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
+       into the PythonTools output folder temporarily to generate the pkgdef file. -->
+  <!--<Target Name="_CopyForCreatePkgDef" BeforeTargets="GeneratePkgDef">
+    <Copy SourceFiles="$(OutputPath)..\Analysis\Microsoft.PythonTools.Analysis.dll;$(OutputPath)..\EnvironmentsList\Microsoft.PythonTools.EnvironmentsList.dll;$(OutputPath)..\VSInterpreters\Microsoft.PythonTools.VSInterpreters.dll" DestinationFolder="$(OutputPath)">
+      <Output TaskParameter="CopiedFiles" ItemName="_CopiedForCreatePkgdef" />
+    </Copy>
+  </Target>
+  <Target Name="_DeleteAfterCreatePkgDef" AfterTargets="GeneratePkgDef">
+    <Delete Files="@(_CopiedForCreatePkgdef)" />
+  </Target>-->
+  <!--<Target Name="DetokenizeVsixManifestFile" />-->
+</Project>
