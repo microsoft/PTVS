@@ -42,6 +42,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         private readonly CancellationTokenSource _sessionTokenSource = new CancellationTokenSource();
         private readonly RestTextConverter _textConverter = new RestTextConverter();
         private readonly Dictionary<Uri, Diagnostic[]> _pendingDiagnostic = new Dictionary<Uri, Diagnostic[]>();
+        private ManualResetEventSlim _initComplete = new ManualResetEventSlim(false);
         private readonly object _lock = new object();
 
         private IUIService _ui;
@@ -153,6 +154,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         #region Workspace
         [JsonRpcMethod("workspace/didChangeConfiguration")]
         public async Task DidChangeConfiguration(JToken token, CancellationToken cancellationToken) {
+            // Change configuration comes right after the initialization
+            WaitForServerInitComplete(cancellationToken);
+
             var settings = new LanguageServerSettings();
 
             var rootSection = token["settings"];
@@ -212,8 +216,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
         #region TextDocument
         [JsonRpcMethod("textDocument/didOpen")]
-        public Task DidOpenTextDocument(JToken token) {
+        public Task DidOpenTextDocument(JToken token, CancellationToken cancellationToken) {
             _idleTimeTracker?.NotifyUserActivity();
+            WaitForServerInitComplete(cancellationToken);
             return _server.DidOpenTextDocument(ToObject<DidOpenTextDocumentParams>(token));
         }
 
@@ -424,6 +429,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 };
                 _rpc.NotifyWithParameterObjectAsync("textDocument/publishDiagnostics", parameters).DoNotWait();
             }
+        }
+
+        private void WaitForServerInitComplete(CancellationToken token) {
+            _server.CompleteInitialization.ContinueWith(t => _initComplete.Set()).DoNotWait();
+            _initComplete.Wait(token);
         }
 
         private sealed class IdleTimeTracker : IDisposable {

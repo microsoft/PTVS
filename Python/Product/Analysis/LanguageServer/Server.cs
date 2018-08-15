@@ -128,7 +128,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         internal async Task<InitializeResult> Initialize(InitializeParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
-            await DoInitializeAsync(@params, cancellationToken);
+            if (@params.initializationOptions.asyncStartup) {
+                CompleteInitialization = DoInitializeAsync(@params, cancellationToken);
+            } else {
+                await DoInitializeAsync(@params, cancellationToken);
+            }
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -153,6 +157,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             };
         }
+
+        internal Task CompleteInitialization { get; private set; } = Task.CompletedTask;
+
         public override Task Shutdown() {
             ThrowIfDisposed();
             ProjectFiles.Clear();
