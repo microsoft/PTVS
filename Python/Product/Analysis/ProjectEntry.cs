@@ -17,11 +17,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
@@ -40,6 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
+        private TaskCompletionSource<ModuleAnalysis> _analysisTcs = new TaskCompletionSource<ModuleAnalysis>();
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
@@ -133,6 +136,37 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        internal Task<ModuleAnalysis> GetAnalysisAsync(int waitingTimeout = -1, CancellationToken cancellationToken = default(CancellationToken)) {
+            Task<ModuleAnalysis> task;
+            lock (this) {
+                task = _analysisTcs.Task;
+            }
+
+            if (task.IsCompleted || waitingTimeout == -1 && !cancellationToken.CanBeCanceled) {
+                return task;
+            }
+
+            var timeoutTask = Task.Delay(waitingTimeout, cancellationToken).ContinueWith(t => {
+                lock (this) {
+                    return Analysis;
+                }
+            }, cancellationToken);
+
+            return Task.WhenAny(timeoutTask, _analysisTcs.Task).Unwrap();
+        }
+
+        internal void SetCompleteAnalysis() {
+            lock (this) {
+                _analysisTcs.TrySetResultOnThreadPool(Analysis);
+            }
+        }
+
+        internal void ResetCompleteAnalysis() {
+            lock (this) {
+                _analysisTcs = new TaskCompletionSource<ModuleAnalysis>();
+            }
+        }
+
         public void SetCurrentParse(PythonAst tree, IAnalysisCookie cookie, bool notify = true) {
             lock (this) {
                 Tree = tree;
@@ -188,6 +222,9 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsAnalyzed => Analysis != null;
 
         private void Parse(bool enqueueOnly, CancellationToken cancel) {
+#if DEBUG
+            Debug.Assert(Monitor.IsEntered(this));      
+#endif
             var parse = GetCurrentParse();
             var tree = parse?.Tree;
             var cookie = parse?.Cookie;

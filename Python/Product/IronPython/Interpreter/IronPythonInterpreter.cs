@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -48,7 +47,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private PythonAnalyzer _state;
         private readonly IPythonInterpreterFactory _factory;
         private readonly IronPythonBuiltinModule _builtinModule;
-        private PythonTypeDatabase _typeDb;
 #if DEBUG
         private int _id;
         private static int _interpreterCount;
@@ -80,20 +78,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             var newMod = new IronPythonBuiltinModule(this, mod, "__builtin__");
             _modules[newMod.Name] = _builtinModule = newMod;
 
-            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
-                _typeDb = withDb.GetCurrentDatabase().CloneWithNewBuiltins(newMod);
-                withDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
-            }
-
             LoadModules();
-        }
-
-        void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
-                var mod = _modules["__builtin__"] as IBuiltinPythonModule;
-                _typeDb = withDb.GetCurrentDatabase().CloneWithNewBuiltins(mod);
-                RaiseModuleNamesChanged();
-            }
         }
 
         private void InitializeRemoteDomain() {
@@ -389,12 +374,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             res.AddRange(Remote.GetModuleNames());
 
-            if (_typeDb != null) {
-                foreach (var name in _typeDb.GetModuleNames()) {
-                    res.Add(name);
-                }
-            }
-
             return res;
         }
 
@@ -428,12 +407,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 }
             }
 
-            if (_typeDb != null) {
-                var res = _typeDb.GetModule(name);
-                if (res != null) {
-                    return res;
-                }
-            } else if (_factory is AstPythonInterpreterFactory apf) {
+            if (_factory is AstPythonInterpreterFactory apf) {
                 var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
                     Interpreter = this,
                     BuiltinModule = _builtinModule,
@@ -667,10 +641,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 evt(this, EventArgs.Empty);
             }
 
-            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
-                withDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-            }
-            _typeDb = null;
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
 #if DEBUG

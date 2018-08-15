@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -30,250 +28,180 @@ namespace Microsoft.PythonTools.Intellisense {
     /// analysis at various priorities.  
     /// </summary>
     internal sealed class AnalysisQueue : IDisposable {
-        private readonly Thread _workThread;
-        private readonly AutoResetEvent _workEvent;
-        private readonly object _queueLock = new object();
-        private readonly List<IAnalyzable>[] _queue;
-        private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
-        private CancellationTokenSource _cancel;
-        private bool _isAnalyzing;
-        private int _analysisPending;
-        private bool _disposed;
+        private static readonly AsyncLocal<AnalysisQueue> _current = new AsyncLocal<AnalysisQueue>();
+        public static AnalysisQueue Current => _current.Value;
 
-        private const int PriorityCount = (int)AnalysisPriority.High + 1;
+        private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups;
+        private readonly PriorityProducerConsumer<QueueItem> _ppc;
+        private readonly Task _consumerTask;
 
-        internal AnalysisQueue() {
-            _workEvent = new AutoResetEvent(false);
-            _cancel = new CancellationTokenSource();
-
-            _queue = new List<IAnalyzable>[PriorityCount];
-            for (var i = 0; i < PriorityCount; i++) {
-                _queue[i] = new List<IAnalyzable>();
-            }
-
-            _workThread = new Thread(Worker);
-            _workThread.Name = "Python Analysis Queue";
-            _workThread.Priority = ThreadPriority.BelowNormal;
-            _workThread.IsBackground = true;
-
-            // start the thread, wait for our synchronization context to be created
-            using (var threadStarted = new AutoResetEvent(false)) {
-                _workThread.Start(threadStarted);
-                threadStarted.WaitOne();
-            }
-        }
-
-        private sealed class WaitAnalyzableTask : IAnalyzable {
-            private readonly TaskCompletionSource<object> _tcs;
-
-            public WaitAnalyzableTask() {
-                _tcs = new TaskCompletionSource<object>();
-            }
-
-            public Task Task => _tcs.Task;
-
-            public void Analyze(CancellationToken cancel) {
-                if (cancel.IsCancellationRequested) {
-                    _tcs.TrySetCanceled();
-                } else {
-                    _tcs.TrySetResult(null);
-                }
-            }
-        }
-
-        public int Count {
-            get {
-                lock (_queueLock) {
-                    return _queue.Sum(q => q.Count);
-                }
-            }
-        }
-
-        public Task WaitForCompleteAsync(AnalysisPriority priority = AnalysisPriority.None) {
-            var task = new WaitAnalyzableTask();
-            Enqueue(task, priority);
-            return task.Task;
-        }
-
+        public event EventHandler AnalysisStarted;
+        public event EventHandler AnalysisComplete;
+        public event EventHandler AnalysisAborted;
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
 
-        public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
-            ThrowIfDisposed();
-            var iPri = (int)priority;
+        public int Count => _ppc.Count;
 
-            if (iPri < 0 || iPri > _queue.Length) {
-                throw new ArgumentException("priority");
-            }
+        internal AnalysisQueue() {
+            _ppc = new PriorityProducerConsumer<QueueItem>(4, excludeDuplicates: true, comparer: QueueItemComparer.Instance);
+            _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
+            _consumerTask = Task.Run(ConsumerLoop);
+        }
 
-            lock (_queueLock) {
-                // see if we have the item in the queue anywhere...
-                for (var i = 0; i < _queue.Length; i++) {
-                    if (_queue[i].Remove(item)) {
-                        Interlocked.Decrement(ref _analysisPending);
+        private void Enqueue(object key, Func<CancellationToken, Task> handler, AnalysisPriority priority)
+            => _ppc.Produce(new QueueItem(key, handler), (int)priority);
 
-                        var oldPri = (AnalysisPriority)i;
-
-                        if (oldPri > priority) {
-                            // if it was at a higher priority then our current
-                            // priority go ahead and raise the new entry to our
-                            // old priority
-                            priority = oldPri;
-                        }
-
-                        break;
-                    }
-                }
-
-                // enqueue the work item
-                Interlocked.Increment(ref _analysisPending);
-                if (priority == AnalysisPriority.High) {
-                    // always try and process high pri items immediately
-                    _queue[iPri].Insert(0, item);
-                } else {
-                    _queue[iPri].Add(item);
-                }
+        private async Task ConsumerLoop() {
+            RaiseEventOnThreadPool(AnalysisStarted);
+            while (!_ppc.IsDisposed) {
                 try {
-                    _workEvent.Set();
-                } catch (IOException) {
-                } catch (ObjectDisposedException) {
-                    // Queue was closed while we were running
+                    var item = await ConsumeAsync();
+                    _current.Value = this;
+                    await item.Handler(_ppc.CancellationToken);
+                    _current.Value = null;
+                } catch (OperationCanceledException) when (_ppc.IsDisposed)  {
+                    return;
+                } catch (Exception ex) when (!ex.IsCriticalException())  {
+                    UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(ex, false));
+                    Dispose();
                 }
             }
         }
 
-        public void Stop() {
-            try {
-                _cancel.Cancel();
-            } catch (ObjectDisposedException) {
-            }
-            if (_workThread.IsAlive) {
-                try {
-                    _workEvent.Set();
-                } catch (ObjectDisposedException) {
+        private async Task<QueueItem> ConsumeAsync() {
+            var task = _ppc.ConsumeAsync(_ppc.CancellationToken);
+            if (!task.IsCompleted) {
+                await Task.WhenAny(task, Task.Delay(50));
+                if (!task.IsCompleted) {
+                    RaiseEventOnThreadPool(AnalysisComplete);
+                    var result = await task;
+                    RaiseEventOnThreadPool(AnalysisStarted);
+                    return result;
                 }
-                if (!_workThread.Join(TimeSpan.FromSeconds(5.0))) {
+            }
+
+            return await task;
+        }
+
+        private void RaiseEventOnThreadPool(EventHandler handler) {
+            if (handler != null) {
+                ThreadPool.QueueUserWorkItem(_ => handler(this, EventArgs.Empty));
+            }
+        }
+
+        /// <summary>
+        /// Queues the specified work to run in analysis queue.
+        /// Exceptions are rethrown to the caller and don't affect queue processing loop.
+        /// </summary>
+        /// <param name="function">The work to execute</param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public Task ExecuteInQueueAsync(Func<CancellationToken, Task> function, AnalysisPriority priority) {
+            // If we are inside the queue already, simply call the function
+            if (Current == this) {
+                return function(_ppc.CancellationToken);
+            }
+
+            var item = new ExecuteInQueueAsyncItem<bool>(function);
+            Enqueue(item, item.Handler, priority);
+            return item.Task;
+        }
+
+        /// <summary>
+        /// Queues the specified work to run in analysis queue.
+        /// Exceptions are rethrown to the caller and don't affect queue processing loop.
+        /// </summary>
+        /// <param name="function">The work to execute</param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public Task<T> ExecuteInQueueAsync<T>(Func<CancellationToken, Task<T>> function, AnalysisPriority priority) {
+            // If we are inside the queue already, simply call the function
+            if (Current == this) {
+                return function(_ppc.CancellationToken);
+            }
+
+            var item = new ExecuteInQueueAsyncItem<T>(function);
+            Enqueue(item, item.Handler, priority);
+            return item.Task;
+        }
+
+        public Task WaitForCompleteAsync() => ExecuteInQueueAsync(ct => Task.CompletedTask, AnalysisPriority.None);
+
+        public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
+            Enqueue(item, ct => HandleAnalyzable(item, priority, ct), priority);
+        }
+
+        private async Task HandleAnalyzable(IAnalyzable item, AnalysisPriority priority, CancellationToken cancellationToken) {
+            if (item is IGroupableAnalysisProjectEntry groupable) {
+                var added = _enqueuedGroups.Add(groupable.AnalysisGroup);
+                if (added) {
+                    Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), priority);
+                }
+
+                groupable.Analyze(cancellationToken, true);
+            } else {
+                item.Analyze(cancellationToken);
+            }
+        }
+
+        public void Dispose() {
+            if (!_ppc.IsDisposed) {
+                _ppc.Dispose();
+                RaiseEventOnThreadPool(AnalysisAborted);
+            }
+
+            if (!_consumerTask.IsCompleted) {
+                if (!_consumerTask.Wait(TimeSpan.FromSeconds(5.0))) {
                     Trace.TraceWarning("Failed to wait for worker thread to terminate");
                 }
             }
         }
 
-        public event EventHandler AnalysisStarted;
+        private struct QueueItem {
+            public readonly object Key;
+            public readonly Func<CancellationToken, Task> Handler;
 
-        public bool IsAnalyzing {
-            get {
-                lock (_queueLock) {
-                    return _isAnalyzing || _analysisPending > 0;
-                }
+            public QueueItem(object key, Func<CancellationToken, Task> handler) {
+                Key = key;
+                Handler = handler;
             }
         }
 
-        public int AnalysisPending => _analysisPending;
+        private sealed class ExecuteInQueueAsyncItem<T> {
+            private readonly Func<CancellationToken, Task> _handler;
+            private readonly TaskCompletionSourceEx<T> _tcs;
+            public Task<T> Task => _tcs.Task;
 
-        internal SynchronizationContext SynchronizationContext { get; private set; }
+            public ExecuteInQueueAsyncItem(Func<CancellationToken, Task> handler) {
+                _handler = handler;
+                _tcs = new TaskCompletionSourceEx<T>();
+            }
 
-        #region IDisposable Members
-        public void Dispose() {
-            _disposed = true;
-            Stop();
-            _workEvent.Dispose();
-            _cancel.Dispose();
-        }
-
-        #endregion
-
-        private IAnalyzable GetNextItem(out AnalysisPriority priority) {
-            for (var i = PriorityCount - 1; i >= 0; i--) {
-                if (_queue[i].Count > 0) {
-                    var res = _queue[i][0];
-                    _queue[i].RemoveAt(0);
-                    Interlocked.Decrement(ref _analysisPending);
-                    priority = (AnalysisPriority)i;
-                    return res;
+            public async Task Handler(CancellationToken cancellationToken) {
+                try {
+                    var task = _handler(cancellationToken);
+                    await task;
+                    var result = task is Task<T> typedTask ? typedTask.Result : default(T);
+                    ThreadPool.QueueUserWorkItem(SetResult, result);
+                } catch (OperationCanceledException oce) {
+                    ThreadPool.QueueUserWorkItem(SetCanceled, oce);
+                } catch (Exception ex) {
+                    ThreadPool.QueueUserWorkItem(SetException, ex);
                 }
             }
-            priority = AnalysisPriority.None;
-            return null;
+
+            private void SetResult(object state) => _tcs.TrySetResult((T)state);
+            private void SetCanceled(object state) => _tcs.TrySetCanceled((OperationCanceledException)state);
+            private void SetException(object state) => _tcs.TrySetException((Exception)state);
         }
 
-        private void Worker(object threadStarted) {
-            try {
-                SynchronizationContext = new AnalysisSynchronizationContext(this);
-                SynchronizationContext.SetSynchronizationContext(SynchronizationContext);
-            } finally {
-                ((AutoResetEvent)threadStarted).Set();
-            }
+        private sealed class QueueItemComparer : IEqualityComparer<QueueItem> {
+            public static IEqualityComparer<QueueItem> Instance { get; } = new QueueItemComparer();
 
-            AnalysisStarted?.Invoke(this, EventArgs.Empty);
-            _isAnalyzing = true;
-
-            CancellationToken cancel;
-            try {
-                cancel = _cancel.Token;
-            } catch (ObjectDisposedException) {
-                AnalysisAborted?.Invoke(this, EventArgs.Empty);
-                return;
-            }
-
-            while (!cancel.IsCancellationRequested) {
-                IAnalyzable workItem;
-
-                AnalysisPriority pri;
-                lock (_queueLock) {
-                    workItem = GetNextItem(out pri);
-                }
-
-                if (workItem != null) {
-                    try {
-                        var groupable = workItem as IGroupableAnalysisProjectEntry;
-                        if (groupable != null) {
-                            var added = _enqueuedGroups.Add(groupable.AnalysisGroup);
-                            if (added) {
-                                Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
-                            }
-
-                            groupable.Analyze(cancel, true);
-                        } else {
-                            workItem.Analyze(cancel);
-                        }
-                    } catch (Exception ex) when (!ex.IsCriticalException() && !Debugger.IsAttached) {
-                        UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(ex, false));
-                        _cancel.Cancel();
-                    }
-                } else if (!_workEvent.WaitOne(50)) {
-                    // Short wait for activity before raising the event.
-                    _isAnalyzing = false;
-                    var evt1 = AnalysisComplete;
-                    if (evt1 != null) {
-                        ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
-                    }
-                    try {
-                        _workEvent.WaitOne();
-                    } catch (ApplicationException) {
-                        // No idea where this is coming from...
-                        try {
-                            _cancel.Cancel();
-                        } catch (ObjectDisposedException) {
-                            // Doesn't matter - we're breaking out anyway
-                        }
-                        break;
-                    }
-                    var evt2 = AnalysisStarted;
-                    if (evt2 != null) {
-                        ThreadPool.QueueUserWorkItem(_ => evt2(this, EventArgs.Empty));
-                    }
-                    _isAnalyzing = true;
-                }
-            }
-            _isAnalyzing = false;
-
-            if (cancel.IsCancellationRequested) {
-                AnalysisAborted?.Invoke(this, EventArgs.Empty);
-            }
+            private QueueItemComparer() {}
+            public bool Equals(QueueItem x, QueueItem y) => Equals(x.Key, y.Key);
+            public int GetHashCode(QueueItem obj) => obj.Key.GetHashCode();
         }
-
-        public event EventHandler AnalysisComplete;
-
-        public event EventHandler AnalysisAborted;
 
         private sealed class GroupAnalysis : IAnalyzable {
             private readonly IGroupableAnalysisProject _project;
@@ -292,12 +220,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             #endregion
-        }
-
-        private void ThrowIfDisposed() {
-            if (_disposed) {
-                throw new ObjectDisposedException(nameof(AnalysisQueue));
-            }
         }
     }
 }

@@ -18,9 +18,6 @@
         <CommandBinding Command="{x:Static l:EnvironmentView.MakeGlobalDefault}"
                         CanExecute="MakeGlobalDefault_CanExecute"
                         Executed="MakeGlobalDefault_Executed" />
-        <CommandBinding Command="{x:Static l:DBExtension.StartRefreshDB}"
-                        CanExecute="StartRefreshDB_CanExecute"
-                        Executed="StartRefreshDB_Executed" />
         <CommandBinding Command="{x:Static l:ConfigurationEnvironmentView.Added}"
                         CanExecute="ConfigurableViewAdded_CanExecute"
                         Executed="ConfigurableViewAdded_Executed" />

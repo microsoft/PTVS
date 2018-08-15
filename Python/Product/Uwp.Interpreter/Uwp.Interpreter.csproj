@@ -73,9 +73,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="InstalledPythonUwpInterpreter.cs" />
-    <Compile Include="PythonUwpInterpreter.cs" />
     <Compile Include="PythonUwpConstants.cs" />
-    <Compile Include="PythonUwpInterpreterFactory.cs" />
     <Compile Include="PythonUwpInterpreterFactoryProvider.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

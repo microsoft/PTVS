@@ -14,13 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PackageManagerFactoryExtensions {
@@ -38,29 +34,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var withDb = factory as LegacyDB.PythonInterpreterFactoryWithDatabase;
-            if (withDb != null && withDb.IsCurrent) {
-                var db = withDb.GetCurrentDatabase();
-                if (db.GetModule(moduleName) != null) {
-                    return true;
-                }
-
-                // Always stop searching after this step
-                return false;
-            }
-
-            if (withDb != null) {
-                try {
-                    var paths = await LegacyDB.PythonTypeDatabase.GetDatabaseSearchPathsAsync(withDb);
-                    if (LegacyDB.PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
-                        .SelectMany()
-                        .Any(g => g.ModuleName == moduleName)) {
-                        return true;
-                    }
-                } catch (InvalidOperationException) {
-                }
-            }
-
             return await Task.Run(() => {
                 foreach (var mp in ModulePath.GetModulesInLib(factory.Configuration)) {
                     if (mp.ModuleName == moduleName) {
@@ -71,19 +44,5 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             });
         }
-
-        /// <summary>
-        /// Generates the completion database and returns a task that will
-        /// complete when the database is regenerated.
-        /// </summary>
-        internal static Task<int> GenerateDatabaseAsync(
-            this LegacyDB.IPythonInterpreterFactoryWithDatabase factory,
-            GenerateDatabaseOptions options
-        ) {
-            var tcs = new TaskCompletionSource<int>();
-            factory.GenerateDatabase(options, tcs.SetResult);
-            return tcs.Task;
-        }
-
     }
 }

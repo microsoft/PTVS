@@ -18,7 +18,6 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -95,21 +94,16 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(2)]
         public void ImportPydFromSearchPath() {
-            PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
-            try {
-                var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
+            var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 
-                analyzer.AddModule("test-module", "from spam import *");
-                analyzer.WaitForAnalysis();
-                AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "system", "spam" });
+            analyzer.AddModule("test-module", "from spam import *");
+            analyzer.WaitForAnalysis();
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "system", "spam" });
 
-                analyzer.SetSearchPaths(TestData.GetPath("TestData"));
-                analyzer.ReanalyzeAll(CancellationTokens.After60s);
+            analyzer.SetSearchPaths(TestData.GetPath("TestData"));
+            analyzer.ReanalyzeAll(CancellationTokens.After60s);
 
-                AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
-            } finally {
-                PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
-            }
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
         }
 
         [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4226

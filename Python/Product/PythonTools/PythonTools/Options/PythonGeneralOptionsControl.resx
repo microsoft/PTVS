@@ -189,144 +189,6 @@
   <data name="&gt;&gt;_showOutputWindowForPackageInstallation.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="_autoAnalysis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_autoAnalysis.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_autoAnalysis.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 72</value>
-  </data>
-  <data name="_autoAnalysis.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_autoAnalysis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>259, 17</value>
-  </data>
-  <data name="_autoAnalysis.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="_autoAnalysis.Text" xml:space="preserve">
-    <value>&amp;Automatically generate completion DB on first use</value>
-  </data>
-  <data name="&gt;&gt;_autoAnalysis.Name" xml:space="preserve">
-    <value>_autoAnalysis</value>
-  </data>
-  <data name="&gt;&gt;_autoAnalysis.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_autoAnalysis.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_autoAnalysis.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 118</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 17</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Text" xml:space="preserve">
-    <value>&amp;Update search paths when adding linked files</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Name" xml:space="preserve">
-    <value>_updateSearchPathsForLinkedFiles</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_indentationInconsistentLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 191</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 13</value>
-  </data>
-  <data name="_indentationInconsistentLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Text" xml:space="preserve">
-    <value>&amp;Report inconsistent indentation as</value>
-  </data>
-  <data name="_indentationInconsistentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Name" xml:space="preserve">
-    <value>_indentationInconsistentLabel</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items" xml:space="preserve">
-    <value>Errors</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items1" xml:space="preserve">
-    <value>Warnings</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items2" xml:space="preserve">
-    <value>Don't</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 187</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 21</value>
-  </data>
-  <data name="_indentationInconsistentCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Name" xml:space="preserve">
-    <value>_indentationInconsistentCombo</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="_elevatePip.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -355,40 +217,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_elevatePip.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="_unresolvedImportWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_unresolvedImportWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_unresolvedImportWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 141</value>
-  </data>
-  <data name="_unresolvedImportWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_unresolvedImportWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>242, 17</value>
-  </data>
-  <data name="_unresolvedImportWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="_unresolvedImportWarning.Text" xml:space="preserve">
-    <value>&amp;Warn when imported module cannot be found</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Name" xml:space="preserve">
-    <value>_unresolvedImportWarning</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>2</value>
   </data>
   <data name="_clearGlobalPythonPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -397,7 +226,7 @@
     <value>True</value>
   </data>
   <data name="_clearGlobalPythonPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 95</value>
+    <value>6, 72</value>
   </data>
   <data name="_clearGlobalPythonPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
@@ -421,43 +250,73 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_clearGlobalPythonPath.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>3</value>
   </data>
-  <data name="_resetSuppressDialog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top</value>
+  <data name="_updateSearchPathsForLinkedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
   </data>
-  <data name="_resetSuppressDialog.AutoSize" type="System.Boolean, mscorlib">
+  <data name="_updateSearchPathsForLinkedFiles.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="_resetSuppressDialog.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
+  <data name="_updateSearchPathsForLinkedFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 95</value>
   </data>
-  <data name="_resetSuppressDialog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="_updateSearchPathsForLinkedFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
   </data>
-  <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>96, 214</value>
+  <data name="_updateSearchPathsForLinkedFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>241, 17</value>
   </data>
-  <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 23</value>
+  <data name="_updateSearchPathsForLinkedFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+  <data name="_updateSearchPathsForLinkedFiles.Text" xml:space="preserve">
+    <value>&amp;Update search paths when adding linked files</value>
   </data>
-  <data name="_resetSuppressDialog.Text" xml:space="preserve">
-    <value>Reset all permanently hidden dialogs</value>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Name" xml:space="preserve">
+    <value>_updateSearchPathsForLinkedFiles</value>
   </data>
-  <data name="&gt;&gt;_resetSuppressDialog.Name" xml:space="preserve">
-    <value>_resetSuppressDialog</value>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;_resetSuppressDialog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_resetSuppressDialog.Parent" xml:space="preserve">
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Parent" xml:space="preserve">
     <value>tableLayoutPanel3</value>
   </data>
-  <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
-    <value>9</value>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_unresolvedImportWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_unresolvedImportWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_unresolvedImportWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 118</value>
+  </data>
+  <data name="_unresolvedImportWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_unresolvedImportWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>242, 17</value>
+  </data>
+  <data name="_unresolvedImportWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_unresolvedImportWarning.Text" xml:space="preserve">
+    <value>&amp;Warn when imported module cannot be found</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Name" xml:space="preserve">
+    <value>_unresolvedImportWarning</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="_invalidEncodingWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -469,7 +328,7 @@
     <value>NoControl</value>
   </data>
   <data name="_invalidEncodingWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 164</value>
+    <value>6, 141</value>
   </data>
   <data name="_invalidEncodingWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
@@ -493,7 +352,115 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_invalidEncodingWarning.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_indentationInconsistentLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 168</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>167, 13</value>
+  </data>
+  <data name="_indentationInconsistentLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Text" xml:space="preserve">
+    <value>&amp;Report inconsistent indentation as</value>
+  </data>
+  <data name="_indentationInconsistentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Name" xml:space="preserve">
+    <value>_indentationInconsistentLabel</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items1" xml:space="preserve">
+    <value>Warnings</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items2" xml:space="preserve">
+    <value>Don't</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 164</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 21</value>
+  </data>
+  <data name="_indentationInconsistentCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Name" xml:space="preserve">
+    <value>_indentationInconsistentCombo</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="_resetSuppressDialog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="_resetSuppressDialog.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_resetSuppressDialog.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="_resetSuppressDialog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 191</value>
+  </data>
+  <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>189, 23</value>
+  </data>
+  <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
+  </data>
+  <data name="_resetSuppressDialog.Text" xml:space="preserve">
+    <value>Reset all permanently hidden dialogs</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Name" xml:space="preserve">
+    <value>_resetSuppressDialog</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -526,7 +493,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="8" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="8" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_invalidEncodingWarning" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_invalidEncodingWarning" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="8" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="8" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_resetSuppressDialog" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

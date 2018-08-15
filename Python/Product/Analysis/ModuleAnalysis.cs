@@ -534,9 +534,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// specified location.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
-        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
-            return GetDefinitionTree(_unit.Tree.IndexToLocation(index));
-        }
+        internal IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) 
+            => GetDefinitionTree(_unit.Tree.IndexToLocation(index));
 
         /// <summary>
         /// Gets the hierarchy of class and function definitions at the
@@ -678,24 +677,7 @@ namespace Microsoft.PythonTools.Analysis {
             var scope = FindScope(location);
 
             foreach (var s in scope.EnumerateTowardsGlobal) {
-                var scopeResult = new Dictionary<string, List<AnalysisValue>>();
-                foreach (var kvp in s.GetAllMergedVariables()) {
-                    var vars = kvp.Value.TypesNoCopy;
-                    if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
-                        continue;
-                    }
-                    if (scopeResult.TryGetValue(kvp.Key, out var values)) {
-                        values.AddRange(vars);
-                    } else {
-                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
-                    }
-                    values.Add(new SyntheticDefinitionInfo(
-                        kvp.Key,
-                        null,
-                        kvp.Value.Definitions.Select(e => e.GetLocationInfo())
-                    ));
-                }
-
+                var scopeResult = GetAllAvailableAnalysisValuesFromScope(s, options);
                 foreach (var kvp in scopeResult) {
                     // deliberately overwrite variables from outer scopes
                     result[kvp.Key] = kvp.Value;
@@ -710,6 +692,40 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        internal IEnumerable<MemberResult> GetAllAvailableMembersFromScope(InterpreterScope scope, GetMemberOptions options) {
+            var result = new Dictionary<string, IEnumerable<AnalysisValue>>();
+            var scopeResult = GetAllAvailableAnalysisValuesFromScope(scope, options);
+            foreach (var kvp in scopeResult) {
+                result[kvp.Key] = kvp.Value;
+            }
+
+            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
+            if (options.StatementKeywords() || options.ExpressionKeywords()) {
+                res = GetKeywordMembers(options, scope).Union(res);
+            }
+            return res;
+        }
+
+        private Dictionary<string, List<AnalysisValue>> GetAllAvailableAnalysisValuesFromScope(InterpreterScope scope, GetMemberOptions options) {
+            var scopeResult = new Dictionary<string, List<AnalysisValue>>();
+            foreach (var kvp in scope.GetAllMergedVariables()) {
+                var vars = kvp.Value.TypesNoCopy;
+                if (options.Exceptions() && !IsExceptionType(kvp.Key, vars)) {
+                    continue;
+                }
+                if (scopeResult.TryGetValue(kvp.Key, out var values)) {
+                    values.AddRange(vars);
+                } else {
+                    scopeResult[kvp.Key] = values = new List<AnalysisValue>(vars);
+                }
+                values.Add(new SyntheticDefinitionInfo(
+                    kvp.Key,
+                    null,
+                    kvp.Value.Definitions.Select(e => e.GetLocationInfo())
+                ));
+            }
+            return scopeResult;
+        }
 
         private bool IsExceptionType(string name, IAnalysisSet values) {
             if (name.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0 ||

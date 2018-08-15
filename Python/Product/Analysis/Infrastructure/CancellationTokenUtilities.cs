@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,11 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
-    enum AnalysisPriority {
-        High,
-        Normal,
-        Low,
-        None,
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Microsoft.PythonTools.Analysis.Infrastructure {
+    internal static class CancellationTokenUtilities {
+        public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task) 
+            => task.ContinueWith(UnregisterCancellationToken, registration, default(CancellationToken), TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+        private static void UnregisterCancellationToken(Task task, object state) => ((CancellationTokenRegistration)state).Dispose();
     }
 }

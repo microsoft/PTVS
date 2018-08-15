@@ -95,17 +95,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DBExtension.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="FileNameLabel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="NoDBExtension.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="PipExtension.xaml">
       <SubType>Designer</SubType>
@@ -166,15 +158,9 @@
       <DependentUpon>ConfigurationExtension.xaml</DependentUpon>
     </Compile>
     <Compile Include="DataListBox.cs" />
-    <Compile Include="DBExtension.xaml.cs">
-      <DependentUpon>DBExtension.xaml</DependentUpon>
-    </Compile>
     <Compile Include="FileNameEllipsisConverter.cs" />
     <Compile Include="ICanFocus.cs" />
     <Compile Include="IEnvironmentViewExtensionProvider.cs" />
-    <Compile Include="NoDBExtension.xaml.cs">
-      <DependentUpon>NoDBExtension.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>
     </Compile>
