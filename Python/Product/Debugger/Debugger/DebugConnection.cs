@@ -21,6 +21,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
@@ -34,7 +35,7 @@ namespace Microsoft.PythonTools.Debugger {
         private TextWriter _debugLog;
         private Connection _connection;
         private Thread _eventThread;
-        private Thread _debuggerThread;
+        private AsyncThread _debuggerThread;
         private readonly object _isListeningLock = new object();
         private readonly object _eventHandlingLock = new object();
         private readonly ConcurrentQueue<EventReceivedEventArgs> _eventsPending = new ConcurrentQueue<EventReceivedEventArgs>();
@@ -80,7 +81,7 @@ namespace Microsoft.PythonTools.Debugger {
             // Process events in a separate thread from the one that is processing messages
             // so that event handling code that needs access to the UI thread don't end up racing with other
             // code on the UI thread which may be waiting for a response to a request.
-            _debugLog.WriteLine("PythonProcess enqueuing event: " + e.Name);
+            _debugLog.WriteLine("[{0:s}] PythonProcess enqueuing event: {1}".FormatUI(DateTime.Now, e.Name));
             _eventsPending.Enqueue(e);
             _eventsPendingWakeUp.Set();
         }
@@ -93,7 +94,7 @@ namespace Microsoft.PythonTools.Debugger {
             _eventThread.Name = "Python Debugger Event Handling " + _processGuid;
             _eventThread.Start();
 
-            _debuggerThread = new Thread(MessageProcessingThread);
+            _debuggerThread = new AsyncThread(MessageProcessingThreadAsync);
             _debuggerThread.Name = "Python Debugger Message Processing " + _processGuid;
             _debuggerThread.Start();
 
@@ -145,10 +146,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SetProcess(Guid debugId) {
             _processGuid = debugId;
-        }
-
-        private void MessageProcessingThread() {
-            MessageProcessingThreadAsync().WaitAndUnwrapExceptions();
         }
 
         private async Task MessageProcessingThreadAsync() {
@@ -217,7 +214,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void HandleEvent(EventReceivedEventArgs e) {
-            _debugLog.WriteLine(string.Format("PythonProcess handling event: {0}", e.Event.name));
+            _debugLog.WriteLine("[{0:s}] PythonProcess handling event: {1}".FormatUI(DateTime.Now, e.Event.name));
             lock (_eventHandlingLock) {
                 Debug.Assert(e.Event.name == LDP.LocalConnectedEvent.Name || e.Event.name == LDP.RemoteConnectedEvent.Name || _isAuthenticated);
                 switch (e.Event.name) {

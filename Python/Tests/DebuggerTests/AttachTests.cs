@@ -387,7 +387,7 @@ void Thread(void*)
         PyGILState_STATE state = PyGILState_Ensure();
         PyObject *pValue;
 
-        pValue = PyObject_CallObject(g_pFunc, 0);
+        pValue = PyObject_CallObject(g_pFunc, NULL);
         if (!pValue) {
             PyErr_Print();
             return;
@@ -443,7 +443,7 @@ void main()
     import sys
     print(sys.gettrace() or ""(no trace function)"")
     for i in range(1):
-        print(i)
+        print('i = %d' % i)
 
     return 0");
 
@@ -453,18 +453,26 @@ void main()
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1500);
+                    Assert.IsFalse(p.HasExited);
 
-                    var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                    var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var attached = new TaskCompletionSource<bool>();
+                    var bpHit = new TaskCompletionSource<bool>();
 
                     var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput, debugLog: DebugLog);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
-                            Console.WriteLine("Process loaded");
+                            DebugLog?.WriteLine("Process loaded");
                             attached.SetResult(true);
                         };
                         proc.DebuggerOutput += (sender, args) => {
-                            Console.WriteLine(args.Output ?? "");
+                            DebugLog?.WriteLine(args.Output ?? "<null>\n");
+                        };
+                        proc.BreakpointBindSucceeded += (sender, args) => {
+                            DebugLog?.WriteLine("[{0:s}] Breakpoint bound at line {1}".FormatUI(DateTime.Now, args.Breakpoint.LineNo));
+                        };
+                        proc.BreakpointBindFailed += (sender, args) => {
+                            DebugLog?.WriteLine("Breakpoint was not bound");
+                            bpHit.SetCanceled();
                         };
                         await proc.StartListeningAsync();
 
@@ -475,7 +483,7 @@ void main()
                             bpHit.SetResult(true);
                         };
 
-                        var bp = proc.AddBreakpoint("gilstate_attach.py", 2);
+                        var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
                         await bp.AddAsync(TimeoutToken());
 
                         await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
@@ -1229,8 +1237,8 @@ int main(int argc, char* argv[]) {
                     : (VCCompiler.VC10_X86 ?? VCCompiler.VC12_X86 ?? VCCompiler.VC11_X86);
             } else {
                 vc = Version.Isx64
-                    ? (VCCompiler.VC15_X64 ?? VCCompiler.VC14_X64)
-                    : (VCCompiler.VC15_X86 ?? VCCompiler.VC14_X86);
+                    ? (VCCompiler.VC16_X64 ?? VCCompiler.VC15_X64 ?? VCCompiler.VC14_X64)
+                    : (VCCompiler.VC16_X86 ?? VCCompiler.VC15_X86 ?? VCCompiler.VC14_X86);
             }
 
             if (vc == null) {

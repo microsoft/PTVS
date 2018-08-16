@@ -1143,7 +1143,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private async Task<T> SendDebugRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken))
             where T : Response, new() {
-            _debugLog.WriteLine("PythonDebugger " + _processGuid + " Sending Command " + request.command);
+            _debugLog.WriteLine("[{0:s}] PythonDebugger {1} Sending Command {2}".FormatUI(DateTime.Now, _processGuid, request.command));
 
             DebugConnection connection = null;
             lock (_connectionLock) {

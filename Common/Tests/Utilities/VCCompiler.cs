@@ -35,12 +35,14 @@ namespace TestUtilities {
         public static VCCompiler VC12_X86 { get { return FindVC("12.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC14_X86 { get { return FindVC("14.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC15_X86 { get { return FindVC("15.0", ProcessorArchitecture.X86); } }
+        public static VCCompiler VC16_X86 { get { return FindVC("16.0", ProcessorArchitecture.X86); } }
         public static VCCompiler VC9_X64 { get { return FindVC("9.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC10_X64 { get { return FindVC("10.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC11_X64 { get { return FindVC("11.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC12_X64 { get { return FindVC("12.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC14_X64 { get { return FindVC("14.0", ProcessorArchitecture.Amd64); } }
         public static VCCompiler VC15_X64 { get { return FindVC("15.0", ProcessorArchitecture.Amd64); } }
+        public static VCCompiler VC16_X64 { get { return FindVC("16.0", ProcessorArchitecture.Amd64); } }
 
         private VCCompiler(string bin, string bins, string include, string lib) {
             BinPath = bin ?? string.Empty;
@@ -113,7 +115,7 @@ namespace TestUtilities {
         ) {
             var isX64 = (arch == ProcessorArchitecture.Amd64);
 
-            if (vcVersion == "14.0") {
+            if (vcVersion == "16.0" || vcVersion == "15.0" || vcVersion == "14.0") {
                 // Windows 10 kit is required for this version
                 AddWindows10KitPaths(isX64, ref includePaths, ref libPaths);
                 return;
@@ -130,6 +132,9 @@ namespace TestUtilities {
         }
 
         private static void AppendPath(ref string paths, string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
             if (string.IsNullOrEmpty(paths)) {
                 paths = path;
             } else {
@@ -227,13 +232,6 @@ namespace TestUtilities {
             ref string includePaths,
             ref string libPaths
         ) {
-            string include8 = null;
-            string lib8 = null;
-
-            if (!AddWindows8KitPaths(isX64, ref include8, ref lib8)) {
-                return false;
-            }
-
             foreach (var version in new[] { "KitsRoot10" }) {
                 var regValue = Registry.GetValue(
                     "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
@@ -253,6 +251,7 @@ namespace TestUtilities {
                 }
                 // We want a subfolder that is a version number - get the latest
                 var crtVersion = new DirectoryInfo(include).EnumerateDirectories()
+                    .Where(d => d.GetDirectories("ucrt").Any())
                     .Select(d => d.Name)
                     .OrderByDescending(s => s)
                     .FirstOrDefault();
@@ -273,10 +272,9 @@ namespace TestUtilities {
                 }
 
                 AppendPath(ref includePaths, include);
-                AppendPath(ref includePaths, include8);
-
                 AppendPath(ref libPaths, lib);
-                AppendPath(ref libPaths, lib8);
+
+                AddWindows8KitPaths(isX64, ref includePaths, ref libPaths);
 
                 return true;
             }
