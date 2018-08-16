@@ -394,23 +394,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
-            if (!ExperimentalOptions.NoDatabaseFactory) {
-                var fact = new LegacyDB.CPythonInterpreterFactory(
-                    info.Configuration,
-                    new InterpreterFactoryCreationOptions {
-                        WatchFileSystem = true,
-                        DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, LegacyDB.PythonTypeDatabase.FormatVersion)
-                    }
-                );
-                fact.BeginRefreshIsCurrent();
-                return fact;
-            }
-
             return new Ast.AstPythonInterpreterFactory(
                 info.Configuration,
                 new InterpreterFactoryCreationOptions {
                     WatchFileSystem = true,
-                    DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1)
                 }
             );
         }

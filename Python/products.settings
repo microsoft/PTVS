@@ -9,13 +9,13 @@
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     
-    <!-- Include UWP by default -->
-    <IncludeUwp Condition="'$(IncludeUwp)' == ''">true</IncludeUwp>
+    <!-- Exclude UWP by default -->
+    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
     
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     
-    <!-- Include WSL by default -->
-    <IncludeWsl Condition="'$(IncludeWsl)' == ''">true</IncludeWsl>
+    <!-- Exclude WSL by default -->
+    <IncludeWsl Condition="'$(IncludeWsl)' == ''">false</IncludeWsl>
   </PropertyGroup>
 </Project>

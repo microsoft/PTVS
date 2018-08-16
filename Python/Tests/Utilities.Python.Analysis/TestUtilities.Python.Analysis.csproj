@@ -62,7 +62,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonAnalysis.cs" />
     <Compile Include="PythonPaths.cs" />
-    <Compile Include="MockCompletionDB.cs" />
     <Compile Include="TestPackageManagerUI.cs" />
   </ItemGroup>
   <ItemGroup>

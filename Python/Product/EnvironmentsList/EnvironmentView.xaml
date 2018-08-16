@@ -55,34 +55,6 @@
                                    Opacity="0.9" />
                     </Grid>
 
-                    <ProgressBar x:Name="RefreshDBProgress"
-                                 Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-                                 HorizontalAlignment="Stretch"
-                                 Height="5"
-                                 Margin="2"
-                                 BorderBrush="Transparent"
-                                 BorderThickness="0"
-                                 Focusable="False"
-                                 Value="{Binding RefreshDBProgress,Mode=OneWay}" Maximum="100"
-                                 IsIndeterminate="{Binding IsRefreshDBProgressIndeterminate}"
-                                 ToolTip="{x:Static l:Resources.EnvironmentViewRefreshDBProgressTooltip}"
-                                 Visibility="Hidden"/>
-
-                    <Button x:Name="Icon_NeedRefresh"
-                            Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
-                            IsHitTestVisible="True"
-                            VerticalAlignment="Stretch"
-                            Cursor="Hand"
-                            Margin="1"
-                            Command="{x:Static l:DBExtension.StartRefreshDB}"
-                            CommandParameter="{Binding}"
-                            ToolTip="{x:Static l:Resources.EnvironmentViewNeedRefreshToolTip}"
-                            AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewNeedRefreshAutomationName}"
-                            AutomationProperties.HelpText="{x:Static l:Resources.EnvironmentViewNeedRefreshAutomationHelp}"
-                            Visibility="Hidden">
-                        <Control Style="{StaticResource RefreshImage}" IsTabStop="False" />
-                    </Button>
-
                     <Button x:Name="InteractiveWindowButton"
                             Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
                             Style="{StaticResource {x:Type Button}}"
@@ -105,22 +77,9 @@
                         <Setter TargetName="Name_IsDefault" Property="Visibility" Value="Visible" />
                         <Setter TargetName="Name_IsNotDefault" Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
-                    <DataTrigger Binding="{Binding IsCurrent}" Value="False">
-                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Visible" />
-                    </DataTrigger>
                     <DataTrigger Binding="{Binding Company,Mode=OneWay}" Value="">
                         <Setter TargetName="Company" Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
-                    <DataTrigger Binding="{Binding IsCheckingDatabase}" Value="True">
-                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding IsRefreshingDB}" Value="True">
-                        <Setter TargetName="RefreshDBProgress" Property="Visibility" Value="Visible" />
-                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
-                    </DataTrigger>
-                    <Trigger SourceName="Icon_NeedRefresh" Property="IsEnabled" Value="False">
-                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
-                    </Trigger>
                 </DataTemplate.Triggers>
             </DataTemplate>
 

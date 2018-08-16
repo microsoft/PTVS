@@ -159,26 +159,12 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
-                    { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory },
                     { "AutoDetectCondaEnvironments", ExperimentalOptions.AutoDetectCondaEnvironments },
                     { "UseCondaPackageManager", ExperimentalOptions.UseCondaPackageManager },
                     { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
                 });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-            }
-        }
-
-        /// <summary>
-        /// Asks the interpreter to generate its completion database if the
-        /// option is enabled (the default) and the database is not current.
-        /// </summary>
-        internal void EnsureCompletionDb(IPythonInterpreterFactory factory) {
-            if (GeneralOptions.AutoAnalyzeStandardLibrary) {
-                var withDb = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-                if (withDb != null && !withDb.IsCurrent) {
-                    withDb.GenerateDatabase(Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged);
-                }
             }
         }
 
@@ -197,7 +183,6 @@ namespace Microsoft.PythonTools {
             if (factory == null) {
                 return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
-            EnsureCompletionDb(factory);
             return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
         }
 

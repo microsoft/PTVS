@@ -19,10 +19,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,7 +35,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    public partial class ToolWindow : UserControl, IDisposable {
+    public partial class ToolWindow : UserControl {
         internal readonly ObservableCollection<EnvironmentView> _environments;
         internal readonly ObservableCollection<object> _extensions;
 
@@ -50,16 +48,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private EnvironmentView _addNewEnvironmentView;
         private EnvironmentView _onlineHelpView;
 
-        private AnalyzerStatusListener _listener;
-        private readonly object _listenerLock = new object();
-        private int _listenerTimeToLive;
-        const int _listenerDefaultTimeToLive = 1200;
-
-        // lock(_environments) when accessing _currentlyRefreshing
-        private readonly Dictionary<IPythonInterpreterFactory, AnalysisProgress> _currentlyRefreshing;
-
-        private bool _isDisposed;
-
         public static readonly RoutedCommand UnhandledException = new RoutedCommand();
         private static readonly object[] EmptyObjectArray = new object[0];
 
@@ -71,10 +59,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _extensionsView.SortDescriptions.Add(new SortDescription("SortPriority", ListSortDirection.Ascending));
             _extensionsView.SortDescriptions.Add(new SortDescription("LocalizedDisplayName", ListSortDirection.Ascending));
             _environmentsView.View.CurrentChanged += EnvironmentsView_CurrentChanged;
-            _currentlyRefreshing = new Dictionary<IPythonInterpreterFactory, AnalysisProgress>();
             DataContext = this;
             InitializeComponent();
-            CreateListener();
             SizeChanged += ToolWindow_SizeChanged;
         }
 
@@ -180,45 +166,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             UpdateLayout();
         }
 
-
-        private void CreateListener() {
-            lock (_listenerLock) {
-                var oldListener = _listener;
-                if (oldListener != null) {
-                    oldListener.ThrowPendingExceptions();
-                    oldListener.Dispose();
-                }
-                var newListener = new AnalyzerStatusListener(Listener_ProgressUpdate, TimeSpan.FromMilliseconds(250));
-                newListener.ThrowPendingExceptions();
-                _listener = newListener;
-                _listenerTimeToLive = _listenerDefaultTimeToLive;
-            }
-        }
-
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~ToolWindow() {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                _isDisposed = true;
-
-                if (disposing) {
-                    lock (_listenerLock) {
-                        if (_listener != null) {
-                            _listener.Dispose();
-                            _listener = null;
-                        }
-                    }
-                }
-            }
-        }
-
         public ICollectionView Environments => _environmentsView.View;
         public ICollectionView Extensions => _extensionsView.View;
 
@@ -229,126 +176,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void MakeGlobalDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
             _options.DefaultInterpreter = ((EnvironmentView)e.Parameter).Factory;
-        }
-
-        private async void Listener_ProgressUpdate(Dictionary<string, AnalysisProgress> status) {
-            bool anyUpdates = status.Any();
-            if (!anyUpdates) {
-                lock (_environments) {
-                    anyUpdates = _currentlyRefreshing.Count != 0;
-                }
-            }
-
-            if (anyUpdates) {
-                var updates = new List<DispatcherOperation>();
-
-                lock (_environments) {
-                    foreach (var env in _environments) {
-                        if (env.Factory == null) {
-                            continue;
-                        }
-
-                        AnalysisProgress progress;
-                        if (status.TryGetValue(AnalyzerStatusUpdater.GetIdentifier(env.Factory), out progress)) {
-                            _currentlyRefreshing[env.Factory] = progress;
-
-                            updates.Add(env.Dispatcher.InvokeAsync(() => {
-                                if (progress.Maximum > 0) {
-                                    var percent = progress.Progress * 100 / progress.Maximum;
-                                    var current = env.RefreshDBProgress;
-                                    // Filter out small instances of 'reverse'
-                                    // progress, but allow big jumps backwards.
-                                    if (percent > current || percent < current - 25) {
-                                        env.RefreshDBProgress = percent;
-                                    }
-                                    env.IsRefreshDBProgressIndeterminate = false;
-                                } else {
-                                    env.IsRefreshDBProgressIndeterminate = true;
-                                }
-                                env.RefreshDBMessage = progress.Message;
-                                env.IsRefreshingDB = true;
-                            }));
-                        } else if (_currentlyRefreshing.TryGetValue(env.Factory, out progress)) {
-                            _currentlyRefreshing.Remove(env.Factory);
-                            try {
-                                TelemetryLogger?.LogEvent(PythonLogEvent.AnalysisCompleted, new AnalysisInfo {
-                                    InterpreterId = env.Factory.Configuration.Id,
-                                    AnalysisSeconds = progress.Seconds
-                                });
-                            } catch (Exception ex) {
-                                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                            }
-                            updates.Add(env.Dispatcher.InvokeAsync(() => {
-                                env.IsRefreshingDB = false;
-                                env.IsRefreshDBProgressIndeterminate = false;
-                                env.RefreshDBMessage = string.Empty;
-                                CommandManager.InvalidateRequerySuggested();
-                            }));
-                        }
-                    }
-                }
-
-                try {
-                    await Task.WhenAll(updates.Select(d => d.Task).ToArray());
-                } catch (OperationCanceledException) {
-                    // Tasks were cancelled, which probably means we are closing.
-                    // In this case, _timer will be disposed before the next update.
-                }
-            }
-
-            if (Interlocked.Decrement(ref _listenerTimeToLive) == 0) {
-                // It's time to reset the listener. We do this periodically in
-                // case the global mutex has become abandoned. By releasing our
-                // handle, it should go away and any errors (which may be caused
-                // by users killing the analyzer) become transient rather than
-                // permanent.
-
-                // Because we are currently on the listener's thread, we need to
-                // recreate on a separate thread so that this one can terminate.
-                Task.Run((Action)CreateListener)
-                    .HandleAllExceptions(Site, GetType())
-                    .DoNotWait();
-            }
-        }
-
-        private void StartRefreshDB_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var view = e.Parameter as EnvironmentView;
-            var factory = view?.Factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            e.CanExecute = factory != null &&
-                !view.IsRefreshingDB &&
-                File.Exists(factory.Configuration.InterpreterPath);
-        }
-
-        private async void StartRefreshDB_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var view = (EnvironmentView)e.Parameter;
-            await StartRefreshDBAsync(view)
-                .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(Site, GetType());
-        }
-
-        private async Task StartRefreshDBAsync(EnvironmentView view) {
-            view.IsRefreshingDB = true;
-            view.IsRefreshDBProgressIndeterminate = true;
-
-            var tcs = new TaskCompletionSource<int>();
-            ((Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
-                Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ?
-                    Interpreter.LegacyDB.GenerateDatabaseOptions.None :
-                    Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged,
-                tcs.SetResult
-            );
-            await tcs.Task;
-
-            // Ensure that the factory is added to the list of those currently
-            // being refreshed. This ensures that if the task completes before
-            // an asynchronous update arrives, we will still reset the state.
-            // If an update has arrived, this causes a benign refresh of the
-            // command state.
-            lock (_environments) {
-                if (!_currentlyRefreshing.ContainsKey(view.Factory)) {
-                    _currentlyRefreshing[view.Factory] = default(AnalysisProgress);
-                }
-            }
         }
 
         private void UpdateEnvironments(string select = null) {

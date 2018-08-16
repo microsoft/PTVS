@@ -98,14 +98,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             IsBroken = !Configuration.IsRunnable();
             BrokenEnvironmentHelpUrl = "https://go.microsoft.com/fwlink/?linkid=863373";
 
-            var withDb = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            if (withDb != null) {
-                withDb.IsCurrentChanged += Factory_IsCurrentChanged;
-                IsCheckingDatabase = withDb.IsCheckingDatabase;
-                IsCurrent = withDb.IsCurrent;
-            }
-            
-
             if (_service.IsConfigurable(Factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
@@ -164,54 +156,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public ObservableCollection<object> Extensions { get; private set; }
 
-        private void Factory_IsCurrentChanged(object sender, EventArgs e) {
-            var withDb = sender as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-            Debug.Assert(withDb != null);
-            if (withDb == null) {
-                return;
-            }
-
-            Dispatcher.BeginInvoke((Action)(() => {
-                IsCheckingDatabase = withDb.IsCheckingDatabase;
-                IsCurrent = withDb.IsCurrent;
-            }));
-        }
-
-        private static void RefreshingDBChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            d.SetValue(RefreshDBButtonVisibilityPropertyKey, ((bool)e.NewValue) ? Visibility.Hidden : Visibility.Visible);
-            d.SetValue(RefreshProgressVisibilityPropertyKey, ((bool)e.NewValue) ? Visibility.Visible : Visibility.Hidden);
-        }
-
-
         #region Read-only State Dependency Properties
 
         private static readonly DependencyPropertyKey IsConfigurablePropertyKey = DependencyProperty.RegisterReadOnly("IsConfigurable", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey CanBeDeletedPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDeleted", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey CanBeDefaultPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDefault", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsDefault", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
-        private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(true));
-        private static readonly DependencyPropertyKey IsCheckingDatabasePropertyKey = DependencyProperty.RegisterReadOnly("IsCheckingDatabase", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey IsBrokenPropertyKey = DependencyProperty.RegisterReadOnly("IsBroken", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
-        private static readonly DependencyPropertyKey RefreshDBProgressPropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBProgress", typeof(int), typeof(EnvironmentView), new PropertyMetadata(0));
-        private static readonly DependencyPropertyKey RefreshDBMessagePropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBMessage", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
-        private static readonly DependencyPropertyKey IsRefreshingDBPropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshingDB", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false, RefreshingDBChanged));
-        private static readonly DependencyPropertyKey IsRefreshDBProgressIndeterminatePropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshDBProgressIndeterminate", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
-        private static readonly DependencyPropertyKey RefreshDBButtonVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBButtonVisibility", typeof(Visibility), typeof(EnvironmentView), new PropertyMetadata(Visibility.Visible));
-        private static readonly DependencyPropertyKey RefreshProgressVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("RefreshProgressVisibility", typeof(Visibility), typeof(EnvironmentView), new PropertyMetadata(Visibility.Hidden));
 
         public static readonly DependencyProperty IsConfigurableProperty = IsConfigurablePropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanBeDeletedProperty = CanBeDeletedPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanBeDefaultProperty = CanBeDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty IsCheckingDatabaseProperty = IsCheckingDatabasePropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsBrokenProperty = IsBrokenPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty RefreshDBMessageProperty = RefreshDBMessagePropertyKey.DependencyProperty;
-        public static readonly DependencyProperty RefreshDBProgressProperty = RefreshDBProgressPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty IsRefreshingDBProperty = IsRefreshingDBPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty IsRefreshDBProgressIndeterminateProperty = IsRefreshDBProgressIndeterminatePropertyKey.DependencyProperty;
-        public static readonly DependencyProperty RefreshDBButtonVisibilityProperty = RefreshDBButtonVisibilityPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty RefreshProgressVisibilityProperty = RefreshProgressVisibilityPropertyKey.DependencyProperty;
 
         public bool IsConfigurable {
             get { return Factory == null ? false : (bool)GetValue(IsConfigurableProperty); }
@@ -233,39 +190,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             internal set { if (Factory != null) { SetValue(IsDefaultPropertyKey, value); } }
         }
 
-        public bool IsCurrent {
-            get { return Factory == null ? true : (bool)GetValue(IsCurrentProperty); }
-            internal set { if (Factory != null) { SetValue(IsCurrentPropertyKey, value); } }
-        }
-
-        public bool IsCheckingDatabase {
-            get { return Factory == null ? false : (bool)GetValue(IsCheckingDatabaseProperty); }
-            internal set { if (Factory != null) { SetValue(IsCheckingDatabasePropertyKey, value); } }
-        }
-
         public bool IsBroken {
             get { return Factory == null ? false : (bool)GetValue(IsBrokenProperty); }
             internal set { if (Factory != null) { SetValue(IsBrokenPropertyKey, value); } }
-        }
-
-        public int RefreshDBProgress {
-            get { return Factory == null ? 0 : (int)GetValue(RefreshDBProgressProperty); }
-            internal set { if (Factory != null) { SetValue(RefreshDBProgressPropertyKey, value); } }
-        }
-
-        public string RefreshDBMessage {
-            get { return Factory == null ? string.Empty : (string)GetValue(RefreshDBMessageProperty); }
-            internal set { if (Factory != null) { SetValue(RefreshDBMessagePropertyKey, value); } }
-        }
-
-        public bool IsRefreshingDB {
-            get { return Factory == null ? false : (bool)GetValue(IsRefreshingDBProperty); }
-            internal set { if (Factory != null) { SetValue(IsRefreshingDBPropertyKey, value); } }
-        }
-
-        public bool IsRefreshDBProgressIndeterminate {
-            get { return Factory == null ? false : (bool)GetValue(IsRefreshDBProgressIndeterminateProperty); }
-            internal set { if (Factory != null) { SetValue(IsRefreshDBProgressIndeterminatePropertyKey, value); } }
         }
 
         #endregion
