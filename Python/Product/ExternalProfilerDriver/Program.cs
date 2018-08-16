@@ -37,6 +37,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         [Option('c', "callstack", HelpText = "Specify the pre-generated callstack report to process")]
         public string CallStackFNameToParse { get; set; }
 
+        [Option('s', "sympath", HelpText = "Specify the path(s) to search symbols in")]
+        public string SymbolPath { get; set; }
+
         [Option('d', "dwjsondir", HelpText = "Specify the directory in which to dump resulting dwjson (contents are overwritten)")]
         public string DWJsonOutDir { get; set; }
 
@@ -73,6 +76,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 VTuneCollectHotspotsSpec spec = new VTuneCollectHotspotsSpec() {
                     WorkloadSpec = String.Join(" ", RestArgs)
                 };
+
+                if (opts.SymbolPath != string.Empty) {
+                    Console.WriteLine("Symbol path specified");
+                    spec.SymbolPath = opts.SymbolPath;
+                }
+
                 string vtuneCollectArgs = spec.FullCLI();
 
                 VTuneReportCallstacksSpec repspec = new VTuneReportCallstacksSpec();
