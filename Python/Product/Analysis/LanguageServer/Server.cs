@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         internal async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
             if (Analyzer == null) {
-                LogMessage(MessageType.Error, "change configuration notification sent to uninitialized server");
+                LogMessage(MessageType.Error, "Change configuration notification sent to uninitialized server");
                 return;
             }
 
@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task ReloadModulesAsync(CancellationToken token) {
-            LogMessage(MessageType.Info, "Reloading modules...");
+            LogMessage(MessageType.General, "Reloading modules...");
 
             // Make sure reload modules is executed on the analyzer thread.
             var task = _reloadModulesQueueItem.Task;
@@ -374,9 +374,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
 
             if (string.IsNullOrEmpty(Analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.Log, "Initializing for generic interpreter");
+                LogMessage(MessageType.General, "Initializing for generic interpreter");
             } else {
-                LogMessage(MessageType.Log, $"Initializing for {Analyzer.InterpreterFactory.Configuration.InterpreterPath}");
+                LogMessage(MessageType.General, $"Initializing for {Analyzer.InterpreterFactory.Configuration.InterpreterPath}");
             }
 
             if (@params.rootUri != null) {

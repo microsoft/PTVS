@@ -149,5 +149,8 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public static int IndexOfOrdinal(this string s, string value, int startIndex = 0, bool ignoreCase = false) {
             return s?.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
         }
+
+        public static bool EqualsIgnoreCase(this string s, string other)
+            => string.Compare(s, other, StringComparison.OrdinalIgnoreCase) == 0;
     }
 }

@@ -23,6 +23,8 @@ using StreamJsonRpc;
 namespace Microsoft.Python.LanguageServer.Services {
     public sealed class UIService : IUIService, ILogger {
         private readonly JsonRpc _rpc;
+        private MessageType _logLevel = MessageType.Error;
+
         public UIService(JsonRpc rpc) {
             _rpc = rpc;
         }
@@ -50,6 +52,9 @@ namespace Microsoft.Python.LanguageServer.Services {
         }
 
         public Task LogMessage(string message, MessageType messageType) {
+            if(messageType > _logLevel) {
+                return Task.CompletedTask;
+            }
             var parameters = new LogMessageParams {
                 type = messageType,
                 message = message
@@ -59,6 +64,9 @@ namespace Microsoft.Python.LanguageServer.Services {
 
         public Task SetStatusBarMessage(string message) 
             => _rpc.NotifyWithParameterObjectAsync("window/setStatusBarMessage", message);
+
         public void TraceMessage(IFormattable message) => LogMessage(message.ToString(), MessageType.Info);
+
+        public void SetLogLevel(MessageType logLevel) => _logLevel = logLevel;
     }
 }
