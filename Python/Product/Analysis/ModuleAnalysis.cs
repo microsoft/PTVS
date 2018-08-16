@@ -684,7 +684,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
+            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, scope, result);
             if (options.StatementKeywords() || options.ExpressionKeywords()) {
                 res = GetKeywordMembers(options, scope).Union(res);
             }
@@ -699,7 +699,7 @@ namespace Microsoft.PythonTools.Analysis {
                 result[kvp.Key] = kvp.Value;
             }
 
-            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
+            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, scope, result);
             if (options.StatementKeywords() || options.ExpressionKeywords()) {
                 res = GetKeywordMembers(options, scope).Union(res);
             }
@@ -935,7 +935,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // intersection. Setting it to null saves lookups later.
                 ownerDict = null;
             }
-            return MemberDictToResultList(GetPrivatePrefix(scope), options, memberDict, ownerDict, namespacesCount);
+            return MemberDictToResultList(GetPrivatePrefix(scope), options, scope, memberDict, ownerDict, namespacesCount);
         }
 
         /// <summary>
@@ -1114,6 +1114,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static IEnumerable<MemberResult> MemberDictToResultList(
             string privatePrefix,
             GetMemberOptions options,
+            InterpreterScope scope,
             Dictionary<string, IEnumerable<AnalysisValue>> memberDict,
             Dictionary<string, IEnumerable<AnalysisValue>> ownerDict = null,
             int maximumOwners = 0
@@ -1156,7 +1157,7 @@ namespace Microsoft.PythonTools.Analysis {
                         newName.Append(")");
                         name = newName.ToString();
                     }
-                    yield return new MemberResult(name, completion, kvp.Value, null);
+                    yield return new MemberResult(name, completion, scope, kvp.Value, null);
                 }
             }
         }

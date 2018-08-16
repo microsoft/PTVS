@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -50,6 +51,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .ToArray();
         }
 
+        public async Task<DocumentSymbol[]> NewDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
+            var entry = ProjectFiles.GetEntry(@params.textDocument);
+
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
+            return ToDocumentSymbols(members);
+        }
+
         private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout) {
             var analysis = entry != null ? await entry.GetAnalysisAsync(timeout) : null;
             return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
@@ -78,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
                 name = m.Name,
-                kind = ToSymbolKind(m.MemberType),
+                kind = ToSymbolKind(m),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
@@ -96,11 +105,59 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return res;
         }
 
-        private static SymbolKind ToSymbolKind(PythonMemberType memberType) {
-            switch (memberType) {
+        private DocumentSymbol[] ToDocumentSymbols(List<MemberResult> members) {
+            var childMap = new Dictionary<MemberResult, List<MemberResult>>();
+            var topLevel = new List<MemberResult>();
+
+            foreach (var m in members) {
+                var parent = members.FirstOrDefault(x => x.Scope?.Node == m.Scope?.OuterScope?.Node && x.Name == m.Scope?.Name);
+                if (parent != default(MemberResult)) {
+                    if (!childMap.TryGetValue(parent, out var children)) {
+                        childMap[parent] = children = new List<MemberResult>();
+                    }
+                    children.Add(m);
+                } else {
+                    topLevel.Add(m);
+                }
+            }
+
+            var symbols = topLevel
+                .GroupBy(mr => mr.Name)
+                .Select(g => g.First())
+                .Select(m => ToDocumentSymbol(m, childMap))
+                .ToArray();
+
+            return symbols;
+        }
+
+        private DocumentSymbol ToDocumentSymbol(MemberResult m, Dictionary<MemberResult, List<MemberResult>> childMap) {
+            var res = new DocumentSymbol {
+                name = m.Name,
+                detail = m.Name,
+                kind = ToSymbolKind(m),
+                deprecated = false
+            };
+
+            if (childMap.TryGetValue(m, out var children)) {
+                res.children = children.Select(x => ToDocumentSymbol(x, childMap)).ToArray();
+            }
+
+            var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
+            if (loc != null) {
+                res.range = new SourceSpan(
+                        new SourceLocation(loc.StartLine, loc.StartColumn),
+                        new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)
+                    );
+                res.selectionRange = res.range;
+            }
+            return res;
+        }
+
+        private static SymbolKind ToSymbolKind(MemberResult m) {
+            switch (m.MemberType) {
                 case PythonMemberType.Unknown: return SymbolKind.None;
-                case PythonMemberType.Class: return SymbolKind.Class;
-                case PythonMemberType.Instance: return SymbolKind.Object;
+                case PythonMemberType.Class: return m.Scope is FunctionScope ? SymbolKind.Variable : SymbolKind.Class;
+                case PythonMemberType.Instance: return SymbolKind.Variable;
                 case PythonMemberType.Delegate: return SymbolKind.Function;
                 case PythonMemberType.DelegateInstance: return SymbolKind.Function;
                 case PythonMemberType.Enum: return SymbolKind.Enum;

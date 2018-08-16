@@ -354,11 +354,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         [JsonRpcMethod("textDocument/documentSymbol")]
-        public async Task<SymbolInformation[]> DocumentSymbol(JToken token, CancellationToken cancellationToken) {
+        public async Task<DocumentSymbol[]> DocumentSymbol(JToken token, CancellationToken cancellationToken) {
             await _prioritizer.DefaultPriorityAsync(cancellationToken);
             // This call is also used by VSC document outline and it needs correct information
             await WaitForCompleteAnalysisAsync(cancellationToken);
-            return await _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
+            return await _server.NewDocumentSymbol(ToObject<DocumentSymbolParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/codeAction")]

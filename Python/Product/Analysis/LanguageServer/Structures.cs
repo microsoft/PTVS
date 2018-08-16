@@ -289,12 +289,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// Enables an even higher level of logging via the logMessage event.
         /// This will likely have a performance impact.
         /// </summary>
-        public bool traceLogging; 
-        
+        public bool traceLogging;
+
         /// <summary> 
         /// If true, analyzer will be created asynchronously. Used in VS Code. 
         /// </summary> 
-        public bool asyncStartup; 
+        public bool asyncStartup;
     }
 
     [Serializable]
@@ -457,6 +457,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 public SymbolKind[] valueSet;
             }
             public SymbolKindCapabilities? symbolKind;
+
+            /// <summary>
+            /// The client support hierarchical document symbols.
+            /// </summary>
+            public bool? hierarchicalDocumentSymbolSupport;
         }
         public DocumentSymbolCapabilities? documentSymbol;
 
@@ -801,6 +806,48 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that range applies to
         /// </summary>
         public int? _version;
+    }
+
+    [Serializable]
+    public struct DocumentSymbol {
+        /// <summary>
+        /// The name of this symbol.
+        /// </summary>
+        public string name;
+
+        /// <summary>
+        /// More detail for this symbol, e.g the signature of a function. If not provided the
+        /// name is used.
+        /// </summary>
+        public string detail;
+
+        /// <summary>
+        /// The kind of this symbol.
+        /// </summary>
+        public SymbolKind kind;
+
+        /// <summary>
+        /// Indicates if this symbol is deprecated.
+        /// </summary>
+        public bool? deprecated;
+
+        /// <summary>
+        /// The range enclosing this symbol not including leading/trailing whitespace but everything else
+        /// like comments.This information is typically used to determine if the clients cursor is
+        /// inside the symbol to reveal in the symbol in the UI.
+        /// </summary>
+        public Range range;
+
+        /// <summary>
+        /// The range that should be selected and revealed when this symbol is being picked, 
+        /// e.g the name of a function. Must be contained by the `range`.
+        /// </summary>
+        public Range selectionRange;
+
+        /// <summary>
+        /// Children of this symbol, e.g. properties of a class.
+        /// </summary>
+        public DocumentSymbol[] children;
     }
 
     [Serializable]
