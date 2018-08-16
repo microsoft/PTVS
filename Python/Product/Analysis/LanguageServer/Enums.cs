@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         Info = 3,
 
         /// <summary>
-        /// Language server errors.
+        /// Language server log-level diagnostic messages.
         /// </summary>
         Log = 4
     }
