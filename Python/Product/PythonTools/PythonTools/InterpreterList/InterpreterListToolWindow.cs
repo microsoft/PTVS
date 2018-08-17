@@ -280,15 +280,6 @@ namespace Microsoft.PythonTools.InterpreterList {
                 }
             }
 
-            var _withDb = view.Factory as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-            if (_withDb != null && !string.IsNullOrEmpty(_withDb.DatabasePath)) {
-                view.Extensions.Add(new DBExtensionProvider(_withDb));
-            }
-
-            if (_withDb == null && ExperimentalOptions.NoDatabaseFactory) {
-                view.Extensions.Add(new NoDBExtensionProvider());
-            }
-
             var model = _site.GetComponentModel();
             if (model != null) {
                 try {

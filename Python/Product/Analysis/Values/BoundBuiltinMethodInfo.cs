@@ -50,7 +50,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return _method.ReturnTypes.GetInstanceType();
+            // Check if method returns self
+            var returnType = _method.ReturnTypes.GetInstanceType();
+            if (args.Length > 0 && returnType.Split(v => v is BuiltinInstanceInfo biif && biif.PythonType == _method.Function?.DeclaringType, out _, out _)) {
+                return args[0]; //  Return actual self (i.e. derived class)
+            }
+            return returnType;
         }
 
         public override IEnumerable<OverloadResult> Overloads {

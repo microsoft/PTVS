@@ -42,23 +42,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            await WaitForEntryAnalysisComplete(entry, 1000);
             var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
-            
             return members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
                 .Select(ToSymbolInformation)
                 .ToArray();
-        }
-
-        private Task WaitForEntryAnalysisComplete(IProjectEntry entry, int timeout) {
-            var cts = new CancellationTokenSource(timeout);
-            return Task.Run(async () => {
-                while (!entry.IsAnalyzed && !cts.IsCancellationRequested) {
-                    await Task.Delay(100);
-                }
-            });
         }
 
         private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout) {
