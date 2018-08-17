@@ -388,6 +388,7 @@ namespace TestUtilities.UI {
         }
 
         public OutputWindowPane GetOutputWindow(string name) {
+            ((DTE2)Dte).ToolWindows.OutputWindow.Parent.Activate();
             return ((DTE2)Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
 
@@ -411,6 +412,7 @@ namespace TestUtilities.UI {
 
         public string GetOutputWindowText(string name) {
             var window = GetOutputWindow(name);
+            window.Activate();
             var doc = window.TextDocument;
             doc.Selection.SelectAll();
             return doc.Selection.Text;
