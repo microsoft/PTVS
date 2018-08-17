@@ -51,10 +51,6 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             if (pm != null) {
                 e.View.Extensions.Add(new PipExtensionProvider(e.View.Factory, pm));
             }
-            var withDb = e.View.Factory as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
-            if (withDb != null && !string.IsNullOrEmpty(withDb.DatabasePath)) {
-                e.View.Extensions.Add(new DBExtensionProvider(withDb));
-            }
             e.View.IPythonModeEnabledSetter = SetIPythonEnabled;
             e.View.IsIPythonModeEnabled = QueryIPythonEnabled(e.View);
         }

@@ -299,6 +299,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string GeneralPaneName {
+            get {
+                return ResourceManager.GetString("GeneralPaneName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not retrieve results from GitHub.
         /// </summary>
         public static string GitHubSearchError {

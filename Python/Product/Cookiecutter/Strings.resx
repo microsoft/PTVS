@@ -535,4 +535,7 @@ Please delete the installed template and try again.</value>
   <data name="UnableToElevate" xml:space="preserve">
     <value>Visual Studio was unable to launch the elevated process.</value>
   </data>
+  <data name="GeneralPaneName" xml:space="preserve">
+    <value>General</value>
+  </data>
 </root>

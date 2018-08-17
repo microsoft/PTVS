@@ -79,7 +79,6 @@
   <ItemGroup>
     <Compile Include="IronPythonAnalysis.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
-    <Compile Include="IronPythonDatabaseTest.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
   </ItemGroup>
   <ItemGroup>

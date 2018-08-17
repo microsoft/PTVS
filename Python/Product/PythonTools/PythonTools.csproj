@@ -476,10 +476,6 @@
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
-      <DependentUpon>CompletionControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
@@ -1018,12 +1014,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="PythonTools\Project\AddVirtualEnvironment.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
