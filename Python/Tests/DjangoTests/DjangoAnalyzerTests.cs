@@ -163,8 +163,6 @@ namespace DjangoTests {
             var djangoAnalyzer = new DjangoAnalyzer();
             djangoAnalyzer.Register(analyzer);
 
-            //analyzer.SetSearchPaths(new[] { path });
-
             var entries = new List<IPythonProjectEntry>();
             foreach (string file in Directory.EnumerateFiles(path, "*.py", SearchOption.AllDirectories)) {
                 if (!ModulePath.FromBasePathAndFile_NoThrow(path, file, out var mp)) {
