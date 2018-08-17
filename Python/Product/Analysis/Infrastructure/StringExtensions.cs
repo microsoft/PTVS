@@ -151,6 +151,6 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         }
 
         public static bool EqualsIgnoreCase(this string s, string other)
-            => string.Compare(s, other, StringComparison.OrdinalIgnoreCase) == 0;
+            => string.Equals(s, other, StringComparison.OrdinalIgnoreCase);
     }
 }
