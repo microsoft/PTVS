@@ -234,7 +234,7 @@
     </ProjectReference>
     <ProjectReference2 Include="..\VsPyProf\VsPyProf.vcxproj" />
     <ProjectReference2 Include="..\VsPyProf\VsPyProfX86.vcxproj" />
-    <ProjectReference2 Include="..\ExternalProfilerDriver\ExternalProfilerDriver.csproj" />
+    <ProjectReference2 Include="..\ExternalProfilerDriver\ExternalProfilerDriver.csproj" Condition="'$(IncludeExternalProfilerDriver)' == 'True'" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
