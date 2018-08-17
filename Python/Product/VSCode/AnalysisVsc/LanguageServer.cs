@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DsTools.Core.Disposables;
@@ -139,7 +138,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 // while typing normally.
                 var diags = e.diagnostics.ToArray();
                 _pendingDiagnostic[e.uri] = diags;
-                if(diags.Length == 0) {
+                if (diags.Length == 0) {
                     PublishPendingDiagnostics();
                 }
             }
@@ -171,6 +170,8 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 var analysis = pythonSection["analysis"];
                 settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
                 settings.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
+
+                _ui.SetLogLevel(GetLogLevel(analysis));
 
                 _idleTimeTracker?.Dispose();
                 _idleTimeTracker = new IdleTimeTracker(settings.diagnosticPublishDelay, PublishPendingDiagnostics);
@@ -430,6 +431,17 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             return defaultValue;
         }
 
+        private MessageType GetLogLevel(JToken analysisKey) {
+            var s = GetSetting(analysisKey, "logLevel", "Error");
+            if (s.EqualsIgnoreCase("Warning")) {
+                return MessageType.Warning;
+            }
+            if (s.EqualsIgnoreCase("Info") || s.EqualsIgnoreCase("Information")) {
+                return MessageType.Info;
+            }
+            return MessageType.Error;
+        }
+
         private void PublishPendingDiagnostics() {
             List<KeyValuePair<Uri, Diagnostic[]>> list;
 
@@ -460,7 +472,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 NotifyUserActivity();
             }
 
-            public void NotifyUserActivity()  => _lastActivityTime = DateTime.Now;
+            public void NotifyUserActivity() => _lastActivityTime = DateTime.Now;
 
             public void Dispose() {
                 _timer?.Dispose();
@@ -486,7 +498,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                     tcs.TrySetResult(null);
                 } catch (OperationCanceledException) {
                     tcs.TrySetCanceled();
-                } catch(Exception ex) when (!ex.IsCriticalException()) {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     tcs.TrySetException(ex);
                 }
             });
@@ -516,22 +528,22 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                         } else {
                             item.SetResult(EmptyDisposable.Instance);
                         }
-                    } catch (OperationCanceledException) when (_ppc.IsDisposed)  {
+                    } catch (OperationCanceledException) when (_ppc.IsDisposed) {
                         return;
                     }
                 }
             }
 
-            public Task<IDisposable> InitializePriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
+            public Task<IDisposable> InitializePriorityAsync(CancellationToken cancellationToken = default(CancellationToken))
                 => Enqueue(InitializePriority, true, cancellationToken);
 
-            public Task<IDisposable> ConfigurationPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
+            public Task<IDisposable> ConfigurationPriorityAsync(CancellationToken cancellationToken = default(CancellationToken))
                 => Enqueue(ConfigurationPriority, true, cancellationToken);
 
-            public Task<IDisposable> DocumentChangePriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
+            public Task<IDisposable> DocumentChangePriorityAsync(CancellationToken cancellationToken = default(CancellationToken))
                 => Enqueue(DocumentChangePriority, true, cancellationToken);
 
-            public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken)) 
+            public Task DefaultPriorityAsync(CancellationToken cancellationToken = default(CancellationToken))
                 => Enqueue(DefaultPriority, false, cancellationToken);
 
             private Task<IDisposable> Enqueue(int priority, bool isAwaitable, CancellationToken cancellationToken = default(CancellationToken)) {
