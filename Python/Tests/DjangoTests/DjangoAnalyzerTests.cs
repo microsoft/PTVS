@@ -17,6 +17,8 @@
 #if DJANGO_HTML_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -39,7 +41,7 @@ namespace DjangoTests {
         }
 
         private void TestSingleRenderVariable(string template, string value="data") {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
 
             var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));
             Assert.IsNotNull(vars, "No variables found for " + template);
@@ -62,7 +64,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomFilter() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out var langVersion);
 
             AssertUtil.ContainsExactly(
                 proj._filters.Keys.Except(DjangoAnalyzer._knownFilters.Keys),
@@ -73,7 +75,7 @@ namespace DjangoTests {
             var entry = proj._filters["test_filter_2"].Entry;
             var parser = Parser.CreateParser(
                 new StringReader(File.ReadAllText(entry.FilePath).Replace("test_filter_2", "test_filter_3")),
-                PythonLanguageVersion.V27
+                langVersion
             );
             using (var p = entry.BeginParse()) {
                 p.Tree = parser.ParseFile();
@@ -90,7 +92,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomTag() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out var langVersion);
 
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
@@ -103,7 +105,7 @@ namespace DjangoTests {
             var entry = proj._tags["test_tag_2"].Entry;
             var parser = Parser.CreateParser(
                 new StringReader(File.ReadAllText(entry.FilePath).Replace("test_tag_2", "test_tag_3")),
-                PythonLanguageVersion.V27
+                langVersion
             );
             using (var p = entry.BeginParse()) {
                 p.Tree = parser.ParseFile();
@@ -122,7 +124,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void TestListView() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
 
             var detailsVars = proj.GetVariablesForTemplateFile(templates + "index.html");
@@ -132,7 +134,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void TestDetailsView() {
-            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
+            var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
 
             var detailsVars = proj.GetVariablesForTemplateFile(templates + "details.html");
@@ -144,26 +146,34 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(mymodel2_detailsVars.Keys, "mymodel2");
         }
 
-        private DjangoAnalyzer AnalyzerTest(string path) {
-            var version = new Version(2, 7);
-            var testFact = new AstPythonInterpreterFactory(
-                new InterpreterConfiguration($"AnalysisOnly|{version}", $"Analysis Only {version}", version: version, uiMode: InterpreterUIMode.Normal),
-                new InterpreterFactoryCreationOptions { WatchFileSystem = false }
-            );
+        private DjangoAnalyzer AnalyzerTest(string path, out PythonLanguageVersion languageVersion) {
+            var version = PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "django")));
+            version.AssertInstalled();
 
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
-            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
+            var testFact = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions {
+                DatabasePath = TestData.GetTempPath(),
+                UseExistingCache = false,
+                TraceLevel = TraceLevel.Verbose,
+                WatchFileSystem = false
+            });
+            Debug.WriteLine("Testing with {0}".FormatInvariant(version.InterpreterPath));
+            languageVersion = testFact.GetLanguageVersion();
+
+            var analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
+            var djangoAnalyzer = new DjangoAnalyzer();
             djangoAnalyzer.Register(analyzer);
 
-            analyzer.SetSearchPaths(new[] { path });
-
-            List<IPythonProjectEntry> entries = new List<IPythonProjectEntry>();
+            var entries = new List<IPythonProjectEntry>();
             foreach (string file in Directory.EnumerateFiles(path, "*.py", SearchOption.AllDirectories)) {
-                var entry = analyzer.AddModule(ModulePath.FromFullPath(file).ModuleName, file);
+                if (!ModulePath.FromBasePathAndFile_NoThrow(path, file, out var mp)) {
+                    Debug.WriteLine("Not parsing {0}".FormatInvariant(file));
+                    continue;
+                }
+                Debug.WriteLine("Parsing {0} ({1})".FormatInvariant(mp.FullName, file));
+                var entry = analyzer.AddModule(mp.ModuleName, file);
                 var parser = Parser.CreateParser(
                     new FileStream(file, FileMode.Open, FileAccess.Read),
-                    PythonLanguageVersion.V27
+                    testFact.GetLanguageVersion()
                 );
                 using (var p = entry.BeginParse()) {
                     p.Tree = parser.ParseFile();
@@ -175,6 +185,8 @@ namespace DjangoTests {
             foreach (var entry in entries) {
                 entry.Analyze(CancellationToken.None, false);
             }
+
+            Debug.WriteLine((testFact as IPythonInterpreterFactoryWithLog)?.GetAnalysisLogContent(CultureInfo.CurrentUICulture) ?? "(no logs)");
 
             return djangoAnalyzer;
         }
