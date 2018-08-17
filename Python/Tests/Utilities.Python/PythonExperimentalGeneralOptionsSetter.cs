@@ -21,23 +21,16 @@ namespace TestUtilities.Python {
 
     public class PythonExperimentalGeneralOptionsSetter : IDisposable {
         private readonly PythonToolsService _pyService;
-        private readonly bool? _noDatabaseFactory;
         private readonly bool? _autoDetectCondaEnvironments;
         private readonly bool? _useCondaPackageManager;
 
         public PythonExperimentalGeneralOptionsSetter(
             PythonToolsService pyService,
-            bool? noDatabaseFactory = null,
             bool? autoDetectCondaEnvironments = null,
             bool? useCondaPackageManager = null
         ) {
             _pyService = pyService;
             var options = _pyService.ExperimentalOptions;
-
-            if (noDatabaseFactory.HasValue) {
-                _noDatabaseFactory = options.NoDatabaseFactory;
-                options.NoDatabaseFactory = noDatabaseFactory.Value;
-            }
 
             if (autoDetectCondaEnvironments.HasValue) {
                 _autoDetectCondaEnvironments = options.AutoDetectCondaEnvironments;
@@ -52,10 +45,6 @@ namespace TestUtilities.Python {
 
         public void Dispose() {
             var options = _pyService.ExperimentalOptions;
-
-            if (_noDatabaseFactory.HasValue) {
-                options.NoDatabaseFactory = _noDatabaseFactory.Value;
-            }
 
             if (_autoDetectCondaEnvironments.HasValue) {
                 options.AutoDetectCondaEnvironments = _autoDetectCondaEnvironments.Value;

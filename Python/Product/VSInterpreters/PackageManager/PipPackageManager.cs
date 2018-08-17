@@ -441,7 +441,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     if (packages == null) {
                         // Pip failed, so return a directory listing
-                        var paths = await LegacyDB.PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
+                        var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null);
 
                         packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
                             .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
@@ -596,17 +596,14 @@ namespace Microsoft.PythonTools.Interpreter {
             Debug.Assert(_libWatchers != null, "Should not create watchers when suppressed");
 
             IReadOnlyList<string> paths = null;
-            string cachePath = null;
 
             if (_factory is Ast.AstPythonInterpreterFactory astFactory) {
                 paths = await astFactory.GetSearchPathsAsync(CancellationToken.None);
-            } else if (_factory is LegacyDB.PythonInterpreterFactoryWithDatabase dbFactory) {
-                cachePath = PathUtils.GetAbsoluteFilePath(dbFactory.DatabasePath, "database.path");
             }
 
             if (paths == null) {
                 try {
-                    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, cachePath))
+                    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null))
                         .Select(p => p.Path)
                         .ToArray();
                 } catch (InvalidOperationException) {

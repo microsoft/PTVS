@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private AnalysisUnit _unit;
-        private TaskCompletionSource<ModuleAnalysis> _analysisTcs;
+        private TaskCompletionSource<ModuleAnalysis> _analysisTcs = new TaskCompletionSource<ModuleAnalysis>();
         private readonly SortedDictionary<int, DocumentBuffer> _buffers;
         private readonly ConcurrentQueue<WeakReference<ReferenceDict>> _backReferences = new ConcurrentQueue<WeakReference<ReferenceDict>>();
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();

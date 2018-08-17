@@ -39,9 +39,9 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         /// Does nothing.
         /// </summary>
         public void Dispose() { }
-    }   
+    }
 
-    public sealed class DisposeToken {
+    internal sealed class DisposeToken {
         private readonly Type _type;
         private readonly CancellationTokenSource _cts;
         private int _disposed;

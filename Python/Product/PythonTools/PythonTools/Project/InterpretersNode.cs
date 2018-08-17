@@ -188,13 +188,6 @@ namespace Microsoft.PythonTools.Project {
                         ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
                     }
                 }
-
-                if (prevChecked && anyChanges) {
-                    var withDb = _factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
-                    if (withDb != null) {
-                        withDb.GenerateDatabase(Interpreter.LegacyDB.GenerateDatabaseOptions.SkipUnchanged);
-                    }
-                }
             });
         }
 

@@ -1209,9 +1209,6 @@ namespace Microsoft.PythonTools.Project {
                 return InterpreterOptions.DefaultInterpreter;
             }
 
-
-            Site.GetPythonToolsService().EnsureCompletionDb(fact);
-
             return fact;
         }
 
@@ -1245,8 +1242,6 @@ namespace Microsoft.PythonTools.Project {
                     )
                 );
             }
-
-            Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
             return fact;
         }

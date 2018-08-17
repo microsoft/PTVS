@@ -24,7 +24,6 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonExperimentalOptionsControl));
-            this._noDatabaseFactory = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this._condaEnvironments = new System.Windows.Forms.CheckBox();
             this._condaPackageManager = new System.Windows.Forms.CheckBox();
@@ -32,17 +31,9 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
-            // _noDatabaseFactory
-            // 
-            resources.ApplyResources(this._noDatabaseFactory, "_noDatabaseFactory");
-            this._noDatabaseFactory.AutoEllipsis = true;
-            this._noDatabaseFactory.Name = "_noDatabaseFactory";
-            this._noDatabaseFactory.UseVisualStyleBackColor = true;
-            // 
             // tableLayoutPanel2
             // 
             resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
-            this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._condaEnvironments, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._condaPackageManager, 0, 2);
             this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
@@ -81,8 +72,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         #endregion
-
-        private System.Windows.Forms.CheckBox _noDatabaseFactory;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label _mustRestartLabel;
         private System.Windows.Forms.CheckBox _condaEnvironments;

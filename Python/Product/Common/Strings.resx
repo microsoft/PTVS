@@ -2290,4 +2290,7 @@ Expand selection to the full expression?</value>
   <data name="UpgradedMscorlibReference" xml:space="preserve">
     <value>A reference to 'mscorlib' was added to this project.</value>
   </data>
+  <data name="GeneralPaneName" xml:space="preserve">
+    <value>General</value>
+  </data>
 </root>

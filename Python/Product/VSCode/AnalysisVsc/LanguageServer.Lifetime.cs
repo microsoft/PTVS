@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
@@ -32,13 +33,25 @@ namespace Microsoft.Python.LanguageServer.Implementation {
     public partial class LanguageServer {
         private InitializeParams _initParams;
         private bool _shutdown;
+        private Action<Task, object> DisposeStateContinuation { get; } = (t, o) => ((IDisposable) o).Dispose();
 
         [JsonRpcMethod("initialize")]
-        public Task<InitializeResult> Initialize(JToken token, CancellationToken cancellationToken) {
+        public async Task<InitializeResult> Initialize(JToken token, CancellationToken cancellationToken) {
             _initParams = token.ToObject<InitializeParams>();
             MonitorParentProcess(_initParams);
+            var priorityToken = await _prioritizer.InitializePriorityAsync(cancellationToken);
+            if (_initParams.initializationOptions.asyncStartup) {
+                _server.Initialize(_initParams, cancellationToken)
+                    .ContinueWith(DisposeStateContinuation, priorityToken, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                    .DoNotWait();
+                return _server.GetInitializeResult();
+            }
 
-            return _server.Initialize(_initParams, cancellationToken);
+            try {
+                return await _server.Initialize(_initParams, cancellationToken);
+            } finally {
+                priorityToken.Dispose();
+            }
         }
 
         [JsonRpcMethod("initialized")]

@@ -24,33 +24,24 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            NoDatabaseFactory = EO.GetNoDatabaseFactory();
             AutoDetectCondaEnvironments = EO.GetAutoDetectCondaEnvironments();
             UseCondaPackageManager = EO.GetUseCondaPackageManager();
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
-            EO.NoDatabaseFactory = NoDatabaseFactory;
             EO.AutoDetectCondaEnvironments = AutoDetectCondaEnvironments;
             EO.UseCondaPackageManager = UseCondaPackageManager;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
-            NoDatabaseFactory = false;
             AutoDetectCondaEnvironments = false;
             UseCondaPackageManager = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Changed;
-
-        /// <summary>
-        /// True to use the experimental feature of interpreter factories
-        /// without old-style completion databases.
-        /// </summary>
-        public bool NoDatabaseFactory { get; set; }
 
         /// <summary>
         /// True to auto detect all non-root conda environments on the machine.
