@@ -848,6 +848,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// Children of this symbol, e.g. properties of a class.
         /// </summary>
         public DocumentSymbol[] children;
+
+        /// <summary>
+        /// Custom field provides more information on the function or method such as 
+        /// 'classmethod' or 'property' that are not part of the <see cref="SymbolKind"/>.
+        /// </summary>
+        public string _functionKind;
     }
 
     [Serializable]

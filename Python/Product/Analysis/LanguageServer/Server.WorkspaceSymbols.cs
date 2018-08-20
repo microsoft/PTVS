@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
@@ -81,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
             => currentDepth < _symbolHierarchyDepthLimit
-                ? scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts, currentDepth)) 
+                ? scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts, currentDepth))
                 : Enumerable.Empty<MemberResult>();
 
         private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
@@ -138,7 +139,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 name = m.Name,
                 detail = m.Name,
                 kind = ToSymbolKind(m.MemberType),
-                deprecated = false
+                deprecated = false,
+                _functionKind = GetFunctionKind(m)
             };
 
             if (childMap.TryGetValue(m, out var children)) {
@@ -156,6 +158,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 res.selectionRange = res.range;
             }
             return res;
+        }
+
+        private static string GetFunctionKind(MemberResult m) {
+            if (m.MemberType == PythonMemberType.Function) {
+                var funcDef = m.Values.FirstOrDefault(x => x is IPythonFunction)?.PythonType as FunctionDefinition;
+                if (funcDef?.Decorators != null && funcDef.Decorators.DecoratorsInternal.Length == 1) {
+                    foreach (var decorator in funcDef.Decorators.DecoratorsInternal) {
+                        if (decorator is NameExpression nameExpr) {
+                            if (nameExpr.Name == "property" || nameExpr.Name == "staticmethod" || nameExpr.Name == "classmethod") {
+                                return nameExpr.Name;
+                            }
+                        }
+                    }
+                }
+                return "function";
+            }
+            return m.MemberType == PythonMemberType.Class ? "class" : string.Empty;
         }
 
         private static SymbolKind ToSymbolKind(PythonMemberType memberType) {

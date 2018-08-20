@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.QuickInfoRequest.Command: response = await GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = await AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
-                case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
+                case AP.NavigationRequest.Command: response = await GetNavigationsAsync((AP.NavigationRequest)request); break;
                 case AP.FileUpdateRequest.Command: response = await UpdateContent((AP.FileUpdateRequest)request); break;
                 case AP.AddImportRequest.Command: response = AddImportRequest((AP.AddImportRequest)request); break;
                 case AP.IsMissingImportRequest.Command: response = IsMissingImport((AP.IsMissingImportRequest)request); break;
@@ -967,99 +967,29 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response GetNavigations(AP.NavigationRequest request) {
-            List<AP.Navigation> navs = new List<AP.Navigation>();
+        private async Task<Response> GetNavigationsAsync(AP.NavigationRequest request) {
+            var symbols = await _server.HierarchyDocumentSymbol(new LS.DocumentSymbolParams {
+                textDocument = new LS.TextDocumentIdentifier { uri = request.documentUri }
+            }, CancellationToken.None);
+
+            var navs = symbols.Select(ToNavigation).ToArray();
             var bufferVersion = GetPythonBuffer(request.documentUri);
-
-            var suite = bufferVersion.Ast?.Body as SuiteStatement;
-            if (suite == null) {
-                return IncorrectBufferId(request.documentUri);
-            }
-
-            foreach (var stmt in suite.Statements) {
-                var classDef = stmt as ClassDefinition;
-                if (classDef != null) {
-                    // classes have nested defs
-                    var classSuite = classDef.Body as SuiteStatement;
-                    var nestedNavs = new List<AP.Navigation>();
-                    if (classSuite != null) {
-                        foreach (var child in classSuite.Statements) {
-                            if (child is ClassDefinition || child is FunctionDefinition) {
-                                nestedNavs.Add(GetNavigation(bufferVersion.Ast, child));
-                            }
-                        }
-                    }
-
-                    var startLoc = classDef.GetStart(bufferVersion.Ast);
-                    var endLoc = classDef.GetEnd(bufferVersion.Ast);
-                    if (startLoc >= endLoc) {
-                        Debug.Fail($"Invalid span on AST node {classDef}");
-                        endLoc = bufferVersion.Ast.IndexToLocation(classDef.StartIndex + 1);
-                    }
-
-                    navs.Add(new AP.Navigation() {
-                        type = "class",
-                        name = classDef.Name,
-                        startLine = startLoc.Line,
-                        startColumn = startLoc.Column,
-                        endLine = endLoc.Line,
-                        endColumn = endLoc.Column,
-                        children = nestedNavs.ToArray()
-                    });
-
-                } else if (stmt is FunctionDefinition) {
-                    navs.Add(GetNavigation(bufferVersion.Ast, stmt));
-                }
-            }
-
-
             return new AP.NavigationResponse() {
                 version = bufferVersion.Version,
-                navigations = navs.ToArray()
+                navigations = navs
             };
         }
 
-        private static AP.Navigation GetNavigation(PythonAst ast, Statement stmt) {
-            string type, name;
-            if (stmt is FunctionDefinition funcDef) {
-                name = funcDef.Name;
-                type = "function";
-                if (funcDef.Decorators != null && funcDef.Decorators.DecoratorsInternal.Length == 1) {
-                    foreach (var decorator in funcDef.Decorators.DecoratorsInternal) {
-                        if (decorator is NameExpression nameExpr) {
-                            if (nameExpr.Name == "property") {
-                                type = "property";
-                                break;
-                            } else if (nameExpr.Name == "staticmethod") {
-                                type = "staticmethod";
-                                break;
-                            } else if (nameExpr.Name == "classmethod") {
-                                type = "classmethod";
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                name = ((ClassDefinition)stmt).Name;
-                type = "class";
-            }
-            var startLoc = stmt.GetStart(ast);
-            var endLoc = stmt.GetEnd(ast);
-            if (startLoc >= endLoc) {
-                Debug.Fail($"Invalid span on AST node {stmt}");
-                endLoc = ast.IndexToLocation(stmt.StartIndex + 1);
-            }
-
-            return new AP.Navigation {
-                type = type,
-                name = name,
-                startLine = startLoc.Line,
-                startColumn = startLoc.Column,
-                endLine = endLoc.Line,
-                endColumn = endLoc.Column
+        private AP.Navigation ToNavigation(LS.DocumentSymbol symbol) =>
+            new AP.Navigation {
+                name = symbol.name,
+                startLine = symbol.range.start.line + 1,
+                startColumn = symbol.range.start.character + 1,
+                endLine = symbol.range.end.line + 1,
+                endColumn = symbol.range.end.character + 1,
+                type = symbol._functionKind,
+                children = symbol.children.Select(ToNavigation).ToArray()
             };
-        }
 
         private Response ExpressionAtPoint(AP.ExpressionAtPointRequest request) {
             var buffer = GetPythonBuffer(request.documentUri);
@@ -1440,7 +1370,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 documentUri = new Uri[request.path.Length]
             };
 
-            for(int i = 0; i < request.path.Length; ++i) {
+            for (int i = 0; i < request.path.Length; ++i) {
                 if (!string.IsNullOrEmpty(request.path[i])) {
                     var documentUri = ProjectEntry.MakeDocumentUri(request.path[i]);
                     entries[i] = await AddNewFile(documentUri, request.path[i], request.addingFromDir);
@@ -1641,7 +1571,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__doc__" ||
                 nameExpr.Name == "__name__";
         }
-        
+
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
 
         internal IPythonInterpreter Interpreter => Project?.Interpreter;
