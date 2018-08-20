@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task ReloadModulesAsync(CancellationToken token) {
-            LogMessage(MessageType.General, "Reloading modules...");
+            LogMessage(MessageType._General, "Reloading modules...");
 
             // Make sure reload modules is executed on the analyzer thread.
             var task = _reloadModulesQueueItem.Task;
@@ -374,9 +374,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _displayTextBuilder = DocumentationBuilder.Create(DisplayOptions);
 
             if (string.IsNullOrEmpty(Analyzer.InterpreterFactory?.Configuration?.InterpreterPath)) {
-                LogMessage(MessageType.General, "Initializing for generic interpreter");
+                LogMessage(MessageType._General, "Initializing for generic interpreter");
             } else {
-                LogMessage(MessageType.General, $"Initializing for {Analyzer.InterpreterFactory.Configuration.InterpreterPath}");
+                LogMessage(MessageType._General, $"Initializing for {Analyzer.InterpreterFactory.Configuration.InterpreterPath}");
             }
 
             if (@params.rootUri != null) {

@@ -74,8 +74,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// <summary>
         /// General language server output relevant to the user
         /// such as information on Python interpreter type.
+        /// Does not conform to LSP definitions, Python LS specific.
         /// </summary>
-        General = 0,
+        _General = 0,
 
         /// <summary>
         /// Language server errors.

@@ -140,6 +140,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             if (childMap.TryGetValue(m, out var children)) {
                 res.children = children.Select(x => ToDocumentSymbol(x, childMap)).ToArray();
+            } else {
+                res.children = new DocumentSymbol[0];
             }
 
             var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
