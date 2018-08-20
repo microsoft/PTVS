@@ -829,7 +829,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// <summary>
         /// Indicates if this symbol is deprecated.
         /// </summary>
-        public bool? deprecated;
+        public bool deprecated;
 
         /// <summary>
         /// The range enclosing this symbol not including leading/trailing whitespace but everything else

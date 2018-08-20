@@ -358,7 +358,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             await _prioritizer.DefaultPriorityAsync(cancellationToken);
             // This call is also used by VSC document outline and it needs correct information
             await WaitForCompleteAnalysisAsync(cancellationToken);
-            return await _server.NewDocumentSymbol(ToObject<DocumentSymbolParams>(token), cancellationToken);
+            return await _server.HierarchyDocumentSymbol(ToObject<DocumentSymbolParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/codeAction")]

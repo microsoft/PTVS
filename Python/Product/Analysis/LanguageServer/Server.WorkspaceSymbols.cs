@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .ToArray();
         }
 
-        public async Task<DocumentSymbol[]> NewDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
+        public async Task<DocumentSymbol[]> HierarchyDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
                 name = m.Name,
-                kind = ToSymbolKind(m),
+                kind = ToSymbolKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var res = new DocumentSymbol {
                 name = m.Name,
                 detail = m.Name,
-                kind = ToSymbolKind(m),
+                kind = ToSymbolKind(m.MemberType),
                 deprecated = false
             };
 
@@ -153,10 +153,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return res;
         }
 
-        private static SymbolKind ToSymbolKind(MemberResult m) {
-            switch (m.MemberType) {
+        private static SymbolKind ToSymbolKind(PythonMemberType memberType) {
+            switch (memberType) {
                 case PythonMemberType.Unknown: return SymbolKind.None;
-                case PythonMemberType.Class: return m.Scope is FunctionScope ? SymbolKind.Variable : SymbolKind.Class;
+                case PythonMemberType.Class: return SymbolKind.Class;
                 case PythonMemberType.Instance: return SymbolKind.Variable;
                 case PythonMemberType.Delegate: return SymbolKind.Function;
                 case PythonMemberType.DelegateInstance: return SymbolKind.Function;
