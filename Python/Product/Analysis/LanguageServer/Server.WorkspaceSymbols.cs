@@ -20,11 +20,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
+        private static int _symbolHierarchyDepthLimit = 1;
+
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
@@ -75,14 +76,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     return false;
                 })
-            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts));
+            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts, 0));
         }
 
-        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
-            => scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts));
+        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
+            => currentDepth < _symbolHierarchyDepthLimit
+                ? scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts, currentDepth)) 
+                : Enumerable.Empty<MemberResult>();
 
-        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
-            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
+        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
+            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts, currentDepth + 1));
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {

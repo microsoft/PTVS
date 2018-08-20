@@ -170,6 +170,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 var analysis = pythonSection["analysis"];
                 settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
                 settings.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
+                settings.symbolsHierarchyDepthLimit = GetSetting(analysis, "symbolsHierarchyDepthLimit", 10);
 
                 _ui.SetLogLevel(GetLogLevel(analysis));
 
@@ -438,6 +439,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             }
             if (s.EqualsIgnoreCase("Info") || s.EqualsIgnoreCase("Information")) {
                 return MessageType.Info;
+            }
+            if (s.EqualsIgnoreCase("Trace")) {
+                return MessageType.Log;
             }
             return MessageType.Error;
         }
