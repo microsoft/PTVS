@@ -32,7 +32,7 @@
     The version number that will identify a specific build. This appears in
     Programs and Features, Extension Manager, and Help About.
     -->
-    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">15.8</FileVersionPrefix>
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">15.9</FileVersionPrefix>
     <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
     <!--
     The version number that will identify assembly compatibility.
