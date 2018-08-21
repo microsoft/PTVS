@@ -2202,7 +2202,10 @@ namespace DebuggerTests {
 
             var process = processRunInfo.Process;
 
+            var oldEncoding = Console.InputEncoding;
             try {
+                Console.InputEncoding = Encoding.ASCII;
+
                 await process.StartAsync();
 
                 AssertWaited(processRunInfo.ProcessLoaded);
@@ -2211,6 +2214,7 @@ namespace DebuggerTests {
                 Thread.Sleep(1000);
                 process.SendStringToStdInput("fob\n");
             } finally {
+                Console.InputEncoding = oldEncoding;
                 WaitForExit(process);
             }
 
