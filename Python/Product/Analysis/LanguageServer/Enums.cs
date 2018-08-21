@@ -71,9 +71,31 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public enum MessageType : int {
+        /// <summary>
+        /// General language server output relevant to the user
+        /// such as information on Python interpreter type.
+        /// Does not conform to LSP definitions, Python LS specific.
+        /// </summary>
+        _General = 0,
+
+        /// <summary>
+        /// Language server errors.
+        /// </summary>
         Error = 1,
+
+        /// <summary>
+        /// Language server warnings.
+        /// </summary>
         Warning = 2,
+
+        /// <summary>
+        /// Language server internal information.
+        /// </summary>
         Info = 3,
+
+        /// <summary>
+        /// Language server log-level diagnostic messages.
+        /// </summary>
         Log = 4
     }
 
