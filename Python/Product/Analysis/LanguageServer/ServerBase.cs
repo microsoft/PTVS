@@ -19,7 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
-    public abstract class ServerBase : IServer {
+    public abstract class ServerBase : IServer2 {
         /// <summary>
         /// Doesn't do anything. Left here for legacy purpores
         /// </summary>
@@ -72,6 +72,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public virtual Task<DocumentHighlight[]> DocumentHighlight(TextDocumentPositionParams @params) => throw new NotImplementedException();
 
         public virtual Task<SymbolInformation[]> DocumentSymbol(DocumentSymbolParams @params) => throw new NotImplementedException();
+
+        public virtual Task<DocumentSymbol[]> HierarchicalDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken)
+            => Task.FromResult(Array.Empty<DocumentSymbol>());
 
         public virtual Task<Command[]> CodeAction(CodeActionParams @params) => throw new NotImplementedException();
 

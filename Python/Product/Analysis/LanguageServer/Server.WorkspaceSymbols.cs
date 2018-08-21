@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .ToArray();
         }
 
-        public async Task<DocumentSymbol[]> HierarchyDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
+        public override async Task<DocumentSymbol[]> HierarchicalDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
