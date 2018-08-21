@@ -1,5 +1,7 @@
 from django.shortcuts import render, render_to_response
-from django.template.defaulttags import register
+from django import template
+
+register = template.Library()
 
 def test_render_view(request):
     return render(request, 'test_render.html', {'content': 'data'})

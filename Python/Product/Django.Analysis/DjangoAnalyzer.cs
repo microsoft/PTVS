@@ -198,16 +198,21 @@ namespace Microsoft.PythonTools.Django.Analysis {
             analyzer.SpecializeFunction("django.contrib.gis.shortcuts", "render_to_kmz", RenderToStringProcessor, true);
             analyzer.SpecializeFunction("django.contrib.gis.shortcuts", "render_to_text", RenderToStringProcessor, true);
 
-            analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor, true);
-            analyzer.SpecializeFunction("django.template.base.Library", "filter_function", FilterProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "filter", FilterProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "filter_function", FilterProcessor, true);
 
-            analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor, true);
-            analyzer.SpecializeFunction("django.template.base.Library", "tag_function", TagProcessor, true);
-            analyzer.SpecializeFunction("django.template.base.Library", "assignment_tag", TagProcessor, true);
-            analyzer.SpecializeFunction("django.template.base.Library", "simple_tag", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "tag", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "tag_function", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "assignment_tag", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.Library", "simple_tag", TagProcessor, true);
+
+            // Django >= 1.9
+            analyzer.SpecializeFunction("django.template.library", "import_library", "django.template.library.Library", true);
+
+            // Django < 1.9
+            analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library", true);
 
             analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor, true);
-            analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library", true);
 
             analyzer.SpecializeFunction("django.template.loader", "get_template", GetTemplateProcessor, true);
             analyzer.SpecializeFunction("django.template.context", "Context", ContextClassProcessor, true);
