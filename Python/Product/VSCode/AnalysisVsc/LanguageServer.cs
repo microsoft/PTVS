@@ -194,10 +194,10 @@ namespace Microsoft.Python.LanguageServer.Implementation {
 
                 await _server.DidChangeConfiguration(new DidChangeConfigurationParams { settings = settings }, cancellationToken);
 
-                if (!_filesLoaded) {
+                if (!_filesLoaded && !settings.analysis.openFilesOnly) {
                     await LoadDirectoryFiles();
-                    _filesLoaded = true;
                 }
+                _filesLoaded = true;
             }
         }
 
