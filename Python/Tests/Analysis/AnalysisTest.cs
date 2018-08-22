@@ -6635,7 +6635,8 @@ keywords_from_fob_2 = fob_2.keywords
                 "result_4",
                 "args_from_fob_1"
             }) {
-                var result = entry.GetValue<SequenceInfo>(name);
+                entry.AssertDescription(name, "tuple[int, float, str, list]");
+                var result = entry.GetValue<AnalysisValue>(name);
                 Console.WriteLine("{0} = {1}", name, result);
                 AssertTupleContains(result, BuiltinTypeId.Int, BuiltinTypeId.Float, entry.BuiltinTypeId_Str, BuiltinTypeId.List);
             }
@@ -6697,18 +6698,21 @@ test1_result = test1()
             state.AssertIsInstance("test2a.test_attr", BuiltinTypeId.Int);
         }
 
-        private static void AssertTupleContains(SequenceInfo tuple, params BuiltinTypeId[] id) {
+        private static void AssertTupleContains(AnalysisValue tuple, params BuiltinTypeId[] id) {
+            var indexTypes = (tuple as SequenceInfo)?.IndexTypes?.Select(v => v.TypesNoCopy).ToArray() ??
+                (tuple as ProtocolInfo)?.GetProtocols<TupleProtocol>()?.FirstOrDefault()?._values;
+            Assert.IsNotNull(indexTypes);
+
             var expected = string.Join(", ", id);
-            var actual = string.Join(", ", tuple.IndexTypes.Select(t => {
-                var t2 = t.TypesNoCopy;
-                if (t2.Count == 1) {
-                    return t2.Single().TypeId.ToString();
+            var actual = string.Join(", ", indexTypes.Select(t => {
+                if (t.Count == 1) {
+                    return t.Single().TypeId.ToString();
                 } else {
-                    return "{" + string.Join(", ", t2.Select(t3 => t3.TypeId).OrderBy(t3 => t3)) + "}";
+                    return "{" + string.Join(", ", t.Select(t2 => t2.TypeId).OrderBy(t2 => t2)) + "}";
                 }
             }));
-            if (tuple.IndexTypes
-                .Zip(id, (t1, id2) => t1.TypesNoCopy.Count == 1 && t1.TypesNoCopy.Single().TypeId == id2)
+            if (indexTypes
+                .Zip(id, (t1, id2) => t1.Count == 1 && t1.Single().TypeId == id2)
                 .Any(b => !b)) {
                 Assert.Fail(string.Format("Expected <{0}>. Actual <{1}>.", expected, actual));
             }
