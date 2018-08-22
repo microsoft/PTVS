@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Profiling {
         
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
+        private bool _useVTune;
+        private bool _isVTuneAvailable;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -53,6 +55,9 @@ namespace Microsoft.PythonTools.Profiling {
             _isProjectSelected = true;
 
             _isValid = false;
+
+            _useVTune = false;
+            _isVTuneAvailable = PythonProfilingPackage.CheckForExternalProfiler();
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
@@ -94,7 +99,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (IsValid) {
                 return new ProfilingTarget {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
-                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null
+                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
+                    UseVTune = _useVTune
                 };
             } else {
                 return null;
@@ -184,6 +190,23 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool UseVTune
+        {
+            get { return _useVTune; }
+            set {
+                _useVTune = value;
+                OnPropertyChanged("UseVTune");
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsVTuneAvailable
+        {
+            get { return _isVTuneAvailable; }
+        }
 
         /// <summary>
         /// Receives our own property change events to update IsValid.

@@ -218,6 +218,15 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mi_xed Mode Profiling.
+        /// </summary>
+        public static string LaunchProfiling_MixedModeProfiling {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_MixedModeProfiling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _OK.
         /// </summary>
         public static string LaunchProfiling_OK {
