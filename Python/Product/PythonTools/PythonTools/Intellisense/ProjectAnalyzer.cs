@@ -942,12 +942,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
             foreach (var e in oldEntries) {
+                if (!IsActive) {
+                    // We've been shut down - abort
+                    return;
+                }
+
                 if (e.IsTemporaryFile || e.SuppressErrorList) {
                     var entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
-                    for (int retries = 3; retries > 0 && entry == null; --retries) {
+                    for (int retries = 3; retries > 0 && entry == null && IsActive; --retries) {
                         // Likely in the process of changing analyzer, so we'll delay slightly and retry.
                         await Task.Delay(100);
                         entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
+                    }
+                    if (!IsActive) {
+                        // We've been shut down - abort
+                        return;
                     }
                     if (entry == null) {
                         Debug.Fail($"Failed to analyze file {e.Path}");
@@ -961,16 +970,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (e == null) {
                     continue;
                 }
+                if (!IsActive) {
+                    // We've been shut down - abort
+                    return;
+                }
 
                 if (oldBuffers.TryGetValue(e.Path, out ITextBuffer[] buffers)) {
                     foreach (var b in buffers.MaybeEnumerate()) {
+                        if (!IsActive) {
+                            // We've been shut down - abort
+                            return;
+                        }
+
                         PythonTextBufferInfo.MarkForReplacement(b);
                         var bi = _services.GetBufferInfo(b);
                         var actualEntry = bi.TrySetAnalysisEntry(e, null);
                         var bp = actualEntry?.GetOrCreateBufferParser(_services);
                         if (bp != null) {
-                            bp.AddBuffer(b);
-                            await bp.EnsureCodeSyncedAsync(b);
+                            try {
+                                bp.AddBuffer(b);
+                                await bp.EnsureCodeSyncedAsync(b);
+                            } catch (InvalidOperationException) {
+                            }
                         }
                     }
                 }

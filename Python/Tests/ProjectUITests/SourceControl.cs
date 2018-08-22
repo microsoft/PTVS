@@ -163,6 +163,9 @@ namespace ProjectUITests {
                     Assert.IsNotNull(project.ProjectItems.Item(fileName));
                     AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
                         OnQueryAddFiles(fileName),
+#if DEV16_OR_LATER      // We get queried twice now, it seems
+                        OnQueryAddFiles(fileName),
+#endif
                         OnAfterAddFilesEx(fileName)
                     );
                 }

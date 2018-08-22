@@ -706,7 +706,7 @@ namespace DebuggerUITests {
                 var items = app.WaitForErrorListItems(7);
 
                 var debug3 = (Debugger3)app.Dte.Debugger;
-                ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
+                debug3.Go(true);
 
                 var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
                 dialog.No();
