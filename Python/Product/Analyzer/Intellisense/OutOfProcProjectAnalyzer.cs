@@ -968,7 +968,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<Response> GetNavigationsAsync(AP.NavigationRequest request) {
-            var symbols = await _server.HierarchyDocumentSymbol(new LS.DocumentSymbolParams {
+            var symbols = await _server.HierarchicalDocumentSymbol(new LS.DocumentSymbolParams {
                 textDocument = new LS.TextDocumentIdentifier { uri = request.documentUri }
             }, CancellationToken.None);
 
