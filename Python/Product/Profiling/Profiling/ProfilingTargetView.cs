@@ -32,7 +32,9 @@ namespace Microsoft.PythonTools.Profiling {
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
         private bool _useVTune;
+#if EXTERNAL_PROFILER_DRIVER
         private bool _isVTuneAvailable;
+#endif
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -57,7 +59,9 @@ namespace Microsoft.PythonTools.Profiling {
             _isValid = false;
 
             _useVTune = false;
+#if EXTERNAL_PROFILER_DRIVER
             _isVTuneAvailable = PythonProfilingPackage.CheckForExternalProfiler();
+#endif
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
@@ -201,12 +205,14 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
+#if EXTERNAL_PROFILER_DRIVER
         /// <summary>
         /// </summary>
         public bool IsVTuneAvailable
         {
             get { return _isVTuneAvailable; }
         }
+#endif
 
         /// <summary>
         /// Receives our own property change events to update IsValid.

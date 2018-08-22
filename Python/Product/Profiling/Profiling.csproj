@@ -35,6 +35,7 @@
     <AssemblyName>Microsoft.PythonTools.Profiling</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
+    <DefineConstants Condition="$(IncludeExternalProfilerDriver) == 'true'">EXTERNAL_PROFILER_DRIVER;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>

@@ -72,7 +72,9 @@ namespace Microsoft.PythonTools.Profiling {
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
+#if EXTERNAL_PROFILER_DRIVER
         private const string ExternalProfilerDriverExe = "ExternalProfilerDriver.exe";
+#endif
 
         /// <summary>
         /// Default constructor of the package.
@@ -285,11 +287,15 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
+#if EXTERNAL_PROFILER_DRIVER
             if (useVTune) {
                 RunVTune(session, config, openReport);
             } else {
+#endif
                 RunProfiler(session, config, openReport);
+#if EXTERNAL_PROFILER_DRIVER
             }
+#endif
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport, bool useVTune) {
@@ -310,14 +316,18 @@ namespace Microsoft.PythonTools.Profiling {
             config.ScriptArguments = runTarget.Arguments;
             config.WorkingDirectory = runTarget.WorkingDirectory;
 
+#if EXTERNAL_PROFILER_DRIVER
             if (useVTune) {
                 RunVTune(session, config, openReport);
             } else {
+#endif
                 RunProfiler(session, config, openReport);
+#if EXTERNAL_PROFILER_DRIVER
             }
+#endif
         }
 
-
+#if EXTERNAL_PROFILER_DRIVER
         private static void RunVTune(SessionNode session, LaunchConfiguration config, bool openReport) {
 #if false
             var pyexe = ProcessOutput.QuoteSingleArgument(stndTarget.InterpreterPath);
@@ -374,6 +384,7 @@ namespace Microsoft.PythonTools.Profiling {
             };
             proc.Start();
         }
+#endif
 
         private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
             var process = new ProfiledProcess(
@@ -526,6 +537,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
+#if EXTERNAL_PROFILER_DRIVER
         public static bool CheckForExternalProfiler() {
             var driver = PythonToolsInstallPath.TryGetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
             if (string.IsNullOrEmpty(driver)) {
@@ -576,5 +588,6 @@ namespace Microsoft.PythonTools.Profiling {
                 package.CommitToPath(Path.Combine(dirname, "trace"), CommitOption.CommitOption_Archive);
             }
         }
+#endif
     }
 }
