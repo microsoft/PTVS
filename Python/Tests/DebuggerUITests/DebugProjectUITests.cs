@@ -561,7 +561,7 @@ namespace DebuggerUITests {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
-                string exceptionDescription = useVsCodeDebugger ? "ValueError('bad value',)" : "ValueError: bad value";
+                string exceptionDescription = useVsCodeDebugger ? "bad value" : "ValueError: bad value";
                 ExceptionTest(app, "SimpleException2.py", "Exception Thrown", exceptionDescription, "ValueError", 3);
             }
         }
