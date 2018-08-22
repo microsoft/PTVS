@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -162,15 +163,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         private static string GetFunctionKind(MemberResult m) {
             if (m.MemberType == PythonMemberType.Function) {
-                var funcDef = m.Values.FirstOrDefault(x => x is IPythonFunction)?.PythonType as FunctionDefinition;
-                if (funcDef?.Decorators != null && funcDef.Decorators.DecoratorsInternal.Length == 1) {
-                    foreach (var decorator in funcDef.Decorators.DecoratorsInternal) {
-                        if (decorator is NameExpression nameExpr) {
-                            if (nameExpr.Name == "property" || nameExpr.Name == "staticmethod" || nameExpr.Name == "classmethod") {
-                                return nameExpr.Name;
-                            }
-                        }
-                    }
+                var funcInfo = m.Values.OfType<FunctionInfo>().FirstOrDefault();
+                if (funcInfo.IsProperty) {
+                    return "property";
+                }
+                if(funcInfo.IsStatic) {
+                    return "staticmethod";
+                }
+                if (funcInfo.IsClassMethod) {
+                    return "classmethod";
                 }
                 return "function";
             }
