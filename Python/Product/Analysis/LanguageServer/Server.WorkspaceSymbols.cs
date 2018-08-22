@@ -164,14 +164,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private static string GetFunctionKind(MemberResult m) {
             if (m.MemberType == PythonMemberType.Function) {
                 var funcInfo = m.Values.OfType<FunctionInfo>().FirstOrDefault();
-                if (funcInfo.IsProperty) {
-                    return "property";
-                }
-                if(funcInfo.IsStatic) {
-                    return "staticmethod";
-                }
-                if (funcInfo.IsClassMethod) {
-                    return "classmethod";
+                if (funcInfo != null) {
+                    if (funcInfo.IsProperty) {
+                        return "property";
+                    }
+                    if (funcInfo.IsStatic) {
+                        return "staticmethod";
+                    }
+                    if (funcInfo.IsClassMethod) {
+                        return "classmethod";
+                    }
                 }
                 return "function";
             }
