@@ -7169,6 +7169,23 @@ e = Employee('Guido')
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("e"), "name", "id");
         }
 
+        [TestMethod, Priority(0)]
+        public void CrossModuleUnassignedImport() {
+            var version = PythonPaths.Versions.LastOrDefault(v => v.IsCPython && File.Exists(v.InterpreterPath));
+            version.AssertInstalled();
+            var entry = CreateAnalyzer(new Microsoft.PythonTools.Interpreter.Ast.AstPythonInterpreterFactory(
+                version.Configuration,
+                new InterpreterFactoryCreationOptions { DatabasePath = TestData.GetTempPath(), WatchFileSystem = false }
+            ));
+            var e1 = entry.AddModule("p", "from . import m; m.X; m.Z; W = 1", "__init__.py");
+            var e2 = entry.AddModule("p.m", "from . import Y, W; Z = 1", "m.py");
+            entry.WaitForAnalysis();
+            Assert.AreEqual(0, entry.Analyzer.Queue.Count, "Analysis did not complete");
+
+            entry.AssertNotHasAttr(e1, "m", 0, "X", "Y");
+            entry.AssertHasAttr(e1, "m", 0, "Z", "W");
+        }
+
         #endregion
 
         #region Helpers

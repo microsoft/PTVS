@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
-                if (!variableInfo.Value.HasTypes && !variableInfo.Value.IsAssigned) {
+                if (!variableInfo.Value.HasTypes && !variableInfo.Value.IsAssigned && !variableInfo.Value.IsEphemeral) {
                     toRemove = toRemove ?? new List<KeyValuePair<string, VariableDef>>();
                     toRemove.Add(variableInfo);
                 }

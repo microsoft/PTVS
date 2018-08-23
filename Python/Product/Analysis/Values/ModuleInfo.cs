@@ -346,7 +346,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #endregion
 
         public IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
-            var importedValue = Scope.CreateVariable(node, unit, name, addRef);
+            var importedValue = Scope.CreateEphemeralVariable(node, unit, name, addRef);
             ModuleDefinition.AddDependency(unit);
 
             if (linkedScope != null) {
