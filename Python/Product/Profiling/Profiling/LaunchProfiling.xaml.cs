@@ -85,7 +85,6 @@ namespace Microsoft.PythonTools.Profiling {
         private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
             Close();
-            // ProfiledProcess.PackageTrace();
         }
     }
 }
