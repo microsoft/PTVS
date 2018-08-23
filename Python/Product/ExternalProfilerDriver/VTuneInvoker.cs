@@ -32,8 +32,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         private const string _vtune18Envvar = "VTUNE_AMPLIFIER_2018_DIR";
         private const string _vtuneExeBasename = "amplxe-cl";
 
-        public static string VTunePath()
-        {
+        public static string VTunePath() {
             string envvarval = "dummyval";
             if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows ||
                  RuntimeEnvironment.OperatingSystemPlatform == Platform.Linux) {
@@ -73,8 +72,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         /// </summary>
         /// <param name="baseOutDir"></param>
         /// <param name="vtunePath"></param>
-        public VTuneInvoker(string baseOutDir, string vtunePath = "")
-        {
+        public VTuneInvoker(string baseOutDir, string vtunePath = "") {
             _baseOutDir = baseOutDir;
             _path = vtunePath;
         }
@@ -120,8 +118,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public abstract class VTuneSpec
-    {
+    public abstract class VTuneSpec {
         public string UserDataDir { get; set; }
         public string ResultDir { get; set; }
 
@@ -271,5 +268,4 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             return sb.ToString();
         }
     }
-
 }
