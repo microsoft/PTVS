@@ -16,10 +16,6 @@
     TextOptions.TextFormattingMode="Display"
     ResizeMode="CanResizeWithGrip">
     <Window.Resources>
-    <!--
-        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
-        -->
-
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
@@ -167,15 +163,6 @@
             </GroupBox>
         </Grid>
 
-<!--
-        <Grid Grid.Row="1">
-            <CheckBox Grid.Row="1" Margin="12 12 12 4"
-                      Content="{x:Static ui:Strings.LaunchProfiling_MixedModeProfiling}"
-                      Visibility="{Binding IsExternalProfilerEnabled}"
-                      IsEnabled="{Binding IsVTuneAvailable}"
-                      IsChecked="{Binding UseVTune}" />
-        </Grid>
-        -->
         <Grid Grid.Row="1">
             <CheckBox Grid.Row="1" Margin="12 12 12 4"
                       Content="{x:Static ui:Strings.LaunchProfiling_MixedModeProfiling}"
