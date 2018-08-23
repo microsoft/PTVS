@@ -32,9 +32,8 @@ namespace Microsoft.PythonTools.Profiling {
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
         private bool _useVTune;
-#if EXTERNAL_PROFILER_DRIVER
         private bool _isVTuneAvailable;
-#endif
+        private bool _isExternalProfilerEnabled;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -61,6 +60,10 @@ namespace Microsoft.PythonTools.Profiling {
             _useVTune = false;
 #if EXTERNAL_PROFILER_DRIVER
             _isVTuneAvailable = PythonProfilingPackage.CheckForExternalProfiler();
+            _isExternalProfilerEnabled = true;
+#else
+            _isVTuneAvailable = false;
+            _isExternalProfilerEnabled = false;
 #endif
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
@@ -196,8 +199,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         /// <summary>
         /// </summary>
-        public bool UseVTune
-        {
+        public bool UseVTune {
             get { return _useVTune; }
             set {
                 _useVTune = value;
@@ -205,14 +207,19 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
-#if EXTERNAL_PROFILER_DRIVER
         /// <summary>
+        /// Whether a VTune installation is available in this machine.
         /// </summary>
-        public bool IsVTuneAvailable
-        {
+        public bool IsVTuneAvailable {
             get { return _isVTuneAvailable; }
         }
-#endif
+
+        /// <summary>
+        /// Whether "ExternalProfilerDriver" has been compiled in this build of PTVS
+        /// </summary>
+        public bool IsExternalProfilerEnabled {
+            get { return _isExternalProfilerEnabled; }
+        }
 
         /// <summary>
         /// Receives our own property change events to update IsValid.
