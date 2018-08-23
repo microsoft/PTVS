@@ -295,4 +295,10 @@ Error:
   <data name="LaunchProfiling_MixedModeProfiling" xml:space="preserve">
     <value>Mi_xed Mode Profiling</value>
   </data>
+  <data name="CannotFindPythonInterpreter" xml:space="preserve">
+    <value>Can't find specified Python interpreter</value>
+  </data>
+  <data name="CannotFindGeneratedFile" xml:space="preserve">
+    <value>Can't find expected output file</value>
+  </data>
 </root>

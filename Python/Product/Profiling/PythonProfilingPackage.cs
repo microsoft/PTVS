@@ -193,7 +193,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         private void StartProfilingWizard(object sender, EventArgs e) {
             if (!IsProfilingInstalled()) {
-                MessageBox.Show(Strings.ProfilingSupportMissingError);
+                MessageBox.Show(Strings.ProfilingSupportMissingError, Strings.ProductTitle);
                 return;
             }
 
@@ -332,7 +332,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             var interpreter = config.GetInterpreterPath();
             if (!File.Exists(interpreter)) {
-                MessageBox.Show("Can't find specified python interpreter.");
+                MessageBox.Show(Strings.CannotFindPythonInterpreter, Strings.ProductTitle);
                 return;
             }
 
@@ -360,7 +360,7 @@ namespace Microsoft.PythonTools.Profiling {
             proc.EnableRaisingEvents = true;
             proc.Exited += (_, args) => {
                 if (!File.Exists(Path.Combine(outPathDir, "Sample.dwjson"))) {
-                    MessageBox.Show($"Something happened, cannot find output file");
+                    MessageBox.Show(Strings.CannotFindGeneratedFile, Strings.ProductTitle);
                 } else {
                     PackageTrace(outPathDir);
                     dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
@@ -430,7 +430,7 @@ namespace Microsoft.PythonTools.Profiling {
             try {
                 await ShowPerformanceExplorerAsync();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                MessageBox.Show(Strings.ProfilingSupportMissingError);
+                MessageBox.Show(Strings.ProfilingSupportMissingError, Strings.ProductTitle);
             }
         }
 
