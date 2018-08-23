@@ -172,6 +172,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (@params.textDocument.text != null) {
                     doc.ResetDocument(@params.textDocument.version, @params.textDocument.text);
                 }
+                EnqueueItem(doc);
             } else if (entry == null) {
                 IAnalysisCookie cookie = null;
                 if (@params.textDocument.text != null) {
@@ -181,10 +182,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     };
                 }
                 entry = await AddFileAsync(@params.textDocument.uri, null, cookie);
-            }
-
-            if ((doc = entry as IDocument) != null) {
-                EnqueueItem(doc);
             }
         }
 
@@ -575,7 +572,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     entry.ResetCompleteAnalysis();
                 }
 
-                AnalysisQueued(doc.DocumentUri);
                 // The call must be fire and forget, but should not be yielding.
                 // It is called from DidChangeTextDocument which must fully finish
                 // since otherwise Complete() may come before the change is enqueued
@@ -608,7 +604,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
 
                 if (doc is IAnalyzable analyzable && enqueueForAnalysis) {
-                    TraceMessage($"Enqueing document {doc.DocumentUri} for analysis");
+                    AnalysisQueued(doc.DocumentUri);
                     _queue.Enqueue(analyzable, priority);
                 }
 
