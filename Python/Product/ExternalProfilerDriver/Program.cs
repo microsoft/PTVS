@@ -63,12 +63,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 try {
                     vtuneExec = VTuneInvoker.VTunePath();
                 } catch (VTuneNotInstalledException ex) {
-                    Console.WriteLine($"VTune not found in expected path: {ex.Message}");
+                    Console.WriteLine($"{Strings.VTuneNotFoundInExpectedPath} : {ex.Message}");
                     Environment.Exit(1);
                 }
 
                 if (opts.ReportVTunePath) {
-                    Console.WriteLine($"The path of VTune is: {vtuneExec}");
+                    Console.WriteLine($"{Strings.VTuneFoundInPath} : {vtuneExec}");
                     Environment.Exit(0);
                 }
 
@@ -78,7 +78,8 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 };
 
                 if (opts.SymbolPath != string.Empty) {
-                    Console.WriteLine("Symbol path specified");
+                    //Console.WriteLine("Symbol path specified");
+                    Console.WriteLine(Strings.SymbolPathSpecifiedNotification);
                     spec.SymbolPath = opts.SymbolPath;
                 }
 
