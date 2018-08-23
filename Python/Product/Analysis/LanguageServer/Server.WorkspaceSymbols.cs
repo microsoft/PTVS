@@ -22,7 +22,6 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
@@ -34,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             foreach (var entry in ProjectFiles.All) {
                 members = members.Concat(
-                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query, 50)
+                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query, 50, CancellationToken.None)
                 );
             }
 
@@ -46,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50, CancellationToken.None);
             return members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
@@ -58,12 +57,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50, cancellationToken);
             return ToDocumentSymbols(members);
         }
 
-        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout) {
-            var analysis = entry != null ? await entry.GetAnalysisAsync(timeout) : null;
+        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout, CancellationToken token) {
+            var analysis = entry != null ? await entry.GetAnalysisAsync(timeout, token) : null;
             return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
         }
 
