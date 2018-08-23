@@ -239,6 +239,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         internal async Task DidChangeConfiguration(DidChangeConfigurationParams @params, CancellationToken cancellationToken) {
             ThrowIfDisposed();
+
             if (Analyzer == null) {
                 LogMessage(MessageType.Error, "Change configuration notification sent to uninitialized server");
                 return;
@@ -665,6 +666,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var oldSettings = Settings;
             Settings = newSettings;
 
+            _symbolHierarchyDepthLimit = Settings.analysis.symbolsHierarchyDepthLimit;
+
             if (oldSettings == null) {
                 return true;
             }
@@ -680,6 +683,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 !newSettings.analysis.disabled.SetEquals(oldSettings.analysis.disabled)) {
                 _editorFiles.UpdateDiagnostics();
             }
+
             return false;
         }
 

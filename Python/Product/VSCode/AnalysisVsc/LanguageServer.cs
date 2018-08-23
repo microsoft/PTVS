@@ -170,6 +170,7 @@ namespace Microsoft.Python.LanguageServer.Implementation {
                 var analysis = pythonSection["analysis"];
                 settings.analysis.openFilesOnly = GetSetting(analysis, "openFilesOnly", false);
                 settings.diagnosticPublishDelay = GetSetting(analysis, "diagnosticPublishDelay", 1000);
+                settings.symbolsHierarchyDepthLimit = GetSetting(analysis, "symbolsHierarchyDepthLimit", 10);
 
                 _ui.SetLogLevel(GetLogLevel(analysis));
 
@@ -354,11 +355,11 @@ namespace Microsoft.Python.LanguageServer.Implementation {
         }
 
         [JsonRpcMethod("textDocument/documentSymbol")]
-        public async Task<SymbolInformation[]> DocumentSymbol(JToken token, CancellationToken cancellationToken) {
+        public async Task<DocumentSymbol[]> DocumentSymbol(JToken token, CancellationToken cancellationToken) {
             await _prioritizer.DefaultPriorityAsync(cancellationToken);
             // This call is also used by VSC document outline and it needs correct information
             await WaitForCompleteAnalysisAsync(cancellationToken);
-            return await _server.DocumentSymbol(ToObject<DocumentSymbolParams>(token));
+            return await _server.HierarchicalDocumentSymbol(ToObject<DocumentSymbolParams>(token), cancellationToken);
         }
 
         [JsonRpcMethod("textDocument/codeAction")]
@@ -438,6 +439,9 @@ namespace Microsoft.Python.LanguageServer.Implementation {
             }
             if (s.EqualsIgnoreCase("Info") || s.EqualsIgnoreCase("Information")) {
                 return MessageType.Info;
+            }
+            if (s.EqualsIgnoreCase("Trace")) {
+                return MessageType.Log;
             }
             return MessageType.Error;
         }

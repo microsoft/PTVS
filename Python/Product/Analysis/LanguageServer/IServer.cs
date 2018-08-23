@@ -79,4 +79,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         Task ReloadModulesAsync(CancellationToken token);
     }
+
+    public interface IServer2 : IServer {
+        Task<DocumentSymbol[]> HierarchicalDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken);
+    }
 }

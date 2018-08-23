@@ -23,6 +23,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             private Dictionary<string, DiagnosticSeverity> _map = new Dictionary<string, DiagnosticSeverity>();
 
             public bool openFilesOnly;
+            public int symbolsHierarchyDepthLimit = 10;
+
             public string[] errors { get; } = Array.Empty<string>();
             public string[] warnings { get; } = Array.Empty<string>();
             public string[] information { get; } = Array.Empty<string>();

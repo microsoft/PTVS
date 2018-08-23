@@ -20,17 +20,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Infrastructure;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed partial class Server {
+        private static int _symbolHierarchyDepthLimit = 1;
+
         public override async Task<SymbolInformation[]> WorkspaceSymbols(WorkspaceSymbolParams @params) {
             var members = Enumerable.Empty<MemberResult>();
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
 
             foreach (var entry in ProjectFiles.All) {
                 members = members.Concat(
-                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query, 50)
+                    await GetModuleVariablesAsync(entry as ProjectEntry, opts, @params.query, 50, CancellationToken.None)
                 );
             }
 
@@ -42,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
             var entry = ProjectFiles.GetEntry(@params.textDocument);
 
-            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50);
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50, CancellationToken.None);
             return members
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
@@ -50,8 +53,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 .ToArray();
         }
 
-        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout) {
-            var analysis = entry != null ? await entry.GetAnalysisAsync(timeout) : null;
+        public override async Task<DocumentSymbol[]> HierarchicalDocumentSymbol(DocumentSymbolParams @params, CancellationToken cancellationToken) {
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly;
+            var entry = ProjectFiles.GetEntry(@params.textDocument);
+
+            var members = await GetModuleVariablesAsync(entry as ProjectEntry, opts, string.Empty, 50, cancellationToken);
+            return ToDocumentSymbols(members);
+        }
+
+        private static async Task<List<MemberResult>> GetModuleVariablesAsync(ProjectEntry entry, GetMemberOptions opts, string prefix, int timeout, CancellationToken token) {
+            var analysis = entry != null ? await entry.GetAnalysisAsync(timeout, token) : null;
             return analysis == null ? new List<MemberResult>() : GetModuleVariables(entry, opts, prefix, analysis).ToList();
         }
 
@@ -66,14 +77,16 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     }
                     return false;
                 })
-            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts));
+            .Concat(GetChildScopesVariables(analysis, analysis.Scope, opts, 0));
         }
 
-        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
-            => scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts));
+        private static IEnumerable<MemberResult> GetChildScopesVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
+            => currentDepth < _symbolHierarchyDepthLimit
+                ? scope.Children.SelectMany(c => GetScopeVariables(analysis, c, opts, currentDepth))
+                : Enumerable.Empty<MemberResult>();
 
-        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts)
-            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts));
+        private static IEnumerable<MemberResult> GetScopeVariables(ModuleAnalysis analysis, InterpreterScope scope, GetMemberOptions opts, int currentDepth)
+            => analysis.GetAllAvailableMembersFromScope(scope, opts).Concat(GetChildScopesVariables(analysis, scope, opts, currentDepth + 1));
 
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
@@ -96,11 +109,81 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             return res;
         }
 
+        private DocumentSymbol[] ToDocumentSymbols(List<MemberResult> members) {
+            var childMap = new Dictionary<MemberResult, List<MemberResult>>();
+            var topLevel = new List<MemberResult>();
+
+            foreach (var m in members) {
+                var parent = members.FirstOrDefault(x => x.Scope?.Node == m.Scope?.OuterScope?.Node && x.Name == m.Scope?.Name);
+                if (parent != default(MemberResult)) {
+                    if (!childMap.TryGetValue(parent, out var children)) {
+                        childMap[parent] = children = new List<MemberResult>();
+                    }
+                    children.Add(m);
+                } else {
+                    topLevel.Add(m);
+                }
+            }
+
+            var symbols = topLevel
+                .GroupBy(mr => mr.Name)
+                .Select(g => g.First())
+                .Select(m => ToDocumentSymbol(m, childMap))
+                .ToArray();
+
+            return symbols;
+        }
+
+        private DocumentSymbol ToDocumentSymbol(MemberResult m, Dictionary<MemberResult, List<MemberResult>> childMap) {
+            var res = new DocumentSymbol {
+                name = m.Name,
+                detail = m.Name,
+                kind = ToSymbolKind(m.MemberType),
+                deprecated = false,
+                _functionKind = GetFunctionKind(m)
+            };
+
+            if (childMap.TryGetValue(m, out var children)) {
+                res.children = children.Select(x => ToDocumentSymbol(x, childMap)).ToArray();
+            } else {
+                res.children = new DocumentSymbol[0];
+            }
+
+            var loc = m.Locations.FirstOrDefault(l => !string.IsNullOrEmpty(l.FilePath));
+            if (loc != null) {
+                res.range = new SourceSpan(
+                        new SourceLocation(loc.StartLine, loc.StartColumn),
+                        new SourceLocation(loc.EndLine ?? loc.StartLine, loc.EndColumn ?? loc.StartColumn)
+                    );
+                res.selectionRange = res.range;
+            }
+            return res;
+        }
+
+        private static string GetFunctionKind(MemberResult m) {
+            if (m.MemberType == PythonMemberType.Function) {
+                var funcInfo = m.Values.OfType<FunctionInfo>().FirstOrDefault();
+                if (funcInfo != null) {
+                    if (funcInfo.IsProperty) {
+                        return "property";
+                    }
+                    if (funcInfo.IsStatic) {
+                        return "staticmethod";
+                    }
+                    if (funcInfo.IsClassMethod) {
+                        return "classmethod";
+                    }
+                }
+                return "function";
+            }
+            return m.MemberType == PythonMemberType.Class ? "class" : string.Empty;
+        }
+
         private static SymbolKind ToSymbolKind(PythonMemberType memberType) {
             switch (memberType) {
                 case PythonMemberType.Unknown: return SymbolKind.None;
                 case PythonMemberType.Class: return SymbolKind.Class;
-                case PythonMemberType.Instance: return SymbolKind.Object;
+                case PythonMemberType.Instance: return SymbolKind.Variable;
                 case PythonMemberType.Delegate: return SymbolKind.Function;
                 case PythonMemberType.DelegateInstance: return SymbolKind.Function;
                 case PythonMemberType.Enum: return SymbolKind.Enum;
