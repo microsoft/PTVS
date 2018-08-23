@@ -329,22 +329,6 @@ namespace Microsoft.PythonTools.Profiling {
 
 #if EXTERNAL_PROFILER_DRIVER
         private static void RunVTune(SessionNode session, LaunchConfiguration config, bool openReport) {
-#if false
-            var pyexe = ProcessOutput.QuoteSingleArgument(stndTarget.InterpreterPath);
-
-            if (pyexe == string.Empty) {
-                if (stndTarget.PythonInterpreter != null) {
-                    var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                    var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
-                    if (interpreter == null) { 
-                        /* ??? */;
-                        MessageBox.Show("Could not find interpreter in the registry");
-                    } else {
-                        MessageBox.Show($"The Python interpreter in question is: [{interpreter}]");
-                    }
-                }
-            }
-#endif
 
             var interpreter = config.GetInterpreterPath();
             if (!File.Exists(interpreter)) {
