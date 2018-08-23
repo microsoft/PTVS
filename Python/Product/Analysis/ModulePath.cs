@@ -650,6 +650,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static ModulePath FromBasePathAndName(
             string basePath,
             string moduleName,
+            bool requireInitPy,
             Func<string, bool> isPackage = null,
             Func<string, string, string> getModule = null
         ) {
@@ -661,6 +662,7 @@ namespace Microsoft.PythonTools.Analysis {
                 moduleName,
                 isPackage,
                 getModule,
+                requireInitPy,
                 out module,
                 out isInvalid,
                 out isMissing,
@@ -681,8 +683,9 @@ namespace Microsoft.PythonTools.Analysis {
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
+            bool requireInitPy,
             out ModulePath modulePath
-        )  => FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
+        ) => FromBasePathAndName_NoThrow(basePath, moduleName, null, null, requireInitPy, out modulePath, out _, out _, out _);
 
         internal static bool FromBasePathAndFile_NoThrow(
             string basePath,
@@ -723,6 +726,7 @@ namespace Microsoft.PythonTools.Analysis {
             string moduleName,
             Func<string, bool> isPackage,
             Func<string, string, string> getModule,
+            bool requireInitPy,
             out ModulePath modulePath,
             out bool isInvalid,
             out bool isMissing,
@@ -741,8 +745,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
             if (getModule == null) {
                 getModule = (dir, mod) => {
-                    var pack = GetPackageInitPy(Path.Combine(dir, mod));
-                    if (File.Exists(pack)) {
+                    var modPath = Path.Combine(dir, mod);
+                    var pack = GetPackageInitPy(modPath);
+                    if (pack == null && !requireInitPy && Directory.Exists(modPath)) {
+                        return modPath;
+                    } else if (File.Exists(pack)) {
                         return pack;
                     }
                     var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
