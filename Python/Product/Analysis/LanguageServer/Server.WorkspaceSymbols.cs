@@ -128,13 +128,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var symbols = topLevel
                 .GroupBy(mr => mr.Name)
                 .Select(g => g.First())
-                .Select(m => ToDocumentSymbol(m, childMap))
+                .Select(m => ToDocumentSymbol(m, childMap, 0))
                 .ToArray();
 
             return symbols;
         }
 
-        private DocumentSymbol ToDocumentSymbol(MemberResult m, Dictionary<MemberResult, List<MemberResult>> childMap) {
+        private DocumentSymbol ToDocumentSymbol(MemberResult m, Dictionary<MemberResult, List<MemberResult>> childMap, int currentDepth) {
             var res = new DocumentSymbol {
                 name = m.Name,
                 detail = m.Name,
@@ -143,8 +143,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 _functionKind = GetFunctionKind(m)
             };
 
-            if (childMap.TryGetValue(m, out var children)) {
-                res.children = children.Select(x => ToDocumentSymbol(x, childMap)).ToArray();
+            if (childMap.TryGetValue(m, out var children) && currentDepth < _symbolHierarchyDepthLimit) {
+                res.children = children.Select(x => ToDocumentSymbol(x, childMap, currentDepth + 1)).ToArray();
             } else {
                 res.children = new DocumentSymbol[0];
             }
