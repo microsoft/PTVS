@@ -297,6 +297,7 @@ Error:
   </data>
   <data name="CannotFindPythonInterpreter" xml:space="preserve">
     <value>Can't find specified Python interpreter</value>
+    <comment>ExternalProfilerDriver cannot find the Python executable to run</comment>
   </data>
   <data name="CannotFindGeneratedFile" xml:space="preserve">
     <value>Can't find expected output file</value>
