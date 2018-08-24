@@ -337,6 +337,12 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             string outPathDir = Path.GetTempPath();
+            var subpath = Path.Combine(outPathDir, Path.GetRandomFileName());
+            while (Directory.Exists(subpath) || File.Exists(subpath)) {
+                subpath = Path.Combine(outPathDir, Path.GetRandomFileName());
+            }
+            outPathDir = subpath;
+
             string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
 
             var driver = PythonToolsInstallPath.GetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
