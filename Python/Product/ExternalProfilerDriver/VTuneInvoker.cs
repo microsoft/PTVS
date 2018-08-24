@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 envvarval = Environment.GetEnvironmentVariable(_vtune17Envvar) ??
                     Environment.GetEnvironmentVariable(_vtune18Envvar) ?? throw new VTuneNotInstalledException();
             } else {
-                throw new Exception("Only Linux and Windows are supported at this time");
+                throw new Exception(Strings.ErrorMsgOSNotSupported);
             }
 
             string fname = "";
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             if (File.Exists(fname)) {
                 return fname;
             } else {
-                throw new Exception($"Could not find {fname}, please check you have installed VTune");
+                throw new Exception($"{Strings.ErrorMsgVTuneExpectedFileNotFound}: {fname}, ");
             }
         }
 
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 basedir = Path.GetTempPath();
             }
             if (!Directory.Exists(basedir)) {
-                throw new ArgumentException($"Directory {basedir} does not exist");
+                throw new ArgumentException($"{Strings.ErrorMsgDirectoryDoesNotExist}: {basedir}");
             }
             int count = 1;
             string candidate = string.Format(rdirtemplate, count);
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     public class VTuneNotInstalledException : Exception {
         public override string Message {
             get {
-                return "Only VTune 2017 or 2018 supported, see https://software.intel.com/intel-vtune-amplifier-xe";
+                return Strings.InstallVTuneFrom;
             }
         }
     }

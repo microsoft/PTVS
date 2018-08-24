@@ -28,19 +28,19 @@ using CommandLine.Text;
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
     class ProgramOptions {
-        [Option('p', "path", HelpText = "Report VTune path")]
+        [Option('p', "path")]
         public bool ReportVTunePath { get; set; }
 
-        [Option('n', "dry-run", HelpText = "Whether I should execute or just pretend to execute")]
+        [Option('n', "dry-run")]
         public bool DryRunRequested { get; set; }
 
-        [Option('c', "callstack", HelpText = "Specify the pre-generated callstack report to process")]
+        [Option('c', "callstack")]
         public string CallStackFNameToParse { get; set; }
 
-        [Option('s', "sympath", HelpText = "Specify the path(s) to search symbols in")]
+        [Option('s', "sympath")]
         public string SymbolPath { get; set; }
 
-        [Option('d', "dwjsondir", HelpText = "Specify the directory in which to dump resulting dwjson (contents are overwritten)")]
+        [Option('d', "dwjsondir")]
         public string DWJsonOutDir { get; set; }
 
         [Value(0)]
@@ -78,7 +78,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 };
 
                 if (opts.SymbolPath != string.Empty) {
-                    //Console.WriteLine("Symbol path specified");
                     Console.WriteLine(Strings.SymbolPathSpecifiedNotification);
                     spec.SymbolPath = opts.SymbolPath;
                 }
@@ -94,14 +93,14 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 // If output directory requested and it does not exist, create it
                 if (!opts.DryRunRequested) {
                     if (opts.DWJsonOutDir == null) {
-                        Console.WriteLine($"Need an output directory unless in dry run.");
+                        Console.WriteLine(Strings.OutputDirRequired);
                         Environment.Exit(1);
                     } else {
                         if (!Directory.Exists(opts.DWJsonOutDir)) {
                             try {
                                 Directory.CreateDirectory(opts.DWJsonOutDir);
                             } catch (Exception ex) {
-                                Console.WriteLine($"Couldn't create specified directory [{opts.DWJsonOutDir}]: {ex.Message}");
+                                Console.WriteLine($"{Strings.DirCreationFailed} [{opts.DWJsonOutDir}]: {ex.Message}");
                                 Environment.Exit(1);
                             }
                         }
@@ -110,19 +109,18 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 }
 
                 if (!opts.DryRunRequested) {
-                    Console.WriteLine($"Collect command line is: [ {vtuneExec} {vtuneCollectArgs} ]");
+                    Console.WriteLine($"{Strings.CollectCmdLineDump}: [ {vtuneExec} {vtuneCollectArgs} ]");
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneCollectArgs);
 
-                    Console.WriteLine($"Report callstacks line: [ {vtuneExec} {vtuneReportArgs} ]");
+                    Console.WriteLine($"{Strings.CallstackReportCmdLineDump}: [ {vtuneExec} {vtuneReportArgs} ]");
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneReportArgs);
 
-                    Console.WriteLine($"Report timing line: [ {vtuneExec} {vtuneReportTimeArgs} ]");
+                    Console.WriteLine($"{Strings.TimingReportCmdLineDump}: [ {vtuneExec} {vtuneReportTimeArgs} ]");
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneReportTimeArgs);
                 } else {
-                    Console.WriteLine($"Collect command line is: [ {vtuneExec} {vtuneCollectArgs} ]");
-                    Console.WriteLine("Report command lines");
-                    Console.WriteLine($"[ {vtuneExec} {vtuneReportArgs} ]");
-                    Console.WriteLine($"[ {vtuneExec} {vtuneReportTimeArgs} ]");
+                    Console.WriteLine($"{Strings.CollectCmdLineDump}: [ {vtuneExec} {vtuneCollectArgs} ]");
+                    Console.WriteLine($"{Strings.CallstackReportCmdLineDump}: [ {vtuneExec} {vtuneReportArgs} ]");
+                    Console.WriteLine($"{Strings.TimingReportCmdLineDump}: [ {vtuneExec} {vtuneReportTimeArgs} ]");
 
                     Environment.Exit(0);
                 }
@@ -132,7 +130,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
             })
             .WithNotParsed(errors => {
-                Console.WriteLine("Incorrect command line.");
+                Console.WriteLine(Strings.IncorrectCommandLine);
                 Environment.Exit(1);
             });
 

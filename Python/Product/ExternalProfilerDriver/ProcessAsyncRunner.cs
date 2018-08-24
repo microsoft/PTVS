@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 };
 
                 process.ErrorDataReceived += (sender, localEventArgs) => {
-                    Console.WriteLine($"Encountered error while running inferior process: {localEventArgs.Data}");
+                    Console.WriteLine($"{Strings.ProcessRunnerErrorWhenRunningInferior}: {localEventArgs.Data}");
                     // TODO: should probably cancel
                 };
             }
@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             CancellationTokenSource cts = new CancellationTokenSource();
             var progress = new Progress<ProcessProgressDataload>();
             progress.ProgressChanged += (s, e) => {
-                Console.WriteLine($"From process: {e.Message}");
+                Console.WriteLine($"{Strings.ProcessRunnerInferiorOutputPrefix}: {e.Message}");
             };
 
             try {
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 }
                 t.Wait();
             } catch (OperationCanceledException ce) {
-                Console.WriteLine($"Operation was cancelled with message: {ce.Message}");
+                Console.WriteLine($"{Strings.ProcessRunnerInferiorCancelledWithMsg}: {ce.Message}");
             }
         }
     }

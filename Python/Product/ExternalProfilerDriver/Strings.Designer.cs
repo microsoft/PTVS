@@ -61,11 +61,173 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Report callstacks line.
+        /// </summary>
+        public static string CallstackReportCmdLineDump {
+            get {
+                return ResourceManager.GetString("CallstackReportCmdLineDump", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collect command line is.
+        /// </summary>
+        public static string CollectCmdLineDump {
+            get {
+                return ResourceManager.GetString("CollectCmdLineDump", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn&apos;t create specified directory.
+        /// </summary>
+        public static string DirCreationFailed {
+            get {
+                return ResourceManager.GetString("DirCreationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn&apos;t build the module/function dictionary.
+        /// </summary>
+        public static string ErrorMsgCannotBuildModuleFunctionDict {
+            get {
+                return ResourceManager.GetString("ErrorMsgCannotBuildModuleFunctionDict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find specified CPU utilization report.
+        /// </summary>
+        public static string ErrorMsgCannotFindCPUUtilizationReport {
+            get {
+                return ResourceManager.GetString("ErrorMsgCannotFindCPUUtilizationReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find specified directory.
+        /// </summary>
+        public static string ErrorMsgDirectoryDoesNotExist {
+            get {
+                return ResourceManager.GetString("ErrorMsgDirectoryDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified file does not exist.
+        /// </summary>
+        public static string ErrorMsgFileDoesNotExist {
+            get {
+                return ResourceManager.GetString("ErrorMsgFileDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only Linux and Windows are supported at this time.
+        /// </summary>
+        public static string ErrorMsgOSNotSupported {
+            get {
+                return ResourceManager.GetString("ErrorMsgOSNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parsing exception caught.
+        /// </summary>
+        public static string ErrorMsgUnexpectedInputWhileParsing {
+            get {
+                return ResourceManager.GetString("ErrorMsgUnexpectedInputWhileParsing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please check you have installed VTune; expected file not found.
+        /// </summary>
+        public static string ErrorMsgVTuneExpectedFileNotFound {
+            get {
+                return ResourceManager.GetString("ErrorMsgVTuneExpectedFileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid runtime specification in CPU utilization report.
+        /// </summary>
+        public static string ErrorMsgWrongTimeSpecified {
+            get {
+                return ResourceManager.GetString("ErrorMsgWrongTimeSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incorrect command line.
+        /// </summary>
+        public static string IncorrectCommandLine {
+            get {
+                return ResourceManager.GetString("IncorrectCommandLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only VTune 2017 or 2018 supported, see https://software.intel.com/intel-vtune-amplifier-xe.
+        /// </summary>
+        public static string InstallVTuneFrom {
+            get {
+                return ResourceManager.GetString("InstallVTuneFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Need an output directory unless in dry run.
+        /// </summary>
+        public static string OutputDirRequired {
+            get {
+                return ResourceManager.GetString("OutputDirRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered error while running inferior process.
+        /// </summary>
+        public static string ProcessRunnerErrorWhenRunningInferior {
+            get {
+                return ResourceManager.GetString("ProcessRunnerErrorWhenRunningInferior", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation was cancelled with message.
+        /// </summary>
+        public static string ProcessRunnerInferiorCancelledWithMsg {
+            get {
+                return ResourceManager.GetString("ProcessRunnerInferiorCancelledWithMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From process.
+        /// </summary>
+        public static string ProcessRunnerInferiorOutputPrefix {
+            get {
+                return ResourceManager.GetString("ProcessRunnerInferiorOutputPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Symbol path has been specified.
         /// </summary>
         public static string SymbolPathSpecifiedNotification {
             get {
                 return ResourceManager.GetString("SymbolPathSpecifiedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report timing line.
+        /// </summary>
+        public static string TimingReportCmdLineDump {
+            get {
+                return ResourceManager.GetString("TimingReportCmdLineDump", resourceCulture);
             }
         }
         

@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         /// <param name="filename">The filename with the callstack report</param>
         public static double CSReportToDWJson(string filename, string outfname) {
             if (!File.Exists(filename)) {
-                throw new ArgumentException($"Specified file {filename} does not exist!");
+                throw new ArgumentException($"{Strings.ErrorMsgFileDoesNotExist} : {filename}");
             }
             var samples = ParseFromFile(filename);
 
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                                        .ToDictionary(od => od.Module, od => od.Functions);
 
             if (mfdd.Count <= 0) {
-                throw new Exception("Couldn't build the module/function dictionary, can't figure out why");
+                throw new Exception(Strings.ErrorMsgCannotBuildModuleFunctionDict);
             }
 
             var mods = mfdd.Zip(Enumerable.Range(1, int.MaxValue), (x, y) => new ModuleSpec() {
@@ -209,11 +209,11 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
         public static void CPUReportToDWJson(string filename, string outfname, double timeTotal = 0.0) {
             if (!File.Exists(filename)) {
-                throw new ArgumentException($"Cannot find specified CPU utilization report {filename}");
+                throw new ArgumentException($"{Strings.ErrorMsgCannotFindCPUUtilizationReport} : {filename}");
             }
 
             if (timeTotal <= 0) {
-                throw new Exception("Invalid runtime specification in CPU utilization report");
+                throw new Exception(Strings.ErrorMsgWrongTimeSpecified);
             }
 
             LongInt durationli = TraceUtils.ToNanoseconds(timeTotal);

@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public static string FindFileInDir(string fname, string rootDir) {
             var candidates = Directory.GetFiles(rootDir, fname, SearchOption.AllDirectories);
             if (candidates.Length <= 0) {
-                throw new FileNotFoundException($"Cannot find file {fname} under directory {rootDir}");
+                throw new FileNotFoundException($"{Strings.ErrorMsgFileDoesNotExist} : {rootDir}/{fname}");
             } else {
                 return candidates[0];
             }

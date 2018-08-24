@@ -117,8 +117,63 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CallstackReportCmdLineDump" xml:space="preserve">
+    <value>Report callstacks line</value>
+  </data>
+  <data name="CollectCmdLineDump" xml:space="preserve">
+    <value>Collect command line is</value>
+  </data>
+  <data name="DirCreationFailed" xml:space="preserve">
+    <value>Couldn't create specified directory</value>
+  </data>
+  <data name="ErrorMsgCannotBuildModuleFunctionDict" xml:space="preserve">
+    <value>Couldn't build the module/function dictionary</value>
+  </data>
+  <data name="ErrorMsgCannotFindCPUUtilizationReport" xml:space="preserve">
+    <value>Cannot find specified CPU utilization report</value>
+  </data>
+  <data name="ErrorMsgDirectoryDoesNotExist" xml:space="preserve">
+    <value>Cannot find specified directory</value>
+  </data>
+  <data name="ErrorMsgFileDoesNotExist" xml:space="preserve">
+    <value>Specified file does not exist</value>
+  </data>
+  <data name="ErrorMsgOSNotSupported" xml:space="preserve">
+    <value>Only Linux and Windows are supported at this time</value>
+  </data>
+  <data name="ErrorMsgUnexpectedInputWhileParsing" xml:space="preserve">
+    <value>Parsing exception caught</value>
+  </data>
+  <data name="ErrorMsgVTuneExpectedFileNotFound" xml:space="preserve">
+    <value>Please check you have installed VTune; expected file not found</value>
+  </data>
+  <data name="ErrorMsgWrongTimeSpecified" xml:space="preserve">
+    <value>Invalid runtime specification in CPU utilization report</value>
+  </data>
+  <data name="IncorrectCommandLine" xml:space="preserve">
+    <value>Incorrect command line</value>
+  </data>
+  <data name="InstallVTuneFrom" xml:space="preserve">
+    <value>Only VTune 2017 or 2018 supported, see https://software.intel.com/intel-vtune-amplifier-xe</value>
+  </data>
+  <data name="OutputDirRequired" xml:space="preserve">
+    <value>Need an output directory unless in dry run</value>
+    <comment>The user has failed to provide a directory to drop the output in (or that they want a dry run)</comment>
+  </data>
+  <data name="ProcessRunnerErrorWhenRunningInferior" xml:space="preserve">
+    <value>Encountered error while running inferior process</value>
+  </data>
+  <data name="ProcessRunnerInferiorCancelledWithMsg" xml:space="preserve">
+    <value>Operation was cancelled with message</value>
+  </data>
+  <data name="ProcessRunnerInferiorOutputPrefix" xml:space="preserve">
+    <value>From process</value>
+  </data>
   <data name="SymbolPathSpecifiedNotification" xml:space="preserve">
     <value>Symbol path has been specified</value>
+  </data>
+  <data name="TimingReportCmdLineDump" xml:space="preserve">
+    <value>Report timing line</value>
   </data>
   <data name="VTuneFoundInPath" xml:space="preserve">
     <value>The path of VTune is</value>
