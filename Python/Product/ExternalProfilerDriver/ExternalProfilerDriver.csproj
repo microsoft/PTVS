@@ -30,6 +30,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PythonTools.Profiling.ExternalProfilerDriver</RootNamespace>
+    <!-- TODO: change executable name to Microsoft.PythonTools.Profiling.VTuneDriver.exe -->
     <AssemblyName>ExternalProfilerDriver</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
