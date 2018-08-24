@@ -61,6 +61,24 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Can&apos;t find expected output file.
+        /// </summary>
+        public static string CannotFindGeneratedFile {
+            get {
+                return ResourceManager.GetString("CannotFindGeneratedFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can&apos;t find specified Python interpreter.
+        /// </summary>
+        public static string CannotFindPythonInterpreter {
+            get {
+                return ResourceManager.GetString("CannotFindPythonInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find shell folder for Visual Studio.
         /// </summary>
         public static string CannotFindShellFolder {
@@ -214,6 +232,15 @@ namespace Microsoft.PythonTools.Profiling {
         public static string LaunchProfiling_InterpreterPathBrowseButtonDescription {
             get {
                 return ResourceManager.GetString("LaunchProfiling_InterpreterPathBrowseButtonDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mi_xed Mode Profiling.
+        /// </summary>
+        public static string LaunchProfiling_MixedModeProfiling {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_MixedModeProfiling", resourceCulture);
             }
         }
         

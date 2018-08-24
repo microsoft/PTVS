@@ -31,6 +31,9 @@ namespace Microsoft.PythonTools.Profiling {
         
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
+        private bool _useVTune;
+        private bool _isVTuneAvailable;
+        private bool _isExternalProfilerEnabled;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -53,6 +56,15 @@ namespace Microsoft.PythonTools.Profiling {
             _isProjectSelected = true;
 
             _isValid = false;
+
+            _useVTune = false;
+#if EXTERNAL_PROFILER_DRIVER
+            _isVTuneAvailable = PythonProfilingPackage.CheckForExternalProfiler();
+            _isExternalProfilerEnabled = true;
+#else
+            _isVTuneAvailable = false;
+            _isExternalProfilerEnabled = false;
+#endif
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
@@ -94,7 +106,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (IsValid) {
                 return new ProfilingTarget {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
-                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null
+                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
+                    UseVTune = _useVTune
                 };
             } else {
                 return null;
@@ -184,6 +197,29 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool UseVTune {
+            get { return _useVTune; }
+            set {
+                _useVTune = value;
+                OnPropertyChanged("UseVTune");
+            }
+        }
+
+        /// <summary>
+        /// Whether a VTune installation is available in this machine.
+        /// </summary>
+        public bool IsVTuneAvailable {
+            get { return _isVTuneAvailable; }
+        }
+
+        /// <summary>
+        /// Whether "ExternalProfilerDriver" has been compiled in this build of PTVS
+        /// </summary>
+        public bool IsExternalProfilerEnabled {
+            get { return _isExternalProfilerEnabled; }
+        }
 
         /// <summary>
         /// Receives our own property change events to update IsValid.

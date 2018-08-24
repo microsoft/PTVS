@@ -16,7 +16,17 @@
     TextOptions.TextFormattingMode="Display"
     ResizeMode="CanResizeWithGrip">
     <Window.Resources>
-        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
+                <ResourceDictionary>
+                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
     </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">
         <Grid.RowDefinitions>
@@ -152,6 +162,15 @@
                 </Grid>
             </GroupBox>
         </Grid>
+
+        <Grid Grid.Row="1">
+            <CheckBox Grid.Row="1" Margin="12 12 12 4"
+                      Content="{x:Static ui:Strings.LaunchProfiling_MixedModeProfiling}"
+                      Visibility="{Binding IsExternalProfilerEnabled, Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                      IsEnabled="{Binding IsVTuneAvailable}"
+                      IsChecked="{Binding UseVTune}" />
+        </Grid>
+
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24"

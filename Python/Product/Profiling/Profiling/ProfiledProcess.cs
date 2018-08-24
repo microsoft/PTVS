@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             ProcessStartInfo processInfo;
             string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
-            
+
             string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
             string arguments = string.Join(" ",
                 ProcessOutput.QuoteSingleArgument(Path.Combine(pythonInstallDir, "proflaun.py")),
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_ABNORMAL_EXIT"] = "1";
             }
-            
+
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         public void StartProfiling(string filename) {
             StartPerfMon(filename);
-            
+
             _process.EnableRaisingEvents = true;
             _process.Exited += (sender, args) => {
                 try {
@@ -209,7 +209,6 @@ namespace Microsoft.PythonTools.Profiling {
             perfToolsPath = Path.Combine(shFolder, perfToolsPath);
             return perfToolsPath;
         }
-
 
         internal void StopProfiling() {
             _process.Kill();
