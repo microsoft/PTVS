@@ -385,7 +385,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     class TupleProtocol : IterableProtocol {
-        private readonly IAnalysisSet[] _values;
+        internal readonly IAnalysisSet[] _values;
 
         public TupleProtocol(ProtocolInfo self, IEnumerable<IAnalysisSet> values) : base(self, AnalysisSet.UnionAll(values)) {
             _values = values.Select(s => s.AsUnion(1)).ToArray();

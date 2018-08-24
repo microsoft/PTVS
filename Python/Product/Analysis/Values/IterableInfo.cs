@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
-            if (indexTypes.Count < 4) {
+            if (indexTypes.Count < 6) {
                 foreach (var kv in indexTypes.GetRichDescriptions()) {
                     yield return kv;
                 }
@@ -240,26 +240,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IAnalysisSet Resolve(AnalysisUnit unit, ResolutionContext context) {
+            VariableDef[] newTypes;
             if (context.CallSite == null) {
                 // No ability to come back to this instance later, so resolve and return
                 // imitation type
+                var union = AnalysisSet.Empty;
+                bool changed = false;
                 if (Push()) {
                     try {
-                        var union = UnionType.Resolve(unit, context, out var changed);
-                        if (!changed) {
-                            return this;
-                        }
-                        var pi = new ProtocolInfo(DeclaringModule, ProjectState);
-                        pi.AddProtocol(new IterableProtocol(pi, union));
-                        return pi;
+                        union = UnionType.Resolve(unit, context, out changed);
                     } finally {
                         Pop();
                     }
                 }
-                return this;
+
+                var pi = new ProtocolInfo(DeclaringModule, ProjectState);
+                pi.AddProtocol(new IterableProtocol(pi, union));
+                if (ClassInfo.TypeId == BuiltinTypeId.Tuple) {
+                    newTypes = VariableDef.Generator.Take(IndexTypes.Length).ToArray();
+                    changed |= ResolveIndexTypes(unit, context, newTypes);
+                    if (newTypes.Length == 1) {
+                        pi.AddProtocol(new GetItemProtocol(pi, unit.State.ClassInfos[BuiltinTypeId.Int], newTypes[0].TypesNoCopy));
+                    } else if (newTypes.Length > 1) {
+                        pi.AddProtocol(new TupleProtocol(pi, newTypes.Select(t => t.TypesNoCopy)));
+                    }
+                }
+
+                return changed ? (AnalysisValue)pi : this;
             }
 
-            VariableDef[] newTypes;
             if (unit.Scope.TryGetNodeValue(context.CallSite, NodeValueKind.Sequence, out var newSeq)) {
                 newTypes = (newSeq as IterableValue)?.IndexTypes;
                 if (newTypes != null) {
@@ -275,5 +284,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             return this;
         }
+
+        public override IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, TypeName);
+            var indexTypes = IndexTypes;
+            if (indexTypes == null || indexTypes.Length == 0) {
+                yield break;
+            }
+
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "[");
+            if (indexTypes.Length < 6) {
+                bool first = true;
+                foreach (var i in indexTypes) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    }
+                    foreach (var kv in i.TypesNoCopy.GetRichDescriptions(unionPrefix: "[", unionSuffix: "]")) {
+                        yield return kv;
+                    }
+                }
+            } else {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "...");
+            }
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
+        }
+
     }
 }
