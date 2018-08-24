@@ -24,7 +24,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
-    public class PerformanceSample {
+    class PerformanceSample {
         public string Function { get; }
         public float CPUTime { get; }
         public string Module { get; }
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class SampleWithTrace {
+    class SampleWithTrace {
         private List<List<PerformanceSample>> _stacks = new List<List<PerformanceSample>>();
         public PerformanceSample TOSFrame { get; }
         public IEnumerable<IEnumerable<PerformanceSample>> Stacks {

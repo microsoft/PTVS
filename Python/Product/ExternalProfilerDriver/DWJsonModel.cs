@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     // Due to JSON limitations, this is represented as a 2D named tuple, where the fields are
     // "l" (low) and "h" (high), each containing a 32-bit *signed* integer.
     // In this way, the max value (0xffffffffffffffff) is represented as {"h" : -1, "l" : -1}
-    public class LongInt {
+    class LongInt {
         public LongInt(long _h, long _l) { h = _h; l = _l; }
         public long h { get; set; }
         public long l { get; set; }
@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public IList<LongInt> frameIPs { get; set; }
     }
 
-    public class FunctionSpec {
+    class FunctionSpec {
         public string name { get; set; }
         [JsonProperty("base")]
         public LongInt @base { get; set; }
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class ModuleSpec {
+    class ModuleSpec {
         public string name { get; set; }
         public int id { get; set; }
         public LongInt begin { get; set; }
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class LineSpec
+    class LineSpec
     {
       public int fileId      { get; set; }
       public int offset      { get; set; } 
@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
       public int columnEnd   {get; set; } 
     }
 
-    public class FileIDMapSpec
+    class FileIDMapSpec
     {
         public int id { get; set; }
         public string file { get; set; }

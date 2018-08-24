@@ -26,7 +26,8 @@ using System.Globalization;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
-    public class BaseSizeTuple {
+    
+    class BaseSizeTuple {
         public long Base { get; set; }
         public long Size { get; set; }
         public BaseSizeTuple(long _base, long _size) {
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class SequenceBaseSize {
+    class SequenceBaseSize {
         private long _current;
         private long _size; // should this be constant?
         public SequenceBaseSize(long start = 0, long size = 10) { _current = start; _size = size; }
@@ -52,7 +53,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class FuncInfo
+    class FuncInfo
     {
         public string FunctionName { get; set; }
         public string SourceFile { get; set; }
@@ -75,7 +76,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
     
-    public class FuncInfoComparer : IEqualityComparer<FuncInfo>
+    class FuncInfoComparer : IEqualityComparer<FuncInfo>
     {
         public bool Equals(FuncInfo x, FuncInfo y)
         {
@@ -258,7 +259,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class AddressTranslator {
+    class AddressTranslator {
         private Dictionary<string, Dictionary<string, BaseSizeTuple>> modfundict;
         private Dictionary<string, LongInt> modindex;
 

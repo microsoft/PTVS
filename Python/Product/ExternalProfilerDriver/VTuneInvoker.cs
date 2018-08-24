@@ -26,7 +26,7 @@ using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
-    public class VTuneInvoker {
+    class VTuneInvoker {
         // In Linux, make sure to run: 
         // source $(VTUNE_INSTALL_PATH)/amplxe-vars.sh
         private const string _vtune17Envvar = "VTUNE_AMPLIFIER_2017_DIR";
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
     }
 
-    public class VTuneNotInstalledException : Exception {
+    class VTuneNotInstalledException : Exception {
         public override string Message {
             get {
                 return Strings.InstallVTuneFrom;
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public abstract class VTuneSpec {
+    abstract class VTuneSpec {
         public string UserDataDir { get; set; }
         public string ResultDir { get; set; }
 
@@ -135,7 +135,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             }
         }
 
-        public VTuneInvoker Invoker;
         public abstract string FullCLI();
         public string UserDataDirCLI() {
             if (UserDataDir == string.Empty || UserDataDir == null) {
@@ -145,7 +144,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public abstract class VTuneCollectSpec : VTuneSpec {
+    abstract class VTuneCollectSpec : VTuneSpec {
         public abstract string AnalysisName { get; }
         public string WorkloadSpec { get; set; }
         public string SymbolPath { get; set; }
@@ -158,7 +157,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class VTuneCollectHotspotsSpec : VTuneCollectSpec {
+    class VTuneCollectHotspotsSpec : VTuneCollectSpec {
         public override string AnalysisName { get { return "hotspots"; } }
         public override string FullCLI() {
             // TODO: Make sure that userdatadir exists and workloadspec is not empty
@@ -185,7 +184,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public abstract class VTuneReportSpec : VTuneSpec {
+    abstract class VTuneReportSpec : VTuneSpec {
         virtual public string ReportFileTemplate { get; }
         private string _reportOutFile = null;
         public string ReportOutputFile {
@@ -226,7 +225,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
-    public class VTuneReportCallstacksSpec : VTuneReportSpec {
+    class VTuneReportCallstacksSpec : VTuneReportSpec {
         public override string ReportFileTemplate { get { return "r_stacks_{0:D4}.csv"; } }
         public VTuneReportCallstacksSpec(string reportName = "") : base(reportName) { }
         public override string ReportName { get { return "callstacks"; } }
@@ -242,7 +241,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
     }
 
     // requires environment variable AMPLXE_EXPERIMENTAL
-    public class VTuneCPUUtilizationSpec : VTuneReportSpec {
+    class VTuneCPUUtilizationSpec : VTuneReportSpec {
 
         public override string ReportFileTemplate { get { return "r_cpu_{0:D4}.csv"; } }
         private Dictionary<string, string> _knobs;
