@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     current = new SampleWithTrace(new PerformanceSample(fields[0], fields[2], fields[3], fields[4], fields[5], fields[6]));
                     } catch (Exception ex) {
                         // Discard record
-                        Console.WriteLine($"{Strings.ErrorMsgUnexpectedInputWhileParsing} {ex.Message}");
+                        Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgUnexpectedInputWhileParsing, ex.Message));
                     }
                 } else {
                     // assert m.Groups.Count is 3
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                             currentStack.Add(new PerformanceSample(fields[0], fields[1], fields[2], fields[3], fields[5], fields[5]));
                         } catch (Exception ex) {
                             // Discard record... happens on de-mangled C++ multi-templatized functions on Linux
-                            Console.WriteLine($"{Strings.ErrorMsgUnexpectedInputWhileParsing} {ex.Message}");
+                            Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgUnexpectedInputWhileParsing, ex.Message));
                         }
                     } else {
                         // verify that the only other allowed value for Groups[1].Length is 6?

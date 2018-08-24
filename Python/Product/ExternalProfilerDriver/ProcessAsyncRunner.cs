@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -58,7 +59,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 };
 
                 process.ErrorDataReceived += (sender, localEventArgs) => {
-                    Console.WriteLine($"{Strings.ProcessRunnerErrorWhenRunningInferior}: {localEventArgs.Data}");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.ProcessRunnerErrorWhenRunningInferior, localEventArgs.Data));
                     // TODO: should probably cancel
                 };
             }
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             CancellationTokenSource cts = new CancellationTokenSource();
             var progress = new Progress<ProcessProgressDataload>();
             progress.ProgressChanged += (s, e) => {
-                Console.WriteLine($"{Strings.ProcessRunnerInferiorOutputPrefix}: {e.Message}");
+                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.ProcessRunnerInferiorOutputPrefix, e.Message));
             };
 
             try {
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 }
                 t.Wait();
             } catch (OperationCanceledException ce) {
-                Console.WriteLine($"{Strings.ProcessRunnerInferiorCancelledWithMsg}: {ce.Message}");
+                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.ProcessRunnerInferiorCancelledWithMsg, ce.Message));
             }
         }
     }

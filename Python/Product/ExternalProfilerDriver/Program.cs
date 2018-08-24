@@ -20,6 +20,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 using System.Threading.Tasks;
 
 using CommandLine;
@@ -63,12 +64,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 try {
                     vtuneExec = VTuneInvoker.VTunePath();
                 } catch (VTuneNotInstalledException ex) {
-                    Console.WriteLine($"{Strings.VTuneNotFoundInExpectedPath} : {ex.Message}");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.VTuneNotFoundInExpectedPath, ex.Message));
                     Environment.Exit(1);
                 }
 
                 if (opts.ReportVTunePath) {
-                    Console.WriteLine($"{Strings.VTuneFoundInPath} : {vtuneExec}");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.VTuneFoundInPath, vtuneExec));
                     Environment.Exit(0);
                 }
 
@@ -100,7 +101,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                             try {
                                 Directory.CreateDirectory(opts.DWJsonOutDir);
                             } catch (Exception ex) {
-                                Console.WriteLine($"{Strings.DirCreationFailed} [{opts.DWJsonOutDir}]: {ex.Message}");
+                                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.DirCreationFailed, opts.DWJsonOutDir, ex.Message));
                                 Environment.Exit(1);
                             }
                         }
@@ -109,18 +110,18 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 }
 
                 if (!opts.DryRunRequested) {
-                    Console.WriteLine($"{Strings.CollectCmdLineDump}: [ {vtuneExec} {vtuneCollectArgs} ]");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CollectCmdLineDump, vtuneExec, vtuneCollectArgs));
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneCollectArgs);
 
-                    Console.WriteLine($"{Strings.CallstackReportCmdLineDump}: [ {vtuneExec} {vtuneReportArgs} ]");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CallstackReportCmdLineDump, vtuneExec, vtuneReportArgs));
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneReportArgs);
 
-                    Console.WriteLine($"{Strings.TimingReportCmdLineDump}: [ {vtuneExec} {vtuneReportTimeArgs} ]");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.TimingReportCmdLineDump, vtuneExec, vtuneReportTimeArgs));
                     ProcessAsyncRunner.RunWrapper(vtuneExec, vtuneReportTimeArgs);
                 } else {
-                    Console.WriteLine($"{Strings.CollectCmdLineDump}: [ {vtuneExec} {vtuneCollectArgs} ]");
-                    Console.WriteLine($"{Strings.CallstackReportCmdLineDump}: [ {vtuneExec} {vtuneReportArgs} ]");
-                    Console.WriteLine($"{Strings.TimingReportCmdLineDump}: [ {vtuneExec} {vtuneReportTimeArgs} ]");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CollectCmdLineDump, vtuneExec, vtuneCollectArgs));
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CallstackReportCmdLineDump, vtuneExec, vtuneReportArgs));
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.TimingReportCmdLineDump, vtuneExec, vtuneReportTimeArgs));
 
                     Environment.Exit(0);
                 }

@@ -21,6 +21,7 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Net;
+using System.Globalization;
 
 using Newtonsoft.Json;
 
@@ -94,7 +95,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         /// <param name="filename">The filename with the callstack report</param>
         public static double CSReportToDWJson(string filename, string outfname) {
             if (!File.Exists(filename)) {
-                throw new ArgumentException($"{Strings.ErrorMsgFileDoesNotExist} : {filename}");
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgPathDoesNotExist, filename));
             }
             var samples = ParseFromFile(filename);
 
@@ -209,7 +210,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
         public static void CPUReportToDWJson(string filename, string outfname, double timeTotal = 0.0) {
             if (!File.Exists(filename)) {
-                throw new ArgumentException($"{Strings.ErrorMsgCannotFindCPUUtilizationReport} : {filename}");
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgCannotFindCPUUtilizationReport, filename));
             }
 
             if (timeTotal <= 0) {

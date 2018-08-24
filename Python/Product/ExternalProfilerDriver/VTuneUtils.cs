@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
@@ -34,7 +35,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public static string FindFileInDir(string fname, string rootDir) {
             var candidates = Directory.GetFiles(rootDir, fname, SearchOption.AllDirectories);
             if (candidates.Length <= 0) {
-                throw new FileNotFoundException($"{Strings.ErrorMsgFileDoesNotExist} : {rootDir}/{fname}");
+                throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgFileDoesNotExist, rootDir, fname));
             } else {
                 return candidates[0];
             }

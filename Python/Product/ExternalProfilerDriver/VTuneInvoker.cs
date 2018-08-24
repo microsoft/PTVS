@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 using Microsoft.DotNet.PlatformAbstractions;
@@ -54,7 +55,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             if (File.Exists(fname)) {
                 return fname;
             } else {
-                throw new Exception($"{Strings.ErrorMsgVTuneExpectedFileNotFound}: {fname}, ");
+                throw new Exception(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgVTuneExpectedFileNotFound, fname));
             }
         }
 
@@ -97,7 +98,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 basedir = Path.GetTempPath();
             }
             if (!Directory.Exists(basedir)) {
-                throw new ArgumentException($"{Strings.ErrorMsgDirectoryDoesNotExist}: {basedir}");
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgDirectoryDoesNotExist, basedir));
             }
             int count = 1;
             string candidate = string.Format(rdirtemplate, count);

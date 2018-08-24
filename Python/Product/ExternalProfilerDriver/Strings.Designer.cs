@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Report callstacks line.
+        ///   Looks up a localized string similar to Report callstacks line is {0} {1}.
         /// </summary>
         public static string CallstackReportCmdLineDump {
             get {
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collect command line is.
+        ///   Looks up a localized string similar to Collect command line is {0} {1}.
         /// </summary>
         public static string CollectCmdLineDump {
             get {
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Couldn&apos;t create specified directory.
+        ///   Looks up a localized string similar to Couldn&apos;t create specified directory {0}, error: {1}.
         /// </summary>
         public static string DirCreationFailed {
             get {
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find specified CPU utilization report.
+        ///   Looks up a localized string similar to Cannot find specified CPU utilization report at path {0}.
         /// </summary>
         public static string ErrorMsgCannotFindCPUUtilizationReport {
             get {
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find specified directory.
+        ///   Looks up a localized string similar to Cannot find specified directory {0}.
         /// </summary>
         public static string ErrorMsgDirectoryDoesNotExist {
             get {
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified file does not exist.
+        ///   Looks up a localized string similar to Specified file {0}/{1} does not exist.
         /// </summary>
         public static string ErrorMsgFileDoesNotExist {
             get {
@@ -133,7 +133,16 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Parsing exception caught.
+        ///   Looks up a localized string similar to Specified path {0} does not exist.
+        /// </summary>
+        public static string ErrorMsgPathDoesNotExist {
+            get {
+                return ResourceManager.GetString("ErrorMsgPathDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parsing exception caught: {0}.
         /// </summary>
         public static string ErrorMsgUnexpectedInputWhileParsing {
             get {
@@ -142,7 +151,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please check you have installed VTune; expected file not found.
+        ///   Looks up a localized string similar to Please check you have installed VTune; expected file {0} not found.
         /// </summary>
         public static string ErrorMsgVTuneExpectedFileNotFound {
             get {
@@ -187,7 +196,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Encountered error while running inferior process.
+        ///   Looks up a localized string similar to Encountered error while running inferior process: {0}.
         /// </summary>
         public static string ProcessRunnerErrorWhenRunningInferior {
             get {
@@ -196,7 +205,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Operation was cancelled with message.
+        ///   Looks up a localized string similar to Operation was cancelled with message : {0}.
         /// </summary>
         public static string ProcessRunnerInferiorCancelledWithMsg {
             get {
@@ -205,7 +214,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to From process.
+        ///   Looks up a localized string similar to From process: {0}.
         /// </summary>
         public static string ProcessRunnerInferiorOutputPrefix {
             get {
@@ -223,7 +232,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Report timing line.
+        ///   Looks up a localized string similar to Report timing line {0} {1}.
         /// </summary>
         public static string TimingReportCmdLineDump {
             get {
@@ -232,7 +241,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path of VTune is.
+        ///   Looks up a localized string similar to The path of VTune is : {0}.
         /// </summary>
         public static string VTuneFoundInPath {
             get {
@@ -241,7 +250,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to VTune not found in expected path.
+        ///   Looks up a localized string similar to VTune not found in expected path : {0}.
         /// </summary>
         public static string VTuneNotFoundInExpectedPath {
             get {
