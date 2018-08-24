@@ -304,7 +304,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            var packageDict = await GetImportableModulesAsync(sp, cancellationToken).ConfigureAwait(false);
+            var requireInitPy = ModulePath.PythonVersionRequiresInitPyFiles(Configuration.Version);
+            var packageDict = await GetImportableModulesAsync(sp, requireInitPy, cancellationToken).ConfigureAwait(false);
             if (!packageDict.Any()) {
                 return null;
             }
@@ -319,7 +320,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths, CancellationToken cancellationToken) {
+        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths, bool requireInitPy, CancellationToken cancellationToken) {
             var packageDict = new Dictionary<string, string>();
 
             foreach (var searchPath in searchPaths.MaybeEnumerate()) {
@@ -327,7 +328,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (File.Exists(searchPath)) {
                     packages = GetPackagesFromZipFile(searchPath, cancellationToken);
                 } else if (Directory.Exists(searchPath)) {
-                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath, cancellationToken)).ConfigureAwait(false);
+                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath, requireInitPy, cancellationToken)).ConfigureAwait(false);
                 }
                 foreach (var package in packages.MaybeEnumerate()) {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -339,11 +340,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
 
-        private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath, CancellationToken cancellationToken) {
+        private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath, bool requireInitPy, CancellationToken cancellationToken) {
             return ModulePath.GetModulesInPath(
                 searchPath,
                 recurse: false,
-                includePackages: true
+                includePackages: true,
+                requireInitPy: requireInitPy
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
         }
 
@@ -731,14 +733,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 isPackage = Directory.Exists;
             }
 
+            var requireInitPy = ModulePath.PythonVersionRequiresInitPyFiles(Configuration.Version);
             if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, isPackage, null, out mp, out _, out _, out _)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, isPackage, null, requireInitPy, out mp, out _, out _, out _)) {
                     return mp;
                 }
             }
 
             foreach (var sp in searchPaths.MaybeEnumerate()) {
-                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, isPackage, null, out mp, out _, out _, out _)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, isPackage, null, requireInitPy, out mp, out _, out _, out _)) {
                     return mp;
                 }
             }

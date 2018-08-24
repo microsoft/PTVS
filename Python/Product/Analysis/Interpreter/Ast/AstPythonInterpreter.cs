@@ -113,7 +113,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
 
                 _log?.Log(TraceLevel.Verbose, "GetImportableModulesAsync");
-                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp, cancellationToken);
+                var requireInitPy = ModulePath.PythonVersionRequiresInitPyFiles(_factory.Configuration.Version);
+                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp, requireInitPy, cancellationToken);
                 lock (_userSearchPathsLock) {
                     if (_userSearchPathPackages == null) {
                         _userSearchPathPackages = ussp;
@@ -155,15 +156,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 isPackage = Directory.Exists;
             }
 
+            var requireInitPy = ModulePath.PythonVersionRequiresInitPyFiles(_factory.Configuration.Version);
             if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, isPackage, null, out mp, out _, out _, out _)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, isPackage, null, requireInitPy, out mp, out _, out _, out _)) {
                     ImportedFromUserSearchPath(name);
                     return mp;
                 }
             }
 
             foreach (var sp in searchPaths.MaybeEnumerate()) {
-                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, isPackage, null, out mp, out _, out _, out _)) {
+                if (ModulePath.FromBasePathAndName_NoThrow(sp, name, isPackage, null, requireInitPy, out mp, out _, out _, out _)) {
                     ImportedFromUserSearchPath(name);
                     return mp;
                 }
