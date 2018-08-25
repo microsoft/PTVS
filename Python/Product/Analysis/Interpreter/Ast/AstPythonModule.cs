@@ -41,10 +41,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonLanguageVersion langVersion,
             string moduleFullName
         ) {
-            using(var stream = Directory.Exists(sourceFile) 
-                ? new MemoryStream()// Module without __init__.py, create empty stream
-                : new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
+            Stream stream = null;
+            try {
+                if(Directory.Exists(sourceFile)) {
+                    stream = new MemoryStream(); // Module without __init__.py, create empty stream
+                } else {
+                    stream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                }
                 return FromStream(interpreter, stream, sourceFile, langVersion, moduleFullName);
+            } finally {
+                stream?.Dispose();
             }
         }
 
