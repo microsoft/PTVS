@@ -293,6 +293,7 @@
     <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\UriEqualityComparer.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />

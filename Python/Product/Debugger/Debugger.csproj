@@ -90,6 +90,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\WebSocketStream.cs">
       <Link>Debugger\Transports\WebSocketStream.cs</Link>
     </Compile>
+    <Compile Include="..\TestAdapter\QualifiedFunctionNameWalker.cs">
+      <Link>QualifiedFunctionNameWalker.cs</Link>
+    </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="CustomDebugAdapterProtocolExtension.cs" />
     <Compile Include="DebugAdapterLauncher.cs" />
@@ -159,7 +162,6 @@
     <Compile Include="Guids.cs" />
     <Compile Include="PtvsdVersion.cs" />
     <Compile Include="PtvsdVersionHelper.cs" />
-    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>

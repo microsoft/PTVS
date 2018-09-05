@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Analysis.Infrastructure {
+namespace Microsoft.PythonTools.Intellisense {
     public sealed class UriEqualityComparer : IEqualityComparer<Uri> {
         private readonly UriComponents _components;
 

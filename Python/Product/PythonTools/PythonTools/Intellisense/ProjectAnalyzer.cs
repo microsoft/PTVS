@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
-            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(Analysis.Infrastructure.UriEqualityComparer.IncludeFragment);
+            _projectFilesByUri = new ConcurrentDictionary<Uri, AnalysisEntry>(UriEqualityComparer.IncludeFragment);
 
             _logger = _services.Python?.Logger;
 

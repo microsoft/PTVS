@@ -82,7 +82,6 @@
     <Compile Include="Infrastructure\TaskCompletionSourceExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
-    <Compile Include="Infrastructure\UriEqualityComparer.cs" />
     <Compile Include="Infrastructure\UriExtensions.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
