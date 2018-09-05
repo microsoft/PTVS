@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (selectionEnd == _code.Length) {
                 selectionEnd -= 1;
             }
-            while (selectionEnd >= 0 && Char.IsWhiteSpace(_code[selectionEnd])) {
+            while (selectionEnd >= 0 && char.IsWhiteSpace(_code[selectionEnd])) {
                 selectionEnd -= 1;
             }
 
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(walker.Target != null);
             if (walker.Target == null) {
                 return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = Strings.ExtractMethodInvalidTargetSelected
+                    cannotExtractReason = AP.CannotExtractReason.InvalidTargetSelected
                 };
             }
 
@@ -65,18 +65,17 @@ namespace Microsoft.PythonTools.Intellisense {
             // expand the selection if we aren't currently covering a full expression/statement
             if (!walker.Target.IsValidSelection) {
                 return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = Strings.ExtractMethodInvalidExpressionSelected
+                    cannotExtractReason = AP.CannotExtractReason.InvalidExpressionSelected
                 };
             }
 
             expanded = WasSelectionExpanded(walker.Target, selectionStart, selectionEnd);
 
             // check for things we cannot handle
-            string failureReason;
-            if (!IsValidExtraction(walker.Target, out failureReason)) {
+            if (!IsValidExtraction(walker.Target, out var failureReason)) {
                 return new AP.ExtractMethodResponse() {
                     // Note: this returns the unformatted error
-                    cannotExtractMsg = failureReason
+                    cannotExtractReason = failureReason
                 };
             }
 
@@ -160,8 +159,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (outputCollector._outputVars.Count > 0 &&
                 walker.Target.ContainsReturn) {
-                return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = Strings.ExtractMethodAssignsVariablesAndReturns
+                return new AP.ExtractMethodResponse {
+                    cannotExtractReason = AP.CannotExtractReason.MethodAssignsVariablesAndReturns
                 };
             }
 
@@ -269,51 +268,45 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        private static bool IsValidExtraction(SelectionTarget target, out string failureReason) {
+        private static bool IsValidExtraction(SelectionTarget target, out AP.CannotExtractReason failureReason) {
             if (target.Parents[target.Parents.Count - 1] is ClassDefinition) {
-                failureReason = Strings.ExtractMethodStatementsFromClassDefinition;
-                return false;
-            }
-
-            string invalidExtractMsg = target.InvalidExtractionMessage;
-            if (invalidExtractMsg != null) {
-                failureReason = invalidExtractMsg;
+                failureReason = AP.CannotExtractReason.StatementsFromClassDefinition;
                 return false;
             }
 
             var breakContinueWalker = new ContinueBreakWalker();
             target.Walk(breakContinueWalker);
             if (breakContinueWalker.ContainsBreak) {
-                failureReason = Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
+                failureReason = AP.CannotExtractReason.SelectionContainsBreakButNotEnclosingLoop;
                 return false;
             } else if (breakContinueWalker.ContainsContinue) {
-                failureReason = Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
+                failureReason = AP.CannotExtractReason.SelectionContainsContinueButNotEnclosingLoop;
                 return false;
             }
 
             var yieldWalker = new YieldWalker();
             target.Walk(yieldWalker);
             if (yieldWalker.ContainsYield) {
-                failureReason = Strings.ExtractMethodContainsYieldExpression;
+                failureReason = AP.CannotExtractReason.ContainsYieldExpression;
                 return false;
             }
 
             var importStarWalker = new ImportStarWalker();
             target.Walk(importStarWalker);
             if (importStarWalker.ContainsImportStar) {
-                failureReason = Strings.ExtractMethodContainsFromImportStar;
+                failureReason = AP.CannotExtractReason.ContainsFromImportStar;
                 return false;
             }
 
             var returnWalker = new ReturnWalker();
             target.Walk(returnWalker);
             if (returnWalker.ContainsReturn && !returnWalker.Returns) {
-                failureReason = Strings.ExtractMethodSelectionContainsReturn;
+                failureReason = AP.CannotExtractReason.SelectionContainsReturn;
                 return false;
             }
 
             target.ContainsReturn = returnWalker.ContainsReturn;
-            failureReason = null;
+            failureReason = AP.CannotExtractReason.None;
             return true;
         }
 

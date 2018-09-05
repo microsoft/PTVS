@@ -578,7 +578,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class ExtractMethodResponse : Response {
-            public string cannotExtractMsg;
+            public CannotExtractReason cannotExtractReason;
             public ChangeInfo[] changes;
             /// <summary>
             /// available scopes the user can retarget to
@@ -590,6 +590,19 @@ namespace Microsoft.PythonTools.Intellisense {
             public int version;
             public string methodBody;
             public string[] variables;
+        }
+        
+        public enum CannotExtractReason {
+            None = 0,
+            InvalidTargetSelected = 1,
+            InvalidExpressionSelected = 2,
+            MethodAssignsVariablesAndReturns = 3,
+            StatementsFromClassDefinition = 4,
+            SelectionContainsBreakButNotEnclosingLoop = 5,
+            SelectionContainsContinueButNotEnclosingLoop = 6,
+            ContainsYieldExpression = 7,
+            ContainsFromImportStar = 8,
+            SelectionContainsReturn = 9
         }
 
         public class ScopeInfo {
