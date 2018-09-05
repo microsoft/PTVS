@@ -27,9 +27,9 @@ using Microsoft.VisualStudio.Language.Intellisense;
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekResultSource : IPeekResultSource {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly IAnalysisVariable[] _variables;
+        private readonly AnalysisVariable[] _variables;
 
-        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, IAnalysisVariable[] variables) {
+        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisVariable[] variables) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
             _variables = variables ?? throw new ArgumentNullException(nameof(variables));
         }

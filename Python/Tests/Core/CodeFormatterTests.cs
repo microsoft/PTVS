@@ -252,7 +252,6 @@ z = y";
                 SpacesWithinListExpression = false,
                 SpacesWithinParenthesisExpression = false,
                 SpacesWithinParenthesisedTupleExpression = false,
-                UseVerbatimImage = true,
                 WrapComments = true,
                 WrappingWidth = 80
             };

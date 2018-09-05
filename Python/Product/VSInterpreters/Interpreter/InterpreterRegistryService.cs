@@ -379,9 +379,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            var fallback = typeof(AnalysisOnlyInterpreterFactory);
+            var fallback = typeof(IPythonInterpreterFactory);
             assembly = fallback.Assembly.Location;
-            typeName = fallback.FullName;
+            typeName = "Microsoft.PythonTools.Interpreter.AnalysisOnlyInterpreterFactory";
             properties = new Dictionary<string, object>();
             if (factory.Configuration?.Version != null) {
                 properties[nameof(Version)] = factory.Configuration.Version.ToString();

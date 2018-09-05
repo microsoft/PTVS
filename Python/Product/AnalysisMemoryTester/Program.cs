@@ -20,10 +20,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
@@ -94,7 +95,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             interpreter = interpreter.Substring(4).Trim();
             Console.WriteLine($"Using Python from {interpreter}");
 
-            var logs = GetFirstCommand(commands, "logs\\s+(.+)", m => m.Groups[1].Value, v => PathUtils.IsValidPath(v.Trim()));
+            var logs = GetFirstCommand(commands, "logs\\s+(.+)", m => m.Groups[1].Value, IsValidPath);
             if (!string.IsNullOrEmpty(logs)) {
                 if (!Path.IsPathRooted(logs)) {
                     logs = Path.GetFullPath(logs);
@@ -111,7 +112,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 interpreter,
                 interpreter,
                 "PYTHONPATH",
-                NativeMethods.GetBinaryType(interpreter) == System.Reflection.ProcessorArchitecture.Amd64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
+                GetBinaryType(interpreter) == ProcessorArchitecture.Amd64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
                 version
             );
 
@@ -327,6 +328,41 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             }, 50);
         }
 
+        [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
+        private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
+
+        private enum GetBinaryTypeResult : uint {
+            SCS_32BIT_BINARY = 0,
+            SCS_DOS_BINARY = 1,
+            SCS_WOW_BINARY = 2,
+            SCS_PIF_BINARY = 3,
+            SCS_POSIX_BINARY = 4,
+            SCS_OS216_BINARY = 5,
+            SCS_64BIT_BINARY = 6
+        }
+
+        private static ProcessorArchitecture GetBinaryType(string path) {
+            GetBinaryTypeResult result;
+
+            if (_GetBinaryType(path, out result)) {
+                switch (result) {
+                    case GetBinaryTypeResult.SCS_32BIT_BINARY:
+                        return ProcessorArchitecture.X86;
+                    case GetBinaryTypeResult.SCS_64BIT_BINARY:
+                        return ProcessorArchitecture.Amd64;
+                    case GetBinaryTypeResult.SCS_DOS_BINARY:
+                    case GetBinaryTypeResult.SCS_WOW_BINARY:
+                    case GetBinaryTypeResult.SCS_PIF_BINARY:
+                    case GetBinaryTypeResult.SCS_POSIX_BINARY:
+                    case GetBinaryTypeResult.SCS_OS216_BINARY:
+                    default:
+                        break;
+                }
+            }
+
+            return ProcessorArchitecture.None;
+        }
+
         private static IEnumerable<ModulePath> GetModules(string args) {
             var m = Regex.Match(args, "(\\*|[\\w\\.]+)\\s+(.+)");
             var modName = m.Groups[1].Value;
@@ -345,7 +381,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             var opt = SearchOption.TopDirectoryOnly;
 
             var dir = PathUtils.TrimEndSeparator(PathUtils.GetParent(fileName));
-            var filter = PathUtils.GetFileOrDirectoryName(fileName);
+            var filter = GetFileOrDirectoryName(fileName);
 
             if (dir.EndsWith("**")) {
                 opt = SearchOption.AllDirectories;
@@ -373,6 +409,28 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 yield return mp;
             }
         }
+
+        public static string GetFileOrDirectoryName(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return string.Empty;
+            }
+
+            int last = path.Length - 1;
+            if (path[last] == Path.DirectorySeparatorChar || path[last] == Path.AltDirectorySeparatorChar) {
+                last -= 1;
+            }
+
+            if (last < 0) {
+                return string.Empty;
+            }
+
+            var start = path.LastIndexOfAny(new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, last);
+
+            return path.Substring(start + 1, last - start);
+        }
+
+        private static bool IsValidPath(string path) 
+            => !string.IsNullOrWhiteSpace(path) && path.IndexOfAny(Path.GetInvalidPathChars().Concat(new[] { '*', '?' }).ToArray()) < 0;
 
         #region MiniDump Support
 

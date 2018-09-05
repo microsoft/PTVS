@@ -99,8 +99,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             return null;
         }
 
-        internal static async Task<IAnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
-            var list = new List<IAnalysisVariable>();
+        internal static async Task<AnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
+            var list = new List<AnalysisVariable>();
 
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt, ExpressionAtPointPurpose.FindDefinition).ConfigureAwait(false);
             foreach (var variable in (result?.Variables).MaybeEnumerate()) {

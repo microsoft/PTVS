@@ -1,4 +1,4 @@
-﻿// Python Tools for Visual Studio
+﻿// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,16 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Parsing;
+using System.Net;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.PythonTools.Intellisense {
-    sealed class TaggedSpan {
-        public SourceSpan Span { get; }
-        public string Tag { get; }
-
-        public TaggedSpan(SourceSpan span, string tag) {
-            Span = span;
-            Tag = tag;
+namespace PythonToolsTests {
+    [TestClass]
+    public class SocketUtilsTests {
+        [TestMethod, Priority(0)]
+        public void GetRandomPortListener() {
+            var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
+            try {
+                Assert.IsNotNull(listener);
+                Assert.AreEqual(port, ((IPEndPoint)listener.LocalEndpoint).Port);
+                Assert.IsTrue(port >= 49152 && port < 65536);
+            } finally {
+                listener?.Stop();
+            }
         }
     }
 }

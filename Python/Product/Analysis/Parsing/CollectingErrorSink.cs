@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Parsing {
-    class CollectingErrorSink  : ErrorSink {
+    public class CollectingErrorSink  : ErrorSink {
         public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
             if (severity == Severity.Error || severity == Severity.FatalError) {
                 Errors.Add(new ErrorResult(message, span));

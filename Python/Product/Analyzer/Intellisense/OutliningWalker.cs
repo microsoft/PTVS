@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class OutliningWalker : PythonWalker {
+    public class OutliningWalker : PythonWalker {
         private readonly PythonAst _ast;
         private readonly List<TaggedSpan> _tagSpans;
 
@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _tagSpans.Add(tagSpan);
         }
 
-        internal IEnumerable<TaggedSpan> GetTags() {
+        public IEnumerable<TaggedSpan> GetTags() {
             return _tagSpans
                 .GroupBy(s => s.Span.Start.Line)
                 .Select(ss => ss.OrderByDescending(s => s.Span.End.Line).First())

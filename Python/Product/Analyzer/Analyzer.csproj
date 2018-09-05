@@ -65,10 +65,16 @@
       <Link>DebugTimer.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Intellisense\AnalysisLimitsConverter.cs" />
     <Compile Include="Intellisense\AnalysisProtocol.cs" />
+    <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\MethodExtractor.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\OutOfProcMethodExtractor.cs" />
     <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
+    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
+    <Compile Include="Intellisense\TaggedSpan.cs" />
+    <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>

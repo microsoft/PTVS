@@ -25,17 +25,11 @@ namespace Microsoft.PythonTools.Parsing {
     /// code at all.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    sealed class CodeFormattingDefaultValueAttribute : Attribute {
-        private readonly object _defaultValue;
-
+    public sealed class CodeFormattingDefaultValueAttribute : Attribute {
         internal CodeFormattingDefaultValueAttribute(object defaultValue) {
-            _defaultValue = defaultValue;
+            DefaultValue = defaultValue;
         }
 
-        public object DefaultValue {
-            get {
-                return _defaultValue;
-            }
-        }
+        public object DefaultValue { get; }
     }
 }

@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
@@ -26,7 +26,7 @@ using Newtonsoft.Json;
 using LS = Microsoft.PythonTools.Analysis.LanguageServer;
 
 namespace Microsoft.PythonTools.Intellisense {
-    internal static class AnalysisProtocol {
+    public static class AnalysisProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
         private static Dictionary<string, Type> CollectCommands() {

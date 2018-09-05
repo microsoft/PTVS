@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Parsing {
     /// when the option is turned on or off.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    class CodeFormattingExampleAttribute : Attribute {
+    public class CodeFormattingExampleAttribute : Attribute {
         private readonly string _on, _off;
 
         internal CodeFormattingExampleAttribute(string doc) : this(doc, doc) { }

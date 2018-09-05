@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Navigation {
             var analyzer = this.Hierarchy.GetPythonProject()?.TryGetAnalyzer();
 
 
-            List<IAnalysisVariable> vars = new List<IAnalysisVariable>();
+            List<AnalysisVariable> vars = new List<AnalysisVariable>();
             if (analyzer != null) {
                 foreach (var value in _value.Values) {
                     foreach (var reference in value.locations.MaybeEnumerate()) {

@@ -18,7 +18,7 @@ using System;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class ProjectAssemblyReference : ProjectReference, IEquatable<ProjectAssemblyReference> {
+    public sealed class ProjectAssemblyReference : ProjectReference, IEquatable<ProjectAssemblyReference> {
         private readonly AssemblyName _asmName;
 
         public ProjectAssemblyReference(AssemblyName assemblyName, string filename)
@@ -26,11 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _asmName = assemblyName;
         }
 
-        public AssemblyName AssemblyName {
-            get {
-                return _asmName;
-            }
-        }
+        public AssemblyName AssemblyName => _asmName;
 
         public override int GetHashCode() {
             return base.GetHashCode() ^ _asmName.GetHashCode();

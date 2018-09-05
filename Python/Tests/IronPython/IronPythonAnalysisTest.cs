@@ -345,7 +345,7 @@ mod.
 from System import DivideByZeroException
 ";
             var entry = ProcessText(text);
-            var dbzEx = entry.GetValue<BuiltinClassInfo>("DivideByZeroException");
+            var dbzEx = entry.GetValue<AnalysisValue>("DivideByZeroException");
             // Check values from IPythonType MRO
             AssertUtil.ContainsExactly(dbzEx.PythonType.Mro.Select(t => t.Name),
                 "DivideByZeroException",

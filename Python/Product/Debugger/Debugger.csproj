@@ -159,6 +159,7 @@
     <Compile Include="Guids.cs" />
     <Compile Include="PtvsdVersion.cs" />
     <Compile Include="PtvsdVersionHelper.cs" />
+    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>

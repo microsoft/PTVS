@@ -48,7 +48,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using LS = Microsoft.PythonTools.Analysis.LanguageServer;
-using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -259,7 +258,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
+                    _analysisOptions.analysisLimits = AnalysisLimitsConverter.LoadFromStorage(key).ToDictionary();
                 }
             }
             using (var key = Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey)) {
