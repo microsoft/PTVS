@@ -81,7 +81,7 @@ namespace TestUtilities.Python {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
             _factory = factory;
-            _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter);
+            _analyzer = PythonAnalyzer.CreateAsync(factory, interpreter).WaitAndUnwrapExceptions();
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
@@ -171,18 +171,21 @@ namespace TestUtilities.Python {
             if (errors.Errors.Any()) {
                 sb.AppendLine("Errors:");
                 foreach (var e in errors.Errors) {
-                    sb.AppendLine("  [{0}] {1}".FormatInvariant(e.Span.ToDebugString(), e.Message));
+                    sb.AppendLine("  [{0}] {1}".FormatInvariant(Format(e.Span), e.Message));
                 }
                 sb.AppendLine();
             }
             if (errors.Warnings.Any()) {
                 sb.AppendLine("Warnings:");
                 foreach (var e in errors.Warnings) {
-                    sb.AppendLine("  [{0}] {1}".FormatInvariant(e.Span.ToDebugString(), e.Message));
+                    sb.AppendLine("  [{0}] {1}".FormatInvariant(Format(e.Span), e.Message));
                 }
             }
             return sb.ToString();
         }
+
+        private static string Format(SourceSpan span)
+            => $"({span.Start.Index},{span.Start.Line},{span.Start.Column})-({span.End.Index},{span.End.Line},{span.End.Column})";
 
         public void SetLimits(AnalysisLimits limits) {
             _analyzer.Limits = limits;

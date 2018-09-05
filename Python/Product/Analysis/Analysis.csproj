@@ -86,7 +86,6 @@
     <Compile Include="Infrastructure\UriExtensions.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
-    <Compile Include="Intellisense\AssignmentWalker.cs" />
     <Compile Include="DocumentChange.cs" />
     <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
     <Compile Include="Intellisense\EnclosingNodeWalker.cs" />

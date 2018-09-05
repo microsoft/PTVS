@@ -61,8 +61,7 @@ namespace TestUtilities.Python {
         bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
             assembly = GetType().Assembly.Location;
             typeName = GetType().FullName;
-            properties = new Dictionary<string, object>();
-            Configuration.WriteToDictionary(properties);
+            properties = Configuration.ToDictionary();
             return true;
         }
 

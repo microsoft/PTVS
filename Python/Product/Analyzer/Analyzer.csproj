@@ -67,6 +67,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Intellisense\AnalysisLimitsConverter.cs" />
     <Compile Include="Intellisense\AnalysisProtocol.cs" />
+    <Compile Include="Intellisense\AssignmentWalker.cs" />
     <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\MethodExtractor.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />
