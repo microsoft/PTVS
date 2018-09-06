@@ -42,6 +42,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly ConcurrentDictionary<string, IPythonModule> _modules = new ConcurrentDictionary<string, IPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
         private readonly HashSet<ProjectReference> _projectReferenceSet = new HashSet<ProjectReference>();
+        private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
@@ -202,11 +203,109 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void SpecializeClrFunctions() {
+            // cached for quick checks to see if we're a call to clr.AddReference
+            _state.SpecializeFunction("wpf", "LoadComponent", LoadComponent);
             _state.SpecializeFunction("clr", "AddReference", (n, u, p, kw) => AddReference(n, null), true);
             _state.SpecializeFunction("clr", "AddReferenceByPartialName", (n, u, p, kw) => AddReference(n, LoadAssemblyByPartialName), true);
             _state.SpecializeFunction("clr", "AddReferenceByName", (n, u, p, kw) => AddReference(n, null), true);
             _state.SpecializeFunction("clr", "AddReferenceToFile", (n, u, p, kw) => AddReference(n, LoadAssemblyFromFile), true);
             _state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n, u, p, kw) => AddReference(n, LoadAssemblyFromFileWithPath), true);
+        }
+
+        private IAnalysisSet LoadComponent(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length != 2 || !(unit.State.Interpreter is IDotNetPythonInterpreter interpreter)) {
+                return AnalysisSet.Empty;
+            }
+
+            var self = args[0];
+            var xaml = args[1];
+
+            foreach (var arg in xaml) {
+                var strConst = arg.GetConstantValueAsString();
+                if (string.IsNullOrEmpty(strConst)) {
+                    continue;
+                }
+
+                // process xaml file, add attributes to self
+                string xamlPath = Path.Combine(Path.GetDirectoryName(unit.Entry.FilePath), strConst);
+                if (_xamlByFilename.TryGetValue(xamlPath, out var xamlProject)) {
+                    // TODO: Get existing analysis if it hasn't changed.
+                    var analysis = xamlProject.Analysis;
+
+                    if (analysis == null) {
+                        xamlProject.Analyze(CancellationToken.None);
+                        analysis = xamlProject.Analysis;
+                        if (analysis == null) {
+                            AnalysisLog.Assert(false, "No Xaml analysis");
+                            return self;
+                        }
+                    }
+
+                    xamlProject.AddDependency(unit.Entry);
+
+                    var evalUnit = unit.CopyForEval();
+
+                    // add named objects to instance
+                    foreach (var keyValue in analysis.NamedObjects) {
+                        var type = keyValue.Value;
+                        if (type.Type.UnderlyingType != null) {
+
+                            var ns = unit.State.GetAnalysisValueFromObjects(interpreter.GetBuiltinType(type.Type.UnderlyingType));
+                            var bci = ns as BuiltinClassInfo;
+                            if (bci != null) {
+                                ns = bci.Instance;
+                            }
+                            self.SetMember(node, evalUnit, keyValue.Key, ns.SelfSet);
+                        }
+
+                        // TODO: Better would be if SetMember took something other than a node, then we'd
+                        // track references w/o this extra effort.
+                        foreach (var inst in self) {
+                            InstanceInfo instInfo = inst as InstanceInfo;
+                            if (instInfo != null && instInfo.InstanceAttributes != null) {
+                                VariableDef def;
+                                if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
+                                    def.AddAssignment(
+                                        new EncodedLocation(
+                                            new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, type.LineNumber, type.LineOffset),
+                                            null
+                                        ),
+                                        xamlProject
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    // add references to event handlers
+                    foreach (var keyValue in analysis.EventHandlers) {
+                        // add reference to methods...
+                        var member = keyValue.Value;
+
+                        // TODO: Better would be if SetMember took something other than a node, then we'd
+                        // track references w/o this extra effort.
+                        foreach (var inst in self) {
+                            InstanceInfo instInfo = inst as InstanceInfo;
+                            if (instInfo != null) {
+                                ClassInfo ci = instInfo.ClassInfo;
+
+                                VariableDef def;
+                                if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
+                                    def.AddReference(
+                                        new EncodedLocation(
+                                            new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, member.LineNumber, member.LineOffset),
+                                            null
+                                        ),
+                                        xamlProject
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // load component returns self
+            return self;
         }
 
         private void PythonAnalyzer_SearchPathsChanged(object sender, EventArgs e) {
@@ -232,7 +331,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void ReloadRemoteDomain() {
-            var oldUnloader = _unloader;
+            var oldUnloaded = _unloader;
 
             var evt = UnloadingDomain;
             if (evt != null) {
@@ -251,7 +350,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             RaiseModuleNamesChanged();
 
-            oldUnloader.Dispose();
+            oldUnloaded.Dispose();
         }
 
         public event EventHandler UnloadingDomain;
@@ -295,7 +394,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return AnalysisSet.Empty;
             }
             foreach (var arg in callExpr.Args) {
-                var cexpr = arg.Expression as Microsoft.PythonTools.Parsing.Ast.ConstantExpression;
+                var cexpr = arg.Expression as ConstantExpression;
                 if (cexpr == null || !(cexpr.Value is string || cexpr.Value is AsciiString)) {
                     // can't process this add reference
                     continue;

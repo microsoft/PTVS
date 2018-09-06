@@ -13,15 +13,16 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-#if DESKTOP
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Analysis {
+namespace Microsoft.IronPythonTools.Interpreter {
     sealed class XamlProjectEntry : IXamlProjectEntry {
         private XamlAnalysis _analysis;
         private int _version;
@@ -128,4 +129,3 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 }
-#endif

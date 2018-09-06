@@ -96,7 +96,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             get {
                 if (_typeId == null) {
                     var ri = RemoteInterpreter;
-                    _typeId = ri != null ? ri.PythonTypeGetBuiltinTypeId(Value) : BuiltinTypeId.Unknown;
+                    _typeId = ri?.PythonTypeGetBuiltinTypeId(Value) ?? BuiltinTypeId.Unknown;
                 }
                 return _typeId.Value;
             }

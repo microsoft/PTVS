@@ -46,9 +46,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
-#if DESKTOP
-        private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
-#endif
         internal ConstantInfo _noneInst;
         private Action<int> _reportQueueSize;
         private int _reportQueueInterval;
