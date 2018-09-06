@@ -18,6 +18,7 @@
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\net35\Microsoft.VisualStudio.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\net45\Microsoft.VisualStudio.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\net46\Microsoft.VisualStudio.*.dll" />
+      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\net461\Microsoft.VisualStudio.*.dll" />
     </ItemGroup>
     <PropertyGroup>
       <AssemblySearchPaths>

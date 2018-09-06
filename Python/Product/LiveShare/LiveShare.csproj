@@ -62,18 +62,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Cascade.LanguageServices.Common">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.LanguageServices.Common.0.3.536\lib\net461\Microsoft.Cascade.LanguageServices.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Cascade.Common">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.Common.0.3.536\lib\net461\Microsoft.Cascade.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Cascade.Client">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.Client.0.3.536\lib\net461\Microsoft.Cascade.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Cascade.Contracts">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Cascade.Contracts.0.3.536\lib\net461\Microsoft.VisualStudio.Cascade.Contracts.dll</HintPath>
-    </Reference>
+    <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Cascade.*\lib\net461\Microsoft.Cascade.*.dll" />
+    <Reference Include="Microsoft.Cascade.LanguageServices.Common" />
+    <Reference Include="Microsoft.Cascade.Common" />
+    <Reference Include="Microsoft.Cascade.Client" />
+    <Reference Include="Microsoft.VisualStudio.Cascade.Contracts" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <!-- <Reference Include="Microsoft.VisualStudio.Text.UI" /> -->
