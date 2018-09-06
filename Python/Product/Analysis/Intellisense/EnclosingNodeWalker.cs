@@ -130,8 +130,8 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_targetNode == null &&
                 node.StartIndex <= _start &&
                 node.EndIndex >= _end &&
-                node is Expression) {
-                _targetNode = new NodeTarget(_insertLocations, _parents.ToArray(), node);
+                node is Expression expression) {
+                _targetNode = new NodeTarget(_insertLocations, _parents.ToArray(), expression);
             }
         }
 

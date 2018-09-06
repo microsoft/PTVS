@@ -54,8 +54,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public abstract bool IsExpression { get; }
 
-        public virtual string InvalidExtractionMessage => null;
-
         public abstract string IndentationLevel { get; }
 
         public virtual bool IsValidSelection => true;
@@ -64,38 +62,23 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     class NodeTarget : SelectionTarget {
-        private readonly Node _node;
+        private readonly Expression _node;
 
-        public NodeTarget(Dictionary<ScopeStatement, SourceLocation> insertLocations, ScopeStatement[] parents, Node node)
+        public NodeTarget(Dictionary<ScopeStatement, SourceLocation> insertLocations, ScopeStatement[] parents, Expression node)
             : base(insertLocations, parents, parents[0] as PythonAst) {
             _node = node;
         }
 
-        public override bool IsExpression => _node is Expression;
+        public override bool IsExpression => true;
 
         public override Node GetNode() => _node;
 
         public override Statement GetBody() {
-            if (_node is Statement body) {
-                return body;
-            }
-            if (_node is Expression expr) {
-                var retStmt = new ReturnStatement(expr);
-                retStmt.RoundTripRemoveValueWhiteSpace(Ast);
-                return retStmt;
-            }
-            throw new InvalidOperationException(InvalidExtractionMessage);
+            var retStmt = new ReturnStatement(_node);
+            retStmt.RoundTripRemoveValueWhiteSpace(Ast);
+            return retStmt;
         }
-
-        public override string InvalidExtractionMessage {
-            get {
-                if (!(_node is Expression || _node is Statement)) {
-                    return _node.NodeName;
-                }
-                return null;
-            }
-        }
-
+        
         public override SourceLocation StartIncludingLeadingWhiteSpace => _node.GetStartIncludingLeadingWhiteSpace(Ast);
 
         public override SourceLocation StartIncludingIndentation => _node.GetStartIncludingIndentation(Ast);

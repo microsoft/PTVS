@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis {
         ForEval = 0x0200
     }
 
-    internal static class GetMemberOptionsExtensions {
+    public static class GetMemberOptionsExtensions {
         public static bool Intersect(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IntersectMultipleResults);
         public static bool HideAdvanced(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.HideAdvancedMembers);
         public static bool StatementKeywords(this GetMemberOptions self) => self.HasFlag(GetMemberOptions.IncludeStatementKeywords);

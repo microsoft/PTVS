@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbol : INavigableSymbol {
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigableSymbol(IServiceProvider serviceProvider, IAnalysisVariable variable, SnapshotSpan span) {
+        public NavigableSymbol(IServiceProvider serviceProvider, AnalysisVariable variable, SnapshotSpan span) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             Variable = variable ?? throw new ArgumentNullException(nameof(variable));
             SymbolSpan = span;
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
         public SnapshotSpan SymbolSpan { get; }
 
-        internal IAnalysisVariable Variable { get; }
+        internal AnalysisVariable Variable { get; }
 
         // FYI: This is for future extensibility, it's currently ignored (in 15.3)
         public IEnumerable<INavigableRelationship> Relationships =>

@@ -71,8 +71,8 @@ namespace Microsoft.PythonTools.Refactoring {
                 return false;
             }
 
-            if (extract.cannotExtractMsg != null) {
-                input.CannotExtract(extract.cannotExtractMsg);
+            if (extract.cannotExtractReason != AP.CannotExtractReason.None) {
+                input.CannotExtract(GetCannotExtractMessage(extract.cannotExtractReason));
                 return false;
             }
 
@@ -123,6 +123,31 @@ namespace Microsoft.PythonTools.Refactoring {
             );
 
             return true;
+        }
+
+        private static string GetCannotExtractMessage(AP.CannotExtractReason reason) {
+            switch (reason) {
+                case AP.CannotExtractReason.InvalidTargetSelected:
+                    return Strings.ExtractMethodInvalidTargetSelected;
+                case AP.CannotExtractReason.InvalidExpressionSelected:
+                    return Strings.ExtractMethodInvalidExpressionSelected;
+                case AP.CannotExtractReason.MethodAssignsVariablesAndReturns:
+                    return Strings.ExtractMethodAssignsVariablesAndReturns;
+                case AP.CannotExtractReason.StatementsFromClassDefinition:
+                    return Strings.ExtractMethodStatementsFromClassDefinition;
+                case AP.CannotExtractReason.SelectionContainsBreakButNotEnclosingLoop:
+                    return Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
+                case AP.CannotExtractReason.SelectionContainsContinueButNotEnclosingLoop:
+                    return Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
+                case AP.CannotExtractReason.ContainsYieldExpression:
+                    return Strings.ExtractMethodContainsYieldExpression;
+                case AP.CannotExtractReason.ContainsFromImportStar:
+                    return Strings.ExtractMethodContainsFromImportStar;
+                case AP.CannotExtractReason.SelectionContainsReturn:
+                    return Strings.ExtractMethodSelectionContainsReturn;
+                default:
+                    return null;
+            }
         }
     }
 

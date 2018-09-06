@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
-            return new Ast.AstPythonInterpreterFactory(
+            return InterpreterFactoryCreator.CreateInterpreterFactory(
                 info.Configuration,
                 new InterpreterFactoryCreationOptions {
                     WatchFileSystem = true,

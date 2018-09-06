@@ -343,24 +343,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             DetachKeyboardFilter();
         }
-
-        /// <summary>
-        /// Triggers Statement completion when appropriate keys are pressed
-        /// The key combination is CTRL-J or "."
-        /// The intellisense window is dismissed when one presses ESC key
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnPreprocessKeyDown(object sender, TextCompositionEventArgs e) {
-            // We should only receive pre-process events from our text view
-            Debug.Assert(sender == _textView);
-
-            string text = e.Text;
-            if (text.Length == 1) {
-                HandleChar(text[0]);
-            }
-        }
-
+        
         private string GetTextBeforeCaret(int includeCharsAfter = 0) {
             var maybePt = _textView.Caret.Position.Point.GetPoint(_textView.TextBuffer, PositionAffinity.Predecessor);
             if (!maybePt.HasValue) {
@@ -495,7 +478,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var languageVersion = entry.Analyzer.LanguageVersion;
-            var parser = Parser.CreateParser(new StringReader(text), languageVersion, ParserOptions.Default);
+            var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions());
             var ast = parser.ParseSingleStatement();
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
@@ -557,9 +540,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(FunctionDefinition node) {
                 CommitByDefault = true;
-                if (node.ParametersInternal != null) {
+                if (node.Parameters != null) {
                     CanComplete = false;
-                    foreach (var p in node.ParametersInternal) {
+                    foreach (var p in node.Parameters) {
                         p.Walk(this);
                     }
                 }

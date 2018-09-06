@@ -9,7 +9,7 @@
 // THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 // OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
 // IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-// MERCHANTABLITY OR NON-INFRINGEMENT.
+// MERCHANTABILITY OR NON-INFRINGEMENT.
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
@@ -78,28 +78,17 @@ namespace Microsoft.PythonTools.Parsing {
 
         /// <summary>
         /// Space before the parenthesis in a class declaration.
-        [CodeFormattingExample("class X (object): pass", "class X(object): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Classes)]
-        [CodeFormattingDescription("SpaceBeforeClassDeclarationParenShort", "SpaceBeforeClassDeclarationParenLong")]
-        [CodeFormattingDefaultValue(false)]
+        /// </summary>
         public bool? SpaceBeforeClassDeclarationParen { get; set; }
 
         /// <summary>
         /// Space after the opening paren and before the closing paren in a class definition.
         /// </summary>
-        [CodeFormattingExample("class X( object ): pass", "class X(object): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Classes)]
-        [CodeFormattingDescription("SpaceWithinClassDeclarationParensShort", "SpaceWithinClassDeclarationParensLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinClassDeclarationParens { get; set; }
 
         /// <summary>
         /// Space within empty base class list for a class definition.
         /// </summary>
-        [CodeFormattingExample("class X( ): pass", "class X(): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Classes)]
-        [CodeFormattingDescription("SpaceWithinEmptyBaseClassListShort", "SpaceWithinEmptyBaseClassListLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinEmptyBaseClassList { get; set; }
 
         #endregion
@@ -110,46 +99,27 @@ namespace Microsoft.PythonTools.Parsing {
 
         /// <summary>
         /// Space before the parenthesis in a function declaration.
-        [CodeFormattingExample("def X (): pass", "def X(): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Functions)]
-        [CodeFormattingDescription("SpaceBeforeFunctionDeclarationParenShort", "SpaceBeforeFunctionDeclarationParenLong")]
-        [CodeFormattingDefaultValue(false)]
+        /// </summary>
         public bool? SpaceBeforeFunctionDeclarationParen { get; set; }
 
         /// <summary>
         /// Space after the opening paren and before the closing paren in a function definition.
         /// </summary>
-        [CodeFormattingExample("def X( a, b ): pass", "def X(a, b): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Functions)]
-        [CodeFormattingDescription("SpaceWithinFunctionDeclarationParensShort", "SpaceWithinFunctionDeclarationParensLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinFunctionDeclarationParens { get; set; }
 
         /// <summary>
         /// Space within empty parameter list for a function definition.
         /// </summary>
-        [CodeFormattingExample("def X( ): pass", "def X(): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Functions)]
-        [CodeFormattingDescription("SpaceWithinEmptyParameterListShort", "SpaceWithinEmptyParameterListLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinEmptyParameterList { get; set; }
 
         /// <summary>
         /// Spaces around the equals for a default value in a parameter list.
         /// </summary>
-        [CodeFormattingExample("def X(a = 42): pass", "def X(a=42): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Functions)]
-        [CodeFormattingDescription("SpaceAroundDefaultValueEqualsShort", "SpaceAroundDefaultValueEqualsLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceAroundDefaultValueEquals { get; set; }
 
         /// <summary>
         /// Spaces around the arrow annotation in a function definition.
         /// </summary>
-        [CodeFormattingExample("def X() -> 42: pass", "def X()->42: pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.Functions)]
-        [CodeFormattingDescription("SpaceAroundAnnotationArrowShort", "SpaceAroundAnnotationArrowLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool? SpaceAroundAnnotationArrow { get; set; }
 
         #endregion
@@ -159,75 +129,34 @@ namespace Microsoft.PythonTools.Parsing {
         /// <summary>
         /// Space before the parenthesis in a call expression.
         /// </summary>
-        [CodeFormattingExample("X ()", "X()")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceBeforeCallParenShort", "SpaceBeforeCallParenLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceBeforeCallParen { get; set; }
 
         /// <summary>
         /// Spaces within the parenthesis in a call expression with no arguments.
         /// </summary>
-        [CodeFormattingExample("X( )", "X()")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceWithinEmptyCallArgumentListShort", "SpaceWithinEmptyCallArgumentListLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinEmptyCallArgumentList { get; set; }
 
         /// <summary>
         /// Space within the parenthesis in a call expression.
         /// </summary>
-        [CodeFormattingExample("X( a, b )", "X(a, b)")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceWithinCallParensShort", "SpaceWithinCallParensLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinCallParens { get; set; }
 
         #endregion
 
         #region Other Spacing
 
-        [CodeFormattingExample("( a )", "(a)")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpacesWithinParenthesisExpressionShort", "SpacesWithinParenthesisExpressionLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpacesWithinParenthesisExpression { get; set; }
 
-        [CodeFormattingExample("( )", "()")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceWithinEmptyTupleExpressionShort", "SpaceWithinEmptyTupleExpressionLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinEmptyTupleExpression { get; set; }
 
-        [CodeFormattingExample("( a, b )", "(a, b)")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpacesWithinParenthesisedTupleExpressionShort", "SpacesWithinParenthesisedTupleExpressionLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpacesWithinParenthesisedTupleExpression { get; set; }
 
-        [CodeFormattingExample("[ ]", "[]")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpacesWithinEmptyListExpressionShort", "SpacesWithinEmptyListExpressionLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpacesWithinEmptyListExpression { get; set; }
 
-        [CodeFormattingExample("[ a, b ]", "[a, b]")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpacesWithinListExpressionShort", "SpacesWithinListExpressionLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpacesWithinListExpression { get; set; }
 
-        /* Index Expressions */
-        [CodeFormattingExample("x [i]", "x[i]")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceBeforeIndexBracketShort", "SpaceBeforeIndexBracketLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceBeforeIndexBracket { get; set; }
 
-        [CodeFormattingExample("x[ i ]", "x[i]")]
-        [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpaceWithinIndexBracketsShort", "SpaceWithinIndexBracketsLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinIndexBrackets { get; set; }
 
         public bool? SpaceBeforeComma { get; set; }
@@ -246,38 +175,18 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Operators
 
-        [CodeFormattingExample("a + b", "a+b")]
-        [CodeFormattingCategory(CodeFormattingCategory.Operators)]
-        [CodeFormattingDescription("SpacesAroundBinaryOperatorsShort", "SpacesAroundBinaryOperatorsLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool? SpacesAroundBinaryOperators { get; set; }
 
-        [CodeFormattingExample("a = b", "a=b")]
-        [CodeFormattingCategory(CodeFormattingCategory.Operators)]
-        [CodeFormattingDescription("SpacesAroundAssignmentOperatorShort", "SpacesAroundAssignmentOperatorLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool? SpacesAroundAssignmentOperator { get; set; }
 
         #endregion
 
         #region Statements
 
-        [CodeFormattingExample("import sys\r\nimport pickle", "import sys, pickle")]
-        [CodeFormattingCategory(CodeFormattingCategory.Statements)]
-        [CodeFormattingDescription("ReplaceMultipleImportsWithMultipleStatementsShort", "ReplaceMultipleImportsWithMultipleStatementsLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool ReplaceMultipleImportsWithMultipleStatements { get; set; }
 
-        [CodeFormattingExample("x = 42", "x = 42;")]
-        [CodeFormattingCategory(CodeFormattingCategory.Statements)]
-        [CodeFormattingDescription("RemoveTrailingSemicolonsShort", "RemoveTrailingSemicolonsLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool RemoveTrailingSemicolons { get; set; }
 
-        [CodeFormattingExample("x = 42\r\ny = 100", "x = 42; y = 100")]
-        [CodeFormattingCategory(CodeFormattingCategory.Statements)]
-        [CodeFormattingDescription("BreakMultipleStatementsPerLineShort", "BreakMultipleStatementsPerLineLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool BreakMultipleStatementsPerLine { get; set; }
 
         #endregion
@@ -285,38 +194,18 @@ namespace Microsoft.PythonTools.Parsing {
         /*
         #region New Lines
 
-        [CodeFormattingExample("# Specifies the number of lines which whould appear between top-level classes and functions")]
-        [CodeFormattingCategory(CodeFormattingCategory.NewLines)]
-        [CodeFormattingDescription("LinesBetweenLevelDeclarationsShort", "LinesBetweenLevelDeclarationsLong")]
-        [CodeFormattingDefaultValue(2)]
         public int LinesBetweenLevelDeclarations { get; set; }
 
-        [CodeFormattingExample("# Specifies the number of lines between methods in classes")]
-        [CodeFormattingCategory(CodeFormattingCategory.NewLines)]
-        [CodeFormattingDescription("LinesBetweenMethodsInClassShort", "LinesBetweenMethodsInClassLong")]
-        [CodeFormattingDefaultValue(1)]
         public int LinesBetweenMethodsInClass { get; set; }
 
-        [CodeFormattingExample("class C:\r\n    def f(): pass\r\n\r\n    def g(): pass", "class C:\r\n    def f(): pass\r\n\r\n\r\n    def g(): pass")]
-        [CodeFormattingCategory(CodeFormattingCategory.NewLines)]
-        [CodeFormattingDescription("RemoveExtraLinesBetweenMethodsShort", "RemoveExtraLinesBetweenMethodsLong")]
-        [CodeFormattingDefaultValue(false)]
         public bool RemoveExtraLinesBetweenMethods { get; set; }
 
         #endregion*/
 
         #region Wrapping
 
-        [CodeFormattingExampleResource("WrapCommentsShort_Example", "WrapCommentsLong_Example")]
-        [CodeFormattingCategory(CodeFormattingCategory.Wrapping)]
-        [CodeFormattingDescription("WrapCommentsShort", "WrapCommentsLong")]
-        [CodeFormattingDefaultValue(true)]
         public bool WrapComments { get; set; }
 
-        [CodeFormattingExampleResource("WrappingWidth_Doc")]
-        [CodeFormattingCategory(CodeFormattingCategory.Wrapping)]
-        [CodeFormattingDescription("WrappingWidthShort", "WrappingWidthLong")]
-        [CodeFormattingDefaultValue(80)]
         public int WrappingWidth { get; set; }
 
         #endregion

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// other implicit assignments (such as class and function definitions,
     /// import/from import statements, need to be handled by the derived binder).
     /// </summary>
-    abstract class AssignmentWalker : PythonWalker {
+    public abstract class AssignmentWalker : PythonWalker {
         public abstract AssignedNameWalker Define {
             get;
         }
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
     }
 
-    abstract class AssignedNameWalker : PythonWalkerNonRecursive {
+    public abstract class AssignedNameWalker : PythonWalkerNonRecursive {
 
         public override abstract bool Walk(NameExpression node);
 

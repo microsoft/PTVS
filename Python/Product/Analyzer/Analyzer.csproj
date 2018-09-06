@@ -65,20 +65,23 @@
       <Link>DebugTimer.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Intellisense\AnalysisLimitsConverter.cs" />
     <Compile Include="Intellisense\AnalysisProtocol.cs" />
+    <Compile Include="Intellisense\AssignmentWalker.cs" />
+    <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\MethodExtractor.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\OutOfProcMethodExtractor.cs" />
     <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
+    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
+    <Compile Include="Intellisense\TaggedSpan.cs" />
+    <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>

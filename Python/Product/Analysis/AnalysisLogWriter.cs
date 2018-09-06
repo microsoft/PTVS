@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
-    class AnalysisLogWriter : IDisposable {
+    public class AnalysisLogWriter : IDisposable {
         private readonly DateTime _startTime;
         private readonly string _outputFile;
         private List<LogItem> _items;

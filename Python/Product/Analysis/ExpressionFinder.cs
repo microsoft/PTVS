@@ -585,7 +585,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    sealed class GetExpressionOptions {
+    public sealed class GetExpressionOptions {
         public static GetExpressionOptions Hover => new GetExpressionOptions {
             Calls = true,
             Indexing = true,

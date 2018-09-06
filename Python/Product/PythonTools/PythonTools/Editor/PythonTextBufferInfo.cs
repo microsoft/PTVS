@@ -489,40 +489,6 @@ namespace Microsoft.PythonTools.Editor {
         public LocationTracker LocationTracker => _locationTracker;
 
         /// <summary>
-        /// Gets the smallest expression that fully contains the span.
-        /// </summary>
-        /// <remarks>
-        /// When options specifies the member target, rather than the
-        /// full expression, only the start of the span is used.
-        /// </remarks>
-        public SnapshotSpan? GetExpressionAtPoint(SnapshotSpan span, GetExpressionOptions options) {
-            var timer = new Stopwatch();
-            timer.Start();
-            bool hasError = true, hasResult = false;
-            try {
-                var r = GetExpressionAtPointWorker(span, options);
-                hasResult = r != null;
-                hasError = false;
-                return r;
-            } finally {
-                timer.Stop();
-                try {
-                    int elapsed = (int)Math.Min(timer.ElapsedMilliseconds, int.MaxValue);
-                    if (elapsed > 10) {
-                        Services.Python?.Logger?.LogEvent(Logging.PythonLogEvent.GetExpressionAtPoint, new Logging.GetExpressionAtPointInfo {
-                            Milliseconds = elapsed,
-                            PartialAstLength = span.End.Position,
-                            ExpressionFound = hasResult,
-                            Success = !hasError
-                        });
-                    }
-                } catch (Exception ex) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the first token containing or adjacent to the specified point.
         /// </summary>
         public TrackingTokenInfo? GetTokenAtPoint(SnapshotPoint point) {
@@ -616,64 +582,6 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
         }
-
-        internal bool IsPossibleExpressionAtPoint(SnapshotPoint point) {
-            var line = point.GetContainingLine();
-            int col = point - line.Start;
-            var pt = new SourceLocation(line.LineNumber + 1, col + 1);
-            bool anyTokens = false;
-
-            foreach (var t in GetTokens(line)) {
-                anyTokens = true;
-
-                if (t.Category == TokenCategory.LineComment || t.Category == TokenCategory.Comment) {
-                    if (t.IsAtStart(pt)) {
-                        continue;
-                    }
-                    // We are in or at the end of a comment
-                    return false;
-                }
-
-                // Tokens after this point are only possible expressions if we are looking
-                // at the very end of the token.
-                if (!t.Contains(pt) || t.IsAtEnd(pt)) {
-                    continue;
-                }
-
-                if (t.Category == TokenCategory.StringLiteral) {
-                    // We are in a string literal
-                    return false;
-                }
-            }
-
-            return anyTokens;
-        }
-
-        internal SnapshotSpan? GetExpressionAtPointWorker(SnapshotSpan span, GetExpressionOptions options) {
-            // First do some very quick tokenization to save a full analysis
-            if (!IsPossibleExpressionAtPoint(span.Start)) {
-                return null;
-            }
-
-            if (span.End.GetContainingLine() != span.Start.GetContainingLine() &&
-                !IsPossibleExpressionAtPoint(span.End)) {
-                return null;
-            }
-
-            var sourceSpan = new SnapshotSpanSourceCodeReader(
-                new SnapshotSpan(span.Snapshot, 0, span.End.Position)
-            );
-
-            PythonAst ast;
-            var parser = Parser.CreateParser(sourceSpan, LanguageVersion);
-            ast = parser.ParseFile();
-
-            var finder = new ExpressionFinder(ast, options);
-            var actualExpr = finder.GetExpressionSpan(span.ToSourceSpan());
-
-            return actualExpr?.ToSnapshotSpan(span.Snapshot);
-        }
-
 
         public bool DoNotParse {
             get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);

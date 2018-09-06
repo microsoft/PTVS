@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Changes the description to be less likely to be
         /// ambiguous with other interpreters.
         /// </summary>
-        internal void SwitchToFullDescription() {
+        public void SwitchToFullDescription() {
             bool hasVersion = _description.Contains(Version.ToString());
             bool hasArch = _description.IndexOf(Architecture.ToString(null, CultureInfo.CurrentCulture), StringComparison.CurrentCultureIgnoreCase) >= 0 ||
                 _description.IndexOf(Architecture.ToString("x", CultureInfo.CurrentCulture), StringComparison.CurrentCultureIgnoreCase) >= 0;

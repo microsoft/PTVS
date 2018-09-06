@@ -27,7 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// updated via interfacing w/ the remote process editor APIs, and supports adding additional files to the 
     /// analysis.
     /// </summary>
-    sealed class OutOfProcProjectAnalyzer : IDisposable {
+    public sealed class OutOfProcProjectAnalyzer : IDisposable {
         private readonly LS.Server _server;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
         private readonly Action<string> _log;
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly Connection _connection;
 
-        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {
+        public OutOfProcProjectAnalyzer(Stream writer, Stream reader, Action<string> log) {
             _server = new LS.Server();
             _server.OnParseComplete += OnParseComplete;
             _server.OnAnalysisComplete += OnAnalysisComplete;
@@ -1498,14 +1498,14 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        internal Task ProcessMessages() {
+        public Task ProcessMessages() {
             return _connection.ProcessMessages();
         }
 
         private Response SetAnalysisOptions(AP.SetAnalysisOptionsRequest request) {
             Options = request.options ?? new AP.AnalysisOptions();
 
-            Project.Limits = new AnalysisLimits(Options.analysisLimits);
+            Project.Limits = AnalysisLimitsConverter.FromDictionary(Options.analysisLimits);
             _server._parseQueue.InconsistentIndentation = LS.DiagnosticsErrorSink.GetSeverity(Options.indentationInconsistencySeverity);
             _server._parseQueue.TaskCommentMap = Options.commentTokens;
             _server.Analyzer.SetTypeStubPaths(Options.typeStubPaths);
@@ -1645,13 +1645,5 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        internal void RemoveReference(ProjectAssemblyReference reference) {
-            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
-            if (interp != null) {
-                interp.RemoveReference(reference);
-            }
-        }
-
     }
 }

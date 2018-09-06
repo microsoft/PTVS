@@ -82,13 +82,10 @@
     <Compile Include="Infrastructure\TaskCompletionSourceExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
-    <Compile Include="Infrastructure\UriEqualityComparer.cs" />
     <Compile Include="Infrastructure\UriExtensions.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
-    <Compile Include="Intellisense\AssignmentWalker.cs" />
     <Compile Include="DocumentChange.cs" />
-    <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
     <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
     <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
@@ -99,11 +96,8 @@
     <Compile Include="Intellisense\LineInfo.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
     <Compile Include="Intellisense\LongestCommonSequence.cs" />
-    <Compile Include="Intellisense\OutliningWalker.cs" />
     <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
-    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
     <Compile Include="Intellisense\SelectionTarget.cs" />
-    <Compile Include="Intellisense\TaggedSpan.cs" />
     <Compile Include="Intellisense\VersionCookie.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
@@ -210,13 +204,8 @@
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\Ast\AwaitExpression.cs" />
-    <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingOptions.cs" />
     <Compile Include="IdDispenser.cs" />
-    <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
     <Compile Include="Interpreter\ProjectReference.cs" />
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
@@ -230,7 +219,6 @@
     <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="PythonKeywords.cs" />
-    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -238,7 +226,6 @@
     </Compile>
     <Compile Include="ReadOnlyWrapper.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
-    <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="ILocationResolver.cs" />
     <Compile Include="Interpreter\ILocatedMember.cs" />

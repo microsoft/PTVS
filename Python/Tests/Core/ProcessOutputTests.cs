@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace AnalysisTests {
+namespace PythonToolsTests {
     [TestClass]
     public class ProcessOutputTests {
         [TestInitialize]

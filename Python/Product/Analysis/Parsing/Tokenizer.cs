@@ -2690,7 +2690,7 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
     }
 
-    enum NewLineKind {
+    public enum NewLineKind {
         None,
         LineFeed,
         CarriageReturn,
@@ -2698,7 +2698,7 @@ namespace Microsoft.PythonTools.Parsing {
     }
 
     [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
-    struct NewLineLocation : IComparable<NewLineLocation> {
+    public struct NewLineLocation : IComparable<NewLineLocation> {
         private readonly int _endIndex;
         private readonly NewLineKind _kind;
 
@@ -2801,7 +2801,7 @@ namespace Microsoft.PythonTools.Parsing {
         public override string ToString() => $"<NewLineLocation({_endIndex}, NewLineKind.{_kind})>";
     }
 
-    static class NewLineKindExtensions {
+    public static class NewLineKindExtensions {
         public static int GetSize(this NewLineKind kind) {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;

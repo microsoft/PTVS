@@ -9,7 +9,7 @@
 // THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 // OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
 // IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-// MERCHANTABLITY OR NON-INFRINGEMENT.
+// MERCHANTABILITY OR NON-INFRINGEMENT.
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// but <c>a.b</c> is (and hence <c>a</c> is not, per the earlier rule).
     /// </para>
     /// </remarks>
-    internal class ProximityExpressionWalker : PythonWalker {
+    public class ProximityExpressionWalker : PythonWalker {
         private readonly PythonAst _ast;
         private readonly int _startLine, _endLine;
 
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // added, because it is a subexpression of this key that we wanted to exclude. For example, given A.B.C,
         // we will first walk A and add it as a key with null as value; then walk A.B, remove A, and add A.B with
         // A as value; then walk A.B.C, remove A.B, and add A.B.C with A.B as value. 
-        // The information about the exluded node is used by PostWalk(CallExpression).
+        // The information about the excluded node is used by PostWalk(CallExpression).
         private readonly Dictionary<Expression, Expression> _expressions = new Dictionary<Expression, Expression>();
 
         public ProximityExpressionWalker(PythonAst ast, int startLine, int endLine) {

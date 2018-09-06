@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<IAnalysisVariable> analysis) {
+        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> analysis) {
             Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
             GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<IAnalysisVariable> variables, out Dictionary<LocationInfo, SimpleLocationInfo> definitions, out Dictionary<LocationInfo, SimpleLocationInfo> references, out Dictionary<LocationInfo, SimpleLocationInfo> values) {
+        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> variables, out Dictionary<LocationInfo, SimpleLocationInfo> definitions, out Dictionary<LocationInfo, SimpleLocationInfo> references, out Dictionary<LocationInfo, SimpleLocationInfo> values) {
             references = new Dictionary<LocationInfo, SimpleLocationInfo>();
             definitions = new Dictionary<LocationInfo, SimpleLocationInfo>();
             values = new Dictionary<LocationInfo, SimpleLocationInfo>();

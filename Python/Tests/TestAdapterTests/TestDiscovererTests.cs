@@ -238,7 +238,7 @@ class TestBase(unittest.TestCase):
         }
 
         private PythonAnalyzer MakeTestAnalyzer() {
-            return PythonAnalyzer.CreateSynchronously(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+            return PythonAnalyzer.CreateAsync(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7))).GetAwaiter().GetResult();
         }
 
         private IPythonProjectEntry AddModule(PythonAnalyzer analyzer, string moduleName, string code, string moduleFile = null) {

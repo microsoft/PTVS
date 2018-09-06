@@ -35,7 +35,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CancellationTokens = Microsoft.PythonTools.Infrastructure.CancellationTokens;
 
 namespace AnalysisTests {
     [TestClass]
@@ -672,7 +671,7 @@ class D(object):
             var state = CreateAnalyzer(DefaultFactoryV3);
             var mod1 = state.AddModule("mod1", text1);
             var mod2 = state.AddModule("mod2", text2);
-            state.WaitForAnalysis(CancellationTokens.After15s);
+            state.WaitForAnalysis(new CancellationTokenSource(15000).Token);
 
             state.AssertReferences(mod2, "D", 0,
                 new VariableLocation(2, 1, VariableType.Value, "mod2"),
@@ -7013,10 +7012,10 @@ def h(x): return g(x)";
             var analyzer = CreateAnalyzer();
             var entryA = analyzer.AddModule("A", modA);
             var entryB = analyzer.AddModule("B", modB);
-            analyzer.WaitForAnalysis(CancellationTokens.After5s);
+            analyzer.WaitForAnalysis(new CancellationTokenSource(5000).Token);
             for (int i = 100; i > 0; --i) {
                 entryA.Analyze(CancellationToken.None, true);
-                analyzer.WaitForAnalysis(CancellationTokens.After5s);
+                analyzer.WaitForAnalysis(new CancellationTokenSource(5000).Token);
             }
             var g = analyzer.GetValue<FunctionInfo>(entryB, "g");
             Assert.AreEqual(1, g.References.Count());

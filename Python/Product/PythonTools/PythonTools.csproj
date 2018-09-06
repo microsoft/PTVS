@@ -273,6 +273,7 @@
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Editor\TokenizerExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
+    <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
@@ -292,11 +293,13 @@
     <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\UriEqualityComparer.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
+    <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
     <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />

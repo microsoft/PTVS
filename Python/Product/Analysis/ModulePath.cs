@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
-    internal struct ModulePath {
+    public struct ModulePath {
         public static readonly ModulePath Empty = new ModulePath(null, null, null);
 
         /// <summary>
@@ -38,17 +38,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// The name by which the module can be imported in Python code.
         /// </summary>
-        public string FullName { get; set; }
+        public string FullName { get; }
 
         /// <summary>
         /// The file containing the source for the module.
         /// </summary>
-        public string SourceFile { get; set; }
+        public string SourceFile { get; }
 
         /// <summary>
         /// The path to the library containing the module.
         /// </summary>
-        public string LibraryPath { get; set; }
+        public string LibraryPath { get; }
 
         /// <summary>
         /// The last portion of <see cref="FullName"/>.
@@ -687,7 +687,7 @@ namespace Microsoft.PythonTools.Analysis {
             out ModulePath modulePath
         ) => FromBasePathAndName_NoThrow(basePath, moduleName, null, null, requireInitPy, out modulePath, out _, out _, out _);
 
-        internal static bool FromBasePathAndFile_NoThrow(
+        public static bool FromBasePathAndFile_NoThrow(
             string basePath,
             string sourceFile,
             out ModulePath modulePath
