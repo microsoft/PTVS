@@ -14,29 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
 namespace Microsoft.PythonTools.Parsing {
-    /// <summary>
-    /// Provides a category for a code formatting option.  Categories group various options
-    /// based upon what syntactic elements they alter.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public sealed class CodeFormattingCategoryAttribute : Attribute {
-        private readonly CodeFormattingCategory _category;
-
-        internal CodeFormattingCategoryAttribute(CodeFormattingCategory category) {
-            _category = category;
-        }
-
-        public CodeFormattingCategory Category {
-            get {
-                return _category;
-            }
-        }
-    }
-
-    public enum CodeFormattingCategory {
+    internal enum CodeFormattingCategory {
         None,
         /// <summary>
         /// The category applies to new line spacing between source elements.

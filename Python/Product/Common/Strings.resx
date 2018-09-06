@@ -2293,4 +2293,187 @@ Expand selection to the full expression?</value>
   <data name="GeneralPaneName" xml:space="preserve">
     <value>General</value>
   </data>
+  <data name="SpaceBeforeClassDeclarationParenShort" xml:space="preserve">
+    <value>Insert space between a class name and bases list</value>
+  </data>
+  <data name="SpaceBeforeClassDeclarationParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinClassDeclarationParensShort" xml:space="preserve">
+    <value>Insert space within bases list parentheses</value>
+  </data>
+  <data name="SpaceWithinClassDeclarationParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of a bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyBaseClassListShort" xml:space="preserve">
+    <value>Insert space within empty bases list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyBaseClassListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeFunctionDeclarationParenShort" xml:space="preserve">
+    <value>Insert space between a function name and parameter list in declarations</value>
+  </data>
+  <data name="SpaceBeforeFunctionDeclarationParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinFunctionDeclarationParensShort" xml:space="preserve">
+    <value>Insert space within parameter list parentheses</value>
+  </data>
+  <data name="SpaceWithinFunctionDeclarationParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of a parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyParameterListShort" xml:space="preserve">
+    <value>Insert space within empty parameter list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyParameterListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceAroundDefaultValueEqualsShort" xml:space="preserve">
+    <value>Insert spaces around '=' in default parameter values</value>
+  </data>
+  <data name="SpaceAroundDefaultValueEqualsLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '=' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceAroundAnnotationArrowShort" xml:space="preserve">
+    <value>Insert space before and after return annotation operators</value>
+  </data>
+  <data name="SpaceAroundAnnotationArrowLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '-&gt;' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeCallParenShort" xml:space="preserve">
+    <value>Insert space between the function name and argument list in calls</value>
+  </data>
+  <data name="SpaceBeforeCallParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyCallArgumentListShort" xml:space="preserve">
+    <value>Insert space within empty argument list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyCallArgumentListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinCallParensShort" xml:space="preserve">
+    <value>Insert space within argument list parentheses</value>
+  </data>
+  <data name="SpaceWithinCallParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinParenthesisExpressionShort" xml:space="preserve">
+    <value>Insert space within parentheses of expression</value>
+  </data>
+  <data name="SpacesWithinParenthesisExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an expression. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyTupleExpressionShort" xml:space="preserve">
+    <value>Insert space within empty tuple parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyTupleExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinParenthesisedTupleExpressionShort" xml:space="preserve">
+    <value>Insert space within tuple parentheses</value>
+  </data>
+  <data name="SpacesWithinParenthesisedTupleExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of the tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinEmptyListExpressionShort" xml:space="preserve">
+    <value>Insert space within empty square brackets</value>
+  </data>
+  <data name="SpacesWithinEmptyListExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added between the open square bracket and the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinListExpressionShort" xml:space="preserve">
+    <value>Insert spaces within square brackets of lists</value>
+  </data>
+  <data name="SpacesWithinListExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open square bracket and before the close square bracket of the list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeIndexBracketShort" xml:space="preserve">
+    <value>Insert space before open square bracket</value>
+  </data>
+  <data name="SpaceBeforeIndexBracketLong" xml:space="preserve">
+    <value>If checked, a space is added before an open square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinIndexBracketsShort" xml:space="preserve">
+    <value>Insert space within square brackets</value>
+  </data>
+  <data name="SpaceWithinIndexBracketsLong" xml:space="preserve">
+    <value>If checked, a space is added after the open square bracket and before the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesAroundBinaryOperatorsShort" xml:space="preserve">
+    <value>Insert spaces around binary operators</value>
+  </data>
+  <data name="SpacesAroundBinaryOperatorsLong" xml:space="preserve">
+    <value>If checked, a space is added before and after binary operators. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesAroundAssignmentOperatorShort" xml:space="preserve">
+    <value>Insert spaces around assignments</value>
+  </data>
+  <data name="SpacesAroundAssignmentOperatorLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '=' operators in assignments. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="ReplaceMultipleImportsWithMultipleStatementsShort" xml:space="preserve">
+    <value>Place imported modules on new line</value>
+  </data>
+  <data name="ReplaceMultipleImportsWithMultipleStatementsLong" xml:space="preserve">
+    <value>If checked, import statements with multiple modules are separated onto individual lines. If unchecked, import statements with multiple modules are not modified.</value>
+  </data>
+  <data name="RemoveTrailingSemicolonsShort" xml:space="preserve">
+    <value>Remove unnecessary semicolons</value>
+  </data>
+  <data name="RemoveTrailingSemicolonsLong" xml:space="preserve">
+    <value>If checked, semicolons at the end of lines will be removed. If unchecked, unnecessary semicolons are not modified.</value>
+  </data>
+  <data name="BreakMultipleStatementsPerLineShort" xml:space="preserve">
+    <value>Place statements on separate lines</value>
+  </data>
+  <data name="BreakMultipleStatementsPerLineLong" xml:space="preserve">
+    <value>If checked, statements separated by semicolons are moved onto individual lines. If unchecked, lines with multiple statements are not modified.</value>
+  </data>
+  <data name="LinesBetweenLevelDeclarationsShort" xml:space="preserve">
+    <value>Lines between top-level declarations</value>
+  </data>
+  <data name="LinesBetweenLevelDeclarationsLong" xml:space="preserve">
+    <value>The number of empty lines to include between class or function declarations at the top level of a module.</value>
+  </data>
+  <data name="LinesBetweenMethodsInClassShort" xml:space="preserve">
+    <value>Lines between class member declarations</value>
+  </data>
+  <data name="LinesBetweenMethodsInClassLong" xml:space="preserve">
+    <value>The number of empty lines to insert between method or class declarations within a class.</value>
+  </data>
+  <data name="RemoveExtraLinesBetweenMethodsShort" xml:space="preserve">
+    <value>Remove blank lines between methods</value>
+  </data>
+  <data name="RemoveExtraLinesBetweenMethodsLong" xml:space="preserve">
+    <value>If checked, removes blank lines between methods and inserts the number specified below. Otherwise, lines between methods are not modified.</value>
+  </data>
+  <data name="WrapCommentsShort" xml:space="preserve">
+    <value>Wrap comments that are too wide</value>
+  </data>
+  <data name="WrapCommentsLong" xml:space="preserve">
+    <value>If checked, comments are wrapped to the specified width. If unchecked, comments are not modified.</value>
+  </data>
+  <data name="WrappingWidthShort" xml:space="preserve">
+    <value>Maximum comment width</value>
+  </data>
+  <data name="WrappingWidthLong" xml:space="preserve">
+    <value>The number of the last column that should include comment text. Words after this column are moved to the following line.</value>
+  </data>
+  <data name="WrapCommentsExample_On" xml:space="preserve">
+    <value># Wrapped to 40 columns:
+# There should be one-- and preferably
+# only one --obvious way to do it.</value>
+    <comment>Line breaks and # symbols must be preserved. There must be no more than 40 characters on each line of the localized text (except for the first line)</comment>
+  </data>
+  <data name="WrapCommentsExample_Off" xml:space="preserve">
+    <value># Not wrapped:
+# There should be one-- and preferably only one --obvious way to do it.</value>
+    <comment>Line breaks and # symbols must be preserved. No new line breaks should be added.</comment>
+  </data>
+  <data name="WrappingWidthExample" xml:space="preserve">
+    <value># Sets the width for wrapping comments
+# and documentation strings.</value>
+  </data>
 </root>

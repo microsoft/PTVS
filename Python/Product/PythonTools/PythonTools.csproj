@@ -299,6 +299,7 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
+    <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
     <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />

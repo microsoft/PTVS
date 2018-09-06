@@ -612,6 +612,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If checked, statements separated by semicolons are moved onto individual lines. If unchecked, lines with multiple statements are not modified..
+        /// </summary>
+        public static string BreakMultipleStatementsPerLineLong {
+            get {
+                return ResourceManager.GetString("BreakMultipleStatementsPerLineLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place statements on separate lines.
+        /// </summary>
+        public static string BreakMultipleStatementsPerLineShort {
+            get {
+                return ResourceManager.GetString("BreakMultipleStatementsPerLineShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Builtins.
         /// </summary>
         public static string BuiltinClassificationType {
@@ -3528,6 +3546,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The number of empty lines to include between class or function declarations at the top level of a module..
+        /// </summary>
+        public static string LinesBetweenLevelDeclarationsLong {
+            get {
+                return ResourceManager.GetString("LinesBetweenLevelDeclarationsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lines between top-level declarations.
+        /// </summary>
+        public static string LinesBetweenLevelDeclarationsShort {
+            get {
+                return ResourceManager.GetString("LinesBetweenLevelDeclarationsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of empty lines to insert between method or class declarations within a class..
+        /// </summary>
+        public static string LinesBetweenMethodsInClassLong {
+            get {
+                return ResourceManager.GetString("LinesBetweenMethodsInClassLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lines between class member declarations.
+        /// </summary>
+        public static string LinesBetweenMethodsInClassShort {
+            get {
+                return ResourceManager.GetString("LinesBetweenMethodsInClassShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
         public static string MisconfiguredEnvironment {
@@ -4506,11 +4560,47 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If checked, removes blank lines between methods and inserts the number specified below. Otherwise, lines between methods are not modified..
+        /// </summary>
+        public static string RemoveExtraLinesBetweenMethodsLong {
+            get {
+                return ResourceManager.GetString("RemoveExtraLinesBetweenMethodsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove blank lines between methods.
+        /// </summary>
+        public static string RemoveExtraLinesBetweenMethodsShort {
+            get {
+                return ResourceManager.GetString("RemoveExtraLinesBetweenMethodsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove Interactive Prompts.
         /// </summary>
         public static string RemoveReplPrompts {
             get {
                 return ResourceManager.GetString("RemoveReplPrompts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, semicolons at the end of lines will be removed. If unchecked, unnecessary semicolons are not modified..
+        /// </summary>
+        public static string RemoveTrailingSemicolonsLong {
+            get {
+                return ResourceManager.GetString("RemoveTrailingSemicolonsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove unnecessary semicolons.
+        /// </summary>
+        public static string RemoveTrailingSemicolonsShort {
+            get {
+                return ResourceManager.GetString("RemoveTrailingSemicolonsShort", resourceCulture);
             }
         }
         
@@ -4628,6 +4718,24 @@ namespace Microsoft.PythonTools {
         public static string RenameVariable_UnableGetExpressionAnalysis {
             get {
                 return ResourceManager.GetString("RenameVariable_UnableGetExpressionAnalysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, import statements with multiple modules are separated onto individual lines. If unchecked, import statements with multiple modules are not modified..
+        /// </summary>
+        public static string ReplaceMultipleImportsWithMultipleStatementsLong {
+            get {
+                return ResourceManager.GetString("ReplaceMultipleImportsWithMultipleStatementsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place imported modules on new line.
+        /// </summary>
+        public static string ReplaceMultipleImportsWithMultipleStatementsShort {
+            get {
+                return ResourceManager.GetString("ReplaceMultipleImportsWithMultipleStatementsShort", resourceCulture);
             }
         }
         
@@ -5264,6 +5372,366 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added before and after &apos;-&gt;&apos; operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceAroundAnnotationArrowLong {
+            get {
+                return ResourceManager.GetString("SpaceAroundAnnotationArrowLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space before and after return annotation operators.
+        /// </summary>
+        public static string SpaceAroundAnnotationArrowShort {
+            get {
+                return ResourceManager.GetString("SpaceAroundAnnotationArrowShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added before and after &apos;=&apos; operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceAroundDefaultValueEqualsLong {
+            get {
+                return ResourceManager.GetString("SpaceAroundDefaultValueEqualsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert spaces around &apos;=&apos; in default parameter values.
+        /// </summary>
+        public static string SpaceAroundDefaultValueEqualsShort {
+            get {
+                return ResourceManager.GetString("SpaceAroundDefaultValueEqualsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added between the name and opening parenthesis of the argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceBeforeCallParenLong {
+            get {
+                return ResourceManager.GetString("SpaceBeforeCallParenLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space between the function name and argument list in calls.
+        /// </summary>
+        public static string SpaceBeforeCallParenShort {
+            get {
+                return ResourceManager.GetString("SpaceBeforeCallParenShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added between the name and opening parenthesis of the bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceBeforeClassDeclarationParenLong {
+            get {
+                return ResourceManager.GetString("SpaceBeforeClassDeclarationParenLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space between a class name and bases list.
+        /// </summary>
+        public static string SpaceBeforeClassDeclarationParenShort {
+            get {
+                return ResourceManager.GetString("SpaceBeforeClassDeclarationParenShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added between the name and opening parenthesis of the parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceBeforeFunctionDeclarationParenLong {
+            get {
+                return ResourceManager.GetString("SpaceBeforeFunctionDeclarationParenLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space between a function name and parameter list in declarations.
+        /// </summary>
+        public static string SpaceBeforeFunctionDeclarationParenShort {
+            get {
+                return ResourceManager.GetString("SpaceBeforeFunctionDeclarationParenShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added before an open square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceBeforeIndexBracketLong {
+            get {
+                return ResourceManager.GetString("SpaceBeforeIndexBracketLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space before open square bracket.
+        /// </summary>
+        public static string SpaceBeforeIndexBracketShort {
+            get {
+                return ResourceManager.GetString("SpaceBeforeIndexBracketShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added before and after &apos;=&apos; operators in assignments. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesAroundAssignmentOperatorLong {
+            get {
+                return ResourceManager.GetString("SpacesAroundAssignmentOperatorLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert spaces around assignments.
+        /// </summary>
+        public static string SpacesAroundAssignmentOperatorShort {
+            get {
+                return ResourceManager.GetString("SpacesAroundAssignmentOperatorShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added before and after binary operators. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesAroundBinaryOperatorsLong {
+            get {
+                return ResourceManager.GetString("SpacesAroundBinaryOperatorsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert spaces around binary operators.
+        /// </summary>
+        public static string SpacesAroundBinaryOperatorsShort {
+            get {
+                return ResourceManager.GetString("SpacesAroundBinaryOperatorsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added between the open square bracket and the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesWithinEmptyListExpressionLong {
+            get {
+                return ResourceManager.GetString("SpacesWithinEmptyListExpressionLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within empty square brackets.
+        /// </summary>
+        public static string SpacesWithinEmptyListExpressionShort {
+            get {
+                return ResourceManager.GetString("SpacesWithinEmptyListExpressionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open square bracket and before the close square bracket of the list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesWithinListExpressionLong {
+            get {
+                return ResourceManager.GetString("SpacesWithinListExpressionLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert spaces within square brackets of lists.
+        /// </summary>
+        public static string SpacesWithinListExpressionShort {
+            get {
+                return ResourceManager.GetString("SpacesWithinListExpressionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of the tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesWithinParenthesisedTupleExpressionLong {
+            get {
+                return ResourceManager.GetString("SpacesWithinParenthesisedTupleExpressionLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within tuple parentheses.
+        /// </summary>
+        public static string SpacesWithinParenthesisedTupleExpressionShort {
+            get {
+                return ResourceManager.GetString("SpacesWithinParenthesisedTupleExpressionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an expression. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpacesWithinParenthesisExpressionLong {
+            get {
+                return ResourceManager.GetString("SpacesWithinParenthesisExpressionLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within parentheses of expression.
+        /// </summary>
+        public static string SpacesWithinParenthesisExpressionShort {
+            get {
+                return ResourceManager.GetString("SpacesWithinParenthesisExpressionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinCallParensLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinCallParensLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within argument list parentheses.
+        /// </summary>
+        public static string SpaceWithinCallParensShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinCallParensShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of a bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinClassDeclarationParensLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinClassDeclarationParensLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within bases list parentheses.
+        /// </summary>
+        public static string SpaceWithinClassDeclarationParensShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinClassDeclarationParensShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an empty bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinEmptyBaseClassListLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyBaseClassListLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within empty bases list parentheses.
+        /// </summary>
+        public static string SpaceWithinEmptyBaseClassListShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyBaseClassListShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an empty argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinEmptyCallArgumentListLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyCallArgumentListLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within empty argument list parentheses.
+        /// </summary>
+        public static string SpaceWithinEmptyCallArgumentListShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyCallArgumentListShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an empty parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinEmptyParameterListLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyParameterListLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within empty parameter list parentheses.
+        /// </summary>
+        public static string SpaceWithinEmptyParameterListShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyParameterListShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of an empty tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinEmptyTupleExpressionLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyTupleExpressionLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within empty tuple parentheses.
+        /// </summary>
+        public static string SpaceWithinEmptyTupleExpressionShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinEmptyTupleExpressionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open parenthesis and before the close parenthesis of a parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinFunctionDeclarationParensLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinFunctionDeclarationParensLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within parameter list parentheses.
+        /// </summary>
+        public static string SpaceWithinFunctionDeclarationParensShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinFunctionDeclarationParensShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, a space is added after the open square bracket and before the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified..
+        /// </summary>
+        public static string SpaceWithinIndexBracketsLong {
+            get {
+                return ResourceManager.GetString("SpaceWithinIndexBracketsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert space within square brackets.
+        /// </summary>
+        public static string SpaceWithinIndexBracketsShort {
+            get {
+                return ResourceManager.GetString("SpaceWithinIndexBracketsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified pattern is an invalid regular expression..
         /// </summary>
         public static string StaticPatternError {
@@ -5838,6 +6306,73 @@ namespace Microsoft.PythonTools {
         public static string WebPIReferenceDeprecated {
             get {
                 return ResourceManager.GetString("WebPIReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Not wrapped:
+        ///# There should be one-- and preferably only one --obvious way to do it..
+        /// </summary>
+        public static string WrapCommentsExample_Off {
+            get {
+                return ResourceManager.GetString("WrapCommentsExample_Off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Wrapped to 40 columns:
+        ///# There should be one-- and preferably
+        ///# only one --obvious way to do it..
+        /// </summary>
+        public static string WrapCommentsExample_On {
+            get {
+                return ResourceManager.GetString("WrapCommentsExample_On", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked, comments are wrapped to the specified width. If unchecked, comments are not modified..
+        /// </summary>
+        public static string WrapCommentsLong {
+            get {
+                return ResourceManager.GetString("WrapCommentsLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrap comments that are too wide.
+        /// </summary>
+        public static string WrapCommentsShort {
+            get {
+                return ResourceManager.GetString("WrapCommentsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Sets the width for wrapping comments
+        ///# and documentation strings..
+        /// </summary>
+        public static string WrappingWidthExample {
+            get {
+                return ResourceManager.GetString("WrappingWidthExample", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of the last column that should include comment text. Words after this column are moved to the following line..
+        /// </summary>
+        public static string WrappingWidthLong {
+            get {
+                return ResourceManager.GetString("WrappingWidthLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum comment width.
+        /// </summary>
+        public static string WrappingWidthShort {
+            get {
+                return ResourceManager.GetString("WrappingWidthShort", resourceCulture);
             }
         }
         

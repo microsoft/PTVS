@@ -204,10 +204,6 @@
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\Ast\AwaitExpression.cs" />
-    <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
-    <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingOptions.cs" />
     <Compile Include="IdDispenser.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />

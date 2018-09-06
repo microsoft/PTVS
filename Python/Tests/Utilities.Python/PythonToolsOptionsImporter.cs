@@ -52,10 +52,7 @@ namespace TestUtilities.Python {
             .Select(CreateCodeFormattingOptionImporter)
             .ToArray();
 
-        private static bool HasCategory(PropertyInfo propertyInfo) => propertyInfo
-            .GetCustomAttributes(typeof(CodeFormattingCategoryAttribute), false)
-            .Any();
-
+        private static bool HasCategory(PropertyInfo propertyInfo) => OptionCategory.GetOption(propertyInfo.Name) != null;
 
         private static Action<IPythonToolsOptionsService, CodeFormattingOptions> CreateCodeFormattingOptionImporter(PropertyInfo propertyInfo) {
             var serviceInstance = Expression.Parameter(typeof(IPythonToolsOptionsService));
