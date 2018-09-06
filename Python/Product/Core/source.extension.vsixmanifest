@@ -35,7 +35,6 @@
         <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSCommon;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSCommon;_GetAssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Workspace;_GetAssemblyName|" />
-        <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.LiveShare;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.LiveShare;_GetAssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" />
@@ -44,7 +43,6 @@
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.TestAdapter;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.XamlDesignerSupport;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" />
-        <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.LiveShare;_GetTargetPath|" />
         <Asset Type="UnitTestExtension" Path="|Microsoft.PythonTools.TestAdapter.Executor;_GetTargetPath|" />
         <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
         <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />

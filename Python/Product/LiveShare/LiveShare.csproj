@@ -33,17 +33,18 @@
     <RootNamespace>Microsoft</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.LiveShare</AssemblyName>
     <ProjectGuid>{4065A3C8-0E5E-42AC-9D94-509AA90C90E9}</ProjectGuid>
-    <UseVSSDK>false</UseVSSDK>
-    <CreateVsixContainer>false</CreateVsixContainer>
-    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
-    <DeployExtension>false</DeployExtension>
-    <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
+    <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
+    <CopyVsixManifestToOutput>true</CopyVsixManifestToOutput>
+    <DeployExtension>true</DeployExtension>
+    <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -60,17 +61,34 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Cascade.LanguageServices.Common">
-      <Version>0.3.536</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Cascade.Contracts">
-      <Version>0.3.536</Version>
-    </PackageReference>
+    <Reference Include="Microsoft.Cascade.LanguageServices.Common">
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.LanguageServices.Common\lib\net461\Microsoft.Cascade.LanguageServices.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cascade.Common">
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.Common\lib\net461\Microsoft.Cascade.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cascade.Client">
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.Client\lib\net461\Microsoft.Cascade.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Cascade.Contracts">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Cascade.Contracts\lib\net461\Microsoft.VisualStudio.Cascade.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Threading" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <!-- <Reference Include="Microsoft.VisualStudio.Text.UI" /> -->
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonLanguageClient.cs" />
     <Compile Include="PythonLanguageClientFactory.cs" />
     <Compile Include="PythonLanguageServiceProviderCallback.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="source.extension.vsixmanifest" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

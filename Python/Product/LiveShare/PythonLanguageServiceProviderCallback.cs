@@ -5,6 +5,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.Cascade.LanguageServices.Common;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
@@ -33,14 +34,16 @@ namespace Microsoft
         {
             if (method.Name == Methods.Initialize.Name)
             {
-                object capabilities = new ServerCapabilities { CompletionProvider = new VisualStudio.LanguageServer.Protocol.CompletionOptions { TriggerCharacters = new[] { "." } } };
-                return (TOut)capabilities;
+                var capabilities = new ServerCapabilities { CompletionProvider = new VisualStudio.LanguageServer.Protocol.CompletionOptions { TriggerCharacters = new[] { "." } } };
+                object result = new InitializeResult { Capabilities = capabilities };
+                return (TOut)(result);
             }
             if (method.Name == Methods.TextDocumentCompletion.Name)
             {
                 var completionParams = param as CompletionParams;
                 var filePath = completionParams.TextDocument.Uri.LocalPath;
-                VsProjectAnalyzer analyzer = await this.serviceProvider.FindAnalyzerAsync(filePath) as VsProjectAnalyzer;
+                VsProjectAnalyzer analyzer = (await serviceProvider.FindAllAnalyzersForFile(filePath)).FirstOrDefault() as VsProjectAnalyzer;
+                
                 var lsCompletionParams = JObject.FromObject(completionParams).ToObject<LS.CompletionParams>();
                 object list = await analyzer.SendLanguageServerRequestAsync<LS.CompletionParams, LS.CompletionList>(method.Name, lsCompletionParams);
                 return (TOut)list;
