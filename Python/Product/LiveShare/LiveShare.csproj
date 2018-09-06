@@ -35,6 +35,7 @@
     <ProjectGuid>{4065A3C8-0E5E-42AC-9D94-509AA90C90E9}</ProjectGuid>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
     <CopyVsixManifestToOutput>true</CopyVsixManifestToOutput>
     <DeployExtension>true</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
@@ -62,16 +63,16 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Cascade.LanguageServices.Common">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.LanguageServices.Common\lib\net461\Microsoft.Cascade.LanguageServices.Common.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.LanguageServices.Common.0.3.536\lib\net461\Microsoft.Cascade.LanguageServices.Common.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Cascade.Common">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.Common\lib\net461\Microsoft.Cascade.Common.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.Common.0.3.536\lib\net461\Microsoft.Cascade.Common.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Cascade.Client">
-      <HintPath>$(PackagesPath)\Microsoft.Cascade.Client\lib\net461\Microsoft.Cascade.Client.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.Cascade.Client.0.3.536\lib\net461\Microsoft.Cascade.Client.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Cascade.Contracts">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Cascade.Contracts\lib\net461\Microsoft.VisualStudio.Cascade.Contracts.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Cascade.Contracts.0.3.536\lib\net461\Microsoft.VisualStudio.Cascade.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
@@ -88,7 +89,9 @@
     <Compile Include="PythonLanguageServiceProviderCallback.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="source.extension.vsixmanifest" />
+    <None Include="source.extension.vsixmanifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
