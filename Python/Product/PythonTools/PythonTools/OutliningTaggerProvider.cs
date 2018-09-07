@@ -47,6 +47,11 @@ namespace Microsoft.PythonTools {
         #region ITaggerProvider Members
 
         public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag {
+            // TODO: Replace with actual constant when available
+            if (buffer.ContentType.IsOfType("code-languageserver-preview")) {
+                return null;
+            }
+
             return (ITagger<T>)_services.GetBufferInfo(buffer)
                 .GetOrCreateSink(typeof(OutliningTagger), _ => new OutliningTagger(_services));
         }

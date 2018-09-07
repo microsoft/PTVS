@@ -91,6 +91,10 @@ namespace Microsoft.PythonTools {
                 _categoryMap = FillCategoryMap(_services.ClassificationTypeRegistryService);
             }
 
+            if (buffer.ContentType.IsOfType("code-languageserver-preview")) {
+                return null;
+            }
+
             return _services.GetBufferInfo(buffer)
                 .GetOrCreateSink(typeof(PythonClassifier), _ => new PythonClassifier(this));
         }

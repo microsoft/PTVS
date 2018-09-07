@@ -52,6 +52,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
+            // TODO: Replace with actual constant when available
+            if (textView.TextBuffer.ContentType.IsOfType("code-languageserver-preview")) {
+                // We want default handling when this is a remote buffer
+                return null;
+            }
+
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView);

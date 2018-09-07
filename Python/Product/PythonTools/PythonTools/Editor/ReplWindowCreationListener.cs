@@ -39,6 +39,12 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+            // TODO: Replace with actual constant when available
+            if (textView.TextBuffer.ContentType.IsOfType("code-languageserver-preview")) {
+                // We want default handling when this is a remote buffer
+                return null;
+            }
+
             var window = textView.TextBuffer.GetInteractiveWindow();
 
             var controller = IntellisenseControllerProvider.GetOrCreateController(

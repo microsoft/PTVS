@@ -60,9 +60,12 @@
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Cascade.*\lib\net461\Microsoft.Cascade.*.dll" />
     <Reference Include="Microsoft.Cascade.LanguageServices.Common" />
     <Reference Include="Microsoft.Cascade.Common" />
     <Reference Include="Microsoft.Cascade.Client" />
@@ -94,6 +97,11 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="_AddCascadeAssemblies" BeforeTargets="_AddPTVSReferences">
+    <ItemGroup>
+      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Cascade.*\lib\net461\Microsoft.Cascade.*.dll" />
+    </ItemGroup>
+  </Target>
   <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
        but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
        into the PythonTools output folder temporarily to generate the pkgdef file. -->

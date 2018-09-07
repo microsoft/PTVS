@@ -669,6 +669,7 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 SnapshotPoint? pyPoint;
+                IntellisenseController controller;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         pyPoint = _textView.GetPythonCaret();
@@ -707,8 +708,7 @@ namespace Microsoft.PythonTools.Language {
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-                        var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
-                        if (controller != null) {
+                        if (_textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                             controller.TriggerCompletionSession(
                                 (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
                                 '\0',
@@ -719,16 +719,14 @@ namespace Microsoft.PythonTools.Language {
                         break;
 
                     case VSConstants.VSStd2KCmdID.QUICKINFO:
-                        controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
-                        if (controller != null) {
+                        if (_textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                             controller.TriggerQuickInfoAsync().DoNotWait();
                             return VSConstants.S_OK;
                         }
                         break;
 
                     case VSConstants.VSStd2KCmdID.PARAMINFO:
-                        controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
-                        if (controller != null) {
+                        if (_textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                             controller.TriggerSignatureHelp();
                             return VSConstants.S_OK;
                         }

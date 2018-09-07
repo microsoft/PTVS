@@ -3,43 +3,36 @@
 // </copyright>
 
 using System;
-using System.Threading.Tasks;
 using Microsoft.Cascade.Extensibility;
 using Microsoft.Cascade.LanguageServices.Common;
 using Microsoft.Cascade.LanguageServices.Contracts;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft
-{
-    internal class PythonLanguageClient : ICollaborationService, IAsyncDisposable
-    {
-        private static string[] PythonContentTypes = new string[] { "python" };
-        private static DocumentFilter[] PythonDocumentFilters = new DocumentFilter[]
-        {
+namespace Microsoft.PythonTools.LiveShare {
+    internal class PythonLanguageClient : ICollaborationService, IAsyncDisposable {
+        private static string[] PythonContentTypes = new string[] { PythonCoreConstants.ContentType };
+        private static DocumentFilter[] PythonDocumentFilters = new[] {
             new DocumentFilter() { Language = "python" }
         };
-        private IAsyncDisposable languageServiceProviderService;
-        private SVsServiceProvider serviceProvider;
 
-        public PythonLanguageClient(SVsServiceProvider serviceProvider)
-        {
-            this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private IAsyncDisposable _languageServiceProviderService;
+        private readonly IServiceProvider _serviceProvider;
+
+        public PythonLanguageClient(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
-        internal async Task InitializeAsync(ILanguageServerHostService languageServerHostService)
-        {
-            if (languageServerHostService == null)
-            {
+        internal async Task InitializeAsync(ILanguageServerHostService languageServerHostService) {
+            if (languageServerHostService == null) {
                 throw new ArgumentNullException(nameof(languageServerHostService));
             }
 
-            var pythonLanguageServiceProviderCallback = new PythonLanguageServiceProviderCallback(this.serviceProvider);
-            this.languageServiceProviderService = await languageServerHostService.CreateCustomLanguageServerProviderAsync(
+            var pythonLanguageServiceProviderCallback = new PythonLanguageServiceProviderCallback(this._serviceProvider);
+            _languageServiceProviderService = await languageServerHostService.CreateCustomLanguageServerProviderAsync(
                 "languageServerProvider-python",
-                new LanguageServerProviderMetadata
-                {
+                new LanguageServerProviderMetadata {
                     IsLanguageClientProvider = false,
                     ContentTypes = PythonContentTypes,
                     DocumentFilters = PythonDocumentFilters
@@ -48,9 +41,10 @@ namespace Microsoft
                 null);
         }
 
-        public async Task DisposeAsync()
-        {
-            await this.languageServiceProviderService?.DisposeAsync();
+        public async Task DisposeAsync() {
+            if (_languageServiceProviderService != null) {
+                await _languageServiceProviderService.DisposeAsync();
+            }
         }
     }
 }

@@ -549,7 +549,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Base protocol defined at https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol
         /// </remarks>
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
-            var str = JsonConvert.SerializeObject(packet);
+            var str = JsonConvert.SerializeObject(packet, UriJsonConverter.Instance);
 
             try {
                 try {
