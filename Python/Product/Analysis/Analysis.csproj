@@ -438,8 +438,6 @@
     <Compile Include="Interpreter\BuiltinTypeId.cs" />
     <Compile Include="VariablesResult.cs" />
     <Compile Include="VariableType.cs" />
-    <Compile Include="XamlAnalysis.cs" />
-    <Compile Include="XamlProjectEntry.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
