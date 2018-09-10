@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// An analysis value represents a set of variables and code.  Examples of 
     /// analysis values include top-level code, classes, and functions.
     /// </summary>
-    public class AnalysisValue : IAnalysisSet, ICanExpire {
+    public class AnalysisValue : IAnalysisValue, ICanExpire {
         [ThreadStatic]
         private static HashSet<AnalysisValue> _processing;
 

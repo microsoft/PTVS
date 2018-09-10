@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Represents an instance of a class implemented in Python
     /// </summary>
-    internal class InstanceInfo : AnalysisValue, IReferenceableContainer {
+    internal class InstanceInfo : AnalysisValue, IInstanceInfo, IReferenceableContainer {
         private readonly ClassInfo _classInfo;
         private Dictionary<string, VariableDef> _instanceAttrs;
 
@@ -410,6 +410,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description => ClassInfo.Name;
         public override string Documentation => ClassInfo.Documentation;
         public override PythonMemberType MemberType => PythonMemberType.Instance;
+
+        IClassInfo IInstanceInfo.ClassInfo => _classInfo;
+        IReadOnlyDictionary<string, IVariableDefinition> IInstanceInfo.InstanceAttributes => InstanceAttributes?.ToDictionary(kvp => kvp.Key, kvp => (IVariableDefinition)kvp.Value);
 
         internal override bool IsOfType(IAnalysisSet klass) {
             return klass.Contains(ClassInfo) || klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Object]);

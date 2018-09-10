@@ -105,6 +105,7 @@
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="Interpreter\Ast\AstPythonLookup.cs" />
     <Compile Include="Interpreter\Ast\AstTypingModule.cs" />
+    <Compile Include="Definitions.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\CompletionAnalysis.cs" />
     <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
@@ -241,7 +242,6 @@
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
-    <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
     <Compile Include="HashSetExtensions.cs" />
     <Compile Include="IAnalysisCookie.cs" />

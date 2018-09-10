@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    class BuiltinInstanceInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer {
+    class BuiltinInstanceInfo : BuiltinNamespace<IPythonType>, IBuiltinInstanceInfo, IReferenceableContainer {
         private readonly BuiltinClassInfo _klass;
 
         public BuiltinInstanceInfo(BuiltinClassInfo klass)
@@ -223,6 +223,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _klass?.PythonType.TypeId ?? BuiltinTypeId.Unknown;
             }
         }
+
+        IBuiltinClassInfo IBuiltinInstanceInfo.ClassInfo => ClassInfo;
 
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             var dict = ProjectState.ClassInfos[BuiltinTypeId.Dict];

@@ -275,21 +275,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-#if DESKTOP
-        /// <summary>
-        /// Adds a XAML file to be analyzed.  
-        /// 
-        /// This method is thread safe.
-        /// </summary>
-        internal IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
-            var entry = new XamlProjectEntry(filePath);
-
-            _xamlByFilename[filePath] = entry;
-
-            return entry;
-        }
-#endif
-
         /// <summary>
         /// Returns a sequence of project entries that import the specified
         /// module. The sequence will be empty if the module is unknown.
@@ -783,7 +768,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAnalysisValueFromObjects(attr);
         }
 
-        internal AnalysisValue GetAnalysisValueFromObjects(object attr) {
+        public AnalysisValue GetAnalysisValueFromObjects(object attr) {
             if (attr == null) {
                 return _noneInst;
             }

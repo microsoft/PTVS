@@ -25,6 +25,7 @@ using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
@@ -236,7 +237,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         xamlProject.Analyze(CancellationToken.None);
                         analysis = xamlProject.Analysis;
                         if (analysis == null) {
-                            AnalysisLog.Assert(false, "No Xaml analysis");
                             return self;
                         }
                     }
@@ -250,9 +250,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         var type = keyValue.Value;
                         if (type.Type.UnderlyingType != null) {
 
-                            var ns = unit.State.GetAnalysisValueFromObjects(interpreter.GetBuiltinType(type.Type.UnderlyingType));
-                            var bci = ns as BuiltinClassInfo;
-                            if (bci != null) {
+                            var ns = (IAnalysisValue)unit.State.GetAnalysisValueFromObjects(interpreter.GetBuiltinType(type.Type.UnderlyingType));
+                            if (ns is IBuiltinClassInfo bci) {
                                 ns = bci.Instance;
                             }
                             self.SetMember(node, evalUnit, keyValue.Key, ns.SelfSet);
@@ -261,10 +260,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         // TODO: Better would be if SetMember took something other than a node, then we'd
                         // track references w/o this extra effort.
                         foreach (var inst in self) {
-                            InstanceInfo instInfo = inst as InstanceInfo;
-                            if (instInfo != null && instInfo.InstanceAttributes != null) {
-                                VariableDef def;
-                                if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
+                            if (inst is IInstanceInfo instInfo && instInfo.InstanceAttributes != null) {
+                                if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out var def)) {
                                     def.AddAssignment(
                                         new EncodedLocation(
                                             new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, type.LineNumber, type.LineOffset),
@@ -285,12 +282,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         // TODO: Better would be if SetMember took something other than a node, then we'd
                         // track references w/o this extra effort.
                         foreach (var inst in self) {
-                            InstanceInfo instInfo = inst as InstanceInfo;
-                            if (instInfo != null) {
-                                ClassInfo ci = instInfo.ClassInfo;
+                            if (inst is IInstanceInfo instInfo) {
+                                var ci = instInfo.ClassInfo;
 
-                                VariableDef def;
-                                if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
+                                if (ci.Scope.TryGetVariable(keyValue.Key, out var def)) {
                                     def.AddReference(
                                         new EncodedLocation(
                                             new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, member.LineNumber, member.LineOffset),
@@ -691,6 +686,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonType GetBuiltinType(Type type) {
             return GetTypeFromType(Remote.GetBuiltinTypeFromType(type));
+        }
+
+        public IProjectEntry AddXamlEntry(string filePath, Uri documentUri) {
+            var entry = new XamlProjectEntry(filePath, documentUri);
+            _xamlByFilename[filePath] = entry;
+            return entry;
         }
 
         #endregion

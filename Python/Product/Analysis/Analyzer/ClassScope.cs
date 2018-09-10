@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
-    sealed class ClassScope : InterpreterScope {
+    sealed class ClassScope : InterpreterScope, IClassScope {
         public ClassScope(ClassInfo classInfo, ClassDefinition ast, InterpreterScope outerScope)
             : base(classInfo, ast, outerScope) {
             classInfo.Scope = this;

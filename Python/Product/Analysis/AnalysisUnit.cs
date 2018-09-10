@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return DeclaringModule.ProjectEntry.ProjectState; }
         }
 
-        internal AnalysisUnit CopyForEval() {
+        public AnalysisUnit CopyForEval() {
             return new AnalysisUnit(Ast, Tree, _scope, true);
         }
 

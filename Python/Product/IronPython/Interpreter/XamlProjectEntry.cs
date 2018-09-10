@@ -30,9 +30,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private Dictionary<object, object> _properties;
         private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
 
-        public XamlProjectEntry(string filename) {
-            FilePath = filename;
-            DocumentUri = ProjectEntry.MakeDocumentUri(FilePath);
+        public XamlProjectEntry(string filePath, Uri documentUri) {
+            FilePath = filePath;
+            DocumentUri = documentUri;
         }
 
         public void ParseContent(TextReader content, IAnalysisCookie fileCookie) {

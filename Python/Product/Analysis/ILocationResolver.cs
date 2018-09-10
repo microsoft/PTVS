@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// 
     /// See EncodedLocation for more information.
     /// </summary>
-    interface ILocationResolver {
+    public interface ILocationResolver {
         LocationInfo ResolveLocation(object location);
 
         /// <summary>
