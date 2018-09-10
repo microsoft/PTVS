@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
+    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IBuiltinClassInfo, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private BuiltinInstanceInfo _inst;
         private string _doc;
         private readonly MemberReferences _referencedMembers = new MemberReferences();
@@ -334,6 +334,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override IEnumerable<LocationInfo> References => _references?.AllReferences ?? new LocationInfo[0];
+
+        IBuiltinInstanceInfo IBuiltinClassInfo.Instance => Instance;
+
         public override ILocatedMember GetLocatedMember() => _type as ILocatedMember;
     }
 }

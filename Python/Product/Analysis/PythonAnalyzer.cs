@@ -46,9 +46,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
-#if DESKTOP
-        private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
-#endif
         internal ConstantInfo _noneInst;
         private Action<int> _reportQueueSize;
         private int _reportQueueInterval;
@@ -277,21 +274,6 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
-
-#if DESKTOP
-        /// <summary>
-        /// Adds a XAML file to be analyzed.  
-        /// 
-        /// This method is thread safe.
-        /// </summary>
-        internal IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
-            var entry = new XamlProjectEntry(filePath);
-
-            _xamlByFilename[filePath] = entry;
-
-            return entry;
-        }
-#endif
 
         /// <summary>
         /// Returns a sequence of project entries that import the specified
@@ -786,7 +768,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAnalysisValueFromObjects(attr);
         }
 
-        internal AnalysisValue GetAnalysisValueFromObjects(object attr) {
+        public AnalysisValue GetAnalysisValueFromObjects(object attr) {
             if (attr == null) {
                 return _noneInst;
             }

@@ -15,12 +15,18 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter {
     public interface IDotNetPythonInterpreter {
         /// <summary>
-        /// Gets the IPythonType object for the specifed .NET type;
+        /// Gets the IPythonType object for the specified .NET type;
         /// </summary>
         IPythonType GetBuiltinType(Type type);
+
+        /// <summary>
+        /// Adds xaml entry
+        /// </summary>
+        IProjectEntry AddXamlEntry(string filePath, Uri documentUri);
     }
 }

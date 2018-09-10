@@ -115,6 +115,8 @@
     <Compile Include="Interpreter\PythonObject.cs" />
     <Compile Include="Interpreter\RemoteInterpreter.cs" />
     <Compile Include="Interpreter\RemoteInterpreterProxy.cs" />
+    <Compile Include="Interpreter\XamlAnalysis.cs" />
+    <Compile Include="Interpreter\XamlProjectEntry.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
