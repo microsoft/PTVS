@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LCX SchemaVersion="6.0" Name="E:\A\_work\9\b\raw\binaries\Microsoft.PythonTools.Common.dll" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="es-ES" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
@@ -5736,7 +5736,7 @@
       <Str Cat="Text">
         <Val><![CDATA[Private infrastructure helpers for Python support in Visual Studio.]]></Val>
         <Tgt Cat="Text" Stat="Loc" Orig="New">
-          <Val><![CDATA[Herramientas auxiliares de infraestructura privada para la compatibilidad de Python en Visual Studio.]]></Val>
+          <Val><![CDATA[Asistentes de infraestructura privada para la compatibilidad de Python en Visual Studio.]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
