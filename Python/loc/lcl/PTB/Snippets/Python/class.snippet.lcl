@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a class definition]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Trecho de código para uma definição de classe]]></Val>
+          <Val><![CDATA[Snippet de código para uma definição de classe]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
