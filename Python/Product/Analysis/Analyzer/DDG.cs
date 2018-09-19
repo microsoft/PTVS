@@ -463,13 +463,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return false;
         }
 
-        internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
+        internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> mro, Node node, AnalysisUnit unit) {
             var result = new List<AnalysisValue>();
-            foreach (var b in bases) {
-                foreach (var curType in b) {
-                    var klass = curType as BuiltinClassInfo;
-                    if (klass != null) {
-                        var value = klass.GetMember(node, unit, name);
+            foreach (var @class in mro.Skip(1)) {
+                foreach (var curType in @class) {
+                    bool isClass = curType is ClassInfo || curType is BuiltinClassInfo;
+                    if (isClass) {
+                        var value = curType.GetMember(node, unit, name);
                         if (value != null) {
                             result.AddRange(value);
                         }
@@ -581,9 +581,30 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(ReturnStatement node) {
             var fnScope = CurrentFunction;
-            if (node.Expression != null && fnScope != null) {
+            if (fnScope == null)
+                return true;
+
+            if (node.Expression != null) {
                 var lookupRes = _eval.Evaluate(node.Expression);
                 fnScope.AddReturnTypes(node, _unit, lookupRes);
+
+                var function = fnScope.Function;
+                var analysisUnit = (FunctionAnalysisUnit)function.AnalysisUnit;
+
+                if (Scope.OuterScope is ClassScope curClass)
+                {
+                    var bases = LookupBaseMethods(
+                        analysisUnit.Ast.Name,
+                        curClass.Class.Mro,
+                        analysisUnit.Ast,
+                        analysisUnit
+                    );
+                    foreach (FunctionInfo baseFunction in bases.OfType<FunctionInfo>())
+                    {
+                        var baseAnalysisUnit = (FunctionAnalysisUnit)baseFunction.AnalysisUnit;
+                        baseAnalysisUnit.ReturnValue.AddTypes(_unit, lookupRes);
+                    }
+                }
             }
             return true;
         }
