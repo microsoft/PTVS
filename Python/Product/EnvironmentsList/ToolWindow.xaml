@@ -190,12 +190,6 @@
                             Focusable="False"
                             ContentTemplate="{StaticResource EnvironmentHeader}" />
 
-            <CheckBox x:Name="HelpVisibility_Horizontal"
-                      Grid.Row="0" Grid.Column="3"
-                      HorizontalAlignment="Center" VerticalAlignment="Top"
-                      Style="{StaticResource HelpCheckBox}"
-                      AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpVisibilityName}"/>
-
             <!-- These content controls are not laid out correctly when their
                  ColumnSpan property is set, but they seem to work okay when put
                  in their own grid. -->
@@ -205,13 +199,6 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-
-                <ContentControl Grid.Row="0"
-                                Style="{StaticResource HelpContentStyle}"
-                                Content="{Binding Extensions.CurrentItem.HelpContent}"
-                                AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpContentName}"
-                                AutomationProperties.HelpText="{Binding Extensions.CurrentItem.HelpText,Mode=OneWay}"
-                                IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Horizontal}"/>
 
                 <ContentControl x:Name="ContentView_Horizontal"
                                 Grid.Row="1"
@@ -263,25 +250,12 @@
                       AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ExtensionsName}"
                       ItemContainerStyle="{StaticResource Combo_WithLocalizedName}" />
 
-            <CheckBox x:Name="HelpVisibility_Vertical"
-                      Grid.Row="1" Grid.Column="1"
-                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Style="{StaticResource HelpCheckBox}"
-                      AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpVisibilityName}"/>
-
             <Grid x:Name="ContentGrid_Vertical"
                   Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-
-                <ContentControl Grid.Row="0"
-                                Style="{StaticResource HelpContentStyle}"
-                                Content="{Binding Extensions.CurrentItem.HelpContent}"
-                                IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Vertical}"
-                                AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpContentName}"
-                                AutomationProperties.HelpText="{Binding Extensions.CurrentItem.HelpText}"/>
 
                 <ContentControl x:Name="ContentView_Vertical"
                                 Grid.Row="1"
