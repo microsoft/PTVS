@@ -60,6 +60,7 @@
     <Compile Include="EventTaskSources.cs" />
     <Compile Include="ExpressionFinderTests.cs" />
     <Compile Include="FunctionBodyAnalysisTests.cs" />
+    <Compile Include="InheritanceTests.cs" />
     <Compile Include="LanguageServerTests.cs" />
     <Compile Include="LongestCommonSequenceTests.cs" />
     <Compile Include="ModulePathTests.cs" />
