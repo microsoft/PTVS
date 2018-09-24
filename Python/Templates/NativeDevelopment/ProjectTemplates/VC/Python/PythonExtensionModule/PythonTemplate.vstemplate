@@ -3,8 +3,7 @@
     <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5024" />
     <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5025" />
     <ProjectType>VC</ProjectType>
-    <ProjectSubType>
-    </ProjectSubType>
+    <TemplateID>Microsoft.Python.Cpp.NativeModule</TemplateID>
     <SortOrder>1000</SortOrder>
     <CreateNewFolder>true</CreateNewFolder>
     <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>

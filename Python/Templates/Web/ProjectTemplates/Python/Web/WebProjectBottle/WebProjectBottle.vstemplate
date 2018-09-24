@@ -4,6 +4,7 @@
     <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5067" />
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
     <ProjectType>Python</ProjectType>
+    <TemplateID>Microsoft.Python.Web.Bottle.Blank</TemplateID>
     <SortOrder>71</SortOrder>
     <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>

@@ -4,6 +4,7 @@
     <Description Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="5003" />
     <Icon Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="402" />
     <ProjectType>Python</ProjectType>
+    <TemplateID>Microsoft.Python.IronPython.Console</TemplateID>
     <SortOrder>100</SortOrder>
     <CreateNewFolder>false</CreateNewFolder>
     <DefaultName>IronPythonApplication</DefaultName>

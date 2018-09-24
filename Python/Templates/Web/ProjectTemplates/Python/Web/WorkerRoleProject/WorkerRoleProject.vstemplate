@@ -5,6 +5,7 @@
     <Hidden>true</Hidden>
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="408" />
     <ProjectType>Python</ProjectType>
+    <TemplateID>Microsoft.Python.CloudService.Core.WorkerRole</TemplateID>
     <SortOrder>60</SortOrder>
     <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
