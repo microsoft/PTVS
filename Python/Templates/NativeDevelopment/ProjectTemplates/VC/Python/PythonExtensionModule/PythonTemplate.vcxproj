@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>$guid1$</ProjectGuid>
     <RootNamespace>$safeprojectname$</RootNamespace>
-    <PythonVersion>3.6</PythonVersion>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <PythonVersion>3.7</PythonVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
