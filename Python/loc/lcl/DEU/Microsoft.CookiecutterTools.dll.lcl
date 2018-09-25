@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LCX SchemaVersion="6.0" Name="E:\A\_work\9\b\raw\binaries\Microsoft.CookiecutterTools.dll" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="de-DE" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
@@ -839,7 +839,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Load more...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Weitere laden...]]></Val>
+            <Val><![CDATA[Mehr laden...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
