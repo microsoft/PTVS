@@ -4,8 +4,7 @@
     <Description Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="5009" />
     <Icon Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="401" />
     <ProjectType>Python</ProjectType>
-    <ProjectSubType>
-    </ProjectSubType>
+    <TemplateID>Microsoft.Python.IronPython.WPF</TemplateID>
     <SortOrder>120</SortOrder>
     <CreateNewFolder>false</CreateNewFolder>
     <DefaultName>WpfApplication</DefaultName>
