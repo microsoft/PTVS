@@ -172,23 +172,17 @@ namespace TestUtilities.UI {
                 }
             }
         }
-#if DEV14_OR_LATER
-#pragma warning disable 0618
-#endif
-        public void StartSmartTagSessionNoSession() {
-            ShowSmartTag();
+
+        public void StartLightBulbSessionNoSession() {
+            ShowLightBulb();
             Thread.Sleep(100);
             Assert.IsNotInstanceOfType(
                 IntellisenseSessionStack.TopSession,
-#if DEV14_OR_LATER
                 typeof(ILightBulbSession)
-#else
-                typeof(ISmartTagSession)
-#endif
             );
         }
 
-        private void ShowSmartTag() {
+        private void ShowLightBulb() {
             Task.Run(() => {
                 for (int i = 0; i < 40; i++) {
                     try {
@@ -201,14 +195,10 @@ namespace TestUtilities.UI {
             }).Wait();
         }
 
-        public SessionHolder<SmartTagSessionWrapper> StartSmartTagSession() {
-            ShowSmartTag();
-#if DEV14_OR_LATER
+        public SessionHolder<LightBulbSessionWrapper> StartLightBulbSession() {
+            ShowLightBulb();
             var sh = WaitForSession<ILightBulbSession>();
-#else
-            var sh = WaitForSession<ISmartTagSession>();
-#endif
-            return sh == null ? null : new SessionHolder<SmartTagSessionWrapper>(new SmartTagSessionWrapper(sh), this);
+            return sh == null ? null : new SessionHolder<LightBulbSessionWrapper>(new LightBulbSessionWrapper(sh), this);
         }
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {

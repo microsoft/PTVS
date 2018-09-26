@@ -24,65 +24,37 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.UI {
-    public class SmartTagSessionWrapper : IIntellisenseSession {
-#if DEV14_OR_LATER
+    public class LightBulbSessionWrapper : IIntellisenseSession {
         private readonly SessionHolder<ILightBulbSession> _sessionHolder;
         private readonly ILightBulbSession _session;
 
-        public SmartTagSessionWrapper(SessionHolder<ILightBulbSession> sessionHolder) {
+        public LightBulbSessionWrapper(SessionHolder<ILightBulbSession> sessionHolder) {
             _sessionHolder = sessionHolder;
             _session = _sessionHolder.Session;
         }
-#else
-        private readonly SessionHolder<ISmartTagSession> _sessionHolder;
-        private readonly ISmartTagSession _session;
 
-        public SmartTagSessionWrapper(SessionHolder<ISmartTagSession> sessionHolder) {
-            _sessionHolder = sessionHolder;
-            _session = _sessionHolder.Session;
-        }
-#endif
-
-        public class SmartTagActionWrapper {
-#if DEV14_OR_LATER
+        public class LightBulbActionWrapper {
             private readonly ISuggestedAction _action;
 
-            public SmartTagActionWrapper(ISuggestedAction action) {
+            public LightBulbActionWrapper(ISuggestedAction action) {
                 _action = action;
             }
-
-#else
-            private readonly ISmartTagAction _action;
-
-            public SmartTagActionWrapper(ISmartTagAction action) {
-                _action = action;
-            }
-#endif
 
             public string DisplayText {
                 get { return _action.DisplayText; }
             }
 
             public void Invoke() {
-#if DEV14_OR_LATER
                 _action.Invoke(CancellationToken.None);
-#else
-                _action.Invoke();
-#endif
             }
         }
 
-        public IEnumerable<SmartTagActionWrapper> Actions {
+        public IEnumerable<LightBulbActionWrapper> Actions {
             get {
-#if DEV14_OR_LATER
                 IEnumerable<SuggestedActionSet> sets;
                 return _session.TryGetSuggestedActionSets(out sets) == QuerySuggestedActionCompletionStatus.Completed ?
-                    sets.SelectMany(s => s.Actions).Select(a => new SmartTagActionWrapper(a)) :
-                    Enumerable.Empty<SmartTagActionWrapper>();
-#else
-                return _session.ActionSets.SelectMany(s => s.Actions).Select(a => new SmartTagActionWrapper(a));
-#endif
-
+                    sets.SelectMany(s => s.Actions).Select(a => new LightBulbActionWrapper(a)) :
+                    Enumerable.Empty<LightBulbActionWrapper>();
             }
         }
 
