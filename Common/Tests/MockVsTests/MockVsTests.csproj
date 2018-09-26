@@ -174,8 +174,6 @@
     <Compile Include="MockAsyncQuickInfoBroker.cs" />
     <Compile Include="MockSignatureHelpBroker.cs" />
     <Compile Include="MockSignatureHelpSession.cs" />
-    <Compile Include="MockSmartTagBroker.cs" />
-    <Compile Include="MockSmartTagSession.cs" />
     <Compile Include="MockStandardClassificationService.cs" />
     <Compile Include="MockTextBufferUndoManager.cs" />
     <Compile Include="MockTextBufferUndoManagerProvider.cs" />

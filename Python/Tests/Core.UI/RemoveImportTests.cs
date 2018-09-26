@@ -30,8 +30,8 @@ namespace PythonToolsUITests {
 
 oar";
 
-            RemoveSmartTagTest(app, "FromImport1.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "FromImport1.py", 1, 1, false, expectedText);
+            RemoveLightBulbTest(app, "FromImport1.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImport1.py", 1, 1, false, expectedText);
         }
 
         public void FromImport2(VisualStudioApp app) {
@@ -39,7 +39,7 @@ oar";
 
 baz";
 
-            RemoveSmartTagTest(app, "FromImport2.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImport2.py", 1, 1, true, expectedText);
         }
 
         public void FromImportParens1(VisualStudioApp app) {
@@ -47,7 +47,7 @@ baz";
 
 oar";
 
-            RemoveSmartTagTest(app, "FromImportParens1.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportParens1.py", 1, 1, true, expectedText);
         }
 
         public void FromImportParens2(VisualStudioApp app) {
@@ -55,7 +55,7 @@ oar";
 
 baz";
 
-            RemoveSmartTagTest(app, "FromImportParens2.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportParens2.py", 1, 1, true, expectedText);
         }
 
         public void FromImportParensTrailingComma1(VisualStudioApp app) {
@@ -63,7 +63,7 @@ baz";
 
 baz";
 
-            RemoveSmartTagTest(app, "FromImportParensTrailingComma1.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportParensTrailingComma1.py", 1, 1, true, expectedText);
         }
 
         public void FromImportParensTrailingComma2(VisualStudioApp app) {
@@ -71,7 +71,7 @@ baz";
 
 oar";
 
-            RemoveSmartTagTest(app, "FromImportParensTrailingComma2.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportParensTrailingComma2.py", 1, 1, true, expectedText);
         }
 
         public void Import1(VisualStudioApp app) {
@@ -79,7 +79,7 @@ oar";
 
 oar";
 
-            RemoveSmartTagTest(app, "Import1.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import1.py", 1, 1, true, expectedText);
         }
 
         public void Import2(VisualStudioApp app) {
@@ -87,7 +87,7 @@ oar";
 
 baz";
 
-            RemoveSmartTagTest(app, "Import2.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import2.py", 1, 1, true, expectedText);
         }
 
         public void Import3(VisualStudioApp app) {
@@ -95,7 +95,7 @@ baz";
 
 baz";
 
-            RemoveSmartTagTest(app, "Import3.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import3.py", 1, 1, true, expectedText);
         }
 
         public void Import4(VisualStudioApp app) {
@@ -104,7 +104,7 @@ baz";
 oar
 quox";
 
-            RemoveSmartTagTest(app, "Import4.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import4.py", 1, 1, true, expectedText);
         }
 
         public void Import5(VisualStudioApp app) {
@@ -113,7 +113,7 @@ quox";
 oar
 quox";
 
-            RemoveSmartTagTest(app, "Import5.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import5.py", 1, 1, true, expectedText);
         }
 
         public void Import6(VisualStudioApp app) {
@@ -122,7 +122,7 @@ quox";
 oar
 quox";
 
-            RemoveSmartTagTest(app, "Import6.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import6.py", 1, 1, true, expectedText);
         }
 
         public void ImportComment(VisualStudioApp app) {
@@ -134,7 +134,7 @@ import oar,          quox
 oar
 quox";
 
-            RemoveSmartTagTest(app, "ImportComment.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "ImportComment.py", 1, 1, true, expectedText);
         }
 
         public void FromImportComment(VisualStudioApp app) {
@@ -146,37 +146,37 @@ from xyz import oar,          quox
 oar
 quox";
 
-            RemoveSmartTagTest(app, "FromImportComment.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportComment.py", 1, 1, true, expectedText);
         }
 
         public void ImportDup(VisualStudioApp app) {
             string expectedText = @"";
 
-            RemoveSmartTagTest(app, "ImportDup.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "ImportDup.py", 1, 1, true, expectedText);
         }
 
         public void FromImportDup(VisualStudioApp app) {
             string expectedText = @"";
 
-            RemoveSmartTagTest(app, "FromImportDup.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImportDup.py", 1, 1, true, expectedText);
         }
 
         public void Import(VisualStudioApp app) {
             string expectedText = @"";
 
-            RemoveSmartTagTest(app, "Import.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "Import.py", 1, 1, true, expectedText);
         }
 
         public void FromImport(VisualStudioApp app) {
             string expectedText = @"";
 
-            RemoveSmartTagTest(app, "FromImport.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FromImport.py", 1, 1, true, expectedText);
         }
 
         public void FutureImport(VisualStudioApp app) {
             string expectedText = @"from __future__ import with_statement";
 
-            RemoveSmartTagTest(app, "FutureImport.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "FutureImport.py", 1, 1, true, expectedText);
         }
 
         public void LocalScopeDontRemoveGlobal(VisualStudioApp app) {
@@ -187,7 +187,7 @@ def f():
 
     baz";
 
-            RemoveSmartTagTest(app, "LocalScopeDontRemoveGlobal.py", 4, 10, false, expectedText);
+            RemoveLightBulbTest(app, "LocalScopeDontRemoveGlobal.py", 4, 10, false, expectedText);
         }
 
         public void LocalScopeOnly(VisualStudioApp app) {
@@ -197,13 +197,13 @@ def f():
 
     oar";
 
-            RemoveSmartTagTest(app, "LocalScopeOnly.py", 4, 10, false, expectedText);
+            RemoveLightBulbTest(app, "LocalScopeOnly.py", 4, 10, false, expectedText);
         }
 
         public void ImportTrailingWhitespace(VisualStudioApp app) {
             string expectedText = @"fob";
 
-            RemoveSmartTagTest(app, "ImportTrailingWhitespace.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "ImportTrailingWhitespace.py", 1, 1, true, expectedText);
         }
 
         public void ClosureReference(VisualStudioApp app) {
@@ -212,8 +212,8 @@ def f():
     def g():
         something";
 
-            RemoveSmartTagTest(app, "ClosureReference.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "ClosureReference.py", 2, 14, false, expectedText);
+            RemoveLightBulbTest(app, "ClosureReference.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "ClosureReference.py", 2, 14, false, expectedText);
         }
 
         public void NameMangledUnmangled(VisualStudioApp app) {
@@ -222,8 +222,8 @@ def f():
         import __fob
         x = _C__fob";
 
-            RemoveSmartTagTest(app, "NameMangleUnmangled.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "NameMangleUnmangled.py", 3, 14, false, expectedText);
+            RemoveLightBulbTest(app, "NameMangleUnmangled.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "NameMangleUnmangled.py", 3, 14, false, expectedText);
         }
 
         public void NameMangledMangled(VisualStudioApp app) {
@@ -232,41 +232,41 @@ def f():
         import __fob
         x = __fob";
 
-            RemoveSmartTagTest(app, "NameMangleMangled.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "NameMangleMangled.py", 3, 14, false, expectedText);
+            RemoveLightBulbTest(app, "NameMangleMangled.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "NameMangleMangled.py", 3, 14, false, expectedText);
         }
 
         public void EmptyFuncDef1(VisualStudioApp app) {
             string expectedText = @"def f():
     pass";
 
-            RemoveSmartTagTest(app, "EmptyFuncDef1.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "EmptyFuncDef1.py", 2, 7, false, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDef1.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDef1.py", 2, 7, false, expectedText);
         }
 
         public void EmptyFuncDef2(VisualStudioApp app) {
             string expectedText = @"def f():
     pass";
 
-            RemoveSmartTagTest(app, "EmptyFuncDef2.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "EmptyFuncDef2.py", 2, 7, false, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDef2.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDef2.py", 2, 7, false, expectedText);
         }
 
         public void EmptyFuncDefWhitespace(VisualStudioApp app) {
             string expectedText = @"def f():
     pass";
 
-            RemoveSmartTagTest(app, "EmptyFuncDefWhitespace.py", 1, 1, true, expectedText);
-            RemoveSmartTagTest(app, "EmptyFuncDefWhitespace.py", 2, 7, false, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDefWhitespace.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "EmptyFuncDefWhitespace.py", 2, 7, false, expectedText);
         }
 
         public void ImportStar(VisualStudioApp app) {
             string expectedText = @"from sys import *";
 
-            RemoveSmartTagTest(app, "ImportStar.py", 1, 1, true, expectedText);
+            RemoveLightBulbTest(app, "ImportStar.py", 1, 1, true, expectedText);
         }
 
-        private static void RemoveSmartTagTest(VisualStudioApp app, string filename, int line, int column, bool allScopes, string expectedText) {
+        private static void RemoveLightBulbTest(VisualStudioApp app, string filename, int line, int column, bool allScopes, string expectedText) {
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\RemoveImport.sln"));
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
