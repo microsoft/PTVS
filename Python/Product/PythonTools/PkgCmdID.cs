@@ -41,8 +41,6 @@ namespace Microsoft.PythonTools {
         public const uint cmdidShowNativePythonFrames = 0x400E;
         public const uint cmdidUsePythonStepping = 0x400F;
 
-        public const uint cmdidAzureExplorerAttachPythonDebugger = 0x4032;
-
         public const uint cmdidAddEnvironment = 0x4006;
         public const uint cmdidAddVirtualEnv = 0x4007;
         public const uint cmdidAddExistingVirtualEnv = 0x4008;

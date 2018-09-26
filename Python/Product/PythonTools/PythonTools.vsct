@@ -787,23 +787,6 @@ permissions and limitations under the License.
       </Button>
 
       <!--===========================================================================================================-->
-      <!--========================================== Server Explorer context menu ===================================-->
-      <!--===========================================================================================================-->
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAzureExplorerAttachPythonDebugger" priority="0x0110" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
-        <Strings>
-          <ButtonText>Attach Debugger (&amp;Python)</ButtonText>
-          <ToolTipText>Attach the Python debugger to the remote Microsoft Azure App Service site</ToolTipText>
-          <CanonicalName>Attach Debugger To Web Site</CanonicalName>
-          <LocCanonicalName>Attach Debugger To Web Site</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <!--===========================================================================================================-->
       <!--=========================================== Interactive Window toolbar ====================================-->
       <!--===========================================================================================================-->
 
@@ -958,10 +941,6 @@ permissions and limitations under the License.
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
     </CommandPlacement>
 
-
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAzureExplorerAttachPythonDebugger" priority="0x0110">
-      <Parent guid="guidAzureExplorerCmdId" id="groupAzureDiagnostics"/>
-    </CommandPlacement>
 
     <!--
         Standard group placements in our menus
@@ -1221,10 +1200,6 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidOpenCommandPromptHere" value="0x10002" />
       <IDSymbol name="cmdidCopyFullPath" value="0x10003" />
 
-    </GuidSymbol>
-
-    <GuidSymbol name="guidAzureExplorerCmdId" value="{2F32C14E-B908-42E6-AE7E-B8B3E2DED633}">
-      <IDSymbol name="groupAzureDiagnostics" value="400" />
     </GuidSymbol>
 
     <!-- InteractiveWindow Guid -->
