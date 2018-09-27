@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a while loop]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Snippet de código para loop while]]></Val>
+          <Val><![CDATA[Snippet de código para um loop while]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
