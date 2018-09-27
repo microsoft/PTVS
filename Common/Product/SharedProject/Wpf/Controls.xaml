@@ -714,8 +714,8 @@
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HotTrackTextKey}}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
+                            <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedTextKey}}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
