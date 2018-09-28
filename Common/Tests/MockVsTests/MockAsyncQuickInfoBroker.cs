@@ -36,5 +36,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public IAsyncQuickInfoSession GetSession(ITextView textView) {
             throw new NotImplementedException();
         }
+
+        public Task<QuickInfoItemsCollection> GetQuickInfoItemsAsync(ITextView textView, ITrackingPoint triggerPoint, CancellationToken cancellationToken) {
+            throw new NotImplementedException();
+        }
     }
 }
