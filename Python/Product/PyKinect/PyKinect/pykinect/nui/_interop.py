@@ -191,7 +191,7 @@ class _NuiInstance(ctypes.c_voidp):
 
     def NuiImageGetColorPixelCoordinatesFromDepthPixel(self, eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue):
         x, y = ctypes.c_long(), ctypes.c_long()
-        _NuiInstance._NuiImageGetColorPixelCoordinatesFromDepthPixel(self, eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue, byref(x), byref(y))
+        _NuiInstance._NuiImageGetColorPixelCoordinatesFromDepthPixel(self, eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue, ctypes.byref(x), ctypes.byref(y))
         return x.value, y.value
 
     def NuiCameraElevationSetAngle(self, lAngleDegrees):
