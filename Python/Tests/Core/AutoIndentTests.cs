@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
+using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -32,7 +33,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Microsoft.VisualStudio.TestTools.UnitTesting.Priority(0)]
+        [TestMethod, Priority(0)]
         public void GetIndentation() {
             Assert.AreEqual(0, AutoIndent.GetIndentation("", 4));
             Assert.AreEqual(0, AutoIndent.GetIndentation("p", 4));
@@ -46,7 +47,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(6, AutoIndent.GetIndentation(" \t p", 4));
         }
 
-        [TestMethod, Microsoft.VisualStudio.TestTools.UnitTesting.Priority(0)]
+        [TestMethod, Priority(0)]
         public void GetLineIndentation() {
             AssertIndent("pass\n", 2, 0);
             AssertIndent("def f():\n", 2, 4);

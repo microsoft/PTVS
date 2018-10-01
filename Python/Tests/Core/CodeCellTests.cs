@@ -26,6 +26,7 @@ using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
     using CCA = CodeCellAnalysis;
+    using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
     [TestClass]
     public class CodeCellTests {
@@ -35,7 +36,7 @@ namespace PythonToolsTests {
             return s.Replace(' ', '\u00B7').Replace('\t', '\u2409');
         }
 
-        [TestMethod, Microsoft.VisualStudio.TestTools.UnitTesting.Priority(0)]
+        [TestMethod, Priority(0)]
         public void CodeCellMarkers() {
             foreach (var trueMarker in new[] {
                 "#%%",
@@ -62,7 +63,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Microsoft.VisualStudio.TestTools.UnitTesting.Priority(0)]
+        [TestMethod, Priority(0)]
         public void EmptyCodeCell() {
             var buffer = new MockTextBuffer(@"# comment here
 
