@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis {
             string relativeModuleName,
             bool absoluteImports
         ) {
-            string importingFrom = null;
+            string importingFrom = string.Empty;
             if (!string.IsNullOrEmpty(importingFromModuleName)) {
                 importingFrom = importingFromModuleName;
                 if (!string.IsNullOrEmpty(importingFromFilePath) && ModulePath.IsInitPyFile(importingFromFilePath)) {
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static string GetModuleFullName(string originatingModule, string relativePath) {
             // Check if it is indeed relative
-            if (string.IsNullOrEmpty(relativePath) || relativePath[0] != '.') {
+            if (string.IsNullOrEmpty(originatingModule) || string.IsNullOrEmpty(relativePath) || relativePath[0] != '.') {
                 return relativePath;
             }
 
