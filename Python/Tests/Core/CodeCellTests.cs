@@ -26,6 +26,7 @@ using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
     using CCA = CodeCellAnalysis;
+    using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
     [TestClass]
     public class CodeCellTests {

@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
+using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
 namespace PythonToolsMockTests {
     [TestClass]

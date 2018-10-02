@@ -15,7 +15,7 @@
 
     <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
     
-    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkMoniker>.NETFramework,Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
     
     <!-- Enables VS SDK build steps.
