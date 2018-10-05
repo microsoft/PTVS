@@ -18,52 +18,51 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPackageManagerProvider))]
     sealed class CPythonCondaPackageManagerProvider : IPackageManagerProvider {
-        private readonly CPythonInterpreterFactoryProvider _globalProvider;
+        private readonly IServiceProvider _site;
         private Lazy<string> _latestCondaExe;
 
         [ImportingConstructor]
         public CPythonCondaPackageManagerProvider(
-            [Import] CPythonInterpreterFactoryProvider globalProvider
+            [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null
         ) {
-            _globalProvider = globalProvider;
+            _site = site;
 
             // This can be slow, if there are 2 or more global conda installations
             // (some conda versions have long startup time), so we only fetch it once.
-            _latestCondaExe = new Lazy<string>(() => CondaUtils.GetLatestCondaExecutablePath(_globalProvider.GetInterpreterFactories()));
+            _latestCondaExe = new Lazy<string>(() => CondaUtils.GetRootCondaExecutablePath(_site));
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-            if (ExperimentalOptions.UseCondaPackageManager) {
-                var prefixPath = factory.Configuration.PrefixPath;
-                if (string.IsNullOrEmpty(prefixPath) ||
-                    !Directory.Exists(Path.Combine(prefixPath, "conda-meta"))) {
-                    yield break;
-                }
+            var prefixPath = factory.Configuration.PrefixPath;
+            if (string.IsNullOrEmpty(prefixPath) ||
+                !Directory.Exists(Path.Combine(prefixPath, "conda-meta"))) {
+                yield break;
+            }
 
-                var condaPath = CondaUtils.GetCondaExecutablePath(prefixPath);
-                if (string.IsNullOrEmpty(condaPath)) {
-                    // conda.bat is no longer present in a conda 4.4 environment,
-                    // so find a global conda.exe to use.
-                    condaPath = _latestCondaExe.Value;
-                }
+            var condaPath = CondaUtils.GetCondaExecutablePath(prefixPath);
+            if (string.IsNullOrEmpty(condaPath)) {
+                // conda.bat is no longer present in a conda 4.4 environment,
+                // so find a global conda.exe to use.
+                condaPath = _latestCondaExe.Value;
+            }
 
-                if (string.IsNullOrEmpty(condaPath)) {
-                    yield break;
-                }
+            if (string.IsNullOrEmpty(condaPath)) {
+                yield break;
+            }
 
-                IPackageManager pm = null;
-                try {
-                    pm = new CondaPackageManager(factory, condaPath);
-                } catch (NotSupportedException) {
-                    pm = null;
-                }
-                if (pm != null) {
-                    yield return pm;
-                }
+            IPackageManager pm = null;
+            try {
+                pm = new CondaPackageManager(factory, condaPath);
+            } catch (NotSupportedException) {
+                pm = null;
+            }
+            if (pm != null) {
+                yield return pm;
             }
         }
     }

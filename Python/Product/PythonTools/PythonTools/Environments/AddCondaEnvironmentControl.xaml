@@ -1,0 +1,405 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.Environments.AddCondaEnvironmentControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:l="clr-namespace:Microsoft.PythonTools.Environments"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
+             xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+             xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+             xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="730">
+    <UserControl.CommandBindings>
+        <CommandBinding
+            Command="{x:Static wpf:Commands.BrowseOpenFile}"
+            CanExecute="Browse_CanExecute"
+            Executed="Browse_Executed" />
+        <CommandBinding
+            Command="{x:Static l:AddCondaEnvironmentControl.BrowsePackages}"
+            CanExecute="BrowsePackages_CanExecute"
+            Executed="BrowsePackages_Executed" />
+    </UserControl.CommandBindings>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
+                <ResourceDictionary>
+                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToHidden">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+
+                    <DataTemplate x:Key="ProjectTemplate">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                    </DataTemplate>
+
+                    <Style x:Key="BrowsePackagesButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
+                        <Setter Property="Command" Value="{x:Static l:AddCondaEnvironmentControl.BrowsePackages}" />
+                        <Setter Property="AutomationProperties.Name" Value="{x:Static common:Strings.AddCondaSuggestedPackagesButton}"/>
+                        <Setter Property="AutomationProperties.HelpText" Value="{x:Static common:Strings.AddCondaSuggestedPackagesButtonHelpText}"/>
+                        <Setter Property="Content">
+                            <Setter.Value>
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- This is a copy of the contents of
+                                    \images\AddPackage_16x.xaml, figure out how to reference it
+                                    rather than embed it here. -->
+                                    <Viewbox Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                                        <Rectangle Width="16" Height="16">
+                                            <Rectangle.Fill>
+                                                <DrawingBrush>
+                                                    <DrawingBrush.Drawing>
+                                                        <DrawingGroup>
+                                                            <DrawingGroup.Children>
+                                                                <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+                                                                <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M16,5L16,16 3,16 3,8 2,8 2,6 0,6 0,2 2,2 2,0 6,0 6,2 8,2 8,2.291C8.726,2.509 9.205,3.027 9.503,3.469 9.892,2.894 10.583,2.184 11.731,2.184 11.88,2.184 12.036,2.196 12.2,2.224 12.932,2.346 13.568,2.746 13.995,3.35 14.34,3.839 14.513,4.414 14.494,5z" />
+                                                                <GeometryDrawing Brush="#FF424242" Geometry="F1M14,14L10,14 10,7 14,7z M10.422,5.917C10.626,5.459 10.818,5.026 10.887,4.893 11.306,4.057 11.585,4.03 11.89,4.083 12.342,4.159 12.647,4.59 12.57,5.042 12.532,5.271 12.377,5.474 12.099,5.665 11.964,5.756 11.744,5.877 11.509,6L10.385,6z M13.075,6C13.282,5.762 13.421,5.5 13.471,5.209 13.632,4.274 12.988,3.385 12.038,3.227 10.955,3.049 10.414,3.817 10.061,4.508 9.991,4.644 9.79,5.084 9.578,5.552L9.503,5.717 9.414,5.521C9.206,5.065 9.013,4.641 8.945,4.508 8.728,4.083 8.44,3.632 8,3.387L8,4.645C8.044,4.719 8.088,4.799 8.135,4.893 8.201,5.023 8.387,5.44 8.585,5.886L8.637,6 8,6 7.511,6 6,6 6,7 9,7 9,14 5,14 5,8 4,8 4,15 15,15 15,6z" />
+                                                                <GeometryDrawing Brush="#FF388A34" Geometry="F1M7,3L7,5 5,5 5,7 3,7 3,5 1,5 1,3 3,3 3,1 5,1 5,3z" />
+                                                            </DrawingGroup.Children>
+                                                        </DrawingGroup>
+                                                    </DrawingBrush.Drawing>
+                                                </DrawingBrush>
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                    </Viewbox>
+                                    <Path HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Fill="{DynamicResource {x:Static ptwpf:ModernStyles.ForegroundKey}}" 
+                                          Data="F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z"
+                                          Margin="2 2 0 0"/>
+                                </StackPanel>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    
+                    <ContextMenu x:Key="SuggestedPackagesMenu" Style="{StaticResource ThemedContextMenu}">
+                        <ContextMenu.Resources>
+                            <Style x:Key="PackageItem" TargetType="MenuItem" BasedOn="{StaticResource ThemedMenuItem}">
+                                <Setter Property="Command" Value="{x:Static l:AddCondaEnvironmentControl.AddPackageNames}"/>
+                            </Style>
+                            <Style x:Key="PackageFolder" TargetType="MenuItem" BasedOn="{StaticResource ThemedMenuItem}">
+                            </Style>
+                        </ContextMenu.Resources>
+                        <MenuItem Style="{StaticResource PackageFolder}" Header="Python">
+                            <MenuItem Style="{StaticResource PackageItem}" Header="{x:Static common:Strings.CondaPackagePythonLatest}" CommandParameter="python"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 2" CommandParameter="python=2"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 2.7" CommandParameter="python=2.7"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3" CommandParameter="python=3"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.4" CommandParameter="python=3.4"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.5" CommandParameter="python=3.5"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.6" CommandParameter="python=3.6"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.7" CommandParameter="python=3.7"/>
+                        </MenuItem>
+                        <MenuItem Style="{StaticResource PackageFolder}" Header="{x:Static common:Strings.CondaPackageDataScienceCoreLibs}">
+                            <MenuItem Style="{StaticResource PackageItem}" Header="NumPy" CommandParameter="numpy"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Pandas" CommandParameter="pandas"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="SciPy" CommandParameter="scipy"/>
+                        </MenuItem>
+                        <MenuItem Style="{StaticResource PackageFolder}" Header="{x:Static common:Strings.CondaPackageVisualization}">
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Bokeh" CommandParameter="bokeh"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Matplotlib" CommandParameter="matplotlib"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Plotly" CommandParameter="plotly"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Seaborn" CommandParameter="seaborn"/>
+                        </MenuItem>
+                        <MenuItem Style="{StaticResource PackageFolder}" Header="{x:Static common:Strings.CondaPackageMachineLearning}">
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Keras" CommandParameter="keras"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="TensorFlow" CommandParameter="tensorflow"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Theano" CommandParameter="theano"/>
+                        </MenuItem>
+                        <MenuItem Style="{StaticResource PackageFolder}" Header="{x:Static common:Strings.CondaPackageWeb}">
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Django" CommandParameter="django"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Flask" CommandParameter="flask"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Requests" CommandParameter="requests"/>
+                        </MenuItem>
+                        <ContextMenu.CommandBindings>
+                            <CommandBinding
+                                Command="{x:Static l:AddCondaEnvironmentControl.AddPackageNames}"
+                                CanExecute="AddPackageNames_CanExecute"
+                                Executed="AddPackageNames_Executed" />
+                        </ContextMenu.CommandBindings>
+                    </ContextMenu>
+
+                    <DataTemplate x:Key="PostActions">
+                        <StackPanel>
+                            <CheckBox
+                                Margin="0 0 0 10"
+                                Name="SetAsCurrentCheckBox"
+                                IsChecked="{Binding Path=SetAsCurrent}"
+                                Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
+                                AutomationProperties.AutomationId="SetAsCurrent"
+                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
+                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                            <CheckBox
+                                Margin="0 0 0 10"
+                                IsChecked="{Binding Path=SetAsDefault}"
+                                Content="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
+                                AutomationProperties.AutomationId="SetAsDefault"
+                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
+                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                            <CheckBox
+                                Margin="0 0 0 10"
+                                IsChecked="{Binding Path=ViewInEnvironmentWindow}"
+                                Content="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
+                                AutomationProperties.AutomationId="ViewInEnvironmentWindow"
+                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
+                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                        </StackPanel>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Path=SelectedProject}" Value="{x:Null}">
+                                <Setter TargetName="SetAsCurrentCheckBox" Property="UIElement.IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="Preview">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Label
+                                Grid.Row="0"
+                                Content="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <StackPanel
+                                Name="ProgressBar"
+                                Orientation="Horizontal"
+                                Grid.Row="1"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
+
+                                <imaging:CrispImage Width="16"
+                                        Height="16"
+                                        Margin="4 0 0 0"
+                                        Moniker="{x:Static catalog:KnownMonikers.Loading}"
+                                        RenderTransformOrigin="0.5, 0.5">
+                                    <imaging:CrispImage.RenderTransform>
+                                        <RotateTransform x:Name="Rotation" />
+                                    </imaging:CrispImage.RenderTransform>
+                                    <imaging:CrispImage.Triggers>
+                                        <EventTrigger RoutedEvent="Image.Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetName="Rotation"
+                                                        Storyboard.TargetProperty="Angle"
+                                                        By="360.0"
+                                                        Duration="0:0:2.0"
+                                                        RepeatBehavior="Forever" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </imaging:CrispImage.Triggers>
+                                </imaging:CrispImage>
+                                <TextBlock
+                                    Margin="4 0 0 0"
+                                    Text="{x:Static common:Strings.AddCondaEnvironmentPreviewInProgress}"/>
+                            </StackPanel>
+
+                            <ScrollViewer
+                                Grid.Row="1"
+                                AutomationProperties.AutomationId="PreviewResult"
+                                VerticalScrollBarVisibility="Auto"
+                                HorizontalScrollBarVisibility="Auto">
+
+                                <StackPanel>
+                                    <TextBlock
+                                        Name="NoPackagesMessage"
+                                        Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoPackages}"
+                                        Visibility="Collapsed"/>
+                                    <TextBlock
+                                        Name="EnvFileMissing"
+                                        Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoEnvFile}"
+                                        Visibility="Collapsed"/>
+                                    <TextBlock
+                                        Name="ErrorMessage"
+                                        Text="{Binding Path=CondaPreview.ErrorMessage}"
+                                        Visibility="Collapsed"/>
+                                    <TextBlock
+                                        Name="EnvFileMessage"
+                                        Text="{Binding Path=CondaPreview.EnvFileContents}"
+                                        Visibility="Collapsed"/>
+                                    <ItemsControl
+                                        Name="PackagesList"
+                                        ItemsSource="{Binding Path=CondaPreview.Packages}"
+                                        Grid.IsSharedSizeScope="True"
+                                        Focusable="False"
+                                        Visibility="Collapsed">
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition SharedSizeGroup="A" Width="Auto"/>
+                                                        <ColumnDefinition Width="8"/>
+                                                        <ColumnDefinition SharedSizeGroup="B" Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock
+                                                        Grid.Column="0"
+                                                        Margin="0 0 0 7"
+                                                        HorizontalAlignment="Left"
+                                                        Text="{Binding Name}"/>
+                                                    <TextBlock
+                                                        Grid.Column="2"
+                                                        Margin="0 0 0 7"
+                                                        HorizontalAlignment="Left"
+                                                        Text="{Binding Version}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.IsInProgress}" Value="True">
+                                <Setter TargetName="ProgressBar" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.IsNoPackages}" Value="True">
+                                <Setter TargetName="NoPackagesMessage" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.HasPreviewError}" Value="True">
+                                <Setter TargetName="ErrorMessage" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=CondaPreview.IsEnvFile}" Value="True" />
+                                    <Condition Binding="{Binding Path=CondaPreview.EnvFileContents}" Value=""  />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="EnvFileMissing" Property="UIElement.Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.IsEnvFile}" Value="True">
+                                <Setter TargetName="EnvFileMessage" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.IsNoEnvFile}" Value="True">
+                                <Setter TargetName="EnvFileMissing" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Path=CondaPreview.IsPackages}" Value="True">
+                                <Setter TargetName="PackagesList" Property="UIElement.Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Margin="0 7 0 0">
+        <Grid Visibility="{Binding Path=IsCondaMissing, Converter={StaticResource BoolToVisible}}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Text="{x:Static common:Strings.CondaNotFoundError}"
+                TextWrapping="Wrap"/>
+        </Grid>
+        <Grid Visibility="{Binding Path=IsCondaMissing, Converter={StaticResource BoolToHidden}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="514*"/>
+                <ColumnDefinition Width="28"/>
+                <ColumnDefinition Width="188*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer
+                Grid.Column="0"
+                VerticalScrollBarVisibility="Auto">
+
+                <StackPanel>
+                    <Label
+                        x:Name="ProjectLabel"
+                        Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
+                        Target="{Binding ElementName=ProjectComboBox}"
+                        Style="{StaticResource ModernLabel}"/>
+
+                    <ComboBox
+                        x:Name="ProjectComboBox"
+                        Margin="0 0 0 17"
+                        MinHeight="29"
+                        Width="249"
+                        HorizontalAlignment="Left"
+                        ItemsSource="{Binding Path=Projects}"
+                        SelectedItem="{Binding Path=SelectedProject}"
+                        ItemTemplate="{StaticResource ProjectTemplate}"
+                        AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"
+                        AutomationProperties.AutomationId="Project"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"/>
+
+                    <Label
+                        x:Name="EnvNameLabel"
+                        Content="{x:Static common:Strings.AddCondaEnvironmentNameLabel}"
+                        Target="{Binding ElementName=EnvNameTextBox}"
+                        Style="{StaticResource ModernLabel}"/>
+
+                    <TextBox
+                        x:Name="EnvNameTextBox"
+                        Margin="0 0 0 17"
+                        MinHeight="29"
+                        Width="249"
+                        HorizontalAlignment="Left"
+                        Text="{Binding Path=EnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                        AutomationProperties.AutomationId="EnvName"
+                        AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
+
+                    <Label
+                        Content="{x:Static common:Strings.AddCondaEnvironmentAddPackagesLabel}"
+                        Style="{StaticResource ModernLabel}"/>
+
+                    <RadioButton
+                        x:Name="EnvFileRadioButton"
+                        Margin="16 6 0 3"
+                        Content="{x:Static common:Strings.AddCondaEnvironmentFileRadioButton}"
+                        IsChecked="{Binding Path=IsEnvFile}"
+                        GroupName="SourceType"
+                        AutomationProperties.AutomationId="EnvFileMode"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogRadioButtonStyleKey}}"/>
+
+                    <wpf:ConfigurationTextBoxWithHelp
+                        Margin="36 0 0 9"
+                        IsEnabled="{Binding Path=IsEnvFile}"
+                        Text="{Binding SelectedEnvFilePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                        Watermark="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
+                        AutomationProperties.AutomationId="EnvFile"
+                        AutomationProperties.LabeledBy="{Binding ElementName=EnvFileRadioButton}"
+                        BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                        BrowseCommandParameter="{x:Static common:Strings.AddCondaEnvironmentFileBrowseFilter}"
+                        BrowseAutomationName="{x:Static common:Strings.AddCondaEnvironmentFileBrowseButton}"/>
+
+                    <RadioButton
+                        x:Name="PackagesRadioButton"
+                        Margin="16 0 0 3"
+                        Content="{x:Static common:Strings.AddCondaPackagesRadioButton}"
+                        IsChecked="{Binding Path=IsPackages}"
+                        GroupName="SourceType"
+                        AutomationProperties.AutomationId="PackagesMode"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogRadioButtonStyleKey}}"/>
+
+                    <wpf:ConfigurationTextBoxWithHelp
+                        Margin="36 0 0 19"
+                        IsEnabled="{Binding Path=IsPackages}"
+                        Text="{Binding Packages,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                        BrowseButtonStyle="{StaticResource BrowsePackagesButton}"
+                        Watermark="{x:Static common:Strings.AddCondaPackagesWatermark}"
+                        AutomationProperties.AutomationId="Packages"
+                        AutomationProperties.LabeledBy="{Binding ElementName=PackagesRadioButton}"/>
+
+                    <ContentControl
+                        IsTabStop="False"
+                        Focusable="False"
+                        Content="{Binding}"
+                        ContentTemplate="{StaticResource PostActions}"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!--Preview-->
+            <ContentControl
+                Grid.Column="2"
+                IsTabStop="False"
+                Focusable="False"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource Preview}"/>
+        </Grid>
+    </Grid>
+</UserControl>

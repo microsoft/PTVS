@@ -125,6 +125,19 @@ permissions and limitations under the License.
         </Strings>
       </Menu>
 
+      <!-- Environments window toolbar -->
+      <Menu guid="guidPythonToolsCmdSet" id="EnvWindowToolbar" type="ToolWindowToolbar" priority="0x100">
+        <Parent guid="guidPythonToolsCmdSet" id="0" />
+        <CommandFlag>DefaultDocked</CommandFlag>
+        <CommandFlag>NoToolbarClose</CommandFlag>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Python Environments Window</ButtonText>
+          <CommandName>Python Environments Window</CommandName>
+        </Strings>
+      </Menu>
+
       <!-- REPL window toolbar -->
       <Menu Condition="Defined(DEV15_OR_LATER)" guid="guidPythonToolsCmdSet" id="ReplWindowToolbar" type="ToolWindowToolbar" priority="0x100">
         <Parent guid="guidPythonToolsCmdSet" id="0" />
@@ -245,6 +258,10 @@ permissions and limitations under the License.
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0200" Condition="Defined(DEV14)">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup" priority="0x0100">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvWindowToolbar"/>
+      </Group>
     </Groups>
     
     <Buttons>
@@ -307,44 +324,53 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Add/Remove Python &amp;Environments...</ButtonText>
-          <ToolTipText>Allows Python environments to be added or removed from this project.</ToolTipText>
-          <CanonicalName>Add Remove Environments</CanonicalName>
-          <LocCanonicalName>Add Remove Environments</LocCanonicalName>
+          <ButtonText>Add &amp;Environment...</ButtonText>
+          <ToolTipText>Add a new or existing Python environment.</ToolTipText>
+          <CanonicalName>Add Environment</CanonicalName>
+          <LocCanonicalName>Add Environment</LocCanonicalName>
         </Strings>
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x0110" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Virtual Environment...</ButtonText>
-          <ToolTipText>Adds a new or existing virtual environment to this project.</ToolTipText>
+          <ToolTipText>Adds a new virtual environment.</ToolTipText>
           <CanonicalName>Add Virtual Environment</CanonicalName>
           <LocCanonicalName>Add Virtual Environment</LocCanonicalName>
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingVirtualEnv" priority="0x0120" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <Strings>
-          <ButtonText>Add Existing &amp;Virtual Environment...</ButtonText>
-          <ToolTipText>Browses for an existing virtual environment to add to this project.</ToolTipText>
-          <CanonicalName>Add Existing Virtual Environment</CanonicalName>
-          <LocCanonicalName>Add Existing Virtual Environment</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidCreateCondaEnv" priority="0x0130" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingEnv" priority="0x0120" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Create &amp;Conda Environment...</ButtonText>
-          <ToolTipText>Creates a new conda environment.</ToolTipText>
-          <CanonicalName>Create Conda Environment</CanonicalName>
-          <LocCanonicalName>Create Conda Environment</LocCanonicalName>
+          <ButtonText>Add E&amp;xisting Environment...</ButtonText>
+          <ToolTipText>Add an existing environment.</ToolTipText>
+          <CanonicalName>Add Existing Environment</CanonicalName>
+          <LocCanonicalName>Add Existing Environment</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddCondaEnv" priority="0x0130" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Add &amp;Conda Environment...</ButtonText>
+          <ToolTipText>Add a new conda environment.</ToolTipText>
+          <CanonicalName>Add Conda Environment</CanonicalName>
+          <LocCanonicalName>Add Conda Environment</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -675,19 +701,6 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidInstallProjectRequirements" priority="0x0610" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="MiscCommandsGroup"/>
-        <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
-        <Strings>
-          <ButtonText>Ins&amp;tall Project Requirements</ButtonText>
-          <ToolTipText>Installs project requirements.</ToolTipText>
-          <CanonicalName>.Python.InstallProjectRequirements</CanonicalName>
-          <LocCanonicalName>Install Project Requirements</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      
       <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup" />
         <CommandFlag>DynamicItemStart</CommandFlag>
@@ -1054,6 +1067,10 @@ permissions and limitations under the License.
       <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
     </CommandPlacement>
 
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidAbortExecution" priority="0x0110">
       <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
     </CommandPlacement>
@@ -1122,7 +1139,7 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidAddEnvironment" value="0x4006" />
       <IDSymbol name="cmdidAddVirtualEnv" value="0x4007" />
-      <IDSymbol name="cmdidAddExistingVirtualEnv" value="0x4008" />
+      <IDSymbol name="cmdidAddExistingEnv" value="0x4008" />
       <IDSymbol name="cmdidActivateEnvironment" value="0x4009" />
       <IDSymbol name="cmdidInstallPythonPackage" value="0x400A" />
       <IDSymbol name="cmdidViewAllEnvironments" value="0x400B" />
@@ -1144,8 +1161,7 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidGenerateRequirementsTxt" value="0x4034" />
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
-      <IDSymbol name="cmdidInstallProjectRequirements" value="0x4036" />
-      <IDSymbol name="cmdidCreateCondaEnv" value="0x4037" />
+      <IDSymbol name="cmdidAddCondaEnv" value="0x4037" />
 
       <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
       <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>
@@ -1174,6 +1190,7 @@ permissions and limitations under the License.
       <IDSymbol name="InteractiveToolbarStandardGroup" value="0x1063" />
       <IDSymbol name="InteractiveToolbarPythonGroup" value="0x1064" />
       <IDSymbol name="MiscCommandsGroup" value="0x1065" />
+      <IDSymbol name="EnvWindowAddGroup" value="0x1066" />
 
       <!-- Menus -->
       <IDSymbol name="PythonMenu" value="0x2000"/>
@@ -1188,6 +1205,7 @@ permissions and limitations under the License.
       <IDSymbol name="SearchPathContainerMenu" value="0x2009" />
       <IDSymbol name="SearchPathMenu" value="0x200A" />
       <IDSymbol name="ReplWindowToolbar" value="0x200B"/>
+      <IDSymbol name="EnvWindowToolbar" value="0x200C"/>
 
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>

@@ -31,6 +31,7 @@ using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -39,7 +40,6 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -56,7 +56,7 @@ using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    internal class PythonProjectNode :
+    internal partial class PythonProjectNode :
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
@@ -94,6 +94,10 @@ namespace Microsoft.PythonTools.Project {
         private Dictionary<object, Action<object>> _actionsOnClose;
         private readonly PythonProject _pythonProject;
 
+        private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
+        private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
+        private readonly PackageInstallInfoBar _packageInstallInfoBar;
+
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
@@ -124,6 +128,10 @@ namespace Microsoft.PythonTools.Project {
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
             _pythonProject = new VsPythonProject(this);
+
+            _condaEnvCreateInfoBar = new CondaEnvCreateInfoBar(this);
+            _virtualEnvCreateInfoBar = new VirtualEnvCreateInfoBar(this);
+            _packageInstallInfoBar = new PackageInstallInfoBar(this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -326,7 +334,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddInterpreterReference(InterpreterConfiguration config) {
+        public void AddInterpreterDefinitionAndReference(InterpreterConfiguration config) {
             lock (_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
@@ -717,6 +725,10 @@ namespace Microsoft.PythonTools.Project {
             ReanalyzeProject(ActiveInterpreter)
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
+
+            _condaEnvCreateInfoBar.Check();
+            _virtualEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            _packageInstallInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -1061,6 +1073,10 @@ namespace Microsoft.PythonTools.Project {
                     }
                     _analyzer = null;
                 }
+
+                _condaEnvCreateInfoBar.Dispose();
+                _virtualEnvCreateInfoBar.Dispose();
+                _packageInstallInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
@@ -1771,14 +1787,13 @@ namespace Microsoft.PythonTools.Project {
 
                 switch ((int)cmdId) {
                     case PythonConstants.AddEnvironment:
-                        ShowAddInterpreter();
-                        return VSConstants.S_OK;
-                    case PythonConstants.CreateCondaEnv:
-                        return ExecCreateCondaEnv();
-                    case PythonConstants.AddExistingVirtualEnv:
+                        return ShowAddEnvironment();
+                    case PythonConstants.AddExistingEnv:
+                        return ShowAddExistingEnvironment();
                     case PythonConstants.AddVirtualEnv:
-                        ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv, Path.Combine(ProjectHome, "requirements.txt"));
-                        return VSConstants.S_OK;
+                        return ShowAddVirtualEnvironment();
+                    case PythonConstants.AddCondaEnv:
+                        return ShowAddCondaEnvironment();
                     case PythonConstants.ViewAllEnvironments:
                         Site.ShowInterpreterList();
                         return VSConstants.S_OK;
@@ -1788,9 +1803,6 @@ namespace Microsoft.PythonTools.Project {
                         return AddSearchPathZip();
                     case PythonConstants.AddPythonPathToSearchPathCommandId:
                         return AddPythonPathToSearchPath();
-                    case PythonConstants.ProcessRequirementsTxt:
-                        ProcessRequirementsTxt(vaIn, vaOut, cmdExecOpt);
-                        return VSConstants.S_OK;
                     default:
                         handled = false;
                         break;
@@ -1807,87 +1819,6 @@ namespace Microsoft.PythonTools.Project {
 
             var obj = Marshal.GetObjectForNativeVariant(variantIn);
             return obj as string;
-        }
-
-        private void ProcessRequirementsTxt(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
-            var requirementsPath = GetStringArgument(variantIn) ?? "";
-            requirementsPath = requirementsPath.Trim('"');
-            if (!File.Exists(requirementsPath)) {
-                Debug.Fail("ProcessRequirementsTxt did not find '{0}'".FormatInvariant(requirementsPath));
-                return;
-            }
-
-            var td = new TaskDialog(Site) {
-                Title = string.Format("{0} - {1}", GetProjectName(), Strings.ProductTitle),
-                MainInstruction = Strings.InstallRequirementsHeading,
-                Content = Strings.InstallRequirementsMessage,
-                EnableHyperlinks = true,
-                AllowCancellation = true,
-            };
-
-            var factory = GetInterpreterFactory();
-            var isGlobalEnv = string.IsNullOrEmpty(InterpreterRegistry.GetProperty(factory.Configuration.Id, "ProjectMoniker") as string);
-
-            // Install into a new virtual environment
-            TaskDialogButton venv = null;
-            if (isGlobalEnv) {
-                venv = new TaskDialogButton(
-                    Strings.InstallRequirementsIntoVirtualEnv,
-                    Strings.InstallRequirementsIntoVirtualEnvTip
-                );
-                td.Buttons.Add(venv);
-            }
-
-            // Install into the currently active environment
-            TaskDialogButton install = null;
-
-            var pm = InterpreterOptions.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
-            if (pm != null) {
-                var description = factory.Configuration.Description ?? Strings.CurrentInterpreterDescription;
-                install = new TaskDialogButton(
-                    string.Format(Strings.InstallRequirementsIntoCurrentEnv, description),
-                    isGlobalEnv ? Strings.InstallRequirementsIntoGlobalEnvTip : Strings.InstallRequirementsIntoVirtualEnvTip
-                );
-                td.Buttons.Add(install);
-            }
-
-            if (install == null && venv == null) {
-                Debug.Fail("ProcessRequirementsTxt found nowhere to install");
-                return;
-            }
-
-            // Do nothing
-            var goAway = new TaskDialogButton(Strings.InstallRequirementsNowhere);
-            td.Buttons.Add(goAway);
-
-            try {
-                td.ExpandedInformation = File.ReadAllText(requirementsPath);
-                td.CollapsedControlText = Strings.InstallRequirementsShowPackages;
-                td.ExpandedControlText = Strings.InstallRequirementsHidePackages;
-            } catch (IOException) {
-            } catch (NotSupportedException) {
-            } catch (UnauthorizedAccessException) {
-            }
-
-            var btn = td.ShowModal();
-
-            try {
-                if (btn == venv) {
-                    ShowAddVirtualEnvironmentWithErrorHandling(false, requirementsPath);
-                } else if (btn == install) {
-                    InstallRequirements(null, requirementsPath, factory);
-                }
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                TaskDialog.ForException(
-                    Site,
-                    ex,
-                    Strings.InstallRequirementsFailed,
-                    Strings.IssueTrackerUrl
-                ).ShowModal();
-            }
         }
 
         private void GetSelectedInterpreterOrDefault(
@@ -1964,8 +1895,6 @@ namespace Microsoft.PythonTools.Project {
                         return "e,env,environment: p,package: a,admin";
                     case PythonConstants.GenerateRequirementsTxt:
                         return "e,env,environment:";
-                    case PythonConstants.ProcessRequirementsTxt:
-                        return "path";
                 }
             }
             return base.QueryCommandArguments(cmdGroup, cmdId, commandOrigin);
@@ -2002,9 +1931,9 @@ namespace Microsoft.PythonTools.Project {
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             return true;
                         case PythonConstants.ActivateEnvironment:
-                        case PythonConstants.CreateCondaEnv:
+                        case PythonConstants.AddCondaEnv:
                         case PythonConstants.AddEnvironment:
-                        case PythonConstants.AddExistingVirtualEnv:
+                        case PythonConstants.AddExistingEnv:
                         case PythonConstants.AddVirtualEnv:
                         case PythonConstants.InstallPythonPackage:
                         case PythonConstants.InstallRequirementsTxt:
@@ -2022,9 +1951,9 @@ namespace Microsoft.PythonTools.Project {
                 } else if (this.IsAppxPackageableProject()) {
                     // Disable adding environment for UWP projects
                     switch ((int)cmd) {
-                        case PythonConstants.CreateCondaEnv:
+                        case PythonConstants.AddCondaEnv:
                         case PythonConstants.AddEnvironment:
-                        case PythonConstants.AddExistingVirtualEnv:
+                        case PythonConstants.AddExistingEnv:
                         case PythonConstants.AddVirtualEnv:
                             return true;
                     }
@@ -2208,7 +2137,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int ExecInstallRequirementsTxt(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
-            var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+            var txt = GetRequirementsTxtPath();
 
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
@@ -2236,7 +2165,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task InstallRequirementsAsync(IPackageManager pm, Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
-            var name = "-r " + ProcessOutput.QuoteSingleArgument(requirementsPath);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
                     selectedInterpreterFactory.Configuration.Description,
@@ -2247,19 +2175,18 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var ui = new VsPackageManagerUI(Site);
-            try {
-                if (!pm.IsReady) {
-                    await pm.PrepareAsync(ui, CancellationToken.None);
-                }
-                await pm.InstallAsync(
-                    PackageSpec.FromArguments(name),
-                    ui,
-                    CancellationToken.None
-                );
-            } catch (InvalidOperationException ex) {
-                ui.OnErrorTextReceived(pm, ex.Message);
-            }
+            await InstallRequirementsAsync(Site, pm, requirementsPath);
+        }
+
+        internal static async Task InstallRequirementsAsync(IServiceProvider site, IPackageManager pm, string requirementsPath) {
+            var operation = new InstallPackagesOperation(
+                site,
+                pm,
+                requirementsPath,
+                OutputWindowRedirector.GetGeneral(site)
+            );
+
+            await operation.RunAsync();
         }
 
         private bool ShouldInstallRequirementsTxt(
@@ -2488,18 +2415,33 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#endregion
+        #endregion
 
-#region Virtual Env support
+        #region Virtual Env support
 
-        private void ShowAddInterpreter() {
-            var service = InterpreterOptions;
+        private int ShowAddEnvironment() {
+            AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(
+                Site,
+                this,
+                null,
+                GetEnvironmentYmlPath(),
+                GetRequirementsTxtPath()
+            ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            return VSConstants.S_OK;
+        }
 
-            var result = PythonTools.Project.AddInterpreter.ShowDialog(this, service);
-            if (result == null) {
-                return;
-            }
+        private int ShowAddExistingEnvironment() {
+            AddEnvironmentDialog.ShowAddExistingEnvironmentDialogAsync(
+                Site,
+                this,
+                null,
+                GetEnvironmentYmlPath(),
+                GetRequirementsTxtPath()
+            ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            return VSConstants.S_OK;
+        }
 
+        internal void ChangeInterpreters(IEnumerable<string> result) {
             var toRemove = new HashSet<string>(InterpreterIds);
             var toAdd = new HashSet<string>(result);
             toRemove.ExceptWith(toAdd);
@@ -2519,7 +2461,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting, string requirementsPath) {
+        private int ShowAddVirtualEnvironment() {
+            ShowAddVirtualEnvironmentAsync(
+                GetRequirementsTxtPath()
+            ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            return VSConstants.S_OK;
+        }
+
+        private async Task ShowAddVirtualEnvironmentAsync(string requirementsPath) {
             var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
 
@@ -2533,7 +2482,13 @@ namespace Microsoft.PythonTools.Project {
             object index = (short)0;
             statusBar.Animation(1, ref index);
             try {
-                await AddVirtualEnvironment.ShowDialog(this, service, requirementsPath, browseForExisting);
+                await AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
+                    Site,
+                    this,
+                    null,
+                    null,
+                    requirementsPath
+                );
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
@@ -2553,19 +2508,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal async Task<IPythonInterpreterFactory> CreateOrAddVirtualEnvironment(
-            IInterpreterRegistryService service,
-            bool create,
-            string path,
-            IPythonInterpreterFactory baseInterp,
-            bool preferVEnv = false
-        ) {
-            if (create && preferVEnv) {
-                await VirtualEnv.CreateWithVEnv(Site, baseInterp, path);
-            } else if (create) {
-                await VirtualEnv.CreateAndInstallDependencies(Site, baseInterp, path);
-            }
-
+        internal IPythonInterpreterFactory AddVirtualEnvironment(IInterpreterRegistryService service, string path, IPythonInterpreterFactory baseInterp) {
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             foreach (var existingConfig in InterpreterConfigurations) {
                 var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.PrefixPath);
@@ -2587,7 +2530,53 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                AddInterpreterReference(config);
+                AddInterpreterDefinitionAndReference(config);
+            } catch (ArgumentException ex) {
+                TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
+                return null;
+            }
+            return InterpreterRegistry.FindInterpreter(id);
+        }
+
+        internal IPythonInterpreterFactory AddMSBuildEnvironment(
+            IInterpreterRegistryService service,
+            string path,
+            string interpreterPath,
+            string windowsInterpreterPath,
+            string pathVar,
+            Version languageVersion,
+            InterpreterArchitecture architecture,
+            string description
+        ) {
+            var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
+            foreach (var existingConfig in InterpreterConfigurations) {
+                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.PrefixPath);
+
+                if (rootPrefix.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {
+                    return InterpreterRegistry.FindInterpreter(existingConfig.Id);
+                }
+            }
+
+            string id = GetNewEnvironmentName(path);
+
+            var config = new InterpreterConfiguration(
+                id,
+                description,
+                path,
+                interpreterPath,
+                windowsInterpreterPath,
+                pathVar,
+                architecture,
+                languageVersion,
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+            );
+
+            if (!QueryEditProjectFile(false)) {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+            }
+
+            try {
+                AddInterpreterDefinitionAndReference(config);
             } catch (ArgumentException ex) {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;
@@ -2652,13 +2641,33 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#endregion
+        #endregion
 
-        private int ExecCreateCondaEnv() {
-            InterpreterList.InterpreterListToolWindow.OpenAtAsync(
+        internal string GetRequirementsTxtPath() {
+            var reqsPath = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+            return File.Exists(reqsPath) ? reqsPath : null;
+        }
+
+        internal string GetEnvironmentYmlPath() {
+            var yamlPath = PathUtils.GetAbsoluteFilePath(ProjectHome, "environment.yml");
+            return File.Exists(yamlPath) ? yamlPath : null;
+        }
+
+        internal int ShowAddCondaEnvironment() {
+            return ShowAddCondaEnvironment(null, GetEnvironmentYmlPath());
+        }
+
+        internal int ShowAddCondaEnvironment(string existingName, string yamlPath) {
+            //Make sure we can edit the project file
+            if (!QueryEditProjectFile(false)) {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+            }
+
+            AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
                 Site,
-                EnvironmentsList.EnvironmentView.CondaEnvironmentViewId,
-                typeof(EnvironmentsList.CondaExtensionProvider)
+                this,
+                existingName,
+                yamlPath).HandleAllExceptions(Site, typeof(PythonProjectNode)
             ).DoNotWait();
             return VSConstants.S_OK;
         }

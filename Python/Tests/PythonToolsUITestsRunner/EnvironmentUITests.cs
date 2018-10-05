@@ -19,7 +19,7 @@ using TestRunnerInterop;
 
 namespace PythonToolsUITestsRunner {
     [TestClass]
-    public class VirtualEnvUITests {
+    public class EnvironmentUITests {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -43,85 +43,103 @@ namespace PythonToolsUITestsRunner {
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void InstallUninstallPackage() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.InstallUninstallPackage));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.InstallUninstallPackage));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CreateInstallRequirementsTxt() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.CreateInstallRequirementsTxt));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.CreateInstallRequirementsTxt));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void InstallGenerateRequirementsTxt() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.InstallGenerateRequirementsTxt));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.InstallGenerateRequirementsTxt));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LoadVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.LoadVEnv));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.LoadVEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ActivateVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.ActivateVEnv));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ActivateVEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void RemoveVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.RemoveVEnv));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.RemoveVEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DeleteVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.DeleteVEnv));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.DeleteVEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DefaultBaseInterpreterSelection() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.DefaultBaseInterpreterSelection));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.DefaultBaseInterpreterSelection));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CreateVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.CreateVEnv));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.CreateVEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void AddExistingVEnv() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.AddExistingVEnv));
+        public void CreateCondaEnvFromPackages() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.CreateCondaEnvFromPackages));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void CreateCondaEnvFromEnvFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.CreateCondaEnvFromEnvFile));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void AddExistingVEnvLocal() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.AddExistingVEnvLocal));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void AddCustomEnvLocal() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.AddCustomEnvLocal));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void AddExistingEnv() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.AddExistingEnv));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchUnknownEnvironment() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.LaunchUnknownEnvironment));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void UnavailableEnvironments() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.UnavailableEnvironments));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.LaunchUnknownEnvironment));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void EnvironmentReplWorkingDirectory() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.EnvironmentReplWorkingDirectory));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.EnvironmentReplWorkingDirectory));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void VirtualEnvironmentReplWorkingDirectory() {
-            _vs.RunTest(nameof(PythonToolsUITests.VirtualEnvUITests.VirtualEnvironmentReplWorkingDirectory));
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.VirtualEnvironmentReplWorkingDirectory));
         }
     }
 }

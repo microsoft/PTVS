@@ -17,8 +17,12 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Microsoft.VisualStudioTools.Wpf {
+    [TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
+    [TemplatePart(Name = "PART_Watermark", Type = typeof(TextBlock))]
+    [TemplatePart(Name = "PART_BrowseButton", Type = typeof(Button))]
     sealed class ConfigurationTextBoxWithHelp : Control {
         public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
@@ -27,6 +31,8 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly DependencyProperty BrowseButtonStyleProperty = DependencyProperty.Register("BrowseButtonStyle", typeof(Style), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseCommandParameterProperty = DependencyProperty.Register("BrowseCommandParameter", typeof(object), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseAutomationNameProperty = DependencyProperty.Register("BrowseAutomationName", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
+
+        private TextBox _textBox;
 
         public string Watermark {
             get { return (string)GetValue(WatermarkProperty); }
@@ -62,13 +68,28 @@ namespace Microsoft.VisualStudioTools.Wpf {
             get { return (string)GetValue(BrowseAutomationNameProperty); }
             set { SetValue(BrowseAutomationNameProperty, value); }
         }
+
+        public override void OnApplyTemplate() {
+            base.OnApplyTemplate();
+
+            _textBox = GetTemplateChild("PART_TextBox") as TextBox;
+        }
+
+        protected override void OnAccessKey(AccessKeyEventArgs e) {
+            if (_textBox != null) {
+                _textBox.Focus();
+            }
+        }
     }
 
+    [TemplatePart(Name = "PART_ComboBox", Type = typeof(ComboBox))]
     sealed class ConfigurationComboBoxWithHelp : Control {
         public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty ValueProperty = DependencyProperty.Register("Value", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty ValuesProperty = DependencyProperty.Register("Values", typeof(IList<string>), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
+
+        private ComboBox _comboBox;
 
         public string Watermark {
             get { return (string)GetValue(WatermarkProperty); }
@@ -88,6 +109,18 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public IList<string> Values {
             get { return (IList<string>)GetValue(ValuesProperty); }
             set { SetValue(ValuesProperty, value); }
+        }
+
+        public override void OnApplyTemplate() {
+            base.OnApplyTemplate();
+
+            _comboBox = GetTemplateChild("PART_ComboBox") as ComboBox;
+        }
+
+        protected override void OnAccessKey(AccessKeyEventArgs e) {
+            if (_comboBox != null) {
+                _comboBox.Focus();
+            }
         }
     }
 }

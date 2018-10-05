@@ -716,6 +716,26 @@ namespace Microsoft.PythonTools.Infrastructure {
             return true;
         }
 
+        private async Task<int> WaitAsync() {
+            return await this;
+        }
+
+        public async Task<int> WaitAsync(CancellationToken ct, bool killProcessOnCancel) {
+            while (true) {
+                var doneTask = WaitAsync();
+                if (await Task.WhenAny(doneTask, Task.Delay(TimeSpan.FromSeconds(1))) == doneTask) {
+                    return await doneTask;
+                }
+
+                if (ct.IsCancellationRequested) {
+                    if (killProcessOnCancel) {
+                        Kill();
+                    }
+                    ct.ThrowIfCancellationRequested();
+                }
+            }
+        }
+
         /// <summary>
         /// Enables using 'await' on this object.
         /// </summary>

@@ -20,15 +20,9 @@ using Microsoft.Win32;
 namespace Microsoft.PythonTools.Interpreter {
     static class ExperimentalOptions {
         private const string ExperimentSubkey = @"Software\Microsoft\PythonTools\Experimental";
-        internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
-        internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
         internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger"; // Named as "UseVSCDebugger" in 15.7 to disable this by default
-        internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
-        internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
         internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseVsCodeDebugger);
 
-        public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: true);
-        public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: true);
         public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: true);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
@@ -58,16 +52,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 root.SetValue(keyName, (value ? 1 : 0));
             }
-        }
-
-        public static bool AutoDetectCondaEnvironments {
-            get => _autoDetectCondaEnvironments.Value;
-            set => SetBooleanFlag(AutoDetectCondaEnvironmentsKey, value);
-        }
-
-        public static bool UseCondaPackageManager {
-            get => _useCondaPackageManager.Value;
-            set => SetBooleanFlag(UseCondaPackageManagerKey, value);
         }
 
         public static bool UseVsCodeDebugger {

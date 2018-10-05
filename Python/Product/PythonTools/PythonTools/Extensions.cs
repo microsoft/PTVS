@@ -835,6 +835,17 @@ namespace Microsoft.PythonTools {
             toolWindowService.ShowWindowPaneAsync(windowPane, focus).DoNotWait();
         }
 
+        private const string TaskStatusCenterCommandSetGuidString = "EF254CCF-CEE3-43E9-A22C-3AE3AB08E7FE";
+        private static readonly Guid TaskStatusCenterCommandSetGuid = new Guid(TaskStatusCenterCommandSetGuidString);
+
+        // View.ShowTaskStatusCenter
+        private const int cmdidShowTaskStatusCenter = 0x0100;
+        public static readonly CommandID ShowTaskStatusCenterCommand = new CommandID(TaskStatusCenterCommandSetGuid, cmdidShowTaskStatusCenter);
+
+        public static void ShowTaskStatusCenter(this IServiceProvider provider) {
+            provider.GlobalInvoke(ShowTaskStatusCenterCommand);
+        }
+
         public static string BrowseForDirectory(this IServiceProvider provider, IntPtr owner, string initialDirectory = null) {
             IVsUIShell uiShell = provider.GetService(typeof(SVsUIShell)) as IVsUIShell;
             if (null == uiShell) {

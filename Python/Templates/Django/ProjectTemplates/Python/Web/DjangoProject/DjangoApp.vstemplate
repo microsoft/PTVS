@@ -21,8 +21,4 @@
       <ProjectItem>requirements.txt</ProjectItem>
     </Project>
   </TemplateContent>
-  <WizardExtension>
-    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
-    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
-  </WizardExtension>
 </VSTemplate>

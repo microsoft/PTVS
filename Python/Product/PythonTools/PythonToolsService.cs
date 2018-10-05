@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools {
         private readonly IPythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
-        private readonly Lazy<Options.ExperimentalOptions> _experimentalOptions;
+        private readonly Lazy<CondaOptions> _condaOptions;
         private readonly Lazy<DiagnosticsOptions> _diagnosticsOptions;
         private readonly Lazy<GeneralOptions> _generalOptions;
         private readonly Lazy<LanguageServerOptions> _languageServerOptions;
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools {
             _idleManager = new IdleManager(container);
             _advancedOptions = new Lazy<AdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<DebuggerOptions>(CreateDebuggerOptions);
-            _experimentalOptions = new Lazy<Options.ExperimentalOptions>(CreateExperimentalOptions);
+            _condaOptions = new Lazy<CondaOptions>(CreateCondaOptions);
             _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
             _languageServerOptions = new Lazy<LanguageServerOptions>(CreateLanguageServerOptions);
@@ -159,8 +159,6 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
-                    { "AutoDetectCondaEnvironments", ExperimentalOptions.AutoDetectCondaEnvironments },
-                    { "UseCondaPackageManager", ExperimentalOptions.UseCondaPackageManager },
                     { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
                 });
             } catch (Exception ex) {
@@ -260,7 +258,7 @@ namespace Microsoft.PythonTools {
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
-        public Options.ExperimentalOptions ExperimentalOptions => _experimentalOptions.Value;
+        public CondaOptions CondaOptions => _condaOptions.Value;
         public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
         public GeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
@@ -278,8 +276,8 @@ namespace Microsoft.PythonTools {
             return opts;
         }
 
-        private Options.ExperimentalOptions CreateExperimentalOptions() {
-            var opts = new Options.ExperimentalOptions(this);
+        private CondaOptions CreateCondaOptions() {
+            var opts = new CondaOptions(this);
             opts.Load();
             return opts;
         }

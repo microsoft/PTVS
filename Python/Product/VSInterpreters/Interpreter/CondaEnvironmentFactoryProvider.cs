@@ -20,8 +20,10 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 
@@ -283,10 +285,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void FindCondaEnvironments(List<PythonInterpreterInformation> envs) {
-            // Try to find an existing root conda installation
-            // If the future we may decide to install a private installation of conda/miniconda
-            var globalFactories = _globalProvider.GetInterpreterFactories().ToList();
-            var mainCondaExePath = CondaUtils.GetLatestCondaExecutablePath(globalFactories);
+            var mainCondaExePath = CondaUtils.GetRootCondaExecutablePath(_site);
             if (mainCondaExePath != null) {
                 envs.AddRange(FindCondaEnvironments(mainCondaExePath));
             }
@@ -367,10 +366,6 @@ namespace Microsoft.PythonTools.Interpreter {
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
-            if (!ExperimentalOptions.AutoDetectCondaEnvironments) {
-                return Enumerable.Empty<InterpreterConfiguration>();
-            }
-
             EnsureInitialized();
 
             lock (_factories) {
@@ -379,10 +374,6 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
-            if (!ExperimentalOptions.AutoDetectCondaEnvironments) {
-                return null;
-            }
-
             EnsureInitialized();
 
             PythonInterpreterInformation info;
@@ -405,9 +396,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private EventHandler _interpFactoriesChanged;
         public event EventHandler InterpreterFactoriesChanged {
             add {
-                if (ExperimentalOptions.AutoDetectCondaEnvironments) {
-                    EnsureInitialized();
-                }
+                EnsureInitialized();
                 _interpFactoriesChanged += value;
             }
             remove {
@@ -420,10 +409,6 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public object GetProperty(string id, string propName) {
-            if (!ExperimentalOptions.AutoDetectCondaEnvironments) {
-                return null;
-            }
-
             PythonInterpreterInformation info;
 
             switch (propName) {
@@ -445,6 +430,39 @@ namespace Microsoft.PythonTools.Interpreter {
                     return true;
             }
 
+            return null;
+        }
+
+        internal static bool IsCondaEnv(IPythonInterpreterFactory factory) {
+            return factory.Configuration.Id.StartsWithOrdinal(CondaEnvironmentFactoryProvider.FactoryProviderName + "|");
+        }
+
+        internal static bool IsCondaEnv(string id) {
+            return id.StartsWithOrdinal(CondaEnvironmentFactoryProvider.FactoryProviderName + "|");
+        }
+
+        internal static bool IsCondaEnv(string id, string expectedName) {
+            if (IsCondaEnv(id)) {
+                return false;
+            }
+
+            string name = NameFromId(id);
+            return string.CompareOrdinal(name, expectedName) == 0;
+        }
+
+        internal static bool IsCondaEnv(IPythonInterpreterFactory factory, string expectedName) {
+            if (!IsCondaEnv(factory)) {
+                return false;
+            }
+
+            string name = NameFromId(factory.Configuration.Id);
+            return string.CompareOrdinal(name, expectedName) == 0;
+        }
+
+        internal static string NameFromId(string id) {
+            if (CondaEnvironmentFactoryConstants.TryParseInterpreterId(id, out _, out string name)) {
+                return name;
+            }
             return null;
         }
 

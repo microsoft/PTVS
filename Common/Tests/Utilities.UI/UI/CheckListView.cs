@@ -41,7 +41,7 @@ namespace TestUtilities.UI {
                     _items = new List<CheckBox>();
                     AutomationElementCollection rawItems = FindAllByControlType(ControlType.CheckBox);
                     foreach (AutomationElement el in rawItems) {
-                        _items.Add(new CheckBox(el, this));
+                        _items.Add(new CheckBox(el));
                     }
                 }
                 return _items;

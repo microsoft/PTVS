@@ -1328,8 +1328,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBox Grid.Column="0"
-                                 x:Name="_TextBox"
+                                 x:Name="PART_ComboBox"
                                  Margin="4 4 1 4"
+                                 MinHeight="24"
                                  VerticalAlignment="Stretch"
                                  Style="{StaticResource {x:Type TextBox}}"
                                  AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
@@ -1349,7 +1350,7 @@
                         </TextBox>
 
                         <TextBlock Grid.Column="0"
-                                   x:Name="_Watermark"
+                                   x:Name="PART_Watermark"
                                    Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}"
                                    HorizontalAlignment="Left"
                                    VerticalAlignment="Center"
@@ -1359,24 +1360,25 @@
                                    Text="{TemplateBinding Watermark}" />
 
                         <Button Grid.Column="1"
-                                x:Name="_Browse"
-                                Margin="1 4 4 4"
+                                x:Name="PART_BrowseButton"
+                                Margin="4 4 4 4"
+                                MinHeight="24"
                                 VerticalAlignment="Center"
                                 Style="{TemplateBinding BrowseButtonStyle}"
                                 AutomationProperties.Name="{TemplateBinding BrowseAutomationName}"
                                 CommandParameter="{TemplateBinding BrowseCommandParameter}"
-                                CommandTarget="{Binding ElementName=_TextBox}" />
+                                CommandTarget="{Binding ElementName=PART_ComboBox}" />
                     </Grid>
 
                     <ControlTemplate.Triggers>
-                        <Trigger SourceName="_TextBox" Property="Text" Value="">
-                            <Setter TargetName="_Watermark" Property="Visibility" Value="Visible" />
+                        <Trigger SourceName="PART_ComboBox" Property="Text" Value="">
+                            <Setter TargetName="PART_Watermark" Property="Visibility" Value="Visible" />
                         </Trigger>
-                        <Trigger SourceName="_TextBox" Property="IsReadOnly" Value="True">
-                            <Setter TargetName="_Browse" Property="Visibility" Value="Collapsed" />
+                        <Trigger SourceName="PART_ComboBox" Property="IsReadOnly" Value="True">
+                            <Setter TargetName="PART_BrowseButton" Property="Visibility" Value="Collapsed" />
                         </Trigger>
-                        <Trigger SourceName="_Browse" Property="Style" Value="{x:Null}">
-                            <Setter TargetName="_Browse" Property="Visibility" Value="Collapsed" />
+                        <Trigger SourceName="PART_BrowseButton" Property="Style" Value="{x:Null}">
+                            <Setter TargetName="PART_BrowseButton" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -1396,7 +1398,7 @@
                         </Grid.ColumnDefinitions>
 
                         <ComboBox Grid.Column="0"
-                                  x:Name="_ComboBox"
+                                  x:Name="PART_ComboBox"
                                   IsEditable="False"
                                   Margin="4 4 1 4"
                                   VerticalAlignment="Center"

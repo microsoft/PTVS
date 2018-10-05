@@ -1,0 +1,490 @@
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
+
+namespace Microsoft.PythonTools.Environments {
+    sealed class AddVirtualEnvironmentView : EnvironmentViewBase, INotifyPropertyChanged {
+        private readonly PythonProjectNode _project;
+        private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
+
+        public AddVirtualEnvironmentView(
+            IServiceProvider serviceProvider,
+            ProjectView[] projects,
+            ProjectView selectedProject
+        ) : base(serviceProvider, projects, selectedProject) {
+            _project = selectedProject?.Node;
+            PageName = Strings.AddVirtualEnvironmentTabHeader;
+            SetAsCurrent = SelectedProject != null;
+            SetAsDefault = false;
+            ViewInEnvironmentWindow = false;
+
+            ResetProjectDependentProperties();
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private static readonly DependencyPropertyKey WillCreateVirtualEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(WillCreateVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty WillCreateVirtualEnvProperty =
+            WillCreateVirtualEnvPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey UseVEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(UseVEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty UseVEnvProperty =
+            UseVEnvPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey CannotCreateVirtualEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(CannotCreateVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty CannotCreateVirtualEnvProperty =
+            CannotCreateVirtualEnvPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey NoInterpretersInstalledPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(NoInterpretersInstalled), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty NoInterpretersInstalledProperty =
+            NoInterpretersInstalledPropertyKey.DependencyProperty;
+
+        public static readonly DependencyProperty BaseInterpreterProperty =
+            DependencyProperty.Register(nameof(BaseInterpreter), typeof(InterpreterView), typeof(AddVirtualEnvironmentView), new PropertyMetadata(null, BaseInterpreter_Changed));
+
+        public static readonly DependencyProperty CanInstallRequirementsTxtProperty =
+            DependencyProperty.Register(nameof(CanInstallRequirementsTxt), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty WillInstallRequirementsTxtProperty =
+            DependencyProperty.Register(nameof(WillInstallRequirementsTxt), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        private static readonly DependencyPropertyKey WillInstallPipPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(WillInstallPip), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty WillInstallPipProperty =
+            WillInstallPipPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey WillInstallVirtualEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(WillInstallVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty WillInstallVirtualEnvProperty =
+            WillInstallVirtualEnvPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey InterpretersPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(Interpreters), typeof(ObservableCollection<InterpreterView>), typeof(AddVirtualEnvironmentView), new PropertyMetadata());
+
+        public static readonly DependencyProperty InterpretersProperty =
+            InterpretersPropertyKey.DependencyProperty;
+
+        public static readonly DependencyProperty IsRegisterCustomEnvProperty =
+            DependencyProperty.Register(nameof(IsRegisterCustomEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false, IsRegisterCustomEnv_Changed));
+
+        public static readonly DependencyProperty IsRegisterCustomEnvEnabledProperty =
+            DependencyProperty.Register(nameof(IsRegisterCustomEnvEnabled), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(true));
+
+        public static readonly DependencyProperty DescriptionProperty =
+            DependencyProperty.Register(nameof(Description), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", Description_Changed));
+
+        public static readonly DependencyProperty IsWorkingProperty =
+            DependencyProperty.Register(nameof(IsWorking), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty BrowseOrigPrefixProperty =
+            DependencyProperty.Register(nameof(BrowseOrigPrefix), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata());
+
+        public static readonly DependencyProperty VirtualEnvNameProperty =
+            DependencyProperty.Register(nameof(VirtualEnvName), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", VirtualEnvName_Changed));
+
+        public static readonly DependencyProperty LocationPathProperty =
+            DependencyProperty.Register(nameof(LocationPath), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", LocationPath_Changed));
+
+        private static readonly DependencyProperty RequirementsPathProperty =
+            DependencyProperty.Register(nameof(RequirementsPath), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", RequirementsPath_Changed));
+
+        public bool IsWorking {
+            get { return (bool)GetValue(IsWorkingProperty); }
+            set { SetValue(IsWorkingProperty, value); }
+        }
+
+        public string BrowseOrigPrefix {
+            get { return (string)GetValue(BrowseOrigPrefixProperty); }
+            set { SetValue(BrowseOrigPrefixProperty, value); }
+        }
+
+        public string VirtualEnvName {
+            get { return (string)GetValue(VirtualEnvNameProperty); }
+            set { SetValue(VirtualEnvNameProperty, value); }
+        }
+
+        public string LocationPath {
+            get { return (string)GetValue(LocationPathProperty); }
+            set { SetValue(LocationPathProperty, value); }
+        }
+
+        public string RequirementsPath {
+            get { return (string)GetValue(RequirementsPathProperty); }
+            set { SetValue(RequirementsPathProperty, value); }
+        }
+
+        public bool WillCreateVirtualEnv {
+            get { return (bool)GetValue(WillCreateVirtualEnvProperty); }
+            private set { SafeSetValue(WillCreateVirtualEnvPropertyKey, value); }
+        }
+
+        public bool UseVEnv {
+            get { return (bool)GetValue(UseVEnvProperty); }
+            private set { SafeSetValue(UseVEnvPropertyKey, value); }
+        }
+
+        public bool CannotCreateVirtualEnv {
+            get { return (bool)GetValue(CannotCreateVirtualEnvProperty); }
+            private set { SetValue(CannotCreateVirtualEnvPropertyKey, value); }
+        }
+
+        public bool NoInterpretersInstalled {
+            get { return (bool)GetValue(NoInterpretersInstalledProperty); }
+            set { SetValue(NoInterpretersInstalledPropertyKey, value); }
+        }
+
+        public InterpreterView BaseInterpreter {
+            get { return (InterpreterView)SafeGetValue(BaseInterpreterProperty); }
+            set { SafeSetValue(BaseInterpreterProperty, value); }
+        }
+
+        public bool CanInstallRequirementsTxt {
+            get { return (bool)GetValue(CanInstallRequirementsTxtProperty); }
+            set { SetValue(CanInstallRequirementsTxtProperty, value); }
+        }
+
+        public bool WillInstallRequirementsTxt {
+            get { return (bool)GetValue(WillInstallRequirementsTxtProperty); }
+            set { SetValue(WillInstallRequirementsTxtProperty, value); }
+        }
+
+        public bool WillInstallPip {
+            get { return (bool)GetValue(WillInstallPipProperty); }
+            private set { SafeSetValue(WillInstallPipPropertyKey, value); }
+        }
+
+        public bool WillInstallVirtualEnv {
+            get { return (bool)GetValue(WillInstallVirtualEnvProperty); }
+            private set { SafeSetValue(WillInstallVirtualEnvPropertyKey, value); }
+        }
+
+        public ObservableCollection<InterpreterView> Interpreters {
+            get { return (ObservableCollection<InterpreterView>)GetValue(InterpretersProperty); }
+            private set { SetValue(InterpretersPropertyKey, value); }
+        }
+
+        public bool IsRegisterCustomEnv {
+            get { return (bool)GetValue(IsRegisterCustomEnvProperty); }
+            set { SetValue(IsRegisterCustomEnvProperty, value); }
+        }
+
+        public bool IsRegisterCustomEnvEnabled {
+            get { return (bool)GetValue(IsRegisterCustomEnvEnabledProperty); }
+            set { SetValue(IsRegisterCustomEnvEnabledProperty, value); }
+        }
+
+        public string Description {
+            get { return (string)GetValue(DescriptionProperty); }
+            set { SetValue(DescriptionProperty, value); }
+        }
+
+        private static void IsRegisterCustomEnv_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            var v = (d as AddVirtualEnvironmentView);
+            if (v != null) {
+                if (!v.IsRegisterCustomEnv) {
+                    v.SetAsDefault = false;
+                }
+                v.RefreshCanCreateVirtualEnv();
+            }
+        }
+
+        private static void Description_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            (d as AddVirtualEnvironmentView)?.RefreshCanCreateVirtualEnv();
+        }
+
+        private static void VirtualEnvName_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            (d as AddVirtualEnvironmentView)?.RefreshCanCreateVirtualEnv();
+        }
+
+        private static void LocationPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            (d as AddVirtualEnvironmentView)?.RefreshCanCreateVirtualEnv();
+        }
+
+        private static void RequirementsPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            (d as AddVirtualEnvironmentView)?.RefreshCanCreateVirtualEnv();
+        }
+
+        private static void BaseInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            (d as AddVirtualEnvironmentView)?.UpdateInterpreter(e.NewValue as InterpreterView);
+        }
+
+        private static bool IsValidVirtualEnvPath(string path) {
+            if (!PathUtils.IsValidPath(path)) {
+                return false;
+            }
+
+            path = PathUtils.TrimEndSeparator(path);
+            if (File.Exists(path)) {
+                return false;
+            }
+
+            var name = Path.GetFileName(path).Trim();
+
+            return !string.IsNullOrEmpty(name) &&
+                name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+        }
+
+        private void RefreshCanCreateVirtualEnv() {
+            if (!Dispatcher.CheckAccess()) {
+                Dispatcher.BeginInvoke((Action)(() => RefreshCanCreateVirtualEnv()));
+                return;
+            }
+
+            string path = string.IsNullOrEmpty(LocationPath)
+                ? string.Empty :
+                Path.Combine(LocationPath, VirtualEnvName);
+
+            if (Interpreters == null || Interpreters.Count == 0) {
+                WillCreateVirtualEnv = false;
+                CannotCreateVirtualEnv = false;
+                NoInterpretersInstalled = true;
+            } else if (!IsValidVirtualEnvPath(path) || BaseInterpreter == null || IsFolderNotEmpty(path) || IsInvalidDescription()) {
+                WillCreateVirtualEnv = false;
+                CannotCreateVirtualEnv = true;
+                NoInterpretersInstalled = false;
+            } else {
+                LocationPath = PathUtils.GetParent(path);
+                WillCreateVirtualEnv = true;
+                CannotCreateVirtualEnv = false;
+                NoInterpretersInstalled = false;
+            }
+
+            if (string.IsNullOrEmpty(VirtualEnvName.Trim())) {
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameEmpty);
+            } else if (!IsValidVirtualEnvPath(path)) {
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationInvalid);
+            } else if (IsFolderNotEmpty(path)) {
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationNotEmpty);
+            } else {
+                ClearErrors(nameof(VirtualEnvName));
+            }
+
+            if (IsRegisterCustomEnv && string.IsNullOrEmpty(Description)) {
+                SetError(nameof(Description), Strings.AddEnvironmentDescriptionEmpty);
+            } else if (IsRegisterCustomEnv && Description.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) {
+                SetError(nameof(Description), Strings.AddEnvironmentDescriptionInvalid);
+            } else {
+                ClearErrors(nameof(Description));
+            }
+
+            if (!string.IsNullOrEmpty(RequirementsPath) && !File.Exists(RequirementsPath)) {
+                SetError(nameof(RequirementsPath), Strings.AddVirtualEnvironmentFileInvalid.FormatUI(RequirementsPath));
+            } else {
+                ClearErrors(nameof(RequirementsPath));
+            }
+
+            CanInstallRequirementsTxt = File.Exists(RequirementsPath);
+            WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
+
+            // For now, we enable but prompt when they click accept
+            //IsAcceptEnabled = WillCreateVirtualEnv && !IsWorking;
+            IsAcceptEnabled = !IsWorking;
+            AcceptCaption = Strings.AddEnvironmentCreateButton;
+        }
+
+        private static bool IsFolderNotEmpty(string path) {
+            return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
+        }
+
+        private bool IsInvalidDescription() {
+            return IsRegisterCustomEnv && string.IsNullOrEmpty(Description);
+        }
+
+        protected override void ResetProjectDependentProperties() {
+            LocationPath = SelectedProject?.HomeFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            VirtualEnvName = GetDefaultEnvName();
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(Site, null, true));
+            BaseInterpreter = Interpreters.FirstOrDefault(v => v.Id == SelectedProject?.ActiveInterpreterId) ?? Interpreters.LastOrDefault();
+            RequirementsPath = SelectedProject?.RequirementsTxtPath ?? string.Empty;
+            CanInstallRequirementsTxt = File.Exists(RequirementsPath);
+            WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
+            SetAsCurrent = SetAsCurrent && SelectedProject != null;
+        }
+
+        private string GetDefaultEnvName() {
+            string venvName = string.Empty;
+            if (!string.IsNullOrEmpty(LocationPath)) {
+                venvName = "env";
+                for (int i = 1; Directory.Exists(Path.Combine(LocationPath, venvName)); ++i) {
+                    venvName = "env" + i.ToString();
+                }
+            } else {
+                venvName = "env";
+            }
+
+            return venvName;
+        }
+
+        public override async Task ApplyAsync() {
+            try {
+                await _ready.WaitAsync();
+            } catch (ObjectDisposedException) {
+                return;
+            }
+
+            try {
+                var op = new AddVirtualEnvironmentOperation(
+                    Site,
+                    _project,
+                    Path.Combine(LocationPath, VirtualEnvName),
+                    BaseInterpreter.Id,
+                    UseVEnv,
+                    WillInstallRequirementsTxt,
+                    RequirementsPath,
+                    IsRegisterCustomEnv,
+                    Description,
+                    SetAsCurrent,
+                    SetAsDefault,
+                    ViewInEnvironmentWindow,
+                    OutputWindowRedirector.GetGeneral(Site)
+                );
+
+                await op.RunAsync();
+            } finally {
+                try {
+                    _ready.Release();
+                } catch (ObjectDisposedException) {
+                }
+            }
+        }
+
+        public override string ToString() {
+            return Strings.AddVirtualEnvironmentTabHeader;
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                _ready.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        private void UpdateInterpreter(InterpreterView interpreterView) {
+            UpdateInterpreterAsync(interpreterView).HandleAllExceptions(Site, GetType()).DoNotWait();
+        }
+
+        internal async Task UpdateInterpreterAsync(InterpreterView interpreterView) {
+            if (!Dispatcher.CheckAccess()) {
+                await Dispatcher.InvokeAsync(() => UpdateInterpreterAsync(interpreterView));
+                return;
+            }
+
+            try {
+                await _ready.WaitAsync();
+            } catch (ObjectDisposedException) {
+                return;
+            }
+
+            IsWorking = true;
+            IsAcceptEnabled = false;
+
+            try {
+                WillInstallPip = false;
+                WillInstallVirtualEnv = false;
+                IsAcceptShieldVisible = false;
+
+                if (interpreterView == null) {
+                    return;
+                }
+
+                var interp = RegistryService.FindInterpreter(interpreterView.Id);
+                Debug.Assert(interp != null);
+                if (interp == null) {
+                    return;
+                }
+
+                RefreshCanCreateVirtualEnv();
+
+                if (await interp.HasModuleAsync("venv", OptionsService)) {
+                    WillInstallPip = false;
+                    WillInstallVirtualEnv = false;
+                    UseVEnv = true;
+                } else if (await interp.HasModuleAsync("virtualenv", OptionsService)) {
+                    WillInstallPip = false;
+                    WillInstallVirtualEnv = false;
+                    UseVEnv = false;
+                } else {
+                    WillInstallPip = await interp.HasModuleAsync("pip", OptionsService);
+                    WillInstallVirtualEnv = true;
+                    UseVEnv = false;
+                }
+
+                IsAcceptShieldVisible = (WillInstallPip || WillInstallVirtualEnv) &&
+                    Site.GetPythonToolsService().GeneralOptions.ElevatePip;
+            } finally {
+                try {
+                    _ready.Release();
+                } catch (ObjectDisposedException) {
+                }
+
+                IsWorking = false;
+                RefreshCanCreateVirtualEnv();
+            }
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+            base.OnPropertyChanged(e);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(e.Property.Name));
+        }
+
+        private object SafeGetValue(DependencyProperty property) {
+            if (Dispatcher.CheckAccess()) {
+                return GetValue(property);
+            } else {
+                return Dispatcher.Invoke((Func<object>)(() => GetValue(property)));
+            }
+        }
+
+        private void SafeSetValue(DependencyProperty property, object value) {
+            if (Dispatcher.CheckAccess()) {
+                SetValue(property, value);
+            } else {
+                Dispatcher.BeginInvoke((Action)(() => SetValue(property, value)));
+            }
+        }
+
+        private void SafeSetValue(DependencyPropertyKey property, object value) {
+            if (Dispatcher.CheckAccess()) {
+                SetValue(property, value);
+            } else {
+                Dispatcher.BeginInvoke((Action)(() => SetValue(property, value)));
+            }
+        }
+    }
+}

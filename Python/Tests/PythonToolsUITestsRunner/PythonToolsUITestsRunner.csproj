@@ -36,7 +36,7 @@
     <Compile Include="TestExplorerTests.cs" />
     <Compile Include="PublishTest.cs" />
     <Compile Include="RemoveImportTests.cs" />
-    <Compile Include="VirtualEnvUITests.cs" />
+    <Compile Include="EnvironmentUITests.cs" />
     <Compile Include="SnippetsTests.cs" />
   </ItemGroup>
   <ItemGroup>
