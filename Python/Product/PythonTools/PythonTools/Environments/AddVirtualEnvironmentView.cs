@@ -60,6 +60,12 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty UseVEnvProperty =
             UseVEnvPropertyKey.DependencyProperty;
 
+        private static readonly DependencyPropertyKey UseVirtualEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(UseVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty UseVirtualEnvProperty =
+            UseVirtualEnvPropertyKey.DependencyProperty;
+
         private static readonly DependencyPropertyKey CannotCreateVirtualEnvPropertyKey =
             DependencyProperty.RegisterReadOnly(nameof(CannotCreateVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
 
@@ -92,6 +98,12 @@ namespace Microsoft.PythonTools.Environments {
 
         public static readonly DependencyProperty WillInstallVirtualEnvProperty =
             WillInstallVirtualEnvPropertyKey.DependencyProperty;
+
+        private static readonly DependencyPropertyKey WillRegisterGloballyPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(WillRegisterGlobally), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty WillRegisterGloballyProperty =
+            WillRegisterGloballyPropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey InterpretersPropertyKey =
             DependencyProperty.RegisterReadOnly(nameof(Interpreters), typeof(ObservableCollection<InterpreterView>), typeof(AddVirtualEnvironmentView), new PropertyMetadata());
@@ -158,6 +170,11 @@ namespace Microsoft.PythonTools.Environments {
             private set { SafeSetValue(UseVEnvPropertyKey, value); }
         }
 
+        public bool UseVirtualEnv {
+            get { return (bool)GetValue(UseVirtualEnvProperty); }
+            private set { SafeSetValue(UseVirtualEnvPropertyKey, value); }
+        }
+
         public bool CannotCreateVirtualEnv {
             get { return (bool)GetValue(CannotCreateVirtualEnvProperty); }
             private set { SetValue(CannotCreateVirtualEnvPropertyKey, value); }
@@ -191,6 +208,11 @@ namespace Microsoft.PythonTools.Environments {
         public bool WillInstallVirtualEnv {
             get { return (bool)GetValue(WillInstallVirtualEnvProperty); }
             private set { SafeSetValue(WillInstallVirtualEnvPropertyKey, value); }
+        }
+
+        public bool WillRegisterGlobally {
+            get { return (bool)GetValue(WillRegisterGloballyProperty); }
+            private set { SafeSetValue(WillRegisterGloballyPropertyKey, value); }
         }
 
         public ObservableCollection<InterpreterView> Interpreters {
@@ -294,12 +316,14 @@ namespace Microsoft.PythonTools.Environments {
                 ClearErrors(nameof(VirtualEnvName));
             }
 
+            bool canRegisterGlobally = false;
             if (IsRegisterCustomEnv && string.IsNullOrEmpty(Description)) {
                 SetError(nameof(Description), Strings.AddEnvironmentDescriptionEmpty);
             } else if (IsRegisterCustomEnv && Description.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) {
                 SetError(nameof(Description), Strings.AddEnvironmentDescriptionInvalid);
             } else {
                 ClearErrors(nameof(Description));
+                canRegisterGlobally = true;
             }
 
             if (!string.IsNullOrEmpty(RequirementsPath) && !File.Exists(RequirementsPath)) {
@@ -310,6 +334,7 @@ namespace Microsoft.PythonTools.Environments {
 
             CanInstallRequirementsTxt = File.Exists(RequirementsPath);
             WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
+            WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
 
             // For now, we enable but prompt when they click accept
             //IsAcceptEnabled = WillCreateVirtualEnv && !IsWorking;
@@ -417,6 +442,9 @@ namespace Microsoft.PythonTools.Environments {
             try {
                 WillInstallPip = false;
                 WillInstallVirtualEnv = false;
+                WillRegisterGlobally = false;
+                UseVEnv = false;
+                UseVirtualEnv = false;
                 IsAcceptShieldVisible = false;
 
                 if (interpreterView == null) {
@@ -435,14 +463,17 @@ namespace Microsoft.PythonTools.Environments {
                     WillInstallPip = false;
                     WillInstallVirtualEnv = false;
                     UseVEnv = true;
+                    UseVirtualEnv = false;
                 } else if (await interp.HasModuleAsync("virtualenv", OptionsService)) {
                     WillInstallPip = false;
                     WillInstallVirtualEnv = false;
                     UseVEnv = false;
+                    UseVirtualEnv = true;
                 } else {
                     WillInstallPip = await interp.HasModuleAsync("pip", OptionsService);
                     WillInstallVirtualEnv = true;
                     UseVEnv = false;
+                    UseVirtualEnv = true;
                 }
 
                 IsAcceptShieldVisible = (WillInstallPip || WillInstallVirtualEnv) &&

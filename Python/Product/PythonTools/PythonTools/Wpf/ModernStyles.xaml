@@ -1370,6 +1370,10 @@
                         </Trigger>
                         <Trigger SourceName="PART_TextBox" Property="IsReadOnly" Value="True">
                             <Setter TargetName="PART_BrowseButton" Property="Visibility" Value="Collapsed" />
+                            <!-- ControlForegroundDisabledKey does not have enough contrast, use GrayTextKey for now />-->
+                            <Setter TargetName="PART_TextBox" Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.GrayTextKey}}" />
+                            <Setter TargetName="PART_TextBox" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundDisabledKey}}" />
+                            <Setter TargetName="PART_TextBox" Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundDisabledColorKey}}" />
                         </Trigger>
                         <Trigger SourceName="PART_BrowseButton" Property="Style" Value="{x:Null}">
                             <Setter TargetName="PART_BrowseButton" Property="Visibility" Value="Collapsed" />

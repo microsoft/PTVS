@@ -775,15 +775,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add the virtual environment.
-        /// </summary>
-        public static string AddVirtualEnvironmentWindow_AddVirtualEnvironment {
-            get {
-                return ResourceManager.GetString("AddVirtualEnvironmentWindow_AddVirtualEnvironment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No action will be taken..
         /// </summary>
         public static string AddVirtualEnvironmentWindow_CannotCreate {
@@ -838,15 +829,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install pip and virtualenv packages.
-        /// </summary>
-        public static string AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv {
-            get {
-                return ResourceManager.GetString("AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Install the virtualenv package.
         /// </summary>
         public static string AddVirtualEnvironmentWindow_InstallVirtualEnv {
@@ -861,6 +843,15 @@ namespace Microsoft.PythonTools {
         public static string AddVirtualEnvironmentWindow_NoInterpreterHelp {
             get {
                 return ResourceManager.GetString("AddVirtualEnvironmentWindow_NoInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write registry keys under HKCU\Software\Python\VisualStudio.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_RegisterGlobally {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_RegisterGlobally", resourceCulture);
             }
         }
         

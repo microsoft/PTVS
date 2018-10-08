@@ -545,10 +545,6 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="AddWebRoleSupportFiles" xml:space="preserve">
     <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
   </data>
-  <data name="AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" xml:space="preserve">
-    <value>Install pip and virtualenv packages</value>
-    <comment>'pip' and 'virtualenv' are package names and must not be translated</comment>
-  </data>
   <data name="AddVirtualEnvironmentWindow_InstallPip" xml:space="preserve">
     <value>Install pip</value>
   </data>
@@ -556,8 +552,8 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Install the virtualenv package</value>
     <comment>'virtualenv' is a package name and must not be translated</comment>
   </data>
-  <data name="AddVirtualEnvironmentWindow_AddVirtualEnvironment" xml:space="preserve">
-    <value>Add the virtual environment</value>
+  <data name="AddVirtualEnvironmentWindow_RegisterGlobally" xml:space="preserve">
+    <value>Write registry keys under HKCU\Software\Python\VisualStudio</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_CreateVirtualEnv" xml:space="preserve">
     <value>Create a virtual environment using virtualenv</value>

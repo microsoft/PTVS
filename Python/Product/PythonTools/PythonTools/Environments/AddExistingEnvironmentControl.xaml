@@ -45,164 +45,7 @@
                         </StackPanel>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="Custom">
-                        <StackPanel Name="CustomPanel" Visibility="Collapsed">
-                            <Label
-                                Name="PrefixPathLabel"
-                                Content="{x:Static common:Strings.ConfigurationExtensionPrefixPathLabel}"
-                                Target="{Binding ElementName=PrefixPathTextBox}"
-                                Style="{StaticResource ModernLabel}"/>
-
-                            <wpf:ConfigurationTextBoxWithHelp
-                                x:Name="PrefixPathTextBox"
-                                Margin="0 0 265 18"
-                                Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                Watermark="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
-                                AutomationProperties.LabeledBy="{Binding ElementName=PrefixPathLabel}"
-                                AutomationProperties.AutomationId="PrefixPath"
-                                BrowseButtonStyle="{StaticResource BrowseFolderButton}"
-                                BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionPrefixPathBrowseButton}"/>
-
-                            <StackPanel Name="CustomDetailsPanel">
-                                <CheckBox
-                                    Margin="0 0 0 17"
-                                    IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
-                                    IsChecked="{Binding Path=RegisterCustomEnv}"
-                                    Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
-                                    AutomationProperties.AutomationId="RegisterGlobally"
-                                    Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="465*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="249*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <Label
-                                            Name="DescriptionLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentDescriptionLabel}"
-                                            Target="{Binding ElementName=DescriptionTextBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationTextBoxWithHelp
-                                            x:Name="DescriptionTextBox"
-                                            Margin="0 0 0 15"
-                                            Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                            Watermark="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
-                                            AutomationProperties.AutomationId="Description"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=DescriptionLabel}"/>
-
-                                        <Label
-                                            Name="InterpreterPathLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentInterpreterPathLabel}"
-                                            Target="{Binding ElementName=InterpreterPathTextBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationTextBoxWithHelp
-                                            x:Name="InterpreterPathTextBox"
-                                            Margin="0 0 0 15"
-                                            Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                            Watermark="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
-                                            AutomationProperties.AutomationId="InterpreterPath"
-                                            BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                            BrowseCommandParameter="{x:Static common:Strings.ConfigurationExtensionInterpreterPathBrowseFilter}"
-                                            BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionInterpreterPathBrowseButton}"/>
-
-                                        <Label
-                                            Name="WindowsInterpreterPathLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentWindowsInterpreterPathLabel}"
-                                            Target="{Binding ElementName=WindowsInterpreterPathTextBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationTextBoxWithHelp
-                                            x:Name="WindowsInterpreterPathTextBox"
-                                            Margin="0 0 0 15"
-                                            Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                            Watermark="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=WindowsInterpreterPathLabel}"
-                                            AutomationProperties.AutomationId="WindowsInterpreterPath"
-                                            BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                            BrowseCommandParameter="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathBrowseFilter}"
-                                            BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathBrowseButton}"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <Label
-                                            Name="LanguageVersionLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentLanguageVersionLabel}"
-                                            Target="{Binding ElementName=LanguageVersionComboBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationComboBoxWithHelp
-                                            x:Name="LanguageVersionComboBox"
-                                            Margin="0 0 0 15"
-                                            Width="62"
-                                            HorizontalAlignment="Left"
-                                            Value="{Binding VersionName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
-                                            Values="{Binding VersionNames}"
-                                            AutomationProperties.AutomationId="LanguageVersion"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=LanguageVersionLabel}"/>
-
-                                        <Label
-                                            Name="ArchitectureLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentArchitectureLabel}"
-                                            Target="{Binding ElementName=ArchitectureComboBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationComboBoxWithHelp
-                                            x:Name="ArchitectureComboBox"
-                                            Margin="0 0 0 15"
-                                            Width="62"
-                                            HorizontalAlignment="Left"
-                                            Value="{Binding ArchitectureName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
-                                            Values="{Binding ArchitectureNames}"
-                                            Watermark="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
-                                            AutomationProperties.AutomationId="Architecture"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=ArchitectureLabel}"/>
-
-                                        <Label
-                                            Name="PathEnvVarLabel"
-                                            Content="{x:Static common:Strings.AddExistingEnvironmentPathEnvVarLabel}"
-                                            Target="{Binding ElementName=PathEnvVarTextBox}"
-                                            Style="{StaticResource ModernLabel}"/>
-
-                                        <wpf:ConfigurationTextBoxWithHelp
-                                            x:Name="PathEnvVarTextBox"
-                                            Margin="0 0 0 15"
-                                            Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                            Watermark="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
-                                            AutomationProperties.AutomationId="PathEnvironmentVariable"
-                                            AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </StackPanel>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Path=IsCustomInterpreter}" Value="True">
-                                <Setter TargetName="CustomPanel" Property="UIElement.Visibility" Value="Visible"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Path=IsCustomPrefixPathValid}" Value="False">
-                                <Setter TargetName="CustomDetailsPanel" Property="UIElement.IsEnabled" Value="False"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Path=IsCustomVirtualEnv}" Value="True">
-                                <Setter TargetName="InterpreterPathTextBox" Property="UIElement.IsEnabled" Value="False"/>
-                                <Setter TargetName="WindowsInterpreterPathTextBox" Property="UIElement.IsEnabled" Value="False"/>
-                                <Setter TargetName="LanguageVersionComboBox" Property="UIElement.IsEnabled" Value="False"/>
-                                <Setter TargetName="ArchitectureComboBox" Property="UIElement.IsEnabled" Value="False"/>
-                                <Setter TargetName="PathEnvVarTextBox" Property="UIElement.IsEnabled" Value="False"/>
-                            </DataTrigger>
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding Path=IsCustomVirtualEnv}" Value="True"/>
-                                    <Condition Binding="{Binding Path=RegisterCustomEnv}" Value="False"/>
-                                </MultiDataTrigger.Conditions>
-                                <Setter TargetName="DescriptionTextBox" Property="UIElement.IsEnabled" Value="False"/>
-                            </MultiDataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-
                     <l:AddExistingEnvironmentTemplateSelector x:Key="interpreterViewSelector"/>
-
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -254,11 +97,150 @@
                 </ComboBox.ItemContainerStyle>
             </ComboBox>
 
-            <ContentControl
-                IsTabStop="False"
-                Focusable="False"
-                Content="{Binding}"
-                ContentTemplate="{StaticResource Custom}"/>
+            <StackPanel Visibility="{Binding Path=IsCustomInterpreter, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                <Label
+                    Name="PrefixPathLabel"
+                    Content="{x:Static common:Strings.ConfigurationExtensionPrefixPathLabel}"
+                    Target="{Binding ElementName=PrefixPathTextBox}"
+                    Style="{StaticResource ModernLabel}"/>
+
+                <wpf:ConfigurationTextBoxWithHelp
+                    x:Name="PrefixPathTextBox"
+                    Margin="0 0 265 18"
+                    Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                    Watermark="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
+                    AutomationProperties.LabeledBy="{Binding ElementName=PrefixPathLabel}"
+                    AutomationProperties.AutomationId="PrefixPath"
+                    BrowseButtonStyle="{StaticResource BrowseFolderButton}"
+                    BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionPrefixPathBrowseButton}"/>
+
+                <StackPanel IsEnabled="{Binding Path=IsCustomPrefixPathValid}">
+                    <CheckBox
+                        Margin="0 0 0 17"
+                        IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
+                        IsChecked="{Binding Path=RegisterCustomEnv}"
+                        Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
+                        AutomationProperties.AutomationId="RegisterGlobally"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="465*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="249*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <Label
+                                Name="DescriptionLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentDescriptionLabel}"
+                                Target="{Binding ElementName=DescriptionTextBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationTextBoxWithHelp
+                                x:Name="DescriptionTextBox"
+                                Margin="0 0 0 15"
+                                Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                Watermark="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
+                                AutomationProperties.AutomationId="Description"
+                                AutomationProperties.LabeledBy="{Binding ElementName=DescriptionLabel}">
+                                <wpf:ConfigurationTextBoxWithHelp.IsReadOnly>
+                                    <MultiBinding Converter="{x:Static wpf:Converters.All}">
+                                        <Binding Path="IsCustomVirtualEnv"/>
+                                        <Binding Path="RegisterCustomEnv" Converter="{x:Static wpf:Converters.Not}"/>
+                                    </MultiBinding>
+                                </wpf:ConfigurationTextBoxWithHelp.IsReadOnly>
+                            </wpf:ConfigurationTextBoxWithHelp>
+
+                            <Label
+                                Name="InterpreterPathLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentInterpreterPathLabel}"
+                                Target="{Binding ElementName=InterpreterPathTextBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationTextBoxWithHelp
+                                x:Name="InterpreterPathTextBox"
+                                Margin="0 0 0 15"
+                                IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
+                                Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                Watermark="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
+                                AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
+                                AutomationProperties.AutomationId="InterpreterPath"
+                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                BrowseCommandParameter="{x:Static common:Strings.ConfigurationExtensionInterpreterPathBrowseFilter}"
+                                BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionInterpreterPathBrowseButton}"/>
+
+                            <Label
+                                Name="WindowsInterpreterPathLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentWindowsInterpreterPathLabel}"
+                                Target="{Binding ElementName=WindowsInterpreterPathTextBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationTextBoxWithHelp
+                                x:Name="WindowsInterpreterPathTextBox"
+                                Margin="0 0 0 15"
+                                IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
+                                Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                Watermark="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
+                                AutomationProperties.LabeledBy="{Binding ElementName=WindowsInterpreterPathLabel}"
+                                AutomationProperties.AutomationId="WindowsInterpreterPath"
+                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                BrowseCommandParameter="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathBrowseFilter}"
+                                BrowseAutomationName="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathBrowseButton}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <Label
+                                Name="LanguageVersionLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentLanguageVersionLabel}"
+                                Target="{Binding ElementName=LanguageVersionComboBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationComboBoxWithHelp
+                                x:Name="LanguageVersionComboBox"
+                                Margin="0 0 0 15"
+                                Width="62"
+                                HorizontalAlignment="Left"
+                                IsEnabled="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
+                                Value="{Binding VersionName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
+                                Values="{Binding VersionNames}"
+                                AutomationProperties.AutomationId="LanguageVersion"
+                                AutomationProperties.LabeledBy="{Binding ElementName=LanguageVersionLabel}"/>
+
+                            <Label
+                                Name="ArchitectureLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentArchitectureLabel}"
+                                Target="{Binding ElementName=ArchitectureComboBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationComboBoxWithHelp
+                                x:Name="ArchitectureComboBox"
+                                Margin="0 0 0 15"
+                                Width="62"
+                                HorizontalAlignment="Left"
+                                IsEnabled="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
+                                Value="{Binding ArchitectureName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
+                                Values="{Binding ArchitectureNames}"
+                                Watermark="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
+                                AutomationProperties.AutomationId="Architecture"
+                                AutomationProperties.LabeledBy="{Binding ElementName=ArchitectureLabel}"/>
+
+                            <Label
+                                Name="PathEnvVarLabel"
+                                Content="{x:Static common:Strings.AddExistingEnvironmentPathEnvVarLabel}"
+                                Target="{Binding ElementName=PathEnvVarTextBox}"
+                                Style="{StaticResource ModernLabel}"/>
+
+                            <wpf:ConfigurationTextBoxWithHelp
+                                x:Name="PathEnvVarTextBox"
+                                Margin="0 0 0 15"
+                                IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
+                                Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                Watermark="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
+                                AutomationProperties.AutomationId="PathEnvironmentVariable"
+                                AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

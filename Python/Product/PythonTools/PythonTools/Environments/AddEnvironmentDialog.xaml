@@ -24,10 +24,6 @@
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
 
                 <ResourceDictionary>
-                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
-
                     <DataTemplate x:Key="AddCondaEnvironmentViewTemplate">
                         <l:AddCondaEnvironmentControl/>
                     </DataTemplate>
@@ -178,7 +174,7 @@
                                         Source="{x:Static ptwpf:ModernStyles.UacShield}"
                                         Width="16" Height="16"
                                         VerticalAlignment="Center"
-                                        Visibility="{Binding Path=PagesView/IsAcceptShieldVisible, Converter={StaticResource BoolToVisibleOrCollapsed}}"/>
+                                        Visibility="{Binding Path=PagesView/IsAcceptShieldVisible, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
                                     <AccessText
                                         Margin="3 0 0 0"
                                         Text="{Binding Path=PagesView/AcceptCaption}"

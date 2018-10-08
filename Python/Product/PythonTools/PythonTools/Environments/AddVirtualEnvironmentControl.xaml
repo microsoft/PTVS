@@ -5,9 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:l="clr-namespace:Microsoft.PythonTools.Environments"
              xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
-             xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
              xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
-             xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
              xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
@@ -29,14 +27,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
                 <ResourceDictionary>
-                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToHidden">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
-
                     <DataTemplate x:Key="ProjectTemplate">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Name}" />
-                        </StackPanel>
+                        <TextBlock Text="{Binding Name}" />
                     </DataTemplate>
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type l:InterpreterView}">
@@ -44,181 +36,12 @@
                                    Text="{Binding Name}"
                                    Padding="3"/>
                     </DataTemplate>
-
-                    <DataTemplate x:Key="PostActions">
-                        <StackPanel>
-                            <CheckBox
-                                Margin="0 0 0 10"
-                                Name="SetAsCurrentCheckBox"
-                                IsChecked="{Binding Path=SetAsCurrent}"
-                                Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
-                                AutomationProperties.AutomationId="SetAsCurrent"
-                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
-                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
-
-                            <CheckBox
-                                Margin="0 0 0 10"
-                                Name="SetAsDefaultCheckBox"
-                                IsChecked="{Binding Path=SetAsDefault}"
-                                Content="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
-                                AutomationProperties.AutomationId="SetAsDefault"
-                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
-                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
-
-                            <CheckBox
-                                Margin="0 0 0 10"
-                                IsChecked="{Binding Path=ViewInEnvironmentWindow}"
-                                Content="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
-                                AutomationProperties.AutomationId="ViewInEnvironmentWindow"
-                                AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
-                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
-
-                            <CheckBox
-                                Margin="0 0 0 3"
-                                x:Name="RegisterCustomEnvCheckBox"
-                                IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
-                                IsChecked="{Binding Path=IsRegisterCustomEnv}"
-                                Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
-                                AutomationProperties.AutomationId="RegisterGlobally"
-                                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
-
-                            <wpf:ConfigurationTextBoxWithHelp
-                                Margin="23 0 0 24"
-                                x:Name="Description"
-                                Text="{Binding Path=Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
-                                Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
-                                AutomationProperties.AutomationId="Description"
-                                AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
-                        </StackPanel>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Path=SelectedProject}" Value="{x:Null}">
-                                <Setter TargetName="SetAsCurrentCheckBox" Property="UIElement.IsEnabled" Value="False"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Path=IsRegisterCustomEnv}" Value="False">
-                                <Setter TargetName="Description" Property="UIElement.IsEnabled" Value="False"/>
-                                <Setter TargetName="SetAsDefaultCheckBox" Property="UIElement.IsEnabled" Value="False"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-
-                    <DataTemplate x:Key="Actions">
-                        <Grid>
-                            <StackPanel
-                                Name="ProgressBar"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Center"
-                                Visibility="Collapsed">
-
-                                <imaging:CrispImage
-                                    Width="16"
-                                    Height="16"
-                                    Margin="4 0 0 0"
-                                    Moniker="{x:Static catalog:KnownMonikers.Loading}"
-                                    RenderTransformOrigin="0.5, 0.5">
-
-                                    <imaging:CrispImage.RenderTransform>
-                                        <RotateTransform x:Name="Rotation" />
-                                    </imaging:CrispImage.RenderTransform>
-                                    <imaging:CrispImage.Triggers>
-                                        <EventTrigger RoutedEvent="Image.Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation
-                                                        Storyboard.TargetName="Rotation"
-                                                        Storyboard.TargetProperty="Angle"
-                                                        By="360.0"
-                                                        Duration="0:0:2.0"
-                                                        RepeatBehavior="Forever" />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </imaging:CrispImage.Triggers>
-                                </imaging:CrispImage>
-                                <TextBlock
-                                    Margin="4 0 0 0"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentPreviewInProgress}"/>
-                            </StackPanel>
-                            <StackPanel Name="Actions" Margin="0" Orientation="Vertical">
-                                <StackPanel.Resources>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Setter Property="Margin" Value="0 0 0 7"/>
-                                    </Style>
-                                </StackPanel.Resources>
-                                <TextBlock
-                                    Name="InstallPipAndVirtualEnv"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv}"/>
-                                <TextBlock
-                                    Name="InstallPip"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPip}"/>
-                                <TextBlock
-                                    Name="InstallVirtualEnv"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallVirtualEnv}"/>
-                                <TextBlock
-                                    Name="CreateVirtualEnv"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVirtualEnv}"/>
-                                <TextBlock
-                                    Name="CreateVEnv"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVEnv}"/>
-                                <TextBlock
-                                    Name="InstallRequirements"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPackages}"/>
-                                <TextBlock
-                                    Name="CannotCreate"
-                                    Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreate}"/>
-                            </StackPanel>
-                        </Grid>
-                        <DataTemplate.Triggers>
-                            <!-- Show both Install messages if pip is required,
-                                 then hide the Pip+VirtualEnv one if we don't
-                                 need virtualenv. -->
-                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
-                                <Setter TargetName="ProgressBar" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="Actions" Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding WillInstallPip}" Value="True">
-                                <Setter TargetName="InstallPip" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding WillInstallVirtualEnv}" Value="True">
-                                <Setter TargetName="InstallVirtualEnv" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding WillInstallPip}" Value="True" />
-                                    <Condition Binding="{Binding WillInstallVirtualEnv}" Value="True" />
-                                </MultiDataTrigger.Conditions>
-                                <Setter TargetName="InstallPip" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="InstallVirtualEnv" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="InstallPipAndVirtualEnv" Property="Visibility" Value="Visible" />
-                            </MultiDataTrigger>
-                            <!-- Show the correct Create message, but hide both
-                                 if we're not creating. -->
-                            <DataTrigger Binding="{Binding UseVEnv}" Value="True">
-                                <Setter TargetName="CreateVEnv" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding UseVEnv}" Value="False">
-                                <Setter TargetName="CreateVirtualEnv" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding WillCreateVirtualEnv}" Value="False">
-                                <Setter TargetName="CreateVirtualEnv" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="CreateVEnv" Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                            <!-- Show messages if the flag says we should -->
-                            <DataTrigger Binding="{Binding WillInstallRequirementsTxt}" Value="True">
-                                <Setter TargetName="InstallRequirements" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding CannotCreateVirtualEnv}" Value="True">
-                                <Setter TargetName="CannotCreate" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid Margin="0 7 0 0">
-        <Grid Visibility="{Binding Path=NoInterpretersInstalled, Converter={StaticResource BoolToVisible}}">
+        <Grid Visibility="{Binding Path=NoInterpretersInstalled, Converter={x:Static wpf:Converters.FalseIsHidden}}">
             <TextBlock
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -226,7 +49,7 @@
                 TextWrapping="Wrap"/>
         </Grid>
 
-        <Grid Visibility="{Binding Path=NoInterpretersInstalled, Converter={StaticResource BoolToHidden}}">
+        <Grid Visibility="{Binding Path=NoInterpretersInstalled, Converter={x:Static wpf:Converters.TrueIsHidden}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="514*"/>
                 <ColumnDefinition Width="28"/>
@@ -342,11 +165,48 @@
                         BrowseCommandParameter="{x:Static common:Strings.AddVirtualEnvironmentFileBrowseFilter}"
                         BrowseAutomationName="{x:Static common:Strings.AddVirtualEnvironmentFileBrowseButton}"/>
 
-                    <ContentControl
-                        IsTabStop="False"
-                        Focusable="False"
-                        Content="{Binding}"
-                        ContentTemplate="{StaticResource PostActions}"/>
+                    <CheckBox
+                        Margin="0 0 0 10"
+                        IsChecked="{Binding Path=SetAsCurrent}"
+                        IsEnabled="{Binding Path=SelectedProject, Converter={x:Static wpf:Converters.NullIsFalse}}"
+                        Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
+                        AutomationProperties.AutomationId="SetAsCurrent"
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                    <CheckBox
+                        Margin="0 0 0 10"
+                        IsChecked="{Binding Path=SetAsDefault}"
+                        IsEnabled="{Binding Path=IsRegisterCustomEnv}"
+                        Content="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
+                        AutomationProperties.AutomationId="SetAsDefault"
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                    <CheckBox
+                        Margin="0 0 0 10"
+                        IsChecked="{Binding Path=ViewInEnvironmentWindow}"
+                        Content="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
+                        AutomationProperties.AutomationId="ViewInEnvironmentWindow"
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                    <CheckBox
+                        Margin="0 0 0 3"
+                        x:Name="RegisterCustomEnvCheckBox"
+                        IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
+                        IsChecked="{Binding Path=IsRegisterCustomEnv}"
+                        Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
+                        AutomationProperties.AutomationId="RegisterGlobally"
+                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+
+                    <wpf:ConfigurationTextBoxWithHelp
+                        Margin="23 0 0 24"
+                        Text="{Binding Path=Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                        IsEnabled="{Binding Path=IsRegisterCustomEnv}"
+                        Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
+                        AutomationProperties.AutomationId="Description"
+                        AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
                 </StackPanel>
             </ScrollViewer>
 
@@ -362,12 +222,93 @@
                     Content="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"
                     Style="{StaticResource ModernLabel}"/>
 
-                <ContentControl
+                <!-- Progress bar -->
+                <StackPanel
                     Grid.Row="1"
-                    IsTabStop="False"
-                    Focusable="False"
-                    Content="{Binding}"
-                    ContentTemplate="{StaticResource Actions}"/>
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding Path=IsWorking, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+
+                    <imaging:CrispImage
+                        Width="16"
+                        Height="16"
+                        Margin="4 0 0 0"
+                        Moniker="{x:Static catalog:KnownMonikers.Loading}"
+                        RenderTransformOrigin="0.5, 0.5">
+
+                        <imaging:CrispImage.RenderTransform>
+                            <RotateTransform x:Name="Rotation" />
+                        </imaging:CrispImage.RenderTransform>
+                        <imaging:CrispImage.Triggers>
+                            <EventTrigger RoutedEvent="Image.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Rotation"
+                                            Storyboard.TargetProperty="Angle"
+                                            By="360.0"
+                                            Duration="0:0:2.0"
+                                            RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </imaging:CrispImage.Triggers>
+                    </imaging:CrispImage>
+                    <TextBlock
+                        Margin="4 0 0 0"
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentPreviewInProgress}"/>
+                </StackPanel>
+
+                <!-- Preview results -->
+                <StackPanel
+                    Grid.Row="1"
+                    Visibility="{Binding Path=IsWorking, Converter={x:Static wpf:Converters.TrueIsCollapsed}}">
+
+                    <StackPanel.Resources>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Setter Property="Margin" Value="0 0 0 7"/>
+                        </Style>
+                    </StackPanel.Resources>
+
+                    <TextBlock
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPip}"
+                        Visibility="{Binding Path=WillInstallPip, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
+
+                    <TextBlock
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallVirtualEnv}"
+                        Visibility="{Binding Path=WillInstallVirtualEnv, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
+
+                    <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVirtualEnv}">
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
+                                <Binding Path="UseVirtualEnv"/>
+                                <Binding Path="WillCreateVirtualEnv"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
+
+                    <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVEnv}">
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
+                                <Binding Path="UseVEnv"/>
+                                <Binding Path="WillCreateVirtualEnv"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
+
+                    <TextBlock
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPackages}"
+                        Visibility="{Binding Path=WillInstallRequirementsTxt, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
+
+                    <TextBlock
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_RegisterGlobally}"
+                        Visibility="{Binding Path=WillRegisterGlobally, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
+
+                    <TextBlock
+                        Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreate}"
+                        Visibility="{Binding CannotCreateVirtualEnv, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
+                </StackPanel>
             </Grid>
         </Grid>
     </Grid>
