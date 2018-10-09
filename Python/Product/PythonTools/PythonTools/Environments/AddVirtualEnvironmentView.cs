@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -29,7 +28,6 @@ using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentView : EnvironmentViewBase {
-        private readonly PythonProjectNode _project;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
 
         public AddVirtualEnvironmentView(
@@ -37,7 +35,6 @@ namespace Microsoft.PythonTools.Environments {
             ProjectView[] projects,
             ProjectView selectedProject
         ) : base(serviceProvider, projects, selectedProject) {
-            _project = selectedProject?.Node;
             PageName = Strings.AddVirtualEnvironmentTabHeader;
             SetAsCurrent = SelectedProject != null;
             SetAsDefault = false;
@@ -383,7 +380,7 @@ namespace Microsoft.PythonTools.Environments {
             try {
                 var op = new AddVirtualEnvironmentOperation(
                     Site,
-                    _project,
+                    SelectedProject?.Node,
                     Path.Combine(LocationPath, VirtualEnvName),
                     BaseInterpreter.Id,
                     UseVEnv,
