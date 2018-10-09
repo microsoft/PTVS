@@ -28,7 +28,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Environments {
-    sealed class AddVirtualEnvironmentView : EnvironmentViewBase, INotifyPropertyChanged {
+    sealed class AddVirtualEnvironmentView : EnvironmentViewBase {
         private readonly PythonProjectNode _project;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
 
@@ -45,8 +45,6 @@ namespace Microsoft.PythonTools.Environments {
 
             ResetProjectDependentProperties();
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private static readonly DependencyPropertyKey WillCreateVirtualEnvPropertyKey =
             DependencyProperty.RegisterReadOnly(nameof(WillCreateVirtualEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
@@ -162,17 +160,17 @@ namespace Microsoft.PythonTools.Environments {
 
         public bool WillCreateVirtualEnv {
             get { return (bool)GetValue(WillCreateVirtualEnvProperty); }
-            private set { SafeSetValue(WillCreateVirtualEnvPropertyKey, value); }
+            private set { SetValue(WillCreateVirtualEnvPropertyKey, value); }
         }
 
         public bool UseVEnv {
             get { return (bool)GetValue(UseVEnvProperty); }
-            private set { SafeSetValue(UseVEnvPropertyKey, value); }
+            private set { SetValue(UseVEnvPropertyKey, value); }
         }
 
         public bool UseVirtualEnv {
             get { return (bool)GetValue(UseVirtualEnvProperty); }
-            private set { SafeSetValue(UseVirtualEnvPropertyKey, value); }
+            private set { SetValue(UseVirtualEnvPropertyKey, value); }
         }
 
         public bool CannotCreateVirtualEnv {
@@ -186,8 +184,8 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         public InterpreterView BaseInterpreter {
-            get { return (InterpreterView)SafeGetValue(BaseInterpreterProperty); }
-            set { SafeSetValue(BaseInterpreterProperty, value); }
+            get { return (InterpreterView)GetValue(BaseInterpreterProperty); }
+            set { SetValue(BaseInterpreterProperty, value); }
         }
 
         public bool CanInstallRequirementsTxt {
@@ -202,17 +200,17 @@ namespace Microsoft.PythonTools.Environments {
 
         public bool WillInstallPip {
             get { return (bool)GetValue(WillInstallPipProperty); }
-            private set { SafeSetValue(WillInstallPipPropertyKey, value); }
+            private set { SetValue(WillInstallPipPropertyKey, value); }
         }
 
         public bool WillInstallVirtualEnv {
             get { return (bool)GetValue(WillInstallVirtualEnvProperty); }
-            private set { SafeSetValue(WillInstallVirtualEnvPropertyKey, value); }
+            private set { SetValue(WillInstallVirtualEnvPropertyKey, value); }
         }
 
         public bool WillRegisterGlobally {
             get { return (bool)GetValue(WillRegisterGloballyProperty); }
-            private set { SafeSetValue(WillRegisterGloballyPropertyKey, value); }
+            private set { SetValue(WillRegisterGloballyPropertyKey, value); }
         }
 
         public ObservableCollection<InterpreterView> Interpreters {
@@ -486,35 +484,6 @@ namespace Microsoft.PythonTools.Environments {
 
                 IsWorking = false;
                 RefreshCanCreateVirtualEnv();
-            }
-        }
-
-        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-            base.OnPropertyChanged(e);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(e.Property.Name));
-        }
-
-        private object SafeGetValue(DependencyProperty property) {
-            if (Dispatcher.CheckAccess()) {
-                return GetValue(property);
-            } else {
-                return Dispatcher.Invoke((Func<object>)(() => GetValue(property)));
-            }
-        }
-
-        private void SafeSetValue(DependencyProperty property, object value) {
-            if (Dispatcher.CheckAccess()) {
-                SetValue(property, value);
-            } else {
-                Dispatcher.BeginInvoke((Action)(() => SetValue(property, value)));
-            }
-        }
-
-        private void SafeSetValue(DependencyPropertyKey property, object value) {
-            if (Dispatcher.CheckAccess()) {
-                SetValue(property, value);
-            } else {
-                Dispatcher.BeginInvoke((Action)(() => SetValue(property, value)));
             }
         }
     }
