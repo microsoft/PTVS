@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -43,8 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal static string GetRootCondaExecutablePath(IServiceProvider serviceProvider) {
             var componentModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
-            var locator = componentModel.GetService<ICondaLocatorProvider>();
-            return locator.CondaExecutablePath;
+            var provider = componentModel.GetService<ICondaLocatorProvider>();
+            return provider?.FindLocator()?.CondaExecutablePath;
         }
     }
 }

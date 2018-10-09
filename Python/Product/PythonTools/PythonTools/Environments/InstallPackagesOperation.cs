@@ -21,7 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TaskStatusCenter;
 
@@ -40,27 +39,23 @@ namespace Microsoft.PythonTools.Environments {
             Redirector output = null
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
-            _pm = pm;
-            _reqsPath = requirementsPath;
+            _pm = pm ?? throw new ArgumentNullException(nameof(pm));
+            _reqsPath = requirementsPath ?? throw new ArgumentNullException(nameof(requirementsPath));
             _output = output;
             _statusCenter = _site.GetService(typeof(SVsTaskStatusCenterService)) as IVsTaskStatusCenterService;
         }
 
         private void WriteOutput(string message) {
-            if (_output != null) {
-                _output.WriteLine(message);
-            }
+            _output?.WriteLine(message);
         }
 
         private void WriteError(string message) {
-            if (_output != null) {
-                _output.WriteErrorLine(message);
-            }
+            _output?.WriteErrorLine(message);
         }
 
         public async Task RunAsync() {
             var outputWindow = OutputWindowRedirector.GetGeneral(_site);
-            var taskHandler = _statusCenter.PreRegister(
+            var taskHandler = _statusCenter?.PreRegister(
                 new TaskHandlerOptions() {
                     ActionsAfterCompletion = CompletionActions.RetainAndNotifyOnFaulted | CompletionActions.RetainAndNotifyOnRanToCompletion,
                     Title = Strings.InstallPackagesStatusCenterTitle.FormatUI(PathUtils.GetFileOrDirectoryName(_pm.Factory.Configuration.Description)),
@@ -74,14 +69,14 @@ namespace Microsoft.PythonTools.Environments {
             );
 
             var task = InstallPackagesAsync(taskHandler);
-            taskHandler.RegisterTask(task);
+            taskHandler?.RegisterTask(task);
             _site.ShowTaskStatusCenter();
         }
 
         private async Task InstallPackagesAsync(ITaskHandler taskHandler) {
             await InstallPackagesAsync();
 
-            taskHandler.Progress.Report(new TaskProgressData() {
+            taskHandler?.Progress.Report(new TaskProgressData() {
                 CanBeCanceled = false,
                 ProgressText = Strings.InstallPackagesStatusCenterProgressCompleted,
                 PercentComplete = 100,

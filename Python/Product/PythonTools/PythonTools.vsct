@@ -131,7 +131,6 @@ permissions and limitations under the License.
         <CommandFlag>DefaultDocked</CommandFlag>
         <CommandFlag>NoToolbarClose</CommandFlag>
         <CommandFlag>AlwaysCreate</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
         <Strings>
           <ButtonText>Python Environments Window</ButtonText>
           <CommandName>Python Environments Window</CommandName>
@@ -324,8 +323,6 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Environment...</ButtonText>
@@ -338,7 +335,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x0110" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Virtual Environment...</ButtonText>
@@ -351,7 +347,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingEnv" priority="0x0120" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add E&amp;xisting Environment...</ButtonText>
@@ -364,7 +359,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddCondaEnv" priority="0x0130" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Conda Environment...</ButtonText>

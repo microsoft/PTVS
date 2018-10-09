@@ -217,6 +217,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
+            ForceDiscoverInterpreterFactories();
+        }
+
+        private void ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -466,6 +470,30 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-#endregion
+        #endregion
+
+        private sealed class DiscoverOnDispose : IDisposable {
+            private readonly CondaEnvironmentFactoryProvider _provider;
+            private readonly bool _forceDiscovery;
+
+            public DiscoverOnDispose(CondaEnvironmentFactoryProvider provider, bool forceDiscovery) {
+                _provider = provider;
+                _forceDiscovery = forceDiscovery;
+                Interlocked.Increment(ref _provider._ignoreNotifications);
+            }
+
+            public void Dispose() {
+                Interlocked.Decrement(ref _provider._ignoreNotifications);
+                if (_forceDiscovery) {
+                    _provider.ForceDiscoverInterpreterFactories();
+                } else {
+                    _provider.DiscoverInterpreterFactories();
+                }
+            }
+        }
+
+        internal IDisposable SuppressDiscoverFactories(bool forceDiscoveryOnDispose) {
+            return new DiscoverOnDispose(this, forceDiscoveryOnDispose);
+        }
     }
 }

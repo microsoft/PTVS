@@ -23,7 +23,12 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Interpreter {
-
+    /// <summary>
+    /// Conda locator that searches the registry for Anaconda or Miniconda,
+    /// figures out which one has the newest version of conda (if there is
+    /// more than one) and returns its path.
+    /// This is the lowest priority locator because it is the least predictable.
+    /// </summary>
     [Export(typeof(ICondaLocator))]
     [ExportMetadata("Priority", 1000)]
     sealed class AutoDetectedLatestCondaLocator : ICondaLocator {

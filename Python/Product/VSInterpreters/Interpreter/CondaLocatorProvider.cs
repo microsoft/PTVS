@@ -32,17 +32,12 @@ namespace Microsoft.PythonTools.Interpreter {
             _condaLocators = condaLocators;
         }
 
-        public string CondaExecutablePath {
-            get {
-                foreach (var locator in _condaLocators.OrderBy(l => l.Metadata.Priority)) {
-                    var executablePath = locator.Value.CondaExecutablePath;
-                    if (File.Exists(executablePath)) {
-                        return executablePath;
-                    }
-                }
-
-                return null;
-            }
+        public ICondaLocator FindLocator() {
+            // Order first to avoid creating the lower priority locators unnecessarily
+            return _condaLocators
+                .OrderBy(l => l.Metadata.Priority)
+                .Where(l => File.Exists(l.Value.CondaExecutablePath))
+                .FirstOrDefault()?.Value;
         }
     }
 }

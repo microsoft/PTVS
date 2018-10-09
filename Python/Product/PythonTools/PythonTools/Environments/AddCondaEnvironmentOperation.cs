@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -33,7 +32,8 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IServiceProvider _site;
         private readonly ICondaEnvironmentManager _condaMgr;
         private readonly PythonProjectNode _project;
-        private readonly string _envName;
+        private readonly string _envNameOrPath;
+        private readonly string _actualName;
         private readonly string _envFilePath;
         private readonly List<PackageSpec> _packages;
         private readonly bool _setAsCurrent;
@@ -46,12 +46,13 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IInterpreterRegistryService _registry;
         private readonly IInterpreterOptionsService _options;
         private readonly IPythonToolsLogger _logger;
+        private readonly CondaEnvironmentFactoryProvider _factoryProvider;
 
         public AddCondaEnvironmentOperation(
             IServiceProvider site,
             ICondaEnvironmentManager condaMgr,
             PythonProjectNode project,
-            string envName,
+            string envNameOrPath,
             string envFilePath,
             List<PackageSpec> packages,
             bool setAsCurrent,
@@ -59,14 +60,20 @@ namespace Microsoft.PythonTools.Environments {
             bool viewInEnvWindow
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
-            _condaMgr = condaMgr;
+            _condaMgr = condaMgr ?? throw new ArgumentNullException(nameof(condaMgr));
             _project = project;
-            _envName = envName;
+            _envNameOrPath = envNameOrPath ?? throw new ArgumentNullException(nameof(envNameOrPath));
             _envFilePath = envFilePath;
-            _packages = packages;
+            _packages = packages ?? throw new ArgumentNullException(nameof(packages));
             _setAsCurrent = setAsCurrent;
             _setAsDefault = setAsDefault;
             _viewInEnvWindow = viewInEnvWindow;
+
+            // If passed a path, the actual name reported by conda will the last part
+            _actualName = PathUtils.GetFileOrDirectoryName(_envNameOrPath);
+            if (_actualName.Length == 0) {
+                _actualName = _envNameOrPath;
+            }
 
             _outputWindow = OutputWindowRedirector.GetGeneral(_site);
             _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
@@ -75,13 +82,14 @@ namespace Microsoft.PythonTools.Environments {
             _registry = _site.GetComponentModel().GetService<IInterpreterRegistryService>();
             _options = _site.GetComponentModel().GetService<IInterpreterOptionsService>();
             _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
+            _factoryProvider = _site.GetComponentModel().GetService<CondaEnvironmentFactoryProvider>();
         }
 
-        public async Task RunAsync(CancellationToken ct = default(CancellationToken)) {
-            var taskHandler = _statusCenter.PreRegister(
+        public async Task RunAsync() {
+            var taskHandler = _statusCenter?.PreRegister(
                 new TaskHandlerOptions() {
                     ActionsAfterCompletion = CompletionActions.RetainAndNotifyOnFaulted | CompletionActions.RetainAndNotifyOnRanToCompletion,
-                    Title = Strings.CondaStatusCenterCreateTitle.FormatUI(_envName),
+                    Title = Strings.CondaStatusCenterCreateTitle.FormatUI(_actualName),
                     DisplayTaskDetails = (t) => { _outputWindow.ShowAndActivate(); }
                 },
                 new TaskProgressData() {
@@ -92,9 +100,9 @@ namespace Microsoft.PythonTools.Environments {
             );
 
             var ui = new CondaUI(taskHandler, _outputWindow, _showAndActiveOutputWindow);
-            _statusBar.SetText(Strings.CondaStatusBarCreateStarted.FormatUI(_envName));
+            _statusBar?.SetText(Strings.CondaStatusBarCreateStarted.FormatUI(_actualName));
 
-            var task = Task.Run(() => CreateCondaEnvironmentAsync(ui, taskHandler, ct));
+            var task = Task.Run(() => CreateCondaEnvironmentAsync(ui, taskHandler, taskHandler?.UserCancellation ?? CancellationToken.None));
             taskHandler.RegisterTask(task);
             _site.ShowTaskStatusCenter();
         }
@@ -121,49 +129,39 @@ namespace Microsoft.PythonTools.Environments {
                     });
                 }
 
-                taskHandler.Progress.Report(new TaskProgressData() {
+                taskHandler?.Progress.Report(new TaskProgressData() {
                     CanBeCanceled = false,
                     ProgressText = Strings.CondaStatusCenterCreateProgressCompleted,
                     PercentComplete = 100,
                 });
 
-                _statusBar.SetText(Strings.CondaStatusBarCreateSucceeded.FormatUI(_envName));
+                _statusBar?.SetText(Strings.CondaStatusBarCreateSucceeded.FormatUI(_actualName));
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                _statusBar.SetText(Strings.CondaStatusBarCreateFailed.FormatUI(_envName));
+                _statusBar?.SetText(Strings.CondaStatusBarCreateFailed.FormatUI(_actualName));
                 ui.OnErrorTextReceived(_condaMgr, ex.Message);
                 throw;
             }
         }
 
         private async Task<IPythonInterpreterFactory> CreateFactoryAsync(CondaUI ui, ITaskHandler taskHandler, CancellationToken ct) {
-            var tcs = new TaskCompletionSource<IPythonInterpreterFactory>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            EventHandler interpretersChanged = (object sender, EventArgs e) => {
-                var first = _registry.Interpreters
-                    .Where(f => CondaEnvironmentFactoryProvider.IsCondaEnv(f, _envName))
-                    .FirstOrDefault();
-                if (first != null) {
-                    tcs.TrySetResult(first);
-                }
-            };
-
-            IPythonInterpreterFactory factory = null;
-
-            _registry.InterpretersChanged += interpretersChanged;
-            try {
-                taskHandler.Progress.Report(new TaskProgressData() {
+            // Force discovery, don't respect the ignore nofitication ref count,
+            // which won't go back to 0 if multiple conda environments are being
+            // created around the same time. We need the discovery in order to find
+            // the new factory.
+            using (_factoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
+                taskHandler?.Progress.Report(new TaskProgressData() {
                     CanBeCanceled = false,
                     ProgressText = Strings.CondaStatusCenterCreateProgressCreating,
                     PercentComplete = null,
                 });
 
-                bool failed = false;
+                bool failed = true;
                 bool useEnvFile = !string.IsNullOrEmpty(_envFilePath);
 
                 try {
                     if (useEnvFile) {
                         if (!await _condaMgr.CreateFromEnvironmentFileAsync(
-                            _envName,
+                            _envNameOrPath,
                             _envFilePath,
                             ui,
                             ct
@@ -172,7 +170,7 @@ namespace Microsoft.PythonTools.Environments {
                         }
                     } else {
                         if (!await _condaMgr.CreateAsync(
-                            _envName,
+                            _envNameOrPath,
                             _packages.ToArray(),
                             ui,
                             ct
@@ -180,9 +178,8 @@ namespace Microsoft.PythonTools.Environments {
                             throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
                         }
                     }
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    failed = true;
-                    throw;
+
+                    failed = false;
                 } finally {
                     _logger?.LogEvent(PythonLogEvent.CreateCondaEnv, new CreateCondaEnvInfo() {
                         Failed = failed,
@@ -192,22 +189,17 @@ namespace Microsoft.PythonTools.Environments {
                         OpenEnvironmentsWindow = _viewInEnvWindow,
                     });
                 }
-
-                // Wait for the factory to refresh
-                taskHandler.Progress.Report(new TaskProgressData() {
-                    CanBeCanceled = false,
-                    ProgressText = Strings.CondaStatusCenterCreateProgressDetecting,
-                    PercentComplete = 90,
-                });
-
-                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
-                if (await Task.WhenAny(tcs.Task, timeoutTask) == timeoutTask) {
-                    throw new ApplicationException(Strings.WaitForEnvTimeout.FormatUI(_envName));
-                }
-                factory = await tcs.Task;
-            } finally {
-                _registry.InterpretersChanged -= interpretersChanged;
             }
+
+            var expectedId = CondaEnvironmentFactoryConstants.GetInterpreterId(
+                CondaEnvironmentFactoryProvider.EnvironmentCompanyName,
+                _actualName
+            );
+
+            // This will return null if the environment that was created does
+            // not contain a python interpreter. Common case for this is
+            // when the package list the user has entered is empty string.
+            var factory = _factoryProvider?.GetInterpreterFactory(expectedId);
 
             return factory;
         }
@@ -218,7 +210,7 @@ namespace Microsoft.PythonTools.Environments {
             private readonly bool _showAndActiveOutputWindow;
 
             public CondaUI(ITaskHandler taskHandler, Redirector outputWindow, bool showAndActiveOutputWindow) {
-                _taskHandler = taskHandler ?? throw new ArgumentNullException(nameof(taskHandler));
+                _taskHandler = taskHandler;
                 _outputWindow = outputWindow ?? throw new ArgumentNullException(nameof(outputWindow));
                 _showAndActiveOutputWindow = showAndActiveOutputWindow;
             }
@@ -237,7 +229,7 @@ namespace Microsoft.PythonTools.Environments {
 
             public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text) {
                 _outputWindow.WriteLine(text.TrimEndNewline());
-                _taskHandler.Progress.Report(new TaskProgressData() {
+                _taskHandler?.Progress.Report(new TaskProgressData() {
                     CanBeCanceled = false,
                     ProgressText = text,
                     PercentComplete = null
@@ -250,7 +242,7 @@ namespace Microsoft.PythonTools.Environments {
 
             public void OnOutputTextReceived(IPackageManager sender, string text) {
                 _outputWindow.WriteLine(text.TrimEndNewline());
-                _taskHandler.Progress.Report(new TaskProgressData() {
+                _taskHandler?.Progress.Report(new TaskProgressData() {
                     CanBeCanceled = false,
                     ProgressText = text,
                     PercentComplete = null

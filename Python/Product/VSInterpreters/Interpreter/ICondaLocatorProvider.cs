@@ -16,7 +16,18 @@
 
 namespace Microsoft.PythonTools.Interpreter {
 
+    /// <summary>
+    /// Provides the ability to find the most appropriate conda locator from
+    /// the many that may be available.
+    /// </summary>
     public interface ICondaLocatorProvider {
-        string CondaExecutablePath { get; }
+        /// <summary>
+        /// Retrieves the highest priority conda locator available.
+        /// </summary>
+        /// <returns>
+        /// A locator that has a valid conda executable, or <c>null</c>
+        /// if none was found.
+        /// </returns>
+        ICondaLocator FindLocator();
     }
 }

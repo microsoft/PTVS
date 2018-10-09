@@ -20,9 +20,15 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Environments {
+    /// <summary>
+    /// Conda locator that returns the path to the conda executable
+    /// specified by the user in tools/options/python/conda page.
+    /// This is the highest priority locator because it respects
+    /// the user's choice.
+    /// </summary>
     [Export(typeof(ICondaLocator))]
     [ExportMetadata("Priority", 100)]
-    public class UserSpecifiedCondaLocator : ICondaLocator {
+    sealed class UserSpecifiedCondaLocator : ICondaLocator {
         private readonly IServiceProvider _site;
         private readonly PythonToolsService _pythonToolsService;
 

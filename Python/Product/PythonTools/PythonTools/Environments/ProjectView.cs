@@ -16,11 +16,10 @@
 
 using System;
 using System.Linq;
-using System.Windows;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Environments {
-    class ProjectView : DependencyObject {
+    sealed class ProjectView {
         public PythonProjectNode Node { get; }
         public string Name { get; set; }
         public string HomeFolder { get; set; }

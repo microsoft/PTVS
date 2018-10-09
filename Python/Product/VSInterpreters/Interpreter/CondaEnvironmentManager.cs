@@ -298,7 +298,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 // It is safe to kill a conda dry run
-                var exitCode = await output.WaitAsync(ct, killProcessOnCancel: true);
+                var exitCode = await WaitAndKillOnCancelAsync(output, ct);
                 if (exitCode >= 0) {
                     var json = string.Join(Environment.NewLine, output.StandardOutputLines);
                     try {
@@ -312,6 +312,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return null;
+        }
+
+        private async Task<int> WaitAndKillOnCancelAsync(ProcessOutput processOutput, CancellationToken ct) {
+            var tcs = new TaskCompletionSource<int>();
+            processOutput.Exited += (o, e) => tcs.TrySetResult(0);
+            try {
+                if (processOutput.ExitCode == null) {
+                    tcs.RegisterForCancellation(ct).UnregisterOnCompletion(tcs.Task);
+                    await tcs.Task;
+                }
+                return (int)processOutput.ExitCode;
+            } catch (OperationCanceledException) when (ct.IsCancellationRequested) {
+                try {
+                    processOutput.Kill();
+                } catch (InvalidOperationException) {
+                    // Must have exited just as we were about to kill it
+                }
+                throw;
+            }
         }
 
         private async Task<bool> DoOperationAsync(

@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -65,8 +63,8 @@ namespace Microsoft.PythonTools.Environments {
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _project = project;
-            _virtualEnvPath = virtualEnvPath;
-            _baseInterpreter = baseInterpreterId;
+            _virtualEnvPath = virtualEnvPath ?? throw new ArgumentNullException(nameof(virtualEnvPath));
+            _baseInterpreter = baseInterpreterId ?? throw new ArgumentNullException(nameof(baseInterpreterId));
             _useVEnv = useVEnv;
             _installReqs = installRequirements;
             _reqsPath = requirementsPath;
@@ -98,14 +96,14 @@ namespace Microsoft.PythonTools.Environments {
             );
 
             var task = CreateVirtualEnvironmentAsync(taskHandler);
-            taskHandler.RegisterTask(task);
+            taskHandler?.RegisterTask(task);
             _site.ShowTaskStatusCenter();
         }
 
         private async Task CreateVirtualEnvironmentAsync(ITaskHandler taskHandler) {
             IPythonInterpreterFactory factory = null;
 
-            bool failed = false;
+            bool failed = true;
             var baseInterp = _registry.FindInterpreter(_baseInterpreter);
 
             try {
@@ -143,9 +141,8 @@ namespace Microsoft.PythonTools.Environments {
                         }
                     });
                 }
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                failed = true;
-                throw;
+
+                failed = false;
             } finally {
                 _logger?.LogEvent(PythonLogEvent.CreateVirtualEnv, new CreateVirtualEnvInfo() {
                     Failed = failed,
@@ -160,7 +157,7 @@ namespace Microsoft.PythonTools.Environments {
                 });
             }
 
-            taskHandler.Progress.Report(new TaskProgressData() {
+            taskHandler?.Progress.Report(new TaskProgressData() {
                 CanBeCanceled = false,
                 ProgressText = Strings.VirtualEnvStatusCenterCreateProgressCompleted,
                 PercentComplete = 100,
@@ -168,7 +165,7 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private async Task InstallPackagesAsync(ITaskHandler taskHandler, IPythonInterpreterFactory factory) {
-            taskHandler.Progress.Report(new TaskProgressData() {
+            taskHandler?.Progress.Report(new TaskProgressData() {
                 CanBeCanceled = false,
                 ProgressText = Strings.VirtualEnvStatusCenterCreateProgressInstallingPackages,
                 PercentComplete = null,

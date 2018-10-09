@@ -139,24 +139,36 @@ namespace Microsoft.PythonTools.Environments {
                 throw new ArgumentNullException(nameof(site));
             }
 
-            var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-            var projects = sln?.EnumerateLoadedPythonProjects().ToArray();
+            ProjectView[] projectViews;
+            ProjectView selectedProjectView;
 
-            var projectViews = projects
-                .Select((projectNode) => new ProjectView(projectNode))
-                .ToArray();
+            try {
+                var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
+                var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? new PythonProjectNode[0];
 
-            var selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
-            if (existingCondaEnvName != null) {
-                selectedProjectView.MissingCondaEnvName = existingCondaEnvName;
+                projectViews = projects
+                    .Select((projectNode) => new ProjectView(projectNode))
+                    .ToArray();
+
+                selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
+            } catch (InvalidOperationException ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
+                projectViews = new ProjectView[0];
+                selectedProjectView = null;
             }
 
-            if (environmentYmlPath != null) {
-                selectedProjectView.EnvironmentYmlPath = environmentYmlPath;
-            }
+            if (selectedProjectView != null) {
+                if (existingCondaEnvName != null) {
+                    selectedProjectView.MissingCondaEnvName = existingCondaEnvName;
+                }
 
-            if (requirementsTxtPath != null) {
-                selectedProjectView.RequirementsTxtPath = requirementsTxtPath;
+                if (environmentYmlPath != null) {
+                    selectedProjectView.EnvironmentYmlPath = environmentYmlPath;
+                }
+
+                if (requirementsTxtPath != null) {
+                    selectedProjectView.RequirementsTxtPath = requirementsTxtPath;
+                }
             }
 
             var addVirtualView = new AddVirtualEnvironmentView(

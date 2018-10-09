@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Environments {
-    internal class InterpreterView : DependencyObject {
+    sealed class InterpreterView : DependencyObject {
         public static readonly IEqualityComparer<InterpreterView> EqualityComparer = new InterpreterViewComparer();
         public static readonly IComparer<InterpreterView> Comparer = (IComparer<InterpreterView>)EqualityComparer;
 
