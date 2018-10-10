@@ -259,6 +259,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
+    /// <summary>
+    /// Auxiliary class to translate "address" from a module/function spec.
+    /// </summary>
     class AddressTranslator {
         private Dictionary<string, Dictionary<string, BaseSizeTuple>> modfundict;
         private Dictionary<string, LongInt> modindex;

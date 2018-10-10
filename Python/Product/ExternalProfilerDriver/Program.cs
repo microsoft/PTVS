@@ -78,10 +78,17 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     WorkloadSpec = String.Join(" ", RestArgs)
                 };
 
+#if false
                 if (opts.SymbolPath != string.Empty) {
                     Console.WriteLine(Strings.SymbolPathSpecifiedNotification);
                     spec.SymbolPath = opts.SymbolPath;
                 }
+#else
+                var workloadCLI = spec.WorkloadSpec.Split(' ');
+                if (workloadCLI.Length >= 2) {
+                    spec.SymbolPath = Path.GetDirectoryName(workloadCLI[1]);
+                }
+#endif
 
                 string vtuneCollectArgs = spec.FullCLI();
 
@@ -128,7 +135,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
                 double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"));
                 VTuneToDWJSON.CPUReportToDWJson(reptimespec.ReportOutputFile, Path.Combine(dwjsonDir, "Session.counters"), runtime);
-
             })
             .WithNotParsed(errors => {
                 Console.WriteLine(Strings.IncorrectCommandLine);

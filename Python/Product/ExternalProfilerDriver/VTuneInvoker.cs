@@ -166,21 +166,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             sb.Append(AnalysisCLI);
             sb.Append(" " + UserDataDirCLI());
             sb.Append(" " + ResultDirCLI);
-            sb.Append(WorkloadCLI);
-            return sb.ToString();
-            #if false
-            StringBuilder sb = new StringBuilder();
-            sb.Append(AnalysisCLI);
-            sb.Append(" " + UserDataDirCLI());
-            sb.Append(" " + ResultDirCLI);
-
             if (!string.IsNullOrEmpty(this.SymbolPath)) {
                 sb.Append($" -search-dir {this.SymbolPath}");
             }
-
             sb.Append(WorkloadCLI);
+
             return sb.ToString();
-            #endif
         }
     }
 
