@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     Environment.Exit(0);
                 }
 
-                double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"));
+                double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"), spec.SymbolPath);
                 VTuneToDWJSON.CPUReportToDWJson(reptimespec.ReportOutputFile, Path.Combine(dwjsonDir, "Session.counters"), runtime);
             })
             .WithNotParsed(errors => {
