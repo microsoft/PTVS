@@ -22,6 +22,8 @@ using System.Linq;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
+using CsvHelper;
+
 namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
     class PerformanceSample {
