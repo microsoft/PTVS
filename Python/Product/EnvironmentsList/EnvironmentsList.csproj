@@ -77,10 +77,6 @@
     <Reference Include="Microsoft.VisualStudio.Utilities" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="CondaExtension.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -150,9 +146,6 @@
     </Compile>
     <Compile Include="..\PythonTools\PythonTools\Intellisense\FuzzyStringMatcher.cs">
       <Link>FuzzyStringMatcher.cs</Link>
-    </Compile>
-    <Compile Include="CondaExtension.xaml.cs">
-      <DependentUpon>CondaExtension.xaml</DependentUpon>
     </Compile>
     <Compile Include="ConfigurationExtension.xaml.cs">
       <DependentUpon>ConfigurationExtension.xaml</DependentUpon>

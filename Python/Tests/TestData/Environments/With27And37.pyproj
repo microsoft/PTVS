@@ -9,9 +9,9 @@
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
-    <AssemblyName>With27And33</AssemblyName>
-    <Name>With27And33</Name>
-    <RootNamespace>With27And33</RootNamespace>
+    <AssemblyName>With27And37</AssemblyName>
+    <Name>With27And37</Name>
+    <RootNamespace>With27And37</RootNamespace>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -27,7 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|2.7-32" />
-    <InterpreterReference Include="Global|PythonCore|3.3-32" />
+    <InterpreterReference Include="Global|PythonCore|3.7-32" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

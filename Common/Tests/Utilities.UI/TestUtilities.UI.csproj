@@ -103,6 +103,7 @@
     <Compile Include="UI\AddReferenceDialog.cs" />
     <Compile Include="UI\AttachToProcessDialog.cs" />
     <Compile Include="UI\AutomationWrapper.cs" />
+    <Compile Include="UI\RadioButton.cs" />
     <Compile Include="UI\ExceptionHelperDialog.cs" />
     <Compile Include="UI\ListBox.cs" />
     <Compile Include="UI\Button.cs" />

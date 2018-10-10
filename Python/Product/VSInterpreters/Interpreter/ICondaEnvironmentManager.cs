@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Interpreter {
     interface ICondaEnvironmentManager {
@@ -31,7 +33,21 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="packageSpecs">
         /// List of conda packages to install.
         /// </param>
-        Task<bool> CreateAsync(string newEnvNameOrPath, PackageSpec[] packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct);
+        Task<bool> CreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct);
+
+        /// <summary>
+        /// Previews the creation of a new conda environment with the specified
+        /// conda packages. No environment is created.
+        /// </summary>
+        /// <param name="newEnvNameOrPath">
+        /// Name or absolute path of folder for the new environment. If a name
+        /// or relative path is used, it will be created in the user's default
+        /// environments folder, as determined by conda.
+        /// </param>
+        /// <param name="packageSpecs">
+        /// List of conda packages to install.
+        /// </param>
+        Task<CondaCreateDryRunResult> PreviewCreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, CancellationToken ct);
 
         /// <summary>
         /// Creates a new conda environment and installs the conda and pip
@@ -94,5 +110,41 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Path to the existing environment to delete.
         /// </param>
         Task<bool> DeleteAsync(string envPath, ICondaEnvironmentManagerUI ui, CancellationToken ct);
+    }
+
+    sealed class CondaCreateDryRunResult {
+        [JsonProperty("actions")]
+        public CondaCreateDryRunActions Actions = null;
+
+        [JsonProperty("prefix")]
+        public string PrefixFolder = null;
+
+        [JsonProperty("error")]
+        public string Error = null;
+
+        [JsonProperty("message")]
+        public string Message = null;
+
+        [JsonProperty("success")]
+        public bool Success;
+    }
+
+    sealed class CondaCreateDryRunActions {
+        [JsonProperty("FETCH")]
+        public CondaCreateDryRunPackage[] FetchPackages = null;
+
+        [JsonProperty("LINK")]
+        public CondaCreateDryRunPackage[] LinkPackages = null;
+
+        [JsonProperty("PREFIX")]
+        public string PrefixFolder = null;
+    }
+
+    sealed class CondaCreateDryRunPackage {
+        [JsonProperty("name")]
+        public string Name = null;
+
+        [JsonProperty("version")]
+        public string VersionText = null;
     }
 }

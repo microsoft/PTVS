@@ -35,7 +35,7 @@ using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
-    public class VirtualEnvUITests {
+    public class EnvironmentUITests {
         const string TestPackageSpec = "ptvsd==2.2.0";
         const string TestPackageDisplay = "ptvsd (2.2.0)";
 
@@ -56,7 +56,7 @@ namespace PythonToolsUITests {
 
         static DefaultInterpreterSetter InitPython3(PythonVisualStudioApp app) {
             return app.SelectDefaultInterpreter(
-                //PythonPaths.Python37 ?? PythonPaths.Python37_x64 ??
+                PythonPaths.Python37 ?? PythonPaths.Python37_x64 ??
                 PythonPaths.Python36 ?? PythonPaths.Python36_x64 ??
                 PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
                 PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
@@ -79,8 +79,7 @@ namespace PythonToolsUITests {
             using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
-                string envName;
-                var env = app.CreateVirtualEnvironment(project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out string envName);
                 env.Select();
 
                 app.ExecuteCommand("Python.InstallPackage", "/p:" + TestPackageSpec);
@@ -115,8 +114,7 @@ namespace PythonToolsUITests {
                 var projectHome = project.GetPythonProject().ProjectHome;
                 File.WriteAllText(Path.Combine(projectHome, "requirements.txt"), TestPackageSpec);
 
-                string envName;
-                var env = app.CreateVirtualEnvironment(project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out string envName);
                 env.Select();
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
@@ -132,8 +130,7 @@ namespace PythonToolsUITests {
             using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
-                string envName;
-                var env = app.CreateVirtualEnvironment(project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out string envName);
                 env.Select();
 
                 try {
@@ -178,8 +175,7 @@ namespace PythonToolsUITests {
                 var project = CreateTemporaryProject(app);
                 var projectName = project.UniqueName;
 
-                string envName;
-                var env = app.CreateVirtualEnvironment(project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out string envName);
 
                 var solution = app.Dte.Solution.FullName;
                 app.Dte.Solution.Close(true);
@@ -204,26 +200,28 @@ namespace PythonToolsUITests {
 
                 var id0 = (string)project.Properties.Item("InterpreterId").Value;
 
-                string envName1, envName2;
-                var env1 = app.CreateVirtualEnvironment(project, out envName1);
-                var env2 = app.CreateVirtualEnvironment(project, out envName2);
+                var env1 = app.CreateVirtualEnvironment(project, out string envName1);
+                var env2 = app.CreateVirtualEnvironment(project, out string envName2);
+
+                // At this point, env2 is active
+                var id2 = (string)project.Properties.Item("InterpreterId").Value;
+                Assert.AreNotEqual(id0, id2);
+
+                // Activate env1 (previously stored node is now invalid, we need to query again)
+                env1 = app.OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName1);
+                env1.Select();
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
                 var id1 = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreNotEqual(id0, id1);
+                Assert.AreNotEqual(id2, id1);
 
-                env2.Select();
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment");
-
-                var id2 = (string)project.Properties.Item("InterpreterId").Value;
-                Assert.AreNotEqual(id0, id2);
-                Assert.AreNotEqual(id1, id2);
-
-                // Change the selected node
+                // Activate env2
                 app.SolutionExplorerTreeView.SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"" + envName1 + "\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"" + envName2 + "\"");
 
-                var id1b = (string)project.Properties.Item("InterpreterId").Value;
-                Assert.AreEqual(id1, id1b);
+                var id2b = (string)project.Properties.Item("InterpreterId").Value;
+                Assert.AreEqual(id2, id2b);
             }
         }
 
@@ -231,8 +229,7 @@ namespace PythonToolsUITests {
             using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
-                string envName, envPath;
-                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+                var env = app.CreateVirtualEnvironment(project, out string envName, out string envPath);
 
                 env.Select();
 
@@ -246,8 +243,6 @@ namespace PythonToolsUITests {
                     envName
                 );
 
-                var projectHome = (string)project.Properties.Item("ProjectHome").Value;
-                envPath = Path.Combine(projectHome, envPath);
                 Assert.IsTrue(Directory.Exists(envPath), envPath);
             }
         }
@@ -263,8 +258,7 @@ namespace PythonToolsUITests {
 
                 var project = CreateTemporaryProject(app);
 
-                string envName, envPath;
-                TreeNode env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+                TreeNode env = app.CreateVirtualEnvironment(project, out string envName, out string envPath);
 
                 // Need to wait some more for the database to be loaded.
                 app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
@@ -287,8 +281,6 @@ namespace PythonToolsUITests {
                     envName
                 );
 
-                var projectHome = (string)project.Properties.Item("ProjectHome").Value;
-                envPath = Path.Combine(projectHome, envPath);
                 for (int retries = 10;
                     Directory.Exists(envPath) && retries > 0;
                     --retries) {
@@ -301,28 +293,34 @@ namespace PythonToolsUITests {
         public void DefaultBaseInterpreterSelection(PythonVisualStudioApp app) {
             // The project that will be loaded references these environments.
             PythonPaths.Python27.AssertInstalled();
-            PythonPaths.Python33.AssertInstalled();
+            PythonPaths.Python37.AssertInstalled();
 
-            using (var dis = InitPython2(app)) {
+            using (var dis = InitPython3(app)) {
                 var sln = app.CopyProjectForTest(@"TestData\Environments.sln");
                 var project = app.OpenProject(sln);
 
                 app.OpenSolutionExplorer().SelectProject(project);
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
 
-                using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
-                    var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
+                environmentsNode.Select();
+
+                using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
+                    var baseInterp = createVenv.BaseInterpreter;
 
                     Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3 (32-bit)\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.7 (32-bit)\"");
 
-                using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
-                    var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
+                environmentsNode.Select();
 
-                    Assert.AreEqual("Python 3.3 (32-bit)", baseInterp);
+                using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
+                    var baseInterp = createVenv.BaseInterpreter;
+
+                    Assert.AreEqual("Python 3.7 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -342,9 +340,7 @@ namespace PythonToolsUITests {
 
                 var project = CreateTemporaryProject(app);
 
-                string envName, envPath;
-
-                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+                var env = app.CreateVirtualEnvironment(project, out string envName);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual(string.Format("env (Python {0} ({1}))",
@@ -354,25 +350,90 @@ namespace PythonToolsUITests {
             }
         }
 
-        public void AddExistingVEnv(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+        public void CreateCondaEnvFromPackages(PythonVisualStudioApp app) {
+            var python = PythonPaths.Anaconda36_x64 ?? PythonPaths.Anaconda36 ?? PythonPaths.Anaconda27_x64?? PythonPaths.Anaconda27;
+            python.AssertInstalled();
+
+            var project = CreateTemporaryProject(app);
+
+            var env = app.CreateCondaEnvironment(project, "python=3.7 requests", null, null, out string envName, out string envPath);
+            Assert.IsNotNull(env);
+            Assert.IsNotNull(env.Element);
+
+            FileUtils.DeleteDirectory(envPath);
+        }
+
+        public void CreateCondaEnvFromEnvFile(PythonVisualStudioApp app) {
+            var python = PythonPaths.Anaconda36_x64 ?? PythonPaths.Anaconda36 ?? PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
+            python.AssertInstalled();
+
+            var envFileContents = @"name: test
+dependencies:
+  - cookies==2.2.1";
+            var envFilePath = Path.Combine(TestData.GetTempPath("EnvFiles"), "environment.yml");
+            File.WriteAllText(envFilePath, envFileContents);
+            var project = CreateTemporaryProject(app);
+            var envFileItem = project.ProjectItems.AddFromFileCopy(envFilePath);
+
+            var env = app.CreateCondaEnvironment(project, null, envFileItem.FileNames[0], envFileItem.FileNames[0], out string envName, out string envPath);
+            Assert.IsNotNull(env);
+            Assert.IsNotNull(env.Element);
+
+            FileUtils.DeleteDirectory(envPath);
+        }
+
+        public void AddExistingVEnvLocal(PythonVisualStudioApp app) {
+            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
             python.AssertInstalled();
 
             var project = CreateTemporaryProject(app);
 
             var envPath = TestData.GetTempPath("venv");
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\\Environments\\venv"), envPath);
-            string envName;
             File.WriteAllText(Path.Combine(envPath, "pyvenv.cfg"),
                 string.Format(@"home = {0}
 include-system-site-packages = false
 version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
-            var env = app.AddExistingVirtualEnvironment(project, envPath, out envName);
+            var env = app.AddLocalCustomEnvironment(project, envPath, null, python.Configuration.Version.ToString(), python.Architecture.ToString(), out string envName);
             Assert.IsNotNull(env);
             Assert.IsNotNull(env.Element);
             Assert.AreEqual(
                 string.Format("venv (Python 3.{0} (32-bit))", python.Version.ToVersion().Minor),
+                envName
+            );
+        }
+
+        public void AddCustomEnvLocal(PythonVisualStudioApp app) {
+            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            python.AssertInstalled();
+
+            var project = CreateTemporaryProject(app);
+
+            var envPath = python.PrefixPath;
+
+            var env = app.AddLocalCustomEnvironment(project, envPath, "Test", python.Configuration.Version.ToString(), python.Architecture.ToString(), out string envName);
+            Assert.IsNotNull(env);
+            Assert.IsNotNull(env.Element);
+            Assert.AreEqual(
+                string.Format("Test", python.Version.ToVersion().Minor),
+                envName
+            );
+        }
+
+        public void AddExistingEnv(PythonVisualStudioApp app) {
+            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            python.AssertInstalled();
+
+            var project = CreateTemporaryProject(app);
+
+            var envPath = python.PrefixPath;
+
+            var env = app.AddExistingEnvironment(project, envPath, out string envName);
+            Assert.IsNotNull(env);
+            Assert.IsNotNull(env.Element);
+            Assert.AreEqual(
+                string.Format("Python 3.{0} (32-bit)", python.Version.ToVersion().Minor),
                 envName
             );
         }
@@ -383,102 +444,6 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
             app.ExecuteCommand("Debug.Start");
             app.CheckMessageBox(MessageBoxButton.Close, "Global|PythonCore|2.8|x86", "incorrectly configured");
-        }
-
-        class MockProjectContextProvider : IProjectContextProvider {
-            private readonly object[] _contexts;
-
-            public MockProjectContextProvider(params object[] contexts) {
-                _contexts = contexts;
-
-            }
-
-            public IEnumerable<object> Projects {
-                get {
-                    return _contexts;
-                }
-            }
-
-            public event EventHandler ProjectsChanaged {
-                add {
-                }
-                remove {
-                }
-            }
-
-            public void InterpreterLoaded(object context, InterpreterConfiguration factory) {
-            }
-
-            public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
-            }
-
-            public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
-                add {
-
-                }
-                remove {
-                }
-            }
-        }
-
-        class MockLogger : IInterpreterLog {
-            public readonly StringBuilder Errors = new StringBuilder();
-
-            public void Log(string msg) {
-                Errors.AppendLine(msg);
-            }
-        }
-
-        public void UnavailableEnvironments() {
-            var collection = new Microsoft.Build.Evaluation.ProjectCollection();
-            try {
-                var service = new MockInterpreterOptionsService();
-                var proj = collection.LoadProject(TestData.GetPath(@"TestData\Environments\Unavailable.pyproj"));
-                var contextProvider = new MockProjectContextProvider(proj);
-
-                var logger = new MockLogger();
-
-                using (var provider = new MSBuildProjectInterpreterFactoryProvider(
-                    new[] { new Lazy<IProjectContextProvider>(() => contextProvider) },
-                    null,
-                    new[] { new Lazy<IInterpreterLog>(() => logger) })) {
-                    var configs = provider.GetInterpreterConfigurations().ToArray();
-                    // force the load...
-                    AssertUtil.AreEqual(
-                        logger.Errors.ToString()
-                        .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
-                        .Split('\r', '\n')
-                        .Where(s => !string.IsNullOrEmpty(s))
-                        .Select(s => s.Trim()),
-                        @"Interpreter $env\ has invalid value for 'Id':",
-                        @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
-                        @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
-                        @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH"
-                    );
-
-                    var factories = provider.GetInterpreterFactories().ToList();
-                    foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
-                    }
-
-                    foreach (var fact in factories) {
-                        Assert.IsInstanceOfType(
-                            fact,
-                            typeof(NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Configuration.Description)
-                        );
-                        Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
-                    }
-
-                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
-                        "Invalid InterpreterPath (unavailable)",
-                        "Invalid WindowsInterpreterPath (unavailable)"
-                    );
-                }
-            } finally {
-                collection.UnloadAllProjects();
-                collection.Dispose();
-            }
         }
 
         private void EnvironmentReplWorkingDirectoryTest(
@@ -537,8 +502,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
-                string envName;
-                var env = app.CreateVirtualEnvironment(project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out _);
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);
             }

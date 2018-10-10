@@ -667,6 +667,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\Converters.cs">
+      <Link>SharedProject\Wpf\Converters.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\ILambdaConverterProvider.cs">
       <Link>SharedProject\Wpf\ILambdaConverterProvider.cs</Link>
       <Visible>true</Visible>

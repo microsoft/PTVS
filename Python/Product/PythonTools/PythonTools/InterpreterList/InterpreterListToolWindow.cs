@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -46,10 +48,14 @@ namespace Microsoft.PythonTools.InterpreterList {
         private PythonToolsService _pyService;
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
+        private readonly object _commandsLock = new object();
+        private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
         private readonly Dictionary<EnvironmentView, string> _cachedScriptPaths;
 
         public InterpreterListToolWindow(IServiceProvider services) : base(services) {
+            ToolBar = new CommandID(GuidList.guidPythonToolsCmdSet, PkgCmdIDList.EnvWindowToolbar);
+
             _site = services;
             _cachedScriptPaths = new Dictionary<EnvironmentView, string>();
         }
@@ -73,7 +79,6 @@ namespace Microsoft.PythonTools.InterpreterList {
             var list = new ToolWindow();
             list.ViewCreated += List_ViewCreated;
             list.ViewSelected += List_ViewSelected;
-            list.CondaProviderCreated += List_CondaCreateProviderCreated;
             list.Site = _site;
             try {
                 list.TelemetryLogger = _pyService.Logger;
@@ -132,7 +137,52 @@ namespace Microsoft.PythonTools.InterpreterList {
                 DeleteEnvironment_CanExecute
             ));
 
+            RegisterCommands(new Command[] {
+                new AddEnvironmentCommand(this),
+            }, GuidList.guidPythonToolsCmdSet);
+
             Content = list;
+        }
+
+        class AddEnvironmentCommand : Command {
+            private readonly InterpreterListToolWindow _window;
+
+            public AddEnvironmentCommand(InterpreterListToolWindow window) {
+                _window = window;
+            }
+
+            public override void DoCommand(object sender, EventArgs args) {
+                var service = _window._site.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var sln = (IVsSolution)_window._site.GetService(typeof(SVsSolution));
+                var project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
+                string ymlPath = project?.GetEnvironmentYmlPath();
+                string txtPath = project?.GetRequirementsTxtPath();
+
+                AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_window._site, project, null, ymlPath, txtPath)
+                    .HandleAllExceptions(_window._site, typeof(PythonProjectNode)).DoNotWait();
+            }
+
+            public override int CommandId {
+                get { return (int)PkgCmdIDList.cmdidAddEnvironment; }
+            }
+        }
+
+        private void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
+            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (null != mcs) {
+                lock (_commandsLock) {
+                    foreach (var command in commands) {
+                        var beforeQueryStatus = command.BeforeQueryStatus;
+                        CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                        if (beforeQueryStatus != null) {
+                            menuToolWin.BeforeQueryStatus += beforeQueryStatus;
+                        }
+                        mcs.AddCommand(menuToolWin);
+                        _commands[command] = menuToolWin;
+                    }
+                }
+            }
         }
 
         private void InteractiveOptions_Changed(object sender, EventArgs e) {
@@ -235,13 +285,6 @@ namespace Microsoft.PythonTools.InterpreterList {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
             }
-        }
-
-        private void List_CondaCreateProviderCreated(object sender, CondaProviderEventArgs e) {
-            e.Provider.OperationStarted += PipExtensionProvider_OperationStarted;
-            e.Provider.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-            e.Provider.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-            e.Provider.OperationFinished += PipExtensionProvider_OperationFinished;
         }
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
@@ -468,9 +511,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
             var registry = compModel.GetService<IInterpreterRegistryService>();
-            // TODO: reuse a single conda environment manager between this and
-            // the one in CondaExtension, since it can be slow to create
-            var mgr = CondaEnvironmentManager.Create(registry);
+            var mgr = CondaEnvironmentManager.Create(_site);
             mgr.DeleteAsync(
                 view.Configuration.PrefixPath,
                 new CondaEnvironmentManagerUI(_outputWindow),

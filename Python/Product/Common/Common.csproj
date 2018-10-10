@@ -62,6 +62,8 @@
     <Compile Include="Infrastructure\SocketUtils.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
     <Compile Include="Infrastructure\StringListReader.cs" />
+    <Compile Include="Infrastructure\CancellationTokenUtilities.cs" />
+    <Compile Include="Infrastructure\TaskCompletionSourceExtensions.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\TestEnvironment.cs" />
     <Compile Include="Infrastructure\Win32Window.cs" />

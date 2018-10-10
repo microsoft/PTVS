@@ -27,6 +27,8 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this._showOutputWindowForVirtualEnvCreate = new System.Windows.Forms.CheckBox();
             this._showOutputWindowForPackageInstallation = new System.Windows.Forms.CheckBox();
+            this._promptForEnvCreate = new System.Windows.Forms.CheckBox();
+            this._promptForPackageInstallation = new System.Windows.Forms.CheckBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
@@ -43,13 +45,15 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this.tableLayoutPanel3, "tableLayoutPanel3");
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForVirtualEnvCreate, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
-            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
-            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 7);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 8);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 8);
+            this.tableLayoutPanel3.Controls.Add(this._promptForEnvCreate, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this._promptForPackageInstallation, 0, 3);
+            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 4);
+            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 5);
+            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 6);
+            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 7);
+            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 8);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 9);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 9);
             this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
@@ -66,6 +70,20 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForPackageInstallation, 2);
             this._showOutputWindowForPackageInstallation.Name = "_showOutputWindowForPackageInstallation";
             this._showOutputWindowForPackageInstallation.UseVisualStyleBackColor = true;
+            // 
+            // _promptForEnvCreate
+            // 
+            resources.ApplyResources(this._promptForEnvCreate, "_promptForEnvCreate");
+            this.tableLayoutPanel3.SetColumnSpan(this._promptForEnvCreate, 2);
+            this._promptForEnvCreate.Name = "_promptForEnvCreate";
+            this._promptForEnvCreate.UseVisualStyleBackColor = true;
+            // 
+            // _promptForPackageInstallation
+            // 
+            resources.ApplyResources(this._promptForPackageInstallation, "_promptForPackageInstallation");
+            this.tableLayoutPanel3.SetColumnSpan(this._promptForPackageInstallation, 2);
+            this._promptForPackageInstallation.Name = "_promptForPackageInstallation";
+            this._promptForPackageInstallation.UseVisualStyleBackColor = true;
             // 
             // _elevatePip
             // 
@@ -148,6 +166,8 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.CheckBox _showOutputWindowForVirtualEnvCreate;
         private System.Windows.Forms.CheckBox _showOutputWindowForPackageInstallation;
+        private System.Windows.Forms.CheckBox _promptForEnvCreate;
+        private System.Windows.Forms.CheckBox _promptForPackageInstallation;
         private System.Windows.Forms.CheckBox _updateSearchPathsForLinkedFiles;
         private System.Windows.Forms.Label _indentationInconsistentLabel;
         private System.Windows.Forms.ComboBox _indentationInconsistentCombo;

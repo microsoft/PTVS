@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.Wpf.ModernDialogHeaderControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+             xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+             xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+             xmlns:l="clr-namespace:Microsoft.PythonTools.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="HeaderButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonBrushKey}}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonBorderBrushKey}}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Content="{TemplateBinding Content}"
+                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                              Focusable="False"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBorderBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBorderBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    <Grid Height="36" Margin="0 0 7 0" VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Grid.Column="1"
+                Margin="4 0 0 0"
+                HorizontalAlignment="Right"
+                Style="{StaticResource HeaderButtonStyle}"
+                AutomationProperties.Name="{x:Static common:Strings.ModernDialogHeaderCloseButtonAutomationName}"
+                Click="Close_Click">
+            <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Close}"
+                                Height="12"
+                                Width="14" />
+        </Button>
+                
+    </Grid>
+</UserControl>

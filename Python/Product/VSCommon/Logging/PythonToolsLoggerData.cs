@@ -111,4 +111,68 @@ namespace Microsoft.PythonTools.Logging {
         public bool Success { get; set; }
         public bool ExpressionFound { get; set; }
     }
+
+    static class CondaEnvCreateInfoBarActions {
+        public const string Prompt = "Prompt";
+        public const string Create = "Create";
+        public const string Ignore = "Ignore";
+    }
+
+    static class CondaEnvCreateInfoBarReasons {
+        public const string MissingEnv = "MissingEnv";
+        public const string NoEnv = "NoEnv";
+    }
+
+    sealed class CondaEnvCreateInfoBarInfo : PythonToolsLoggerData {
+        public string Reason { get; set; }
+        public string Action { get; set; }
+    }
+
+    static class VirtualEnvCreateInfoBarActions {
+        public const string Prompt = "Prompt";
+        public const string Create = "Create";
+        public const string Ignore = "Ignore";
+    }
+
+    sealed class VirtualEnvCreateInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+    }
+
+    static class PackageInstallInfoBarActions {
+        public const string Prompt = "Prompt";
+        public const string Install = "Install";
+        public const string Ignore = "Ignore";
+    }
+
+    sealed class PackageInstallInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+    }
+
+    sealed class CreateCondaEnvInfo : PythonToolsLoggerData {
+        public bool Failed { get; set; }
+        public bool FromEnvironmentFile { get; set; }
+        public bool SetAsDefault { get; set; }
+        public bool SetAsCurrent { get; set; }
+        public bool OpenEnvironmentsWindow { get; set; }
+    }
+
+    sealed class CreateVirtualEnvInfo : PythonToolsLoggerData {
+        public bool Failed { get; set; }
+        public string LanguageVersion { get; set; }
+        public string Architecture { get; set; }
+        public bool InstallRequirements { get; set; }
+        public bool UseVEnv { get; set; }
+        public bool Global { get; set; }
+        public bool SetAsDefault { get; set; }
+        public bool SetAsCurrent { get; set; }
+        public bool OpenEnvironmentsWindow { get; set; }
+    }
+
+    sealed class AddExistingEnvInfo : PythonToolsLoggerData {
+        public bool Failed { get; set; }
+        public string LanguageVersion { get; set; }
+        public string Architecture { get; set; }
+        public bool Custom { get; set; }
+        public bool Global { get; set; }
+    }
 }
