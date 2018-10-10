@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             if (!File.Exists(filename)) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgPathDoesNotExist, filename));
             }
-            var samples = ParseFromFile(filename);
+            var samples = VTuneStackParserForCPP.ParseFromFile(filename);
 
             var times = samples.Select(x => x.TOSFrame.CPUTime);
             var total = times.Sum();

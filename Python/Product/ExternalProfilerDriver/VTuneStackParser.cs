@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Text;
 
 using CsvHelper;
 
@@ -36,7 +37,12 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
         public PerformanceSample(string function, string cpuTime, string module, string functionFull, string sourceFile, string startAddress) {
             Function = function;
-            CPUTime = Single.Parse(cpuTime);
+            try {
+                CPUTime = Single.Parse(cpuTime);
+            } catch (Exception) { // TODO -- should use a more specific exception
+                CPUTime = 0;
+            }
+
             Module = module;
             FunctionFull = functionFull;
             SourceFile = sourceFile;
@@ -145,4 +151,61 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
 
     }
+
+    class VTuneStackParserForCPP
+    {
+        public static IEnumerable<SampleWithTrace> ParseFromFile(string filename)
+        {
+            if (!File.Exists(filename)) {
+                throw new ArgumentException($"Cannot find specified file ${filename}");
+            }
+
+            SampleWithTrace current = null;
+            List<PerformanceSample> currentStack = new List<PerformanceSample>();
+
+            uint index = 0;
+            using (var reader = new StreamReader(filename)) {
+                using (CsvReader csvReader = new CsvReader(reader)) {
+
+                    while (csvReader.Read()) {
+                        var row = csvReader.GetRecord<dynamic>();
+                        var dict = row as IDictionary<string, object>;
+
+                            if (dict["Function"] == null || dict["Function"].ToString() == string.Empty) {
+                                if (dict["Function Stack"] == null || dict["Function Stack"].ToString() == string.Empty) {
+                                    current.AddStack(currentStack);
+                                    currentStack = new List<PerformanceSample>();
+                                } else {
+                                    PerformanceSample s = new PerformanceSample(dict["Function Stack"].ToString(), 
+                                                                                dict["CPU Time"].ToString(),
+                                                                                dict["Module"].ToString(),
+                                                                                dict["Function (Full)"].ToString(),
+                                                                                dict["Source File"].ToString(),
+                                                                                dict["Start Address"].ToString());
+                                    currentStack.Add(s);
+                                }
+                            } else {
+                                if (current != null) {
+                                    yield return current;
+                                }
+                                PerformanceSample s = new PerformanceSample(dict["Function"].ToString(), 
+                                                                            dict["CPU Time"].ToString(),
+                                                                            dict["Module"].ToString(),
+                                                                            dict["Function (Full)"].ToString(),
+                                                                            dict["Source File"].ToString(),
+                                                                            dict["Start Address"].ToString()
+                                );
+
+                                current = new SampleWithTrace(s);
+                            }
+                            index += 1;
+                    }
+                }
+            }
+            if (current != null) {
+                yield return current;
+            }
+        }
+    }
+
 }
