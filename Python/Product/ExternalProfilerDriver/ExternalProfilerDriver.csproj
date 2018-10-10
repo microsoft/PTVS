@@ -110,6 +110,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="$(PackagesPath)\CsvHelper.8.0.0-beta01\lib\net45\CsvHelper.dll">
+      <Link>CsvHelper.dll</Link>
+      <Visible>false</Visible>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
 </Project>
