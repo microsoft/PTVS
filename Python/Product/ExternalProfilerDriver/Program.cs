@@ -136,17 +136,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"), spec.SymbolPath);
                 VTuneToDWJSON.CPUReportToDWJson(reptimespec.ReportOutputFile, Path.Combine(dwjsonDir, "Session.counters"), runtime);
 
-#if false
-                StringBuilder sb = new StringBuilder();
-                foreach(var samp in VTuneStackParserForCPP.ParseFromFile(@"C:\Users\perf\AppData\Local\Temp\results_20181010\r_stacks_0003.csv")) {
-                    sb.Append($"\nGot another sample with function {samp.TOSFrame.Function} at the top, and {samp.Stacks.Count()} stacks.");
-                    uint i = 0;
-                    foreach (var ss in samp.Stacks) {
-                        sb.Append($"Stack index {i} has {ss.Count()} elements");
-                    }
-                }
-                File.WriteAllText(@"c:\users\perf\test4.log", sb.ToString());
-#endif
             })
             .WithNotParsed(errors => {
                 Console.WriteLine(Strings.IncorrectCommandLine);
