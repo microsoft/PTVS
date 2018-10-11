@@ -257,5 +257,14 @@ namespace Microsoft.PythonTools.Profiling {
                 return ResourceManager.GetString("VTuneNotFoundInExpectedPath", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find specified symbols path: {0}.
+        /// </summary>
+        public static string VTuneSympathNotFound {
+            get {
+                return ResourceManager.GetString("VTuneSympathNotFound", resourceCulture);
+            }
+        }
     }
 }

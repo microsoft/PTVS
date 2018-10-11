@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public static IEnumerable<SampleWithTrace> ParseFromFile(string filename)
         {
             if (!File.Exists(filename)) {
-                throw new ArgumentException($"Cannot find specified file ${filename}");
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgPathDoesNotExist, filename));
             }
 
             SampleWithTrace current = null;

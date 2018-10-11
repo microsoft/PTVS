@@ -265,7 +265,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public static Dictionary<string, Dictionary<string, FunctionSourceLocation>> AddLineNumbers(ref Dictionary<string, Dictionary<string, BaseSizeTuple> > orig, string symbolPath)
         {
             if (!Directory.Exists(symbolPath)) {
-                throw new ArgumentException($"Cannot find specified directory: {symbolPath}");
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.VTuneSympathNotFound, symbolPath));
             }
 
             Dictionary<string, Dictionary<string, FunctionSourceLocation> > sourcelocs = new Dictionary<string, Dictionary<string, FunctionSourceLocation> >();
