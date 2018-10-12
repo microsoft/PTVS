@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class ClassInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
+    internal class ClassInfo : AnalysisValue, IClassInfo, IReferenceableContainer, IHasRichDescription, IHasQualifiedName {
         private AnalysisUnit _analysisUnit;
         private readonly List<IAnalysisSet> _bases;
         internal Mro _mro;
@@ -721,6 +721,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new LocationInfo[0];
             }
         }
+
+        IClassScope IClassInfo.Scope => Scope;
 
         #endregion
     }

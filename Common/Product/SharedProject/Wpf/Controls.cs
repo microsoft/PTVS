@@ -38,6 +38,9 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object HotTrackKey = VsBrushes.CommandBarHoverKey;
         public static readonly object HotTrackTextKey = VsBrushes.CommandBarTextHoverKey;
 
+        public static readonly object ListBoxItemSelectedKey = TreeViewColors.SelectedItemActiveBrushKey;
+        public static readonly object ListBoxItemSelectedTextKey = TreeViewColors.SelectedItemActiveTextBrushKey;
+
         public static readonly object TooltipBackgroundKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundBrush);
         public static readonly object TooltipBackgroundColorKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundColor);
         public static readonly object TooltipTextKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.ForegroundBrush);

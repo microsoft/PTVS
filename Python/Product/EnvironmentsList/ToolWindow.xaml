@@ -34,26 +34,6 @@
                 <ResourceDictionary>
                     <Style TargetType="{x:Type l:DataListBox}" BasedOn="{StaticResource {x:Type ListBox}}" />
 
-                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">
-                        <Button Style="{StaticResource NavigationButtonInList}"
-                                Margin="6"
-                                Name="Button"
-                                Command="ApplicationCommands.Help"
-                                HorizontalAlignment="Left"
-                                GotFocus="OnlineHelpListItem_GotFocus">
-                            <Grid Background="Transparent">
-                                <Label VerticalAlignment="Center"
-                                       Foreground="{Binding Foreground,ElementName=Button}"
-                                       Content="{x:Static l:Resources.EnvironmentViewOnlineHelpLabel}"/>
-                            </Grid>
-                        </Button>
-                        <DataTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-
                     <DataTemplate x:Key="ExtensionListItem">
                         <TextBlock Text="{Binding LocalizedDisplayName}"
                                    Margin="4" />
@@ -161,18 +141,10 @@
                            VerticalAlignment="Stretch"
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemTemplate="{StaticResource EnvironmentListItem}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}"
                            ItemsSource="{Binding Environments}"
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
-                <l:DataListBox.ItemTemplateSelector>
-                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
-                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
-                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
-                                                       Environment="{StaticResource EnvironmentListItem}" />
-                </l:DataListBox.ItemTemplateSelector>
-                <l:DataListBox.ItemContainerStyleSelector>
-                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
-                                                            Environment="{StaticResource WithLocalizedName}"/>
-                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
@@ -190,36 +162,12 @@
                             Focusable="False"
                             ContentTemplate="{StaticResource EnvironmentHeader}" />
 
-            <CheckBox x:Name="HelpVisibility_Horizontal"
-                      Grid.Row="0" Grid.Column="3"
-                      HorizontalAlignment="Center" VerticalAlignment="Top"
-                      Style="{StaticResource HelpCheckBox}"
-                      AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpVisibilityName}"/>
-
-            <!-- These content controls are not laid out correctly when their
-                 ColumnSpan property is set, but they seem to work okay when put
-                 in their own grid. -->
-            <Grid x:Name="ContentGrid_Horizontal"
-                  Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Grid.ColumnSpan="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <ContentControl Grid.Row="0"
-                                Style="{StaticResource HelpContentStyle}"
-                                Content="{Binding Extensions.CurrentItem.HelpContent}"
-                                AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpContentName}"
-                                AutomationProperties.HelpText="{Binding Extensions.CurrentItem.HelpText,Mode=OneWay}"
-                                IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Horizontal}"/>
-
-                <ContentControl x:Name="ContentView_Horizontal"
-                                Grid.Row="1"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Focusable="False"
-                                DataContext="{Binding Environments.CurrentItem}" />
-            </Grid>
+            <ContentControl x:Name="ContentView_Horizontal"
+                            Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Grid.ColumnSpan="2"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Focusable="False"
+                            DataContext="{Binding Environments.CurrentItem}" />
         </Grid>
 
         <Grid x:Name="VerticalLayout" Visibility="Collapsed">
@@ -240,18 +188,10 @@
                            HorizontalAlignment="Stretch"
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemTemplate="{StaticResource EnvironmentListItem}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}"
                            ItemsSource="{Binding Environments}"
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
-                <l:DataListBox.ItemTemplateSelector>
-                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
-                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
-                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
-                                                       Environment="{StaticResource EnvironmentListItem}" />
-                </l:DataListBox.ItemTemplateSelector>
-                <l:DataListBox.ItemContainerStyleSelector>
-                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
-                                                            Environment="{StaticResource WithLocalizedName}"/>
-                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ComboBox Grid.Row="1" Grid.Column="0"
@@ -263,33 +203,12 @@
                       AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ExtensionsName}"
                       ItemContainerStyle="{StaticResource Combo_WithLocalizedName}" />
 
-            <CheckBox x:Name="HelpVisibility_Vertical"
-                      Grid.Row="1" Grid.Column="1"
-                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Style="{StaticResource HelpCheckBox}"
-                      AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpVisibilityName}"/>
-
-            <Grid x:Name="ContentGrid_Vertical"
-                  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <ContentControl Grid.Row="0"
-                                Style="{StaticResource HelpContentStyle}"
-                                Content="{Binding Extensions.CurrentItem.HelpContent}"
-                                IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Vertical}"
-                                AutomationProperties.Name="{x:Static l:Resources.ToolWindow_HelpContentName}"
-                                AutomationProperties.HelpText="{Binding Extensions.CurrentItem.HelpText}"/>
-
-                <ContentControl x:Name="ContentView_Vertical"
-                                Grid.Row="1"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Focusable="False"
-                                DataContext="{Binding Environments.CurrentItem}"/>
-            </Grid>
+            <ContentControl x:Name="ContentView_Vertical"
+                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Focusable="False"
+                            DataContext="{Binding Environments.CurrentItem}"/>
         </Grid>
     </Grid>
 </UserControl>

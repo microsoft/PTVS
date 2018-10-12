@@ -4,6 +4,7 @@
     <Description Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="5005" />
     <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
     <ProjectType>Python</ProjectType>
+    <TemplateID>Microsoft.Python.Web.Django.Starter</TemplateID>
     <SortOrder>41</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
@@ -57,8 +58,4 @@
       <ProjectItem TargetFileName="app\templates\app\loginpartial.html">loginpartial.html</ProjectItem>
     </Project>
   </TemplateContent>
-  <WizardExtension>
-    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
-    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
-  </WizardExtension>
 </VSTemplate>

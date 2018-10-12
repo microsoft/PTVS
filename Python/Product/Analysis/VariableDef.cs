@@ -463,7 +463,7 @@ namespace Microsoft.PythonTools.Analysis {
 
     }
 
-    class VariableDef : TypedDef<ReferenceableDependencyInfo>, IReferenceable {
+    class VariableDef : TypedDef<ReferenceableDependencyInfo>, IVariableDefinition, IReferenceable {
         internal static VariableDef[] EmptyArray = new VariableDef[0];
 
 #if VARDEF_STATS

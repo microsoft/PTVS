@@ -26,10 +26,6 @@
         $(BuildRoot)Python\References\Common;
         @(_NugetAssemblies->'%(RootDir)%(Directory)',';');
         $(AssemblySearchPaths);
-        $(DevEnvDir);
-        $(DevEnvDir)CommonExtensions\Microsoft\Editor;
-        $(DevEnvDir)PrivateAssemblies;
-        $(DevEnvDir)PublicAssemblies;
       </AssemblySearchPaths>
     </PropertyGroup>
   </Target>

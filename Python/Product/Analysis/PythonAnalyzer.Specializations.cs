@@ -217,11 +217,6 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("unittest", "skipIf", IdentityDecorator);
             SpecializeFunction("unittest", "skipUnless", IdentityDecorator);
 
-            // cached for quick checks to see if we're a call to clr.AddReference
-#if DESKTOP
-            SpecializeFunction("wpf", "LoadComponent", LoadComponent);
-#endif
-
             // These are also specially handled in Function
             SpecializeFunction("abc", "abstractmethod", IdentityDecorator);
             SpecializeFunction("abc", "abstractclassmethod", IdentityDecorator);
@@ -597,105 +592,5 @@ namespace Microsoft.PythonTools.Analysis {
             var memb = modRef.Module.GetModuleMember(node, unit, bytes ? "BufferedIOBase" : "TextIOWrapper", addRef: false);
             return memb?.GetInstanceType() ?? unit.State.ClassInfos[BuiltinTypeId.Object].Instance;
         }
-
-#if DESKTOP
-        IAnalysisSet LoadComponent(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (args.Length == 2 && unit.State.Interpreter is IDotNetPythonInterpreter) {
-                var self = args[0];
-                var xaml = args[1];
-
-                foreach (var arg in xaml) {
-                    var strConst = arg.GetConstantValueAsString();
-                    if (string.IsNullOrEmpty(strConst)) {
-                        continue;
-                    }
-
-                    // process xaml file, add attributes to self
-                    string xamlPath = Path.Combine(Path.GetDirectoryName(unit.DeclaringModule.ProjectEntry.FilePath), strConst);
-                    XamlProjectEntry xamlProject;
-                    if (unit.State._xamlByFilename.TryGetValue(xamlPath, out xamlProject)) {
-                        // TODO: Get existing analysis if it hasn't changed.
-                        var analysis = xamlProject.Analysis;
-
-                        if (analysis == null) {
-                            xamlProject.Analyze(CancellationToken.None);
-                            analysis = xamlProject.Analysis;
-                            if (analysis == null) {
-                                AnalysisLog.Assert(false, "No Xaml analysis");
-                                return self;
-                            }
-                        }
-
-                        xamlProject.AddDependency(unit.ProjectEntry);
-
-                        var evalUnit = unit.CopyForEval();
-
-                        // add named objects to instance
-                        foreach (var keyValue in analysis.NamedObjects) {
-                            var type = keyValue.Value;
-                            if (type.Type.UnderlyingType != null) {
-
-                                var ns = unit.State.GetAnalysisValueFromObjects(((IDotNetPythonInterpreter)unit.State.Interpreter).GetBuiltinType(type.Type.UnderlyingType));
-                                var bci = ns as BuiltinClassInfo;
-                                if (bci != null) {
-                                    ns = bci.Instance;
-                                }
-                                self.SetMember(node, evalUnit, keyValue.Key, ns.SelfSet);
-                            }
-
-                            // TODO: Better would be if SetMember took something other than a node, then we'd
-                            // track references w/o this extra effort.
-                            foreach (var inst in self) {
-                                InstanceInfo instInfo = inst as InstanceInfo;
-                                if (instInfo != null && instInfo.InstanceAttributes != null) {
-                                    VariableDef def;
-                                    if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
-                                        def.AddAssignment(
-                                            new EncodedLocation(
-                                                new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, type.LineNumber, type.LineOffset),
-                                                null
-                                            ),
-                                            xamlProject
-                                        );
-                                    }
-                                }
-                            }
-                        }
-
-                        // add references to event handlers
-                        foreach (var keyValue in analysis.EventHandlers) {
-                            // add reference to methods...
-                            var member = keyValue.Value;
-
-                            // TODO: Better would be if SetMember took something other than a node, then we'd
-                            // track references w/o this extra effort.
-                            foreach (var inst in self) {
-                                InstanceInfo instInfo = inst as InstanceInfo;
-                                if (instInfo != null) {
-                                    ClassInfo ci = instInfo.ClassInfo;
-
-                                    VariableDef def;
-                                    if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
-                                        def.AddReference(
-                                            new EncodedLocation(
-                                                new LocationInfo(xamlProject.FilePath, xamlProject.DocumentUri, member.LineNumber, member.LineOffset),
-                                                null
-                                            ),
-                                            xamlProject
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                // load component returns self
-                return self;
-            }
-
-            return AnalysisSet.Empty;
-        }
-#endif
-
     }
 }

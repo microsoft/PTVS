@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var m = IdParser.Match(id);
                 if (m.Success && m.Groups["provider"].Value == CondaEnvironmentFactoryProvider.FactoryProviderName) {
                     company = m.Groups["company"].Value;
-                    env = m.Groups["env"].Value;
+                    env = m.Groups["tag"].Value;
                     return true;
                 }
                 return false;

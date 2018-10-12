@@ -20,12 +20,11 @@ using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -332,7 +331,7 @@ namespace PythonToolsUITests {
                         )
                     ));
                     var view = list.Environments.Single();
-                    Assert.IsTrue(view.IsBroken, $"'{invalidPath ?? "<null>"}' should be detected as broken");
+                    Assert.IsTrue(wpf.Invoke( ()=> view.IsBroken), $"'{invalidPath ?? "<null>"}' should be detected as broken");
                 }
             }
         }
@@ -353,7 +352,7 @@ namespace PythonToolsUITests {
                         version.Configuration
                     ));
                     var view = list.Environments.Single();
-                    Assert.IsFalse(view.IsBroken, $"'{version.PrefixPath}' should not be detected as broken");
+                    Assert.IsFalse(wpf.Invoke(() => view.IsBroken), $"'{version.PrefixPath}' should not be detected as broken");
                 }
             }
         }
@@ -474,16 +473,15 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static async Task AddCustomEnvironment(EnvironmentListProxy list) {
+        private static async Task AddCustomEnvironment(EnvironmentListProxy list, IServiceProvider serviceProvider, IInterpreterRegistryService registry, IInterpreterOptionsService options) {
+            var origCount = list.Environments.Count;
+            var confView = new AddExistingEnvironmentView(
+                serviceProvider,
+                new ProjectView[0],
+                null
+            );
 
-            var view = list.AddNewEnvironmentView;
-            var extView = view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject;
-
-            // Extension is not sited in the tool window, so we need
-            // to set the DataContext in order to get the Subcontext
-            extView.DataContext = view;
-            var confView = (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext;
-
+            confView.SelectedInterpreter = AddExistingEnvironmentView.CustomInterpreter;
             confView.Description = "Test Environment";
             confView.PrefixPath = @"C:\Test";
             confView.InterpreterPath = @"C:\Test\python.exe";
@@ -491,9 +489,7 @@ namespace PythonToolsUITests {
             confView.VersionName = "3.5";
             confView.ArchitectureName = "32-bit";
 
-            var origCount = list.Environments.Count;
-
-            ((RoutedCommand)ConfigurationExtension.Apply).Execute(confView, extView);
+            await confView.ApplyAsync();
 
             while (list.Environments.Count == origCount) {
                 await Task.Delay(10);
@@ -506,16 +502,17 @@ namespace PythonToolsUITests {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 string newId = null;
+                var serviceProvider = new MockServiceProvider();
                 var container = CreateCompositionContainer();
-                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                var options = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-                list.InitializeEnvironments(interpreters, service);
+                list.InitializeEnvironments(interpreters, options);
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
 
                 try {
-                    wpf.Invoke(() => AddCustomEnvironment(list)).Wait(10000);
+                    wpf.Invoke(() => AddCustomEnvironment(list, serviceProvider, interpreters, options)).Wait(10000);
 
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
                     var difference = new HashSet<string>(afterAdd);
@@ -964,16 +961,8 @@ namespace PythonToolsUITests {
             public List<EnvironmentView> Environments {
                 get {
                     return _proxy.Invoke(() =>
-                        Window._environments
-                            .Where(ev => !EnvironmentView.IsAddNewEnvironmentView(ev) && !EnvironmentView.IsOnlineHelpView(ev) && !EnvironmentView.IsCondaEnvironmentView(ev))
-                            .ToList()
+                        Window._environments.ToList()
                     );
-                }
-            }
-
-            public EnvironmentView AddNewEnvironmentView {
-                get {
-                    return _proxy.Invoke(() => Window._environments.Single(ev => EnvironmentView.IsAddNewEnvironmentView(ev)));
                 }
             }
 

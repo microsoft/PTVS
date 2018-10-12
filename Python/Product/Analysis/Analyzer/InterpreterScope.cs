@@ -21,7 +21,7 @@ using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
-    abstract class InterpreterScope {
+    abstract class InterpreterScope : IScope {
         public readonly InterpreterScope OuterScope;
         private readonly List<InterpreterScope> _linkedScopes;
 
@@ -382,6 +382,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 AddNodeValue(node, kind, result);
             }
             return result;
+        }
+
+        bool IScope.TryGetVariable(string name, out IVariableDefinition value) {
+            if (TryGetVariable(name, out var variableDef)) {
+                value = variableDef;
+                return true;
+            }
+
+            value = null;
+            return false;
         }
     }
 

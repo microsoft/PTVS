@@ -123,14 +123,5 @@ namespace Microsoft.PythonTools.Analysis {
         public static void EndFileGroup() {
             Add("EFG");
         }
-
-        public static void Assert(bool condition, string message = null) {
-            if (!condition) {
-                try {
-                    throw new InvalidOperationException(message);
-                } catch (InvalidOperationException) {
-                }
-            }
-        }
     }
 }

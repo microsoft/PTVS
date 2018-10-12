@@ -9,9 +9,9 @@
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
-    <AssemblyName>With27And33</AssemblyName>
-    <Name>With27And33</Name>
-    <RootNamespace>With27And33</RootNamespace>
+    <AssemblyName>Unknown</AssemblyName>
+    <Name>Unknown</Name>
+    <RootNamespace>Unknown</RootNamespace>
     <OutputPath>.</OutputPath>
     <InterpreterId>Global|PythonCore|2.8|x86</InterpreterId>
   </PropertyGroup>

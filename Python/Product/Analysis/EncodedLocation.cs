@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// storing the line/column info directly while still allowing multiple schemes
     /// to be used.
     /// </summary>
-    struct EncodedLocation : IEquatable<EncodedLocation>, ICanExpire {
+    public struct EncodedLocation : IEquatable<EncodedLocation>, ICanExpire {
         public readonly ILocationResolver Resolver;
         public readonly object Location;
 

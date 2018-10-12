@@ -128,18 +128,16 @@ namespace Microsoft.PythonTools.Project {
                 }
             } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case PythonConstants.CreateCondaEnv:
-                        if (ExperimentalOptions.AutoDetectCondaEnvironments) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        } else {
-                            result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                        }
-                        return VSConstants.S_OK;
                     case PythonConstants.AddEnvironment:
-                    case PythonConstants.AddVirtualEnv:
-                    case PythonConstants.AddExistingVirtualEnv:
                     case PythonConstants.ViewAllEnvironments:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+                    case PythonConstants.AddCondaEnv:
+                    case PythonConstants.AddVirtualEnv:
+                    case PythonConstants.AddExistingEnv:
+                        // Deprecated, don't show them in context menu
+                        // (still used by tests for now)
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
             }

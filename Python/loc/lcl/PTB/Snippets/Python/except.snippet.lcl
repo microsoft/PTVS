@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a try statement]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Trecho de código para uma instrução try]]></Val>
+          <Val><![CDATA[Snippet de código para uma instrução try]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />

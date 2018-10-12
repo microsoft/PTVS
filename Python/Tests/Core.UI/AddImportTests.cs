@@ -31,7 +31,7 @@ import itertools
 
 itertools";
 
-            AddSmartTagTest(app, "DocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
+            AddLightBulbTest(app, "DocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ import itertools
 
 itertools";
 
-            AddSmartTagTest(app, "UnicodeDocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
+            AddLightBulbTest(app, "UnicodeDocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ import itertools
 
 with_statement";
 
-            AddSmartTagTest(app, "DocStringFuture.py", 4, 10, new[] { "from __future__ import with_statement" }, 0, expectedText);
+            AddLightBulbTest(app, "DocStringFuture.py", 4, 10, new[] { "from __future__ import with_statement" }, 0, expectedText);
         }
 
 
@@ -67,7 +67,7 @@ with_statement";
             string expectedText = @"from test_module import module_func
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFrom.py", 1, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFrom.py", 1, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ module_func()";
             string expectedText = @"from test_package.sub_package import subpackage_method
 subpackage_method()";
 
-            AddSmartTagTest(app, "ImportFunctionFromSubpackage.py", 1, 1, new[] { "from test_package.sub_package import subpackage_method" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromSubpackage.py", 1, 1, new[] { "from test_package.sub_package import subpackage_method" }, 0, expectedText);
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ subpackage_method()";
         /// </summary>
         public void ImportWithErrors(VisualStudioApp app) {
             // http://pytools.codeplex.com/workitem/547
-            AddSmartTagTest(app, "ImportWithError.py", 1, 9, _NoSmartTags);
-            AddSmartTagTest(app, "ImportWithError.py", 2, 3, _NoSmartTags);
+            AddLightBulbTest(app, "ImportWithError.py", 1, 9, _NoLightBulbs);
+            AddLightBulbTest(app, "ImportWithError.py", 2, 3, _NoLightBulbs);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ subpackage_method()";
             string expectedText = @"from sys import getrecursionlimit
 getrecursionlimit()";
 
-            AddSmartTagTest(app, "ImportBuiltinFunction.py", 1, 1, new[] { "from sys import getrecursionlimit" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportBuiltinFunction.py", 1, 1, new[] { "from sys import getrecursionlimit" }, 0, expectedText);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ getrecursionlimit()";
             string expectedText = @"from test_module import module_func_2, module_func
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImport.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImport.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ module_func()";
             string expectedText = @"from test_module import module_func_2 as oar, module_func
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImportAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ module_func()";
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParens.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImportParens.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ module_func()";
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImportParensAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ module_func()";
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ module_func()";
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
 
-            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportFunctionFromExistingFromImportParensTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ module_func()";
             string expectedText = @"import test_package
 test_package";
 
-            AddSmartTagTest(app, "ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
+            AddLightBulbTest(app, "ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
         }
 
         /// <summary>
@@ -182,10 +182,10 @@ test_package";
             string expectedText = @"from test_package import sub_package
 sub_package";
 
-            AddSmartTagTest(app, "ImportSubPackage.py", 1, 1, new[] { "from test_package import sub_package" }, 0, expectedText);
+            AddLightBulbTest(app, "ImportSubPackage.py", 1, 1, new[] { "from test_package import sub_package" }, 0, expectedText);
         }
 
-        private static string[] _NoSmartTags = new string[0];
+        private static string[] _NoLightBulbs = new string[0];
 
         /// <summary>
         /// Adds an import statement for a package.
@@ -200,44 +200,44 @@ sub_package";
 
                 var doc = app.GetDocument(item.Document.FullName);
 
-                AddSmartTagTest(doc, 1, 19, _NoSmartTags);
-                AddSmartTagTest(doc, 1, 30, getreclimit);
+                AddLightBulbTest(doc, 1, 19, _NoLightBulbs);
+                AddLightBulbTest(doc, 1, 30, getreclimit);
 
-                AddSmartTagTest(doc, 4, 18, _NoSmartTags);
-                AddSmartTagTest(doc, 7, 18, _NoSmartTags);
-                AddSmartTagTest(doc, 10, 20, _NoSmartTags);
-                AddSmartTagTest(doc, 13, 22, _NoSmartTags);
-                AddSmartTagTest(doc, 16, 22, _NoSmartTags);
-                AddSmartTagTest(doc, 19, 22, _NoSmartTags);
+                AddLightBulbTest(doc, 4, 18, _NoLightBulbs);
+                AddLightBulbTest(doc, 7, 18, _NoLightBulbs);
+                AddLightBulbTest(doc, 10, 20, _NoLightBulbs);
+                AddLightBulbTest(doc, 13, 22, _NoLightBulbs);
+                AddLightBulbTest(doc, 16, 22, _NoLightBulbs);
+                AddLightBulbTest(doc, 19, 22, _NoLightBulbs);
 
-                AddSmartTagTest(doc, 19, 35, getreclimit);
+                AddLightBulbTest(doc, 19, 35, getreclimit);
 
-                AddSmartTagTest(doc, 22, 25, _NoSmartTags);
-                AddSmartTagTest(doc, 22, 56, getreclimit);
+                AddLightBulbTest(doc, 22, 25, _NoLightBulbs);
+                AddLightBulbTest(doc, 22, 56, getreclimit);
 
-                AddSmartTagTest(doc, 25, 38, _NoSmartTags);
-                AddSmartTagTest(doc, 25, 38, _NoSmartTags);
-                AddSmartTagTest(doc, 25, 48, getreclimit);
+                AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
+                AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
+                AddLightBulbTest(doc, 25, 48, getreclimit);
 
-                AddSmartTagTest(doc, 29, 12, _NoSmartTags);
-                AddSmartTagTest(doc, 29, 42, getreclimit);
+                AddLightBulbTest(doc, 29, 12, _NoLightBulbs);
+                AddLightBulbTest(doc, 29, 42, getreclimit);
 
-                AddSmartTagTest(doc, 34, 26, _NoSmartTags);
-                AddSmartTagTest(doc, 34, 31, getreclimit);
+                AddLightBulbTest(doc, 34, 26, _NoLightBulbs);
+                AddLightBulbTest(doc, 34, 31, getreclimit);
 
-                AddSmartTagTest(doc, 42, 16, _NoSmartTags);
-                AddSmartTagTest(doc, 51, 16, _NoSmartTags);
+                AddLightBulbTest(doc, 42, 16, _NoLightBulbs);
+                AddLightBulbTest(doc, 51, 16, _NoLightBulbs);
         }
 
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
         public void AssignedWithoutTypeInfo(VisualStudioApp app) {
-            AddSmartTagTest(app, "Assignments.py", 1, 2, _NoSmartTags);
-            AddSmartTagTest(app, "Assignments.py", 1, 8, _NoSmartTags);
+            AddLightBulbTest(app, "Assignments.py", 1, 2, _NoLightBulbs);
+            AddLightBulbTest(app, "Assignments.py", 1, 8, _NoLightBulbs);
         }
 
-        private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
+        private static void AddLightBulbTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
             doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
@@ -245,7 +245,7 @@ sub_package";
             });
 
             if (expectedActions.Length > 0) {
-                using (var sh = doc.StartSmartTagSession()) {
+                using (var sh = doc.StartLightBulbSession()) {
                     var actions = sh.Session.Actions.ToList();
                     if (expectedActions[0] == "*") {
                         AssertUtil.ContainsAtLeast(
@@ -267,11 +267,11 @@ sub_package";
                     }
                 }
             } else {
-                doc.StartSmartTagSessionNoSession();
+                doc.StartLightBulbSessionNoSession();
             }
         }
 
-        private static void AddSmartTagTest(VisualStudioApp app, string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
+        private static void AddLightBulbTest(VisualStudioApp app, string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
             var project = app.OpenProject(@"TestData\AddImport.sln");
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
@@ -279,7 +279,7 @@ sub_package";
 
             var doc = app.GetDocument(item.Document.FullName);
 
-            AddSmartTagTest(doc, line, column, expectedActions, invokeAction, expectedText);
+            AddLightBulbTest(doc, line, column, expectedActions, invokeAction, expectedText);
         }
     }
 }

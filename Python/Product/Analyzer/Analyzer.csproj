@@ -75,6 +75,7 @@
     <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
     <Compile Include="Intellisense\TaggedSpan.cs" />
+    <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>

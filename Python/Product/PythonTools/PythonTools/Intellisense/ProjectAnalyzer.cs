@@ -611,7 +611,17 @@ namespace Microsoft.PythonTools.Intellisense {
             public override int ExitCode => _proc.ExitCode;
             public override bool WaitForExit(int millisecondsTimeout) => _proc.WaitForExit(millisecondsTimeout);
             public override void Dispose() => _proc.Dispose();
-            public override void Kill() => _proc.Kill();
+            public override void Kill() {
+                if (!_proc.HasExited) {
+                    try {
+                        _proc.Kill();
+                    } catch (InvalidOperationException) {
+                        if (!_proc.HasExited) {
+                            throw;
+                        }
+                    }
+                }
+            }
             public override string ToString() => $"<Process {_proc.Id}>";
         }
 

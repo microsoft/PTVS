@@ -20,6 +20,8 @@ using System;
 
 namespace Microsoft.PythonTools {
     static class PkgCmdIDList {
+        public const int EnvWindowToolbar = 0x200c;
+
         public const uint cmdidExecuteFileInRepl = 0x102;
         public const uint cmdidSendToRepl = 0x103;
         public const uint cmdidFillParagraph = 0x105;
@@ -41,8 +43,6 @@ namespace Microsoft.PythonTools {
         public const uint cmdidShowNativePythonFrames = 0x400E;
         public const uint cmdidUsePythonStepping = 0x400F;
 
-        public const uint cmdidAzureExplorerAttachPythonDebugger = 0x4032;
-
         public const uint cmdidAddEnvironment = 0x4006;
         public const uint cmdidAddVirtualEnv = 0x4007;
         public const uint cmdidAddExistingVirtualEnv = 0x4008;
@@ -54,7 +54,6 @@ namespace Microsoft.PythonTools {
         public const uint cmdidGenerateRequirementsTxt = 0x4034;
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
-        public const uint cmdidInstallProjectRequirements = 0x4036;
 
         public const uint cmdidWebPythonAtMicrosoft = 0x4040;
         public const uint cmdidWebPTVSSupport = 0x4041;

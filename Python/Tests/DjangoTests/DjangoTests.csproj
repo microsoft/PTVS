@@ -108,12 +108,8 @@
   <Choose>
     <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
-        </Reference>
+        <Reference Include="Microsoft.VisualStudio.Html.Package" />
+        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
       </ItemGroup>
       <ItemGroup>
         <ProjectReference Include="..\..\Product\Django.Analysis\Django.Analysis.csproj">

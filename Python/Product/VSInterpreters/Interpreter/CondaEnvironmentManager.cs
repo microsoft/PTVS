@@ -16,12 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class CondaEnvironmentManager : ICondaEnvironmentManager, IDisposable {
@@ -34,7 +36,7 @@ namespace Microsoft.PythonTools.Interpreter {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        private CondaEnvironmentManager(string condaPath) {
+        internal CondaEnvironmentManager(string condaPath) {
             CondaPath = condaPath;
         }
 
@@ -45,12 +47,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public static CondaEnvironmentManager Create(IInterpreterRegistryService registry) {
-            if (registry == null) {
-                throw new ArgumentNullException(nameof(registry));
-            }
-
-            var condaPath = CondaUtils.GetLatestCondaExecutablePath(registry.Interpreters);
+        public static CondaEnvironmentManager Create(IServiceProvider serviceProvider) {
+            var condaPath = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
             if (!string.IsNullOrEmpty(condaPath)) {
                 return new CondaEnvironmentManager(condaPath);
             }
@@ -58,7 +56,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        public async Task<bool> CreateAsync(string newEnvNameOrPath, PackageSpec[] packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
+        public async Task<bool> CreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
                 var args = new[] {
@@ -86,6 +84,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     ui?.OnOutputTextReceived(this, msg.FormatUI(newEnvNameOrPath));
                     ui?.OnOperationFinished(this, operation, success);
                 }
+            }
+        }
+
+        public async Task<CondaCreateDryRunResult> PreviewCreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, CancellationToken ct) {
+            using (await _working.LockAsync(ct)) {
+                var args = new[] {
+                    "create",
+                    IsAbsolutePath(newEnvNameOrPath) ? "-p" : "-n",
+                    ProcessOutput.QuoteSingleArgument(newEnvNameOrPath),
+                    "-y",
+                    "--dry-run",
+                    "--json",
+                }.Union(packageSpecs.Select(s => s.FullSpec));
+
+                return await DoPreviewOperationAsync(args, ct);
             }
         }
 
@@ -275,6 +288,48 @@ namespace Microsoft.PythonTools.Interpreter {
                 return Path.IsPathRooted(path);
             } catch (ArgumentException) {
                 return false;
+            }
+        }
+
+        private async Task<CondaCreateDryRunResult> DoPreviewOperationAsync(IEnumerable<string> args, CancellationToken ct) {
+            using (var output = ProcessOutput.RunHiddenAndCapture(CondaPath, args.ToArray())) {
+                if (!output.IsStarted) {
+                    return null;
+                }
+
+                // It is safe to kill a conda dry run
+                var exitCode = await WaitAndKillOnCancelAsync(output, ct);
+                if (exitCode >= 0) {
+                    var json = string.Join(Environment.NewLine, output.StandardOutputLines);
+                    try {
+                        return JsonConvert.DeserializeObject<CondaCreateDryRunResult>(json);
+                    } catch (JsonException ex) {
+                        Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                        Debug.WriteLine(json);
+                        return null;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<int> WaitAndKillOnCancelAsync(ProcessOutput processOutput, CancellationToken ct) {
+            var tcs = new TaskCompletionSource<int>();
+            processOutput.Exited += (o, e) => tcs.TrySetResult(0);
+            try {
+                if (processOutput.ExitCode == null) {
+                    tcs.RegisterForCancellation(ct).UnregisterOnCompletion(tcs.Task);
+                    await tcs.Task;
+                }
+                return (int)processOutput.ExitCode;
+            } catch (OperationCanceledException) when (ct.IsCancellationRequested) {
+                try {
+                    processOutput.Kill();
+                } catch (InvalidOperationException) {
+                    // Must have exited just as we were about to kill it
+                }
+                throw;
             }
         }
 

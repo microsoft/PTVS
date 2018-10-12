@@ -96,5 +96,33 @@ namespace Microsoft.PythonTools.Logging {
         /// Info about debugger launch or attach timeouts on slower machines
         /// </summary>
         DebugAdapterConnectionTimeout,
+        /// <summary>
+        /// Create conda environment info bar
+        /// </summary>
+        CondaEnvCreateInfoBar,
+        /// <summary>
+        /// Create virtual environment info bar
+        /// </summary>
+        VirtualEnvCreateInfoBar,
+        /// <summary>
+        /// Install packages info bar
+        /// </summary>
+        PackageInstallInfoBar,
+        /// <summary>
+        /// Create conda environment
+        /// </summary>
+        CreateCondaEnv,
+        /// <summary>
+        /// Create virtual environment
+        /// </summary>
+        CreateVirtualEnv,
+        /// <summary>
+        /// Add existing environment
+        /// </summary>
+        AddExistingEnv,
+        /// <summary>
+        /// Install environment
+        /// </summary>
+        InstallEnv,
     }
 }

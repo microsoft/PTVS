@@ -109,6 +109,9 @@
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.Telemetry" />
   </ItemGroup>
@@ -146,7 +149,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=15.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=15.8.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -251,6 +254,43 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
+    <Compile Include="PythonTools\Environments\CustomEnv.cs" />
+    <Compile Include="PythonTools\Environments\AddEnvironmentTemplateSelector.cs" />
+    <Compile Include="PythonTools\Environments\AddCondaEnvironmentView.cs" />
+    <Compile Include="PythonTools\Environments\AddInstalledEnvironmentView.cs" />
+    <Compile Include="PythonTools\Environments\AddInstalledEnvironmentControl.xaml.cs">
+      <DependentUpon>AddInstalledEnvironmentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Environments\AddExistingEnvironmentView.cs" />
+    <Compile Include="PythonTools\Environments\AddVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
+    <Compile Include="PythonTools\Environments\ProjectView.cs" />
+    <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
+    <Compile Include="PythonTools\Options\CondaOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonCondaOptionsControl.Designer.cs">
+      <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonCondaOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Environments\AddCondaEnvironmentControl.xaml.cs">
+      <DependentUpon>AddCondaEnvironmentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Environments\AddEnvironmentView.cs" />
+    <Compile Include="PythonTools\Environments\AddCondaEnvironmentOperation.cs" />
+    <Compile Include="PythonTools\Environments\AddExistingEnvironmentControl.xaml.cs">
+      <DependentUpon>AddExistingEnvironmentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Environments\AddVirtualEnvironmentControl.xaml.cs">
+      <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
+    <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />
     <Compile Include="ProvideFeatureFlagAttribute.cs" />
     <Compile Include="ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
@@ -300,7 +340,6 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
     <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
-    <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />
     <Compile Include="PythonTools\Options\LanguageServerOptionsControl.cs">
@@ -310,15 +349,6 @@
       <DependentUpon>LanguageServerOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Options\LanguageServerOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.Designer.cs">
-      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonExperimentalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
@@ -333,7 +363,14 @@
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
+    <Compile Include="PythonTools\Environments\AddEnvironmentDialog.xaml.cs">
+      <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
+    <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
+      <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
     <Compile Include="PythonTools\SearchPathManager.cs" />
@@ -377,7 +414,6 @@
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
-    <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
@@ -394,7 +430,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\PythonToolsOptionsService.cs" />
-    <Compile Include="PythonTools\Project\AddVirtualEnvironmentOperation.cs" />
+    <Compile Include="PythonTools\Environments\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
@@ -403,7 +439,7 @@
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
-    <Compile Include="PythonTools\InterpreterView.cs" />
+    <Compile Include="PythonTools\Environments\InterpreterView.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
@@ -415,14 +451,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\SurveyNewsPolicy.cs" />
-    <Compile Include="PythonTools\Project\AddVirtualEnvironment.xaml.cs">
-      <DependentUpon>AddVirtualEnvironment.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Project\AddVirtualEnvironmentView.cs" />
-    <Compile Include="PythonTools\Project\AddInterpreter.xaml.cs">
-      <DependentUpon>AddInterpreter.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
     <Compile Include="PythonTools\Project\CustomCommand.cs" />
     <Compile Include="PythonTools\Project\IAsyncCommand.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\ProjectCustomizations.cs" />
@@ -442,7 +470,7 @@
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
     <Compile Include="PythonTools\Project\LoadedProjectInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnv.cs" />
+    <Compile Include="PythonTools\Environments\VirtualEnv.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
@@ -694,6 +722,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
+    <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />
@@ -714,6 +743,8 @@
   <ItemGroup>
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
+    <Content Include="images\AddPackage_16x.png" />
+    <Content Include="images\AddPackage_16x.svg" />
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />
@@ -955,9 +986,8 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\LanguageServerOptionsControl.resx" />
-    <EmbeddedResource Include="PythonTools\Options\PythonExperimentalOptionsControl.resx">
-      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="PythonTools\Options\PythonCondaOptionsControl.resx">
+      <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
       <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
@@ -1017,7 +1047,23 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="PythonTools\Project\AddVirtualEnvironment.xaml">
+    <Page Include="images\AddPackage_16x.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Environments\AddCondaEnvironmentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Environments\AddInstalledEnvironmentControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Environments\AddEnvironmentDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Environments\AddExistingEnvironmentControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -1027,12 +1073,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PythonTools\Project\AddInterpreter.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Environments\AddVirtualEnvironmentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -1051,6 +1097,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\ImportWizard\ImportWizardDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Wpf\ModernStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

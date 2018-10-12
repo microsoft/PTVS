@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools.Options {
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
             _showOutputWindowForVirtualEnvCreate.Checked = pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate;
             _showOutputWindowForPackageInstallation.Checked = pyService.GeneralOptions.ShowOutputWindowForPackageInstallation;
+            _promptForEnvCreate.Checked = pyService.GeneralOptions.PromptForEnvCreate;
+            _promptForPackageInstallation.Checked = pyService.GeneralOptions.PromptForPackageInstallation;
             _elevatePip.Checked = pyService.GeneralOptions.ElevatePip;
             _updateSearchPathsForLinkedFiles.Checked = pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
             _unresolvedImportWarning.Checked = pyService.GeneralOptions.UnresolvedImportWarning;
@@ -70,6 +72,8 @@ namespace Microsoft.PythonTools.Options {
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
             pyService.GeneralOptions.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
+            pyService.GeneralOptions.PromptForEnvCreate = _promptForEnvCreate.Checked;
+            pyService.GeneralOptions.PromptForPackageInstallation = _promptForPackageInstallation.Checked;
             pyService.GeneralOptions.ElevatePip = _elevatePip.Checked;
             pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
             pyService.GeneralOptions.IndentationInconsistencySeverity = IndentationInconsistencySeverity;

@@ -266,18 +266,10 @@
       <ItemGroup>
         <Reference Include="Microsoft.Web.Core" />
         <Reference Include="Microsoft.Web.Editor" />
-        <Reference Include="Microsoft.Html.Core">
-          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Html.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Html.Editor">
-          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Html.Editor.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.Html.Package">
-          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.Web.HTML">
-          <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
-        </Reference>
+        <Reference Include="Microsoft.Html.Core" />
+        <Reference Include="Microsoft.Html.Editor" />
+        <Reference Include="Microsoft.VisualStudio.Html.Package" />
+        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
       </ItemGroup>
       <ItemGroup>
         <Compile Include="DjangoEditorFactory.cs" />

@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.Options {
 
         private const string ShowOutputWindowForVirtualEnvCreateSetting = "ShowOutputWindowForVirtualEnvCreate";
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
+        private const string PromptForEnvCreateSetting = "PromptForEnvCreate";
+        private const string PromptForPackageInstallationSetting = "PromptForPackageInstallation";
         private const string ElevatePipSetting = "ElevatePip";
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
         private const string InvalidEncodingWarningSetting = "InvalidEncodingWarningWarning";
@@ -47,6 +49,8 @@ namespace Microsoft.PythonTools.Options {
         public void Load() {
             ShowOutputWindowForVirtualEnvCreate = _pyService.LoadBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory) ?? true;
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
+            PromptForEnvCreate = _pyService.LoadBool(PromptForEnvCreateSetting, GeneralCategory) ?? true;
+            PromptForPackageInstallation = _pyService.LoadBool(PromptForPackageInstallationSetting, GeneralCategory) ?? true;
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
             UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
             InvalidEncodingWarning = _pyService.LoadBool(InvalidEncodingWarningSetting, GeneralCategory) ?? true;
@@ -70,6 +74,8 @@ namespace Microsoft.PythonTools.Options {
         public void Save() {
             _pyService.SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory, ShowOutputWindowForVirtualEnvCreate);
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
+            _pyService.SaveBool(PromptForEnvCreateSetting, GeneralCategory, PromptForEnvCreate);
+            _pyService.SaveBool(PromptForPackageInstallationSetting, GeneralCategory, PromptForPackageInstallation);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
             _pyService.SaveBool(UnresolvedImportWarningSetting, GeneralCategory, UnresolvedImportWarning);
             _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
@@ -88,6 +94,8 @@ namespace Microsoft.PythonTools.Options {
         public void Reset() {
             ShowOutputWindowForVirtualEnvCreate = true;
             ShowOutputWindowForPackageInstallation = true;
+            PromptForEnvCreate = true;
+            PromptForPackageInstallation = true;
             ElevatePip = false;
             UnresolvedImportWarning = true;
             ClearGlobalPythonPath = true;
@@ -162,6 +170,24 @@ namespace Microsoft.PythonTools.Options {
             set;
         }
 
+        /// <summary>
+        /// Show an info bar to propose creating an environment.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        public bool PromptForEnvCreate {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Show an info bar to propose installing missing packages.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        public bool PromptForPackageInstallation {
+            get;
+            set;
+        }
+        
         /// <summary>
         /// True to always run pip elevated when installing or uninstalling
         /// packages.

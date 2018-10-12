@@ -70,7 +70,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.VisualStudio.Settings.15.0, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+    <Reference Include="Microsoft.VisualStudio.Settings.15.0">
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -88,7 +88,6 @@
     <Compile Include="CloudServiceWizard.cs" />
     <Compile Include="CookiecutterWizard.cs" />
     <Compile Include="ImportWizard.cs" />
-    <Compile Include="InstallRequirementsWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsSDKWizard.cs" />
     <Compile Include="WizardHelpers.cs" />

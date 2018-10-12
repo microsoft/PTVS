@@ -44,7 +44,12 @@ namespace Microsoft.PythonTools.Debugger {
         public static string EvaluateReplRequest(string expression, int threadId) {
             var stackTraceResponse = Evaluator?._hostOperations.SendRequestSync(new StackTraceRequest(threadId));
             var fid = stackTraceResponse.StackFrames[0].Id;
-            var response = Evaluator?._hostOperations.SendRequestSync(new EvaluateRequest(expression.Replace("\n", "@LINE@"), frameId: fid, context: EvaluateArguments.ContextValue.Repl));
+            var response = Evaluator?._hostOperations.SendRequestSync(
+                new EvaluateRequest(expression.Replace("\n", "@LINE@")) {
+                    FrameId = fid,
+                    Context = EvaluateArguments.ContextValue.Repl
+                }
+            );
             return response?.Result;
         }
 

@@ -29,6 +29,7 @@ using System.Windows.Automation;
 using System.Xml;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -726,13 +727,18 @@ namespace PythonToolsUITests {
             var uiThread = app.ServiceProvider.GetUIThread();
             var task = uiThread.InvokeTask(() => {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterRegistryService>();
+                var registryService = model.GetService<IInterpreterRegistryService>();
+                var optionsService = model.GetService<IInterpreterOptionsService>();
 
-                return pyProj.CreateOrAddVirtualEnvironment(
-                    service,
-                    true,
+                return VirtualEnv.CreateAndAddFactory(
+                    app.ServiceProvider,
+                    registryService,
+                    optionsService,
+                    pyProj,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
+                    registryService.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
+                    false,
+                    null,
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });
