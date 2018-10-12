@@ -304,9 +304,9 @@ namespace Microsoft.PythonTools.Environments {
             if (string.IsNullOrEmpty(VirtualEnvName.Trim())) {
                 SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameEmpty);
             } else if (!IsValidVirtualEnvPath(path)) {
-                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationInvalid);
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationInvalid.FormatUI(path));
             } else if (IsFolderNotEmpty(path)) {
-                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationNotEmpty);
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationNotEmpty.FormatUI(path));
             } else {
                 ClearErrors(nameof(VirtualEnvName));
             }
