@@ -2263,13 +2263,22 @@ Expand selection to the full expression?</value>
     <value>Python installation</value>
   </data>
   <data name="AddInstalledEnvironmentDescription" xml:space="preserve">
-    <value>To install a new Python interpreter, open Visual Studio Installer and install it from there.</value>
+    <value>To install a new Python interpreter, select one from the Visual Studio Installer components below.</value>
   </data>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>
   <data name="AddInstalledEnvironmentLaunch" xml:space="preserve">
     <value>Open Visual Studio Installer</value>
+  </data>
+  <data name="AddInstalledEnvironmentInstalledLabel" xml:space="preserve">
+    <value>Installed</value>
+  </data>
+  <data name="AddInstalledEnvironmentAvailableLabel" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="AddInstalledEnvironmentNone" xml:space="preserve">
+    <value>(none)</value>
   </data>
   <data name="AddCondaEnvironmentTabHeader" xml:space="preserve">
     <value>Conda environment</value>
@@ -2472,9 +2481,6 @@ Please specify at least one package.</value>
   </data>
   <data name="AddExistingEnvironmentVersionEmpty" xml:space="preserve">
     <value>Version is not specified.</value>
-  </data>
-  <data name="WaitForEnvTimeout" xml:space="preserve">
-    <value>Timed out waiting for environment '{0}' to be detected. The environment may have failed to be created or the environment may not include a Python package.</value>
   </data>
   <data name="CondaExecutableFilter" xml:space="preserve">
     <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>

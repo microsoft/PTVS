@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:l="clr-namespace:Microsoft.PythonTools.Environments"
              xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
              xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
@@ -13,25 +14,63 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
                 <ResourceDictionary>
+                    <DataTemplate x:Key="InstalledTemplate" DataType="{x:Type l:SetupPackageView}">
+                        <TextBlock
+                            Text="{Binding Path=Title}"
+                            Margin="0 0 0 10"/>
+                    </DataTemplate>
+                    <DataTemplate x:Key="AvailableTemplate" DataType="{x:Type l:SetupPackageView}">
+                        <CheckBox
+                            Content="{Binding Path=Title}"
+                            IsChecked="{Binding Path=IsChecked}"
+                            Margin="0 0 0 10"
+                            Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid Margin="0 7 0 0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <StackPanel Margin="0 7 0 0">
         <Label
-            Grid.Row="0"
             Content="{x:Static common:Strings.AddInstalledEnvironmentInstallationLabel}"
             Style="{StaticResource ModernLabel}"/>
+
         <TextBlock
-            Grid.Row="1"
             Text="{x:Static common:Strings.AddInstalledEnvironmentDescription}"
             Margin="0 0 0 20"/>
-    </Grid>
+
+        <!-- Available -->
+        <Label
+            Content="{x:Static common:Strings.AddInstalledEnvironmentAvailableLabel}"
+            Style="{StaticResource ModernLabel}"/>
+
+        <TextBlock
+            Text="{x:Static common:Strings.AddInstalledEnvironmentNone}"
+            Visibility="{Binding Path=AvailableView.IsEmpty, Converter={x:Static wpf:Converters.TrueIsNotCollapsed}}"
+            Margin="0 0 0 20"/>
+
+        <ItemsControl
+            ItemsSource="{Binding Path=AvailableView}"
+            ItemTemplate="{StaticResource AvailableTemplate}"
+            Visibility="{Binding Path=AvailableView.IsEmpty, Converter={x:Static wpf:Converters.TrueIsCollapsed}}"
+            Focusable="False"
+            Margin="0 0 0 10"/>
+
+        <!-- Installed -->
+        <Label
+            Content="{x:Static common:Strings.AddInstalledEnvironmentInstalledLabel}"
+            Style="{StaticResource ModernLabel}"/>
+
+        <TextBlock
+            Text="{x:Static common:Strings.AddInstalledEnvironmentNone}"
+            Visibility="{Binding Path=InstalledView.IsEmpty, Converter={x:Static wpf:Converters.TrueIsNotCollapsed}}"
+            Margin="0 0 0 20"/>
+
+        <ItemsControl
+            ItemsSource="{Binding Path=InstalledView}"
+            ItemTemplate="{StaticResource InstalledTemplate}"
+            Visibility="{Binding Path=InstalledView.IsEmpty, Converter={x:Static wpf:Converters.TrueIsCollapsed}}"
+            Focusable="False"
+            Margin="0 0 0 10"/>
+    </StackPanel>
 </UserControl>
