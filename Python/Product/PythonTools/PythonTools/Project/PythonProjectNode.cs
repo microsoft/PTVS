@@ -94,6 +94,7 @@ namespace Microsoft.PythonTools.Project {
         private Dictionary<object, Action<object>> _actionsOnClose;
         private readonly PythonProject _pythonProject;
 
+        private bool _infoBarCheckTriggered = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
@@ -726,9 +727,21 @@ namespace Microsoft.PythonTools.Project {
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
 
+        }
+
+        public override void OnOpenItem(string fullPathToSourceFile) {
+            base.OnOpenItem(fullPathToSourceFile);
+
+            if (!_infoBarCheckTriggered) {
+                _infoBarCheckTriggered = true;
+                TriggerInfoBarsAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            }
+        }
+
+        private async Task TriggerInfoBarsAsync() {
             _condaEnvCreateInfoBar.Check();
-            _virtualEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
-            _packageInstallInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            await _virtualEnvCreateInfoBar.CheckAsync();
+            await _packageInstallInfoBar.CheckAsync();
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -2316,7 +2329,8 @@ namespace Microsoft.PythonTools.Project {
             TaskDialog.CallWithRetry(
                 _ => {
                     if (items.Any()) {
-                        File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
+                        var merged = PipRequirementsUtils.MergeRequirements(existing, items, addNew);
+                        File.WriteAllLines(txt, merged);
                     } else if (existing == null) {
                         File.WriteAllText(txt, "");
                     }
@@ -2355,63 +2369,6 @@ namespace Microsoft.PythonTools.Project {
                     Strings.Retry,
                     Strings.Cancel
                 );
-            }
-        }
-
-        internal static readonly Regex FindRequirementRegex = new Regex(@"
-            (?<!\#.*)       # ensure we are not in a comment
-            (?<=\s|\A)      # ensure we are preceded by a space/start of the line
-            (?<spec>        # <spec> includes name, version and whitespace
-                (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
-                (\s*(?<cmp><=|>=|<|>|!=|==)\s*
-                    (?<ver>[^\s\#]+)
-                )?          # cmp and ver are optional
-            )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
-        );
-
-        internal static IEnumerable<string> MergeRequirements(
-            IEnumerable<string> original,
-            IEnumerable<PackageSpec> updates,
-            bool addNew
-        ) {
-            if (original == null) {
-                foreach (var req in updates.OrderBy(r => r.FullSpec)) {
-                    yield return req.FullSpec;
-                }
-                yield break;
-            }
-
-            var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var p in updates) {
-                existing[p.Name] = p.FullSpec;
-            }
-
-            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var _line in original) {
-                var line = _line;
-                foreach (var m in FindRequirementRegex.Matches(line).Cast<Match>()) {
-                    string newReq;
-                    var name = m.Groups["name"].Value;
-                    if (existing.TryGetValue(name, out newReq)) {
-                        line = FindRequirementRegex.Replace(line, m2 =>
-                            name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
-                                newReq :
-                                m2.Value
-                        );
-                        seen.Add(name);
-                    }
-                }
-                yield return line;
-            }
-
-            if (addNew) {
-                foreach (var req in existing
-                    .Where(kv => !seen.Contains(kv.Key))
-                    .Select(kv => kv.Value)
-                    .OrderBy(v => v)
-                ) {
-                    yield return req;
-                }
             }
         }
 

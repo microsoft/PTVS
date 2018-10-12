@@ -67,17 +67,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task<bool> PackagesMissingAsync(IPackageManager pm, string txtPath) {
             try {
-                var installed = await pm.GetInstalledPackagesAsync(CancellationTokens.After15s);
                 var original = File.ReadAllLines(txtPath);
-                foreach (var _line in original) {
-                    var line = _line;
-                    foreach (var m in PythonProjectNode.FindRequirementRegex.Matches(line).Cast<Match>()) {
-                        var name = m.Groups["name"].Value;
-                        if (installed.FirstOrDefault(pkg => string.CompareOrdinal(pkg.Name, name) == 0) == null) {
-                            return true;
-                        }
-                    }
-                }
+                var installed = await pm.GetInstalledPackagesAsync(CancellationTokens.After15s);
+                return PipRequirementsUtils.AnyPackageMissing(original, installed);
             } catch (IOException) {
             } catch (OperationCanceledException) {
             }
