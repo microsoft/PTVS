@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -88,7 +89,10 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
-            shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj);
+            if (ErrorHandler.Failed(shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null) {
+                return;
+            }
+
             var infoBarHost = (IVsInfoBarHost)infoBarHostObj;
             var infoBarFactory = (IVsInfoBarUIFactory)ServiceProvider.GlobalProvider.GetService(typeof(SVsInfoBarUIFactory));
             if (_logger == null) {
