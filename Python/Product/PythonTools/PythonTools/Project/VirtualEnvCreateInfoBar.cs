@@ -20,84 +20,66 @@ using System.IO;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal sealed class VirtualEnvCreateInfoBar : IVsInfoBarUIEvents, IDisposable {
-        private readonly PythonProjectNode _projectNode;
-        private uint _adviseCookie;
-        private IVsInfoBarUIElement _infoBar;
-        private IPythonToolsLogger _logger;
-
-        public VirtualEnvCreateInfoBar(PythonProjectNode projectNode) {
-            _projectNode = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
+    internal sealed class VirtualEnvCreateInfoBar : PythonProjectInfoBar {
+        public VirtualEnvCreateInfoBar(PythonProjectNode projectNode)
+            : base(projectNode) {
         }
 
-        public async System.Threading.Tasks.Task CheckAsync() {
-            if (!_projectNode.Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
+        public override async Task CheckAsync() {
+            if (IsCreated) {
                 return;
             }
 
-            var suppressProp = _projectNode.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt);
+            if (!Project.Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
+                return;
+            }
+
+            var suppressProp = Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt);
             if (suppressProp.IsTrue()) {
                 return;
             }
 
-            var txtPath = _projectNode.GetRequirementsTxtPath();
+            if (!Project.IsActiveInterpreterGlobalDefault) {
+                return;
+            }
+
+            var txtPath = Project.GetRequirementsTxtPath();
             if (!File.Exists(txtPath)) {
                 return;
             }
 
-            if (_projectNode.IsActiveInterpreterGlobalDefault) {
-                ShowCreateVirtualEnvironment(txtPath);
-            }
-        }
-
-        private void ShowCreateVirtualEnvironment(string txtPath) {
-            if (_infoBar != null) {
-                return;
-            }
-
-            var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
-            if (ErrorHandler.Failed(shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null) {
-                return;
-            }
-
-            var infoBarHost = (IVsInfoBarHost)infoBarHostObj;
-            var infoBarFactory = (IVsInfoBarUIFactory)ServiceProvider.GlobalProvider.GetService(typeof(SVsInfoBarUIFactory));
-            if (_logger == null) {
-                _logger = (IPythonToolsLogger)ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
-            }
-
             Action createVirtualEnv = () => {
-                _logger?.LogEvent(
+                Logger?.LogEvent(
                     PythonLogEvent.VirtualEnvCreateInfoBar,
                     new VirtualEnvCreateInfoBarInfo() {
                         Action = VirtualEnvCreateInfoBarActions.Create,
                     }
                 );
                 AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
-                    _projectNode.Site,
-                    _projectNode,
+                    Project.Site,
+                    Project,
                     null,
                     null,
                     txtPath
-                ).HandleAllExceptions(_projectNode.Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
-                _infoBar.Close();
+                ).HandleAllExceptions(Project.Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
+                Close();
             };
 
             Action projectIgnore = () => {
-                _logger?.LogEvent(
+                Logger?.LogEvent(
                     PythonLogEvent.VirtualEnvCreateInfoBar,
                     new VirtualEnvCreateInfoBarInfo() {
                         Action = VirtualEnvCreateInfoBarActions.Ignore,
                     }
                 );
-                _projectNode.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
-                _infoBar.Close();
+                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+                Close();
             };
 
             var messages = new List<IVsInfoBarTextSpan>();
@@ -106,37 +88,19 @@ namespace Microsoft.PythonTools.Project {
             messages.Add(new InfoBarTextSpan(
                 Strings.RequirementsTxtCreateVirtualEnvInfoBarMessage.FormatUI(
                     PathUtils.GetFileOrDirectoryName(txtPath),
-                    _projectNode.Caption
+                    Project.Caption
             )));
             actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, createVirtualEnv));
             actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
 
-            var infoBarModel = new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true);
-            _infoBar = infoBarFactory.CreateInfoBar(infoBarModel);
-            infoBarHost.AddInfoBar(_infoBar);
-
-            _infoBar.Advise(this, out uint cookie);
-            _adviseCookie = cookie;
-
-            _logger?.LogEvent(
+            Logger?.LogEvent(
                 PythonLogEvent.VirtualEnvCreateInfoBar,
                 new VirtualEnvCreateInfoBarInfo() {
                     Action = VirtualEnvCreateInfoBarActions.Prompt,
                 }
             );
-        }
 
-        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
-            ((Action)actionItem.ActionContext)();
-        }
-
-        public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
-            infoBarUIElement.Unadvise(_adviseCookie);
-            _infoBar = null;
-        }
-
-        public void Dispose() {
-            _infoBar?.Close();
+            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
         }
     }
 }

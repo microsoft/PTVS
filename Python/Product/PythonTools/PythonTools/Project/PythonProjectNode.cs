@@ -739,9 +739,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task TriggerInfoBarsAsync() {
-            _condaEnvCreateInfoBar.Check();
-            await _virtualEnvCreateInfoBar.CheckAsync();
-            await _packageInstallInfoBar.CheckAsync();
+            await Task.WhenAll(
+                _condaEnvCreateInfoBar.CheckAsync(),
+                _virtualEnvCreateInfoBar.CheckAsync(),
+                _packageInstallInfoBar.CheckAsync()
+            );
         }
 
         private void RefreshCurrentWorkingDirectory() {
