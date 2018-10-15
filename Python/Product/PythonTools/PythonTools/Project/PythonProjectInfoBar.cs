@@ -19,23 +19,24 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal abstract class PythonProjectInfoBar : IVsInfoBarUIEvents, IVsShellPropertyEvents, IDisposable {
+    internal abstract class PythonProjectInfoBar : IVsInfoBarUIEvents, IDisposable {
         private readonly IVsShell _shell;
         private readonly IVsInfoBarUIFactory _infoBarFactory;
+        private IdleManager _idleManager;
         private uint _adviseCookie;
-        private uint? _shellChangeCookie;
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
-        private int _retry = 3;
 
         protected PythonProjectInfoBar(PythonProjectNode projectNode) {
             Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
             Logger = (IPythonToolsLogger)projectNode.Site.GetService(typeof(IPythonToolsLogger));
             _shell = (IVsShell)projectNode.Site.GetService(typeof(SVsShell));
             _infoBarFactory = (IVsInfoBarUIFactory)projectNode.Site.GetService(typeof(SVsInfoBarUIFactory));
+            _idleManager = new IdleManager(Project.Site);
         }
 
         protected PythonProjectNode Project { get; }
@@ -61,10 +62,8 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (ErrorHandler.Failed(_shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null) {
-                // Main window is not ready yet, try again when it appears
-                if (_retry-- > 0 && ErrorHandler.Succeeded(_shell.AdviseShellPropertyChanges(this, out uint shellCookie))) {
-                    _shellChangeCookie = shellCookie;
-                }
+                // Main window is not ready yet, finish creating it later
+                _idleManager.OnIdle += OnIdle;
                 return;
             }
 
@@ -77,6 +76,11 @@ namespace Microsoft.PythonTools.Project {
             _adviseCookie = cookie;
         }
 
+        private void OnIdle(object sender, ComponentManagerEventArgs e) {
+            _idleManager.OnIdle -= OnIdle;
+            FinishCreate();
+        }
+
         public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
             ((Action)actionItem.ActionContext)();
         }
@@ -86,25 +90,10 @@ namespace Microsoft.PythonTools.Project {
             _infoBar = null;
         }
 
-        public int OnShellPropertyChange(int propid, object var) {
-            if (propid == (int)__VSSPROPID2.VSSPROPID_MainWindowSize) {
-                if (_shellChangeCookie.HasValue) {
-                    _shell.UnadviseShellPropertyChanges(_shellChangeCookie.Value);
-                    _shellChangeCookie = null;
-
-                    FinishCreate();
-                }
-            }
-
-            return VSConstants.S_OK;
-        }
-
         public void Dispose() {
             _infoBar?.Close();
-            if (_shellChangeCookie.HasValue) {
-                _shell.UnadviseShellPropertyChanges(_shellChangeCookie.Value);
-                _shellChangeCookie = null;
-            }
+            _idleManager.OnIdle -= OnIdle;
+            _idleManager.Dispose();
         }
     }
 }
