@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -26,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
     internal abstract class PythonProjectInfoBar : IVsInfoBarUIEvents, IDisposable {
         private readonly IVsShell _shell;
         private readonly IVsInfoBarUIFactory _infoBarFactory;
-        private IdleManager _idleManager;
+        private readonly IdleManager _idleManager;
         private uint _adviseCookie;
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
@@ -58,6 +59,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected void FinishCreate() {
             if (_infoBar != null) {
+                Debug.Fail("Should not try to create info bar more than once.");
                 return;
             }
 
