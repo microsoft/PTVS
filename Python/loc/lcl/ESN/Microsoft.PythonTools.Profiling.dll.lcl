@@ -200,7 +200,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Mi_xed Mode Profiling]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Generación de perfiles en modo mixto]]></Val>
+            <Val><![CDATA[Generación de perfiles en modo mi_xto]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

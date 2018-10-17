@@ -40,6 +40,9 @@
       <Item ItemId=";CannotFindPythonInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Can't find specified Python interpreter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[找不到指定的 Python 解释器]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
