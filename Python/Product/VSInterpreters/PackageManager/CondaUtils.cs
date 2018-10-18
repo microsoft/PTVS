@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class CondaUtils {
@@ -42,49 +40,10 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        internal static string GetLatestCondaExecutablePath(IEnumerable<IPythonInterpreterFactory> factories) {
-            var condaPaths = factories
-                .Select(factory => new {
-                    PrefixPath = factory.Configuration.PrefixPath,
-                    ExePath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false)
-                })
-                .Where(obj => !string.IsNullOrEmpty(obj.ExePath))
-                .OrderByDescending(obj => GetCondaVersion(obj.PrefixPath, obj.ExePath));
-            return condaPaths.FirstOrDefault()?.ExePath;
-        }
-
-        private static PackageVersion GetCondaVersion(string prefixPath, string exePath) {
-            // Reading from .version is faster than running conda -V
-            var versionFilePath = Path.Combine(prefixPath, "Lib", "site-packages", "conda", ".version");
-            if (File.Exists(versionFilePath)) {
-                try {
-                    var version = File.ReadAllText(versionFilePath).Trim();
-                    if (PackageVersion.TryParse(version, out PackageVersion ver)) {
-                        return ver;
-                    }
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                }
-            }
-
-            if (File.Exists(exePath)) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(exePath, "-V")) {
-                    output.Wait();
-                    if (output.ExitCode == 0) {
-                        // Version is currently being printed to stderr, and nothing in stdout
-                        foreach (var line in output.StandardErrorLines.Union(output.StandardOutputLines)) {
-                            if (!string.IsNullOrEmpty(line) && line.StartsWithOrdinal("conda ")) {
-                                var version = line.Substring("conda ".Length);
-                                if (PackageVersion.TryParse(version, out PackageVersion ver)) {
-                                    return ver;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return PackageVersion.Empty;
+        internal static string GetRootCondaExecutablePath(IServiceProvider serviceProvider) {
+            var componentModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
+            var provider = componentModel.GetService<ICondaLocatorProvider>();
+            return provider?.FindLocator()?.CondaExecutablePath;
         }
     }
 }

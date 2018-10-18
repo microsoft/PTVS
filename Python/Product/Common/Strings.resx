@@ -123,17 +123,6 @@
   <data name="QuickInfo_UnknownType" xml:space="preserve">
     <value>{0}: unknown type</value>
   </data>
-  <data name="BaseInterpreterDescription" xml:space="preserve">
-    <value>The interpreter that was used to create this virtual environment.</value>
-  </data>
-  <data name="BaseInterpreterDisplayName" xml:space="preserve">
-    <value>Base Interpreter</value>
-  </data>
-  <data name="InstallPip" xml:space="preserve">
-    <value>To install your Python package, we will install the pip package manager.
-
-Continue?</value>
-  </data>
   <data name="EnvironmentDeleteConfirmation" xml:space="preserve">
     <value>'{0}' will be removed from the project and the directory
 '{1}'
@@ -556,38 +545,6 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="AddWebRoleSupportFiles" xml:space="preserve">
     <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
   </data>
-  <data name="AddInterpreterWindow_AssociatedEnvironments" xml:space="preserve">
-    <value>Python environments associated with my project</value>
-  </data>
-  <data name="AddInterpreterWindow_AssociatedEnvironmentsHelp" xml:space="preserve">
-    <value>Select the environments to associate with this project. These environments will be shown in Solution Explorer.</value>
-  </data>
-  <data name="AddInterpreterWindow_HelpFind" xml:space="preserve">
-    <value>Go online and help me find another one</value>
-  </data>
-  <data name="AddInterpreterWindow_OK" xml:space="preserve">
-    <value>_OK</value>
-  </data>
-  <data name="AddInterpreterWindow_Cancel" xml:space="preserve">
-    <value>_Cancel</value>
-  </data>
-  <data name="AddInterpreterWindow_Title" xml:space="preserve">
-    <value>Add/Remove Python Environments</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_BrowsePathError" xml:space="preserve">
-    <value>We could not identify a virtual environment in the selected path.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" xml:space="preserve">
-    <value>We could not find a base interpreter at {0}</value>
-    <comment>{0} is a folder path</comment>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_Actions" xml:space="preserve">
-    <value>Actions we will perform:</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" xml:space="preserve">
-    <value>Install pip and virtualenv packages</value>
-    <comment>'pip' and 'virtualenv' are package names and must not be translated</comment>
-  </data>
   <data name="AddVirtualEnvironmentWindow_InstallPip" xml:space="preserve">
     <value>Install pip</value>
   </data>
@@ -595,8 +552,8 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Install the virtualenv package</value>
     <comment>'virtualenv' is a package name and must not be translated</comment>
   </data>
-  <data name="AddVirtualEnvironmentWindow_AddVirtualEnvironment" xml:space="preserve">
-    <value>Add the virtual environment</value>
+  <data name="AddVirtualEnvironmentWindow_RegisterGlobally" xml:space="preserve">
+    <value>Write registry keys under HKCU\Software\Python\VisualStudio</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_CreateVirtualEnv" xml:space="preserve">
     <value>Create a virtual environment using virtualenv</value>
@@ -604,78 +561,17 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="AddVirtualEnvironmentWindow_CreateVEnv" xml:space="preserve">
     <value>Create a virtual environment using venv</value>
   </data>
-  <data name="AddVirtualEnvironmentWindow_InstallRequirements" xml:space="preserve">
-    <value>Install packages from requirements.txt</value>
-    <comment>Do not translate 'requirements.txt'</comment>
+  <data name="AddVirtualEnvironmentWindow_InstallPackages" xml:space="preserve">
+    <value>Install packages</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_CannotCreate" xml:space="preserve">
     <value>No action will be taken.</value>
   </data>
-  <data name="AddVirtualEnvironmentWindow_MayNotSupportWarning" xml:space="preserve">
-    <value>WARNING - the selected interpreter may not support virtual environments.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_Working" xml:space="preserve">
-    <value>Working...</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_Add" xml:space="preserve">
-    <value>_Add</value>
-  </data>
   <data name="AddVirtualEnvironmentWindow_Create" xml:space="preserve">
     <value>C_reate</value>
   </data>
-  <data name="AddVirtualEnvironmentWindow_Close" xml:space="preserve">
-    <value>_Close</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_Cancel" xml:space="preserve">
-    <value>_Cancel</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocation" xml:space="preserve">
-    <value>Location of the virtual environment</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocationHelp" xml:space="preserve">
-    <value>Specify the name or location of the virtual environment. If one already exists, we will detect the base interpreter for you.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_SelectInterpreter" xml:space="preserve">
-    <value>Select a base interpreter for your virtual environment.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_SelectInterpreterHelp" xml:space="preserve">
-    <value>Packages in your base interpreter will not be available in the virtual environment until you install them.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_BaseInterpreter" xml:space="preserve">
-    <value>The virtual environment is based on this interpreter.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_BaseInterpreterHelp" xml:space="preserve">
-    <value>This cannot be changed. To use a different base interpreter, you must create a new virtual environment.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath" xml:space="preserve">
-    <value>We cannot create a virtual environment at the specified path.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp" xml:space="preserve">
-    <value>Choose a folder that does not exist, is empty, or contains an existing virtual environment.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_NoInterpreter" xml:space="preserve">
-    <value>We cannot create a virtual environment.</value>
-  </data>
   <data name="AddVirtualEnvironmentWindow_NoInterpreterHelp" xml:space="preserve">
     <value>You will need to install a Python interpreter before creating a virtual environment.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_NoInterpreterGoOnline" xml:space="preserve">
-    <value>Go online and help me find a Python interpreter</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_FoundRequirements" xml:space="preserve">
-    <value>We found a requirements.txt file.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_FoundRequirementsHelp" xml:space="preserve">
-    <value>This file contains external packages that are required by your project. We can use pip to download and install these dependencies automatically.</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_DownloadInstallPackages" xml:space="preserve">
-    <value>Download and _install packages</value>
-  </data>
-  <data name="AddVirtualEnvironmentWindow_Title" xml:space="preserve">
-    <value>Add Virtual Environment</value>
-  </data>
-  <data name="CannotFindConda" xml:space="preserve">
-    <value>Cannot find conda</value>
   </data>
   <data name="CurrentWorkingDirectoryCaption" xml:space="preserve">
     <value>Working Directory ({0})</value>
@@ -2237,6 +2133,453 @@ Expand selection to the full expression?</value>
 
 </value>
     <comment>Displayed in the output window</comment>
+  </data>
+  <data name="CondaStatusBarCreateStarted" xml:space="preserve">
+    <value>Creating conda environment '{0}'</value>
+  </data>
+  <data name="CondaStatusBarCreateFailed" xml:space="preserve">
+    <value>Failed to create conda environment '{0}'</value>
+  </data>
+  <data name="CondaStatusBarCreateSucceeded" xml:space="preserve">
+    <value>Successfully created conda environment '{0}'</value>
+  </data>
+  <data name="CondaStatusCenterCreateTitle" xml:space="preserve">
+    <value>Create conda environment '{0}'</value>
+  </data>
+  <data name="CondaStatusCenterCreateProgressPreparing" xml:space="preserve">
+    <value>Preparing</value>
+  </data>
+  <data name="CondaStatusCenterCreateProgressCreating" xml:space="preserve">
+    <value>Creating environment</value>
+  </data>
+  <data name="CondaStatusCenterCreateProgressDetecting" xml:space="preserve">
+    <value>Detecting environments</value>
+  </data>
+  <data name="CondaStatusCenterCreateProgressCompleted" xml:space="preserve">
+    <value>Environment created successfully</value>
+  </data>
+  <data name="CondaStatusCenterCreateFailure" xml:space="preserve">
+    <value>Failed to create environment.</value>
+  </data>
+  <data name="CondaStatusCenterInstallFailure" xml:space="preserve">
+    <value>Failed to install additional packages.</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateTitle" xml:space="preserve">
+    <value>Create virtual environment '{0}'</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateProgressPreparing" xml:space="preserve">
+    <value>Preparing</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateProgressCreating" xml:space="preserve">
+    <value>Creating environment</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateProgressInstallingPackages" xml:space="preserve">
+    <value>Installing additional packages</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateProgressCompleted" xml:space="preserve">
+    <value>Environment created successfully</value>
+  </data>
+  <data name="VirtualEnvStatusCenterCreateFailure" xml:space="preserve">
+    <value>Failed to create environment.</value>
+  </data>
+  <data name="VirtualEnvStatusCenterInstallFailure" xml:space="preserve">
+    <value>Failed to install additional packages.</value>
+  </data>
+  <data name="InstallPackagesStatusCenterTitle" xml:space="preserve">
+    <value>Install packages into {0}</value>
+  </data>
+  <data name="InstallPackagesStatusCenterProgressPreparing" xml:space="preserve">
+    <value>Preparing</value>
+  </data>
+  <data name="InstallPackagesStatusCenterProgressCompleted" xml:space="preserve">
+    <value>Packages installed successfully</value>
+  </data>
+  <data name="CondaInfoBarCreateNewMessage" xml:space="preserve">
+    <value>The project '{0}' has a conda environment.yml file, but no conda environments. Would you like to create one?</value>
+  </data>
+  <data name="CondaInfoBarRecreateMessage" xml:space="preserve">
+    <value>The project '{0}' has a reference to a missing conda environment '{1}'. Would you like to create it?</value>
+  </data>
+  <data name="CondaInfoBarCreateAction" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="CondaInfoBarProjectIgnoreAction" xml:space="preserve">
+    <value>Don't Show This Again</value>
+  </data>
+  <data name="RequirementsTxtCreateVirtualEnvInfoBarMessage" xml:space="preserve">
+    <value>Package specification file '{0}' was detected in project '{1}'. Would you like to add a virtual environment?</value>
+  </data>
+  <data name="RequirementsTxtInstallPackagesInfoBarMessage" xml:space="preserve">
+    <value>One or more packages listed in '{0}' of project '{1}' are missing. Would you like to install packages in the '{2}' environment?</value>
+  </data>
+  <data name="RequirementsTxtInfoBarCreateVirtualEnvAction" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="RequirementsTxtInfoBarInstallPackagesAction" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="RequirementsTxtInfoBarProjectIgnoreAction" xml:space="preserve">
+    <value>Don't Show This Again</value>
+  </data>
+  <data name="CondaNotFoundError" xml:space="preserve">
+    <value>Conda is required for this functionality. Please install either Anaconda or Miniconda and try again.</value>
+  </data>
+  <data name="ModernDialogHeaderCloseButtonAutomationName" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="AddEnvironmentOKButtonAutomationName" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="AddEnvironmentCancelButtonAutomationName" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AddEnvironmentPagesListBoxAutomationName" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="AddEnvironmentTitle" xml:space="preserve">
+    <value>Add environment</value>
+  </data>
+  <data name="AddEnvironmentAddButton" xml:space="preserve">
+    <value>_Add</value>
+  </data>
+  <data name="AddEnvironmentCreateButton" xml:space="preserve">
+    <value>C_reate</value>
+  </data>
+  <data name="AddEnvironmentCancelButton" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="AddEnvironmentValidationErrors" xml:space="preserve">
+    <value>Some fields have invalid values.
+
+{0}</value>
+  </data>
+  <data name="AddEnvironmentMoreInfoButton" xml:space="preserve">
+    <value>How do I manage Python environments?</value>
+  </data>
+  <data name="AddInstalledEnvironmentTabHeader" xml:space="preserve">
+    <value>Python installation</value>
+  </data>
+  <data name="AddInstalledEnvironmentInstallationLabel" xml:space="preserve">
+    <value>Python installation</value>
+  </data>
+  <data name="AddInstalledEnvironmentDescription" xml:space="preserve">
+    <value>To install a new Python interpreter, open Visual Studio Installer and install it from there.</value>
+  </data>
+  <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
+    <value>Python installation</value>
+  </data>
+  <data name="AddInstalledEnvironmentLaunch" xml:space="preserve">
+    <value>Open Visual Studio Installer</value>
+  </data>
+  <data name="AddCondaEnvironmentTabHeader" xml:space="preserve">
+    <value>Conda environment</value>
+  </data>
+  <data name="AddCondaSuggestedPackagesButton" xml:space="preserve">
+    <value>Suggested Packages</value>
+  </data>
+  <data name="AddCondaSuggestedPackagesButtonHelpText" xml:space="preserve">
+    <value>Browse a list of suggested packages.</value>
+  </data>
+  <data name="CondaPackageDataScienceCoreLibs" xml:space="preserve">
+    <value>Data Science Core Libraries</value>
+  </data>
+  <data name="CondaPackageVisualization" xml:space="preserve">
+    <value>Visualization</value>
+  </data>
+  <data name="CondaPackageMachineLearning" xml:space="preserve">
+    <value>Machine Learning</value>
+  </data>
+  <data name="CondaPackageWeb" xml:space="preserve">
+    <value>Web</value>
+  </data>
+  <data name="CondaPackagePythonLatest" xml:space="preserve">
+    <value>Python (latest)</value>
+  </data>
+  <data name="AddExistingEnvironmentTabHeader" xml:space="preserve">
+    <value>Existing environment</value>
+  </data>
+  <data name="AddExistingEnvironmentSelectEnvironment" xml:space="preserve">
+    <value>Select environment</value>
+  </data>
+  <data name="AddCustomEnvironmentTabDescription" xml:space="preserve">
+    <value>Specify settings for environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentTabHeader" xml:space="preserve">
+    <value>Virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentNameLabel" xml:space="preserve">
+    <value>_Name</value>
+  </data>
+  <data name="AddVirtualEnvironmentLocationLabel" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="AddVirtualEnvironmentChangeLocationLink" xml:space="preserve">
+    <value>Change virtual environment _location</value>
+  </data>
+  <data name="AddVirtualEnvironmentBaseInterpreterLabel" xml:space="preserve">
+    <value>Ba_se interpreter</value>
+  </data>
+  <data name="AddVirtualEnvironmentRequirementsPathLabel" xml:space="preserve">
+    <value>Install packages fr_om file</value>
+  </data>
+  <data name="AddVirtualEnvironmentPreviewLabel" xml:space="preserve">
+    <value>Actions we will perform</value>
+  </data>
+  <data name="AddVirtualEnvironmentFileWatermark" xml:space="preserve">
+    <value>requirements.txt</value>
+  </data>
+  <data name="AddVirtualEnvironmentFileHelp" xml:space="preserve">
+    <value>The requirements file is typically named requirements.txt and specifies the pip packages to install when creating the virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentFileBrowseButton" xml:space="preserve">
+    <value>Browse for requirements file</value>
+  </data>
+  <data name="AddVirtualEnvironmentFileBrowseFilter" xml:space="preserve">
+    <value>Requirements Files (*.txt)|*.txt|All Files (*.*)|*.*</value>
+  </data>
+  <data name="AddVirtualEnvironmentDescriptionWatermark" xml:space="preserve">
+    <value>Description for this environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentPreviewInProgress" xml:space="preserve">
+    <value>Please wait...</value>
+  </data>
+  <data name="AddCondaEnvironmentPreviewLabel" xml:space="preserve">
+    <value>Packages preview</value>
+  </data>
+  <data name="AddExistingEnvironmentCustomName" xml:space="preserve">
+    <value>&lt;Custom&gt;</value>
+  </data>
+  <data name="AddExistingEnvironmentCustomPath" xml:space="preserve">
+    <value>&lt;Path to an existing environment&gt;</value>
+  </data>
+  <data name="AddExistingEnvironmentExistingLabel" xml:space="preserve">
+    <value>_Environment</value>
+  </data>
+  <data name="AddExistingEnvironmentRegisterGloballyCheckBox" xml:space="preserve">
+    <value>Ma_ke this environment available globally</value>
+  </data>
+  <data name="AddExistingEnvironmentDescriptionLabel" xml:space="preserve">
+    <value>_Description</value>
+  </data>
+  <data name="AddExistingEnvironmentInterpreterPathLabel" xml:space="preserve">
+    <value>In_terpreter path</value>
+  </data>
+  <data name="AddExistingEnvironmentWindowsInterpreterPathLabel" xml:space="preserve">
+    <value>Windo_wed interpreter</value>
+  </data>
+  <data name="AddExistingEnvironmentLanguageVersionLabel" xml:space="preserve">
+    <value>Language _version</value>
+  </data>
+  <data name="AddExistingEnvironmentArchitectureLabel" xml:space="preserve">
+    <value>Arc_hitecture</value>
+  </data>
+  <data name="AddExistingEnvironmentPathEnvVarLabel" xml:space="preserve">
+    <value>Path environment varia_ble</value>
+  </data>
+  <data name="AddEnvironmentSetAsCurrentLabel" xml:space="preserve">
+    <value>Set as c_urrent environment</value>
+  </data>
+  <data name="AddEnvironmentProjectLabel" xml:space="preserve">
+    <value>_Project</value>
+  </data>
+  <data name="AddCondaEnvironmentNameLabel" xml:space="preserve">
+    <value>_Name</value>
+  </data>
+  <data name="AddCondaEnvironmentAddPackagesLabel" xml:space="preserve">
+    <value>Add packages from</value>
+  </data>
+  <data name="AddCondaEnvironmentFileRadioButton" xml:space="preserve">
+    <value>Environment _file</value>
+  </data>
+  <data name="AddCondaEnvironmentFileWatermark" xml:space="preserve">
+    <value>environment.yml</value>
+  </data>
+  <data name="AddCondaEnvironmentFileHelp" xml:space="preserve">
+    <value>The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment.</value>
+  </data>
+  <data name="AddCondaEnvironmentFileBrowseButton" xml:space="preserve">
+    <value>Browse for environment file</value>
+  </data>
+  <data name="AddCondaEnvironmentFileBrowseFilter" xml:space="preserve">
+    <value>Environment Files (*.yml)|*.yml|All Files (*.*)|*.*</value>
+  </data>
+  <data name="AddCondaPackagesRadioButton" xml:space="preserve">
+    <value>On_e or more Anaconda package names</value>
+  </data>
+  <data name="AddCondaPackagesWatermark" xml:space="preserve">
+    <value>ex. numpy pandas</value>
+  </data>
+  <data name="AddCondaPackagesHelpText" xml:space="preserve">
+    <value>List of conda packages to install when creating the conda environment. Entries should be separated by spaces.</value>
+  </data>
+  <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
+    <value>Set as _default environment for new projects</value>
+  </data>
+  <data name="AddEnvironmentViewInEnvWindowLabel" xml:space="preserve">
+    <value>_View in Python environments window</value>
+  </data>
+  <data name="AddEnvironmentDescriptionEmpty" xml:space="preserve">
+    <value>Description is empty.</value>
+  </data>
+  <data name="AddEnvironmentDescriptionInvalid" xml:space="preserve">
+    <value>Description has invalid characters. It must only use valid path characters.</value>
+  </data>
+  <data name="AddCondaEnvironmentPreviewInProgress" xml:space="preserve">
+    <value>Preview in progress...</value>
+  </data>
+  <data name="AddCondaEnvironmentPreviewNoPackages" xml:space="preserve">
+    <value>No packages will be installed.
+Please specify at least one package.</value>
+  </data>
+  <data name="AddCondaEnvironmentPreviewNoEnvFile" xml:space="preserve">
+    <value>Environment file not found.</value>
+  </data>
+  <data name="AddCondaEnvironmentPreviewFailed" xml:space="preserve">
+    <value>Preview failed.</value>
+  </data>
+  <data name="AddCondaEnvironmentNameEmpty" xml:space="preserve">
+    <value>Conda environment name is empty.</value>
+  </data>
+  <data name="AddCondaEnvironmentNameInvalid" xml:space="preserve">
+    <value>Conda environment name '{0}' is invalid or conflicts with an existing environment.</value>
+  </data>
+  <data name="AddCondaEnvironmentFileInvalid" xml:space="preserve">
+    <value>Conda environment file '{0}' does not exist.</value>
+  </data>
+  <data name="AddVirtualEnvironmentFileInvalid" xml:space="preserve">
+    <value>Requirements file '{0}' does not exist.</value>
+  </data>
+  <data name="AddVirtualEnvironmentNameEmpty" xml:space="preserve">
+    <value>Virtual environment name is empty.</value>
+  </data>
+  <data name="AddVirtualEnvironmentLocationInvalid" xml:space="preserve">
+    <value>Virtual environment target folder '{0}' is invalid.</value>
+  </data>
+  <data name="AddVirtualEnvironmentLocationNotEmpty" xml:space="preserve">
+    <value>Virtual environment target folder '{0}' is not empty.</value>
+  </data>
+  <data name="AddExistingEnvironmentPrefixPathFolderNotFound" xml:space="preserve">
+    <value>Prefix path folder '{0}' does not exist.</value>
+  </data>
+  <data name="AddExistingEnvironmentInterpreterPathNotFound" xml:space="preserve">
+    <value>Interpreter path executable '{0}' does not exist.</value>
+  </data>
+  <data name="AddExistingEnvironmentWindowsInterpreterPathNotFound" xml:space="preserve">
+    <value>Windowed interpreter path executable '{0}' does not exist.</value>
+  </data>
+  <data name="AddExistingEnvironmentArchictureEmpty" xml:space="preserve">
+    <value>Architecture is not specified.</value>
+  </data>
+  <data name="AddExistingEnvironmentVersionEmpty" xml:space="preserve">
+    <value>Version is not specified.</value>
+  </data>
+  <data name="WaitForEnvTimeout" xml:space="preserve">
+    <value>Timed out waiting for environment '{0}' to be detected. The environment may have failed to be created or the environment may not include a Python package.</value>
+  </data>
+  <data name="CondaExecutableFilter" xml:space="preserve">
+    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ConfigurationExtensionDescriptionWatermark" xml:space="preserve">
+    <value>e.g. My Custom Environment</value>
+  </data>
+  <data name="ConfigurationExtensionDescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ConfigurationExtensionDescriptionHelp" xml:space="preserve">
+    <value>The description is displayed throughout Visual Studio to help you identify the environment.</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathLabel" xml:space="preserve">
+    <value>Prefi_x path</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathBrowseButton" xml:space="preserve">
+    <value>Browse for prefix path</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathHelp" xml:space="preserve">
+    <value>The prefix path specifies the directory containing all files needed for this environment. It may be used for searching installed libraries or deploying an environment to another machine.</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathLabel" xml:space="preserve">
+    <value>Interpreter path</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathBrowseButton" xml:space="preserve">
+    <value>Browse for interpreter path</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY\python.exe</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathHelp" xml:space="preserve">
+    <value>The interpreter path is the executable file used to run Python. Normally this is called "python.exe", but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathLabel" xml:space="preserve">
+    <value>Windowed interpreter</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathBrowseButton" xml:space="preserve">
+    <value>Browse for windowed interpreter path</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY\pythonw.exe</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathHelp" xml:space="preserve">
+    <value>The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathBrowseFilter" xml:space="preserve">
+    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathBrowseFilter" xml:space="preserve">
+    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionLabel" xml:space="preserve">
+    <value>Language version</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionWatermark" xml:space="preserve">
+    <value>Language version</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionHelp" xml:space="preserve">
+    <value>The language version determines whether certain syntax features are allowed or reported as errors. This should be set to match the interpreter version.</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureLabel" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureWatermark" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureHelp" xml:space="preserve">
+    <value>The architecture helps distinguish similar interpreters. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system.</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarLabel" xml:space="preserve">
+    <value>Path environment variable</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarWatermark" xml:space="preserve">
+    <value>e.g. PYTHONPATH</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarHelp" xml:space="preserve">
+    <value>This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to "PYTHONPATH", but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionApplyLabel" xml:space="preserve">
+    <value>_Apply</value>
+  </data>
+  <data name="ConfigurationExtensionApplyTooltip" xml:space="preserve">
+    <value>Saves the changes that have been made.</value>
+  </data>
+  <data name="ConfigurationExtensionResetLabel" xml:space="preserve">
+    <value>_Reset</value>
+  </data>
+  <data name="ConfigurationExtensionResetTooltip" xml:space="preserve">
+    <value>Clears any changes that have been made.</value>
+  </data>
+  <data name="ConfigurationExtensionAutoDetectLabel" xml:space="preserve">
+    <value>A_uto Detect</value>
+  </data>
+  <data name="ConfigurationExtensionAutoDetectTooltip" xml:space="preserve">
+    <value>Attempts to fill in blank settings based on those that are already filled in.</value>
+  </data>
+  <data name="ConfigurationExtensionRemoveLabel" xml:space="preserve">
+    <value>Re_move</value>
+  </data>
+  <data name="ConfigurationExtensionRemoveTooltip" xml:space="preserve">
+    <value>Removes the environment. This operation cannot be undone.</value>
   </data>
   <data name="RenameVariable_UnableGetExpressionAnalysis" xml:space="preserve">
     <value>Unable to get analysis for the selected expression.</value>

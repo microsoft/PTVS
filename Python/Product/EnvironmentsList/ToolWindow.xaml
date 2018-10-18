@@ -34,26 +34,6 @@
                 <ResourceDictionary>
                     <Style TargetType="{x:Type l:DataListBox}" BasedOn="{StaticResource {x:Type ListBox}}" />
 
-                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">
-                        <Button Style="{StaticResource NavigationButtonInList}"
-                                Margin="6"
-                                Name="Button"
-                                Command="ApplicationCommands.Help"
-                                HorizontalAlignment="Left"
-                                GotFocus="OnlineHelpListItem_GotFocus">
-                            <Grid Background="Transparent">
-                                <Label VerticalAlignment="Center"
-                                       Foreground="{Binding Foreground,ElementName=Button}"
-                                       Content="{x:Static l:Resources.EnvironmentViewOnlineHelpLabel}"/>
-                            </Grid>
-                        </Button>
-                        <DataTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-
                     <DataTemplate x:Key="ExtensionListItem">
                         <TextBlock Text="{Binding LocalizedDisplayName}"
                                    Margin="4" />
@@ -161,18 +141,10 @@
                            VerticalAlignment="Stretch"
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemTemplate="{StaticResource EnvironmentListItem}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}"
                            ItemsSource="{Binding Environments}"
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
-                <l:DataListBox.ItemTemplateSelector>
-                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
-                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
-                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
-                                                       Environment="{StaticResource EnvironmentListItem}" />
-                </l:DataListBox.ItemTemplateSelector>
-                <l:DataListBox.ItemContainerStyleSelector>
-                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
-                                                            Environment="{StaticResource WithLocalizedName}"/>
-                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
@@ -216,18 +188,10 @@
                            HorizontalAlignment="Stretch"
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemTemplate="{StaticResource EnvironmentListItem}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}"
                            ItemsSource="{Binding Environments}"
                            AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
-                <l:DataListBox.ItemTemplateSelector>
-                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
-                                                       CondaEnvironment="{StaticResource CondaEnvironmentListItem}"
-                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
-                                                       Environment="{StaticResource EnvironmentListItem}" />
-                </l:DataListBox.ItemTemplateSelector>
-                <l:DataListBox.ItemContainerStyleSelector>
-                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
-                                                            Environment="{StaticResource WithLocalizedName}"/>
-                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ComboBox Grid.Row="1" Grid.Column="0"

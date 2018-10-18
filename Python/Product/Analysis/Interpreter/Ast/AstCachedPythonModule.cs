@@ -27,7 +27,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override Stream LoadCachedCode(AstPythonInterpreter interpreter) {
-            return PathUtils.OpenWithRetry(_cachePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var filePath = _cachePath;
+            if (Directory.Exists(_cachePath)) {
+                filePath = Path.Combine(_cachePath, Name);
+                if (!File.Exists(filePath)) {
+                    return new MemoryStream();
+                }
+            }
+            return PathUtils.OpenWithRetry(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {

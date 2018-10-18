@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                 using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
 #if DEV16
-                    var path = key?.GetValue("CollectionToolsDir16") as string;
+                    var path = key?.GetValue("CollectionToolsDir2019") as string;
 #else
                     var path = key?.GetValue("CollectionToolsDir") as string;
 #endif

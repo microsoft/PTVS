@@ -356,20 +356,10 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Anaconda is required.");
             }
 
-            var container = CreateCompositionContainer();
-            var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-            var mgr = CondaEnvironmentManager.Create(interpreters);
-            Assert.IsNotNull(mgr, "Could not create conda environment manager.");
-            return mgr;
-        }
-
-        private static CompositionContainer CreateCompositionContainer(bool defaultProviders = true) {
-            var sp = new MockServiceProvider();
-            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
-            var settings = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = settings;
-
-            return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
+            var version = PythonPaths.AnacondaVersions.FirstOrDefault();
+            string condaPath = CondaUtils.GetCondaExecutablePath(version.PrefixPath, allowBatch: false);
+            Assert.IsTrue(File.Exists(condaPath), $"Conda executable not found: '{condaPath}' for environment prefix at '{version.PrefixPath}'");
+            return new CondaEnvironmentManager(condaPath);
         }
 
         class MockCondaEnvironmentManagerUI : ICondaEnvironmentManagerUI {

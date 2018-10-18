@@ -9,9 +9,9 @@
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
-    <AssemblyName>With27And33</AssemblyName>
-    <Name>With27And33</Name>
-    <RootNamespace>With27And33</RootNamespace>
+    <AssemblyName>Unavailable</AssemblyName>
+    <Name>Unavailable</Name>
+    <RootNamespace>Unavailable</RootNamespace>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

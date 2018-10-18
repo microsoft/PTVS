@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "With27And33", "Environments\With27And33.pyproj", "{b4d16cf2-1fdc-4ce3-bbcc-408e8fbbe943}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "With27And37", "Environments\With27And37.pyproj", "{b4d16cf2-1fdc-4ce3-bbcc-408e8fbbe943}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

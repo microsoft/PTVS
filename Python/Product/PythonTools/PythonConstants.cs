@@ -65,13 +65,13 @@ namespace Microsoft.PythonTools {
         // Command IDs
         internal const int AddEnvironment = 0x4006;
         internal const int AddVirtualEnv = 0x4007;
-        internal const int AddExistingVirtualEnv = 0x4008;
+        internal const int AddExistingEnv = 0x4008;
         internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
         internal const int InstallRequirementsTxt = 0x4033;
         internal const int GenerateRequirementsTxt = 0x4034;
-        internal const int ProcessRequirementsTxt = 0x4036;
-        internal const int CreateCondaEnv = 0x4037;
+        internal const int ProcessRequirementsTxt = 0x4036; // deprecated
+        internal const int AddCondaEnv = 0x4037;
         internal const int OpenInteractiveForEnvironment = 0x4031;
         internal const int ViewAllEnvironments = 0x400B;
 
@@ -140,6 +140,12 @@ namespace Microsoft.PythonTools {
 
         // Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
+
+        // Suppress the prompt for environment creation project property
+        public const string SuppressEnvironmentCreationPrompt = "SuppressEnvironmentCreationPrompt";
+
+        // Suppress the prompt for package installation project property
+        public const string SuppressPackageInstallationPrompt = "SuppressPackageInstallationPrompt";
 
         // Launch option to ignore pause on exist settings
         internal const string NeverPauseOnExit = "NeverPauseOnExit";

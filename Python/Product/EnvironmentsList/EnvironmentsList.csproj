@@ -71,16 +71,12 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Microsoft.VisualStudio.Settings.15.0, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+    <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
     <Reference Include="Microsoft.VisualStudio.ImageCatalog" />
     <Reference Include="Microsoft.VisualStudio.Imaging" />
     <Reference Include="Microsoft.VisualStudio.Utilities" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="CondaExtension.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -150,9 +146,6 @@
     </Compile>
     <Compile Include="..\PythonTools\PythonTools\Intellisense\FuzzyStringMatcher.cs">
       <Link>FuzzyStringMatcher.cs</Link>
-    </Compile>
-    <Compile Include="CondaExtension.xaml.cs">
-      <DependentUpon>CondaExtension.xaml</DependentUpon>
     </Compile>
     <Compile Include="ConfigurationExtension.xaml.cs">
       <DependentUpon>ConfigurationExtension.xaml</DependentUpon>

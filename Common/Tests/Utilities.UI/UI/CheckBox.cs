@@ -21,7 +21,7 @@ namespace TestUtilities.UI {
     public class CheckBox : AutomationWrapper {
         public string Name { get; set; }
 
-        public CheckBox(AutomationElement element, CheckListView parent)
+        public CheckBox(AutomationElement element)
             : base(element) {
             Name = (string)Element.GetCurrentPropertyValue(AutomationElement.NameProperty);
         }
@@ -43,6 +43,21 @@ namespace TestUtilities.UI {
             if (pattern.Current.ToggleState != ToggleState.Off) pattern.Toggle();
             if (pattern.Current.ToggleState != ToggleState.Off) pattern.Toggle();
             Assert.AreEqual(pattern.Current.ToggleState, ToggleState.Off, "Could not toggle " + Name + " to Off.");
+        }
+
+        public ToggleState ToggleState {
+            get {
+                TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
+                return pattern.Current.ToggleState;
+            }
+
+            set {
+                if (value == ToggleState.On) {
+                    SetSelected();
+                } else if (value == ToggleState.Off) {
+                    SetUnselected();
+                }
+            }
         }
     }
 }

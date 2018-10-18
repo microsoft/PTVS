@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 
@@ -110,5 +111,13 @@ namespace Microsoft.VisualStudioTools.Wpf {
                     return lambda((T1)args[0], (T2)args[1], (T3)args[2]);
                 });
         }
+
+        public static LambdaConverter CreateMulti<T>(Func<T[], object> lambda) => new LambdaConverter(args => {
+            if (args.Any(t => t == DependencyProperty.UnsetValue)) {
+                return DependencyProperty.UnsetValue;
+            }
+
+            return lambda(args.Cast<T>().ToArray());
+        });
     }
 }
