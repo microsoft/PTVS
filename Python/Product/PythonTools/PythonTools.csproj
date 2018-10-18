@@ -288,6 +288,7 @@
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentControl.xaml.cs">
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Project\PythonProjectInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
     <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />

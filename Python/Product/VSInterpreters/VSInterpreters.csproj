@@ -99,6 +99,7 @@
     <Compile Include="PackageManager\NoPackageManager.cs" />
     <Compile Include="PackageManager\PackageManagerFactoryExtensions.cs" />
     <Compile Include="PackageManager\CPythonPipPackageManagerProvider.cs" />
+    <Compile Include="PackageManager\PipRequirementsUtils.cs" />
     <Compile Include="PackageManager\PipPackageManagerCommands.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Interpreter\CondaEnvironmentFactoryConstants.cs" />

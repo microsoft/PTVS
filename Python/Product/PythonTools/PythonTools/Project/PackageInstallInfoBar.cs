@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -26,99 +25,74 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal sealed class PackageInstallInfoBar : IVsInfoBarUIEvents, IDisposable {
-        private readonly PythonProjectNode _projectNode;
-        private uint _adviseCookie;
-        private IVsInfoBarUIElement _infoBar;
-        private IPythonToolsLogger _logger;
-
-        public PackageInstallInfoBar(PythonProjectNode projectNode) {
-            _projectNode = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
+    internal sealed class PackageInstallInfoBar : PythonProjectInfoBar {
+        public PackageInstallInfoBar(PythonProjectNode projectNode)
+            : base (projectNode) {
         }
 
-        public async System.Threading.Tasks.Task CheckAsync() {
-            if (!_projectNode.Site.GetPythonToolsService().GeneralOptions.PromptForPackageInstallation) {
+        public override async Task CheckAsync() {
+            if (IsCreated) {
                 return;
             }
 
-            var suppressProp = _projectNode.GetProjectProperty(PythonConstants.SuppressPackageInstallationPrompt);
+            if (!Project.Site.GetPythonToolsService().GeneralOptions.PromptForPackageInstallation) {
+                return;
+            }
+
+            var suppressProp = Project.GetProjectProperty(PythonConstants.SuppressPackageInstallationPrompt);
             if (suppressProp.IsTrue()) {
                 return;
             }
 
-            var txtPath = _projectNode.GetRequirementsTxtPath();
+            if (Project.IsActiveInterpreterGlobalDefault) {
+                return;
+            }
+
+            var txtPath = Project.GetRequirementsTxtPath();
             if (!File.Exists(txtPath)) {
                 return;
             }
 
-            if (!_projectNode.IsActiveInterpreterGlobalDefault) {
-                var active = _projectNode.ActiveInterpreter;
-                if (active.IsRunnable()) {
-                    var pm = _projectNode.InterpreterOptions.GetPackageManagers(active).FirstOrDefault(p => p.UniqueKey == "pip");
-                    if (pm != null && await PackagesMissingAsync(pm, txtPath)) {
-                        ShowInstallPackages(txtPath, pm);
-                    }
-                }
-            }
-        }
-
-        private async Task<bool> PackagesMissingAsync(IPackageManager pm, string txtPath) {
-            try {
-                var installed = await pm.GetInstalledPackagesAsync(CancellationTokens.After15s);
-                var original = File.ReadAllLines(txtPath);
-                foreach (var _line in original) {
-                    var line = _line;
-                    foreach (var m in PythonProjectNode.FindRequirementRegex.Matches(line).Cast<Match>()) {
-                        var name = m.Groups["name"].Value;
-                        if (installed.FirstOrDefault(pkg => string.CompareOrdinal(pkg.Name, name) == 0) == null) {
-                            return true;
-                        }
-                    }
-                }
-            } catch (IOException) {
-            } catch (OperationCanceledException) {
-            }
-
-            return false;
-        }
-
-        private void ShowInstallPackages(string txtPath, IPackageManager pm) {
-            if (_infoBar != null) {
+            var active = Project.ActiveInterpreter;
+            if (!active.IsRunnable()) {
                 return;
             }
 
-            var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
-            shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj);
-            var infoBarHost = (IVsInfoBarHost)infoBarHostObj;
-            var infoBarFactory = (IVsInfoBarUIFactory)ServiceProvider.GlobalProvider.GetService(typeof(SVsInfoBarUIFactory));
-            if (_logger == null) {
-                _logger = (IPythonToolsLogger)ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
+            var pm = Project.InterpreterOptions.GetPackageManagers(active).FirstOrDefault(p => p.UniqueKey == "pip");
+            if (pm == null) {
+                return;
+            }
+
+            var missing = await PackagesMissingAsync(pm, txtPath);
+            if (!missing) {
+                return;
             }
 
             Action installPackages = () => {
-                _logger?.LogEvent(
+                Logger?.LogEvent(
                     PythonLogEvent.PackageInstallInfoBar,
                     new PackageInstallInfoBarInfo() {
                         Action = PackageInstallInfoBarActions.Install,
                     }
                 );
-                PythonProjectNode.InstallRequirementsAsync(_projectNode.Site, pm, txtPath)
-                    .HandleAllExceptions(_projectNode.Site, typeof(PackageInstallInfoBar))
+                PythonProjectNode.InstallRequirementsAsync(Project.Site, pm, txtPath)
+                    .HandleAllExceptions(Project.Site, typeof(PackageInstallInfoBar))
                     .DoNotWait();
-                _infoBar.Close();
+                Close();
             };
 
             Action projectIgnore = () => {
-                _logger?.LogEvent(
+                Logger?.LogEvent(
                     PythonLogEvent.PackageInstallInfoBar,
                     new PackageInstallInfoBarInfo() {
                         Action = PackageInstallInfoBarActions.Ignore,
                     }
                 );
-                _projectNode.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
-                _infoBar.Close();
+                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+                Close();
             };
 
             var messages = new List<IVsInfoBarTextSpan>();
@@ -127,38 +101,32 @@ namespace Microsoft.PythonTools.Project {
             messages.Add(new InfoBarTextSpan(
                 Strings.RequirementsTxtInstallPackagesInfoBarMessage.FormatUI(
                     PathUtils.GetFileOrDirectoryName(txtPath),
-                    _projectNode.Caption,
+                    Project.Caption,
                     pm.Factory.Configuration.Description
             )));
             actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarInstallPackagesAction, installPackages));
             actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
 
-            var infoBarModel = new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true);
-            _infoBar = infoBarFactory.CreateInfoBar(infoBarModel);
-            infoBarHost.AddInfoBar(_infoBar);
-
-            _infoBar.Advise(this, out uint cookie);
-            _adviseCookie = cookie;
-
-            _logger?.LogEvent(
+            Logger?.LogEvent(
                 PythonLogEvent.PackageInstallInfoBar,
                 new PackageInstallInfoBarInfo() {
                     Action = PackageInstallInfoBarActions.Prompt,
                 }
             );
+
+            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
         }
 
-        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
-            ((Action)actionItem.ActionContext)();
-        }
+        private async Task<bool> PackagesMissingAsync(IPackageManager pm, string txtPath) {
+            try {
+                var original = File.ReadAllLines(txtPath);
+                var installed = await pm.GetInstalledPackagesAsync(CancellationTokens.After15s);
+                return PipRequirementsUtils.AnyPackageMissing(original, installed);
+            } catch (IOException) {
+            } catch (OperationCanceledException) {
+            }
 
-        public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
-            infoBarUIElement.Unadvise(_adviseCookie);
-            _infoBar = null;
-        }
-
-        public void Dispose() {
-            _infoBar?.Close();
+            return false;
         }
     }
 }
