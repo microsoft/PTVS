@@ -2260,22 +2260,19 @@ Expand selection to the full expression?</value>
     <value>Python installation</value>
   </data>
   <data name="AddInstalledEnvironmentInstallationLabel" xml:space="preserve">
-    <value>Python installation</value>
+    <value>Python</value>
   </data>
   <data name="AddInstalledEnvironmentDescription" xml:space="preserve">
-    <value>To install a new Python interpreter, select one from the Visual Studio Installer components below.</value>
+    <value>The Visual Studio Installer supports the following versions of Python. Select one or more to install:</value>
   </data>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>
   <data name="AddInstalledEnvironmentLaunch" xml:space="preserve">
-    <value>Open Visual Studio Installer</value>
+    <value>Install</value>
   </data>
   <data name="AddInstalledEnvironmentInstalledLabel" xml:space="preserve">
-    <value>Installed</value>
-  </data>
-  <data name="AddInstalledEnvironmentAvailableLabel" xml:space="preserve">
-    <value>Available</value>
+    <value>Already installed</value>
   </data>
   <data name="AddInstalledEnvironmentNone" xml:space="preserve">
     <value>(none)</value>

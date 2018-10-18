@@ -559,16 +559,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Available.
-        /// </summary>
-        public static string AddInstalledEnvironmentAvailableLabel {
-            get {
-                return ResourceManager.GetString("AddInstalledEnvironmentAvailableLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to To install a new Python interpreter, select one from the Visual Studio Installer components below..
+        ///   Looks up a localized string similar to The Visual Studio Installer supports the following versions of Python. Select one or more to install:.
         /// </summary>
         public static string AddInstalledEnvironmentDescription {
             get {
@@ -577,7 +568,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation.
+        ///   Looks up a localized string similar to Python.
         /// </summary>
         public static string AddInstalledEnvironmentInstallationLabel {
             get {
@@ -586,7 +577,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installed.
+        ///   Looks up a localized string similar to Already installed.
         /// </summary>
         public static string AddInstalledEnvironmentInstalledLabel {
             get {
@@ -604,7 +595,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open Visual Studio Installer.
+        ///   Looks up a localized string similar to Install.
         /// </summary>
         public static string AddInstalledEnvironmentLaunch {
             get {

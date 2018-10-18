@@ -35,14 +35,10 @@
             Content="{x:Static common:Strings.AddInstalledEnvironmentInstallationLabel}"
             Style="{StaticResource ModernLabel}"/>
 
+        <!-- Available -->
         <TextBlock
             Text="{x:Static common:Strings.AddInstalledEnvironmentDescription}"
             Margin="0 0 0 20"/>
-
-        <!-- Available -->
-        <Label
-            Content="{x:Static common:Strings.AddInstalledEnvironmentAvailableLabel}"
-            Style="{StaticResource ModernLabel}"/>
 
         <TextBlock
             Text="{x:Static common:Strings.AddInstalledEnvironmentNone}"
