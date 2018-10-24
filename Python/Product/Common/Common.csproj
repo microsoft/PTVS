@@ -47,8 +47,12 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Infrastructure\BindableBase.cs" />
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\COMEnumerator.cs" />
+    <Compile Include="Infrastructure\DefaultDisposable.cs" />
+    <Compile Include="Infrastructure\Disposable.cs" />
+    <Compile Include="Infrastructure\DisposableBag.cs" />
     <Compile Include="Infrastructure\ICatalogLog.cs" />
     <Compile Include="Infrastructure\ITestEnvironment.cs" />
     <Compile Include="Infrastructure\NativeMethods.cs" />

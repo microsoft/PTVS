@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.Environments.EnvironmentSwitcherStatusBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
+             xmlns:theming="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
+             xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+             xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+             xmlns:local="clr-namespace:Microsoft.PythonTools.Environments"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
+                <ResourceDictionary>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Setter Property="FontFamily" Value="{DynamicResource {x:Static ptwpf:ModernStyles.EnvironmentFontFamilyKey}}"/>
+                        <Setter Property="FontSize" Value="{DynamicResource {x:Static ptwpf:ModernStyles.EnvironmentFontSizeKey}}"/>
+                    </Style>
+
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Height" Value="18" />
+                        <Setter Property="IsHitTestVisible" Value="True" />
+                        <Setter Property="Margin" Value="11,0,0,0" />
+                        <Setter Property="Orientation" Value="Horizontal" />
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="White" Opacity="0.2" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel
+        Visibility="{Binding Path=IsVisible, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"
+        theming:ImageThemingUtilities.ImageBackgroundColor="{Binding Background, RelativeSource={RelativeSource Self}}">
+        <StackPanel.ToolTip>
+            <ToolTip Placement="Top">
+                <TextBlock
+                    Text="{Binding Path=ToolTipText}"
+                    Foreground="{DynamicResource {x:Static ptwpf:ModernStyles.ToolTipTextBrushKey}}"/>
+            </ToolTip>
+        </StackPanel.ToolTip>
+        <!-- TODO: replace with a better python icon -->
+        <imaging:CrispImage
+            Margin="4,0,4,0"
+            Moniker="{x:Static catalog:KnownMonikers.PYFileNode}"/>
+        <TextBlock 
+            x:Name="PythonEnvironmentStatusText"
+            Text="{Binding Path=StatusText}"
+            Margin="4,0,0,1"
+            MaxWidth="300"
+            VerticalAlignment="Bottom"
+            Foreground="{DynamicResource {x:Static ptwpf:ModernStyles.StatusBarDefaultTextBrushKey}}"/>
+        <Polygon
+            Margin="8,8,8,0"
+            Points="0,4 4,0 8,4 0,4"
+            Fill="{Binding ElementName=PythonEnvironmentStatusText, Path=Foreground}"
+            Localization.Attributes="Content (Unmodifiable Unreadable)" />
+    </StackPanel>
+</UserControl>

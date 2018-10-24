@@ -26,9 +26,11 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
@@ -137,50 +139,18 @@ namespace Microsoft.PythonTools.InterpreterList {
                 DeleteEnvironment_CanExecute
             ));
 
-            RegisterCommands(new Command[] {
-                new AddEnvironmentCommand(this),
-            }, GuidList.guidPythonToolsCmdSet);
+            RegisterCommands(
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this))
+            );
 
             Content = list;
         }
 
-        class AddEnvironmentCommand : Command {
-            private readonly InterpreterListToolWindow _window;
-
-            public AddEnvironmentCommand(InterpreterListToolWindow window) {
-                _window = window;
-            }
-
-            public override void DoCommand(object sender, EventArgs args) {
-                var service = _window._site.GetComponentModel().GetService<IInterpreterRegistryService>();
-                var sln = (IVsSolution)_window._site.GetService(typeof(SVsSolution));
-                var project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
-                string ymlPath = project?.GetEnvironmentYmlPath();
-                string txtPath = project?.GetRequirementsTxtPath();
-
-                AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_window._site, project, null, ymlPath, txtPath)
-                    .HandleAllExceptions(_window._site, typeof(PythonProjectNode)).DoNotWait();
-            }
-
-            public override int CommandId {
-                get { return (int)PkgCmdIDList.cmdidAddEnvironment; }
-            }
-        }
-
-        private void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
-                lock (_commandsLock) {
-                    foreach (var command in commands) {
-                        var beforeQueryStatus = command.BeforeQueryStatus;
-                        CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        if (beforeQueryStatus != null) {
-                            menuToolWin.BeforeQueryStatus += beforeQueryStatus;
-                        }
-                        mcs.AddCommand(menuToolWin);
-                        _commands[command] = menuToolWin;
-                    }
+        internal void RegisterCommands(params MenuCommand[] commands) {
+            _uiThread.MustBeCalledFromUIThreadOrThrow();
+            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs) {
+                foreach (var command in commands) {
+                    mcs.AddCommand(command);
                 }
             }
         }

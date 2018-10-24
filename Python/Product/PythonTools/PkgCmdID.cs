@@ -55,6 +55,8 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
 
+        public const uint cmdidViewEnvironmentStatus = 0x4038;
+
         public const uint cmdidWebPythonAtMicrosoft = 0x4040;
         public const uint cmdidWebPTVSSupport = 0x4041;
         public const uint cmdidWebDGProducts = 0x4042;

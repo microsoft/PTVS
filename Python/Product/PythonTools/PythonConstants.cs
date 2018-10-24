@@ -86,11 +86,16 @@ namespace Microsoft.PythonTools {
         internal const int SearchPathContainerMenuId = 0x2009;
         internal const int SearchPathMenuId = 0x200A;
         internal const int ReplWindowToolbar = 0x200B;
+        internal const int EnvironmentStatusBarMenu = 0x200D;
 
         // Custom (per-project) commands
         internal const int FirstCustomCmdId = 0x4010;
         internal const int LastCustomCmdId = 0x402F;
         internal const int CustomProjectCommandsMenu = 0x2005;
+
+        // Environments status bar switcher commands
+        internal const int FirstEnvironmentCmdId = 0x4050;
+        internal const int LastEnvironmentCmdId = 0x4090;
 
         // Shows up before references
         internal const int InterpretersContainerNodeSortPriority = 200;

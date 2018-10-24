@@ -137,6 +137,12 @@ namespace Microsoft.PythonTools.Wpf {
         public static readonly object MenuItemHighlightDisabledBackgroundBrushKey = VsBrushes.CommandBarMouseOverBackgroundEndKey;
         public static readonly object MenuItemHighlightDisabledBorderBrushKey = VsBrushes.CommandBarMenuBorderKey;
 
+        public static readonly object StatusBarDefaultTextBrushKey = EnvironmentColors.StatusBarDefaultTextBrushKey;
+        public static readonly object ToolTipTextBrushKey = EnvironmentColors.ToolTipTextBrushKey;
+
+        public static readonly string EnvironmentFontSizeKey = "VsFont.EnvironmentFontSize";
+        public static readonly string EnvironmentFontFamilyKey = "VsFont.EnvironmentFontFamily";
+
         public static ThemeResourceKey GridHeadingBackgroundBrushKey => ThemedDialogColors.GridHeadingBackgroundBrushKey;
         public static ThemeResourceKey GridHeadingTextBrushKey => ThemedDialogColors.GridHeadingTextBrushKey;
         public static ThemeResourceKey HeaderTextBrushKey => ThemedDialogColors.HeaderTextBrushKey;

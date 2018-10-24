@@ -254,6 +254,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Commands\AddEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Commands\ManagePackagesCommand.cs" />
+    <Compile Include="PythonTools\Commands\ViewAllEnvironmentsCommand.cs" />
+    <Compile Include="PythonTools\Commands\ViewEnvironmentStatusCommand.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherManager.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherStatusBar.xaml.cs">
+      <DependentUpon>EnvironmentSwitcherStatusBar.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
     <Compile Include="PythonTools\Environments\CustomEnv.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentTemplateSelector.cs" />
@@ -265,6 +274,7 @@
     <Compile Include="PythonTools\Environments\AddExistingEnvironmentView.cs" />
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentView.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherStatusBarViewModel.cs" />
     <Compile Include="PythonTools\Environments\ProjectView.cs" />
     <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
     <Compile Include="PythonTools\Options\CondaOptions.cs" />
@@ -368,6 +378,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\VsStatusBar.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
       <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>
@@ -724,6 +735,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
+    <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />
@@ -1065,6 +1077,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Environments\AddExistingEnvironmentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Environments\EnvironmentSwitcherStatusBar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

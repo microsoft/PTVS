@@ -2479,6 +2479,16 @@ Please specify at least one package.</value>
   <data name="CondaExecutableFilter" xml:space="preserve">
     <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
   </data>
+  <data name="EnvironmentSwitcherNoCurrentEnvironment" xml:space="preserve">
+    <value>(no Python environment).</value>
+  </data>
+  <data name="EnvironmentSwitcherTooltipWithKeyBinding" xml:space="preserve">
+    <value>Python Environment ({0})</value>
+    <comment>{0} is a string that contains a keyboard shortcut ie "CTRL+K, CTRL+E"</comment>
+  </data>
+  <data name="EnvironmentSwitcherTooltipWithoutKeyBinding" xml:space="preserve">
+    <value>Python Environment</value>
+  </data>
   <data name="ConfigurationExtensionDescriptionWatermark" xml:space="preserve">
     <value>e.g. My Custom Environment</value>
   </data>

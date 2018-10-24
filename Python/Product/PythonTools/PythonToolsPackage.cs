@@ -56,6 +56,9 @@ using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.PythonTools.Environments;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure.Commands;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -183,6 +186,9 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
+        private VsStatusBar _statusBar;
+        private EnvironmentSwitcherStatusBar _environmentSwitcherStatusBar;
+        private DisposableBag _disposables;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
         /// <summary>
@@ -193,6 +199,8 @@ namespace Microsoft.PythonTools {
         /// initialization is the Initialize method.
         /// </summary>
         public PythonToolsPackage() {
+            _disposables = new DisposableBag(GetType().Name, "Package is disposed");
+
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 
 #if DEBUG
@@ -213,6 +221,14 @@ namespace Microsoft.PythonTools {
                 }
             };
 #endif
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+
+            if (disposing) {
+                _disposables.TryDispose();
+            }
         }
 
         public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
@@ -444,6 +460,7 @@ namespace Microsoft.PythonTools {
                 new OpenDebugReplCommand(this),
                 new ExecuteInReplCommand(this),
                 new SendToReplCommand(this),
+                new ViewEnvironmentStatusCommand(this),
                 new FillParagraphCommand(this),
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
@@ -455,9 +472,16 @@ namespace Microsoft.PythonTools {
                 new ShowCppViewCommand(this),
                 new ShowNativePythonFrames(this),
                 new UsePythonStepping(this),
+                new ViewAllEnvironmentsCommand(this),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
                 new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
+
+            RegisterCommands(
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.FirstEnvironmentCmdId, new SwitchToEnvironmentCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this))
+            );
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
@@ -466,7 +490,21 @@ namespace Microsoft.PythonTools {
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
 
+            _statusBar = new VsStatusBar(this);
+
+            AddEnvironmentsStatusBar();
+
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
+        }
+
+
+        private void AddEnvironmentsStatusBar() {
+            _environmentSwitcherStatusBar = new EnvironmentSwitcherStatusBar(this) { DataContext = new EnvironmentSwitcherStatusBarViewModel(this) };
+            _disposables.TryAdd(_statusBar.AddItem(_environmentSwitcherStatusBar));
+        }
+
+        internal void ViewEnvironmentStatus() {
+            _environmentSwitcherStatusBar?.ShowMenu();
         }
 
         public EnvDTE.DTE DTE {

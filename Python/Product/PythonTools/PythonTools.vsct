@@ -125,6 +125,13 @@ permissions and limitations under the License.
         </Strings>
       </Menu>
 
+      <Menu guid="guidPythonToolsCmdSet" id="EnvironmentStatusBarMenu" priority="0x0000" type="Context">
+        <CommandFlag>NotInTBList</CommandFlag>
+        <Strings>
+          <ButtonText>Python Environment Status</ButtonText>
+        </Strings>
+      </Menu>
+
       <!-- Environments window toolbar -->
       <Menu guid="guidPythonToolsCmdSet" id="EnvWindowToolbar" type="ToolWindowToolbar" priority="0x100">
         <Parent guid="guidPythonToolsCmdSet" id="0" />
@@ -184,10 +191,17 @@ permissions and limitations under the License.
       <!-- 
           Python Environments context menu
       -->
-      <Group guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup" priority="0x0100">
+      <Group guid="guidPythonToolsCmdSet" id="EnvironmentsViewCommandsGroup" priority="0x0300">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
-      <Group guid="guidPythonToolsCmdSet" id="EnvironmentsViewCommandsGroup" priority="0x0200">
+      <Group guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup" priority="0x0400">
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup" priority="0x0100">
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="EnvironmentStatusEnvironmentsGroup" priority="0x0100">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
 
@@ -365,6 +379,18 @@ permissions and limitations under the License.
           <ToolTipText>Add a new conda environment.</ToolTipText>
           <CanonicalName>Add Conda Environment</CanonicalName>
           <LocCanonicalName>Add Conda Environment</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidViewEnvironmentStatus" priority="0x0130" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>View Python Environment Status...</ButtonText>
+          <ToolTipText>View Python environment status.</ToolTipText>
+          <CanonicalName>View Environment Status</CanonicalName>
+          <LocCanonicalName>View Environment Status</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -708,6 +734,19 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidFirstEnvironmentCmdId" priority="0x400" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusEnvironmentsGroup" />
+        <CommandFlag>DynamicItemStart</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>NoButtonCustomize</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Environments</ButtonText>
+          <ToolTipText>Environments</ToolTipText>
+        </Strings>
+      </Button>
+      
       <!--================================================================================================================-->
       <!--========================================== Integrated Shell Commands ===========================================-->
       <!--================================================================================================================-->
@@ -989,9 +1028,27 @@ permissions and limitations under the License.
       <Parent guid="guidPythonToolsCmdSet" id="SearchPathMenu" />
     </CommandPlacement>
 
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusBarMenu"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="EnvironmentStatusEnvironmentsGroup" priority="0x0300">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusBarMenu"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup" priority="0x0400">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusBarMenu"/>
+    </CommandPlacement>
+
     <!--
         Button placements
     -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInstallPythonPackage" priority="0x0200">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
     </CommandPlacement>
@@ -1093,6 +1150,7 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidViewEnvironmentStatus" key1="K" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
   </KeyBindings>
 
   <UsedCommands>
@@ -1156,11 +1214,16 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
       <IDSymbol name="cmdidAddCondaEnv" value="0x4037" />
+      <IDSymbol name="cmdidViewEnvironmentStatus" value="0x4038"/>
 
       <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
       <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>
       <IDSymbol name="cmdidWebDGProducts" value="0x4042"/>
-      
+
+      <!-- 64 environments ought to be enough for anybody -->
+      <IDSymbol name="cmdidFirstEnvironmentCmdId" value="0x4050" />
+      <IDSymbol name="cmdidLastEnvironmentCmdId" value="0x4090" />
+
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />
@@ -1185,6 +1248,8 @@ permissions and limitations under the License.
       <IDSymbol name="InteractiveToolbarPythonGroup" value="0x1064" />
       <IDSymbol name="MiscCommandsGroup" value="0x1065" />
       <IDSymbol name="EnvWindowAddGroup" value="0x1066" />
+      <IDSymbol name="EnvironmentStatusEnvironmentsGroup" value="0x1067" />
+      <IDSymbol name="EnvironmentStatusManageEnvironmentsGroup" value="0x1068" />
 
       <!-- Menus -->
       <IDSymbol name="PythonMenu" value="0x2000"/>
@@ -1200,6 +1265,7 @@ permissions and limitations under the License.
       <IDSymbol name="SearchPathMenu" value="0x200A" />
       <IDSymbol name="ReplWindowToolbar" value="0x200B"/>
       <IDSymbol name="EnvWindowToolbar" value="0x200C"/>
+      <IDSymbol name="EnvironmentStatusBarMenu" value="0x200D"/>
 
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>
