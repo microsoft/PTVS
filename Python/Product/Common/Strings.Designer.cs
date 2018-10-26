@@ -3138,7 +3138,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to (no Python environment)..
+        ///   Looks up a localized string similar to (no Python environment).
         /// </summary>
         public static string EnvironmentSwitcherNoCurrentEnvironment {
             get {

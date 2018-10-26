@@ -2480,7 +2480,7 @@ Please specify at least one package.</value>
     <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
   </data>
   <data name="EnvironmentSwitcherNoCurrentEnvironment" xml:space="preserve">
-    <value>(no Python environment).</value>
+    <value>(no Python environment)</value>
   </data>
   <data name="EnvironmentSwitcherTooltipWithKeyBinding" xml:space="preserve">
     <value>Python Environment ({0})</value>

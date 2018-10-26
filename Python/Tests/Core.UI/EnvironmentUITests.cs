@@ -16,12 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -506,6 +508,73 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);
             }
+        }
+
+        public void SwitcherSingleProject(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            var added27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            added27.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Project has no references, uses global default
+                var project = CreateTemporaryProject(app);
+                CheckSwitcherText(app, globalDefault37.Configuration.Description);
+
+                // Project has one referenced interpreter
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pp = project.GetPythonProject();
+                    pp.AddInterpreter(added27.Configuration.Id);
+                });
+                CheckSwitcherText(app, added27.Configuration.Description);
+
+                // No switcher visisble when solution closed and no file opened
+                app.Dte.Solution.Close(SaveFirst: false);
+                CheckSwitcherHidden(app);
+            }
+        }
+
+        public void SwitcherNoProject(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Loose Python file shows global default
+                app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.py"));
+                CheckSwitcherText(app, globalDefault37.Configuration.Description);
+
+                // No switcher visisble when solution closed and no file opened
+                app.Dte.ActiveWindow.Close();
+                CheckSwitcherHidden(app);
+
+                // No switcher visisble when loose cpp file open
+                app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.cpp"));
+                CheckSwitcherHidden(app);
+            }
+        }
+
+        private void CheckSwitcherText(PythonVisualStudioApp app, string expected) {
+            var status = app.FindByAutomationId("PythonEnvironmentStatusText");
+            Assert.AreEqual(expected, status.Current.Name);
+
+        }
+
+        private void CheckSwitcherHidden(PythonVisualStudioApp app) {
+            var status = app.FindByAutomationId("PythonEnvironmentStatusText");
+            for (int i = 20; i >= 0; --i) {
+                if (status.Current.Name == "(no Python environment)") {
+                    break;
+                }
+
+                if (i == 0) {
+                    Assert.AreEqual("(no Python environment)", status.Current.Name);
+                }
+
+                Thread.Sleep(500);
+            }
+
+            Assert.IsTrue(status.Current.IsOffscreen, "Status switcher should not be visible");
         }
     }
 }
