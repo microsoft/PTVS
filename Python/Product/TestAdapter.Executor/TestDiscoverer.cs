@@ -28,8 +28,13 @@ namespace Microsoft.PythonTools.TestAdapter {
     [DefaultExecutorUri(PythonConstants.TestExecutorUriString)]
     class TestDiscoverer : ITestDiscoverer {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            ValidateArg.NotNull(sources, "sources");
-            ValidateArg.NotNull(discoverySink, "discoverySink");
+            if (sources == null) {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            if (discoverySink == null) {
+                throw new ArgumentNullException(nameof(discoverySink));
+            }
 
             var settings = discoveryContext.RunSettings;
             
