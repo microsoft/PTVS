@@ -15,15 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -517,6 +513,9 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             var added27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             added27.AssertInstalled();
 
+            var added36 = PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+            added36.AssertInstalled();
+
             using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
                 // Project has no references, uses global default
                 var project = CreateTemporaryProject(app);
@@ -529,7 +528,14 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 });
                 CheckSwitcherText(app, added27.Configuration.Description);
 
-                // No switcher visisble when solution closed and no file opened
+                // Project has two referenced interpreters (active remains the same)
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pp = project.GetPythonProject();
+                    pp.AddInterpreter(added36.Configuration.Id);
+                });
+                CheckSwitcherText(app, added27.Configuration.Description);
+
+                // No switcher visible when solution closed and no file opened
                 app.Dte.Solution.Close(SaveFirst: false);
                 CheckSwitcherHidden(app);
             }
@@ -544,11 +550,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.py"));
                 CheckSwitcherText(app, globalDefault37.Configuration.Description);
 
-                // No switcher visisble when solution closed and no file opened
+                // No switcher visible when solution closed and no file opened
                 app.Dte.ActiveWindow.Close();
                 CheckSwitcherHidden(app);
 
-                // No switcher visisble when loose cpp file open
+                // No switcher visible when loose cpp file open
                 app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.cpp"));
                 CheckSwitcherHidden(app);
             }
