@@ -61,7 +61,6 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttributeTests.cs" />
     <Compile Include="DjangoAnalyzerTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />
     <Compile Include="DjangoTemplateParserTests.cs" />
