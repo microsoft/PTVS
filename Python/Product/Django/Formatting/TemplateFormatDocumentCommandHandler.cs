@@ -18,7 +18,11 @@ using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.Web.Editor;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Editor.Controller.Command;
+#else
 using Microsoft.Web.Editor.Controller.Command;
+#endif
 
 namespace Microsoft.PythonTools.Django.Formatting {
     internal class TemplateFormatDocumentCommandHandler : EditingCommand {

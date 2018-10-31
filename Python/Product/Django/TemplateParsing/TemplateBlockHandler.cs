@@ -15,10 +15,17 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.ContainedLanguage.Generators;
+using Microsoft.WebTools.Languages.Html.Editor.ContainedLanguage.Handlers;
+using Microsoft.WebTools.Languages.Html.Editor.ContentType;
+using Microsoft.WebTools.Languages.Html.Editor.Tree;
+#else
 using Microsoft.Html.Editor.ContainedLanguage.Generators;
 using Microsoft.Html.Editor.ContainedLanguage.Handlers;
 using Microsoft.Html.Editor.ContentType;
 using Microsoft.Html.Editor.Tree;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateBlockHandler : ArtifactBasedBlockHandler {

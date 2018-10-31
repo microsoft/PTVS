@@ -16,7 +16,11 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.ContentTypes;
+#else
 using Microsoft.Web.Core.ContentTypes;
+#endif
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>

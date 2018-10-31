@@ -20,9 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using EnvDTE;
-using Microsoft.Html.Editor.Document;
-using Microsoft.Html.Editor.Settings;
-using Microsoft.Html.Editor.Tree;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +30,15 @@ using Microsoft.VisualStudio.Text.Operations;
 using TestUtilities;
 using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.Document;
+using Microsoft.WebTools.Languages.Html.Editor.Tree;
+using Microsoft.WebTools.Languages.Html.Editor.Settings;
+#else
+using Microsoft.Html.Editor.Document;
+using Microsoft.Html.Editor.Settings;
+using Microsoft.Html.Editor.Tree;
+#endif
 
 namespace DjangoUITests {
     public class DjangoEditingUITests {

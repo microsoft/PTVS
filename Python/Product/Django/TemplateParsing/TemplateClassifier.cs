@@ -21,7 +21,11 @@ using System.Threading;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Projection;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.Document;
+#else
 using Microsoft.Html.Editor.Document;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateClassifier : TemplateClassifierBase {
