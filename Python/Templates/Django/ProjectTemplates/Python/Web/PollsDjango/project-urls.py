@@ -9,7 +9,7 @@ from django.urls import path, include
 from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
-    path('', include(('app.urls', "app"), "appNameTemp")),
+    path('', include(('app.urls', "app"), "appurls")),
     path('contact', views.contact, name='contact'),
     path('about/', views.about, name='about'),
     path('seed/', views.seed, name='seed'),
