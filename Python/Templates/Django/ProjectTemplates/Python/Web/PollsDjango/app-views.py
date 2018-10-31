@@ -5,7 +5,7 @@ Definition of views.
 from app.models import Choice, Poll
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template import RequestContext

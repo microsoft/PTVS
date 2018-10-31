@@ -20,7 +20,7 @@ class Poll(models.Model):
 
 class Choice(models.Model):
     """A poll choice object for use in the application views and repository."""
-    poll = models.ForeignKey(Poll)
+    poll = models.ForeignKey(Poll, on_delete = models.CASCADE)
     text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
 

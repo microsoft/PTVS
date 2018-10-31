@@ -2,42 +2,30 @@
 Definition of urls for $safeprojectname$.
 """
 
+from app import forms, views
 from datetime import datetime
-from django.conf.urls import url, include
 from django.contrib import admin
-import django.contrib.auth.views
-
-import app.forms
-import app.views
-
-admin.autodiscover()
+from django.urls import path, include
+from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
-    url(r'^', include('app.urls', namespace="app")),
-    url(r'^contact$', app.views.contact, name='contact'),
-    url(r'^about$', app.views.about, name='about'),
-    url(r'^seed$', app.views.seed, name='seed'),
-    url(r'^login/$',
-        django.contrib.auth.views.login,
-        {
-            'template_name': 'app/login.html',
-            'authentication_form': app.forms.BootstrapAuthenticationForm,
-            'extra_context':
+    path('', include(('app.urls', "app"), "appNameTemp")),
+    path('contact', views.contact, name='contact'),
+    path('about/', views.about, name='about'),
+    path('seed/', views.seed, name='seed'),
+    path('login/', 
+        LoginView.as_view
+        (
+            template_name = 'app/login.html', 
+            authentication_form = forms.BootstrapAuthenticationForm,
+            extra_context =
             {
                 'title': 'Log in',
                 'year': datetime.now().year,
             }
-        },
+         ),
         name='login'),
-    url(r'^logout$',
-        django.contrib.auth.views.logout,
-        {
-            'next_page': '/',
-        },
-        name='logout'),
+    path('logout/', LogoutView.as_view(next_page = '/'), name='logout'),
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    url(r'^admin/', include(admin.site.urls)),
+    path('admin/', admin.site.urls)
 ]
