@@ -264,12 +264,17 @@
   <Choose>
     <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
       <ItemGroup>
-        <Reference Include="Microsoft.Web.Core" />
-        <Reference Include="Microsoft.Web.Editor" />
-        <Reference Include="Microsoft.Html.Core" />
-        <Reference Include="Microsoft.Html.Editor" />
-        <Reference Include="Microsoft.VisualStudio.Html.Package" />
         <Reference Include="Microsoft.VisualStudio.Web.HTML" />
+        <Reference Include="Microsoft.Web.Core" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' " />
+        <Reference Include="Microsoft.Web.Editor" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' " />
+        <Reference Include="Microsoft.Html.Core" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' " />
+        <Reference Include="Microsoft.Html.Editor" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' " />
+        <Reference Include="Microsoft.VisualStudio.Html.Package" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' " />
+        <Reference Include="Microsoft.WebTools.Languages.dll" Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' " />
+        <Reference Include="Microsoft.WebTools.Languages.Editor.dll" Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' " />
+        <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' " />
+        <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' " />
+        <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' " />
       </ItemGroup>
       <ItemGroup>
         <Compile Include="DjangoEditorFactory.cs" />

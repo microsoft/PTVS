@@ -15,10 +15,14 @@
 // permissions and limitations under the License.
 
 using System.Linq;
-using Microsoft.Html.Editor.Document;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.Document;
+#else
+using Microsoft.Html.Editor.Document;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {

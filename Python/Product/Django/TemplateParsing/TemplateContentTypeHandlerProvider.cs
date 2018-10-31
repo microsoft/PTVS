@@ -16,7 +16,11 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.ContentType.Def;
+#else
 using Microsoft.Html.Editor.ContentType.Def;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(IContentTypeHandlerProvider))]
