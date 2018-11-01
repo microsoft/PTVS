@@ -20,7 +20,11 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Editor.Controller;
+#else
 using Microsoft.Web.Editor.Controller;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(ICommandFactory))]

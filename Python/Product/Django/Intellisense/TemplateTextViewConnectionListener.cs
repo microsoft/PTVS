@@ -19,10 +19,17 @@ using System.Linq;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Editor.ContainedLanguage;
+using Microsoft.WebTools.Languages.Editor.Controller;
+using Microsoft.WebTools.Languages.Editor.Host;
+using Microsoft.WebTools.Languages.Editor.Services;
+#else
 using Microsoft.Web.Editor.ContainedLanguage;
 using Microsoft.Web.Editor.Controller;
 using Microsoft.Web.Editor.Host;
 using Microsoft.Web.Editor.Services;
+#endif
 using ITextViewCreationListener = Microsoft.VisualStudio.Text.Editor.ITextViewCreationListener;
 
 namespace Microsoft.PythonTools.Django.Intellisense {

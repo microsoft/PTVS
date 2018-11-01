@@ -91,12 +91,6 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void ShowCallStackOnCodeMap() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ShowCallStackOnCodeMap), UseVsCodeDebugger, Interpreter);
-        }
-
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Step3() {

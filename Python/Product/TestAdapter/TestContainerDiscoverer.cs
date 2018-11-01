@@ -42,12 +42,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
-            ValidateArg.NotNull(serviceProvider, "serviceProvider");
-            ValidateArg.NotNull(operationState, "operationState");
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
             _projectInfo = new Dictionary<PythonProject, ProjectInfo>();
-
-            _serviceProvider = serviceProvider;
 
             _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;

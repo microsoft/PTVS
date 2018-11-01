@@ -27,8 +27,13 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public static T GetService<T>(this IServiceProvider serviceProvider, Type serviceType)
             where T : class {
-            ValidateArg.NotNull(serviceProvider, "serviceProvider");
-            ValidateArg.NotNull(serviceType, "serviceType");
+            if (serviceProvider == null) {
+                throw new ArgumentNullException(nameof(serviceProvider));
+            }
+
+            if (serviceType == null) {
+                throw new ArgumentNullException(nameof(serviceType));
+            }
 
             var serviceInstance = serviceProvider.GetService(serviceType) as T;
             if (serviceInstance == null) {

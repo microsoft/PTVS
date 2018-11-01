@@ -22,7 +22,11 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Editor.Services;
+#else
 using Microsoft.Web.Editor.Services;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order]

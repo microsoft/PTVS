@@ -14,9 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Artifacts;
+using Microsoft.WebTools.Languages.Html.Editor.ContentType.Handlers;
+using Microsoft.WebTools.Languages.Html.Editor.Tree;
+#else
 using Microsoft.Html.Core.Artifacts;
 using Microsoft.Html.Editor.ContentType.Handlers;
 using Microsoft.Html.Editor.Tree;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateContentTypeHandler : HtmlServerCodeContentTypeHandler {
