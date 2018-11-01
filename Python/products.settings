@@ -20,5 +20,8 @@
 
     <!-- Exclude ExternalProfilerDriver by default (for the moment) -->
     <IncludeExternalProfilerDriver Condition="'$(IncludeExternalProfilerDriver)' == ''">false</IncludeExternalProfilerDriver>
+
+    <!-- Include LiveShare by default -->
+    <IncludeLiveShare Condition="'$(IncludeLiveShare)' == ''">true</IncludeLiveShare>
   </PropertyGroup>
 </Project>
