@@ -17,10 +17,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Artifacts;
+using Microsoft.WebTools.Languages.Html.Parser.Def;
+using Microsoft.WebTools.Languages.Text;
+#else
 using Microsoft.Html.Core.Artifacts;
 using Microsoft.Html.Core.Parser.Def;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Web.Core.Text;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

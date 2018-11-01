@@ -241,66 +241,6 @@ namespace DebuggerUITests {
             }
         }
 
-        public void ShowCallStackOnCodeMap(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
-            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
-            using (SelectDefaultInterpreter(app, interpreter))
-            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
-                var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
-
-                app.Dte.ExecuteCommand("Debug.ShowCallStackonCodeMap");
-
-                // Got the CodeMap Graph displaying, but it may not have finished processing
-                app.WaitForInputIdle();
-
-                var dgmlKind = "{295A0962-5A59-4F4F-9E12-6BC670C15C3B}";
-
-                Document dgmlDoc = null;
-                for (int i = 1; i <= app.Dte.Documents.Count; i++) {
-                    var doc = app.Dte.Documents.Item(i);
-                    if (doc.Kind == dgmlKind) {
-                        dgmlDoc = doc;
-                        break;
-                    }
-                }
-
-                Assert.IsNotNull(dgmlDoc, "Could not find dgml document");
-
-                var dgmlFile = Path.GetTempFileName();
-                try {
-                    // Save to a temp file. If the code map is not ready, it 
-                    // may have template xml but no data in it, so give it
-                    // some more time and try again.
-                    string fileText = string.Empty;
-                    for (int i = 0; i < 10; i++) {
-                        dgmlDoc.Save(dgmlFile);
-
-                        fileText = File.ReadAllText(dgmlFile);
-                        if (fileText.Contains("SteppingTest3")) {
-                            break;
-                        }
-
-                        Thread.Sleep(250);
-                    }
-
-                    // These are the lines of interest in the DGML File.  If these match, the correct content should be displayed in the code map.
-                    List<string> LinesToMatch = new List<string>() {
-                        @"<Node Id=""\(Name=f @1 IsUnresolved=True\)"" Category=""CodeSchema_CallStackUnresolvedMethod"" Label=""f"">",
-                        @"<Node Id=""@2"" Category=""CodeSchema_CallStackUnresolvedMethod"" Label=""SteppingTest3 module"">",
-                        @"<Node Id=""ExternalCodeRootNode"" Category=""ExternalCallStackEntry"" Label=""External Code"">",
-                        @"<Link Source=""@2"" Target=""\(Name=f @1 IsUnresolved=True\)"" Category=""CallStackDirectCall"">",
-                        @"<Alias n=""1"" Uri=""Assembly=SteppingTest3"" />",
-                        @"<Alias n=""2"" Id=""\(Name=&quot;SteppingTest3 module&quot; @1 IsUnresolved=True\)"" />"
-                    };
-
-                    foreach (var line in LinesToMatch) {
-                        Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(fileText, line), "Expected:\r\n{0}\r\nsActual:\r\n{1}", line, fileText);
-                    }
-                } finally {
-                    File.Delete(dgmlFile);
-                }
-            }
-        }
-
         public void Step3(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))

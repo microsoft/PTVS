@@ -69,9 +69,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-            ValidateArg.NotNull(sources, "sources");
-            ValidateArg.NotNull(runContext, "runContext");
-            ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
+            if (sources == null) {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            if (runContext == null) {
+                throw new ArgumentNullException(nameof(runContext));
+            }
+
+            if (frameworkHandle == null) {
+                throw new ArgumentNullException(nameof(frameworkHandle));
+            }
 
             _cancelRequested.Reset();
 
@@ -132,9 +140,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-            ValidateArg.NotNull(tests, "tests");
-            ValidateArg.NotNull(runContext, "runContext");
-            ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
+            if (tests == null) {
+                throw new ArgumentNullException(nameof(tests));
+            }
+
+            if (runContext == null) {
+                throw new ArgumentNullException(nameof(runContext));
+            }
+
+            if (frameworkHandle == null) {
+                throw new ArgumentNullException(nameof(frameworkHandle));
+            }
 
             _cancelRequested.Reset();
 

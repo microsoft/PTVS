@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -559,7 +559,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To install a new Python interpreter, open Visual Studio Installer and install it from there..
+        ///   Looks up a localized string similar to The Visual Studio Installer supports the following versions of Python. Select one or more to install:.
         /// </summary>
         public static string AddInstalledEnvironmentDescription {
             get {
@@ -568,11 +568,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation.
+        ///   Looks up a localized string similar to Python.
         /// </summary>
         public static string AddInstalledEnvironmentInstallationLabel {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentInstallationLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Already installed.
+        /// </summary>
+        public static string AddInstalledEnvironmentInstalledLabel {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentInstalledLabel", resourceCulture);
             }
         }
         
@@ -586,11 +595,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open Visual Studio Installer.
+        ///   Looks up a localized string similar to Install.
         /// </summary>
         public static string AddInstalledEnvironmentLaunch {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentLaunch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (none).
+        /// </summary>
+        public static string AddInstalledEnvironmentNone {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentNone", resourceCulture);
             }
         }
         
@@ -7306,15 +7324,6 @@ namespace Microsoft.PythonTools {
         public static string WaitForCompleteAnalysisDialog_Waiting {
             get {
                 return ResourceManager.GetString("WaitForCompleteAnalysisDialog_Waiting", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Timed out waiting for environment &apos;{0}&apos; to be detected. The environment may have failed to be created or the environment may not include a Python package..
-        /// </summary>
-        public static string WaitForEnvTimeout {
-            get {
-                return ResourceManager.GetString("WaitForEnvTimeout", resourceCulture);
             }
         }
         

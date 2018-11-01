@@ -17,12 +17,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Html.Editor.Document;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.Editor.Document;
+using Microsoft.WebTools.Languages.Text;
+#else
+using Microsoft.Html.Editor.Document;
 using Microsoft.Web.Core.Text;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
