@@ -228,6 +228,8 @@ namespace Microsoft.PythonTools.Django.Analysis {
 
             // Urls specializers
             analyzer.SpecializeFunction("django.conf.urls", "url", UrlProcessor, true);
+            analyzer.SpecializeFunction("django.urls", "url", UrlProcessor, true);
+            analyzer.SpecializeFunction("django.urls", "path", UrlProcessor, true);
         }
 
         private IAnalysisSet ParseProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
