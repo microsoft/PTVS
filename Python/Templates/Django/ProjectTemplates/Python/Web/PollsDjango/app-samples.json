@@ -18,14 +18,5 @@
             "Public transportation",
             "No commute"
         ]
-    },
-    {
-        "text": "Have you tried R Tools for Visual Studio?",
-        "choices": [
-            "No, I do not use R",
-            "No, but I use/have used R",
-            "Yes, I have used it",
-            "Yes, I use it frequently"
-        ]
     }
 ]
