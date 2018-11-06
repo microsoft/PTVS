@@ -17,11 +17,15 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
@@ -35,19 +39,40 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     [ContentType("xaml")]
     class XamlTextViewCreationListener : IVsTextViewCreationListener {
-        private readonly PythonEditorServices _services;
+        private readonly IServiceProvider _site;
+        private readonly IVsEditorAdaptersFactoryService _editorAdaptersFactory;
+        private readonly IVsRunningDocumentTable _rdt;
+        private PythonEditorServices _services;
 
         [ImportingConstructor]
-        public XamlTextViewCreationListener(PythonEditorServices services) {
-            _services = services;
+        public XamlTextViewCreationListener(
+            [Import(typeof(SVsServiceProvider))] IServiceProvider site,
+            IVsEditorAdaptersFactoryService editorAdaptersFactory,
+            IVsRunningDocumentTable rdt
+        ) {
+            _site = site;
+            _editorAdaptersFactory = editorAdaptersFactory;
+            _rdt = rdt;
         }
 
         public async void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
-            // TODO: We should probably only track text views in Python projects or loose files.
-            var textView = _services.EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
-            
+            var textView = _editorAdaptersFactory.GetWpfTextView(textViewAdapter);
             if (textView == null) {
                 return;
+            }
+
+            // Only track text views in Python projects (we don't get called for loose files)
+            // For example, we may get called for xaml files in UWP projects, in which case we do nothing
+            if (!IsInPythonProject(textView)) {
+                return;
+            }
+
+            // Load Python services now that we know we'll need them
+            if (_services == null) {
+                _services = _site.GetComponentModel().GetService<PythonEditorServices>();
+                if (_services == null) {
+                    return;
+                }
             }
 
             var bi = _services.GetBufferInfo(textView.TextBuffer);
@@ -74,6 +99,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
             await entry.EnsureCodeSyncedAsync(bi.Buffer);
+        }
+
+        private bool IsInPythonProject(IWpfTextView textView) {
+            try {
+                if (textView.TextBuffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument textDocument) && !string.IsNullOrEmpty(textDocument?.FilePath)) {
+                    ErrorHandler.ThrowOnFailure(_rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, textDocument.FilePath, out IVsHierarchy hier, out uint itemId, out IntPtr docData, out _));
+                    try {
+                        ErrorHandler.ThrowOnFailure(hier.GetProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID5.VSHPROPID_ProjectCapabilities, out object propVal));
+                        var capabilities = propVal as string;
+                        if (capabilities != null && capabilities.Contains("Python")) {
+                            return true;
+                        }
+                    } finally {
+                        if (docData != IntPtr.Zero) {
+                            Marshal.Release(docData);
+                        }
+                    }
+                }
+                return false;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                return false;
+            }
         }
 
         private static async Task<AnalysisEntry> AnalyzeXamlFileAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {

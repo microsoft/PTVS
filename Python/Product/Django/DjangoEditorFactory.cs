@@ -16,7 +16,11 @@
 
 using System;
 using System.Runtime.InteropServices;
+#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Html.VS.Package.Common;
+#else
 using Microsoft.VisualStudio.Html.Package.Package.Common;
+#endif
 
 namespace Microsoft.PythonTools.Django {
     [Guid(GuidList.guidDjangoEditorFactoryString)]
