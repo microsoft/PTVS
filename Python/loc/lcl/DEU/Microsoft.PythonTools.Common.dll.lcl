@@ -498,18 +498,33 @@
       </Item>
       <Item ItemId=";AddInstalledEnvironmentDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[To install a new Python interpreter, open Visual Studio Installer and install it from there.]]></Val>
+          <Val><![CDATA[The Visual Studio Installer supports the following versions of Python. Select one or more to install:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Um einen neuen Python-Interpreter zu installieren, öffnen Sie den Visual Studio-Installer und installieren ihn von dort aus.]]></Val>
+            <Val><![CDATA[Der Visual Studio-Installer unterstützt die folgenden Versionen von Python. Wählen Sie mindestens eine zur Installation aus:]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[To install a new Python interpreter, open Visual Studio Installer and install it from there.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";AddInstalledEnvironmentInstallationLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Python installation]]></Val>
+          <Val><![CDATA[Python]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python-Installation]]></Val>
+            <Val><![CDATA[Python]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Python installation]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddInstalledEnvironmentInstalledLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Already installed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bereits installiert]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -525,9 +540,21 @@
       </Item>
       <Item ItemId=";AddInstalledEnvironmentLaunch" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Open Visual Studio Installer]]></Val>
+          <Val><![CDATA[Install]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Visual Studio-Installer öffnen]]></Val>
+            <Val><![CDATA[Installieren]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Open Visual Studio Installer]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddInstalledEnvironmentNone" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[(none)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[(keine)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7140,15 +7167,6 @@
           <Val><![CDATA[Waiting for analysis to complete...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Auf den Abschluss der Analyse wird gewartet...]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";WaitForEnvTimeout" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Timed out waiting for environment '{0}' to be detected. The environment may have failed to be created or the environment may not include a Python package.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Timeout beim Warten auf die Erkennung der Umgebung "{0}". Beim Erstellen der Umgebung ist möglicherweise ein Fehler aufgetreten, oder die Umgebung enthält kein Python-Paket.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
