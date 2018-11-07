@@ -1308,7 +1308,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Yes.
+        ///   Looks up a localized string similar to Create Conda virtual environment.
         /// </summary>
         public static string CondaInfoBarCreateAction {
             get {
@@ -1317,7 +1317,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a conda environment.yml file, but no conda environments. Would you like to create one?.
+        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a conda environment.yml file, but no conda environments..
         /// </summary>
         public static string CondaInfoBarCreateNewMessage {
             get {
@@ -1326,7 +1326,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t Show This Again.
+        ///   Looks up a localized string similar to Don&apos;t show this again.
         /// </summary>
         public static string CondaInfoBarProjectIgnoreAction {
             get {
@@ -1335,7 +1335,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a reference to a missing conda environment &apos;{1}&apos;. Would you like to create it?.
+        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a reference to a missing conda environment &apos;{1}&apos;..
         /// </summary>
         public static string CondaInfoBarRecreateMessage {
             get {
@@ -6026,7 +6026,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package specification file &apos;{0}&apos; was detected in project &apos;{1}&apos;. Would you like to add a virtual environment?.
+        ///   Looks up a localized string similar to Package specification file &apos;{0}&apos; was detected in project &apos;{1}&apos;..
         /// </summary>
         public static string RequirementsTxtCreateVirtualEnvInfoBarMessage {
             get {
@@ -6080,7 +6080,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Yes.
+        ///   Looks up a localized string similar to Create Python virtual environment.
         /// </summary>
         public static string RequirementsTxtInfoBarCreateVirtualEnvAction {
             get {
@@ -6089,7 +6089,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Yes.
+        ///   Looks up a localized string similar to Install packages in &apos;{0}&apos;.
         /// </summary>
         public static string RequirementsTxtInfoBarInstallPackagesAction {
             get {
@@ -6098,7 +6098,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t Show This Again.
+        ///   Looks up a localized string similar to Don&apos;t show this again.
         /// </summary>
         public static string RequirementsTxtInfoBarProjectIgnoreAction {
             get {
@@ -6116,7 +6116,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to One or more packages listed in &apos;{0}&apos; of project &apos;{1}&apos; are missing. Would you like to install packages in the &apos;{2}&apos; environment?.
+        ///   Looks up a localized string similar to One or more packages listed in &apos;{0}&apos; of project &apos;{1}&apos; are missing..
         /// </summary>
         public static string RequirementsTxtInstallPackagesInfoBarMessage {
             get {
