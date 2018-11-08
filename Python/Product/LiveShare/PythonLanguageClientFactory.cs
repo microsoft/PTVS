@@ -6,13 +6,12 @@ using System;
 using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Cascade.Client;
-using Microsoft.Cascade.Extensibility;
-using Microsoft.Cascade.LanguageServices.Common;
+using Microsoft.VisualStudio.LiveShare;
+using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.LiveShare {
-    [ExportCollaborationService(typeof(PythonLanguageClient), Scope = SessionScope.Host, Features = WellKnownFeatures.LspServices)]
+    [ExportCollaborationService(typeof(PythonLanguageClient), Scope = SessionScope.Host)]
     internal class PythonLanguageClientFactory : ICollaborationServiceFactory {
         private readonly IServiceProvider _serviceProvider;
 
@@ -21,8 +20,8 @@ namespace Microsoft.PythonTools.LiveShare {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
-        public async Task<ICollaborationService> CreateServiceAsync(SessionContext sessionContext, CancellationToken cancellationToken) {
-            var languageServerHostService = sessionContext.ServiceProvider.GetService<ILanguageServerHostService>();
+        public async Task<ICollaborationService> CreateServiceAsync(CollaborationSession session, CancellationToken cancellationToken) {
+            var languageServerHostService = session.GetService(typeof(ILanguageServerHostService)) as ILanguageServerHostService;
             if (languageServerHostService == null) {
                 return null;
             }

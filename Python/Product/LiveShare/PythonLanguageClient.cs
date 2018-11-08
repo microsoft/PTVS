@@ -3,10 +3,8 @@
 // </copyright>
 
 using System;
-using Microsoft.Cascade.Extensibility;
-using Microsoft.Cascade.LanguageServices.Common;
-using Microsoft.Cascade.LanguageServices.Contracts;
-using Microsoft.PythonTools;
+using Microsoft.VisualStudio.LiveShare;
+using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 

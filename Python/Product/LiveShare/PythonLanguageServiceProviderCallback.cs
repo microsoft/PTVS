@@ -7,10 +7,10 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Cascade.LanguageServices.Common;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.LiveShare {
             return analyzer;
         }
 
-        public async Task<TOut> RequestAsync<TIn, TOut>(LspRequest<TIn, TOut> method, TIn param, CancellationToken cancellationToken) {
+        public async Task<TOut> RequestAsync<TIn, TOut>(LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
             if (method.Name == Methods.Initialize.Name) {
                 var capabilities = new ServerCapabilities {
                     CompletionProvider = new LSP.CompletionOptions {

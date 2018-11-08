@@ -66,10 +66,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Cascade.LanguageServices.Common" />
-    <Reference Include="Microsoft.Cascade.Common" />
-    <Reference Include="Microsoft.Cascade.Client" />
-    <Reference Include="Microsoft.VisualStudio.Cascade.Contracts" />
+    <Reference Include="Microsoft.VisualStudio.LiveShare" />
+    <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <!-- <Reference Include="Microsoft.VisualStudio.Text.UI" /> -->
