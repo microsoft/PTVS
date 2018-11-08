@@ -48,7 +48,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             DjangoProjectCustomization.Instance,
             FlaskProjectCustomization.Instance,
             GenericWebProjectCustomization.Instance,
-            UwpProjectCustomization.Instance
         };
 
         public ImportSettings(IServiceProvider site, IInterpreterRegistryService service) {

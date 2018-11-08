@@ -4174,15 +4174,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python UWP Project.
-        /// </summary>
-        public static string ImportWizardUwpProjectCustomization {
-            get {
-                return ResourceManager.GetString("ImportWizardUwpProjectCustomization", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Insert Snippet.
         /// </summary>
         public static string InsertSnippet {

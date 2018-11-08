@@ -1,3 +1,0 @@
-﻿
-folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools"
-  file source=Microsoft.PythonTools.Uwp.targets
