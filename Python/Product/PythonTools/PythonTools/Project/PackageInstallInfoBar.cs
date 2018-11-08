@@ -101,13 +101,10 @@ namespace Microsoft.PythonTools.Project {
             messages.Add(new InfoBarTextSpan(
                 Strings.RequirementsTxtInstallPackagesInfoBarMessage.FormatUI(
                     PathUtils.GetFileOrDirectoryName(txtPath),
-                    Project.Caption
+                    Project.Caption,
+                    pm.Factory.Configuration.Description
             )));
-            actions.Add(new InfoBarHyperlink(
-                Strings.RequirementsTxtInfoBarInstallPackagesAction.FormatUI(
-                    pm.Factory.Configuration.Description),
-                    installPackages
-            ));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarInstallPackagesAction, installPackages));
             actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
 
             Logger?.LogEvent(

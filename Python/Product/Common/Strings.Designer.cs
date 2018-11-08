@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -1308,7 +1308,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create Conda virtual environment.
+        ///   Looks up a localized string similar to Create environment.
         /// </summary>
         public static string CondaInfoBarCreateAction {
             get {
@@ -6026,7 +6026,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package specification file &apos;{0}&apos; was detected in project &apos;{1}&apos;..
+        ///   Looks up a localized string similar to Python package specification file &apos;{0}&apos; was detected in project &apos;{1}&apos;..
         /// </summary>
         public static string RequirementsTxtCreateVirtualEnvInfoBarMessage {
             get {
@@ -6080,7 +6080,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create Python virtual environment.
+        ///   Looks up a localized string similar to Create virtual environment.
         /// </summary>
         public static string RequirementsTxtInfoBarCreateVirtualEnvAction {
             get {
@@ -6089,7 +6089,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install packages in &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Install packages.
         /// </summary>
         public static string RequirementsTxtInfoBarInstallPackagesAction {
             get {
@@ -6116,7 +6116,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to One or more packages listed in &apos;{0}&apos; of project &apos;{1}&apos; are missing..
+        ///   Looks up a localized string similar to One or more packages listed in &apos;{0}&apos; of project &apos;{1}&apos; are missing from the &apos;{2}&apos; environment..
         /// </summary>
         public static string RequirementsTxtInstallPackagesInfoBarMessage {
             get {
