@@ -252,29 +252,4 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 ";
         }
     }
-
-    class UwpProjectCustomization : ProjectCustomization {
-        public static readonly ProjectCustomization Instance = new UwpProjectCustomization();
-
-        private UwpProjectCustomization() { }
-
-        public override string DisplayName {
-            get {
-                return Strings.ImportWizardUwpProjectCustomization;
-            }
-        }
-
-        public override void Process(
-            string sourcePath,
-            ProjectRootElement project,
-            Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
-            ProjectPropertyGroupElement globals;
-            if (!groups.TryGetValue("Globals", out globals)) {
-                globals = project.AddPropertyGroup();
-            }
-
-            AddOrSetProperty(globals, "ProjectTypeGuids", "{2b557614-1a2b-4903-b9df-ed20d7b63f3a};{888888A0-9F3D-457C-B088-3A5042F75D52}");
-        }
-    }
 }

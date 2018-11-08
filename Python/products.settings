@@ -9,9 +9,6 @@
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     
-    <!-- Exclude UWP by default -->
-    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
-    
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     

@@ -64,11 +64,6 @@
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         " Condition="$(IncludeIronPython)" />
     <ManagedFiles Include="
-        Microsoft.PythonTools.Uwp.dll;
-        Microsoft.PythonTools.Uwp.Interpreter.dll;
-        Microsoft.PythonTools.Uwp.Wizards.dll;
-        " Condition="$(IncludeUwp)" />
-    <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
     <ManagedFiles Include="

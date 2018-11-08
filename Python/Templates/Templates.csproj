@@ -78,7 +78,7 @@
       <IncludeInVsix>true</IncludeInVsix>
       <VsixSubPath>ItemTemplates\%(RecursiveDir)</VsixSubPath>
     </Content>
-    <Content Include="Core\ProjectTemplates\**\*;Django\ProjectTemplates\**\*;IronPython\ProjectTemplates\**\*;NativeDevelopment\ProjectTemplates\**\*;Web\ProjectTemplates\**\*;Uwp\ProjectTemplates\**\*">
+    <Content Include="Core\ProjectTemplates\**\*;Django\ProjectTemplates\**\*;IronPython\ProjectTemplates\**\*;NativeDevelopment\ProjectTemplates\**\*;Web\ProjectTemplates\**\*">
       <IncludeInVsix>true</IncludeInVsix>
       <VsixSubPath>ProjectTemplates\%(RecursiveDir)</VsixSubPath>
     </Content>
