@@ -2195,31 +2195,31 @@ Expand selection to the full expression?</value>
     <value>Packages installed successfully</value>
   </data>
   <data name="CondaInfoBarCreateNewMessage" xml:space="preserve">
-    <value>The project '{0}' has a conda environment.yml file, but no conda environments. Would you like to create one?</value>
+    <value>The project '{0}' has a conda environment.yml file, but no conda environments.</value>
   </data>
   <data name="CondaInfoBarRecreateMessage" xml:space="preserve">
-    <value>The project '{0}' has a reference to a missing conda environment '{1}'. Would you like to create it?</value>
+    <value>The project '{0}' has a reference to a missing conda environment '{1}'.</value>
   </data>
   <data name="CondaInfoBarCreateAction" xml:space="preserve">
-    <value>Yes</value>
+    <value>Create environment</value>
   </data>
   <data name="CondaInfoBarProjectIgnoreAction" xml:space="preserve">
-    <value>Don't Show This Again</value>
+    <value>Don't show this again</value>
   </data>
   <data name="RequirementsTxtCreateVirtualEnvInfoBarMessage" xml:space="preserve">
-    <value>Package specification file '{0}' was detected in project '{1}'. Would you like to add a virtual environment?</value>
+    <value>Python package specification file '{0}' was detected in project '{1}'.</value>
   </data>
   <data name="RequirementsTxtInstallPackagesInfoBarMessage" xml:space="preserve">
-    <value>One or more packages listed in '{0}' of project '{1}' are missing. Would you like to install packages in the '{2}' environment?</value>
+    <value>One or more packages listed in '{0}' of project '{1}' are missing from the '{2}' environment.</value>
   </data>
   <data name="RequirementsTxtInfoBarCreateVirtualEnvAction" xml:space="preserve">
-    <value>Yes</value>
+    <value>Create virtual environment</value>
   </data>
   <data name="RequirementsTxtInfoBarInstallPackagesAction" xml:space="preserve">
-    <value>Yes</value>
+    <value>Install packages</value>
   </data>
   <data name="RequirementsTxtInfoBarProjectIgnoreAction" xml:space="preserve">
-    <value>Don't Show This Again</value>
+    <value>Don't show this again</value>
   </data>
   <data name="CondaNotFoundError" xml:space="preserve">
     <value>Conda is required for this functionality. Please install either Anaconda or Miniconda and try again.</value>
