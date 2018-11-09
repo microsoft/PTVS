@@ -19,7 +19,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.Web.Editor;
 #if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Editor.Controller.Command;
+using Microsoft.WebTools.Languages.Shared.Editor.Controller.Command;
 #else
 using Microsoft.Web.Editor.Controller.Command;
 #endif
