@@ -17,7 +17,7 @@
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
 #if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Editor.Formatting;
+using Microsoft.WebTools.Languages.Shared.Editor.Formatting;
 #else
 using Microsoft.Web.Editor.Formatting;
 #endif
