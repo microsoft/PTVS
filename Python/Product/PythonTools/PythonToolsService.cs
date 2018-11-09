@@ -124,6 +124,7 @@ namespace Microsoft.PythonTools {
 
             _expansionCompletions = new ExpansionCompletionSource(Site);
             InitializeLogging();
+            EnvironmentSwitcherManager.Initialize();
         }
 
         public void Dispose() {

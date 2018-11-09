@@ -264,6 +264,16 @@ namespace Microsoft.PythonTools {
             return base.CreateToolWindow(ref toolWindowType, id);
         }
 
+        protected override int QueryClose(out bool canClose) {
+            var res = base.QueryClose(out canClose);
+
+            if (canClose) {
+                var pyService = this.GetPythonToolsService();
+                pyService.EnvironmentSwitcherManager.IsClosing = true;
+            }
+
+            return res;
+        }
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
             if (File.Exists(filename)) {
                 VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);

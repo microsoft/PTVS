@@ -541,6 +541,33 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
+        public void SwitcherWorkspace(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            var python27 = PythonPaths.Python27_x64;
+            python27.AssertInstalled();
+
+            var folders = TestData.GetTempPath();
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "EnvironmentsSwitcherFolders"), folders);
+
+            var folder1 = Path.Combine(folders, "Folder1");
+            var folder2 = Path.Combine(folders, "Folder2");
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                app.OpenFolder(folder1);
+                app.OpenDocument(Path.Combine(folder1, "app1.py"));
+                CheckSwitcherText(app, globalDefault37.Configuration.Description);
+
+                app.OpenFolder(folder2);
+                app.OpenDocument(Path.Combine(folder2, "app2.py"));
+                CheckSwitcherText(app, python27.Configuration.Description);
+
+                app.Dte.Solution.Close();
+                CheckSwitcherHidden(app);
+            }
+        }
+
         public void SwitcherNoProject(PythonVisualStudioApp app) {
             var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
             globalDefault37.AssertInstalled();

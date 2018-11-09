@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Internal.VisualStudio.Shell;
 using Microsoft.PythonTools.Analysis;
@@ -26,8 +26,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-
-// TODO: handle the workspace scenario
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.PythonTools.Environments {
     /// <summary>
@@ -41,9 +40,12 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly IVsMonitorSelection _monitorSelection;
+        private readonly IVsShell _shell;
+        private readonly IVsFolderWorkspaceService _workspaceService;
         private uint _selectionEventsCookie;
         private IVsHierarchy _previousHier;
-        private PythonProjectNode _project;
+        private IEnvironmentSwitcherContext _context;
+        private bool _isInitialized;
 
         public event EventHandler EnvironmentsChanged;
 
@@ -52,20 +54,19 @@ namespace Microsoft.PythonTools.Environments {
             _optionsService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
             _monitorSelection = serviceProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
-
-            _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
-            _registryService.InterpretersChanged += OnInterpretersChanged;
-            _monitorSelection.AdviseSelectionEvents(this, out _selectionEventsCookie);
-
+            _shell = serviceProvider.GetService(typeof(SVsShell)) as IVsShell;
+            _workspaceService = serviceProvider.GetComponentModel().GetService<IVsFolderWorkspaceService>();
             AllFactories = Enumerable.Empty<IPythonInterpreterFactory>();
         }
+
+        public bool IsClosing { get; set; }
 
         /// <summary>
         /// Returns whether a Python project, workspace or document is currently
         /// selected / active. Used to control the visibility of the status bar
         /// switcher.
         /// </summary>
-        public bool IsInPythonMode { get; private set; }
+        public bool IsInPythonMode => Context != null;
 
         /// <summary>
         /// Interpreter factory that is currently applicable to the current
@@ -86,46 +87,64 @@ namespace Microsoft.PythonTools.Environments {
         /// </remarks>
         public IEnumerable<IPythonInterpreterFactory> AllFactories { get; private set; }
 
-        public PythonProjectNode Project {
-            get => _project;
+        public IEnvironmentSwitcherContext Context {
+            get => _context;
             private set {
-                if (_project != null) {
-                    _project.ActiveInterpreterChanged -= OnProjectActiveInterpreterChanged;
-                    _project.InterpreterFactoriesChanged -= OnProjectInterpreterFactoriesChanged;
+                if (_context != null) {
+                    _context.EnvironmentsChanged -= OnInterpretersChanged;
+                    _context.Dispose();
                 }
 
-                _project = value;
+                _context = value;
 
-                if (_project != null) {
-                    _project.ActiveInterpreterChanged += OnProjectActiveInterpreterChanged;
-                    _project.InterpreterFactoriesChanged += OnProjectInterpreterFactoriesChanged;
+                if (_context != null) {
+                    _context.EnvironmentsChanged += OnInterpretersChanged;
                 }
+            }
+        }
+
+        public void Initialize() {
+            if (_isInitialized) {
+                return;
+            }
+
+            _isInitialized = true;
+
+            _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
+            _registryService.InterpretersChanged += OnInterpretersChanged;
+            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
+            _monitorSelection.AdviseSelectionEvents(this, out _selectionEventsCookie);
+
+            SetInitialContext();
+        }
+
+        public void Dispose() {
+            if (_isInitialized) {
+                _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
+                _registryService.InterpretersChanged -= OnInterpretersChanged;
+                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
+                _monitorSelection.UnadviseSelectionEvents(_selectionEventsCookie);
+            }
+
+            if (Context != null) {
+                Context.EnvironmentsChanged -= OnInterpretersChanged;
+                Context.Dispose();
             }
         }
 
         public string GetSwitcherCommandKeyBinding() {
-            try {
-                return KeyBindingHelper.GetGlobalKeyBinding(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidViewEnvironmentStatus);
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                // I've seen NRE thrown during VS shutdown
-                return null;
-            }
+            // Don't call this during close because it throws an NRE
+            return IsClosing
+                ? null :
+                KeyBindingHelper.GetGlobalKeyBinding(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidViewEnvironmentStatus);
         }
 
         public Task SwitchToFactoryAsync(IPythonInterpreterFactory factory) {
-            if (factory == null) {
-                throw new ArgumentNullException(nameof(factory));
-            }
+            return Context != null ? Context.ChangeFactoryAsync(factory) : Task.CompletedTask;
+        }
 
-            if (Project != null) {
-                Project.SetInterpreterFactory(factory);
-            } else {
-                // For now we change the global default, but later we will improve this
-                // so you can select different interpreter for a python file without
-                // affecting the global default.
-                _optionsService.DefaultInterpreter = factory;
-            }
-
+        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+            RefreshFactories();
             return Task.CompletedTask;
         }
 
@@ -137,48 +156,73 @@ namespace Microsoft.PythonTools.Environments {
             RefreshFactories();
         }
 
-        private void OnProjectInterpreterFactoriesChanged(object sender, EventArgs e) {
-            Debug.Assert(sender == Project);
-            RefreshFactories();
-        }
-
-        private void OnProjectActiveInterpreterChanged(object sender, EventArgs e) {
-            Debug.Assert(sender == Project);
-            RefreshFactories();
-        }
-
         private void RefreshFactories() {
-            if (Project != null) {
-                AllFactories = Project.InterpreterFactories.ToArray();
-                CurrentFactory = Project.GetPythonInterpreterFactory();
-            } else {
-                AllFactories = _registryService.Interpreters.ToArray();
-                CurrentFactory = _optionsService.DefaultInterpreter;
+            if (IsClosing) {
+                return;
             }
 
+            AllFactories = Context?.AllFactories ?? Enumerable.Empty<IPythonInterpreterFactory>();
+            CurrentFactory = Context?.CurrentFactory;
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void Reset() {
-            Project = null;
-            IsInPythonMode = false;
+            if (IsClosing) {
+                return;
+            }
+
+            Context = null;
             AllFactories = Enumerable.Empty<IPythonInterpreterFactory>();
             CurrentFactory = null;
 
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public int OnSelectionChanged(IVsHierarchy pHierOld, uint itemidOld, IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew) {
+        private void SetInitialContext() {
+            IntPtr hierPtr = IntPtr.Zero;
             try {
-                if (pHierNew != null && ErrorHandler.Succeeded(pHierNew.GetCanonicalName(itemidNew, out string filePath))) {
+                _monitorSelection.GetCurrentSelection(out hierPtr, out uint item, out _, out _);
+                var hier = (hierPtr != IntPtr.Zero ? Marshal.GetObjectForIUnknown(hierPtr) : null) as IVsHierarchy;
+                if (hier != null) {
+                    HandleSelection(hier, item);
+                } else if (ErrorHandler.Succeeded(_monitorSelection.GetCurrentElementValue(VSConstants.DocumentFrame, out object elementVal))) {
+                    HandleElementValue(elementVal);
+                } else {
+                    Reset();
+                }
+            } finally {
+                if (hierPtr != IntPtr.Zero) {
+                    Marshal.Release(hierPtr);
+                }
+            }
+        }
+
+        private void UpdateContext(PythonProjectNode project, string filePath) {
+            if (project != null) {
+                Context = new EnvironmentSwitcherProjectContext(project);
+            } else if (_workspaceService.CurrentWorkspace != null) {
+                Context = new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _workspaceService.CurrentWorkspace);
+            } else if (ModulePath.IsPythonSourceFile(filePath)) {
+                Context = new EnvironmentSwitcherFileContext(_serviceProvider, filePath);
+            } else {
+                Context = null;
+            }
+
+            RefreshFactories();
+        }
+
+        private void HandleSelection(IVsHierarchy pHierNew, uint itemidNew) {
+            try {
+                if (pHierNew != null &&
+                    (ErrorHandler.Succeeded(pHierNew.GetCanonicalName(itemidNew, out string filePath)) ||
+                    _workspaceService.CurrentWorkspace != null)) {
                     // We can get called multiple times for the same project,
                     // only process the first time it changes. It doesn't matter
                     // if it's a different document, since they all use the same
                     // environment(s).
                     if (pHierNew != _previousHier) {
-                        Project = pHierNew.GetPythonProject();
-                        IsInPythonMode = Project != null || ModulePath.IsPythonSourceFile(filePath);
-                        RefreshFactories();
+                        var project = pHierNew.GetPythonProject();
+                        UpdateContext(project, filePath);
                     }
                 } else {
                     Reset();
@@ -189,50 +233,47 @@ namespace Microsoft.PythonTools.Environments {
                 // Safety catch - we can't test all VS extensions / project types
                 Reset();
             }
-
-            return VSConstants.S_OK;
         }
 
-        public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew) {
+        private void HandleElementValue(object varValueNew) {
             try {
-                if (VSConstants.DocumentFrame == elementid) {
-                    var frame = varValueNew as IVsWindowFrame;
-                    if (frame != null && ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out object filePathObj))) {
-                        object hierObj;
-                        if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_Hierarchy, out hierObj))) {
-                            hierObj = null;
-                        }
-
-                        var hier = hierObj as IVsHierarchy;
-                        var filePath = filePathObj as string;
-                        Project = hier?.GetPythonProject();
-                        IsInPythonMode = Project != null || ModulePath.IsPythonSourceFile(filePath);
-                        RefreshFactories();
-                    } else {
-                        Reset();
+                var frame = varValueNew as IVsWindowFrame;
+                if (frame != null && ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out object filePathObj))) {
+                    object hierObj;
+                    if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_Hierarchy, out hierObj))) {
+                        hierObj = null;
                     }
+
+                    var hier = hierObj as IVsHierarchy;
+                    var filePath = filePathObj as string;
+                    var project = hier?.GetPythonProject();
+                    UpdateContext(project, filePath);
+                } else {
+                    _previousHier = null;
+                    Reset();
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 // Safety catch - we can't test all VS extensions / project types
                 Reset();
             }
+        }
+
+        int IVsSelectionEvents.OnSelectionChanged(IVsHierarchy pHierOld, uint itemidOld, IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew) {
+            HandleSelection(pHierNew, itemidNew);
 
             return VSConstants.S_OK;
         }
 
-        public int OnCmdUIContextChanged(uint dwCmdUICookie, int fActive) {
-            return VSConstants.S_OK;
-        }
-
-        public void Dispose() {
-            _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
-            _registryService.InterpretersChanged -= OnInterpretersChanged;
-            _monitorSelection.UnadviseSelectionEvents(_selectionEventsCookie);
-
-            if (Project != null) {
-                Project.ActiveInterpreterChanged -= OnProjectActiveInterpreterChanged;
-                Project.InterpreterFactoriesChanged -= OnProjectInterpreterFactoriesChanged;
+        int IVsSelectionEvents.OnElementValueChanged(uint elementid, object varValueOld, object varValueNew) {
+            if (VSConstants.DocumentFrame == elementid) {
+                HandleElementValue(varValueNew);
             }
+
+            return VSConstants.S_OK;
+        }
+
+        int IVsSelectionEvents.OnCmdUIContextChanged(uint dwCmdUICookie, int fActive) {
+            return VSConstants.S_OK;
         }
     }
 }

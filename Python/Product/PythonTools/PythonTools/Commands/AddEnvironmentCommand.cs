@@ -34,7 +34,9 @@ namespace Microsoft.PythonTools.Commands {
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
         public async Task InvokeAsync() {
-            var project = _envSwitchMgr.Project;
+            // We'll add support for open folder later
+            // https://github.com/Microsoft/PTVS/issues/4852
+            var project = (_envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
             if (project == null) {
                 var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
