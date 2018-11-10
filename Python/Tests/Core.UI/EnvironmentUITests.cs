@@ -551,17 +551,33 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             var folders = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "EnvironmentsSwitcherFolders"), folders);
 
-            var folder1 = Path.Combine(folders, "Folder1");
-            var folder2 = Path.Combine(folders, "Folder2");
+            var folder1 = Path.Combine(folders, "WorkspaceWithoutSettings");
+            var folder2 = Path.Combine(folders, "WorkspaceWithSettings");
+            var folder3 = Path.Combine(folders, "WorkspaceNoPython");
 
             using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Hidden before any file is opened
+                CheckSwitcherHidden(app);
+
+                // Workspace without PythonSettings.json shows global default
                 app.OpenFolder(folder1);
                 app.OpenDocument(Path.Combine(folder1, "app1.py"));
                 CheckSwitcherText(app, globalDefault37.Configuration.Description);
 
+                // Workspace with PythonSettings.json - Python 2.7 (64-bit)
                 app.OpenFolder(folder2);
                 app.OpenDocument(Path.Combine(folder2, "app2.py"));
                 CheckSwitcherText(app, python27.Configuration.Description);
+
+                // Keep showing even after opening non-python files
+                app.OpenDocument(Path.Combine(folder2, "app2.cpp"));
+                CheckSwitcherText(app, python27.Configuration.Description);
+
+                // Workspace without python file
+                app.OpenFolder(folder3);
+                CheckSwitcherHidden(app);
+                app.OpenDocument(Path.Combine(folder3, "app3.cpp"));
+                CheckSwitcherHidden(app);
 
                 app.Dte.Solution.Close();
                 CheckSwitcherHidden(app);

@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Environments {
         private IVsHierarchy _previousHier;
         private IEnvironmentSwitcherContext _context;
         private bool _isInitialized;
+        private bool _isPythonWorkspace;
 
         public event EventHandler EnvironmentsChanged;
 
@@ -144,6 +145,7 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+            _isPythonWorkspace = false;
             RefreshFactories();
             return Task.CompletedTask;
         }
@@ -198,11 +200,14 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private void UpdateContext(PythonProjectNode project, string filePath) {
+            var isPythonFile = ModulePath.IsPythonSourceFile(filePath);
+
             if (project != null) {
                 Context = new EnvironmentSwitcherProjectContext(project);
-            } else if (_workspaceService.CurrentWorkspace != null) {
+            } else if (_workspaceService.CurrentWorkspace != null && (_isPythonWorkspace || isPythonFile)) {
+                _isPythonWorkspace = true;
                 Context = new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _workspaceService.CurrentWorkspace);
-            } else if (ModulePath.IsPythonSourceFile(filePath)) {
+            } else if (isPythonFile) {
                 Context = new EnvironmentSwitcherFileContext(_serviceProvider, filePath);
             } else {
                 Context = null;
