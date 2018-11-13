@@ -7382,6 +7382,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Workspace Environment.
+        /// </summary>
+        public static string WorkspaceEnvironmentDescription {
+            get {
+                return ResourceManager.GetString("WorkspaceEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to # Not wrapped:
         ///# There should be one-- and preferably only one --obvious way to do it..
         /// </summary>

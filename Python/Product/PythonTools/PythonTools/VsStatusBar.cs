@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools {
         private readonly IServiceProvider _serviceProvider;
         private readonly IdleManager _idleManager;
         private ItemsControl _itemsControl;
-        private Visual _visualRoot;
         private bool _onIdleScheduled;
 
         public VsStatusBar(IServiceProvider serviceProvider) {
@@ -62,15 +61,14 @@ namespace Microsoft.PythonTools {
                 return true;
             }
 
-            if (_visualRoot == null) {
-                _visualRoot = GetRootVisual();
-            }
-
-            if (_visualRoot == null) {
+            // Note that the visual root may be wrong initialy due to Get to Code dialog
+            // so don't cache it, otherwise we may never find the status bar.
+            var visualRoot = GetRootVisual();
+            if (visualRoot == null) {
                 return false;
             }
 
-            var resizeGrip = _visualRoot.FindFirstVisualChildBreadthFirst<ResizeGrip>();
+            var resizeGrip = visualRoot.FindFirstVisualChildBreadthFirst<ResizeGrip>();
             var statusBarPanel = resizeGrip?.Parent as DockPanel;
             if (statusBarPanel == null) {
                 return false;

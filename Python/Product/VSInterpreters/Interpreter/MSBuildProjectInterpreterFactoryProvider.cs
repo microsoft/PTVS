@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         pathVar,
                         arch,
                         ver,
-                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
                     ));
                 }
 

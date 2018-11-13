@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.Environments {
 
                 _previousHier = pHierNew;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                // Safety catch - we can't test all VS extensions / project types
+                // Safety catch - selection can be from unknown or untested packages/project types
                 Reset();
             }
         }
@@ -258,7 +258,7 @@ namespace Microsoft.PythonTools.Environments {
                     Reset();
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                // Safety catch - we can't test all VS extensions / project types
+                // Safety catch - selection can be from unknown or untested packages/project types
                 Reset();
             }
         }

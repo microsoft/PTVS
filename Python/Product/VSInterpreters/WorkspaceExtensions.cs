@@ -22,22 +22,14 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Workspace;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools {
     static class WorkspaceExtensions {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
 
-        public static string GetInterpreter(this IWorkspace workspace, IInterpreterRegistryService registryService, IInterpreterOptionsService optionsService) {
+        public static string GetInterpreter(this IWorkspace workspace) {
             if (workspace == null) {
                 throw new ArgumentNullException(nameof(workspace));
-            }
-
-            if (registryService == null) {
-                throw new ArgumentNullException(nameof(registryService));
-            }
-
-            if (optionsService == null) {
-                throw new ArgumentNullException(nameof(optionsService));
             }
 
             var settingsMgr = workspace.GetSettingsManager();
@@ -48,6 +40,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task SetInterpreter(this IWorkspace workspace, string interpreter) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
             var settingsMgr = workspace.GetSettingsManager();
             using (var persist = await settingsMgr.GetPersistanceAsync(true)) {
                 var writer = await persist.GetWriter(PythonSettingsType);
@@ -60,7 +56,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static IPythonInterpreterFactory GetInterpreterFactory(this IWorkspace workspace, IInterpreterRegistryService registryService, IInterpreterOptionsService optionsService) {
-            var interpreter = workspace.GetInterpreter(registryService, optionsService);
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            if (registryService == null) {
+                throw new ArgumentNullException(nameof(registryService));
+            }
+
+            if (optionsService == null) {
+                throw new ArgumentNullException(nameof(optionsService));
+            }
+
+            var interpreter = workspace.GetInterpreter();
 
             IPythonInterpreterFactory factory = null;
             if (interpreter != null) {
@@ -76,8 +84,12 @@ namespace Microsoft.PythonTools.Project {
             return factory ?? optionsService.DefaultInterpreter;
         }
 
-        public static async Task SetInterpreterFactory(this IWorkspace workspace, IPythonInterpreterFactory factory) {
-            await workspace.SetInterpreter(factory.Configuration.Id);
+        public static Task SetInterpreterFactory(this IWorkspace workspace, IPythonInterpreterFactory factory) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            return workspace.SetInterpreter(factory.Configuration.Id);
         }
     }
 }

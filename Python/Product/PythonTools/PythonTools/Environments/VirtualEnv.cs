@@ -309,7 +309,7 @@ namespace Microsoft.PythonTools.Environments {
                 pathVar,
                 baseInterpreter.Configuration.Architecture,
                 baseInterpreter.Configuration.Version,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
             );
         }
 

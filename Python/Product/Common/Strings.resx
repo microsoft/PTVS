@@ -2040,6 +2040,9 @@ Expand selection to the full expression?</value>
     <value>Packages (PyPI)</value>
     <comment>Do not translate 'PyPI'</comment>
   </data>
+  <data name="WorkspaceEnvironmentDescription" xml:space="preserve">
+    <value>Workspace Environment</value>
+  </data>
   <data name="CondaEnvironmentDescription" xml:space="preserve">
     <value>Conda Environment</value>
     <comment>Do not translate 'Conda'</comment>
