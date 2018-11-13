@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Settings;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -37,7 +36,6 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private IWorkspace _workspace;
         private IWorkspaceSettingsManager _workspaceSettingsMgr;
@@ -54,12 +52,12 @@ namespace Microsoft.PythonTools.Interpreter {
             new Version(3, 0)
         };
 
+        internal event EventHandler DiscoveryStarted;
+
         [ImportingConstructor]
         public WorkspaceInterpreterFactoryProvider(
-            [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null,
             [Import] IVsFolderWorkspaceService workspaceService = null
         ) {
-            _site = site;
             _workspaceService = workspaceService;
             _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
         }
@@ -140,7 +138,9 @@ namespace Microsoft.PythonTools.Interpreter {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
-            
+
+            DiscoveryStarted?.Invoke(this, EventArgs.Empty);
+
             // Discover the available interpreters...
             bool anyChanged = false;
 
@@ -171,6 +171,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 // We are aborting, so silently return with no results.
                 return;
             }
+
+            found = found.Where(i => !ExcludedVersions.Contains(i.Configuration.Version)).ToList();
 
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
