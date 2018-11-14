@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (saveDirtyFiles) {
-                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, filename)) {
+                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, ref filename)) {
                         return false;
                     }
 
@@ -358,11 +358,13 @@ namespace Microsoft.PythonTools {
             return true;
         }
 
-        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, string fileName) {
+        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName) {
             var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
 
             if (rdt != null && rdt4 != null) {
+                // The save operation may move the file, so adjust filename 
+                // to the new location if necessary. 
                 var launchFileCookie = isLaunchFileOpen ? rdt4.GetDocumentCookie(fileName) : VSConstants.VSCOOKIE_NIL;
 
                 // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
