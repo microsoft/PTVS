@@ -50,12 +50,8 @@ namespace Microsoft.PythonTools.Commands {
                 : CommandStatus.SupportedAndEnabled;
         }
 
-        public string GetText(int index) {
-            return _allFactories[index].Configuration.Description;
-        }
+        public string GetText(int index) => _allFactories[index].Configuration.Description;
 
-        public async Task InvokeAsync(int index) {
-            await _envSwitchMgr.SwitchToFactoryAsync(_allFactories[index]);
-        }
+        public Task InvokeAsync(int index) => _envSwitchMgr.SwitchToFactoryAsync(_allFactories[index]);
     }
 }

@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
-        public async Task InvokeAsync() {
+        public Task InvokeAsync() {
             // We'll add support for open folder later
             // https://github.com/Microsoft/PTVS/issues/4852
             var project = (_envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Commands {
             string ymlPath = project?.GetEnvironmentYmlPath();
             string txtPath = project?.GetRequirementsTxtPath();
 
-            await AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_serviceProvider, project, null, ymlPath, txtPath);
+            return AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_serviceProvider, project, null, ymlPath, txtPath);
         }
     }
 }
