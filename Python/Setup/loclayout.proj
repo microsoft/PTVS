@@ -52,6 +52,9 @@
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         " Condition="$(IncludeIronPython)" />
     <ManagedFiles Include="
+        Microsoft.PythonTools.Miniconda.dll;
+        " Condition="$(IncludeMiniconda)" />
+    <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
     <ManagedFiles Include="
