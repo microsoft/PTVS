@@ -169,15 +169,8 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private void Reset() {
-            if (IsClosing) {
-                return;
-            }
-
             Context = null;
-            AllFactories = Enumerable.Empty<IPythonInterpreterFactory>();
-            CurrentFactory = null;
-
-            EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
+            RefreshFactories();
         }
 
         private void SetInitialContext() {
@@ -229,7 +222,7 @@ namespace Microsoft.PythonTools.Environments {
                         var project = pHierNew.GetPythonProject();
                         UpdateContext(project, filePath);
                     }
-                } else {
+                } else if (!_isPythonWorkspace) {
                     Reset();
                 }
 
