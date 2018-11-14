@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 #if DEV16_OR_LATER
 using Microsoft.WebTools.Languages.Html.Editor.Document;
-using Microsoft.WebTools.Languages.Text;
+using Microsoft.WebTools.Languages.Shared.Text;
 #else
 using Microsoft.Html.Editor.Document;
 using Microsoft.Web.Core.Text;

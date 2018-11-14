@@ -20,13 +20,13 @@ class Poll(models.Model):
 
 class Choice(models.Model):
     """A poll choice object for use in the application views and repository."""
-    poll = models.ForeignKey(Poll)
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
     text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
 
     def votes_percentage(self):
         """Calculates the percentage of votes for this choice."""
-        total = self.poll.total_votes()
+        total=self.poll.total_votes()
         return self.votes / float(total) * 100 if total > 0 else 0
 
     def __unicode__(self):

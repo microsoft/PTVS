@@ -16,14 +16,12 @@
 
 using System;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -330,7 +328,19 @@ namespace Microsoft.PythonTools {
         }
 
         internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
-            var project = (IPythonProject)provider.GetProjectFromOpenFile(filename) ?? new DefaultPythonProject(provider, filename);
+            bool isLaunchFileOpen = true;
+            var project = (IPythonProject)provider.GetProjectFromOpenFile(filename);
+
+            if (project == null) {
+                project = (IPythonProject)provider.GetProjectContainingFile(filename);
+
+                if (project == null) {
+                    project = new DefaultPythonProject(provider, filename);
+                } else {
+                    isLaunchFileOpen = false;
+                }
+            }
+
             try {
                 var starter = GetLauncher(provider, project);
                 if (starter == null) {
@@ -339,28 +349,10 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (saveDirtyFiles) {
-                    var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-                    if (rdt != null && rdt4 != null) {
-                        // The save operation may move the file, so adjust filename
-                        // to the new location if necessary.
-                        var launchFileCookie = rdt4.GetDocumentCookie(filename);
-
-                        // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
-                        // when VS settings include prompt for save on build
-                        var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
-                        var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
-                        if (hr == VSConstants.E_ABORT) {
-                            return false;
-                        }
-
-                        if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
-                            var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
-                            if (!string.IsNullOrEmpty(launchFileMoniker)) {
-                                filename = launchFileMoniker;
-                            }
-                        }
+                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, ref filename)) {
+                        return false;
                     }
+
                 }
 
                 starter.LaunchFile(filename, debug);
@@ -389,6 +381,34 @@ namespace Microsoft.PythonTools {
                 return false;
             }
 
+            return true;
+        }
+
+        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName) {
+            var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+
+            if (rdt != null && rdt4 != null) {
+                // The save operation may move the file, so adjust filename 
+                // to the new location if necessary. 
+                var launchFileCookie = isLaunchFileOpen ? rdt4.GetDocumentCookie(fileName) : VSConstants.VSCOOKIE_NIL;
+
+                // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
+                // when VS settings include prompt for save on build
+                var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
+                var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
+                if (hr == VSConstants.E_ABORT) {
+                    return false;
+
+                }
+
+                if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
+                    var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
+                    if (!string.IsNullOrEmpty(launchFileMoniker)) {
+                        fileName = launchFileMoniker;
+                    }
+                }
+            }
             return true;
         }
 

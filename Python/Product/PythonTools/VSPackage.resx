@@ -359,7 +359,7 @@ Opens Cookiecutter window where you can create the project from a cookiecutter t
     <value>Python Extension Module</value>
   </data>
   <data name="5025" xml:space="preserve">
-    <value>Implements a native extension module for CPython 3.5 or later</value>
+    <value>Implements a native extension module for CPython 3.6 or later</value>
   </data>
   <data name="5026" xml:space="preserve">
     <value>Bottle Web Role</value>

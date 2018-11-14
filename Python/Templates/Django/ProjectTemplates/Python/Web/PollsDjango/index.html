@@ -21,13 +21,13 @@
 <p>No polls available.</p>
 <br />
 <p>You can add a set of sample polls.</p>
-<form action="/seed" method="post">
+<form action="/seed/" method="post">
     {% csrf_token %}
     <button class="btn btn-primary" type="submit">Create Sample Polls</button>
 </form>
 <br />
 <p>You can design new polls using the Django administration interface.</p>
-<p><a href="/admin" class="btn btn-primary btn-large">Django Administration &raquo;</a></p>
+<p><a href="/admin/" class="btn btn-primary btn-large">Django Administration &raquo;</a></p>
 {% endif %}
 
 {% endblock %}

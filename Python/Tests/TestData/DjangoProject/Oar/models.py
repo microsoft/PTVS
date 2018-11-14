@@ -14,7 +14,7 @@ class Poll(models.Model):
     was_published_today.short_description = 'Published today?'
 
 class Choice(models.Model):
-    poll = models.ForeignKey(Poll)
+    poll = models.ForeignKey(Poll, on_delete = models.CASCADE)
     choice = models.CharField(max_length=200)
     votes = models.IntegerField()
 

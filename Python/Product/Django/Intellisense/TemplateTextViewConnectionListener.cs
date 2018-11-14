@@ -20,10 +20,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 #if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Editor.ContainedLanguage;
-using Microsoft.WebTools.Languages.Editor.Controller;
-using Microsoft.WebTools.Languages.Editor.Host;
-using Microsoft.WebTools.Languages.Editor.Services;
+using Microsoft.WebTools.Languages.Shared.Editor.ContainedLanguage;
+using Microsoft.WebTools.Languages.Shared.Editor.Controller;
+using Microsoft.WebTools.Languages.Shared.Editor.Host;
+using Microsoft.WebTools.Languages.Shared.Editor.Services;
 #else
 using Microsoft.Web.Editor.ContainedLanguage;
 using Microsoft.Web.Editor.Controller;

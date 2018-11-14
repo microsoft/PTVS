@@ -104,8 +104,8 @@ namespace Microsoft.PythonTools.Project {
                     Project.Caption,
                     pm.Factory.Configuration.Description
             )));
-            actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarInstallPackagesAction, installPackages));
-            actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarInstallPackagesAction, installPackages));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
 
             Logger?.LogEvent(
                 PythonLogEvent.PackageInstallInfoBar,
