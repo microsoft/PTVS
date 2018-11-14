@@ -499,8 +499,8 @@
       <Item ItemId=";AddInstalledEnvironmentDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The Visual Studio Installer supports the following versions of Python. Select one or more to install:]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Pokud chcete nainstalovat nový interpret Pythonu, otevřete Instalační program pro Visual Studio a interpret nainstalujte přes něj.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Instalační program pro Visual Studio podporuje následující verze Pythonu. Vyberte nejméně jednu, která se má nainstalovat:]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[To install a new Python interpreter, open Visual Studio Installer and install it from there.]]></Val>
@@ -523,6 +523,9 @@
       <Item ItemId=";AddInstalledEnvironmentInstalledLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Already installed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Už nainstalováno]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
