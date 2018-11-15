@@ -1,0 +1,27 @@
+{
+  "arch": "x86_64",
+  "build": "hc54c509_2",
+  "build_number": 2,
+  "depends": [
+    "vc 14.*"
+  ],
+  "files": [
+    "Library/bin/yaml.dll",
+    "Library/include/yaml.h",
+    "Library/lib/yaml.lib",
+    "Library/lib/yaml_static.lib"
+  ],
+  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "license": "MIT",
+  "link": {
+    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\yaml-0.1.7-hc54c509_2",
+    "type": "hard-link"
+  },
+  "md5": "eaeee418b8ac33d392ea03bb9b6f389d",
+  "name": "yaml",
+  "platform": "win",
+  "subdir": "win-64",
+  "timestamp": 1510609877038,
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/yaml-0.1.7-hc54c509_2.tar.bz2",
+  "version": "0.1.7"
+}

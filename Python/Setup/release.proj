@@ -17,6 +17,9 @@
     <ReleaseFile Include="swix\InstallIntoDev15.ps1">
       <Name>InstallIntoDev15.ps1</Name>
     </ReleaseFile>
+    <ReleaseFile Include="swix\InstallIntoDev16.ps1">
+      <Name>InstallIntoDev16.ps1</Name>
+    </ReleaseFile>
     <ReleaseFile Include="$(BinariesOutputPath)AnacondaInstallLauncher.exe">
       <Name>AnacondaInstallLauncher.exe</Name>
     </ReleaseFile>
