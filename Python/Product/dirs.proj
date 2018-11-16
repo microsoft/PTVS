@@ -49,8 +49,7 @@
     <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
-    <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
-
+    
     <ProjectFile Include="VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'"/>
     <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
 
