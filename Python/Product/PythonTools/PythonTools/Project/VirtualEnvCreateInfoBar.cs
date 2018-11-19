@@ -90,8 +90,8 @@ namespace Microsoft.PythonTools.Project {
                     PathUtils.GetFileOrDirectoryName(txtPath),
                     Project.Caption
             )));
-            actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, createVirtualEnv));
-            actions.Add(new InfoBarButton(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, createVirtualEnv));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
 
             Logger?.LogEvent(
                 PythonLogEvent.VirtualEnvCreateInfoBar,

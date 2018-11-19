@@ -16,8 +16,8 @@
 
 using Microsoft.VisualStudio.Text.Editor;
 #if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Editor.Completion;
-using Microsoft.WebTools.Languages.Editor.Services;
+using Microsoft.WebTools.Languages.Shared.Editor.Completion;
+using Microsoft.WebTools.Languages.Shared.Editor.Services;
 #else
 using Microsoft.Web.Editor.Completion;
 using Microsoft.Web.Editor.Services;

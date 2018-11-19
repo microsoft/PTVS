@@ -89,8 +89,8 @@
     <Reference Include="Microsoft.Html.Core" Condition=" '$(VSTarget)' == '15.0' " />
     <Reference Include="Microsoft.Html.Editor" Condition=" '$(VSTarget)' == '15.0' " />
     <Reference Include="Microsoft.VisualStudio.Html.Package" Condition=" '$(VSTarget)' == '15.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.dll" Condition=" '$(VSTarget)' == '16.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
+    <Reference Include="Microsoft.WebTools.Languages.Shared.dll" Condition=" '$(VSTarget)' == '16.0' " />
+    <Reference Include="Microsoft.WebTools.Languages.Shared.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
