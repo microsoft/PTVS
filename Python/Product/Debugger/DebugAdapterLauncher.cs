@@ -20,6 +20,9 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Settings;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
@@ -45,12 +48,53 @@ namespace Microsoft.PythonTools.Debugger {
             }
             return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
+
+
+        private string LoadString(string name, string category)
+        {
+            const string _optionsKey = "Options";
+            const string BaseRegistryKey = "PythonTools";
+
+            var settingsManager = SettingsManagerCreator.GetSettingsManager((IServiceProvider)Package.GetGlobalService(typeof(IServiceProvider)));
+            var settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+            var path = BaseRegistryKey + "\\" + _optionsKey + "\\" + category;
+
+            if (!settingsStore.CollectionExists(path) || !settingsStore.PropertyExists(path, name))
+            {
+                return null;
+            }
+
+            return settingsStore.GetString(path, name, "");
+        }
+
+        private bool? LoadBoolean(string name, string category)
+        {
+            string res = LoadString(name, category);
+            if (res == null)
+            {
+                return null;
+            }
+
+            bool val;
+            if (bool.TryParse(res, out val))
+            {
+                return val;
+            }
+            return null;
+        }
+
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
             if(launchInfo.LaunchType == LaunchType.Attach) {
                 launchInfo.DebugPort.GetPortName(out string uri);
-                JObject obj = new JObject {
-                    ["remote"] = uri
+
+                bool tempValue = LoadBoolean("ShowReturnValue", "Advanced") ?? true;
+                
+                JObject obj = new JObject()
+                {
+                    ["remote"] = uri,
+                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(tempValue)
                 };
+
                 launchInfo.LaunchJson = obj.ToString();
             }
         }

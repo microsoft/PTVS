@@ -105,6 +105,10 @@ namespace Microsoft.PythonTools.Debugger {
             if (pyService.DebuggerOptions.DebugStdLib) {
                 options.Append(";" + AD7Engine.DebugStdLib + "=True");
             }
+            if (pyService.DebuggerOptions.ShowReturnValue) {
+                options.Append(";" + AD7Engine.ShowReturnValue + "=True");
+            }
+
 
             engine.SetMetric(AD7Engine.DebugOptionsMetric, options.ToString());
         }

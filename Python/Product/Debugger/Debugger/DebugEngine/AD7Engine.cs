@@ -140,6 +140,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string DebugStdLib = "DEBUG_STDLIB";
 
         /// <summary>
+        /// Specifies if the debugger should display the function return values in locals window
+        /// </summary>
+        public const string ShowReturnValue = "SHOW_RETURN_VALUE";
+
+        /// <summary>
         /// Specifies if the debugger should treat the application as if it doesn't have a console.
         /// </summary>
         /// <remarks>

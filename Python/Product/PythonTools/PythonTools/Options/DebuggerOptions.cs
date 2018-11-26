@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Options {
         private const string TeeStandardOutSetting = "TeeStandardOut";
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
         private const string DebugStdLibSetting = "DebugStdLib";
+        private const string ShowFunctionReturnValueSetting = "ShowReturnValue";
 
         internal DebuggerOptions(PythonToolsService service) {
             _service = service;
@@ -47,6 +48,7 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = _service.LoadBool(TeeStandardOutSetting, Category) ?? true;
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
+            ShowReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
             UseLegacyDebugger = !EO.GetUseVsCodeDebugger();
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -58,6 +60,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(TeeStandardOutSetting, Category, TeeStandardOutput);
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
+            _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowReturnValue);
             EO.UseVsCodeDebugger = !UseLegacyDebugger;
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -69,6 +72,7 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = true;
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
+            ShowReturnValue = true;
             UseLegacyDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -128,6 +132,14 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         /// <remarks>New in 1.1</remarks>
         public bool DebugStdLib {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Show the function return value in locals window
+        /// </summary>
+        public bool ShowReturnValue {
             get;
             set;
         }
