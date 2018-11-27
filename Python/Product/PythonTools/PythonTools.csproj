@@ -254,6 +254,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterLauncher.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterProcessStream.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterRemoteProcess.cs" />
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
     <Compile Include="PythonTools\Environments\CustomEnv.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentTemplateSelector.cs" />

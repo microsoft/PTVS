@@ -15,14 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
-using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
@@ -49,50 +47,20 @@ namespace Microsoft.PythonTools.Debugger {
             return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
 
-
-        private string LoadString(string name, string category)
-        {
-            const string _optionsKey = "Options";
-            const string BaseRegistryKey = "PythonTools";
-
-            var settingsManager = SettingsManagerCreator.GetSettingsManager((IServiceProvider)Package.GetGlobalService(typeof(IServiceProvider)));
-            var settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-            var path = BaseRegistryKey + "\\" + _optionsKey + "\\" + category;
-
-            if (!settingsStore.CollectionExists(path) || !settingsStore.PropertyExists(path, name))
-            {
-                return null;
-            }
-
-            return settingsStore.GetString(path, name, "");
-        }
-
-        private bool? LoadBoolean(string name, string category)
-        {
-            string res = LoadString(name, category);
-            if (res == null)
-            {
-                return null;
-            }
-
-            bool val;
-            if (bool.TryParse(res, out val))
-            {
-                return val;
-            }
-            return null;
-        }
-
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
             if(launchInfo.LaunchType == LaunchType.Attach) {
                 launchInfo.DebugPort.GetPortName(out string uri);
 
-                bool tempValue = LoadBoolean("ShowReturnValue", "Advanced") ?? true;
-                
+                var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
+                var ptvsPackage = GuidList.guidPythonToolsPackage;
+                shell.LoadPackage(ref ptvsPackage, out _);
+
+                var pyToolsService = (PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService));
+                bool showReturnValue = pyToolsService.DebuggerOptions.ShowReturnValue;
                 JObject obj = new JObject()
                 {
                     ["remote"] = uri,
-                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(tempValue)
+                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(showReturnValue)
                 };
 
                 launchInfo.LaunchJson = obj.ToString();
