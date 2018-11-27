@@ -16,6 +16,7 @@
 
 using System;
 using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
+//using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class DebuggerOptions {
@@ -30,15 +31,11 @@ namespace Microsoft.PythonTools.Options {
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
         private const string DebugStdLibSetting = "DebugStdLib";
         private const string ShowFunctionReturnValueSetting = "ShowReturnValue";
+        private const string UseVsCodeDebuggerSetting = "UseVsCodeDebugger";
 
         internal DebuggerOptions(PythonToolsService service) {
             _service = service;
             Load();
-            EO.UseVsCodeDebuggerChanged += OnUseVsCodeDebuggerChanged;
-        }
-
-        private void OnUseVsCodeDebuggerChanged(object sender, EventArgs e) {
-            UseLegacyDebugger = !EO.GetUseVsCodeDebugger();
         }
 
         public void Load() {
@@ -49,7 +46,7 @@ namespace Microsoft.PythonTools.Options {
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
             ShowReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
-            UseLegacyDebugger = !EO.GetUseVsCodeDebugger();
+            UseLegacyDebugger = !(_service.LoadBool(UseVsCodeDebuggerSetting, Category) ?? true);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -61,7 +58,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
             _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowReturnValue);
-            EO.UseVsCodeDebugger = !UseLegacyDebugger;
+            _service.SaveBool(UseVsCodeDebuggerSetting, Category, !UseLegacyDebugger);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
