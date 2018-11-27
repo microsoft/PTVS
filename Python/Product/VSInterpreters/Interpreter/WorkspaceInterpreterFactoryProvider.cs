@@ -99,33 +99,35 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void InitializeWorkspace() {
-            // Cleanup state associated with the previous workspace, if any
-            if (_workspaceSettingsMgr != null) {
-                _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
-            }
-
-            _folderWatcher?.Dispose();
-            _folderWatcher = null;
-            _folderWatcherTimer?.Dispose();
-            _folderWatcherTimer = null;
-
-            // Setup new workspace
-            _workspace = _workspaceService.CurrentWorkspace;
-            _workspaceSettingsMgr = _workspace?.GetSettingsManager();
-            if (_workspaceSettingsMgr != null) {
-                _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
-            }
-
-            if (_workspace != null) {
-                try {
-                    _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
-                    _folderWatcher.Created += OnFileCreated;
-                    _folderWatcher.EnableRaisingEvents = true;
-                    _folderWatcher.IncludeSubdirectories = true;
-                } catch (ArgumentException) {
-                } catch (IOException) {
+            lock (_factories) {
+                // Cleanup state associated with the previous workspace, if any
+                if (_workspaceSettingsMgr != null) {
+                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
                 }
-                _folderWatcherTimer = new Timer(OnFileChangesTimerElapsed);
+
+                _folderWatcher?.Dispose();
+                _folderWatcher = null;
+                _folderWatcherTimer?.Dispose();
+                _folderWatcherTimer = null;
+
+                // Setup new workspace
+                _workspace = _workspaceService.CurrentWorkspace;
+                _workspaceSettingsMgr = _workspace?.GetSettingsManager();
+                if (_workspaceSettingsMgr != null) {
+                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
+                }
+
+                if (_workspace != null) {
+                    try {
+                        _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
+                        _folderWatcher.Created += OnFileCreated;
+                        _folderWatcher.EnableRaisingEvents = true;
+                        _folderWatcher.IncludeSubdirectories = true;
+                    } catch (ArgumentException) {
+                    } catch (IOException) {
+                    }
+                    _folderWatcherTimer = new Timer(OnFileChangesTimerElapsed);
+                }
             }
         }
 
@@ -144,35 +146,20 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            var found = new List<PythonInterpreterInformation>();
+            IWorkspace workspace = null;
+            lock (_factories) {
+                workspace = _workspace;
+            }
 
+            List<PythonInterpreterInformation> found;
             try {
-                if (_workspace != null) {
-                    // First look in workspace subfolders
-                    found.AddRange(FindInterpreters(_workspace.Location).Where(p => p != null));
-
-                    // Then look at the currently set interpreter path,
-                    // because it may point to a folder outside of the workspace,
-                    // or in a deep subfolder that we don't look into.
-                    var interpreter = _workspace.GetInterpreter();
-                    if (PathUtils.IsValidPath(interpreter) && !Path.IsPathRooted(interpreter)) {
-                        interpreter = _workspace.MakeRooted(interpreter);
-                    }
-
-                    // Make sure it wasn't already discovered
-                    if (File.Exists(interpreter) && !found.Any(p => PathUtils.IsSamePath(p.Configuration.InterpreterPath, interpreter))) {
-                        var info = CreateEnvironmentInfo(interpreter);
-                        if (info != null) {
-                            found.Add(info);
-                        }
-                    }
-                }
+                found = FindWorkspaceInterpreters(workspace)
+                    .Where(i => !ExcludedVersions.Contains(i.Configuration.Version))
+                    .ToList();
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
                 return;
             }
-
-            found = found.Where(i => !ExcludedVersions.Contains(i.Configuration.Version)).ToList();
 
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
@@ -197,6 +184,42 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (anyChanged) {
                 OnInterpreterFactoriesChanged();
+            }
+        }
+
+        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IWorkspace workspace) {
+            var found = new List<PythonInterpreterInformation>();
+
+            if (workspace != null) {
+                // First look in workspace subfolders
+                found.AddRange(FindInterpretersInSubFolders(workspace.Location).Where(p => p != null));
+
+                // Then look at the currently set interpreter path,
+                // because it may point to a folder outside of the workspace,
+                // or in a deep subfolder that we don't look into.
+                var interpreter = workspace.GetInterpreter();
+                if (PathUtils.IsValidPath(interpreter) && !Path.IsPathRooted(interpreter)) {
+                    interpreter = workspace.MakeRooted(interpreter);
+                }
+
+                // Make sure it wasn't already discovered
+                if (File.Exists(interpreter) && !found.Any(p => PathUtils.IsSamePath(p.Configuration.InterpreterPath, interpreter))) {
+                    var info = CreateEnvironmentInfo(interpreter);
+                    if (info != null) {
+                        found.Add(info);
+                    }
+                }
+            }
+
+            return found;
+        }
+
+        private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
+            foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
+                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
+                if (!string.IsNullOrEmpty(file)) {
+                    yield return CreateEnvironmentInfo(file);
+                }
             }
         }
 
@@ -226,15 +249,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     DiscoverInterpreterFactories();
                 }
             } catch (ObjectDisposedException) {
-            }
-        }
-
-        private IEnumerable<PythonInterpreterInformation> FindInterpreters(string workspaceFolder) {
-            foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
-                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
-                if (!string.IsNullOrEmpty(file)) {
-                    yield return CreateEnvironmentInfo(file);
-                }
             }
         }
 
@@ -323,7 +337,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return info?.GetOrCreateFactory(CreateFactory);
         }
 
-        private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
+        private static IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
             return InterpreterFactoryCreator.CreateInterpreterFactory(
                 info.Configuration,
                 new InterpreterFactoryCreationOptions {

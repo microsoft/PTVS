@@ -44,7 +44,6 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IVsFolderWorkspaceService _workspaceService;
         private uint _selectionEventsCookie;
         private IVsHierarchy _previousHier;
-        private IEnvironmentSwitcherContext _context;
         private bool _isInitialized;
         private bool _isPythonWorkspace;
 
@@ -88,21 +87,7 @@ namespace Microsoft.PythonTools.Environments {
         /// </remarks>
         public IEnumerable<IPythonInterpreterFactory> AllFactories { get; private set; }
 
-        public IEnvironmentSwitcherContext Context {
-            get => _context;
-            private set {
-                if (_context != null) {
-                    _context.EnvironmentsChanged -= OnInterpretersChanged;
-                    _context.Dispose();
-                }
-
-                _context = value;
-
-                if (_context != null) {
-                    _context.EnvironmentsChanged += OnInterpretersChanged;
-                }
-            }
-        }
+        public IEnvironmentSwitcherContext Context { get; private set; }
 
         public void Initialize() {
             if (_isInitialized) {
@@ -169,14 +154,15 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private void Reset() {
-            Context = null;
+            ReplaceContext(null);
             RefreshFactories();
         }
 
         private void SetInitialContext() {
             IntPtr hierPtr = IntPtr.Zero;
+            IntPtr containerPtr = IntPtr.Zero;
             try {
-                _monitorSelection.GetCurrentSelection(out hierPtr, out uint item, out _, out _);
+                _monitorSelection.GetCurrentSelection(out hierPtr, out uint item, out _, out containerPtr);
                 var hier = (hierPtr != IntPtr.Zero ? Marshal.GetObjectForIUnknown(hierPtr) : null) as IVsHierarchy;
                 if (hier != null) {
                     HandleSelection(hier, item);
@@ -189,6 +175,9 @@ namespace Microsoft.PythonTools.Environments {
                 if (hierPtr != IntPtr.Zero) {
                     Marshal.Release(hierPtr);
                 }
+                if (containerPtr != IntPtr.Zero) {
+                    Marshal.Release(containerPtr);
+                }
             }
         }
 
@@ -196,17 +185,30 @@ namespace Microsoft.PythonTools.Environments {
             var isPythonFile = ModulePath.IsPythonSourceFile(filePath);
 
             if (project != null) {
-                Context = new EnvironmentSwitcherProjectContext(project);
+                ReplaceContext(new EnvironmentSwitcherProjectContext(project));
             } else if (_workspaceService.CurrentWorkspace != null && (_isPythonWorkspace || isPythonFile)) {
                 _isPythonWorkspace = true;
-                Context = new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _workspaceService.CurrentWorkspace);
+                ReplaceContext(new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _workspaceService.CurrentWorkspace));
             } else if (isPythonFile) {
-                Context = new EnvironmentSwitcherFileContext(_serviceProvider, filePath);
+                ReplaceContext(new EnvironmentSwitcherFileContext(_serviceProvider, filePath));
             } else {
-                Context = null;
+                ReplaceContext(null);
             }
 
             RefreshFactories();
+        }
+
+        private void ReplaceContext(IEnvironmentSwitcherContext newContext) {
+            if (Context != null) {
+                Context.EnvironmentsChanged -= OnInterpretersChanged;
+                Context.Dispose();
+            }
+
+            Context = newContext;
+
+            if (Context != null) {
+                Context.EnvironmentsChanged += OnInterpretersChanged;
+            }
         }
 
         private void HandleSelection(IVsHierarchy pHierNew, uint itemidNew) {
