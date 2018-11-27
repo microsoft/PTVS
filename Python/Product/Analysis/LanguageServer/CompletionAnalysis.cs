@@ -820,7 +820,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = m.Name,
                 insertText = completion,
                 documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
-                    kind = _textBuilder.DisplayOptions.preferredFormat,
+                    kind = _textBuilder.DisplayOptions.preferredFormat ?? MarkupKind.PlainText,
                     value = doc
                 },
                 // Place regular items first, advanced entries last
