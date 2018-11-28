@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Navigation {
     class DropDownBarClient : IVsDropdownBarClient, IPythonTextBufferInfoEventSink {
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private readonly PythonEditorServices _services;
-        private ITextView _textView;                                 // text view we're drop downs for
+        private ITextView _textView;                                    // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private NavigationInfo _navigations;
         private readonly object _navigationsLock = new object();

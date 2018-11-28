@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -80,8 +81,8 @@ namespace Microsoft.PythonTools.Navigation {
                 return false;
             }
 
-            // TODO: Replace with actual constant when available
-            if (view.TextBuffer.ContentType.IsOfType("code-languageserver-preview")) {
+            if (view.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
+                // This is not really our text view
                 view = null;
                 return false;
             }

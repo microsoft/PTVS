@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -39,8 +40,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
-            // TODO: Replace with actual constant when available
-            if (textView.TextBuffer.ContentType.IsOfType("code-languageserver-preview")) {
+            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
                 // We want default handling when this is a remote buffer
                 return null;
             }

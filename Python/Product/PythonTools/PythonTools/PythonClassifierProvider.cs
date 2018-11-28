@@ -20,6 +20,7 @@ using System.Windows.Media;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -91,7 +92,7 @@ namespace Microsoft.PythonTools {
                 _categoryMap = FillCategoryMap(_services.ClassificationTypeRegistryService);
             }
 
-            if (buffer.ContentType.IsOfType("code-languageserver-preview")) {
+            if (buffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
                 return null;
             }
 

@@ -24,6 +24,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -52,8 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            // TODO: Replace with actual constant when available
-            if (textView.TextBuffer.ContentType.IsOfType("code-languageserver-preview")) {
+            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
                 // We want default handling when this is a remote buffer
                 return null;
             }

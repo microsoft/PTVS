@@ -252,6 +252,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.6.DesignTime">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
