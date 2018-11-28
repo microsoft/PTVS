@@ -824,7 +824,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     value = doc
                 },
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(completion, 0) ? "1" : "2",
+                sortText = (char.IsLetter(completion, 0) ? "1" : "2") + m.Name,
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
@@ -836,7 +836,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = label ?? text,
                 insertText = text,
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(text, 0) ? "1" : "2",
+                sortText = (char.IsLetter(text, 0) ? "1" : "2") + (label ?? text),
                 kind = ToCompletionItemKind(type),
                 _kind = type.ToString().ToLowerInvariant()
             };
