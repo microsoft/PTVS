@@ -97,13 +97,28 @@ namespace Microsoft.PythonTools.LiveShare {
                 method.Name == Methods.TextDocumentReferences.Name ||
                 method.Name == Methods.TextDocumentSignatureHelp.Name
             ) {
-                var analyzer = await FindAnalyzer((param as TextDocumentPositionParams)?.TextDocument);
+                var doc = (param as TextDocumentPositionParams)?.TextDocument;
+                if (doc == null) {
+                    return default(TOut);
+                }
+
+                var analyzer = await FindAnalyzer(doc);
                 if (analyzer == null) {
                     return default(TOut);
                 }
 
                 if (method.Name == Methods.TextDocumentDefinition.Name) {
                     return (TOut)(object)await analyzer.SendLanguageServerRequestAsync<TIn, Location[]>(method.Name, param);
+                }
+
+                var entry = analyzer.GetAnalysisEntryFromUri(doc.Uri);
+                if (entry != null) {
+                    var buffers = entry.TryGetBufferParser()?.AllBuffers;
+                    if (buffers != null) {
+                        foreach (var b in buffers) {
+                            await entry.EnsureCodeSyncedAsync(b);
+                        }
+                    }
                 }
 
                 return await analyzer.SendLanguageServerRequestAsync<TIn, TOut>(method.Name, param);

@@ -68,6 +68,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.LiveShare" />
     <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices" />
+    <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <!-- <Reference Include="Microsoft.VisualStudio.Text.UI" /> -->
