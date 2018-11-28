@@ -29,6 +29,15 @@ namespace Microsoft.PythonTools.LiveShare {
             _analyzerCache = new ConcurrentDictionary<Uri, VsProjectAnalyzer>(UriEqualityComparer.Default);
         }
 
+        private PythonLanguageServiceProviderCallback() {
+            _analyzerCache = new ConcurrentDictionary<Uri, VsProjectAnalyzer>(UriEqualityComparer.Default);
+        }
+
+        /// <summary>
+        /// Test helper factory for creating an instance with no service provider.
+        /// </summary>
+        internal static PythonLanguageServiceProviderCallback CreateTestInstance() => new PythonLanguageServiceProviderCallback();
+
 #pragma warning disable 0067
         public event AsyncEventHandler<LanguageServiceNotifyEventArgs> NotifyAsync;
 #pragma warning restore 0067
@@ -44,15 +53,25 @@ namespace Microsoft.PythonTools.LiveShare {
                     return null;
                 }
 
-                // TODO: Use URI for more accurate lookup
-                analyzer = await _uiThread.InvokeTask(async () =>
-                    (await _serviceProvider.FindAllAnalyzersForFile(filePath)).FirstOrDefault() as VsProjectAnalyzer
-                );
+                if (_uiThread != null) {
+                    // TODO: Use URI for more accurate lookup
+                    analyzer = await _uiThread.InvokeTask(async () =>
+                        (await _serviceProvider.FindAllAnalyzersForFile(filePath)).FirstOrDefault() as VsProjectAnalyzer
+                    );
+                }
 
                 analyzer = _analyzerCache.GetOrAdd(document.Uri, analyzer);
             }
 
             return analyzer;
+        }
+
+        /// <summary>
+        /// Helper function for tests, enabling this class to be tested without needing
+        /// a service provider or UI thread.
+        /// </summary>
+        internal void SetAnalyzer(Uri documentUri, VsProjectAnalyzer analyzer) {
+            _analyzerCache[documentUri] = analyzer;
         }
 
         public async Task<TOut> RequestAsync<TIn, TOut>(LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {

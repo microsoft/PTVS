@@ -251,10 +251,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
 
-            var lso = _services.Python.LanguageServerOptions;
-            lso.Changed += LanguageServerOptions_Changed;
-
-            _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
+            var lso = _services.Python?.LanguageServerOptions;
+            if (lso != null) {
+                lso.Changed += LanguageServerOptions_Changed;
+                _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
+            }
 
             if (_analysisOptions.analysisLimits == null) {
                 using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
