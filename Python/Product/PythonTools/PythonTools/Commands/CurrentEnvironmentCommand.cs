@@ -62,8 +62,8 @@ namespace Microsoft.PythonTools.Commands {
 
         private async Task SwitchToFactoryAsync(IPythonInterpreterFactory factory) {
             await _envSwitchMgr.SwitchToFactoryAsync(factory);
-            var uiShell = _serviceProvider.GetService<SVsUIShell, IVsUIShell>();
-            uiShell.UpdateCommandUI(0);
+            var uiShell = _serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            uiShell?.UpdateCommandUI(0);
         }
     }
 }
