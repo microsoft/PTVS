@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
 
-        public const uint cmdidViewEnvironmentStatus = 0x4038;
+        public const uint cmdidAddEnvironmentNoIcon = 0x4038;
 
         public const uint cmdidWebPythonAtMicrosoft = 0x4040;
         public const uint cmdidWebPTVSSupport = 0x4041;
@@ -65,5 +65,7 @@ namespace Microsoft.PythonTools {
         public const uint comboIdReplScopesGetList = 0x5001;
         public const uint comboIdReplEvaluators = 0x5002;
         public const uint comboIdReplEvaluatorsGetList = 0x5003;
+        public const uint comboIdCurrentEnvironment = 0x5004;
+        public const uint comboIdCurrentEnvironmentList = 0x5005;
     };
 }

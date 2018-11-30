@@ -18,15 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Microsoft.Internal.VisualStudio.Shell;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Environments {
     /// <summary>
@@ -118,13 +118,6 @@ namespace Microsoft.PythonTools.Environments {
             }
         }
 
-        public string GetSwitcherCommandKeyBinding() {
-            // Don't call this during close because it throws an NRE
-            return IsClosing
-                ? null :
-                KeyBindingHelper.GetGlobalKeyBinding(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidViewEnvironmentStatus);
-        }
-
         public Task SwitchToFactoryAsync(IPythonInterpreterFactory factory) {
             return Context != null ? Context.ChangeFactoryAsync(factory) : Task.CompletedTask;
         }
@@ -151,6 +144,8 @@ namespace Microsoft.PythonTools.Environments {
             AllFactories = Context?.AllFactories ?? Enumerable.Empty<IPythonInterpreterFactory>();
             CurrentFactory = Context?.CurrentFactory;
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
+
+            UIContext.FromUIContextGuid(GuidList.guidPythonToolbarUIContext).IsActive = Context != null;
         }
 
         private void Reset() {

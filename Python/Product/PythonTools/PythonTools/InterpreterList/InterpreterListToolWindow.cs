@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             ));
 
             RegisterCommands(
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this))
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironmentNoIcon, new AddEnvironmentCommand(this))
             );
 
             Content = list;

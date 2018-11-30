@@ -28,14 +28,16 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -52,11 +54,7 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
-using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.PythonTools.Environments;
-using Microsoft.PythonTools.Common.Infrastructure;
-using Microsoft.PythonTools.Infrastructure.Commands;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -184,8 +182,6 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
-        private VsStatusBar _statusBar;
-        private EnvironmentSwitcherStatusBar _environmentSwitcherStatusBar;
         private DisposableBag _disposables;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
@@ -490,7 +486,6 @@ namespace Microsoft.PythonTools {
                 new OpenDebugReplCommand(this),
                 new ExecuteInReplCommand(this),
                 new SendToReplCommand(this),
-                new ViewEnvironmentStatusCommand(this),
                 new FillParagraphCommand(this),
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
@@ -509,8 +504,9 @@ namespace Microsoft.PythonTools {
 
             RegisterCommands(
                 CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.FirstEnvironmentCmdId, new SwitchToEnvironmentCommand(this)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this))
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
+                new CurrentEnvironmentCommand(this),
+                new CurrentEnvironmentListCommand(this)
             );
 
             // Enable the Python debugger UI context
@@ -520,21 +516,7 @@ namespace Microsoft.PythonTools {
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
 
-            _statusBar = new VsStatusBar(this);
-
-            AddEnvironmentsStatusBar();
-
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
-        }
-
-
-        private void AddEnvironmentsStatusBar() {
-            _environmentSwitcherStatusBar = new EnvironmentSwitcherStatusBar(this) { DataContext = new EnvironmentSwitcherStatusBarViewModel(this) };
-            _disposables.TryAdd(_statusBar.AddItem(_environmentSwitcherStatusBar));
-        }
-
-        internal void ViewEnvironmentStatus() {
-            _environmentSwitcherStatusBar?.ShowMenu();
         }
 
         public EnvDTE.DTE DTE {

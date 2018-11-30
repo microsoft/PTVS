@@ -144,6 +144,14 @@ permissions and limitations under the License.
         </Strings>
       </Menu>
 
+      <!-- Main Python toolbar -->
+      <Menu guid="guidPythonToolsCmdSet" id="MainPythonToolbar" type="Toolbar" priority="0x0000">
+        <Strings>
+          <ButtonText>Python</ButtonText>
+          <CommandName>Python</CommandName>
+        </Strings>
+      </Menu>
+
       <!-- REPL window toolbar -->
       <Menu Condition="Defined(DEV15_OR_LATER)" guid="guidPythonToolsCmdSet" id="ReplWindowToolbar" type="ToolWindowToolbar" priority="0x100">
         <Parent guid="guidPythonToolsCmdSet" id="0" />
@@ -275,6 +283,14 @@ permissions and limitations under the License.
       <Group guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup" priority="0x0100">
         <Parent guid="guidPythonToolsCmdSet" id="EnvWindowToolbar"/>
       </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="MainPythonToolbarEnvironmentGroup" priority="0x0100">
+        <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbar"/>
+      </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="MainPythonToolbarWindowGroup" priority="0x0200">
+        <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbar"/>
+      </Group>
     </Groups>
     
     <Buttons>
@@ -337,12 +353,26 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Add" />
         <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Environment...</ButtonText>
           <ToolTipText>Add a new or existing Python environment.</ToolTipText>
           <CanonicalName>Add Environment</CanonicalName>
           <LocCanonicalName>Add Environment</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- This is a copy of cmdidAddEnvironment for use on the environments window toolbar -->
+      <!-- where there's only one button, which would look bad if we were to use an icon -->
+      <!-- When we add more buttons to the toolbar, we'll be able to get rid of this and use icons-->
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironmentNoIcon" priority="0x0100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Add &amp;Environment...</ButtonText>
+          <ToolTipText>Add a new or existing Python environment.</ToolTipText>
         </Strings>
       </Button>
 
@@ -379,18 +409,6 @@ permissions and limitations under the License.
           <ToolTipText>Add a new conda environment.</ToolTipText>
           <CanonicalName>Add Conda Environment</CanonicalName>
           <LocCanonicalName>Add Conda Environment</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidViewEnvironmentStatus" priority="0x0130" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>View Python Environment Status...</ButtonText>
-          <ToolTipText>View Python environment status.</ToolTipText>
-          <CanonicalName>View Environment Status</CanonicalName>
-          <LocCanonicalName>View Environment Status</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -436,11 +454,13 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidInstallPythonPackage" priority="0x0300" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
+        <Icon guid="ImageCatalogGuid" id="PythonPackage" />
         <CommandFlag>AllowParams</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>&amp;Install Python Package...</ButtonText>
-          <ToolTipText>Installs a package into this environment.</ToolTipText>
+          <ButtonText>&amp;Manage Python Packages...</ButtonText>
+          <ToolTipText>Manages packages for this environment.</ToolTipText>
           <CanonicalName>Install Package</CanonicalName>
           <LocCanonicalName>Install Package</LocCanonicalName>
         </Strings>
@@ -734,19 +754,6 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidFirstEnvironmentCmdId" priority="0x400" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusEnvironmentsGroup" />
-        <CommandFlag>DynamicItemStart</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>NoButtonCustomize</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Environments</ButtonText>
-          <ToolTipText>Environments</ToolTipText>
-        </Strings>
-      </Button>
-      
       <!--================================================================================================================-->
       <!--========================================== Integrated Shell Commands ===========================================-->
       <!--================================================================================================================-->
@@ -906,6 +913,27 @@ permissions and limitations under the License.
           <ToolTipText>Selects the current module scope that the interactive window is using.</ToolTipText>
           <CanonicalName>Interactive Scope</CanonicalName>
           <LocCanonicalName>Interactive Scope</LocCanonicalName>
+        </Strings>
+      </Combo>
+
+      <Combo guid="guidPythonToolsCmdSet"
+         id="comboIdCurrentEnvironment"
+         idCommandList="comboIdCurrentEnvironmentList"
+         priority="0x0100"
+         type="DropDownCombo"
+         defaultWidth="200">
+        <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbarEnvironmentGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconAndText</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
+        <Strings>
+          <!--<ButtonText>Environment: </ButtonText>-->
+          <ButtonText></ButtonText>
+          <ToolTipText>Current Python environment</ToolTipText>
+          <CanonicalName>Python Environment</CanonicalName>
+          <LocCanonicalName>Python Environment</LocCanonicalName>
         </Strings>
       </Combo>
     </Combos>
@@ -1118,8 +1146,16 @@ permissions and limitations under the License.
       <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100">
-      <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0200">
+      <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbarEnvironmentGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInstallPythonPackage" priority="0x0300">
+      <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbarEnvironmentGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidViewAllEnvironments" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbarWindowGroup"/>
     </CommandPlacement>
 
     <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidAbortExecution" priority="0x0110">
@@ -1139,6 +1175,10 @@ permissions and limitations under the License.
     </CommandPlacement>
   </CommandPlacements>
 
+  <VisibilityConstraints>
+    <VisibilityItem guid="guidPythonToolsCmdSet" id="MainPythonToolbar" context="guidPythonToolbarUIContext"/>
+  </VisibilityConstraints>
+
   <KeyBindings>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" mod1="Alt Shift" key1="VK_F5" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" mod1="Alt Shift" key1="I" editor="guidVSStd97"/>
@@ -1150,7 +1190,7 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidViewEnvironmentStatus" key1="K" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="comboIdCurrentEnvironment" key1="K" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
   </KeyBindings>
 
   <UsedCommands>
@@ -1163,7 +1203,8 @@ permissions and limitations under the License.
     <GuidSymbol name="guidPythonToolsPkg" value="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" />
     <GuidSymbol name="guidReplWindow" value="{7EE13E74-F6FD-4C7E-9896-1B89D62A513E}" />
     <GuidSymbol name="guidEditorFactory" value="{888888c4-36f9-4453-90aa-29fa4d2e5706}" />
-    
+    <GuidSymbol name="guidPythonToolbarUIContext" value="{2F07BD4C-A28C-405B-923D-09EBA2946E67}" />
+
     <!-- This is our command set GUID and associated commands -->
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
@@ -1214,7 +1255,7 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
       <IDSymbol name="cmdidAddCondaEnv" value="0x4037" />
-      <IDSymbol name="cmdidViewEnvironmentStatus" value="0x4038"/>
+      <IDSymbol name="cmdidAddEnvironmentNoIcon" value="0x4038"/>
 
       <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
       <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>
@@ -1250,6 +1291,8 @@ permissions and limitations under the License.
       <IDSymbol name="EnvWindowAddGroup" value="0x1066" />
       <IDSymbol name="EnvironmentStatusEnvironmentsGroup" value="0x1067" />
       <IDSymbol name="EnvironmentStatusManageEnvironmentsGroup" value="0x1068" />
+      <IDSymbol name="MainPythonToolbarEnvironmentGroup" value="0x1069" />
+      <IDSymbol name="MainPythonToolbarWindowGroup" value="0x106A" />
 
       <!-- Menus -->
       <IDSymbol name="PythonMenu" value="0x2000"/>
@@ -1266,12 +1309,15 @@ permissions and limitations under the License.
       <IDSymbol name="ReplWindowToolbar" value="0x200B"/>
       <IDSymbol name="EnvWindowToolbar" value="0x200C"/>
       <IDSymbol name="EnvironmentStatusBarMenu" value="0x200D"/>
+      <IDSymbol name="MainPythonToolbar" value="0x200E"/>
 
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>
       <IDSymbol name="comboIdReplScopesGetList" value="0x5001"/>
       <IDSymbol name="comboIdReplEvaluators" value="0x5002"/>
       <IDSymbol name="comboIdReplEvaluatorsGetList" value="0x5003"/>
+      <IDSymbol name="comboIdCurrentEnvironment" value="0x5004"/>
+      <IDSymbol name="comboIdCurrentEnvironmentList" value="0x5005"/>
 
       <!-- Shared commands, defined in CommonConstants.cs -->
       <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />
