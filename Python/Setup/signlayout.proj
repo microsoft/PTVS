@@ -33,6 +33,7 @@
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
         Microsoft.PythonTools.Ipc.Json.dll;
+        Microsoft.PythonTools.LiveShare.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.RunElevated.exe;

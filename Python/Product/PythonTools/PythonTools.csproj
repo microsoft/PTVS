@@ -252,6 +252,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.6.DesignTime">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
@@ -1134,16 +1135,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
-       but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
-       into the PythonTools output folder temporarily to generate the pkgdef file. -->
-  <!--<Target Name="_CopyForCreatePkgDef" BeforeTargets="GeneratePkgDef">
-    <Copy SourceFiles="$(OutputPath)..\Analysis\Microsoft.PythonTools.Analysis.dll;$(OutputPath)..\EnvironmentsList\Microsoft.PythonTools.EnvironmentsList.dll;$(OutputPath)..\VSInterpreters\Microsoft.PythonTools.VSInterpreters.dll" DestinationFolder="$(OutputPath)">
-      <Output TaskParameter="CopiedFiles" ItemName="_CopiedForCreatePkgdef" />
-    </Copy>
-  </Target>
-  <Target Name="_DeleteAfterCreatePkgDef" AfterTargets="GeneratePkgDef">
-    <Delete Files="@(_CopiedForCreatePkgdef)" />
-  </Target>-->
-  <!--<Target Name="DetokenizeVsixManifestFile" />-->
 </Project>
