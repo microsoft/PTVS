@@ -71,7 +71,6 @@
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <!-- <Reference Include="Microsoft.VisualStudio.Text.UI" /> -->
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -97,21 +96,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_AddCascadeAssemblies" BeforeTargets="_AddPTVSReferences">
-    <ItemGroup>
-      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Cascade.*\lib\net461\Microsoft.Cascade.*.dll" />
-    </ItemGroup>
-  </Target>
-  <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
-       but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
-       into the PythonTools output folder temporarily to generate the pkgdef file. -->
-  <!--<Target Name="_CopyForCreatePkgDef" BeforeTargets="GeneratePkgDef">
-    <Copy SourceFiles="$(OutputPath)..\Analysis\Microsoft.PythonTools.Analysis.dll;$(OutputPath)..\EnvironmentsList\Microsoft.PythonTools.EnvironmentsList.dll;$(OutputPath)..\VSInterpreters\Microsoft.PythonTools.VSInterpreters.dll" DestinationFolder="$(OutputPath)">
-      <Output TaskParameter="CopiedFiles" ItemName="_CopiedForCreatePkgdef" />
-    </Copy>
-  </Target>
-  <Target Name="_DeleteAfterCreatePkgDef" AfterTargets="GeneratePkgDef">
-    <Delete Files="@(_CopiedForCreatePkgdef)" />
-  </Target>-->
-  <!--<Target Name="DetokenizeVsixManifestFile" />-->
 </Project>

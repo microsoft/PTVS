@@ -34,9 +34,10 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        private static Task<VsProjectAnalyzer> CreateAnalyzer() => CreateAnalyzer(PythonPaths.Versions.LastOrDefault());
+        private static Task<VsProjectAnalyzer> CreateAnalyzerAsync() =>
+            CreateAnalyzerAsync(PythonPaths.Versions.LastOrDefault());
 
-        private static async Task<VsProjectAnalyzer> CreateAnalyzer(PythonVersion version) {
+        private static async Task<VsProjectAnalyzer> CreateAnalyzerAsync(PythonVersion version) {
             version.AssertInstalled();
             var factory = new MockPythonInterpreterFactory(version.Configuration);
             var sp = new MockServiceProvider();
@@ -55,7 +56,7 @@ namespace PythonToolsTests {
         public async Task LiveShareCallback_Initialize() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzer()) {
+            using (var analyzer = await CreateAnalyzerAsync()) {
                 var res = await cb.RequestAsync(
                     Methods.Initialize,
                     null,
@@ -75,7 +76,7 @@ namespace PythonToolsTests {
         public async Task LiveShareCallback_Completion() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzer()) {
+            using (var analyzer = await CreateAnalyzerAsync()) {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -108,7 +109,7 @@ namespace PythonToolsTests {
         public async Task LiveShareCallback_Hover() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzer()) {
+            using (var analyzer = await CreateAnalyzerAsync()) {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -141,7 +142,7 @@ namespace PythonToolsTests {
         public async Task LiveShareCallback_Definition() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzer()) {
+            using (var analyzer = await CreateAnalyzerAsync()) {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -180,7 +181,7 @@ namespace PythonToolsTests {
         public async Task LiveShareCallback_References() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzer()) {
+            using (var analyzer = await CreateAnalyzerAsync()) {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
