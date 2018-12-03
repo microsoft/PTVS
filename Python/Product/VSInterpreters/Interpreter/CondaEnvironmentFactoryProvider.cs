@@ -324,26 +324,12 @@ namespace Microsoft.PythonTools.Interpreter {
             var interpreterPath = Path.Combine(prefixPath, CondaEnvironmentFactoryConstants.ConsoleExecutable);
             var windowsInterpreterPath = Path.Combine(prefixPath, CondaEnvironmentFactoryConstants.WindowsExecutable);
 
-            InterpreterArchitecture arch = InterpreterArchitecture.Unknown;
-            Version version = null;
-
-            if (File.Exists(interpreterPath)) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(
-                    interpreterPath, "-c", "import sys; print('%s.%s' % (sys.version_info[0], sys.version_info[1]))"
-                )) {
-                    output.Wait();
-                    if (output.ExitCode == 0) {
-                        var versionName = output.StandardOutputLines.FirstOrDefault() ?? "";
-                        if (!Version.TryParse(versionName, out version)) {
-                            version = null;
-                        }
-                    }
-                }
-
-                arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
-            } else {
+            if (!File.Exists(interpreterPath)) {
                 return null;
             }
+
+            var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
+            var version = CPythonInterpreterFactoryProvider.VersionFromSysVersionInfo(interpreterPath);
 
             var config = new InterpreterConfiguration(
                 CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, name),

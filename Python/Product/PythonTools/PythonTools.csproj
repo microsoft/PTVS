@@ -191,6 +191,8 @@
     <Reference Include="Microsoft.VisualStudio.WizardFramework">
       <HintPath>$(DevEnvDir)\Microsoft.VisualStudio.WizardFramework.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Workspace" />
+    <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -255,6 +257,17 @@
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
+    <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherFileContext.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherProjectContext.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherWorkspaceContext.cs" />
+    <Compile Include="PythonTools\Environments\IEnvironmentSwitcherContext.cs" />
+    <Compile Include="PythonTools\Commands\AddEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Commands\ManagePackagesCommand.cs" />
+    <Compile Include="PythonTools\Commands\ViewAllEnvironmentsCommand.cs" />
+    <Compile Include="PythonTools\Environments\EnvironmentSwitcherManager.cs" />
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
     <Compile Include="PythonTools\Environments\CustomEnv.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentTemplateSelector.cs" />
@@ -725,6 +738,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
+    <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />

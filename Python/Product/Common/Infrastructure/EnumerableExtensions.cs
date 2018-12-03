@@ -116,5 +116,36 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             return -1;
         }
+
+        public static IEnumerable<T> TraverseBreadthFirst<T>(this T root, Func<T, IEnumerable<T>> selectChildren) {
+            Queue<T> items = new Queue<T>();
+            items.Enqueue(root);
+            while (items.Count > 0) {
+                var item = items.Dequeue();
+                yield return item;
+
+                IEnumerable<T> childen = selectChildren(item);
+                if (childen == null) {
+                    continue;
+                }
+
+                foreach (var child in childen) {
+                    items.Enqueue(child);
+                }
+            }
+        }
+
+        public static IEnumerable<T> TraverseDepthFirst<T>(this T root, Func<T, IEnumerable<T>> selectChildren) {
+            yield return root;
+
+            var children = selectChildren(root);
+            if (children != null) {
+                foreach (T child in children) {
+                    foreach (T t in TraverseDepthFirst(child, selectChildren)) {
+                        yield return t;
+                    }
+                }
+            }
+        }
     }
 }

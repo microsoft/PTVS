@@ -2527,7 +2527,7 @@ namespace Microsoft.PythonTools.Project {
                 pathVar,
                 architecture,
                 languageVersion,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
             );
 
             if (!QueryEditProjectFile(false)) {

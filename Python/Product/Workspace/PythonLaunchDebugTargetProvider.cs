@@ -81,7 +81,8 @@ namespace Microsoft.PythonTools.Workspace {
             var settings = debugLaunchActionContext.LaunchConfiguration;
             var scriptName = settings.GetValue(ScriptNameKey, string.Empty);
             var debug = !settings.GetValue("noDebug", false);
-            var path = settings.GetValue(InterpreterKey, string.Empty);
+            var interpreterVal = settings.GetValue(InterpreterKey, string.Empty);
+            var path = interpreterVal;
             InterpreterConfiguration config = null;
 
             if (string.IsNullOrEmpty(scriptName)) {
@@ -90,31 +91,20 @@ namespace Microsoft.PythonTools.Workspace {
 
             if (!string.IsNullOrEmpty(path) && !DefaultInterpreterValue.Equals(path, StringComparison.OrdinalIgnoreCase)) {
                 if (PathUtils.IsValidPath(path) && !Path.IsPathRooted(path)) {
-                    // Cannot (currently?) get the workspace path easily from here, so we'll start from
-                    // the startup file and work our way up until we find it.
-                    var basePath = PathUtils.GetParent(scriptName);
-                    string candidate = null;
-                    
-                    while (Directory.Exists(basePath)) {
-                        candidate = PathUtils.GetAbsoluteFilePath(basePath, path);
-                        if (File.Exists(candidate)) {
-                            path = candidate;
-                            break;
-                        }
-                        basePath = PathUtils.GetParent(basePath);
-                    }
+                    path = workspace.MakeRooted(path);
                 }
 
                 if (File.Exists(path)) {
                     config = registry.Configurations.FirstOrDefault(c => c.InterpreterPath.Equals(path, StringComparison.OrdinalIgnoreCase)) ??
                         new InterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
                 } else {
-                    config = registry.FindConfiguration(path);
+                    config = registry.FindConfiguration(interpreterVal);
                 }
             } else {
-                var service = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                service.DefaultInterpreter.ThrowIfNotRunnable();
-                config = service.DefaultInterpreter.Configuration;
+                var options = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                var interpreter = workspace.GetInterpreterFactory(registry, options);
+                interpreter.ThrowIfNotRunnable();
+                config = interpreter.Configuration;
                 path = config.InterpreterPath;
             }
 

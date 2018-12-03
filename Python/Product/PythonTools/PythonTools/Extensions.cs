@@ -243,8 +243,16 @@ namespace Microsoft.PythonTools {
         }
 
 
+        internal static PythonProjectNode GetPythonProject(this ProjectNode project) {
+            return ((IVsHierarchy)project).GetPythonProject();
+        }
+
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
-            return ((IVsHierarchy)project).GetProject()?.GetCommonProject() as PythonProjectNode;
+            return ((IVsHierarchy)project).GetPythonProject();
+        }
+
+        internal static PythonProjectNode GetPythonProject(this IVsHierarchy project) {
+            return project.GetProject()?.GetCommonProject() as PythonProjectNode;
         }
 
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {

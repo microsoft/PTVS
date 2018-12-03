@@ -249,6 +249,9 @@ namespace TestUtilities.UI.Python {
             ExecuteCommand("Python.SendSelectionToInteractive");
         }
 
+        public void OpenFolder(string folderPath) {
+            ExecuteCommand("File.OpenFolder", "\"{0}\"".FormatInvariant(folderPath));
+        }
 
         public ReplWindowProxy WaitForInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();

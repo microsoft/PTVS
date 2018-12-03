@@ -28,14 +28,16 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -52,7 +54,6 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
-using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
@@ -181,6 +182,7 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
+        private DisposableBag _disposables;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
         /// <summary>
@@ -191,6 +193,8 @@ namespace Microsoft.PythonTools {
         /// initialization is the Initialize method.
         /// </summary>
         public PythonToolsPackage() {
+            _disposables = new DisposableBag(GetType().Name, "Package is disposed");
+
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 
 #if DEBUG
@@ -211,6 +215,14 @@ namespace Microsoft.PythonTools {
                 }
             };
 #endif
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+
+            if (disposing) {
+                _disposables.TryDispose();
+            }
         }
 
         public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
@@ -246,6 +258,16 @@ namespace Microsoft.PythonTools {
             return base.CreateToolWindow(ref toolWindowType, id);
         }
 
+        protected override int QueryClose(out bool canClose) {
+            var res = base.QueryClose(out canClose);
+
+            if (canClose) {
+                var pyService = this.GetPythonToolsService();
+                pyService.EnvironmentSwitcherManager.IsClosing = true;
+            }
+
+            return res;
+        }
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
             if (File.Exists(filename)) {
                 VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
@@ -475,9 +497,17 @@ namespace Microsoft.PythonTools {
                 new ShowCppViewCommand(this),
                 new ShowNativePythonFrames(this),
                 new UsePythonStepping(this),
+                new ViewAllEnvironmentsCommand(this),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
                 new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
+
+            RegisterCommands(
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
+                new CurrentEnvironmentCommand(this),
+                new CurrentEnvironmentListCommand(this)
+            );
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;

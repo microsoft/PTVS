@@ -86,8 +86,15 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Compile Include="Infrastructure\Commands\AsyncCommandRangeToOleMenuCommandShim.cs" />
+    <Compile Include="Infrastructure\Commands\CommandAsyncToOleMenuCommandShim.cs" />
+    <Compile Include="Infrastructure\Commands\CommandAsyncToOleMenuCommandShimFactory.cs" />
+    <Compile Include="Infrastructure\Commands\CommandStatus.cs" />
+    <Compile Include="Infrastructure\Commands\IAsyncCommand.cs" />
+    <Compile Include="Infrastructure\Commands\IAsyncCommandRange.cs" />
     <Compile Include="Infrastructure\InterpreterCatalog.cs" />
     <Compile Include="Infrastructure\LiveTextBlock.cs" />
+    <Compile Include="Infrastructure\Commands\PackageCommand.cs" />
     <Compile Include="Logging\IPythonToolsLogger.cs" />
     <Compile Include="Infrastructure\IXamlDesignerSupport.cs" />
     <Compile Include="Infrastructure\OutputWindowRedirector.cs" />
