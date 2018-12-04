@@ -1,0 +1,28 @@
+{
+  "arch": "x86_64",
+  "build": "py37hfa6e2cd_0",
+  "build_number": 0,
+  "depends": [
+    "python >=3.7,<3.8.0a0",
+    "vc 14.*"
+  ],
+  "files": [
+    "Lib/site-packages/__pycache__/test_pycosat.cpython-37.pyc",
+    "Lib/site-packages/pycosat-0.6.3-py3.7.egg-info",
+    "Lib/site-packages/pycosat.cp37-win_amd64.pyd",
+    "Lib/site-packages/test_pycosat.py"
+  ],
+  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "license": "MIT",
+  "link": {
+    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\pycosat-0.6.3-py37hfa6e2cd_0",
+    "type": "hard-link"
+  },
+  "md5": "0286cada8369b363e53969d840b58f27",
+  "name": "pycosat",
+  "platform": "win",
+  "subdir": "win-64",
+  "timestamp": 1533164987646,
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/pycosat-0.6.3-py37hfa6e2cd_0.tar.bz2",
+  "version": "0.6.3"
+}

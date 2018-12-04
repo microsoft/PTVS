@@ -1,0 +1,16 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.cfg
+setup.py
+socks.py
+sockshandler.py
+PySocks.egg-info/PKG-INFO
+PySocks.egg-info/SOURCES.txt
+PySocks.egg-info/dependency_links.txt
+PySocks.egg-info/top_level.txt
+test/__init__.py
+test/test_pysocks.py
+test/util.py
+test/bin/3proxy
+test/bin/3proxy.license

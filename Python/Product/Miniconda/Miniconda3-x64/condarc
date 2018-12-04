@@ -1,0 +1,3 @@
+# directories in which environments are located
+envs_dirs:
+  - ~/.conda/envs
