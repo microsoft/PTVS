@@ -15,10 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
-using Microsoft.Win32;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -45,12 +46,19 @@ namespace Microsoft.PythonTools.Debugger {
             }
             return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
+
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
             if(launchInfo.LaunchType == LaunchType.Attach) {
                 launchInfo.DebugPort.GetPortName(out string uri);
-                JObject obj = new JObject {
-                    ["remote"] = uri
+
+                var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+
+                JObject obj = new JObject()
+                {
+                    ["remote"] = uri,
+                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(debugService.ShowFunctionReturnValue)
                 };
+
                 launchInfo.LaunchJson = obj.ToString();
             }
         }

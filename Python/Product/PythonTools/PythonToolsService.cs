@@ -23,7 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
@@ -147,8 +146,9 @@ namespace Microsoft.PythonTools {
         private void InitializeLogging() {
             try {
                 var registry = ComponentModel.GetService<IInterpreterRegistryService>();
-                if (registry != null) { // not available in some test cases...
-                                                    // log interesting stats on startup
+                if (registry != null) {
+                    // not available in some test cases...
+                    // log interesting stats on startup
                     var installed = registry.Configurations.Count();
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);

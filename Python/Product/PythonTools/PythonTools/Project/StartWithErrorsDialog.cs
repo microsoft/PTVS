@@ -21,18 +21,18 @@ using System;
 
 namespace Microsoft.PythonTools.Project {
     public partial class StartWithErrorsDialog : Form {
-        private readonly PythonToolsService _pyService;
+        internal PythonToolsService PythonService { get; }
 
         public StartWithErrorsDialog(PythonToolsService pyService) {
-            _pyService = pyService;
+            PythonService = pyService;
             InitializeComponent();
             _icon.Image = SystemIcons.Warning.ToBitmap();
         }
 
         protected override void OnClosing(CancelEventArgs e) {
             if (_dontShowAgainCheckbox.Checked) {
-                _pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = false;
-                _pyService.DebuggerOptions.Save();
+                PythonService.DebuggerOptions.PromptBeforeRunningWithBuildError = false;
+                PythonService.DebuggerOptions.Save();
             }
         }
 
@@ -44,12 +44,6 @@ namespace Microsoft.PythonTools.Project {
         private void NoButtonClick(object sender, System.EventArgs e) {
             this.DialogResult = System.Windows.Forms.DialogResult.No;
             Close();
-        }
-
-        internal PythonToolsService PythonService {
-            get {
-                return _pyService;
-            }
         }
     }
 }

@@ -471,6 +471,7 @@ namespace Microsoft.PythonTools {
             AddService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
             AddService<ErrorTaskProvider>(ErrorTaskProvider.CreateService, promote: true);
             AddService<CommentTaskProvider>(CommentTaskProvider.CreateService, promote: true);
+            AddService<IPythonDebugOptionsService>((container, serviceType) => new PythonDebugOptionsService(this), promote: true);
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();

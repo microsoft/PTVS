@@ -257,6 +257,12 @@
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterLauncher.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterProcessStream.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapterRemoteProcess.cs" />
+    <Compile Include="PythonTools\Debugger\PtvsdVersionHelper.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
@@ -302,6 +308,7 @@
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentControl.xaml.cs">
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Options\PythonDebugOptionsService.cs" />
     <Compile Include="PythonTools\Project\PythonProjectInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />

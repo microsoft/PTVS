@@ -113,7 +113,6 @@
     <Compile Include="PackageManager\CondaPackageManager.cs" />
     <Compile Include="Interpreter\CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="Interpreter\CPythonInterpreterFactoryProvider.cs" />
-    <Compile Include="Interpreter\ExperimentalOptions.cs" />
     <Compile Include="Interpreter\IInterpreterOptionsService.cs" />
     <Compile Include="Interpreter\InterpreterFactoryIdAttribute.cs" />
     <Compile Include="Interpreter\InterpreterOptionsService.cs" />

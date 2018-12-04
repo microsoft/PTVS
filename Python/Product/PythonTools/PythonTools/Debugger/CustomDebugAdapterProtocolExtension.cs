@@ -75,8 +75,6 @@ namespace Microsoft.PythonTools.Debugger {
             Evaluator?._hostOperations.SendRequestSync(request);
         }
 
-
-
         public void Initialize(IDebugAdapterHostContext context) {
             _context = context ?? throw new ArgumentException(nameof(context));
             _context.Events.DebuggingEnded += OnDebuggingEnded;
