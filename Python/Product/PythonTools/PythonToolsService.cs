@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -53,7 +54,6 @@ namespace Microsoft.PythonTools {
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
         private readonly ConcurrentDictionary<string, VsProjectAnalyzer> _analyzers;
-        private readonly IPythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
         private readonly Lazy<CondaOptions> _condaOptions;
@@ -106,8 +106,9 @@ namespace Microsoft.PythonTools {
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
-            _logger = (IPythonToolsLogger)container.GetService(typeof(IPythonToolsLogger));
             _diagnosticsProvider = new DiagnosticsProvider(container);
+            Logger = (IPythonToolsLogger)container.GetService(typeof(IPythonToolsLogger));
+            EnvironmentSwitcherManager = new EnvironmentSwitcherManager(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
 
@@ -122,6 +123,7 @@ namespace Microsoft.PythonTools {
 
             _expansionCompletions = new ExpansionCompletionSource(Site);
             InitializeLogging();
+            EnvironmentSwitcherManager.Initialize();
         }
 
         public void Dispose() {
@@ -151,14 +153,14 @@ namespace Microsoft.PythonTools {
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);
 
-                    _logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
+                    Logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
                         { "Total", installed },
                         { "3x", installedV3 },
                         { "2x", installedV2 }
                     });
                 }
 
-                _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
+                Logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
                     { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
                 });
             } catch (Exception ex) {
@@ -175,7 +177,9 @@ namespace Microsoft.PythonTools {
         internal IInterpreterOptionsService InterpreterOptionsService => _interpreterOptionsService.Value;
         internal IInterpreterRegistryService InterpreterRegistryService => _interpreterRegistryService.Value;
 
-        internal IPythonToolsLogger Logger => _logger;
+        internal IPythonToolsLogger Logger { get; }
+
+        internal EnvironmentSwitcherManager EnvironmentSwitcherManager { get; }
 
         internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             if (factory == null) {

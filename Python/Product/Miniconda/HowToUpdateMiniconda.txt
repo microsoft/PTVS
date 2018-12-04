@@ -1,0 +1,11 @@
+Miniconda3-latest-Windows-x86_64.exe /NoRegistry=1 /S /D=c:\installed
+
+Once install has finished (miniconda executable keeps running even after it's done?), delete the subfolders under pkgs. They will be recreated on demand and this greatly reduces number of files / amount of space used.
+
+Create a condarc file in c:\installed:
+
+# directories in which environments are located
+envs_dirs:
+  - ~/.conda/envs
+
+Delete the contents of Miniconda3-x64, and replace with the contents of c:\installed

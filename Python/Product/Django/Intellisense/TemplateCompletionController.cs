@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 #if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Editor.Completion;
+using Microsoft.WebTools.Languages.Shared.Editor.Completion;
 #else
 using Microsoft.Web.Editor.Completion;
 #endif

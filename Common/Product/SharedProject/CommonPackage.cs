@@ -126,6 +126,15 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
+        internal void RegisterCommands(params MenuCommand[] commands) {
+            _uiThread.MustBeCalledFromUIThreadOrThrow();
+            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs) {
+                foreach (var command in commands) {
+                    mcs.AddCommand(command);
+                }
+            }
+        }
+
         /// <summary>
         /// Gets the current IWpfTextView that is the active document.
         /// </summary>

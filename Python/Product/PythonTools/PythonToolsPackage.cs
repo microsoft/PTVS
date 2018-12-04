@@ -16,28 +16,28 @@
 
 using System;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -54,7 +54,6 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
-using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
@@ -183,6 +182,7 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
+        private DisposableBag _disposables;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
         /// <summary>
@@ -193,6 +193,8 @@ namespace Microsoft.PythonTools {
         /// initialization is the Initialize method.
         /// </summary>
         public PythonToolsPackage() {
+            _disposables = new DisposableBag(GetType().Name, "Package is disposed");
+
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 
 #if DEBUG
@@ -213,6 +215,14 @@ namespace Microsoft.PythonTools {
                 }
             };
 #endif
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+
+            if (disposing) {
+                _disposables.TryDispose();
+            }
         }
 
         public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
@@ -248,6 +258,16 @@ namespace Microsoft.PythonTools {
             return base.CreateToolWindow(ref toolWindowType, id);
         }
 
+        protected override int QueryClose(out bool canClose) {
+            var res = base.QueryClose(out canClose);
+
+            if (canClose) {
+                var pyService = this.GetPythonToolsService();
+                pyService.EnvironmentSwitcherManager.IsClosing = true;
+            }
+
+            return res;
+        }
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
             if (File.Exists(filename)) {
                 VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
@@ -304,7 +324,19 @@ namespace Microsoft.PythonTools {
         }
 
         internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
-            var project = (IPythonProject)provider.GetProjectFromOpenFile(filename) ?? new DefaultPythonProject(provider, filename);
+            bool isLaunchFileOpen = true;
+            var project = (IPythonProject)provider.GetProjectFromOpenFile(filename);
+
+            if (project == null) {
+                project = (IPythonProject)provider.GetProjectContainingFile(filename);
+
+                if (project == null) {
+                    project = new DefaultPythonProject(provider, filename);
+                } else {
+                    isLaunchFileOpen = false;
+                }
+            }
+
             try {
                 var starter = GetLauncher(provider, project);
                 if (starter == null) {
@@ -313,28 +345,10 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (saveDirtyFiles) {
-                    var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-                    if (rdt != null && rdt4 != null) {
-                        // The save operation may move the file, so adjust filename
-                        // to the new location if necessary.
-                        var launchFileCookie = rdt4.GetDocumentCookie(filename);
-
-                        // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
-                        // when VS settings include prompt for save on build
-                        var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
-                        var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
-                        if (hr == VSConstants.E_ABORT) {
-                            return false;
-                        }
-
-                        if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
-                            var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
-                            if (!string.IsNullOrEmpty(launchFileMoniker)) {
-                                filename = launchFileMoniker;
-                            }
-                        }
+                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, ref filename)) {
+                        return false;
                     }
+
                 }
 
                 starter.LaunchFile(filename, debug);
@@ -363,6 +377,34 @@ namespace Microsoft.PythonTools {
                 return false;
             }
 
+            return true;
+        }
+
+        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName) {
+            var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+
+            if (rdt != null && rdt4 != null) {
+                // The save operation may move the file, so adjust filename 
+                // to the new location if necessary. 
+                var launchFileCookie = isLaunchFileOpen ? rdt4.GetDocumentCookie(fileName) : VSConstants.VSCOOKIE_NIL;
+
+                // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
+                // when VS settings include prompt for save on build
+                var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
+                var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
+                if (hr == VSConstants.E_ABORT) {
+                    return false;
+
+                }
+
+                if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
+                    var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
+                    if (!string.IsNullOrEmpty(launchFileMoniker)) {
+                        fileName = launchFileMoniker;
+                    }
+                }
+            }
             return true;
         }
 
@@ -456,9 +498,17 @@ namespace Microsoft.PythonTools {
                 new ShowCppViewCommand(this),
                 new ShowNativePythonFrames(this),
                 new UsePythonStepping(this),
+                new ViewAllEnvironmentsCommand(this),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
                 new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport),
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
+
+            RegisterCommands(
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
+                new CurrentEnvironmentCommand(this),
+                new CurrentEnvironmentListCommand(this)
+            );
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;

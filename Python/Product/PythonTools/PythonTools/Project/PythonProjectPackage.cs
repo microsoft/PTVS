@@ -66,14 +66,6 @@ namespace Microsoft.PythonTools.Project {
                 !PathUtils.IsSubpathOf(rootDir, installPath)) {
                 MSBuild.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("_PythonToolsPath", installPath);
                 Environment.SetEnvironmentVariable("_PythonToolsPath", installPath);
-
-                // Also find and set the UWP tools path
-                var uwp = PathUtils.FindFile(PathUtils.GetParent(PathUtils.GetParent(installPath)), "Microsoft.PythonTools.Uwp.targets", depthLimit: 3);
-                if (!string.IsNullOrEmpty(uwp)) {
-                    uwp = PathUtils.GetParent(uwp);
-                    MSBuild.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("_PythonUwpToolsPath", uwp);
-                    Environment.SetEnvironmentVariable("_PythonUwpToolsPath", installPath);
-                }
             }
 
             base.Initialize();

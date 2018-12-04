@@ -17,14 +17,13 @@
 using System;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
@@ -72,6 +71,25 @@ namespace Microsoft.PythonTools.Navigation {
             }
         }
 
+        private bool TryGetTextView(IVsTextView vsTextView, out IWpfTextView view) {
+            if (vsTextView == null) {
+                view = null;
+                return false;
+            }
+            view = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+            if (view == null) {
+                return false;
+            }
+
+            if (view.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
+                // This is not really our text view
+                view = null;
+                return false;
+            }
+
+            return true;
+        }
+
         private int AddDropDownBar(bool refresh) {
             var cpc = (IConnectionPointContainer)_window;
             if (cpc != null) {
@@ -82,20 +100,17 @@ namespace Microsoft.PythonTools.Navigation {
                 }
             }
 
-            IWpfTextView wpfTextView = null;
             IVsTextView vsTextView;
-            if (ErrorHandler.Succeeded(_window.GetLastActiveView(out vsTextView)) && vsTextView != null) {
-                wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
-            }
-            if (wpfTextView == null) {
+            if (!ErrorHandler.Succeeded(_window.GetLastActiveView(out vsTextView)) ||
+                !TryGetTextView(vsTextView, out var view)) {
                 return VSConstants.E_FAIL;
             }
 
-            _client = new DropDownBarClient(_serviceProvider, wpfTextView);
+            _client = new DropDownBarClient(_serviceProvider, view);
             var result = _client.Register((IVsDropdownBarManager)_window);
  
             if (refresh) {
-                var entry = wpfTextView.TryGetAnalysisEntry(_serviceProvider);
+                var entry = view.TryGetAnalysisEntry(_serviceProvider);
                 if (entry != null && entry.IsAnalyzed) {
                     _client.RefreshNavigationsFromAnalysisEntry(entry)
                         .HandleAllExceptions(_serviceProvider, GetType())
@@ -151,8 +166,7 @@ namespace Microsoft.PythonTools.Navigation {
 
         int IVsCodeWindowEvents.OnNewView(IVsTextView vsTextView) {
             _viewCount++;
-            var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
-            if (wpfTextView != null) {
+            if (TryGetTextView(vsTextView, out var wpfTextView)) {
                 var services = ComponentModel.GetService<PythonEditorServices>();
                 EditFilter.GetOrCreate(services, vsTextView);
                 new TextViewFilter(services, vsTextView);
@@ -168,8 +182,7 @@ namespace Microsoft.PythonTools.Navigation {
                 _pyService.CodeWindowClosed(_window);
             }
             _pyService.OnIdle -= OnIdle;
-            var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
-            if (wpfTextView != null) {
+            if (TryGetTextView(vsTextView, out var wpfTextView)) {
                 wpfTextView.GotAggregateFocus -= OnTextViewGotAggregateFocus;
                 wpfTextView.LostAggregateFocus -= OnTextViewLostAggregateFocus;
             }

@@ -19,6 +19,8 @@ using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class UriJsonConverter : JsonConverter {
+        public static readonly JsonConverter Instance = new UriJsonConverter();
+
         public override bool CanConvert(Type objectType) {
             return typeof(Uri).IsAssignableFrom(objectType);
         }

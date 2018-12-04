@@ -45,7 +45,12 @@
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
-    <Reference Include="Microsoft.VisualStudio.Utilities.Internal" />
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.Composition" />
@@ -78,6 +83,8 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Workspace" />
+    <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -102,6 +109,7 @@
     <Compile Include="AutoIndentTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <Compile Include="CodeCellTests.cs" />
+    <Compile Include="WorkspaceInterpreterFactoryTests.cs" />
     <Compile Include="CoverageTests.cs" />
     <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="CondaInterpreterFactoryTests.cs" />
@@ -109,6 +117,7 @@
     <Compile Include="EditorTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
+    <Compile Include="LiveShareTests.cs" />
     <Compile Include="LocationTrackerTests.cs" />
     <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
@@ -142,6 +151,10 @@
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\LiveShare\LiveShare.csproj">
+      <Project>{4065a3c8-0e5e-42ac-9d94-509aa90c90e9}</Project>
+      <Name>LiveShare</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>

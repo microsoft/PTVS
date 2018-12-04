@@ -141,5 +141,23 @@ namespace PythonToolsUITestsRunner {
         public void VirtualEnvironmentReplWorkingDirectory() {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.VirtualEnvironmentReplWorkingDirectory));
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void SwitcherSingleProject() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherSingleProject));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void SwitcherWorkspace() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherWorkspace));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void SwitcherNoProject() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherNoProject));
+        }
     }
 }

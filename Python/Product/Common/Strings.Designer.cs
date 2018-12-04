@@ -3156,6 +3156,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (no Python environment).
+        /// </summary>
+        public static string EnvironmentSwitcherNoCurrentEnvironment {
+            get {
+                return ResourceManager.GetString("EnvironmentSwitcherNoCurrentEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Environment ({0}).
+        /// </summary>
+        public static string EnvironmentSwitcherTooltipWithKeyBinding {
+            get {
+                return ResourceManager.GetString("EnvironmentSwitcherTooltipWithKeyBinding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Environment.
+        /// </summary>
+        public static string EnvironmentSwitcherTooltipWithoutKeyBinding {
+            get {
+                return ResourceManager.GetString("EnvironmentSwitcherTooltipWithoutKeyBinding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Python language version supported by the environment..
         /// </summary>
         public static string EnvironmentVersionDescription {
@@ -4170,15 +4197,6 @@ namespace Microsoft.PythonTools {
         public static string ImportWizardProjectExists {
             get {
                 return ResourceManager.GetString("ImportWizardProjectExists", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Python UWP Project.
-        /// </summary>
-        public static string ImportWizardUwpProjectCustomization {
-            get {
-                return ResourceManager.GetString("ImportWizardUwpProjectCustomization", resourceCulture);
             }
         }
         
@@ -7351,6 +7369,15 @@ namespace Microsoft.PythonTools {
         public static string WebPIReferenceDeprecated {
             get {
                 return ResourceManager.GetString("WebPIReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace Environment.
+        /// </summary>
+        public static string WorkspaceEnvironmentDescription {
+            get {
+                return ResourceManager.GetString("WorkspaceEnvironmentDescription", resourceCulture);
             }
         }
         

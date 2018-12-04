@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools
         public static readonly Guid guidPythonLanguageServiceGuid = new Guid(guidPythonLanguageService);
         public static readonly Guid guidCSharpProjectPacakge = new Guid("FAE04EC1-301F-11D3-BF4B-00C04F79EFBC");
         public static readonly Guid guidPythonInteractiveWindowGuid = new Guid(guidPythonInteractiveWindow);
+        public static readonly Guid guidPythonToolbarUIContext = new Guid("2F07BD4C-A28C-405B-923D-09EBA2946E67");
         public static readonly Guid guidCookiecutterPackage = new Guid("8261E28A-54EC-44D2-ADED-8F9366B9196B");
 
         public static readonly Guid guidVenusCmdId = new Guid("c7547851-4e3a-4e5b-9173-fa6e9c8bd82c");

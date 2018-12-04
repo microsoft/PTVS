@@ -15,17 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
@@ -505,6 +504,124 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 var env = app.CreateVirtualEnvironment(project, out _);
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);
+            }
+        }
+
+        public void SwitcherSingleProject(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            var added27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            added27.AssertInstalled();
+
+            var added36 = PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+            added36.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Project has no references, uses global default
+                var project = CreateTemporaryProject(app);
+                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+
+                // Project has one referenced interpreter
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pp = project.GetPythonProject();
+                    pp.AddInterpreter(added27.Configuration.Id);
+                });
+                CheckSwitcherEnvironment(app, added27.Configuration.Description);
+
+                // Project has two referenced interpreters (active remains the same)
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pp = project.GetPythonProject();
+                    pp.AddInterpreter(added36.Configuration.Id);
+                });
+                CheckSwitcherEnvironment(app, added27.Configuration.Description);
+
+                // No switcher visible when solution closed and no file opened
+                app.Dte.Solution.Close(SaveFirst: false);
+                CheckSwitcherEnvironment(app, null);
+            }
+        }
+
+        public void SwitcherWorkspace(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            var python27 = PythonPaths.Python27_x64;
+            python27.AssertInstalled();
+
+            var folders = TestData.GetTempPath();
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "EnvironmentsSwitcherFolders"), folders);
+
+            var folder1 = Path.Combine(folders, "WorkspaceWithoutSettings");
+            var folder2 = Path.Combine(folders, "WorkspaceWithSettings");
+            var folder3 = Path.Combine(folders, "WorkspaceNoPython");
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Hidden before any file is opened
+                CheckSwitcherEnvironment(app, null);
+
+                // Workspace without PythonSettings.json shows global default
+                app.OpenFolder(folder1);
+                app.OpenDocument(Path.Combine(folder1, "app1.py"));
+                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+
+                // Workspace with PythonSettings.json - Python 2.7 (64-bit)
+                app.OpenFolder(folder2);
+                app.OpenDocument(Path.Combine(folder2, "app2.py"));
+                CheckSwitcherEnvironment(app, python27.Configuration.Description);
+
+                // Keep showing even after opening non-python files
+                app.OpenDocument(Path.Combine(folder2, "app2.cpp"));
+                CheckSwitcherEnvironment(app, python27.Configuration.Description);
+
+                // Workspace without python file
+                app.OpenFolder(folder3);
+                CheckSwitcherEnvironment(app, null);
+                app.OpenDocument(Path.Combine(folder3, "app3.cpp"));
+                CheckSwitcherEnvironment(app, null);
+
+                app.Dte.Solution.Close();
+                CheckSwitcherEnvironment(app, null);
+            }
+        }
+
+        public void SwitcherNoProject(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                // Loose Python file shows global default
+                app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.py"));
+                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+
+                // No switcher visible when solution closed and no file opened
+                app.Dte.ActiveWindow.Close();
+                CheckSwitcherEnvironment(app, null);
+
+                // No switcher visible when loose cpp file open
+                app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.cpp"));
+                CheckSwitcherEnvironment(app, null);
+            }
+        }
+
+        private void CheckSwitcherEnvironment(PythonVisualStudioApp app, string expectedDescription) {
+            var expectedVisible = expectedDescription != null;
+
+            var switchMgr = app.PythonToolsService.EnvironmentSwitcherManager;
+            for (int i = 10; i >= 0; i--) {
+                var actualVisible = UIContext.FromUIContextGuid(GuidList.guidPythonToolbarUIContext).IsActive;
+                var actualDescription = switchMgr.CurrentFactory?.Configuration.Description;
+
+                if (actualVisible == expectedVisible && actualDescription == expectedDescription) {
+                    return;
+                }
+
+                if (i == 0) {
+                    Assert.AreEqual(expectedVisible, actualVisible);
+                    Assert.AreEqual(expectedDescription, actualDescription);
+                } else {
+                    Thread.Sleep(500);
+                }
             }
         }
     }

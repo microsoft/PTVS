@@ -33,7 +33,11 @@ $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPat
 pushd "$buildroot\Build"
 try {
     $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", $outdir, "-Config", "$vstarget\nuget.config", "-NonInteractive"
-    Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Stop -ArgumentList $arglist
+    $nuget = gcm nuget.exe -EA 0
+    if (-not $nuget) {
+        $nuget = gcm .\nuget.exe
+    }
+    Start-Process -Wait -NoNewWindow $nuget.Source -ErrorAction Stop -ArgumentList $arglist
 
     $versions = @{}
     ([xml](gc "$vstarget\packages.config")).packages.package | %{ $versions[$_.id] = $_.version }

@@ -9,9 +9,9 @@
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     
-    <!-- Exclude UWP by default -->
-    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
-    
+    <!-- Include Miniconda by default -->
+    <IncludeMiniconda Condition="'$(IncludeMiniconda)' == ''">true</IncludeMiniconda>
+
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     
@@ -20,5 +20,8 @@
 
     <!-- Exclude ExternalProfilerDriver by default (for the moment) -->
     <IncludeExternalProfilerDriver Condition="'$(IncludeExternalProfilerDriver)' == ''">false</IncludeExternalProfilerDriver>
+
+    <!-- Include LiveShare by default -->
+    <IncludeLiveShare Condition="'$(IncludeLiveShare)' == ''">true</IncludeLiveShare>
   </PropertyGroup>
 </Project>

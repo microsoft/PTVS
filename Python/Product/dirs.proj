@@ -49,17 +49,15 @@
     <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
-    <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
-
-    <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
-
+    
     <ProjectFile Include="VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'"/>
     <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
+    <ProjectFile Include="Miniconda\Miniconda.csproj" Condition="'$(IncludeMiniconda)' == 'True'"/>
+
+    <ProjectFile Include="LiveShare\LiveShare.csproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
 
     <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />
-
-    <ProjectFile Include="AnacondaInstallLauncher\AnacondaInstallLauncher.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

@@ -33,6 +33,7 @@
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
         Microsoft.PythonTools.Ipc.Json.dll;
+        Microsoft.PythonTools.LiveShare.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.RunElevated.exe;
@@ -45,7 +46,6 @@
         Microsoft.PythonTools.Workspace.dll;
         Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
-        AnacondaInstallLauncher.exe;
         "/>
 
     <ManagedFiles Include="
@@ -64,10 +64,8 @@
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         " Condition="$(IncludeIronPython)" />
     <ManagedFiles Include="
-        Microsoft.PythonTools.Uwp.dll;
-        Microsoft.PythonTools.Uwp.Interpreter.dll;
-        Microsoft.PythonTools.Uwp.Wizards.dll;
-        " Condition="$(IncludeUwp)" />
+        Microsoft.PythonTools.Miniconda.dll;
+        " Condition="$(IncludeMiniconda)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />

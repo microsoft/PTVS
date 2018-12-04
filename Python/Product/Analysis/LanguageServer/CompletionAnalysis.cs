@@ -820,11 +820,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = m.Name,
                 insertText = completion,
                 documentation = string.IsNullOrWhiteSpace(doc) ? null : new MarkupContent {
-                    kind = _textBuilder.DisplayOptions.preferredFormat,
+                    kind = _textBuilder.DisplayOptions.preferredFormat ?? MarkupKind.PlainText,
                     value = doc
                 },
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(completion, 0) ? "1" : "2",
+                sortText = (char.IsLetter(completion, 0) ? "1" : "2") + m.Name,
                 kind = ToCompletionItemKind(m.MemberType),
                 _kind = m.MemberType.ToString().ToLowerInvariant()
             };
@@ -836,7 +836,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = label ?? text,
                 insertText = text,
                 // Place regular items first, advanced entries last
-                sortText = char.IsLetter(text, 0) ? "1" : "2",
+                sortText = (char.IsLetter(text, 0) ? "1" : "2") + (label ?? text),
                 kind = ToCompletionItemKind(type),
                 _kind = type.ToString().ToLowerInvariant()
             };

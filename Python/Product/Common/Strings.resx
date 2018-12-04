@@ -828,9 +828,6 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="CustomCommandPrerequisitesRunAnyway" xml:space="preserve">
     <value>Run the command without installing the packages</value>
   </data>
-  <data name="ImportWizardUwpProjectCustomization" xml:space="preserve">
-    <value>Python UWP Project</value>
-  </data>
   <data name="ErrorLoadingEnvironmentViewExtension" xml:space="preserve">
     <value>An error occurred loading '{0}' for the environments window.
 {1}</value>
@@ -2040,6 +2037,9 @@ Expand selection to the full expression?</value>
     <value>Packages (PyPI)</value>
     <comment>Do not translate 'PyPI'</comment>
   </data>
+  <data name="WorkspaceEnvironmentDescription" xml:space="preserve">
+    <value>Workspace Environment</value>
+  </data>
   <data name="CondaEnvironmentDescription" xml:space="preserve">
     <value>Conda Environment</value>
     <comment>Do not translate 'Conda'</comment>
@@ -2481,6 +2481,16 @@ Please specify at least one package.</value>
   </data>
   <data name="CondaExecutableFilter" xml:space="preserve">
     <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="EnvironmentSwitcherNoCurrentEnvironment" xml:space="preserve">
+    <value>(no Python environment)</value>
+  </data>
+  <data name="EnvironmentSwitcherTooltipWithKeyBinding" xml:space="preserve">
+    <value>Python Environment ({0})</value>
+    <comment>{0} is a string that contains a keyboard shortcut ie "CTRL+K, CTRL+E"</comment>
+  </data>
+  <data name="EnvironmentSwitcherTooltipWithoutKeyBinding" xml:space="preserve">
+    <value>Python Environment</value>
   </data>
   <data name="ConfigurationExtensionDescriptionWatermark" xml:space="preserve">
     <value>e.g. My Custom Environment</value>

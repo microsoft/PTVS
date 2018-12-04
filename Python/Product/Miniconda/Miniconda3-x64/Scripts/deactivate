@@ -1,0 +1,4 @@
+#!/bin/sh
+_CONDA_ROOT="$(cygpath 'C:/Users/huvalo/Documents/Miniconda')"
+\. "$_CONDA_ROOT/etc/profile.d/conda.sh" || return $?
+_conda_deactivate

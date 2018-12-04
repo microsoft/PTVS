@@ -164,9 +164,18 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task<Response> ProcessLanguageServerRequest(AP.LanguageServerRequest request) {
             try {
                 var body = (Newtonsoft.Json.Linq.JObject)request.body;
+                object result = null;
 
                 switch (request.name) {
-                    case "textDocument/completion": return new AP.LanguageServerResponse { body = await _server.Completion(body.ToObject<LS.CompletionParams>()) };
+                    case "textDocument/completion": result = await _server.Completion(body.ToObject<LS.CompletionParams>()); break;
+                    case "textDocument/hover": result = await _server.Hover(body.ToObject<LS.TextDocumentPositionParams>()); break;
+                    case "textDocument/definition": result = await _server.GotoDefinition(body.ToObject<LS.TextDocumentPositionParams>()); break;
+                    case "textDocument/references": result = await _server.FindReferences(body.ToObject<LS.ReferencesParams>()); break;
+                    case "textDocument/signatureHelp": result = await _server.SignatureHelp(body.ToObject<LS.TextDocumentPositionParams>()); break;
+                }
+
+                if (result != null) {
+                    return new AP.LanguageServerResponse { body = result };
                 }
 
                 return new AP.LanguageServerResponse { error = "Unknown command: " + request.name };

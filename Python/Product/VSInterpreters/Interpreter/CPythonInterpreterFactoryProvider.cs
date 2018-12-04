@@ -163,6 +163,23 @@ namespace Microsoft.PythonTools.Interpreter {
             return InterpreterArchitecture.Unknown;
         }
 
+        public static Version VersionFromSysVersionInfo(string interpreterPath) {
+            Version version = null;
+            using (var output = ProcessOutput.RunHiddenAndCapture(
+                interpreterPath, "-c", "import sys; print('%s.%s' % (sys.version_info[0], sys.version_info[1]))"
+            )) {
+                output.Wait();
+                if (output.ExitCode == 0) {
+                    var versionName = output.StandardOutputLines.FirstOrDefault() ?? "";
+                    if (!Version.TryParse(versionName, out version)) {
+                        version = null;
+                    }
+                }
+            }
+
+            return version;
+        }
+
         internal void DiscoverInterpreterFactories() {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
