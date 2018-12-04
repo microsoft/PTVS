@@ -9,6 +9,9 @@
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     
+    <!-- Include Miniconda by default -->
+    <IncludeMiniconda Condition="'$(IncludeMiniconda)' == ''">true</IncludeMiniconda>
+
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     
