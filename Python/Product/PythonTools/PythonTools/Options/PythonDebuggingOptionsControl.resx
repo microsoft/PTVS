@@ -337,7 +337,7 @@
     <value>6</value>
   </data>
   <data name="_showFunctionReturnValue.Text" xml:space="preserve">
-    <value>Show function return value</value>
+    <value>Show &amp;function return value</value>
   </data>
   <data name="&gt;&gt;_showFunctionReturnValue.Name" xml:space="preserve">
     <value>_showFunctionReturnValue</value>
@@ -349,7 +349,7 @@
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_showFunctionReturnValue.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="_useLegacyDebugger.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -385,7 +385,7 @@
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_useLegacyDebugger.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="tableLayoutPanel2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -424,7 +424,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useLegacyDebugger" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useLegacyDebugger" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
