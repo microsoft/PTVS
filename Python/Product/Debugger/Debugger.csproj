@@ -95,6 +95,8 @@
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
+    <Compile Include="Debugger\IPythonDebugOptionsService.cs" />
+    <Compile Include="Debugger\PythonDebugOptionsServiceHelper.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />
     <Compile Include="Debugger\DebugConnectionListener.cs" />
@@ -156,7 +158,6 @@
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="PtvsdVersion.cs" />
-    <Compile Include="PtvsdVersionHelper.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>

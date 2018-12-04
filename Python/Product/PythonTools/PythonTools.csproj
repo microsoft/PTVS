@@ -259,6 +259,7 @@
     <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapterProcessStream.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapterRemoteProcess.cs" />
+    <Compile Include="PythonTools\Debugger\PtvsdVersionHelper.cs" />
     <Compile Include="PythonTools\Environments\InstallPackagesOperation.cs" />
     <Compile Include="PythonTools\Environments\CustomEnv.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentTemplateSelector.cs" />
@@ -293,6 +294,7 @@
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentControl.xaml.cs">
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Options\PythonDebugOptionsService.cs" />
     <Compile Include="PythonTools\Project\PythonProjectInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />

@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Newtonsoft.Json;
 
@@ -124,7 +125,9 @@ namespace Microsoft.PythonTools.Debugger {
                     if (selection == learnMore) {
                         Process.Start("https://aka.ms/upgradeptvsd")?.Dispose();
                     } else if (selection == disable) {
-                        ExperimentalOptions.UseVsCodeDebugger = false;
+                        var debuggerOptions = ((PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService))).DebuggerOptions;
+                        debuggerOptions.UseLegacyDebugger = true;
+                        debuggerOptions.Save();
                     }
                 });
             } catch (Exception ex) when (!ex.IsCriticalException()) {

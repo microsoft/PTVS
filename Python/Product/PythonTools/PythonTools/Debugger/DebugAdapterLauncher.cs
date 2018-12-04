@@ -51,16 +51,12 @@ namespace Microsoft.PythonTools.Debugger {
             if(launchInfo.LaunchType == LaunchType.Attach) {
                 launchInfo.DebugPort.GetPortName(out string uri);
 
-                var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
-                var ptvsPackage = GuidList.guidPythonToolsPackage;
-                shell.LoadPackage(ref ptvsPackage, out _);
+                var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
 
-                var pyToolsService = (PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService));
-                bool showReturnValue = pyToolsService.DebuggerOptions.ShowReturnValue;
                 JObject obj = new JObject()
                 {
                     ["remote"] = uri,
-                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(showReturnValue)
+                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(debugService.ShowFunctionReturnValue)
                 };
 
                 launchInfo.LaunchJson = obj.ToString();

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class CondaOptions {

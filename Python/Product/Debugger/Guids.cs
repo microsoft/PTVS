@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Debugger {
         public static readonly Guid UnknownPythonModuleGuid = new Guid("42A6F911-9997-4504-861C-91015BDCE588");
         public static readonly Guid CppLanguageGuid = new Guid("3A12D0B7-C26C-11D0-B442-00A0244A1DD2");
 
-		public const string PythonDebugEngineId = "EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9";
+        public const string PythonDebugEngineId = "EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9";
         public static readonly Guid PythonDebugEngineGuid = new Guid(PythonDebugEngineId);
 
         public const string PythonExceptionCategoryId = PythonDebugEngineId;
@@ -55,5 +55,8 @@ namespace Microsoft.PythonTools.Debugger {
         public const string ProgramProviderCLSID = "FA452F5D-539E-4B55-BCC6-5DE7E342BC44";
         public const string DebugEngineCLSID = "0DA53AFE-069E-47A3-AE34-32610A8253A3";
         public const string RemoteDebugPortSupplierCLSID = "B8CBA3DE-4A20-4DD7-8709-EC66A6A256D3";
+
+        public const string PythonToolsPackageID = "6dbd7c1e-1f1b-496d-ac7c-c55dae66c783";
+        public static readonly Guid PythonToolsPackageGUID = new Guid(PythonToolsPackageID);
     }
 }

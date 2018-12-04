@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (options.DebugStdLib) {
                 yield return AD7Engine.DebugStdLib + "=True";
             }
-            if (options.ShowReturnValue) {
+            if (options.ShowFunctionReturnValue) {
                 yield return AD7Engine.ShowReturnValue + "=True";
             }
         }

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Runtime.InteropServices;
-using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]

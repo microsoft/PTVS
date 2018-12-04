@@ -15,12 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
-//using EO = Microsoft.PythonTools.Interpreter.ExperimentalOptions;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class DebuggerOptions {
         private readonly PythonToolsService _service;
+
+        public event EventHandler Changed;
 
         private const string Category = "Advanced";
 
@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
         private const string DebugStdLibSetting = "DebugStdLib";
         private const string ShowFunctionReturnValueSetting = "ShowReturnValue";
-        private const string UseVsCodeDebuggerSetting = "UseVsCodeDebugger";
+        private const string UseLegacyDebuggerSetting = "UseLegacyDebugger";
 
         internal DebuggerOptions(PythonToolsService service) {
             _service = service;
@@ -45,8 +45,8 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = _service.LoadBool(TeeStandardOutSetting, Category) ?? true;
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
-            ShowReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
-            UseLegacyDebugger = !(_service.LoadBool(UseVsCodeDebuggerSetting, Category) ?? true);
+            ShowFunctionReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
+            UseLegacyDebugger = _service.LoadBool(UseLegacyDebuggerSetting, Category) ?? false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -57,8 +57,8 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(TeeStandardOutSetting, Category, TeeStandardOutput);
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
-            _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowReturnValue);
-            _service.SaveBool(UseVsCodeDebuggerSetting, Category, !UseLegacyDebugger);
+            _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowFunctionReturnValue);
+            _service.SaveBool(UseLegacyDebuggerSetting, Category, UseLegacyDebugger);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -69,12 +69,10 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = true;
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
-            ShowReturnValue = true;
+            ShowFunctionReturnValue = true;
             UseLegacyDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
-
-        public event EventHandler Changed;
 
         /// <summary>
         /// True to ask the user whether to run when their code contains errors.
@@ -135,14 +133,15 @@ namespace Microsoft.PythonTools.Options {
 
         /// <summary>
         /// Show the function return value in locals window
+        /// Default is true
         /// </summary>
-        public bool ShowReturnValue {
+        public bool ShowFunctionReturnValue {
             get;
             set;
         }
 
         /// <summary>
-        /// True to use the legacy debugger.
+        /// True to use the legacy debugger. Default is false.
         /// </summary>
         public bool UseLegacyDebugger {
             get;
