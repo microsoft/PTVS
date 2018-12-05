@@ -304,5 +304,13 @@ namespace Microsoft.PythonTools.Environments {
             textBox.SelectAll();
             textBox.Focus();
         }
+
+        private void AddExistingEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
+        }
+
+        private void AddInstalledEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
+        }
     }
 }
