@@ -41,6 +41,8 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.IronPython",
     "Microsoft.PythonTools.IronPython.Interpreter",
     "Microsoft.PythonTools.Ipc.Json",
+    "Microsoft.PythonTools.LiveShare",
+    "Microsoft.PythonTools.Miniconda",
     "Microsoft.PythonTools.ML",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
