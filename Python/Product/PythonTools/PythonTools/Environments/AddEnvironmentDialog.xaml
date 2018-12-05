@@ -25,7 +25,7 @@
 
                 <ResourceDictionary>
                     <DataTemplate x:Key="AddCondaEnvironmentViewTemplate">
-                        <l:AddCondaEnvironmentControl/>
+                        <l:AddCondaEnvironmentControl Loaded="AddCondaEnvironmentControl_Loaded"/>
                     </DataTemplate>
 
                     <DataTemplate x:Key="AddExistingEnvironmentViewTemplate">
@@ -33,7 +33,7 @@
                     </DataTemplate>
 
                     <DataTemplate x:Key="AddVirtualEnvironmentViewTemplate">
-                        <l:AddVirtualEnvironmentControl/>
+                        <l:AddVirtualEnvironmentControl Loaded="AddVirtualEnvironmentControl_Loaded"/>
                     </DataTemplate>
 
                     <DataTemplate x:Key="AddInstalledEnvironmentViewTemplate">
