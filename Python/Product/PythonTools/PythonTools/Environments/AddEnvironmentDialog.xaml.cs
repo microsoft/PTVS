@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.PythonTools.Environments {
     internal partial class AddEnvironmentDialog : ModernDialog, IDisposable {
         public static readonly ICommand MoreInfo = new RoutedCommand();
+        private bool _isStartupFocusSet;
 
         public AddEnvironmentDialog(IEnumerable<EnvironmentViewBase> pages, EnvironmentViewBase selected) {
             if (pages == null) {
@@ -280,6 +281,36 @@ namespace Microsoft.PythonTools.Environments {
 
         public void Dispose() {
             View.Dispose();
+        }
+
+        private void AddCondaEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            if (_isStartupFocusSet) {
+                return;
+            }
+
+            _isStartupFocusSet = true;
+            var textBox = ((AddCondaEnvironmentControl)sender).EnvNameTextBox;
+            textBox.SelectAll();
+            textBox.Focus();
+        }
+
+        private void AddVirtualEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            if (_isStartupFocusSet) {
+                return;
+            }
+
+            _isStartupFocusSet = true;
+            var textBox = ((AddVirtualEnvironmentControl)sender).EnvNameTextBox;
+            textBox.SelectAll();
+            textBox.Focus();
+        }
+
+        private void AddExistingEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
+        }
+
+        private void AddInstalledEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
         }
     }
 }
