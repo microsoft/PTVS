@@ -13,4 +13,4 @@
 *.bat eol=crlf
 
 # Language detection
-PTVS/Python/Product/Miniconda/Miniconda3-x64/ linguist-vendored
+Python/Product/Miniconda/Miniconda3-x64/* linguist-vendored
