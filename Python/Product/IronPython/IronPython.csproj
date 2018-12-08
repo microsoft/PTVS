@@ -51,6 +51,7 @@
     <Reference Include="IronPython" />
     <Reference Include="IronPython.Modules" />
     <Reference Include="IronPython.Wpf" />
+    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.Dynamic" />
     <Reference Include="Microsoft.Scripting" />
     <Reference Include="Microsoft.Scripting.Metadata" />
@@ -118,10 +119,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
-      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Microsoft.PythonTools.Analysis</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
