@@ -735,6 +735,7 @@ namespace PythonToolsUITests {
                     registryService,
                     optionsService,
                     pyProj,
+                    null,
                     Path.Combine(pyProj.ProjectHome, "env"),
                     registryService.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
                     false,

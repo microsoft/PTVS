@@ -136,11 +136,15 @@ namespace Microsoft.PythonTools.Interpreter {
             return Task.CompletedTask;
         }
 
-        internal void DiscoverInterpreterFactories() {
+        private void DiscoverInterpreterFactories() {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
 
+            ForceDiscoverInterpreterFactories();
+        }
+
+        private void ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -383,21 +387,26 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private sealed class DiscoverOnDispose : IDisposable {
             private readonly WorkspaceInterpreterFactoryProvider _provider;
+            private readonly bool _forceDiscovery;
 
-            public DiscoverOnDispose(WorkspaceInterpreterFactoryProvider provider) {
+            public DiscoverOnDispose(WorkspaceInterpreterFactoryProvider provider, bool forceDiscovery) {
                 _provider = provider;
+                _forceDiscovery = forceDiscovery;
                 Interlocked.Increment(ref _provider._ignoreNotifications);
             }
 
             public void Dispose() {
-                if (Interlocked.Decrement(ref _provider._ignoreNotifications) == 0) {
+                Interlocked.Decrement(ref _provider._ignoreNotifications);
+                if (_forceDiscovery) {
+                    _provider.ForceDiscoverInterpreterFactories();
+                } else {
                     _provider.DiscoverInterpreterFactories();
                 }
             }
         }
 
-        internal IDisposable SuppressDiscoverFactories() {
-            return new DiscoverOnDispose(this);
+        internal IDisposable SuppressDiscoverFactories(bool forceDiscoveryOnDispose) {
+            return new DiscoverOnDispose(this, forceDiscoveryOnDispose);
         }
     }
 }

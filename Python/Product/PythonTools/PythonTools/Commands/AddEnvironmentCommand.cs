@@ -34,18 +34,21 @@ namespace Microsoft.PythonTools.Commands {
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
         public Task InvokeAsync() {
-            // We'll add support for open folder later
-            // https://github.com/Microsoft/PTVS/issues/4852
+            var workspace = (_envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
             var project = (_envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
-            if (project == null) {
+            if (workspace == null && project == null) {
                 var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
             }
 
-            string ymlPath = project?.GetEnvironmentYmlPath();
-            string txtPath = project?.GetRequirementsTxtPath();
-
-            return AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_serviceProvider, project, null, ymlPath, txtPath);
+            return AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(
+                _serviceProvider,
+                project,
+                workspace,
+                null,
+                null,
+                null
+            );
         }
     }
 }

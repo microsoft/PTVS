@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.Environments {
                 }
             } else {
                 try {
-                    ApplyExisting();
+                    await ApplyExistingAsync();
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     failed = true;
                     throw;
@@ -523,9 +523,13 @@ namespace Microsoft.PythonTools.Environments {
 
             if (factory != null) {
                 if (SelectedProject != null) {
-                    SelectedProject.Node.AddInterpreter(factory.Configuration.Id);
-                    if (SetAsCurrent) {
-                        SelectedProject.Node.SetInterpreterFactory(factory);
+                    if (SelectedProject.Node != null) {
+                        SelectedProject.Node.AddInterpreter(factory.Configuration.Id);
+                        if (SetAsCurrent) {
+                            SelectedProject.Node.SetInterpreterFactory(factory);
+                        }
+                    } else if (SelectedProject.Workspace != null) {
+                        await SelectedProject.Workspace.SetInterpreterFactoryAsync(factory);
                     }
                 }
 
@@ -535,9 +539,16 @@ namespace Microsoft.PythonTools.Environments {
             }
         }
 
-        private void ApplyExisting() {
-            var ids = SelectedProject.InterpreterIds.Union(new string[] { SelectedInterpreter.Id }).ToArray();
-            SelectedProject?.Node.ChangeInterpreters(ids);
+        private async Task ApplyExistingAsync() {
+            if (SelectedProject.Node != null) {
+                var ids = SelectedProject.InterpreterIds.Union(new string[] { SelectedInterpreter.Id }).ToArray();
+                SelectedProject?.Node.ChangeInterpreters(ids);
+            } else if (SelectedProject.Workspace != null) {
+                var factory = RegistryService.FindInterpreter(SelectedInterpreter.Id);
+                if (factory != null) {
+                    await SelectedProject.Workspace.SetInterpreterFactoryAsync(factory);
+                }
+            }
         }
 
         public override string ToString() {
