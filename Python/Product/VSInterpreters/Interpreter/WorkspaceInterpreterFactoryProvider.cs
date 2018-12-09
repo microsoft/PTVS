@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
         private FileSystemWatcher _folderWatcher;
         private Timer _folderWatcherTimer;
-        private bool _pythonExecutableCreated;
+        private bool _pythonExecutableCreatedOrDeleted;
         private int _ignoreNotifications;
         private bool _initialized;
 
@@ -121,6 +121,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
                         _folderWatcher.Created += OnFileCreated;
+                        _folderWatcher.Deleted += OnFileDeleted;
                         _folderWatcher.EnableRaisingEvents = true;
                         _folderWatcher.IncludeSubdirectories = true;
                     } catch (ArgumentException) {
@@ -227,7 +228,19 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_factories) {
                 try {
                     if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        _pythonExecutableCreated = true;
+                        _pythonExecutableCreatedOrDeleted = true; //TODO Raymon, do I even need this here? Remove field and transfer _folderWatchTimer.Change() here??
+                    }
+                    _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
+        }
+
+        private void OnFileDeleted(object sender, FileSystemEventArgs e) {
+            lock (_factories) {
+                try {
+                    if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
+                        _pythonExecutableCreatedOrDeleted = true;
                     }
                     _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
@@ -241,8 +254,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 lock (_factories) {
                     _folderWatcherTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                    shouldDiscover = _pythonExecutableCreated;
-                    _pythonExecutableCreated = false;
+                    shouldDiscover = _pythonExecutableCreatedOrDeleted;
+                    _pythonExecutableCreatedOrDeleted = false;
                 }
 
                 if (shouldDiscover) {
