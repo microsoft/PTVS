@@ -38,6 +38,11 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="dia2lib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\References\Common\dia2lib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -57,6 +62,10 @@
       <HintPath>$(PackagesPath)\Microsoft.DotNet.PlatformAbstractions.2.1.0\lib\net45\Microsoft.DotNet.PlatformAbstractions.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="CsvHelper">
+      <HintPath>$(PackagesPath)\CsvHelper.8.0.0-beta01\lib\net45\CsvHelper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -67,6 +76,7 @@
     <Compile Include="VTuneStackParser.cs" />
     <Compile Include="VTuneToDWJSON.cs" />
     <Compile Include="VTuneUtils.cs" />
+    <Compile Include="PdbListFunctions.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -96,6 +106,12 @@
     </Content>
     <Content Include="$(PackagesPath)\Microsoft.DotNet.PlatformAbstractions.2.1.0\lib\net45\Microsoft.DotNet.PlatformAbstractions.dll">
       <Link>Microsoft.DotNet.PlatformAbstractions.dll</Link>
+      <Visible>false</Visible>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\CsvHelper.8.0.0-beta01\lib\net45\CsvHelper.dll">
+      <Link>CsvHelper.dll</Link>
       <Visible>false</Visible>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>

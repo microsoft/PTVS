@@ -19,7 +19,7 @@
     <IncludeWsl Condition="'$(IncludeWsl)' == ''">false</IncludeWsl>
 
     <!-- Exclude ExternalProfilerDriver by default (for the moment) -->
-    <IncludeExternalProfilerDriver Condition="'$(IncludeExternalProfilerDriver)' == ''">false</IncludeExternalProfilerDriver>
+    <IncludeExternalProfilerDriver Condition="'$(IncludeExternalProfilerDriver)' == ''">true</IncludeExternalProfilerDriver>
 
     <!-- Include LiveShare by default -->
     <IncludeLiveShare Condition="'$(IncludeLiveShare)' == ''">true</IncludeLiveShare>

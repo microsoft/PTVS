@@ -78,10 +78,18 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     WorkloadSpec = String.Join(" ", RestArgs)
                 };
 
+                // TODO: choose symbol path more carefullly -- pdb enumeration takes too long, should get function list from LSP
+#if false
                 if (opts.SymbolPath != string.Empty) {
                     Console.WriteLine(Strings.SymbolPathSpecifiedNotification);
                     spec.SymbolPath = opts.SymbolPath;
                 }
+#else
+                var workloadCLI = spec.WorkloadSpec.Split(' ');
+                if (workloadCLI.Length >= 2) {
+                    spec.SymbolPath = Path.GetDirectoryName(workloadCLI[1]);
+                }
+#endif
 
                 string vtuneCollectArgs = spec.FullCLI();
 
@@ -126,7 +134,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     Environment.Exit(0);
                 }
 
-                double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"));
+                double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, Path.Combine(dwjsonDir,"Sample.dwjson"), spec.SymbolPath);
                 VTuneToDWJSON.CPUReportToDWJson(reptimespec.ReportOutputFile, Path.Combine(dwjsonDir, "Session.counters"), runtime);
 
             })

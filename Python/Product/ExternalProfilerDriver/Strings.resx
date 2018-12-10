@@ -195,4 +195,8 @@
     <value>VTune not found in expected path : {0}</value>
     <comment>The program has tried the canonical location for VTune and failed to find the program</comment>
   </data>
+  <data name="VTuneSympathNotFound" xml:space="preserve">
+    <value>Cannot find specified symbols path: {0}</value>
+    <comment>The symbol path (filesystem location where symbols are expected) cannot be found</comment>
+  </data>
 </root>

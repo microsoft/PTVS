@@ -94,11 +94,11 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         /// <paramref name="filename"/>
         /// </summary>
         /// <param name="filename">The filename with the callstack report</param>
-        public static double CSReportToDWJson(string filename, string outfname) {
+        public static double CSReportToDWJson(string filename, string outfname, string sympath = "") {
             if (!File.Exists(filename)) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgPathDoesNotExist, filename));
             }
-            var samples = ParseFromFile(filename);
+            var samples = VTuneStackParserForCPP.ParseFromFile(filename);
 
             var times = samples.Select(x => x.TOSFrame.CPUTime);
             var total = times.Sum();
@@ -119,6 +119,13 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             })
                                        .ToDictionary(od => od.Module, od => od.Functions);
 
+            Dictionary<string, Dictionary<string, FunctionSourceLocation>> d = AddLineNumbers(ref mfdd, sympath);
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var mod in d.Keys) {
+                var xx = d[mod].Values.Zip(Enumerable.Range(0, int.MaxValue), (v,i) => new FileIDMapSpec { id = i, file = v.SourceFile}).ToList();
+            }
+
             if (mfdd.Count <= 0) {
                 throw new Exception(Strings.ErrorMsgCannotBuildModuleFunctionDict);
             }
@@ -131,7 +138,25 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                 @base = new LongInt(0, (y - 1) * 1000),
                 size = new LongInt(0, 300),
                 ranges = x.Value.Select(xx => new FunctionSpec(xx.Key, xx.Value.Base, xx.Value.Size)).ToList()
-            });
+            }).ToList();
+
+            for (int i = 0; i < mods.Count(); i++) {
+                if (d.ContainsKey(mods[i].name)) {
+                    var unique_files = d[mods[i].name].Values.Select(fi => fi.SourceFile).Distinct();
+                    mods[i].fileIdMapping = unique_files.Zip(Enumerable.Range(0, int.MaxValue), (v,j) => new FileIDMapSpec { id = j, file = v}).ToList();
+                    Dictionary<string, int> fileTOC = mods[i].fileIdMapping.ToDictionary(x => x.file, x => x.id);
+                    var ranges = mods[i].ranges;
+                    for(int j = 0; j < ranges.Count(); j++) {
+                        if (d[mods[i].name].ContainsKey(ranges[j].name)) {
+                            var ff = d[mods[i].name][ranges[j].name];
+                            var ls = new LineSpec { fileId = fileTOC[ff.SourceFile], lineBegin = (int)ff.LineNumber };
+                            var lss = new List<LineSpec>(); lss.Add(ls);
+                            ranges[j].lines = lss;
+                        }
+                    }
+                }
+            }
+
             var modBase = mods.ToDictionary(x => x.name, x => x.@base);
 
             AddressTranslator tr = new AddressTranslator(modBase, mfdd);
@@ -141,16 +166,22 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
 
             List<FrameInfo> chains = new List<FrameInfo>();
             int idx = 0;
+            int frameCnt = 0;
             foreach (var s in samples) {
+                // TODO: Fix this logic (only works if s.Stacks.Count() is 1)
+                int sampleTimeCount = (int)fractional[frameCnt];
                 foreach (var y in s.Stacks) {
-                    var fi = new FrameInfo {
-                        timestamp = new LongInt(0, startime + stepsize * idx),
-                        frameIPs = y.Select(z => tr.Translate(z.Module, z.Function)).ToList()
-                    };
-                    fi.frameIPs.Insert(0, tr.Translate(s.TOSFrame.Module, s.TOSFrame.Function));
-                    chains.Add(fi);
+                    for (int cnt = 0; cnt < sampleTimeCount; cnt++) {
+                        var fi = new FrameInfo {
+                            timestamp = new LongInt(0, startime + stepsize * idx),
+                            frameIPs = y.Select(z => tr.Translate(z.Module, z.Function)).ToList()
+                        };
+                        fi.frameIPs.Insert(0, tr.Translate(s.TOSFrame.Module, s.TOSFrame.Function));
+                        chains.Add(fi);
 
-                    idx++;
+                        idx++;
+                    }
+                    frameCnt++;
                 }
             }
 
@@ -189,14 +220,14 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
                     highestUserAddress = new LongInt(0, 2147418111)
                 },
                 processes = processes,
-                modules = mods.ToList()
+                modules = mods
             };
 
             string json = JsonConvert.SerializeObject(trace, Formatting.Indented, new JsonSerializerSettings {
                 NullValueHandling = NullValueHandling.Ignore
             });
-            File.WriteAllText(outfname, json);
 
+            File.WriteAllText(outfname, json);
             return total;
         }
 
@@ -209,6 +240,68 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             return samples;
         }
 
+        /// <summary>
+        /// Creates a two-level dictionary from a stream of <cref>SampleWithTrace</cref>.
+        /// The "primary" (top-level) key is the module name, and the lower-level key
+        /// is the function name (function -> (sourcefile, base, size))
+        /// </summary>
+        public static Dictionary< string, Dictionary< string, FuncInfo > > ModuleFuncDictFromSamples(IEnumerable<SampleWithTrace> samples) {
+            var modFunDictionary = samples.SelectMany(sm => sm.AllSamples())
+                                              .Select(p => new { Module = p.Module, Function = p.Function, SourceFile = p.SourceFile })
+                                              .GroupBy(t => t.Module)
+                                              .Select(g => new { Module = g.Key,
+                                                                 Functions = g.Select(gg => new FuncInfo(gg.Function, gg.SourceFile)).Distinct(new FuncInfoComparer()),
+                                                               });
+
+            var mfdd = modFunDictionary.ToDictionary(r => r.Module,
+                                                     r => r.Functions.ToDictionary(
+                                                         rr => rr.FunctionName,
+                                                         rr => rr
+                                                     ));
+
+            return mfdd;
+        }
+
+        /// <summary>
+        /// Given a two-level module/function dictionary, check in <para>symbolPath</param> if
+        /// there is information on the source file/line number the function is defined in.
+        ///
+        /// TODO: maybe this function should take a list of possible directories to search?
+        /// </summary>
+        public static Dictionary<string, Dictionary<string, FunctionSourceLocation>> AddLineNumbers(ref Dictionary<string, Dictionary<string, BaseSizeTuple> > orig, string symbolPath)
+        {
+            if (!Directory.Exists(symbolPath)) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.VTuneSympathNotFound, symbolPath));
+            }
+
+            Dictionary<string, Dictionary<string, FunctionSourceLocation> > sourcelocs = new Dictionary<string, Dictionary<string, FunctionSourceLocation> >();
+            string rootSymbolPath = Path.GetDirectoryName(symbolPath); // should really let the user choose this
+            foreach (var modk in orig.Keys) {
+                try {
+                    // 1. Finding the pdb file
+                    string modfname = Path.ChangeExtension(modk, "pdb");
+                    string fnd = Utils.FindFileInDir(modfname, rootSymbolPath);
+                    // 2. Getting the symbols in the file
+                    SymbolReader symReader = SymbolReader.Load(fnd);
+                    var syms = symReader.FunctionLocations().ToList();
+                    // 3. Get the information only for the functions that appear in the trace
+                    var funlocs = orig[modk].Join(syms, f => f.Key, fi => fi.Function, (f, fi) => fi).ToList();
+
+                    if (funlocs.Count() > 0) {
+                        sourcelocs[modk] = new Dictionary<string, FunctionSourceLocation>();
+                        //foreach ( var x in (orig[modk].Join(syms, f => f.Key, fi => fi.Function, (f, fi) => fi)) ) {
+                        foreach ( var x in funlocs ) {
+                            // x is of type FunctionSourceLocation
+                            // x.SourceFile, x.LineNumber
+                            sourcelocs[modk][x.Function] = x; // (Function, SourceFile, LineNumber)
+                        }
+                    }
+                } catch (Exception) {
+                    // should probably log errors here
+                }
+            }
+            return sourcelocs;
+        }
         public static void CPUReportToDWJson(string filename, string outfname, double timeTotal = 0.0) {
             if (!File.Exists(filename)) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgCannotFindCPUUtilizationReport, filename));
@@ -223,15 +316,6 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
             var cpuRecords = Utils.ReadFromFile(filename)
                                   .Skip(2)
                                   .ParseCPURecords();
-            /*
-            CPUUtilRecord first = cpuRecords.First();
-            CPUUtilRecord last = cpuRecords.Last();
-
-            CPUUtilTrace trace = new CPUUtilTrace();
-            trace.beginTime = new LongInt(0, (long)(first.Start));
-            trace.duration = new LongInt(0, (long)(last.End - first.Start));
-            trace.counters = new List<ValueTrace> { new ValueTrace(cpuRecords.Select(r => new CPUSample(new LongInt(0, (long)r.Start), (float)r.CPUUtil)).ToList()) };
-            */
 
             int steps = cpuRecords.Count() - 1;
             double totalTime = timeTotal;
@@ -259,6 +343,9 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         }
     }
 
+    /// <summary>
+    /// Auxiliary class to translate "address" from a module/function spec.
+    /// </summary>
     class AddressTranslator {
         private Dictionary<string, Dictionary<string, BaseSizeTuple>> modfundict;
         private Dictionary<string, LongInt> modindex;
