@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
         private FileSystemWatcher _folderWatcher;
         private Timer _folderWatcherTimer;
-        private bool _pythonExecutableCreatedOrDeleted;
+        private bool _refreshPythonInterpreters;
         private int _ignoreNotifications;
         private bool _initialized;
 
@@ -120,8 +120,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_workspace != null) {
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
-                        _folderWatcher.Created += OnFileCreated;
-                        _folderWatcher.Deleted += OnFileDeleted;
+                        _folderWatcher.Created += OnFileCreatedOrDeleted;
+                        _folderWatcher.Deleted += OnFileCreatedOrDeleted;
+                        _folderWatcher.Renamed += OnFileRenamed;
                         _folderWatcher.EnableRaisingEvents = true;
                         _folderWatcher.IncludeSubdirectories = true;
                     } catch (ArgumentException) {
@@ -224,26 +225,26 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void OnFileCreated(object sender, FileSystemEventArgs e) {
+        private void OnFileCreatedOrDeleted(object sender, FileSystemEventArgs e) {
             lock (_factories) {
                 try {
                     if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        _pythonExecutableCreatedOrDeleted = true; //TODO Raymon, do I even need this here? Remove field and transfer _folderWatchTimer.Change() here??
+                        _refreshPythonInterpreters = true;
+                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                    } else if (_refreshPythonInterpreters) {
+                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                     }
-                    _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+
                 } catch (ObjectDisposedException) {
                 }
             }
         }
 
-        private void OnFileDeleted(object sender, FileSystemEventArgs e) {
+        private void OnFileRenamed(object sender, FileSystemEventArgs e) {
             lock (_factories) {
-                try {
-                    if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        _pythonExecutableCreatedOrDeleted = true;
-                    }
-                    _folderWatcherTimer?.Change(1000, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
+                if (Directory.GetFiles(e.FullPath, "python.exe", SearchOption.AllDirectories).Length != 0) {
+                    _refreshPythonInterpreters = true;
+                    _folderWatcherTimer?.Change(0, Timeout.Infinite);
                 }
             }
         }
@@ -254,8 +255,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 lock (_factories) {
                     _folderWatcherTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                    shouldDiscover = _pythonExecutableCreatedOrDeleted;
-                    _pythonExecutableCreatedOrDeleted = false;
+                    shouldDiscover = _refreshPythonInterpreters;
+                    _refreshPythonInterpreters = false;
                 }
 
                 if (shouldDiscover) {
