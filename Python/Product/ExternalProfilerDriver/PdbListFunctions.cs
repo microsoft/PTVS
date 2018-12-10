@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
 
 using System.Runtime.InteropServices;
 
@@ -38,7 +39,7 @@ namespace Microsoft.PythonTools.Profiling.ExternalProfilerDriver {
         public static SymbolReader Load(string pdbpath) {
             try {
                 if (!File.Exists(pdbpath)){
-                    throw new FileNotFoundException($"Cannot find specified file: [{pdbpath}]");
+                    throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, Strings.ErrorMsgPathDoesNotExist, pdbpath));
                 }
                 var loader = new SymbolReader();
                 loader._ds = CoCreateDiaDataSource();
