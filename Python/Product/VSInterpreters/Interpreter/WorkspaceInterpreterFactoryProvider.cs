@@ -120,9 +120,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_workspace != null) {
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
-                        _folderWatcher.Created += OnFileCreatedOrDeleted;
-                        _folderWatcher.Deleted += OnFileCreatedOrDeleted;
-                        _folderWatcher.Renamed += OnFileRenamed;
+                        _folderWatcher.Created += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Deleted += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Renamed += OnFileCreatedDeletedRenamed;
                         _folderWatcher.EnableRaisingEvents = true;
                         _folderWatcher.IncludeSubdirectories = true;
                     } catch (ArgumentException) {
@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
-            foreach(var directory in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
+            foreach (var directory in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
                 yield return FindInterpreterInFolder(directory);
             }
         }
@@ -231,35 +231,22 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        private void OnFileCreatedOrDeleted(object sender, FileSystemEventArgs e) {
+        private void OnFileCreatedDeletedRenamed(object sender, FileSystemEventArgs e) {
             lock (_factories) {
                 try {
-                    if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
+                    if (Directory.Exists(e.FullPath) && e.ChangeType == WatcherChangeTypes.Renamed) {
                         _refreshPythonInterpreters = true;
-                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
-                    } else if (_refreshPythonInterpreters) {
+                    } else if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
+                        if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted) {
+                            _refreshPythonInterpreters = true;
+                        }
+                    }
+
+                    if (_refreshPythonInterpreters) {
                         _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                     }
 
                 } catch (ObjectDisposedException) {
-                }
-            }
-        }
-
-        private void OnFileRenamed(object sender, RenamedEventArgs e) {
-            lock (_factories) {
-                if(Directory.Exists(e.FullPath)) {//Modify this to add pathutils.IsSubpathOf(). Make this such that we can have a VE inside a directory (not root)
-                    string interpreterFactoryKey = _factories
-                        .Where(a => PathUtils.IsSameDirectory(a.Value.Configuration.PrefixPath, e.OldFullPath))
-                        .Select(a => a.Key)
-                        .FirstOrDefault();
-
-                    if (!string.IsNullOrEmpty(interpreterFactoryKey)) {
-                        _factories.Remove(interpreterFactoryKey);
-                        PythonInterpreterInformation interpreter = FindInterpreterInFolder(e.FullPath);
-                        _factories[interpreter.Configuration.Id] = interpreter;//Deal with null case
-                        OnInterpreterFactoriesChanged();
-                    }
                 }
             }
         }
