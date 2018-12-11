@@ -207,6 +207,20 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Returns true if the item should be included in search results
+        /// </summary>
+        public override bool IsSearchable {
+            get {
+                // Starting with 16.0 Preview 2, it is important for the
+                // project to report as not searchable. Otherwise, find in
+                // files will return results in project file, and IsItemDirty
+                // and SaveItem won't work properly.
+                // See https://github.com/Microsoft/PTVS/issues/4887
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Since we appended the language images to the base image list in the constructor,
         /// this should be the offset in the ImageList of the langauge project icon.
         /// </summary>
