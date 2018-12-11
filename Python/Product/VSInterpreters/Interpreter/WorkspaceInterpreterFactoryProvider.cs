@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 windowsInterpreterPath = string.Empty;
             }
 
-            var config = new InterpreterConfiguration(
+            var config = new VisualStudioInterpreterConfiguration(
                 WorkspaceInterpreterFactoryConstants.GetInterpreterId(WorkspaceInterpreterFactoryConstants.EnvironmentCompanyName, name),
                 description,
                 prefixPath,

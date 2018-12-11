@@ -39,7 +39,6 @@ using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -47,7 +46,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
-using LS = Microsoft.PythonTools.Analysis.LanguageServer;
+using LS = Microsoft.Python.LanguageServer;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -200,9 +199,9 @@ namespace Microsoft.PythonTools.Intellisense {
 #else
                 traceLevel = LS.MessageType.Warning,
 #endif
-                commentTokens = new Dictionary<string, LS.DiagnosticSeverity>() {
-                    { "TODO", LS.DiagnosticSeverity.Warning },
-                    { "HACK", LS.DiagnosticSeverity.Warning },
+                commentTokens = new Dictionary<string, Analysis.DiagnosticSeverity>() {
+                    { "TODO", Analysis.DiagnosticSeverity.Warning },
+                    { "HACK", Analysis.DiagnosticSeverity.Warning },
                 }
             };
 
@@ -290,16 +289,16 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_services.CommentTaskProvider != null) {
                 _analysisOptions.commentTokens.Clear();
                 foreach (var keyValue in (_services.CommentTaskProvider.Tokens).MaybeEnumerate()) {
-                    var sev = LS.DiagnosticSeverity.Unspecified;
+                    var sev = Analysis.DiagnosticSeverity.Unspecified;
                     switch (keyValue.Value) {
                         case VSTASKPRIORITY.TP_HIGH:
-                            sev = LS.DiagnosticSeverity.Error;
+                            sev = Analysis.DiagnosticSeverity.Error;
                             break;
                         case VSTASKPRIORITY.TP_NORMAL:
-                            sev = LS.DiagnosticSeverity.Warning;
+                            sev = Analysis.DiagnosticSeverity.Warning;
                             break;
                         case VSTASKPRIORITY.TP_LOW:
-                            sev = LS.DiagnosticSeverity.Information;
+                            sev = Analysis.DiagnosticSeverity.Information;
                             break;
                     }
                     _analysisOptions.commentTokens[keyValue.Key] = sev;
@@ -1560,7 +1559,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // Update the warn-on-launch state for this entry
             var hasErrors = diagnostics.diagnostics.MaybeEnumerate()
-                .Any(d => d.severity == LS.DiagnosticSeverity.Error);
+                .Any(d => d.severity == Analysis.DiagnosticSeverity.Error);
 
             // Update the parser warnings/errors.
             var errorTask = entry.SuppressErrorList ? null : _services.ErrorTaskProvider;
@@ -2248,16 +2247,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
             lock (_analysisOptions) {
                 foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
-                    var sev = LS.DiagnosticSeverity.Unspecified;
+                    var sev = Analysis.DiagnosticSeverity.Unspecified;
                     switch (keyValue.Value) {
                         case VSTASKPRIORITY.TP_HIGH:
-                            sev = LS.DiagnosticSeverity.Error;
+                            sev = Analysis.DiagnosticSeverity.Error;
                             break;
                         case VSTASKPRIORITY.TP_NORMAL:
-                            sev = LS.DiagnosticSeverity.Warning;
+                            sev = Analysis.DiagnosticSeverity.Warning;
                             break;
                         case VSTASKPRIORITY.TP_LOW:
-                            sev = LS.DiagnosticSeverity.Information;
+                            sev = Analysis.DiagnosticSeverity.Information;
                             break;
                     }
                     _analysisOptions.commentTokens[keyValue.Key] = sev;

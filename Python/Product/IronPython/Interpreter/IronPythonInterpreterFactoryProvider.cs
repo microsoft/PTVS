@@ -230,7 +230,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 ipywExe = arch == InterpreterArchitecture.x64 ? "ipyw.exe" : "ipyw32.exe";
             }
 
-            return new InterpreterConfiguration(
+            return new VisualStudioInterpreterConfiguration(
                 GetInterpreterId(arch),
                 string.Format("IronPython 2.7{0: ()}", arch),
                 prefixPath,

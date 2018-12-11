@@ -192,6 +192,10 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
+    <Reference Include="Microsoft.Python.LanguageServer.Core">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.PythonTools.Analyzer">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>

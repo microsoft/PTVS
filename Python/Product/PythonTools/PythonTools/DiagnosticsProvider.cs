@@ -136,9 +136,9 @@ namespace Microsoft.PythonTools {
                             writer.WriteLine("            Id: " + factory.Configuration.Id);
                             writer.WriteLine("            Version: " + factory.Configuration.Version);
                             writer.WriteLine("            Arch: " + factory.Configuration.Architecture);
-                            writer.WriteLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
+                            writer.WriteLine("            Prefix Path: " + factory.Configuration.GetPrefixPath() ?? "(null)");
                             writer.WriteLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
-                            writer.WriteLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
+                            writer.WriteLine("            Windows Path: " + factory.Configuration.GetWindowsInterpreterPath() ?? "(null)");
                             writer.WriteLine(string.Format("            Path Env: {0}={1}{2}",
                                 factory.Configuration.PathEnvironmentVariable ?? "(null)",
                                 Environment.GetEnvironmentVariable(factory.Configuration.PathEnvironmentVariable ?? ""),
@@ -161,9 +161,9 @@ namespace Microsoft.PythonTools {
                     writer.WriteLine("        Factory: " + config.Description);
                     writer.WriteLine("        Version: " + config.Version);
                     writer.WriteLine("        Arch: " + config.Architecture);
-                    writer.WriteLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
+                    writer.WriteLine("        Prefix Path: " + config.GetPrefixPath() ?? "(null)");
                     writer.WriteLine("        Path: " + config.InterpreterPath ?? "(null)");
-                    writer.WriteLine("        Windows Path: " + config.WindowsInterpreterPath ?? "(null)");
+                    writer.WriteLine("        Windows Path: " + config.GetWindowsInterpreterPath() ?? "(null)");
                     writer.WriteLine("        Path Env: " + config.PathEnvironmentVariable ?? "(null)");
                     writer.WriteLine();
                 }

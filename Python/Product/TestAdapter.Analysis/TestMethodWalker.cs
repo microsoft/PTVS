@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             base.PostWalk(node);
         }
 
-        private LocationInfo GetLoc(FunctionDefinition node) {
+        private ILocationInfo GetLoc(FunctionDefinition node) {
             var s = node.Header;
             var e = node.GetEnd(_tree);
             return new LocationInfo(

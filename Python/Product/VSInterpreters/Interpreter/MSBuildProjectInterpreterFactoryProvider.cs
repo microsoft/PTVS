@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (hasError) {
                     info = new ErrorFactoryInfo(fullId, ver, description, dir);
                 } else {
-                    info = new ConfiguredFactoryInfo(this, new InterpreterConfiguration(
+                    info = new ConfiguredFactoryInfo(this, new VisualStudioInterpreterConfiguration(
                         fullId,
                         description,
                         dir,

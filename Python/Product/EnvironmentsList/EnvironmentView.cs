@@ -95,9 +95,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Description = Factory.Configuration.Description;
             IsDefault = (_service != null && _service.DefaultInterpreterId == Configuration.Id);
 
-            PrefixPath = Factory.Configuration.PrefixPath;
+            PrefixPath = Factory.Configuration.GetPrefixPath();
             InterpreterPath = Factory.Configuration.InterpreterPath;
-            WindowsInterpreterPath = Factory.Configuration.WindowsInterpreterPath;
+            WindowsInterpreterPath = Factory.Configuration.GetWindowsInterpreterPath();
 
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());

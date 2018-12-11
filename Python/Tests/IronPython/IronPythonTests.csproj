@@ -117,10 +117,6 @@
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Analysis\AnalysisTests.csproj">
-      <Project>{c2c1c6a1-3c1e-45e4-9ee2-1181db641818}</Project>
-      <Name>AnalysisTests</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>
