@@ -217,18 +217,12 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
-            foreach (var directory in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
-                yield return FindInterpreterInFolder(directory);
+            foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
+                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
+                if (!string.IsNullOrEmpty(file)) {
+                    yield return CreateEnvironmentInfo(file);
+                }
             }
-        }
-
-        private static PythonInterpreterInformation FindInterpreterInFolder(string folder) {
-            var file = PathUtils.FindFile(folder, "python.exe", 1);
-            if (!string.IsNullOrEmpty(file)) {
-                return CreateEnvironmentInfo(file);
-            }
-
-            return null;
         }
 
         private void OnFileCreatedDeletedRenamed(object sender, FileSystemEventArgs e) {
