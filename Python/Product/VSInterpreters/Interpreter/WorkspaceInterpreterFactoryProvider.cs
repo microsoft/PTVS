@@ -229,7 +229,18 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_factories) {
                 try {
                     if (Directory.Exists(e.FullPath) && e.ChangeType == WatcherChangeTypes.Renamed) {
-                        _refreshPythonInterpreters = true;
+                        RenamedEventArgs renamedFileInformation = e as RenamedEventArgs;
+                        if (renamedFileInformation != null) {
+                            string interpreterFactoryKey = _factories
+                                .Where(a => PathUtils.IsSameDirectory(a.Value.Configuration.PrefixPath, renamedFileInformation.OldFullPath))
+                                .Select(a => a.Key)
+                                .FirstOrDefault();
+
+                            if (!string.IsNullOrEmpty(interpreterFactoryKey)) {
+                                _refreshPythonInterpreters = true;
+                            }
+                        }
+
                     } else if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
                         if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted) {
                             _refreshPythonInterpreters = true;
