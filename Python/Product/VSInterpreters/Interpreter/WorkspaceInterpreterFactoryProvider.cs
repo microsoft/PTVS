@@ -217,12 +217,18 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
-            foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
-                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
-                if (!string.IsNullOrEmpty(file)) {
-                    yield return CreateEnvironmentInfo(file);
-                }
+            foreach(var directory in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
+                yield return FindInterpreterInFolder(directory);
             }
+        }
+
+        private static PythonInterpreterInformation FindInterpreterInFolder(string folder) {
+            var file = PathUtils.FindFile(folder, "python.exe", 1);
+            if (!string.IsNullOrEmpty(file)) {
+                return CreateEnvironmentInfo(file);
+            }
+
+            return null;
         }
 
         private void OnFileCreatedOrDeleted(object sender, FileSystemEventArgs e) {
@@ -240,11 +246,20 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void OnFileRenamed(object sender, FileSystemEventArgs e) {
+        private void OnFileRenamed(object sender, RenamedEventArgs e) {
             lock (_factories) {
-                if (Directory.GetFiles(e.FullPath, "python.exe", SearchOption.AllDirectories).Length != 0) {
-                    _refreshPythonInterpreters = true;
-                    _folderWatcherTimer?.Change(0, Timeout.Infinite);
+                if(Directory.Exists(e.FullPath)) {//Modify this to add pathutils.IsSubpathOf(). Make this such that we can have a VE inside a directory (not root)
+                    string interpreterFactoryKey = _factories
+                        .Where(a => PathUtils.IsSameDirectory(a.Value.Configuration.PrefixPath, e.OldFullPath))
+                        .Select(a => a.Key)
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(interpreterFactoryKey)) {
+                        _factories.Remove(interpreterFactoryKey);
+                        PythonInterpreterInformation interpreter = FindInterpreterInFolder(e.FullPath);
+                        _factories[interpreter.Configuration.Id] = interpreter;//Deal with null case
+                        OnInterpreterFactoriesChanged();
+                    }
                 }
             }
         }
