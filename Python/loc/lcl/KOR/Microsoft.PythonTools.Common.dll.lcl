@@ -959,7 +959,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[이러한 도구는 현재 사용 중인 Visual Studio 버전용의 설치 가능 작업이며, 폭넓은 프로그래밍 언어로 Microsoft Azure용 응용 프로그램을 작성, 배포 및 디버그하는 데 사용할 수 있습니다.]]></Val>
+            <Val><![CDATA[이러한 도구는 현재 사용 중인 Visual Studio 버전용의 설치 가능 작업이며, 폭넓은 프로그래밍 언어로 Microsoft Azure용 애플리케이션을 작성, 배포 및 디버그하는 데 사용할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3085,6 +3085,24 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}'이(가) 프로젝트에서 제거됩니다.]D;]A;디스크에서 파일은 삭제되지 않습니다.]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherNoCurrentEnvironment" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[(no Python environment)]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherTooltipWithKeyBinding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Environment ({0})]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherTooltipWithoutKeyBinding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Environment]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -6626,7 +6644,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A regex pattern to identify static URIs, for example: '^static/.*']D;]A;The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['^static/.*'와 같은 정적 URI를 식별하기 위한 정규식 패턴입니다.]D;]A;이 패턴과 일치하는 URI를 응용 프로그램이 아닌 파일 시스템 경로로 해석하도록 web.config 파일이 구성됩니다.]]></Val>
+            <Val><![CDATA['^static/.*'와 같은 정적 URI를 식별하기 위한 정규식 패턴입니다.]D;]A;이 패턴과 일치하는 URI를 애플리케이션이 아닌 파일 시스템 경로로 해석하도록 web.config 파일이 구성됩니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7240,6 +7258,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[WebPI 참조는 사용되지 않습니다. 참조는 사용자 지정 설치 스크립트로 바꾸는 것이 좋습니다.]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WorkspaceEnvironmentDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Workspace Environment]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>

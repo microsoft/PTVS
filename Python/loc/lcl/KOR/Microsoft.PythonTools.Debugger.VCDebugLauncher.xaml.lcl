@@ -84,7 +84,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[The command line arguments to pass to the application.]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[응용 프로그램에 전달할 명령줄 인수입니다.]]></Val>
+          <Val><![CDATA[애플리케이션에 전달할 명령줄 인수입니다.]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
@@ -93,7 +93,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[The application's working directory. By default, the directory containing the project file.]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[응용 프로그램의 작업 디렉터리입니다. 기본적으로 이 디렉터리에는 프로젝트 파일이 들어 있습니다.]]></Val>
+          <Val><![CDATA[애플리케이션의 작업 디렉터리입니다. 기본적으로 이 디렉터리에는 프로젝트 파일이 들어 있습니다.]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
