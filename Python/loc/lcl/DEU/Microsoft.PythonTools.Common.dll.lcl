@@ -3091,6 +3091,9 @@
       <Item ItemId=";EnvironmentSwitcherNoCurrentEnvironment" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[(no Python environment)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[(Keine Python-Umgebung)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7270,6 +7273,9 @@
       <Item ItemId=";WorkspaceEnvironmentDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Workspace Environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Arbeitsbereichsumgebung]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
