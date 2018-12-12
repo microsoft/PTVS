@@ -2436,8 +2436,8 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16394" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Manage Python Packages...]]></Val>
-            <Tgt Cat="Button" IgnoreHK="true" Stat="Update" Orig="New">
-              <Val><![CDATA[&Instalar Pacote do Python...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Gerenciar Pacotes do Python…]]></Val>
             </Tgt>
             <Prev Cat="Button" IgnoreHK="true">
               <Val><![CDATA[&Install Python Package...]]></Val>
@@ -2823,6 +2823,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16440" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add &Environment...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Adicionar &Ambiente…]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
