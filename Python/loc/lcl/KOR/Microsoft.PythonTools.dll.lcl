@@ -5342,7 +5342,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Specifies the tool that transforms a file at design time and places the output of that transformation into another file. For example, a dataset (.xsd) file comes with a default custom tool.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[디자인 타임에 파일을 변환하고 변환 결과를 다른 파일에 저장하는 도구를 지정합니다. 데이터 집합 파일(.xsd)의 경우 기본 사용자 지정 도구가 제공됩니다.]]></Val>
+            <Val><![CDATA[디자인 타임에 파일을 변환하고 변환 결과를 다른 파일에 저장하는 도구를 지정합니다. 데이터 세트 파일(.xsd)의 경우 기본 사용자 지정 도구가 제공됩니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
