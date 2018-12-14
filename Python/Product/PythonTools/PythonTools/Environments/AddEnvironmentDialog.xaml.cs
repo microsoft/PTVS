@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Environments {
             } else {
                 try {
                     var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-                    var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? new PythonProjectNode[0];
+                    var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? Array.Empty<PythonProjectNode>();
 
                     projectViews = projects
                         .Select((projectNode) => new ProjectView(projectNode))
@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Environments {
                     selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
                 } catch (InvalidOperationException ex) {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
-                    projectViews = new ProjectView[0];
+                    projectViews = Array.Empty<ProjectView>();
                     selectedProjectView = null;
                 }
             }

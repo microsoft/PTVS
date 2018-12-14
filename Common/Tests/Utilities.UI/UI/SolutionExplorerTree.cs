@@ -136,7 +136,7 @@ namespace TestUtilities.UI {
         }
 
         private AutomationElement FindChildOfWorkspaceHelper(string[] path, bool assertOnFailure) {
-            var projElement = Nodes.First()?.Element;
+            var projElement = Nodes.FirstOrDefault()?.Element;
             if (assertOnFailure) {
                 AutomationWrapper.DumpElement(Element);
                 Assert.IsNotNull(projElement, "Did not find solution explorer workspace root element");
