@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TaskStatusCenter;
+using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Environments {
@@ -32,6 +33,7 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IServiceProvider _site;
         private readonly ICondaEnvironmentManager _condaMgr;
         private readonly PythonProjectNode _project;
+        private readonly IWorkspace _workspace;
         private readonly string _envNameOrPath;
         private readonly string _actualName;
         private readonly string _envFilePath;
@@ -52,6 +54,7 @@ namespace Microsoft.PythonTools.Environments {
             IServiceProvider site,
             ICondaEnvironmentManager condaMgr,
             PythonProjectNode project,
+            IWorkspace workspace,
             string envNameOrPath,
             string envFilePath,
             List<PackageSpec> packages,
@@ -62,6 +65,7 @@ namespace Microsoft.PythonTools.Environments {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _condaMgr = condaMgr ?? throw new ArgumentNullException(nameof(condaMgr));
             _project = project;
+            _workspace = workspace;
             _envNameOrPath = envNameOrPath ?? throw new ArgumentNullException(nameof(envNameOrPath));
             _envFilePath = envFilePath;
             _packages = packages ?? throw new ArgumentNullException(nameof(packages));
@@ -117,6 +121,8 @@ namespace Microsoft.PythonTools.Environments {
                             if (_setAsCurrent) {
                                 _project.SetInterpreterFactory(factory);
                             }
+                        } else if (_workspace != null) {
+                            await _workspace.SetInterpreterFactoryAsync(factory);
                         }
 
                         if (_setAsDefault && _options != null) {

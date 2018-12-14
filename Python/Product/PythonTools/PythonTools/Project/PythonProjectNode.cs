@@ -2383,6 +2383,7 @@ namespace Microsoft.PythonTools.Project {
                 Site,
                 this,
                 null,
+                null,
                 GetEnvironmentYmlPath(),
                 GetRequirementsTxtPath()
             ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
@@ -2393,6 +2394,7 @@ namespace Microsoft.PythonTools.Project {
             AddEnvironmentDialog.ShowAddExistingEnvironmentDialogAsync(
                 Site,
                 this,
+                null,
                 null,
                 GetEnvironmentYmlPath(),
                 GetRequirementsTxtPath()
@@ -2444,6 +2446,7 @@ namespace Microsoft.PythonTools.Project {
                 await AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
                     Site,
                     this,
+                    null,
                     null,
                     null,
                     requirementsPath
@@ -2625,9 +2628,11 @@ namespace Microsoft.PythonTools.Project {
             AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
                 Site,
                 this,
+                null,
                 existingName,
-                yamlPath).HandleAllExceptions(Site, typeof(PythonProjectNode)
-            ).DoNotWait();
+                yamlPath,
+                null
+            ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
             return VSConstants.S_OK;
         }
 

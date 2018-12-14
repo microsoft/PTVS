@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools {
             return interpreter;
         }
 
-        public static async Task SetInterpreter(this IWorkspace workspace, string interpreter) {
+        public static async Task SetInterpreterAsync(this IWorkspace workspace, string interpreter) {
             if (workspace == null) {
                 throw new ArgumentNullException(nameof(workspace));
             }
@@ -84,12 +84,38 @@ namespace Microsoft.PythonTools {
             return factory ?? optionsService.DefaultInterpreter;
         }
 
-        public static Task SetInterpreterFactory(this IWorkspace workspace, IPythonInterpreterFactory factory) {
+        public static Task SetInterpreterFactoryAsync(this IWorkspace workspace, IPythonInterpreterFactory factory) {
             if (workspace == null) {
                 throw new ArgumentNullException(nameof(workspace));
             }
 
-            return workspace.SetInterpreter(factory.Configuration.Id);
+            return workspace.SetInterpreterAsync(factory.Configuration.Id);
+        }
+
+        public static string GetRequirementsTxtPath(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var reqsPath = PathUtils.GetAbsoluteFilePath(workspace.Location, "requirements.txt");
+            return File.Exists(reqsPath) ? reqsPath : null;
+        }
+
+        public static string GetEnvironmentYmlPath(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var yamlPath = PathUtils.GetAbsoluteFilePath(workspace.Location, "environment.yml");
+            return File.Exists(yamlPath) ? yamlPath : null;
+        }
+
+        public static string GetName(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            return PathUtils.GetFileOrDirectoryName(workspace.Location);
         }
     }
 }

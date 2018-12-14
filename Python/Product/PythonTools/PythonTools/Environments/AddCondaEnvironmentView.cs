@@ -199,6 +199,7 @@ namespace Microsoft.PythonTools.Environments {
                 Site,
                 _condaMgr,
                 SelectedProject?.Node,
+                SelectedProject?.Workspace,
                 EnvName,
                 IsEnvFile ? SelectedEnvFilePath : null,
                 IsPackages ? PackagesSpecs.ToList() : Enumerable.Empty<PackageSpec>().ToList(),

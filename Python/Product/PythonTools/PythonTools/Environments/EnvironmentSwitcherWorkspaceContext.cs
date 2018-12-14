@@ -42,10 +42,12 @@ namespace Microsoft.PythonTools.Environments {
 
         public IPythonInterpreterFactory CurrentFactory => _workspace.GetInterpreterFactory(_registryService, _optionsService);
 
+        public IWorkspace Workspace => _workspace;
+
         public event EventHandler EnvironmentsChanged;
 
         public async Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
-            await _workspace.SetInterpreterFactory(factory);
+            await _workspace.SetInterpreterFactoryAsync(factory);
         }
 
         private Task OnSettingsChanged(object sender, EventArgs e) {

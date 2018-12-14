@@ -381,6 +381,7 @@ namespace Microsoft.PythonTools.Environments {
                 var op = new AddVirtualEnvironmentOperation(
                     Site,
                     SelectedProject?.Node,
+                    SelectedProject?.Workspace,
                     Path.Combine(LocationPath, VirtualEnvName),
                     BaseInterpreter.Id,
                     UseVEnv,
