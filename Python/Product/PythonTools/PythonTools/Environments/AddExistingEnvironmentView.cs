@@ -508,16 +508,20 @@ namespace Microsoft.PythonTools.Environments {
                         version = null;
                     }
 
-                    factory = SelectedProject.Node.AddMSBuildEnvironment(
-                        RegistryService,
-                        PrefixPath,
-                        InterpreterPath,
-                        WindowsInterpreterPath,
-                        PathEnvironmentVariable,
-                        version,
-                        InterpreterArchitecture.TryParse(ArchitectureName ?? ""),
-                        Description
-                    );
+                    if (SelectedProject.Node != null) {
+                        factory = SelectedProject.Node.AddMSBuildEnvironment(
+                            RegistryService,
+                            PrefixPath,
+                            InterpreterPath,
+                            WindowsInterpreterPath,
+                            PathEnvironmentVariable,
+                            version,
+                            InterpreterArchitecture.TryParse(ArchitectureName ?? ""),
+                            Description
+                        );
+                    } else if (SelectedProject.Workspace != null) {
+                        await SelectedProject.Workspace.SetInterpreterAsync(InterpreterPath);
+                    }
                 }
             }
 

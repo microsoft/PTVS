@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Environments {
 
         public AddEnvironmentView View => (AddEnvironmentView)DataContext;
 
-        enum PageKind {
+        public enum PageKind {
             CondaEnvironment,
             VirtualEnvironment,
             ExistingEnvironment,
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Environments {
             );
         }
 
-        private static async Task ShowDialogAsync(
+        public static async Task ShowDialogAsync(
             PageKind activePage,
             IServiceProvider site,
             PythonProjectNode project,

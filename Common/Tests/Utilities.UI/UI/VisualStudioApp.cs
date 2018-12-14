@@ -673,9 +673,15 @@ namespace TestUtilities.UI {
                                     AutomationElement.ControlTypeProperty,
                                     ControlType.Pane
                                 ),
-                                new PropertyCondition(
-                                    AutomationElement.NameProperty,
-                                    "Solution Explorer"
+                                new OrCondition(
+                                    new PropertyCondition(
+                                        AutomationElement.NameProperty,
+                                        "Solution Explorer"
+                                    ),
+                                    new PropertyCondition(
+                                        AutomationElement.NameProperty,
+                                        "Solution Explorer - Folder View"
+                                    )
                                 )
                             )
                         );

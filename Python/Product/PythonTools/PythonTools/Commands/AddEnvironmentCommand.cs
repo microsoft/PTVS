@@ -24,10 +24,16 @@ using Microsoft.PythonTools.Environments;
 namespace Microsoft.PythonTools.Commands {
     class AddEnvironmentCommand : IAsyncCommand {
         private readonly IServiceProvider _serviceProvider;
+        private readonly AddEnvironmentDialog.PageKind _page;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
-        public AddEnvironmentCommand(IServiceProvider serviceProvider) {
+        public AddEnvironmentCommand(IServiceProvider serviceProvider)
+            : this(serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment) {
+        }
+
+        public AddEnvironmentCommand(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _page = page;
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
@@ -41,7 +47,8 @@ namespace Microsoft.PythonTools.Commands {
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
             }
 
-            return AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(
+            return AddEnvironmentDialog.ShowDialogAsync(
+                _page,
                 _serviceProvider,
                 project,
                 workspace,
