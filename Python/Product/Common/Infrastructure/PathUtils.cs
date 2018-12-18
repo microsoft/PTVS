@@ -821,5 +821,35 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return string.Compare(filePath, i + 1, ext, (ext[0] == '.' ? 1 : 0), int.MaxValue, StringComparison.OrdinalIgnoreCase) == 0;
         }
+
+        /// <summary>
+        /// Returns the depth (# of subfolders) between two paths
+        /// 
+        /// If both paths are in same directory, returns 0
+        /// 
+        /// If secondPath is subfolder of firstPath, returns a
+        ///     positive number which represents number of 
+        ///     subfolder iterations from firstPath to secondPath
+        ///     
+        /// If firstPath is subfolder of secondPath, returns a
+        ///     negative number which represents number of 
+        ///     parent iterations from firstPath to secondPath
+        ///     
+        /// </summary>
+        public static int DepthDifferenceBetweenPath(string firstPath, string secondPath) {
+            if (IsSamePath(firstPath, secondPath) || ShareSameDirectory(firstPath, secondPath)) {
+                return 0;
+            } else if(IsSubpathOf(firstPath, secondPath) || IsSubpathOf(secondPath, firstPath)) {
+                return (secondPath.Split(DirectorySeparators).Length - firstPath.Split(DirectorySeparators).Length);
+            }
+
+            return 0;
+        }
+        
+        //Returns true if both paths are in the same parent directory
+        public static bool ShareSameDirectory(string firstPath, string secondPath) {
+            return IsSameDirectory(Directory.GetParent(firstPath).FullName, Directory.GetParent(secondPath).FullName);
+        }
+
     }
 }

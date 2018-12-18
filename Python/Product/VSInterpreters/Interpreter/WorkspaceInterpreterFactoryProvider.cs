@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+        private const int PythonEnvDetectionDepthLimit = 2;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private IWorkspace _workspace;
         private IWorkspaceSettingsManager _workspaceSettingsMgr;
@@ -218,7 +219,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
             foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
-                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
+                //-1 because it's already searching in each subdirectory of root
+                var file = PathUtils.FindFile(dir, "python.exe", PythonEnvDetectionDepthLimit - 1);
                 if (!string.IsNullOrEmpty(file)) {
                     yield return CreateEnvironmentInfo(file);
                 }
@@ -228,32 +230,40 @@ namespace Microsoft.PythonTools.Interpreter {
         private void OnFileCreatedDeletedRenamed(object sender, FileSystemEventArgs e) {
             lock (_factories) {
                 try {
-                    if (Directory.Exists(e.FullPath) && e.ChangeType == WatcherChangeTypes.Renamed) {
-                        RenamedEventArgs renamedFileInformation = e as RenamedEventArgs;
-                        if (renamedFileInformation != null) {
-                            string interpreterFactoryKey = _factories
-                                .Where(a => PathUtils.IsSameDirectory(a.Value.Configuration.PrefixPath, renamedFileInformation.OldFullPath))
-                                .Select(a => a.Key)
-                                .FirstOrDefault();
+                    if (_refreshPythonInterpreters) {
+                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                    } else {
 
-                            if (!string.IsNullOrEmpty(interpreterFactoryKey)) {
+                        //Renamed
+                        if (e.ChangeType == WatcherChangeTypes.Renamed && Directory.Exists(e.FullPath)) {
+                            var renamedFileInformation = e as RenamedEventArgs;
+                            if (_factories.Values.Any(a =>
+                                PathUtils.IsSameDirectory(a.Configuration.PrefixPath, renamedFileInformation.OldFullPath))) {
                                 _refreshPythonInterpreters = true;
+                                _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                             }
                         }
 
-                    } else if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted) {
+                        //Created or deleted
+                        if ((e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted)
+                            && DetectPythonEnvironment(e)
+                        ) {
                             _refreshPythonInterpreters = true;
+                            _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                         }
                     }
-
-                    if (_refreshPythonInterpreters) {
-                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
-                    }
-
                 } catch (ObjectDisposedException) {
                 }
             }
+        }
+
+        private bool DetectPythonEnvironment(FileSystemEventArgs fileChangeEventArgs) {
+            if (string.Compare(Path.GetFileName(fileChangeEventArgs.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) != 0) {
+                return false;
+            }
+
+            int pythonExecutableDepth = PathUtils.DepthDifferenceBetweenPath(_workspace.Location, fileChangeEventArgs.FullPath);
+            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= PythonEnvDetectionDepthLimit));
         }
 
         private void OnFileChangesTimerElapsed(object state) {
