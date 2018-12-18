@@ -1165,8 +1165,11 @@ namespace DjangoUITests {
             bool oldValue = false;
             ThreadHelper.JoinableTaskFactory.Run(async () => {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                // TODO: these no longer exist in dev16
+#if !DEV16_OR_LATER
                 HtmlSettings.InsertMatchingBraces = false;
                 HtmlSettings.InsertEndTags = false;
+#endif
             });
             return oldValue;
         }
