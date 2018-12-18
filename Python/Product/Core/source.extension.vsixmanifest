@@ -24,19 +24,16 @@
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Package" Path="|Microsoft.PythonTools;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools;_GetAssemblyName|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Analysis;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Common;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Common;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger.Concord;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger.Concord;_GetAssemblyName|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Ipc.Json;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Ipc.Json;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.EnvironmentsList;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.ProjectWizards;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.ProjectWizards;AssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSCommon;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSCommon;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Workspace;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools;_GetTargetPath|" />
-    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
@@ -47,5 +44,7 @@
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Analysis.Engine.dll" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
   </Assets>
 </PackageManifest>

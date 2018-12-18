@@ -47,14 +47,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
-        private readonly IPythonInterpreterFactory _factory;
+        private readonly IronPythonAstInterpreterFactory _factory;
         private readonly IronPythonBuiltinModule _builtinModule;
 #if DEBUG
         private int _id;
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(IPythonInterpreterFactory factory) {
+        public IronPythonInterpreter(IronPythonAstInterpreterFactory factory) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter {0} created from {1}", _id, factory.GetType().FullName));
@@ -104,9 +104,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
                                    Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
 
             setup.PrivateBinPathProbe = "";
-            if (Directory.Exists(_factory.Configuration.PrefixPath)) {
+            if (Directory.Exists(_factory.Configuration.GetPrefixPath())) {
                 setup.AppDomainInitializer = IronPythonResolver.Initialize;
-                setup.AppDomainInitializerArguments = new[] { _factory.Configuration.PrefixPath };
+                setup.AppDomainInitializerArguments = new[] { _factory.Configuration.GetPrefixPath() };
             }
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
 
@@ -159,8 +159,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void LoadModules() {
-            if (!string.IsNullOrEmpty(_factory.Configuration.PrefixPath)) {
-                var dlls = PathUtils.GetAbsoluteDirectoryPath(_factory.Configuration.PrefixPath, "DLLs");
+            if (!string.IsNullOrEmpty(_factory.Configuration.GetPrefixPath())) {
+                var dlls = PathUtils.GetAbsoluteDirectoryPath(_factory.Configuration.GetPrefixPath(), "DLLs");
                 if (Directory.Exists(dlls)) {
                     foreach (var dll in PathUtils.EnumerateFiles(dlls, "*.dll", recurse: false)) {
                         try {
@@ -228,7 +228,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 }
 
                 // process xaml file, add attributes to self
-                string xamlPath = Path.Combine(Path.GetDirectoryName(unit.Entry.FilePath), strConst);
+                string xamlPath = Path.Combine(Path.GetDirectoryName(unit.ProjectEntry.FilePath), strConst);
                 if (_xamlByFilename.TryGetValue(xamlPath, out var xamlProject)) {
                     // TODO: Get existing analysis if it hasn't changed.
                     var analysis = xamlProject.Analysis;
@@ -241,7 +241,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         }
                     }
 
-                    xamlProject.AddDependency(unit.Entry);
+                    xamlProject.AddDependency(unit.ProjectEntry);
 
                     var evalUnit = unit.CopyForEval();
 

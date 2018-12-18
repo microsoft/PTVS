@@ -76,7 +76,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _params;
         }
 
-        public IList<IPythonType> ReturnType {
+        public IReadOnlyList<IPythonType> ReturnType {
             get {
                 if (_returnType == null) {
                     _returnType = new List<IPythonType>();

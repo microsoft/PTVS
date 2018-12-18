@@ -73,15 +73,12 @@ namespace TestUtilities.Python {
             _disposeFactory = true;
         }
 
-        public PythonAnalysis(
-            IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null
-        ) {
+        public PythonAnalysis(IPythonInterpreterFactory factory) {
             if (factory == null) {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
             _factory = factory;
-            _analyzer = PythonAnalyzer.CreateAsync(factory, interpreter).WaitAndUnwrapExceptions();
+            _analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions();
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
