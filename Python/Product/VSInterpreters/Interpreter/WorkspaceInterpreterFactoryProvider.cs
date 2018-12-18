@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private const int PythonEnvDetectionDepthLimit = 2;
+        private const int PythonExecutableEnvDetectionDepthLimit = 3;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private IWorkspace _workspace;
         private IWorkspaceSettingsManager _workspaceSettingsMgr;
@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
             foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
                 //-1 because it's already searching in each subdirectory of root
-                var file = PathUtils.FindFile(dir, "python.exe", PythonEnvDetectionDepthLimit - 1);
+                var file = PathUtils.FindFile(dir, "python.exe", PythonExecutableEnvDetectionDepthLimit - 1);
                 if (!string.IsNullOrEmpty(file)) {
                     yield return CreateEnvironmentInfo(file);
                 }
@@ -238,7 +238,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (e.ChangeType == WatcherChangeTypes.Renamed && Directory.Exists(e.FullPath)) {
                             var renamedFileInformation = e as RenamedEventArgs;
                             if (_factories.Values.Any(a =>
-                                PathUtils.IsSameDirectory(a.Configuration.PrefixPath, renamedFileInformation.OldFullPath))) {
+                                PathUtils.IsSameDirectory(a.Configuration.PrefixPath, renamedFileInformation.OldFullPath))
+                            ) {
                                 _refreshPythonInterpreters = true;
                                 _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                             }
@@ -262,8 +263,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            int pythonExecutableDepth = PathUtils.DepthDifferenceBetweenPath(_workspace.Location, fileChangeEventArgs.FullPath);
-            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= PythonEnvDetectionDepthLimit));
+            int pythonExecutableDepth = PathUtils.DepthDifferenceBetweenPaths(_workspace.Location, fileChangeEventArgs.FullPath);
+            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= PythonExecutableEnvDetectionDepthLimit));
         }
 
         private void OnFileChangesTimerElapsed(object state) {

@@ -836,7 +836,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         ///     parent iterations from firstPath to secondPath
         ///     
         /// </summary>
-        public static int DepthDifferenceBetweenPath(string firstPath, string secondPath) {
+        public static int DepthDifferenceBetweenPaths(string firstPath, string secondPath) {
             if (IsSamePath(firstPath, secondPath) || ShareSameDirectory(firstPath, secondPath)) {
                 return 0;
             } else if(IsSubpathOf(firstPath, secondPath) || IsSubpathOf(secondPath, firstPath)) {
