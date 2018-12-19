@@ -821,5 +821,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return string.Compare(filePath, i + 1, ext, (ext[0] == '.' ? 1 : 0), int.MaxValue, StringComparison.OrdinalIgnoreCase) == 0;
         }
+
     }
 }

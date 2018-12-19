@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
         private FileSystemWatcher _folderWatcher;
         private Timer _folderWatcherTimer;
-        private bool _pythonExecutableCreated;
+        private bool _refreshPythonInterpreters;
         private int _ignoreNotifications;
         private bool _initialized;
 
@@ -120,7 +120,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_workspace != null) {
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
-                        _folderWatcher.Created += OnFileCreated;
+                        _folderWatcher.Created += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Deleted += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Renamed += OnFileCreatedDeletedRenamed;
                         _folderWatcher.EnableRaisingEvents = true;
                         _folderWatcher.IncludeSubdirectories = true;
                     } catch (ArgumentException) {
@@ -227,16 +229,41 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void OnFileCreated(object sender, FileSystemEventArgs e) {
+        private void OnFileCreatedDeletedRenamed(object sender, FileSystemEventArgs e) {
             lock (_factories) {
                 try {
-                    if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        _pythonExecutableCreated = true;
+                    if (_refreshPythonInterpreters) {
+                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                    } else {
+
+                        //Renamed
+                        if (e.ChangeType == WatcherChangeTypes.Renamed && Directory.Exists(e.FullPath)) {
+                            var renamedFileInformation = e as RenamedEventArgs;
+                            if (_factories.Values.Any(a =>
+                                PathUtils.IsSameDirectory(a.Configuration.PrefixPath, renamedFileInformation.OldFullPath))
+                            ) {
+                                _refreshPythonInterpreters = true;
+                                _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                            }
+                        } else if ((e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted)
+                            && DetectPythonEnvironment(e)
+                        ) {
+                            _refreshPythonInterpreters = true;
+                            _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                        }
                     }
-                    _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
                 }
             }
+        }
+
+        private bool DetectPythonEnvironment(FileSystemEventArgs fileChangeEventArgs) {
+            if (string.Compare(Path.GetFileName(fileChangeEventArgs.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) != 0) {
+                return false;
+            }
+
+            int pythonExecutableDepth = fileChangeEventArgs.Name.Split(Path.DirectorySeparatorChar).Length;
+            return pythonExecutableDepth != 0 && pythonExecutableDepth <= 3;
         }
 
         private void OnFileChangesTimerElapsed(object state) {
@@ -245,8 +272,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 lock (_factories) {
                     _folderWatcherTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                    shouldDiscover = _pythonExecutableCreated;
-                    _pythonExecutableCreated = false;
+                    shouldDiscover = _refreshPythonInterpreters;
+                    _refreshPythonInterpreters = false;
                 }
 
                 if (shouldDiscover) {
