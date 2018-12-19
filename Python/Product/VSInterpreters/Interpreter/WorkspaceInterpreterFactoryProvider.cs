@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private const int PythonExecutableEnvDetectionDepthLimit = 3;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private IWorkspace _workspace;
         private IWorkspaceSettingsManager _workspaceSettingsMgr;
@@ -220,7 +219,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
             foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
                 //-1 because it's already searching in each subdirectory of root
-                var file = PathUtils.FindFile(dir, "python.exe", PythonExecutableEnvDetectionDepthLimit - 1);
+                var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
                 if (!string.IsNullOrEmpty(file)) {
                     yield return CreateEnvironmentInfo(file);
                 }
@@ -263,8 +262,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            int pythonExecutableDepth = PathUtils.DepthDifferenceBetweenPaths(_workspace.Location, fileChangeEventArgs.FullPath);
-            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= PythonExecutableEnvDetectionDepthLimit));
+            int pythonExecutableDepth = fileChangeEventArgs.Name.Split(Path.DirectorySeparatorChar).Length;
+            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= 3));
         }
 
         private void OnFileChangesTimerElapsed(object state) {
