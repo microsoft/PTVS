@@ -218,7 +218,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
             foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
-                //-1 because it's already searching in each subdirectory of root
                 var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
                 if (!string.IsNullOrEmpty(file)) {
                     yield return CreateEnvironmentInfo(file);
@@ -242,10 +241,7 @@ namespace Microsoft.PythonTools.Interpreter {
                                 _refreshPythonInterpreters = true;
                                 _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                             }
-                        }
-
-                        //Created or deleted
-                        if ((e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted)
+                        } else if ((e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted)
                             && DetectPythonEnvironment(e)
                         ) {
                             _refreshPythonInterpreters = true;
@@ -263,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             int pythonExecutableDepth = fileChangeEventArgs.Name.Split(Path.DirectorySeparatorChar).Length;
-            return (pythonExecutableDepth != 0 && (pythonExecutableDepth <= 3));
+            return pythonExecutableDepth != 0 && pythonExecutableDepth <= 3;
         }
 
         private void OnFileChangesTimerElapsed(object state) {
