@@ -132,7 +132,8 @@ namespace Microsoft.PythonTools.Environments {
 
                     var workspaceFactoryProvider = site.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
                     using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
-                        await workspace.SetInterpreterAsync(interpExe);
+                        var relativeInterpExe = PathUtils.GetRelativeFilePath(workspace.Location, interpExe);
+                        await workspace.SetInterpreterAsync(relativeInterpExe);
                     }
 
                     var factory = workspaceFactoryProvider?
