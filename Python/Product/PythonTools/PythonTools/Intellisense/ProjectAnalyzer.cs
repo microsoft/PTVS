@@ -119,6 +119,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     InterpreterId = factory.Configuration.Id,
                     Architecture = factory.Configuration.Architecture.ToString(),
                     Version = factory.Configuration.Version.ToString(),
+                    IsIronPython = factory.Configuration.IsIronPython(),
                     Reason = AnalysisInitializeReasons.Default,
                 });
             } catch (Exception ex) {
@@ -142,6 +143,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     InterpreterId = factory.Configuration.Id,
                     Architecture = factory.Configuration.Architecture.ToString(),
                     Version = factory.Configuration.Version.ToString(),
+                    IsIronPython = factory.Configuration.IsIronPython(),
                     Reason = AnalysisInitializeReasons.Project,
                 });
             } catch (Exception ex) {
@@ -164,6 +166,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     InterpreterId = factory.Configuration.Id,
                     Architecture = factory.Configuration.Architecture.ToString(),
                     Version = factory.Configuration.Version.ToString(),
+                    IsIronPython = factory.Configuration.IsIronPython(),
                     Reason = AnalysisInitializeReasons.Interactive,
                 });
             } catch (Exception ex) {
