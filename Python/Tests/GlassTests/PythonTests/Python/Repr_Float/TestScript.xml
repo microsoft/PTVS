@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+
+  <Command name="bp py_mod.py 1"/>
+
+  <Command name='launch "native {EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}" %PythonExe% py_mod.py'>
+    <!-- Use entry point filename as a sanity check that we've got Python symbols loaded correctly. -->
+    <Event name="IDebugEntryPointEvent2" expected="True">
+      <functionName Volatile="True" />
+      <function Volatile="True"/>
+      <file>python.c</file>
+      <line Volatile="True"/>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>1</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="eval 0.0">
+    <EvalResult>0.0</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval -0.0">
+    <EvalResult>-0.0</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 0.0001">
+    <EvalResult>0.0001</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 0.00001">
+    <EvalResult>1e-05</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 0.000011">
+    <EvalResult>1.1e-05</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 100000000000000.0">
+    <EvalResult>100000000000000.0</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 1000000000000000.0">
+    <EvalResult>1e+15</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval 1100000000000000.0">
+    <EvalResult>1.1e+15</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval float('inf')">
+    <EvalResult>inf</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval float('-inf')">
+    <EvalResult>-inf</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="eval float('nan')">
+    <EvalResult>nan</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalIsExpandable>False</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+  </Command>
+  <Command name="quit"/>
+
+</GlassEventLog>
