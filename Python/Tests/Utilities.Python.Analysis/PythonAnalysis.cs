@@ -336,11 +336,13 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(IPythonProjectEntry module, int index = 0, bool includeDunder = true) {
-            var res = module.Analysis.GetVariablesNoBuiltinsByIndex(index);
-            if (includeDunder) {
-                return res;
-            }
-            return res.Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__"));
+            var location = module.Tree.IndexToLocation(index);
+            return Enumerable.Empty<string>();
+            //var res = module.Analysis.GetMembers().GetVariablesNoBuiltins(location);
+            //if (includeDunder) {
+            //    return res;
+            //}
+            //return res.Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__"));
         }
 
         public AnalysisValue[] GetValues(string variable, int index = 0) {

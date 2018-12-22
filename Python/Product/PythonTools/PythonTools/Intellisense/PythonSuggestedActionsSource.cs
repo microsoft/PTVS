@@ -66,6 +66,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
+            if (entry != null) {
+                return false;
+            }
+
             var needSuggestion = new List<SnapshotSpan>();
 
             var tokens = bi.GetTokens(range).Where(t => t.Category == TokenCategory.Identifier);
