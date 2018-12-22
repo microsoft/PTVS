@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Workspace {
 
                 if (File.Exists(path)) {
                     config = registry.Configurations.FirstOrDefault(c => c.InterpreterPath.Equals(path, StringComparison.OrdinalIgnoreCase)) ??
-                        new InterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
+                        new VisualStudioInterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
                 } else {
                     config = registry.FindConfiguration(interpreterVal);
                 }

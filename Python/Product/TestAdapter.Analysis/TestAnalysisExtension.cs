@@ -224,8 +224,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private static IEnumerable<IPythonType> GetTestCaseClasses(IPythonModule module, IModuleContext context) {
             foreach (var name in module.GetMemberNames(context)) {
-                var cls = module.GetMember(context, name) as IPythonType;
-                if (cls != null) {
+                if (module.GetMember(context, name) is IPythonType cls) {
                     foreach (var baseCls in cls.Mro.MaybeEnumerate()) {
                         if (baseCls.Name == "TestCase" ||
                             baseCls.Name.StartsWithOrdinal("unittest.") && baseCls.Name.EndsWithOrdinal(".TestCase")) {

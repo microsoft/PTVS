@@ -78,8 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly HashSet<AnalysisEntry> _hasParseErrors = new HashSet<AnalysisEntry>();
         internal readonly object _hasParseErrorsLock = new object();
 
-        internal const string ParserTaskMoniker = "Python (parser)";
-        internal const string AnalyzerTaskMoniker = "Python (analysis)";
+        internal const string PythonMoniker = "Python";
         internal const string InvalidEncodingMoniker = "InvalidEncoding";
         internal const string TaskCommentMoniker = "Task comment";
         internal bool _analysisComplete;
@@ -514,8 +513,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Interlocked.Exchange(ref _waitForCompleteAnalysis, null)?.TrySetCanceled();
 
             foreach (var path in _projectFiles.Keys) {
-                _services.ErrorTaskProvider?.Clear(path, ParserTaskMoniker);
-                _services.ErrorTaskProvider?.Clear(path, AnalyzerTaskMoniker);
+                _services.ErrorTaskProvider?.Clear(path, PythonMoniker);
                 _services.ErrorTaskProvider?.Clear(path, InvalidEncodingMoniker);
                 _services.CommentTaskProvider?.Clear(path, TaskCommentMoniker);
             }
@@ -1052,8 +1050,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
-            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, AnalyzerTaskMoniker, buffer.Buffer);
+            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, PythonMoniker, buffer.Buffer);
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.Filename, TaskCommentMoniker, buffer.Buffer);
             buffer.Services.InvalidEncodingSquiggleProvider?.AddBuffer(buffer);
@@ -1066,8 +1063,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // Use Maybe* variants, since if they haven't been created we don't need to
             // remove our sources.
-            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
-            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, AnalyzerTaskMoniker, buffer.Buffer);
+            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, PythonMoniker, buffer.Buffer);
             buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, TaskCommentMoniker, buffer.Buffer);
             buffer.Services.MaybeInvalidEncodingSquiggleProvider?.RemoveBuffer(buffer);
@@ -1092,8 +1088,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bufferParser.Dispose();
 
                 if (!entry.SuppressErrorList) {
-                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
-                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, AnalyzerTaskMoniker);
+                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, PythonMoniker);
                     _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, InvalidEncodingMoniker);
                     _services.CommentTaskProvider?.ClearErrorSource(entry.Path, TaskCommentMoniker);
                 }
@@ -1569,13 +1564,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 var pyErrors = diagnostics.diagnostics.MaybeEnumerate()
                     .GroupBy(d => d.source);
 
-                var errorMonikers = new HashSet<string> { ParserTaskMoniker, AnalyzerTaskMoniker };
+                var errorMonikers = new HashSet<string> { PythonMoniker };
                 var commentMonikers = new HashSet<string> { TaskCommentMoniker };
 
                 if (pyErrors.Any()) {
                     var factory = new TaskProviderItemFactory(bi?.LocationTracker, diagnostics.version);
                     foreach (var g in pyErrors) {
-                        Debug.Assert(g.Key == ParserTaskMoniker || g.Key == AnalyzerTaskMoniker || g.Key == TaskCommentMoniker, $"Unexpected source {g.Key}");
+                        Debug.Assert(g.Key == PythonMoniker || g.Key == TaskCommentMoniker, $"Unexpected source {g.Key}");
 
                         bool isComment = (g.Key == TaskCommentMoniker);
                         var items = g.Select(e => factory.FromDiagnostic(
@@ -1717,8 +1712,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (bp != null) {
                 bp.ClearBuffers();
             } else {
-                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
-                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, AnalyzerTaskMoniker);
+                _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, PythonMoniker);
                 _services.MaybeErrorTaskProvider?.ClearErrorSource(entry.Path, InvalidEncodingMoniker);
                 _services.MaybeCommentTaskProvider?.ClearErrorSource(entry.Path, TaskCommentMoniker);
             }

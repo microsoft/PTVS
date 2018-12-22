@@ -47,7 +47,9 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.Python.Analysis.Engine">
+      <Aliases>global,analysis</Aliases>
+    </Reference>
     <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />

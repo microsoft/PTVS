@@ -505,7 +505,7 @@ namespace Microsoft.PythonTools.Interpreter {
             private string _dir;
 
             public ErrorFactoryInfo(string id, Version ver, string description, string dir) :
-                base(new InterpreterConfiguration(id, "{0} (unavailable)".FormatInvariant(description), version: ver)) {
+                base(new VisualStudioInterpreterConfiguration(id, "{0} (unavailable)".FormatInvariant(description), version: ver)) {
                 _dir = dir;
             }
 

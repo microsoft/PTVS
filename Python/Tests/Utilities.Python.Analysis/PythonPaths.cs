@@ -164,7 +164,7 @@ namespace TestUtilities {
                 if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
                     continue;
                 }
-                return new PythonVersion(new InterpreterConfiguration(
+                return new PythonVersion(new VisualStudioInterpreterConfiguration(
                     CPythonInterpreterFactoryConstants.GetInterpreterId(
                         "Jython",
                         version.ToVersion().ToString()

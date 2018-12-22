@@ -76,11 +76,6 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
-      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Microsoft.PythonTools.Ipc.Json</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
@@ -192,6 +187,10 @@
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.Python.LanguageServer.Core">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.PythonTools.Ipc.Json">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>

@@ -213,14 +213,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
             }
 
-            Version version;
-            if (!Version.TryParse(view.VersionName, out version)) {
+            if (!Version.TryParse(view.VersionName, out var version)) {
                 version = null;
             }
 
             return _interpreterOptions.AddConfigurableInterpreter(
                 view.Description,
-                new InterpreterConfiguration(
+                new VisualStudioInterpreterConfiguration(
                     "",
                     view.Description,
                     view.PrefixPath,

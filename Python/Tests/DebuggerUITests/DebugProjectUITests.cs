@@ -24,6 +24,7 @@ using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
@@ -122,7 +123,7 @@ namespace DebuggerUITests {
                 var defaultInterpreter = app.OptionsService.DefaultInterpreter;
                 File.Copy(defaultInterpreter.Configuration.InterpreterPath, interpreterPath, true);
                 if (defaultInterpreter.Configuration.Version >= new Version(3, 0)) {
-                    foreach (var sourceDll in FileUtils.EnumerateFiles(defaultInterpreter.Configuration.PrefixPath, "python*.dll", recurse: false)) {
+                    foreach (var sourceDll in FileUtils.EnumerateFiles(defaultInterpreter.Configuration.GetPrefixPath(), "python*.dll", recurse: false)) {
                         var targetDll = Path.Combine(interpreterFolder, Path.GetFileName(sourceDll));
                         File.Copy(sourceDll, targetDll, true);
                     }

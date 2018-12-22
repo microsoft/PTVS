@@ -79,8 +79,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IronPythonAnalysis.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
+    <Compile Include="IronPythonAnalysis.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
   </ItemGroup>
   <ItemGroup>

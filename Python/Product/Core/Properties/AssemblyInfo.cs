@@ -27,6 +27,11 @@ using Microsoft.VisualStudio.Shell;
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.LanguageServer.Core", CodeBase = "Microsoft.Python.LanguageServer.Core.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Analysis.Engine", CodeBase = "Microsoft.Python.Analysis.Engine.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Ipc.Json", CodeBase = "Microsoft.PythonTools.Ipc.Json.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Analyzer", CodeBase = "Microsoft.PythonTools.Analyzer.exe")]
+
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.AttacherX86", CodeBase = "Microsoft.PythonTools.AttacherX86.exe", Version = AssemblyVersionInfo.StableVersion)]

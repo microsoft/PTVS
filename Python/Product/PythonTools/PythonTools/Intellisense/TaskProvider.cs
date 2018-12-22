@@ -1024,8 +1024,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var model = container.GetComponentModel();
                 var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
                 return new ErrorTaskProvider(container, errorList, errorProvider, new[] {
-                    VsProjectAnalyzer.ParserTaskMoniker,
-                    VsProjectAnalyzer.AnalyzerTaskMoniker,
+                    VsProjectAnalyzer.PythonMoniker,
                     VsProjectAnalyzer.InvalidEncodingMoniker,
                 });
             }

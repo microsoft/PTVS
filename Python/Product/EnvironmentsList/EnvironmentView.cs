@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public bool ExtensionsCreated { get; set; }
 
         private EnvironmentView(string id, string localizedName, string localizedHelpText) {
-            Configuration = new InterpreterConfiguration(id, id);
+            Configuration = new VisualStudioInterpreterConfiguration(id, id);
             Description = LocalizedDisplayName = localizedName;
             LocalizedHelpText = localizedHelpText ?? "";
             Extensions = new ObservableCollection<object>();

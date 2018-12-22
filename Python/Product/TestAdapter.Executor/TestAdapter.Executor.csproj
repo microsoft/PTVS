@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.PythonTools.Ipc.Json" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -69,10 +70,6 @@
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
-      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Ipc.Json</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -417,7 +417,7 @@ namespace TestUtilities.UI.Python {
             Assert.IsNotNull(config, "Could not find intepreter configuration");
 
             envName = string.Format("{0} ({1}, {2})", envName, config.Version, config.Architecture);
-            envPath = config.PrefixPath;
+            envPath = config.GetPrefixPath();
 
             Console.WriteLine("Expecting environment named: {0}", envName);
 
@@ -490,7 +490,7 @@ namespace TestUtilities.UI.Python {
             var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
-            var factory = InterpreterService.Interpreters.FirstOrDefault(interp => PathUtils.IsSameDirectory(interp.Configuration.PrefixPath, envPath));
+            var factory = InterpreterService.Interpreters.FirstOrDefault(interp => PathUtils.IsSameDirectory(interp.Configuration.GetPrefixPath(), envPath));
             envName = string.Format("Python {1} ({2})", PathUtils.GetFileOrDirectoryName(envPath), factory.Configuration.Version, factory.Configuration.Architecture);
 
             var dlg = AddExistingEnvironmentDialogWrapper.FromDte(this);

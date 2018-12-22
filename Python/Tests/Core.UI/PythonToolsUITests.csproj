@@ -55,7 +55,9 @@
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.Python.Analysis.Engine">
+      <Aliases>global,analysis</Aliases>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />

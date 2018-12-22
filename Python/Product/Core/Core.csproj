@@ -133,10 +133,6 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
-      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Microsoft.PythonTools.Ipc.Json</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Workspace\Workspace.csproj">
       <Project>{24f9e050-9f7e-4fe8-895d-819e527b8f45}</Project>
       <Name>Microsoft.PythonTools.Workspace</Name>
@@ -165,6 +161,10 @@
     <None Include="source.extension.vsixmanifest" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\net47\Microsoft.Python.LanguageServer.Core.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\net47\Microsoft.Python.Analysis.Engine.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\net47\Microsoft.PythonTools.Analyzer.exe" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\net47\Microsoft.PythonTools.Ipc.Json.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

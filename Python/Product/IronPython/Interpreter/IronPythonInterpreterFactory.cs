@@ -24,12 +24,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             : base(config, options) {
         }
 
-        private IronPythonAstInterpreterFactory(Dictionary<string, object> properties)
-            : base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) {
-        }
-
         public override IPythonInterpreter CreateInterpreter() {
-            return new IronPythonInterpreter(this);
+            var pythonInterpreter = base.CreateInterpreter();
+            return new IronPythonInterpreter(this, pythonInterpreter);
         }
     }
 }

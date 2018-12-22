@@ -55,7 +55,7 @@ namespace PythonToolsUITests {
 
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
-            return new InterpreterConfiguration(
+            return new VisualStudioInterpreterConfiguration(
                 $"Mock|{Guid.NewGuid()}",
                 description,
                 // Path doesn't matter, as long as it exists
@@ -71,10 +71,6 @@ namespace PythonToolsUITests {
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
             return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
-        }
-
-        private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration($"Mock|{path}", path, Path.GetDirectoryName(path), path, "", "", InterpreterArchitecture.Unknown, new Version(2, 7));
         }
 
         [TestMethod, Priority(0)]
@@ -319,8 +315,8 @@ namespace PythonToolsUITests {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
-                        new InterpreterConfiguration(
-                            "Mock;" + Guid.NewGuid().ToString(),
+                        new VisualStudioInterpreterConfiguration(
+                            "Mock;" + Guid.NewGuid(),
                             "Test Factory",
                             invalidPath,
                             invalidPath,
@@ -410,7 +406,7 @@ namespace PythonToolsUITests {
                     try {
                         fact = list.Service.AddConfigurableInterpreter(
                             id,
-                            new InterpreterConfiguration(
+                            new VisualStudioInterpreterConfiguration(
                                 "",
                                 "Blah",
                                 "",
@@ -439,7 +435,7 @@ namespace PythonToolsUITests {
                     using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5))) {
                         list.Service.AddConfigurableInterpreter(
                             id,
-                            new InterpreterConfiguration(
+                            new VisualStudioInterpreterConfiguration(
                                 "",
                                 "test",
                                 "",
@@ -845,7 +841,7 @@ namespace PythonToolsUITests {
             var service = new MockInterpreterOptionsService();
             var provider = new MockPythonInterpreterFactoryProvider("VEnv Provider");
             var factory = new MockPythonInterpreterFactory(
-                new InterpreterConfiguration(
+                new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                     env,
@@ -897,7 +893,7 @@ namespace PythonToolsUITests {
             var service = new MockInterpreterOptionsService();
             var provider = new MockPythonInterpreterFactoryProvider("Conda Env Provider");
             var factory = new MockPythonInterpreterFactory(
-                new InterpreterConfiguration(
+                new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                     env,
