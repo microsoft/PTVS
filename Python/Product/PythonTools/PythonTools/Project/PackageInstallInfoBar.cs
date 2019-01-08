@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Project {
                         Action = PackageInstallInfoBarActions.Ignore,
                     }
                 );
-                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+                Project.SetProjectProperty(PythonConstants.SuppressPackageInstallationPrompt, true.ToString());
                 Close();
             };
 
