@@ -160,7 +160,7 @@ namespace TestUtilities.Python {
                 }
             }
 
-            entry.Analyze(CancellationToken.None, true);
+            entry.PreAnalyze();
         }
 
         private static string MakeMessage(CollectingErrorSink errors) {
@@ -198,7 +198,7 @@ namespace TestUtilities.Python {
 
         public void ReanalyzeAll(CancellationToken? cancel = null) {
             foreach (var entry in _entries.Values) {
-                entry.Analyze(CancellationToken.None, true);
+                entry.PreAnalyze();
             }
             WaitForAnalysis(cancel);
         }

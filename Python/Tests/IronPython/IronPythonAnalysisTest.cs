@@ -3557,7 +3557,7 @@ mod1.l.append(a)
                     state.UpdateModule(mod2, code2);
                 }
 
-                mod2.Analyze(CancellationToken.None, true);
+                mod2.PreAnalyze();
                 state.WaitForAnalysis();
 
                 state.AssertDescription("l", "list[C]");
@@ -6953,7 +6953,7 @@ x = ClsB.x");
             analyzer.AssertIsInstance(entryB, "x");
 
             analyzer.UpdateModule(entryA, @"class ClsA(object): x = 123");
-            entryA.Analyze(CancellationToken.None, true);
+            entryA.PreAnalyze();
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);
         }
