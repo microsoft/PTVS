@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+
+  <Command name="bp py_mod.py 3"/>
+  <Command name="bp py_mod.py 5"/>
+  <Command name="bp py_mod.py 7"/>
+
+  <Command name='launch "native {EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}" %PythonExe% py_mod.py'>
+    <!-- Use entry point filename as a sanity check that we've got Python symbols loaded correctly. -->
+    <Event name="IDebugEntryPointEvent2" expected="True">
+      <functionName Volatile="True" />
+      <function Volatile="True"/>
+      <file>python.c</file>
+      <line Volatile="True"/>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>3</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- __dict__ is NULL: it shouldn't be shown as a child, but slots should still be visible -->
+  <Command name="eval o">
+    <EvalResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <EvalType>cpp_mod.CppObj</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 o">
+    <ExpandResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <ExpandType>cpp_mod.CppObj</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>d</ChildName>
+    <ChildFullName>o.d</ChildFullName>
+    <ChildResult>None</ChildResult>
+    <ChildType>NoneType</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>5</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- __dict__ is something that's not actually a dict: show it as __dict__ when expanded, also show slots -->
+  <Command name="eval o">
+    <EvalResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <EvalType>cpp_mod.CppObj</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 o">
+    <ExpandResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <ExpandType>cpp_mod.CppObj</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>__dict__</ChildName>
+    <ChildFullName>o.__dict__</ChildFullName>
+    <ChildResult>42</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>d</ChildName>
+    <ChildFullName>o.d</ChildFullName>
+    <ChildResult>42</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>7</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- __dict__ is a dict - show it as __dict__, show all members as fields, and show slots -->
+  <Command name="eval o">
+    <EvalResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <EvalType>cpp_mod.CppObj</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 o">
+    <ExpandResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <ExpandType>cpp_mod.CppObj</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>__dict__</ChildName>
+    <ChildFullName>o.__dict__</ChildFullName>
+    <ChildResult>{'x': 1}</ChildResult>
+    <ChildType>dict</ChildType>
+    <ChildIsExpandable>True</ChildIsExpandable>
+
+    <ChildName>d</ChildName>
+    <ChildFullName>o.d</ChildFullName>
+    <ChildResult>{'x': 1}</ChildResult>
+    <ChildType>dict</ChildType>
+    <ChildIsExpandable>True</ChildIsExpandable>
+
+    <ChildName>x</ChildName>
+    <ChildFullName>o.x</ChildFullName>
+    <ChildResult>1</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+  </Command>
+  <Command name="quit"/>
+
+</GlassEventLog>

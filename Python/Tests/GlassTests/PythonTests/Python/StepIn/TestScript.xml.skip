@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+
+  <Command name="bp py_mod.py 9"/>
+
+  <Command name='launch "native {EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}" %PythonExe% py_mod.py'>
+    <!-- Use entry point filename as a sanity check that we've got Python symbols loaded correctly. -->
+    <Event name="IDebugEntryPointEvent2" expected="True">
+      <functionName Volatile="True" />
+      <function Volatile="True"/>
+      <file>python.c</file>
+      <line Volatile="True"/>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>9</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step into a global function call -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>global_func</function>
+      <file>py_mod.py</file>
+      <line>5</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step into a def; equivalent to step over -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>global_func</function>
+      <file>py_mod.py</file>
+      <line>6</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step into a method call; equivalent to step over -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>method</function>
+      <file>py_mod.py</file>
+      <line>2</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step into a def; equivalent to step over -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>method</function>
+      <file>py_mod.py</file>
+      <line>3</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step in at the end of the method; equivalent to step out -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>global_func</function>
+      <file>py_mod.py</file>
+      <line>6</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- Step in at the end of the global function; equivalent to step out -->
+  <Command name="step in">
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>9</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+  </Command>
+  <Command name="quit"/>
+
+</GlassEventLog>
