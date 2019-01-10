@@ -24,13 +24,16 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Internal.VisualStudio.PlatformUI;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Workspace;
 
 namespace Microsoft.PythonTools.Environments {
     internal partial class AddEnvironmentDialog : ModernDialog, IDisposable {
         public static readonly ICommand MoreInfo = new RoutedCommand();
+        private bool _isStartupFocusSet;
 
         public AddEnvironmentDialog(IEnumerable<EnvironmentViewBase> pages, EnvironmentViewBase selected) {
             if (pages == null) {
@@ -43,7 +46,7 @@ namespace Microsoft.PythonTools.Environments {
 
         public AddEnvironmentView View => (AddEnvironmentView)DataContext;
 
-        enum PageKind {
+        public enum PageKind {
             CondaEnvironment,
             VirtualEnvironment,
             ExistingEnvironment,
@@ -53,15 +56,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IWorkspace workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             // For now default to the first tab (virtual environment)
             await ShowAddVirtualEnvironmentDialogAsync(
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -72,15 +77,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddVirtualEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IWorkspace workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.VirtualEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -91,15 +98,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddCondaEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IWorkspace workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.CondaEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -110,15 +119,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddExistingEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IWorkspace workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.ExistingEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -126,13 +137,14 @@ namespace Microsoft.PythonTools.Environments {
             );
         }
 
-        private static async Task ShowDialogAsync(
+        public static async Task ShowDialogAsync(
             PageKind activePage,
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IWorkspace workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             if (site == null) {
@@ -142,19 +154,27 @@ namespace Microsoft.PythonTools.Environments {
             ProjectView[] projectViews;
             ProjectView selectedProjectView;
 
-            try {
-                var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-                var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? new PythonProjectNode[0];
+            if (workspace != null) {
+                var registryService = site.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var optionsService = site.GetComponentModel().GetService<IInterpreterOptionsService>();
+                var factory = workspace.GetInterpreterFactory(registryService, optionsService);
+                selectedProjectView = new ProjectView(workspace, factory);
+                projectViews = new ProjectView[] { selectedProjectView };
+            } else {
+                try {
+                    var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
+                    var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? Array.Empty<PythonProjectNode>();
 
-                projectViews = projects
-                    .Select((projectNode) => new ProjectView(projectNode))
-                    .ToArray();
+                    projectViews = projects
+                        .Select((projectNode) => new ProjectView(projectNode))
+                        .ToArray();
 
-                selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
-            } catch (InvalidOperationException ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
-                projectViews = new ProjectView[0];
-                selectedProjectView = null;
+                    selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
+                } catch (InvalidOperationException ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
+                    projectViews = Array.Empty<ProjectView>();
+                    selectedProjectView = null;
+                }
             }
 
             if (selectedProjectView != null) {
@@ -280,6 +300,36 @@ namespace Microsoft.PythonTools.Environments {
 
         public void Dispose() {
             View.Dispose();
+        }
+
+        private void AddCondaEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            if (_isStartupFocusSet) {
+                return;
+            }
+
+            _isStartupFocusSet = true;
+            var textBox = ((AddCondaEnvironmentControl)sender).EnvNameTextBox;
+            textBox.SelectAll();
+            textBox.Focus();
+        }
+
+        private void AddVirtualEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            if (_isStartupFocusSet) {
+                return;
+            }
+
+            _isStartupFocusSet = true;
+            var textBox = ((AddVirtualEnvironmentControl)sender).EnvNameTextBox;
+            textBox.SelectAll();
+            textBox.Focus();
+        }
+
+        private void AddExistingEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
+        }
+
+        private void AddInstalledEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
+            _isStartupFocusSet = true;
         }
     }
 }

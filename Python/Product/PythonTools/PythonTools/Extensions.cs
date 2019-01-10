@@ -953,6 +953,10 @@ namespace Microsoft.PythonTools {
             return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
         }
 
+        internal static bool IsIronPython(this InterpreterConfiguration config) {
+            return config.Id.StartsWithOrdinal("IronPython|", ignoreCase: true);
+        }
+
         internal static string LimitLines(
             this string str,
             int maxLines = 30,

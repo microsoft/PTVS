@@ -24,28 +24,38 @@ using Microsoft.PythonTools.Environments;
 namespace Microsoft.PythonTools.Commands {
     class AddEnvironmentCommand : IAsyncCommand {
         private readonly IServiceProvider _serviceProvider;
+        private readonly AddEnvironmentDialog.PageKind _page;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
-        public AddEnvironmentCommand(IServiceProvider serviceProvider) {
+        public AddEnvironmentCommand(IServiceProvider serviceProvider)
+            : this(serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment) {
+        }
+
+        public AddEnvironmentCommand(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _page = page;
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
         public Task InvokeAsync() {
-            // We'll add support for open folder later
-            // https://github.com/Microsoft/PTVS/issues/4852
+            var workspace = (_envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
             var project = (_envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
-            if (project == null) {
+            if (workspace == null && project == null) {
                 var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
             }
 
-            string ymlPath = project?.GetEnvironmentYmlPath();
-            string txtPath = project?.GetRequirementsTxtPath();
-
-            return AddEnvironmentDialog.ShowAddEnvironmentDialogAsync(_serviceProvider, project, null, ymlPath, txtPath);
+            return AddEnvironmentDialog.ShowDialogAsync(
+                _page,
+                _serviceProvider,
+                project,
+                workspace,
+                null,
+                null,
+                null
+            );
         }
     }
 }

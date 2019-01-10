@@ -58,7 +58,7 @@ namespace PythonToolsTests {
                 workspaceService.ChangeWorkspace(workspace2);
             };
 
-            TestTriggerDiscovery(workspaceService, triggerDiscovery);
+            TestTriggerDiscovery(workspaceService, triggerDiscovery, true);
         }
 
         [TestMethod, Priority(0)]
@@ -82,7 +82,7 @@ namespace PythonToolsTests {
                 settingsManager.ChangeSettings(aggregatedSettings2);
             };
 
-            TestTriggerDiscovery(workspaceService, triggerDiscovery);
+            TestTriggerDiscovery(workspaceService, triggerDiscovery, true);
         }
 
         [TestMethod, Priority(0)]
@@ -99,16 +99,10 @@ namespace PythonToolsTests {
             var workspaceService = new MockWorkspaceService(workspace);
 
             // Create virtual env inside the workspace folder (one level from root)
-            Action triggerDiscovery = () => {
-                using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", "venv", envFolder)) {
-                    Console.WriteLine(p.Arguments);
-                    p.Wait();
-                    Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
-                    Assert.AreEqual(0, p.ExitCode);
-                }
-            };
-
-            var configs = TestTriggerDiscovery(workspaceService, triggerDiscovery).ToArray();
+            var configs = TestTriggerDiscovery(
+                workspaceService,
+                () => CreatePythonVirtualEnv(python.InterpreterPath, workspaceFolder, "env")
+            ).ToArray();
 
             Assert.AreEqual(1, configs.Length);
             Assert.IsTrue(PathUtils.IsSamePath(
@@ -159,19 +153,80 @@ namespace PythonToolsTests {
             }
         }
 
-        private static IEnumerable<InterpreterConfiguration> TestTriggerDiscovery(IVsFolderWorkspaceService workspaceService, Action triggerDiscovery) {
+        [TestMethod, Priority(0)]
+        public void WatchWorkspaceVirtualEnvRenamed() {
+            const string ENV_NAME = "env";
+            var workspaceService = CreateEnvAndGetWorkspaceService(ENV_NAME);
+
+            string envPath = Path.Combine(workspaceService.CurrentWorkspace.Location, ENV_NAME);
+            string renamedEnvPath = Path.Combine(workspaceService.CurrentWorkspace.Location, string.Concat(ENV_NAME, "1"));
+            var configs = TestTriggerDiscovery
+                (workspaceService, () => Directory.Move(envPath, renamedEnvPath)).ToArray();
+
+            Assert.AreEqual(1, configs.Length);
+            Assert.IsTrue(PathUtils.IsSamePath(Path.Combine(renamedEnvPath, "scripts", "python.exe"),configs[0].InterpreterPath));
+            Assert.AreEqual("Workspace|Workspace|env1", configs[0].Id);
+        }
+
+        [TestMethod, Priority(0)]
+        public void WatchWorkspaceVirtualEnvDeleted() {
+            const string ENV_NAME = "env";
+            var workspaceService = CreateEnvAndGetWorkspaceService(ENV_NAME);
+
+            string envPath = Path.Combine(workspaceService.CurrentWorkspace.Location, ENV_NAME);
+            var configs = TestTriggerDiscovery(workspaceService, () => Directory.Delete(envPath, true)).ToArray();
+
+            Assert.AreEqual(0, configs.Length);
+        }
+
+        private static IEnumerable<InterpreterConfiguration> TestTriggerDiscovery(
+                IVsFolderWorkspaceService workspaceService,
+                Action triggerDiscovery,
+                bool useDiscoveryStartedEvent = false
+        ) {
             using (var evt = new AutoResetEvent(false))
             using (var provider = new WorkspaceInterpreterFactoryProvider(workspaceService)) {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
                 var configs = provider.GetInterpreterConfigurations();
-                provider.DiscoveryStarted += (sender, e) => {
-                    evt.Set();
-                };
+
+                if (useDiscoveryStartedEvent) {
+                    provider.DiscoveryStarted += (sender, e) => {
+                        evt.Set();
+                    };
+                } else {
+                    provider.InterpreterFactoriesChanged += (sender, e) => {
+                        evt.Set();
+                    };
+                }
+
                 triggerDiscovery();
                 Assert.IsTrue(evt.WaitOne(5000), "Failed to trigger discovery.");
                 return provider.GetInterpreterConfigurations();
             }
+        }
+
+        private MockWorkspaceService CreateEnvAndGetWorkspaceService(string envName) {
+            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+
+            var workspacePath = TestData.GetTempPath();
+            Directory.CreateDirectory(workspacePath);
+            File.WriteAllText(Path.Combine(workspacePath, "app.py"), string.Empty);
+
+            CreatePythonVirtualEnv(python.InterpreterPath, workspacePath, envName);
+
+            return new MockWorkspaceService(new MockWorkspace(workspacePath));
+        }
+
+        private static void CreatePythonVirtualEnv(string pythonInterpreterPath, string workspacePath, string envName) {
+            //Creating virtual environment and confirming it was created
+            using (var p = ProcessOutput.RunHiddenAndCapture(pythonInterpreterPath, "-m", "venv", Path.Combine(workspacePath, envName))) {
+                Console.WriteLine(p.Arguments);
+                Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
+                Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
+                Assert.AreEqual(0, p.ExitCode);
+            }
+            Assert.IsTrue(File.Exists(Path.Combine(workspacePath, envName, "scripts", "python.exe")));
         }
 
         class MockWorkspaceService : IVsFolderWorkspaceService {

@@ -37,7 +37,7 @@
     <CreateVsixContainer>true</CreateVsixContainer>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
     <CopyVsixManifestToOutput>true</CopyVsixManifestToOutput>
-    <DeployExtension>true</DeployExtension>
+    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

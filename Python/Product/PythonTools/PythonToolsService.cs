@@ -152,11 +152,13 @@ namespace Microsoft.PythonTools {
                     var installed = registry.Configurations.Count();
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);
+                    var installedIronPython = registry.Configurations.Where(c => c.IsIronPython()).Count();
 
                     Logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
                         { "Total", installed },
                         { "3x", installedV3 },
-                        { "2x", installedV2 }
+                        { "2x", installedV2 },
+                        { "IronPython", installedIronPython },
                     });
                 }
 

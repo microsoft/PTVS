@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudioTools {
 #endif
         }
 
-        
+
         internal static Dictionary<Command, MenuCommand> Commands => _commands;
         internal static object CommandsLock => _commandsLock;
 
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudioTools {
                 return null;
             }
 #if DEV11_OR_LATER
-            if (docView is IVsDifferenceCodeWindow diffWindow) {
+            if (docView is IVsDifferenceCodeWindow diffWindow && diffWindow.DifferenceViewer != null) {
                 switch (diffWindow.DifferenceViewer.ActiveViewType) {
                     case VisualStudio.Text.Differencing.DifferenceViewType.InlineView:
                         return diffWindow.DifferenceViewer.InlineView;
@@ -207,9 +207,9 @@ namespace Microsoft.VisualStudioTools {
             AddService(GetLibraryManagerType(), CreateLibraryManager, true);
 
             var crinfo = new OLECRINFO {
-                cbSize = (uint) Marshal.SizeOf(typeof(OLECRINFO)),
-                grfcrf = (uint) _OLECRF.olecrfNeedIdleTime,
-                grfcadvf = (uint) _OLECADVF.olecadvfModal | (uint) _OLECADVF.olecadvfRedrawOff | (uint) _OLECADVF.olecadvfWarningsOff,
+                cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO)),
+                grfcrf = (uint)_OLECRF.olecrfNeedIdleTime,
+                grfcadvf = (uint)_OLECADVF.olecadvfModal | (uint)_OLECADVF.olecadvfRedrawOff | (uint)_OLECADVF.olecadvfWarningsOff,
                 uIdleTimeInterval = 0
             };
 
@@ -219,17 +219,17 @@ namespace Microsoft.VisualStudioTools {
             await base.InitializeAsync(cancellationToken, progress);
         }
 
-        protected override object GetService(Type serviceType) 
+        protected override object GetService(Type serviceType)
             => serviceType == typeof(UIThreadBase) ? _uiThread : base.GetService(serviceType);
 
         protected void AddService<T>(object service, bool promote)
-            => ((IServiceContainer) this).AddService(typeof(T), service, promote);
+            => ((IServiceContainer)this).AddService(typeof(T), service, promote);
 
         protected void AddService<T>(ServiceCreatorCallback callback, bool promote)
-            => ((IServiceContainer) this).AddService(typeof(T), callback, promote);
+            => ((IServiceContainer)this).AddService(typeof(T), callback, promote);
 
         protected void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
-            => ((IServiceContainer) this).AddService(serviceType, callback, promote);
+            => ((IServiceContainer)this).AddService(serviceType, callback, promote);
 
         internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url) {
             // TODO: In a future VS 2017 release, SVsWebBrowsingService will have the ability
@@ -302,15 +302,15 @@ namespace Microsoft.VisualStudioTools {
 
         public IntPtr HwndGetWindow(uint dwWhich, uint dwReserved) => IntPtr.Zero;
 
-        public void OnActivationChange(IOleComponent pic, int fSameComponent, OLECRINFO[] pcrinfo, int fHostIsActivating, OLECHOSTINFO[] pchostinfo, uint dwReserved) {}
+        public void OnActivationChange(IOleComponent pic, int fSameComponent, OLECRINFO[] pcrinfo, int fHostIsActivating, OLECHOSTINFO[] pchostinfo, uint dwReserved) { }
 
-        public void OnAppActivate(int fActive, uint dwOtherThreadID) {}
+        public void OnAppActivate(int fActive, uint dwOtherThreadID) { }
 
-        public void OnEnterState(uint uStateID, int fEnter) {}
+        public void OnEnterState(uint uStateID, int fEnter) { }
 
-        public void OnLoseActivation() {}
+        public void OnLoseActivation() { }
 
-        public void Terminate() {}
+        public void Terminate() { }
 
         #endregion
     }
