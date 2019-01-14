@@ -33,7 +33,52 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The UI behavior of the interpreter.
         /// </summary>
         public InterpreterUIMode UIMode { get; }
+        
+        /// <summary>
+        /// Reconstructs an interpreter configuration from a dictionary.
+        /// </summary>
+        public static VisualStudioInterpreterConfiguration CreateFromDictionary(Dictionary<string, object> properties) {
+            var id = Read(properties, nameof(InterpreterConfiguration.Id));
+            var description = Read(properties, nameof(InterpreterConfiguration.Description)) ?? "";
+            var prefixPath = Read(properties, nameof(PrefixPath));
+            var interpreterPath = Read(properties, nameof(InterpreterConfiguration.InterpreterPath));
+            var windowsInterpreterPath = Read(properties, nameof(WindowsInterpreterPath));
+            var pathEnvironmentVariable = Read(properties, nameof(InterpreterConfiguration.PathEnvironmentVariable));
+            var architecture = InterpreterArchitecture.TryParse(Read(properties, nameof(InterpreterConfiguration.Architecture)));
 
+            var version = default(Version);
+            try {
+                version = Version.Parse(Read(properties, nameof(Version)));
+            } catch (Exception ex) when (ex is ArgumentException || ex is FormatException) {
+                version = new Version();
+            }
+
+            InterpreterUIMode uiMode = 0;
+            foreach (var bit in (Read(properties, nameof(UIMode)) ?? "").Split('|')) {
+                if (Enum.TryParse(bit, out InterpreterUIMode m)) {
+                    uiMode |= m;
+                }
+            }
+
+            var configuration = new VisualStudioInterpreterConfiguration(id, description, prefixPath, interpreterPath, windowsInterpreterPath, pathEnvironmentVariable, architecture, version, uiMode);
+
+            if (properties.TryGetValue(nameof(InterpreterConfiguration.SearchPaths), out object o)) {
+                configuration.SearchPaths.Clear();
+                switch (o) {
+                    case string s:
+                        configuration.SearchPaths.AddRange(s.Split(';'));
+                        break;
+                    case IEnumerable<string> ss:
+                        configuration.SearchPaths.AddRange(ss);
+                        break;
+                }
+            }
+
+            return configuration;
+        }
+
+        private static string Read(Dictionary<string, object> d, string k)
+            => d.TryGetValue(k, out var o) ? o as string : null;
 
         public VisualStudioInterpreterConfiguration(
             string id,

@@ -63,7 +63,6 @@
     <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.Dynamic" />
     <Reference Include="Microsoft.Scripting" />
-    <Reference Include="Microsoft.Scripting.Metadata" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="PresentationCore" />
