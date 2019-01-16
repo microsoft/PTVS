@@ -22,9 +22,6 @@
         <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}"
                         CanExecute="Browse_CanExecute"
                         Executed="Browse_Executed" />
-        <CommandBinding Command="{x:Static view:SqlCommands.BrowseOdbc}"
-                        CanExecute="Odbc_CanExecute"
-                        Executed="Odbc_Executed" />
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.CreateFilesCommand}"
                         CanExecute="CreateFiles_CanExecute"
                         Executed="CreateFiles_Executed" />
@@ -48,9 +45,6 @@
                     <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
                     <wpf:Lambda x:Key="EmptyStringToVisibleOrCollapsed">(string s) => !string.IsNullOrEmpty(s) ? Visibility.Collapsed: Visibility.Visible</wpf:Lambda>
                     <wpf:Lambda x:Key="EmptyStringToNotVisibleOrCollapsed">(string s) => string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
-                    <Style x:Key="BrowseOdbcButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
-                        <Setter Property="Command" Value="{x:Static view:SqlCommands.BrowseOdbc}" />
-                    </Style>
                     <view:TemplateContextItemTemplateSelector x:Key="contextItemSelector"/>
                     <DataTemplate x:Key="stringTemplate">
                         <StackPanel Orientation="Vertical"
@@ -70,36 +64,6 @@
                                                               Text="{Binding Val, Mode=TwoWay}"
                                                               HelpText="{Binding Description}"
                                                               Watermark="{Binding Default}"
-                                                              AutomationProperties.Name="{Binding Label}"
-                                                              AutomationProperties.HelpText="{Binding Description}"/>
-                        </StackPanel>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
-                                <Setter TargetName="Label_Clickable" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="Label_NotClickable" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                    <DataTemplate x:Key="odbcconnectionTemplate">
-                        <StackPanel Orientation="Vertical"
-                                    Visibility="{Binding Visible, Converter={StaticResource BoolToVisibleOrCollapsed}}">
-                            <TextBlock x:Name="Label_NotClickable"
-                                       Margin="8 4 4 0"
-                                       Text="{Binding Label}"
-                                       Visibility="Collapsed"/>
-                            <Button x:Name="Label_Clickable"
-                                    Margin="8 4 4 0"
-                                    Content="{Binding Label}"
-                                    ToolTip="{Binding Url}"
-                                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
-                                    CommandParameter="{Binding Url,Mode=OneWay}"
-                                    Style="{StaticResource NavigationButton}"/>
-                            <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
-                                                              Text="{Binding Val, Mode=TwoWay}"
-                                                              HelpText="{Binding Description}"
-                                                              Watermark="{Binding Default}"
-                                                              BrowseButtonStyle="{StaticResource BrowseOdbcButton}"
-                                                              BrowseAutomationName="{x:Static cct:Strings.OptionsPage_OdbcConnectionBrowseAutomationName}"
                                                               AutomationProperties.Name="{Binding Label}"
                                                               AutomationProperties.HelpText="{Binding Description}"/>
                         </StackPanel>
