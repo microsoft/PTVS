@@ -88,6 +88,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private AppDomain CreateDomain(out RemoteInterpreterProxy remoteInterpreter) {
             // We create a sacrificial domain for loading all of our assemblies into.  
 
+            var ironPythonAssemblyPath = Path.GetDirectoryName(_factory.Configuration.GetWindowsInterpreterPath());
             AppDomainSetup setup = new AppDomainSetup();
             setup.ShadowCopyFiles = "true";
             // We are in ...\Extensions\Microsoft\IronPython Interpreter\2.0
@@ -98,18 +99,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
             // So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
             setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
             setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" +
-                                   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
+                                   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location) + ";" +
+                                   Path.Combine(ironPythonAssemblyPath, "DLLs") + ";" +
+                                   ironPythonAssemblyPath;
 
             setup.PrivateBinPathProbe = "";
             if (Directory.Exists(_factory.Configuration.GetPrefixPath())) {
                 setup.AppDomainInitializer = IronPythonResolver.Initialize;
                 setup.AppDomainInitializerArguments = new[] { _factory.Configuration.GetPrefixPath() };
             }
-            var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
 
-            remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
-                typeof(RemoteInterpreterProxy).Assembly.FullName,
-                typeof(RemoteInterpreterProxy).FullName);
+            var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
+            using (new RemoteAssemblyResolver(domain, ironPythonAssemblyPath)) {
+                remoteInterpreter = (RemoteInterpreterProxy) domain.CreateInstanceAndUnwrap(
+                    typeof(RemoteInterpreterProxy).Assembly.FullName,
+                    typeof(RemoteInterpreterProxy).FullName);
+            }
 
 #if DEBUG
             var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
@@ -137,6 +142,52 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 #endif
+
+        [Serializable]
+        class RemoteAssemblyResolver : IDisposable {
+            private readonly AppDomain _appDomain;
+            private readonly string _ironPythonRootPath;
+
+            public RemoteAssemblyResolver(AppDomain appDomain, string ironPythonRootPath) {
+                _appDomain = appDomain;
+                _ironPythonRootPath = ironPythonRootPath;
+                _appDomain.AssemblyResolve += AppDomainOnAssemblyResolve;
+            }
+
+            private Assembly AppDomainOnAssemblyResolve(object sender, ResolveEventArgs args) {
+                var name = new AssemblyName(args.Name).Name;
+                switch (name) {
+                    case "IronPython":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "IronPython.dll"));
+                    case "IronPython.Modules":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "IronPython.Modules.dll"));
+                    case "IronPython.Wpf":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "DLLs", "IronPython.Wpf.dll"));
+                    case "Microsoft.Scripting":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "Microsoft.Scripting.dll"));
+                    case "Microsoft.Dynamic":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "Microsoft.Dynamic.dll"));
+                    default:
+                        return null;
+                }
+            }
+
+            public void Dispose() {
+                _appDomain.AssemblyResolve -= AppDomainOnAssemblyResolve;
+            }
+
+            private static Assembly AssemblyLoadFrom(string assemblyPath) {
+                try {
+                    return Assembly.LoadFrom(assemblyPath);
+                } catch (FileLoadException) {
+                    return null;
+                } catch (IOException) {
+                    return null;
+                } catch (BadImageFormatException) {
+                    return null;
+                }
+            }
+        }
 
         class AssemblyResolver {
             internal static AssemblyResolver Instance = new AssemblyResolver();

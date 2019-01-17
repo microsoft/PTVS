@@ -161,10 +161,6 @@
     <None Include="source.extension.vsixmanifest" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\Microsoft.Python.LanguageServer.Core.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\Microsoft.Python.Analysis.Engine.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\Microsoft.PythonTools.Analyzer.exe" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\Microsoft.PythonTools.Ipc.Json.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -175,6 +171,20 @@
     <ItemGroup>
       <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll" />
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <LanguageServerFiles Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\**\*" />
+      <LanguageServerFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </LanguageServerFiles>
+      <Content Include="@(LanguageServerFiles)" />
+      <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
 </Project>

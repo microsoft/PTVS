@@ -1183,19 +1183,6 @@
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Common\Product\SharedProject\SharedProject.proj" />
   <Import Project="..\ProjectAfter.settings" />
-  <Target Name="_IncludeTypeshed" BeforeTargets="AssignTargetPaths">
-    <ItemGroup>
-      <TypeshedFiles Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\Typeshed\**\*" />
-      <TypeshedFiles>
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>Typeshed\%(RecursiveDir)\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>%(RecursiveDir)</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </TypeshedFiles>
-      <Content Include="@(TypeshedFiles)" />
-      <FileWrites Include="@(TypeshedFiles)" />
-    </ItemGroup>
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
