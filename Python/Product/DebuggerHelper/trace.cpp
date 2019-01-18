@@ -453,19 +453,14 @@ static void TraceLine(void* frame) {
         }
     }
 
-#pragma warning(push)
-#pragma warning(disable:4244) // '=': conversion from 'unsigned int' to 'volatile uint8_t', possible loss of data
-
     // See the large comment at the declaration of breakpointData for details of how the below synchronization scheme works.
-    unsigned iData;
+    uint8_t iData;
     do {
         iData = currentBreakpointData;
         // BreakpointManager.WriteBreakpoints may run at this point and change currentBreakpointData ...
         breakpointDataInUseByTraceFunc = iData; // (locks breakpointData[iData] from any modification by debugger)
         // ... so check it again to ensure that it's still the same, and retry if it's not.
     } while (iData != currentBreakpointData);
-
-#pragma warning(pop)
 
     // We can now safely use breakpointData[iData]
     const auto& bpData = breakpointData[iData];
