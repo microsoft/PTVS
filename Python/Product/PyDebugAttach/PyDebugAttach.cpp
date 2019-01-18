@@ -454,6 +454,8 @@ public:
     PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
 
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
+        UNREFERENCED_PARAMETER(hint);
+
         if (g_heap == nullptr) {
             g_heap = HeapCreate(0, 0, 0);
         }
@@ -462,6 +464,8 @@ public:
     }
 
     void deallocate(pointer p, size_type n) {
+        UNREFERENCED_PARAMETER(n);
+
         HeapFree(g_heap, 0, p);
     }
 
@@ -570,6 +574,9 @@ void IncRef(PyObject* object) {
     object->ob_refcnt++;
 }
 
+#pragma warning(push)
+#pragma warning(disable:4324) // 'MemoryBuffer': structure was padded due to alignment specifier
+
 // Structure for our shared memory communication, aligned to be identical on 64-bit and 32-bit
 struct MemoryBuffer {
     int32_t PortNumber;                                 // offset 0-4
@@ -581,6 +588,8 @@ struct MemoryBuffer {
     char DebugId[64];                                   // null terminated string
     char DebugOptions[1];                               // null terminated string (VLA)
 };
+
+#pragma warning(pop)
 
 class ConnectionInfo {
 public:
@@ -617,7 +626,7 @@ public:
 
                 serveraddr.sin_family = AF_INET;
                 serveraddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-                serveraddr.sin_port = htons(Buffer->PortNumber);
+                serveraddr.sin_port = htons(static_cast<u_short>(Buffer->PortNumber));
 
                 // connect to our DebugConnectionListener and report the error.
                 if (connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
@@ -785,6 +794,8 @@ bool LoadAndEvaluateCode(
     if (*evalResult == nullptr) {
         pyErrPrint();
     }
+#else
+    UNREFERENCED_PARAMETER(pyErrPrint);
 #endif
 
     return true;
@@ -818,14 +829,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto gilRelease = (PyGILState_Release*)GetProcAddress(module, "PyGILState_Release");
         auto threadHead = (PyInterpreterState_ThreadHead*)GetProcAddress(module, "PyInterpreterState_ThreadHead");
         auto initThreads = (PyEval_Lock*)GetProcAddress(module, "PyEval_InitThreads");
-        auto acquireLock = (PyEval_Lock*)GetProcAddress(module, "PyEval_AcquireLock");
         auto releaseLock = (PyEval_Lock*)GetProcAddress(module, "PyEval_ReleaseLock");
         auto threadsInited = (PyEval_ThreadsInitialized*)GetProcAddress(module, "PyEval_ThreadsInitialized");
         auto threadNext = (PyThreadState_Next*)GetProcAddress(module, "PyThreadState_Next");
         auto threadSwap = (PyThreadState_Swap*)GetProcAddress(module, "PyThreadState_Swap");
         auto pyDictNew = (PyDict_New*)GetProcAddress(module, "PyDict_New");
-        auto pyModuleNew = (PyModule_New*)GetProcAddress(module, "PyModule_New");
-        auto pyModuleGetDict = (PyModule_GetDict*)GetProcAddress(module, "PyModule_GetDict");
         auto pyCompileString = (Py_CompileString*)GetProcAddress(module, "Py_CompileString");
         auto pyEvalCode = (PyEval_EvalCode*)GetProcAddress(module, "PyEval_EvalCode");
         auto getDictItem = (PyDict_GetItemString*)GetProcAddress(module, "PyDict_GetItemString");
@@ -919,9 +927,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 // not available on 3.2
                 saveIntervalCheck = *intervalCheck;
                 *intervalCheck = -1;    // lower the interval check so pending calls are processed faster
+                saveLongIntervalCheck = 0; // prevent compiler warning
             } else if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
                 saveLongIntervalCheck = getSwitchInterval();
                 setSwitchInterval(0);
+                saveIntervalCheck = 0; // prevent compiler warning
+            }
+            else {
+                saveIntervalCheck = 0; // prevent compiler warning
+                saveLongIntervalCheck = 0; // prevent compiler warning
             }
 
             // 
@@ -998,6 +1012,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             // http://pytools.codeplex.com/workitem/834
                             gilState = gilEnsure();
                         }
+                        else {
+                            gilState = PyGILState_LOCKED; // prevent compiler warning
+                        }
+
                         initThreads();
 
                         if (version >= PythonVersion_32) {
@@ -1167,6 +1185,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_34_36*)curThread)->frame;
                         } else if (PyThreadState_37::IsFor(version)) {
                             frame = ((PyThreadState_37*)curThread)->frame;
+                        } else {
+                            _ASSERTE(false);
+                            frame = nullptr; // prevent compiler warning
                         }
 
                         auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
@@ -1178,14 +1199,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         // all of the work here needs to be minimal - in particular we shouldn't
                         // ever evaluate user defined code as we could end up switching to this
                         // thread on the main thread and corrupting state.
-                        auto prevThreadState = getThreadTls(threadStateIndex);
                         delThreadTls(threadStateIndex);
                         setThreadTls(threadStateIndex, curThread);
                         auto prevThread = threadSwap(curThread);
 
                         // save and restore the error in case something funky happens...
                         auto errOccured = errOccurred();
-                        PyObject *type, *value, *traceback;
+                        PyObject* type = nullptr;
+                        PyObject* value = nullptr;
+                        PyObject* traceback = nullptr;
                         if (errOccured) {
                             pyErrFetch(&type, &value, &traceback);
                         }
@@ -1260,6 +1282,8 @@ bool IsPythonModule(HMODULE module, bool &isDebug) {
 }
 
 DWORD __stdcall AttachWorker(LPVOID arg) {
+    UNREFERENCED_PARAMETER(arg);
+
     HANDLE hProcess = GetCurrentProcess();
     DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
@@ -1324,6 +1348,8 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
 // portion of the debugger, let it setup the thread object, and then we dispatch
 // to it so that it gets the 1st call event.
 int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int what, PyObject *arg) {
+    UNREFERENCED_PARAMETER(obj);
+
     auto curInterpreter = _interpreterInfo[interpreterId];
 
     auto new_thread = curInterpreter->NewThreadFunction;
@@ -1560,6 +1586,8 @@ typedef NTSTATUS NTAPI LdrUnregisterDllNotification(
 #define LDR_DLL_NOTIFICATION_REASON_UNLOADED 2
 
 void CALLBACK DllLoadNotify(ULONG NotificationReason, _LDR_DLL_NOTIFICATION_DATA* NotificationData, PVOID Context) {
+    UNREFERENCED_PARAMETER(Context);
+
     if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
         // patch any Python functions the newly loaded DLL is calling.
         for (DWORD i = 0; i < _interpreterCount; i++) {
