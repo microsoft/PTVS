@@ -27,11 +27,15 @@ extern "C" {
     __declspec(dllexport) __declspec(noinline)
     void OnInitialized() {
         volatile char dummy = 0;
+        UNREFERENCED_PARAMETER(dummy);
     }
 }
 
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
+    UNREFERENCED_PARAMETER(hModule);
+    UNREFERENCED_PARAMETER(lpReserved);
+
     if (ul_reason_for_call == DLL_PROCESS_ATTACH) {
         isInitialized = 1;
         OnInitialized();
