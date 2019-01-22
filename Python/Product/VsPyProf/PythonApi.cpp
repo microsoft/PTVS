@@ -39,7 +39,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
             return nullptr;
     }
 
-    HMODULE vsPerf = LoadLibrary(buffer);
+    HMODULE vsPerf = LoadLibraryEx(buffer, 0, LOAD_LIBRARY_SEARCH_SYSTEM32);
     if (vsPerf == 0) {
         // can't load VsPerf100
         return nullptr;

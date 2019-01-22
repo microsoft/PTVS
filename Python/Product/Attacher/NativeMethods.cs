@@ -31,6 +31,9 @@ namespace Microsoft.PythonTools.Debugger {
         [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr LoadLibrary(string lpFileName);
 
+        [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint flags);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool DuplicateHandle(IntPtr hSourceProcessHandle, IntPtr hSourceHandle, IntPtr hTargetProcessHandle, out IntPtr lpTargetHandle, uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwOptions);
@@ -79,6 +82,14 @@ namespace Microsoft.PythonTools.Debugger {
         public const int MAX_MODULE_NAME32 = 255;
         public static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
+        public const uint LOAD_LIBRARY_AS_IMAGE_RESOURCE = 0x00000020;
+        public const uint LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE = 0x00000040;
+        public const uint LOAD_LIBRARY_REQUIRE_SIGNED_TARGET = 0x00000080;
+        public const uint LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR = 0x00000100;
+        public const uint LOAD_LIBRARY_SEARCH_APPLICATION_DIR = 0x00000200;
+        public const uint LOAD_LIBRARY_SEARCH_USER_DIRS = 0x00000400;
+        public const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+        public const uint LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x00001000;
 
         private static IsWow64Process _isWow64;
         private static bool _checkedIsWow64;
@@ -109,7 +120,7 @@ namespace Microsoft.PythonTools.Debugger {
         public static void EnsureIsWow64() {
             if (_isWow64 == null && !_checkedIsWow64) {
                 _checkedIsWow64 = true;
-                IntPtr kernel = LoadLibrary("kernel32.dll");
+                IntPtr kernel = LoadLibraryEx("kernel32.dll", IntPtr.Zero, LOAD_LIBRARY_SEARCH_SYSTEM32);
                 if (kernel != IntPtr.Zero) {
 
                     var isWowProc = GetProcAddress(kernel, "IsWow64Process");
