@@ -164,7 +164,6 @@
     <Compile Include="View\LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Model\ConnectionStringConverter.cs" />
     <Compile Include="Resources\ImageMonikers.cs" />
     <Compile Include="Telemetry\DictionaryExtension.cs" />
     <Compile Include="Telemetry\ITelemetryRecorder.cs" />
