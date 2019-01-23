@@ -77,7 +77,6 @@
     <Reference Include="Microsoft.VisualStudio.Editor" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
-    <Reference Include="Microsoft.Data.ConnectionUI.Dialog" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Engine" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.ProjectSystem" />
