@@ -72,7 +72,6 @@
     <Reference Include="Microsoft.VisualStudio.Editor" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
-    <Reference Include="Microsoft.Data.ConnectionUI.Dialog" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
@@ -165,8 +164,6 @@
     <Compile Include="View\LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\SqlCommands.cs" />
-    <Compile Include="Model\ConnectionStringConverter.cs" />
     <Compile Include="Resources\ImageMonikers.cs" />
     <Compile Include="Telemetry\DictionaryExtension.cs" />
     <Compile Include="Telemetry\ITelemetryRecorder.cs" />

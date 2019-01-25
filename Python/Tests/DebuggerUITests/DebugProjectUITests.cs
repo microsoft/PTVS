@@ -679,7 +679,7 @@ namespace DebuggerUITests {
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
                 Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
-                Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
+                Assert.AreEqual("Program.py, line 1 character 1", app.Dte.Debugger.BreakpointLastHit.Name);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
             }
@@ -723,7 +723,7 @@ namespace DebuggerUITests {
                 app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
-                Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
+                Assert.AreEqual("Program.py, line 1 character 1", app.Dte.Debugger.BreakpointLastHit.Name);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
             }
@@ -767,7 +767,7 @@ namespace DebuggerUITests {
                 app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
-                Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
+                Assert.AreEqual("Program.py, line 1 character 1", app.Dte.Debugger.BreakpointLastHit.Name);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
             }

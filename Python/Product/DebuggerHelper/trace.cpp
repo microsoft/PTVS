@@ -284,6 +284,8 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
     int32_t my_length = debuggerString->length;
     const wchar_t* my_data = debuggerString->data;
 
+#pragma warning(push)
+#pragma warning(disable:4201) // nonstandard extension used: nameless struct/union
     union {
         struct {
             unsigned interned: 2;
@@ -294,6 +296,8 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
         };
         char state;
     };
+#pragma warning(pop)
+
     state = ReadField<char>(pyString, fieldOffsets.PyUnicodeObject33.state);
 
     if (!ready) {
@@ -303,7 +307,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
         }
 
         auto wstr_length = ReadField<uint32_t>(pyString, fieldOffsets.PyUnicodeObject33.wstr_length);
-        if (wstr_length != my_length) {
+        if (static_cast<int32_t>(wstr_length) != my_length) {
             return false;
         }
 
@@ -354,24 +358,28 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
 __declspec(dllexport) __declspec(noinline)
 void OnBreakpointHit() {
     volatile char dummy = 0;
+    UNREFERENCED_PARAMETER(dummy);
 }
 
 // Note that this is only reported for step in/over, not for step out - debugger handles the latter via native breakpoints.
 __declspec(dllexport) __declspec(noinline)
 void OnStepComplete() { 
     volatile char dummy = 0;
+    UNREFERENCED_PARAMETER(dummy);
 }
 
 // Stepping operation fell through the end of the frame on which it began - debugger should handle the rest of the step.
 __declspec(dllexport) __declspec(noinline)
 void OnStepFallThrough() {
     volatile char dummy = 0;
+    UNREFERENCED_PARAMETER(dummy);
 }
 
 // EvalLoop completed evaluation of input; evalLoopResult points at the resulting object if any, and evalLoopException points at exception if any.
 __declspec(dllexport) __declspec(noinline)
 void OnEvalComplete() {
     volatile char dummy = 0;
+    UNREFERENCED_PARAMETER(dummy);
 }
 
 
@@ -446,13 +454,14 @@ static void TraceLine(void* frame) {
     }
 
     // See the large comment at the declaration of breakpointData for details of how the below synchronization scheme works.
-    unsigned iData;
+    uint8_t iData;
     do {
         iData = currentBreakpointData;
         // BreakpointManager.WriteBreakpoints may run at this point and change currentBreakpointData ...
         breakpointDataInUseByTraceFunc = iData; // (locks breakpointData[iData] from any modification by debugger)
         // ... so check it again to ensure that it's still the same, and retry if it's not.
     } while (iData != currentBreakpointData);
+
     // We can now safely use breakpointData[iData]
     const auto& bpData = breakpointData[iData];
 
@@ -486,6 +495,8 @@ static void TraceLine(void* frame) {
 
 
 static void TraceCall(void* frame) {
+    UNREFERENCED_PARAMETER(frame);
+
     if (stepThreadId == GetCurrentThreadId()) {
         ++steppingStackDepth;
         if (stepKind == STEP_INTO) {
@@ -497,6 +508,8 @@ static void TraceCall(void* frame) {
 
 
 static void TraceReturn(void* frame) {
+    UNREFERENCED_PARAMETER(frame);
+
     if (stepThreadId == GetCurrentThreadId()) {
         --steppingStackDepth;
         if (stepKind != STEP_NONE) {
@@ -507,6 +520,8 @@ static void TraceReturn(void* frame) {
     }
 }
 
+#pragma warning(push)
+#pragma warning(disable:4211) // nonstandard extension used: redefined extern to static
 
 static void ReleasePendingObjects() {
     if (objectsToRelease) {
@@ -527,6 +542,7 @@ static void ReleasePendingObjects() {
     }
 }
 
+#pragma warning(pop)
 
 #define PyTrace_CALL 0
 #define PyTrace_EXCEPTION 1
@@ -538,6 +554,9 @@ static void ReleasePendingObjects() {
 
 __declspec(dllexport)
 int TraceFunc(void* obj, void* frame, int what, void* arg) {
+    UNREFERENCED_PARAMETER(arg);
+    UNREFERENCED_PARAMETER(obj);
+
     ReleasePendingObjects();
 
     switch (what) {
