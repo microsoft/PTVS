@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Logging;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
@@ -250,12 +251,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
-            initialize.liveLinting = _services.FeatureFlags?.IsFeatureEnabled("Python.Analyzer.LiveLinting", false) ?? false;
-
             var lso = _services.Python?.LanguageServerOptions;
             if (lso != null) {
-                lso.Changed += LanguageServerOptions_Changed;
+                lso.Changed += OnOptionsChanged;
                 _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
+            }
+
+            var go = _services.Python?.GeneralOptions;
+            if (go != null) {
+                go.Changed += OnOptionsChanged;
+                _analysisOptions.enableUnresolvedImportWarning = go.UnresolvedImportWarning;
+                _analysisOptions.enableUseBeforeDefWarning = false;
             }
 
             if (_analysisOptions.analysisLimits == null) {
@@ -291,7 +297,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_services.CommentTaskProvider != null) {
                 _analysisOptions.commentTokens.Clear();
                 foreach (var keyValue in (_services.CommentTaskProvider.Tokens).MaybeEnumerate()) {
-                    var sev = Analysis.DiagnosticSeverity.Unspecified;
+                    var sev = Analysis.DiagnosticSeverity.Suppressed;
                     switch (keyValue.Value) {
                         case VSTASKPRIORITY.TP_HIGH:
                             sev = Analysis.DiagnosticSeverity.Error;
@@ -318,13 +324,18 @@ namespace Microsoft.PythonTools.Intellisense {
             AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
         }
 
-        private void LanguageServerOptions_Changed(object sender, EventArgs e) {
-            var lso = sender as Options.LanguageServerOptions;
-            if (lso == null) {
-                return;
+        private void OnOptionsChanged(object sender, EventArgs e) {
+            switch (sender) {
+                case LanguageServerOptions lso:
+                    _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
+                    break;
+                case GeneralOptions go:
+                    _analysisOptions.enableUnresolvedImportWarning = go.UnresolvedImportWarning;
+                    _analysisOptions.enableUseBeforeDefWarning = false;
+                    break;
+                default:
+                    return;
             }
-
-            _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
 
             SendRequestAsync(new AP.SetAnalysisOptionsRequest {
                 options = _analysisOptions
@@ -2244,7 +2255,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             lock (_analysisOptions) {
                 foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
-                    var sev = Analysis.DiagnosticSeverity.Unspecified;
+                    var sev = Analysis.DiagnosticSeverity.Suppressed;
                     switch (keyValue.Value) {
                         case VSTASKPRIORITY.TP_HIGH:
                             sev = Analysis.DiagnosticSeverity.Error;
