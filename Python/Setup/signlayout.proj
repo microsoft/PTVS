@@ -21,9 +21,6 @@
     <_Languages Include="$(Languages)" />
   
     <ManagedFiles Include="
-        Microsoft.Python.Analysis.Engine.dll;
-        Microsoft.Python.LanguageServer.Core.dll;
-        Microsoft.PythonTools.Analyzer.exe;
         Microsoft.PythonTools.Attacher.exe;
         Microsoft.PythonTools.AttacherX86.exe;
         Microsoft.PythonTools.BuildTasks.dll;
@@ -33,7 +30,6 @@
         Microsoft.PythonTools.Debugger.Concord.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
-        Microsoft.PythonTools.Ipc.Json.dll;
         Microsoft.PythonTools.LiveShare.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
