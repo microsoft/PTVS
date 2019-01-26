@@ -54,8 +54,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private static string GetLatestCondaExecutablePath(IServiceProvider serviceProvider, IEnumerable<IPythonInterpreterFactory> factories) {
             var condaPaths = factories
                 .Select(factory => new {
-                    PrefixPath = factory.Configuration.PrefixPath,
-                    ExePath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false)
+                    PrefixPath = factory.Configuration.GetPrefixPath(),
+                    ExePath = CondaUtils.GetCondaExecutablePath(factory.Configuration.GetPrefixPath(), allowBatch: false)
                 })
                 .Where(obj => !string.IsNullOrEmpty(obj.ExePath))
                 .OrderByDescending(obj => GetCondaVersion(obj.PrefixPath, obj.ExePath));

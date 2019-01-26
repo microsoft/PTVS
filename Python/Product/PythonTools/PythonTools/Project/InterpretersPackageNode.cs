@@ -99,13 +99,13 @@ namespace Microsoft.PythonTools.Project {
                     message = Strings.UninstallPackage.FormatUI(
                         Caption,
                         Parent._factory.Configuration.Description,
-                        Parent._factory.Configuration.PrefixPath
+                        Parent._factory.Configuration.GetPrefixPath()
                     );
                 } else {
                     message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
                         Parent._factory.Configuration.Description,
-                        Parent._factory.Configuration.PrefixPath
+                        Parent._factory.Configuration.GetPrefixPath()
                     );
                 }
                 useStandardDialog = false;

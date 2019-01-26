@@ -73,15 +73,12 @@ namespace TestUtilities.Python {
             _disposeFactory = true;
         }
 
-        public PythonAnalysis(
-            IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null
-        ) {
+        public PythonAnalysis(IPythonInterpreterFactory factory) {
             if (factory == null) {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
             _factory = factory;
-            _analyzer = PythonAnalyzer.CreateAsync(factory, interpreter).WaitAndUnwrapExceptions();
+            _analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions();
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
@@ -163,7 +160,7 @@ namespace TestUtilities.Python {
                 }
             }
 
-            entry.Analyze(CancellationToken.None, true);
+            entry.PreAnalyze();
         }
 
         private static string MakeMessage(CollectingErrorSink errors) {
@@ -201,15 +198,12 @@ namespace TestUtilities.Python {
 
         public void ReanalyzeAll(CancellationToken? cancel = null) {
             foreach (var entry in _entries.Values) {
-                entry.Analyze(CancellationToken.None, true);
+                entry.PreAnalyze();
             }
             WaitForAnalysis(cancel);
         }
 
         public void WaitForAnalysis(CancellationToken? cancel = null) {
-            if (_analyzer.Queue.Count == 0) {
-                return;
-            }
             _analyzer.AnalyzeQueuedEntries(cancel ?? CancellationTokens.After5s);
             AssertListener.ThrowUnhandled();
         }
@@ -217,7 +211,7 @@ namespace TestUtilities.Python {
         private void Entry_OnNewAnalysis(object sender, EventArgs e) {
             var entry = sender as IPythonProjectEntry;
             Debug.Assert(entry != null);
-            entry.OnNewAnalysis -= Entry_OnNewAnalysis;
+            entry.NewAnalysis -= Entry_OnNewAnalysis;
 
             TaskCompletionSource<CollectingErrorSink> task;
             if (_tasks.TryRemove(entry, out task)) {
@@ -264,22 +258,22 @@ namespace TestUtilities.Python {
                 }
 
                 var state = _analyzer;
-                if (m == state._noneInst) {
+                if (m.PythonType.TypeId == BuiltinTypeId.NoneType) {
                     return BuiltinTypeId.NoneType;
                 }
 
-                var bci = m as BuiltinClassInfo;
+                var bci = m as IBuiltinClassInfo;
                 if (bci == null) {
-                    var bii = m as BuiltinInstanceInfo;
-                    if (bii != null) {
+                    if (m is IBuiltinInstanceInfo bii) {
                         bci = bii.ClassInfo;
                     }
                 }
+
                 if (bci != null) {
-                    int count = (int)BuiltinTypeIdExtensions.LastTypeId;
-                    for (int i = 1; i <= count; ++i) {
+                    var count = (int)BuiltinTypeIdExtensions.LastTypeId;
+                    for (var i = 1; i <= count; ++i) {
                         var bti = (BuiltinTypeId)i;
-                        if (!bti.IsVirtualId() && _analyzer.ClassInfos[bti] == bci) {
+                        if (!bti.IsVirtualId() && bci.PythonType == state.Interpreter.GetBuiltinType(bti)) {
                             return bti;
                         }
                     }
@@ -326,7 +320,7 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<MemberResult> GetMember(IPythonProjectEntry module, string variable, string memberName, int index = 0) {
-            return module.Analysis.GetMembersByIndex(variable, index).Where(m => m.Name == memberName);
+            return module.Analysis.GetMembersByIndex(variable, index).Where(m => m.Name == memberName).OfType<MemberResult>();
         }
 
         public IEnumerable<string> GetAllNames(int index = 0) {
@@ -334,7 +328,7 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetAllNames(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetAllAvailableMembers(SourceLocation.MinValue).Select(m => m.Name);
+            return module.Analysis.GetAllMembers(SourceLocation.MinValue).OfType<MemberResult>().Select(m => m.Name);
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(int index = 0, bool includeDunder = true) {
@@ -342,11 +336,13 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(IPythonProjectEntry module, int index = 0, bool includeDunder = true) {
-            var res = module.Analysis.GetVariablesNoBuiltinsByIndex(index);
-            if (includeDunder) {
-                return res;
-            }
-            return res.Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__"));
+            var location = module.Tree.IndexToLocation(index);
+            return Enumerable.Empty<string>();
+            //var res = module.Analysis.GetMembers().GetVariablesNoBuiltins(location);
+            //if (includeDunder) {
+            //    return res;
+            //}
+            //return res.Where(n => n.Length < 4 || !n.StartsWith("__") || !n.EndsWith("__"));
         }
 
         public AnalysisValue[] GetValues(string variable, int index = 0) {
@@ -357,11 +353,11 @@ namespace TestUtilities.Python {
             return module.Analysis.GetValuesByIndex(variable, index).ToArray();
         }
 
-        public T GetValue<T>(string variable, int index = 0) where T : AnalysisValue {
+        public T GetValue<T>(string variable, int index = 0) where T : IAnalysisValue {
             return GetValue<T>(_entries[DefaultModule], variable, index);
         }
 
-        public T GetValue<T>(IPythonProjectEntry module, string variable, int index = 0) where T : AnalysisValue {
+        public T GetValue<T>(IPythonProjectEntry module, string variable, int index = 0) where T : IAnalysisValue {
             var rs = module.Analysis.GetValuesByIndex(variable, index).ToArray();
             if (rs.Length == 0) {
                 Assert.Fail("'{0}.{1}' had no variables".FormatInvariant(module.ModuleName, variable));
@@ -371,8 +367,9 @@ namespace TestUtilities.Python {
                 }
                 Assert.Fail("'{0}.{1}' had multiple values: {2}".FormatInvariant(module.ModuleName, variable, AnalysisSet.Create(rs)));
             } else {
-                Assert.IsInstanceOfType(rs[0], typeof(T), "'{0}.{1}' was not expected type".FormatInvariant(module.ModuleName, variable));
-                return (T)rs[0];
+                IAnalysisValue value = rs[0];
+                Assert.IsInstanceOfType(value, typeof(T), "'{0}.{1}' was not expected type".FormatInvariant(module.ModuleName, variable));
+                return (T)value;
             }
             return default(T);
         }
@@ -390,7 +387,7 @@ namespace TestUtilities.Python {
         }
 
         public IOverloadResult[] GetOverrideable(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetOverrideableByIndex(index).ToArray();
+            return module.Analysis.GetOverrideable(module.Tree.IndexToLocation(index)).ToArray();
         }
 
         public string[] GetDiagnostics() {
@@ -590,7 +587,7 @@ namespace TestUtilities.Python {
             Assert.AreEqual(value, val?.GetConstantValueAsString(), "{0}.{1}".FormatInvariant(module.ModuleName, expr));
         }
 
-        private static IEnumerable<IAnalysisVariable> UniquifyReferences(IGrouping<LocationInfo, IAnalysisVariable> source) {
+        private static IEnumerable<IAnalysisVariable> UniquifyReferences(IGrouping<ILocationInfo, IAnalysisVariable> source) {
             var defn = source.FirstOrDefault(v => v.Type == VariableType.Definition);
             var refr = source.FirstOrDefault(v => v.Type == VariableType.Reference);
             var value = source.FirstOrDefault(v => v.Type == VariableType.Value);
@@ -629,13 +626,14 @@ namespace TestUtilities.Python {
             AssertReferencesWorker(module, expr, index, false, expectedVars);
         }
 
-        sealed class LocationComparer : IEqualityComparer<LocationInfo> {
-            public bool Equals(LocationInfo x, LocationInfo y) => x.StartLine == y.StartLine && x.StartColumn == y.StartColumn;
-            public int GetHashCode(LocationInfo obj) => obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode();
+        sealed class LocationComparer : IEqualityComparer<ILocationInfo> {
+            public bool Equals(ILocationInfo x, ILocationInfo y) => x.StartLine == y.StartLine && x.StartColumn == y.StartColumn;
+            public int GetHashCode(ILocationInfo obj) => obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode();
         }
 
         private void AssertReferencesWorker(IPythonProjectEntry module, string expr, int index, bool exact, VariableLocation[] expectedVars) {
-            var vars = module.Analysis.GetVariablesByIndex(expr, index)
+            var location = module.Tree.IndexToLocation(index);
+            var vars = module.Analysis.GetVariables(expr, location)
                 .GroupBy(v => v.Location, new LocationComparer())
                 .OrderBy(g => g.Key.StartLine)
                 .ThenBy(g => g.Key.StartColumn)
@@ -687,9 +685,8 @@ namespace TestUtilities.Python {
         #region Get Expected Result
 
         private string[] GetMembersOf(BuiltinTypeId typeId) {
-            string[] members;
-            if (!_cachedMembers.TryGetValue(typeId, out members)) {
-                _cachedMembers[typeId] = members = Analyzer.Types[typeId].GetMemberNames(ModuleContext).ToArray();
+            if (!_cachedMembers.TryGetValue(typeId, out var members)) {
+                _cachedMembers[typeId] = members = Analyzer.Interpreter.GetBuiltinType(typeId).GetMemberNames(ModuleContext).ToArray();
             }
             return members.ToArray();
         }
@@ -702,7 +699,8 @@ namespace TestUtilities.Python {
         public string[] FunctionMembers => GetMembersOf(BuiltinTypeId.Function);
 
         public IPythonType GetBuiltin(string name) {
-            return ((IBuiltinPythonModule)_analyzer.BuiltinModule.InterpreterModule).GetAnyMember(name) as IPythonType;
+            var builtinName = BuiltinTypeId.Unknown.GetModuleName(_analyzer.LanguageVersion);
+            return ((IBuiltinPythonModule)_analyzer.Interpreter.ImportModule(builtinName)).GetAnyMember(name) as IPythonType;
         }
 
         #endregion

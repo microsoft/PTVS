@@ -52,6 +52,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.Python.Analysis.Engine" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -66,10 +67,6 @@
     </Content>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
-      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Microsoft.PythonTools.Analysis</Name>
-    </ProjectReference>
     <ProjectReference Include="..\AttacherX86\AttacherX86.csproj">
       <Project>{f3a5829d-ee15-4be7-828f-2519172c6671}</Project>
       <Name>Microsoft.PythonTools.AttacherX86</Name>
@@ -136,14 +133,6 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
-      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
-      <Name>Microsoft.PythonTools.Analyzer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
-      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Microsoft.PythonTools.Ipc.Json</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Workspace\Workspace.csproj">
       <Project>{24f9e050-9f7e-4fe8-895d-819e527b8f45}</Project>
       <Name>Microsoft.PythonTools.Workspace</Name>
@@ -182,6 +171,20 @@
     <ItemGroup>
       <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll" />
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <LanguageServerFiles Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\**\*" />
+      <LanguageServerFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </LanguageServerFiles>
+      <Content Include="@(LanguageServerFiles)" />
+      <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
 </Project>

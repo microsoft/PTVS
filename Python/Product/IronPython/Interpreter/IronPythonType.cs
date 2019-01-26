@@ -26,7 +26,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private string _name;
         private BuiltinTypeId? _typeId;
         private IList<IPythonType> _propagateOnCall;
-        private IList<IPythonType> _mro;
+        private IReadOnlyList<IPythonType> _mro;
         private PythonMemberType _memberType;
         private bool? _genericTypeDefinition;
 
@@ -109,7 +109,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public IList<IPythonType> Mro {
+        public IReadOnlyList<IPythonType> Mro {
             get {
                 if (_mro == null) {
                     var ri = RemoteInterpreter;

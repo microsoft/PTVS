@@ -315,7 +315,7 @@ namespace FactoryProviderTypeLoadException {
             }
 
             try {
-                InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterConfiguration(
+                InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
                     Guid.NewGuid().ToString(),
                     "Test Interpreter",
                     version: new Version(1, 0)

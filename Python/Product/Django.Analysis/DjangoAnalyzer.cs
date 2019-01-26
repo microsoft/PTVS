@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
             _filters.Clear();
             _urls.Clear();
             foreach (var entry in _hookedEntries) {
-                entry.OnNewParseTree -= OnNewParseTree;
+                entry.NewParseTree -= OnNewParseTree;
             }
             _hookedEntries.Clear();
             _templateAnalysis.Clear();
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                         foreach (var value in values) {
                             var str = value.GetConstantValueAsString();
                             if (str != null) {
-                                RegisterTag(unit.Entry, _tags, str);
+                                RegisterTag(unit.ProjectEntry, _tags, str);
                             }
                         }
                     }
@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
             _filters.Clear();
             _tags.Clear();
             foreach (var entry in _hookedEntries) {
-                entry.OnNewParseTree -= OnNewParseTree;
+                entry.NewParseTree -= OnNewParseTree;
             }
             _hookedEntries.Clear();
             _templateAnalysis.Clear();
@@ -308,11 +308,11 @@ namespace Microsoft.PythonTools.Django.Analysis {
             } else if (model != null) {
                 // template name is [app]/[modelname]_[template_name_suffix]
                 string appName;
-                int firstDot = unit.Entry.ModuleName.IndexOf('.');
+                int firstDot = unit.ProjectEntry.ModuleName.IndexOf('.');
                 if (firstDot != -1) {
-                    appName = unit.Entry.ModuleName.Substring(0, firstDot);
+                    appName = unit.ProjectEntry.ModuleName.Substring(0, firstDot);
                 } else {
-                    appName = unit.Entry.ModuleName;
+                    appName = unit.ProjectEntry.ModuleName;
                 }
 
                 foreach (var modelInst in model) {
@@ -412,12 +412,12 @@ namespace Microsoft.PythonTools.Django.Analysis {
                     var constName = name.GetConstantValue();
                     if (constName == Type.Missing) {
                         if (name.Name != null) {
-                            RegisterTag(unit.Entry, tags, name.Name, name.Documentation);
+                            RegisterTag(unit.ProjectEntry, tags, name.Name, name.Documentation);
                         }
                     } else {
                         var strName = name.GetConstantValueAsString();
                         if (strName != null) {
-                            RegisterTag(unit.Entry, tags, strName);
+                            RegisterTag(unit.ProjectEntry, tags, strName);
                         }
                     }
                 }
@@ -433,7 +433,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                 foreach (var name in args[1]) {
                     string tagName = name.Name ?? name.GetConstantValueAsString();
                     if (tagName != null) {
-                        RegisterTag(unit.Entry, tags, tagName, name.Documentation);
+                        RegisterTag(unit.ProjectEntry, tags, tagName, name.Documentation);
                     }
                     if (name.MemberType != PythonMemberType.Constant) {
                         var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
@@ -454,7 +454,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
                         return dec;
                     } else if (name.Name != null) {
                         // library.filter
-                        RegisterTag(unit.Entry, tags, name.Name, name.Documentation);
+                        RegisterTag(unit.ProjectEntry, tags, name.Name, name.Documentation);
                     }
                 }
             }
@@ -467,7 +467,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
             if (!tags.TryGetValue(name, out tag) || (String.IsNullOrWhiteSpace(tag.Documentation) && !String.IsNullOrEmpty(documentation))) {
                 tags[name] = tag = new TagInfo(documentation, entry);
                 if (entry != null && _hookedEntries.Add(entry)) {
-                    entry.OnNewParseTree += OnNewParseTree;
+                    entry.NewParseTree += OnNewParseTree;
                 }
             }
         }
