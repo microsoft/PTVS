@@ -6,7 +6,6 @@
     <ProjectFile Include="$(BuildRoot)\Python\Product\dirs.proj"/>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
     <ProjectFile Include="TestRunnerInterop\TestRunnerInterop.csproj" />
-    <ProjectFile Include="Analysis\AnalysisTests.csproj" />
     <ProjectFile Include="CookiecutterTests\CookiecutterTests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
@@ -15,7 +14,6 @@
     <ProjectFile Include="DjangoUITests\DjangoUITests.csproj" />
     <ProjectFile Include="DjangoUITestsRunner\DjangoUITestsRunner.csproj" />
     <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
-    <ProjectFile Include="IpcJsonTests\IpcJsonTests.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
     <ProjectFile Include="ProfilingTests\ProfilingTests.csproj" />
