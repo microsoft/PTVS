@@ -101,9 +101,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Analysis\TestExpressions.cs">
-      <Link>TestExpressions.cs</Link>
-    </Compile>
     <Compile Include="..\DebuggerTests\DebugExtensions.cs">
       <Link>DebugExtensions.cs</Link>
     </Compile>
@@ -139,6 +136,7 @@
     <Compile Include="ReplEvaluatorTests.cs" />
     <Compile Include="SocketUtilsTests.cs" />
     <Compile Include="TaskExtensionsTests.cs" />
+    <Compile Include="TestExpressions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
