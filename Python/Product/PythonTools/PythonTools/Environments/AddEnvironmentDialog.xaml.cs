@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Workspace;
 
 namespace Microsoft.PythonTools.Environments {
     internal partial class AddEnvironmentDialog : ModernDialog, IDisposable {
@@ -56,7 +55,7 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string existingCondaEnvName,
             string environmentYmlPath,
             string requirementsTxtPath,
@@ -77,7 +76,7 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddVirtualEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string existingCondaEnvName,
             string environmentYmlPath,
             string requirementsTxtPath,
@@ -98,7 +97,7 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddCondaEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string existingCondaEnvName,
             string environmentYmlPath,
             string requirementsTxtPath,
@@ -119,7 +118,7 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddExistingEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string existingCondaEnvName,
             string environmentYmlPath,
             string requirementsTxtPath,
@@ -141,7 +140,7 @@ namespace Microsoft.PythonTools.Environments {
             PageKind activePage,
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string existingCondaEnvName,
             string environmentYmlPath,
             string requirementsTxtPath,
@@ -157,8 +156,7 @@ namespace Microsoft.PythonTools.Environments {
             if (workspace != null) {
                 var registryService = site.GetComponentModel().GetService<IInterpreterRegistryService>();
                 var optionsService = site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                var factory = workspace.GetInterpreterFactory(registryService, optionsService);
-                selectedProjectView = new ProjectView(workspace, factory);
+                selectedProjectView = new ProjectView(workspace);
                 projectViews = new ProjectView[] { selectedProjectView };
             } else {
                 try {

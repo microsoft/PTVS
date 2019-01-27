@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Workspace {
             launchSettings[PythonLaunchDebugTargetProvider.InterpreterKey] = "(default)";
             launchSettings[PythonLaunchDebugTargetProvider.InterpreterArgumentsKey] = string.Empty;
             launchSettings[PythonLaunchDebugTargetProvider.ScriptArgumentsKey] = string.Empty;
+            launchSettings[PythonLaunchDebugTargetProvider.EnvKey] = PropertySettings.EmptySettings;
             launchSettings[PythonLaunchDebugTargetProvider.NativeDebuggingKey] = false;
             launchSettings[PythonLaunchDebugTargetProvider.WebBrowserUrlKey] = string.Empty;
         }

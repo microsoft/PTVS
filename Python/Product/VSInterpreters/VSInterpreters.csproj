@@ -85,6 +85,10 @@
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\VisualStudioInterpreterConfiguration.cs" />
+    <Compile Include="Interpreter\IPythonWorkspaceContext.cs" />
+    <Compile Include="Interpreter\PythonWorkspaceContext.cs" />
+    <Compile Include="Interpreter\PythonWorkspaceContextProvider.cs" />
+    <Compile Include="Interpreter\IPythonWorkspaceContextProvider.cs" />
     <Compile Include="Interpreter\WorkspaceInterpreterFactoryConstants.cs" />
     <Compile Include="Interpreter\CondaLocatorProvider.cs" />
     <Compile Include="Interpreter\WorkspaceInterpreterFactoryProvider.cs" />
@@ -129,6 +133,7 @@
     <Compile Include="Interpreter\PythonInterpreterInformation.cs" />
     <Compile Include="Interpreter\PythonRegistrySearch.cs" />
     <Compile Include="RegistryWatcher.cs" />
+    <Compile Include="PythonWorkspaceContextEventArgs.cs" />
     <Compile Include="WorkspaceExtensions.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
