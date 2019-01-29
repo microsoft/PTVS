@@ -20,7 +20,12 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#pragma warning(push)
+#pragma warning(disable:4505) // unreferenced local function has been removed
 #include "python.h"
+#pragma warning(pop)
+
 #include "VSPerf.h"
 #include <unordered_set>
 #include <unordered_map>

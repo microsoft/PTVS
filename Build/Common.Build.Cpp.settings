@@ -52,7 +52,7 @@
 
   <ItemDefinitionGroup>
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <TreatWarningAsError>$(TreatWarningsAsErrors)</TreatWarningAsError>
       <SDLCheck Condition="'$(RunCodeAnalysis)' == 'true'">true</SDLCheck>

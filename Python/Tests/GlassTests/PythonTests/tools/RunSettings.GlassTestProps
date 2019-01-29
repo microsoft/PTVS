@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!--This file defines properties used when glass tests are run inside a debugger enlistment. This lets
+us pull glass from the binaries output directory instead of from <ConcordSDKRoot>\tools\glass. We might
+also want to use this to set things like the path where we pick up the C++ compiler from.-->
+<PropertyGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+  <UseEnlistmentBinDir>false</UseEnlistmentBinDir>
+  <UseEnlistmentBinDir Condition="Exists('..\..\..\..\..\..\out\bin\x86chk\')">true</UseEnlistmentBinDir>
+
+  <UseEnlistmentBinariesDir>false</UseEnlistmentBinariesDir>
+  <UseEnlistmentBinariesDir Condition="Exists('..\..\..\..\..\..\out\binaries\x86chk\')">true</UseEnlistmentBinariesDir>
+
+  <UseEnlistmentOutput>false</UseEnlistmentOutput>
+  <UseEnlistmentOutput Condition=" '$(UseEnlistmentBinDir)'=='true' or '$(UseEnlistmentBinariesDir)'=='true' ">true</UseEnlistmentOutput>
+  
+  <!--NOTE: BinDir has a trailing slash-->
+  <BinDir Condition=" '$(UseEnlistmentBinDir)'=='true' ">$(GetFullPath('..\..\..\..\..\..\out\bin\x86chk\'))</BinDir>
+  <BinDir Condition=" '$(UseEnlistmentBinDir)'!='true' and '$(UseEnlistmentBinariesDir)'=='true' ">$(GetFullPath('..\..\..\..\..\..\out\binaries\x86chk\'))</BinDir>
+  <BinDir Condition=" '$(UseEnlistmentOutput)'!='true' ">$(GetFullPath('..\..\'))</BinDir>
+
+  <!--NOTE: GlassDir has a trailing slash-->
+  <GlassDir Condition=" '$(UseEnlistmentOutput)'=='true' ">$(BinDir)SuiteBin\ConcordSDK\Tools\glass\</GlassDir>
+  <GlassDir Condition=" '$(UseEnlistmentOutput)'!='true' ">$(BinDir)Tools\glass\</GlassDir>
+
+  <!-- This can be overwritten to run Glass tests against a specific version of the CRT/VC Tools. -->
+  <!-- By default, for internals we will grab VC Tools and the CRT from VCDrop.txt. -->
+  <VcDropStore></VcDropStore>
+  
+  <!--Remoting: 'false' to always run locally, 'true' to always remote and 'server' if this is the remote runner-->
+  <Remoting>false</Remoting>
+  
+  <!--Package settings, must be filled in if Remoting=true-->
+  <PackageName>Microsoft.VisualStudio.Debugger.Glass.Tests.Internal</PackageName>
+  <!--Default server for devs-->
+  <PackageServer Condition=" '$(UseEnlistmentOutput)'=='true' ">http://dbgnuget/nuget/</PackageServer>
+  <!--To be filled in by remote dispatch system (this will be the value of where the GTARemote got it's packages from)-->
+  <PackageServer Condition=" '$(UseEnlistmentOutput)'!='true' ">[PackageServer]</PackageServer>
+
+  <!--Use version that is currently built as specified by version file-->
+  <PackageVersionFile Condition=" '$(UseEnlistmentOutput)'=='true' ">$(BinDir)archives\debugger\enu\x86\Microsoft.VisualStudio.Debugger.Glass.Tests.Internal.nupkg.txt</PackageVersionFile>
+  
+  <!--Use hard coded version number if required. If [PackageVersion] is specified, the latest will be used.-->
+  <!--Example: <PackageVersion>14.0.24705</PackageVersion>-->
+  <PackageVersion Condition=" '$(UseEnlistmentOutput)'!='true' ">[PackageVersion]</PackageVersion>
+
+  <!--NebulaDealer settings, must be filled in if Remoting=true. -->
+  <!-- Note: These are used only for running tests remotely from the IDE, and are not used in the CI build. -->
+  <NebulaServer>http://NebulaDealer</NebulaServer>
+  <MachinePool>GlassTest</MachinePool>
+  <!--Number describing how many machines to reserve, for every [this number] of tests we try to get 1 machine-->
+  <TargetMachineRatio>25</TargetMachineRatio>
+
+  <!-- Remote Debugging Settings -->
+  <!-- The remote machine to run test (ex: MyComputer1:4022, 127.0.0.1:4020); for local debegging leave this property to blank. -->
+  <RemoteMachine></RemoteMachine>
+  <!-- The architecture of the remote machine if not x86/AMD64  (ex: arm or arm64) -->
+  <RemoteMachineArchitecture></RemoteMachineArchitecture>
+  <!-- The remote debugging authentication mode on the remote machine (ex: 'windows', or 'none'). -->
+  <RemoteMachineAuthenticationMode>windows</RemoteMachineAuthenticationMode>
+  <!-- The directory on the remote machine to deploy test (ex: C:\MyTest). -->
+  <RemoteMachineDeploymentDirectory>C:\TestV2</RemoteMachineDeploymentDirectory>
+</PropertyGroup>

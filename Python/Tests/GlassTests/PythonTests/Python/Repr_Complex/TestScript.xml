@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+
+  <Command name="bp py_mod.py 9"/>
+
+  <Command name='launch "native {EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}" %PythonExe% py_mod.py'>
+    <!-- Use entry point filename as a sanity check that we've got Python symbols loaded correctly. -->
+    <Event name="IDebugEntryPointEvent2" expected="True">
+      <functionName Volatile="True" />
+      <function Volatile="True"/>
+      <file>python.c</file>
+      <line Volatile="True"/>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>9</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="eval mem(0j)">
+    <EvalResult>0j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>0j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(-0j)">
+    <EvalResult>-0j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>-0j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>-0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult RegEx="^-?0\.0$"/>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(0.0001j)">
+    <EvalResult>0.0001j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>0.0001j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>0.0001</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    <ChildName>real</ChildName>
+
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(0.00001j)">
+    <EvalResult>1e-05j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>1e-05j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(0.000011j)">
+    <EvalResult>1.1e-05j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>1.1e-05j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1.1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(100000000000000j)">
+    <EvalResult>100000000000000j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>100000000000000j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>100000000000000.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(1000000000000000j)">
+    <EvalResult>1e+15j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>1e+15j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(1100000000000000j)">
+    <EvalResult>1.1e+15j</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>1.1e+15j</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1.1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(0, inf))">
+    <EvalResult>infj</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>infj</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(0, -inf))">
+    <EvalResult>-infj</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>-infj</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>-inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(0, nan))">
+    <EvalResult>nanj</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>nanj</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>nan</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(1+0j)">
+    <EvalResult>(1+0j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(1+0j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>1.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(-1-0j)">
+    <EvalResult>(-1+0j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(-1+0j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>-1.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(0.0001+0.0001j)">
+    <EvalResult>(0.0001+0.0001j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(0.0001+0.0001j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>0.0001</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>0.0001</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(0.00001-0.00001j)">
+    <EvalResult>(1e-05-1e-05j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(1e-05-1e-05j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>-1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(-0.000011+0.000011j)">
+    <EvalResult>(-1.1e-05+1.1e-05j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(-1.1e-05+1.1e-05j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1.1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>-1.1e-05</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(100000000000000+100000000000000j)">
+    <EvalResult>(100000000000000+100000000000000j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(100000000000000+100000000000000j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>100000000000000.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>100000000000000.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(1000000000000000+1000000000000000j)">
+    <EvalResult>(1e+15+1e+15j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(1e+15+1e+15j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(1100000000000000.0+1100000000000000.0j)">
+    <EvalResult>(1.1e+15+1.1e+15j)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(1.1e+15+1.1e+15j)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>1.1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>1.1e+15</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(inf, inf))">
+    <EvalResult>(inf+infj)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(inf+infj)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(-inf, -inf))">
+    <EvalResult>(-inf-infj)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(-inf-infj)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>-inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>-inf</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="eval mem(complex(nan, nan))">
+    <EvalResult>(nan+nanj)</EvalResult>
+    <EvalType>complex</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+  <Command name="expandn 1 _">
+    <ExpandResult>(nan+nanj)</ExpandResult>
+    <ExpandType>complex</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+    
+    <ChildName>imag</ChildName>
+    <ChildFullName>_.imag</ChildFullName>
+    <ChildResult>nan</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>real</ChildName>
+    <ChildFullName>_.real</ChildFullName>
+    <ChildResult>nan</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+  </Command>
+  <Command name="quit"/>
+
+</GlassEventLog>

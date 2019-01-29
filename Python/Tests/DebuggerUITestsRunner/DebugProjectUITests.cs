@@ -175,6 +175,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisableReenable), UseVsCodeDebugger, Interpreter);
         }
 
+        [Ignore] // Not reliable enough right now
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchWithErrorsDontRun() {
