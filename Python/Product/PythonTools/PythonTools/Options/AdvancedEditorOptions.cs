@@ -34,8 +34,8 @@ namespace Microsoft.PythonTools.Options {
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
         private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
 
-        private const string _oldDefaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
-        private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#@\\";
+        private const string _oldDefaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#@\\";
+        private const string _defaultCompletionChars = "";
 
         internal AdvancedEditorOptions(PythonToolsService service) {
             _service = service;
