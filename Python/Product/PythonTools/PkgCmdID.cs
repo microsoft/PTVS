@@ -56,7 +56,6 @@ namespace Microsoft.PythonTools {
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
 
         public const uint cmdidAddCondaEnv = 0x4037;
-        public const uint cmdidAddEnvironmentNoIcon = 0x4038;
 
         public const uint cmdidWebPythonAtMicrosoft = 0x4040;
         public const uint cmdidWebPTVSSupport = 0x4041;

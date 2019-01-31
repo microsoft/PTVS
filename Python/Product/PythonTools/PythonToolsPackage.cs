@@ -508,7 +508,6 @@ namespace Microsoft.PythonTools {
                 CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddVirtualEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.VirtualEnvironment)),
                 CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddExistingEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.ExistingEnvironment)),
                 CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddCondaEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.CondaEnvironment)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironmentNoIcon, new AddEnvironmentCommand(this)),
                 CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
                 new CurrentEnvironmentCommand(this),
                 new CurrentEnvironmentListCommand(this)
