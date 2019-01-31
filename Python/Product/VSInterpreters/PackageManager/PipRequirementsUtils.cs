@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter {
             (?<spec>        # <spec> includes name, version and whitespace
                 (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
                 (\s*(?<cmp><=|>=|<|>|!=|==)\s*
-                    (?<ver>[^\s\#]+)
+                    (?<ver>[^\#]+)
                 )?          # cmp and ver are optional
             )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );

@@ -33,7 +33,9 @@ namespace VSInterpretersTests {
                     "# just a comment B==01234",
                     "",
                     "x < 1",
-                    "d==1.0 e==2.0 f==3.0"
+                    "d==1.0",
+                    "e==2.0",
+                    "f==3.0"
                 }, new[] {
                     "b==0.1",
                     "a==0.2",
@@ -46,7 +48,9 @@ namespace VSInterpretersTests {
                 "# just a comment B==01234",
                 "",
                 "x==0.8",
-                "d==1.0 e==4.0 f==3.0"
+                "d==1.0",
+                "e==4.0",
+                "f==3.0"
             );
 
             // addNew is true, so the c==0.3 should be added.
@@ -129,56 +133,18 @@ namespace VSInterpretersTests {
                 "werkzeug==0.9.6"
             );
         }
-
+        
         [TestMethod, Priority(0)]
         public void FindRequirementsRegexTest() {
             var r = PipRequirementsUtils.FindRequirementRegex;
-            AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
-                "aaaa",
-                "bbbb",
-                "cccc"
-            );
-            AssertUtil.AreEqual(r.Matches("aaaa#a\r\nbbbb#b\r\ncccc#c\r\n").Cast<Match>().Select(m => m.Value),
-                "aaaa",
-                "bbbb",
-                "cccc"
-            );
+            Assert.IsTrue(r.Matches("abcd").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches(" abcd  #this is a comment").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches("abcd==1").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches("abcd == 1").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches("abcd >= 1, abcde<=2").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches("abcd    >=   1.0").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
+            Assert.IsTrue(r.Matches("abcd >= 1.0, <= 2.0,!=1.5").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
 
-            AssertUtil.AreEqual(r.Matches("a==1 b!=2 c<=3").Cast<Match>().Select(m => m.Value),
-                "a==1",
-                "b!=2",
-                "c<=3"
-            );
-
-            AssertUtil.AreEqual(r.Matches("a==1 b!=2 c<=3").Cast<Match>().Select(m => m.Groups["name"].Value),
-                "a",
-                "b",
-                "c"
-            );
-
-            AssertUtil.AreEqual(r.Matches("a==1#a\r\nb!=2#b\r\nc<=3#c\r\n").Cast<Match>().Select(m => m.Value),
-                "a==1",
-                "b!=2",
-                "c<=3"
-            );
-
-            AssertUtil.AreEqual(r.Matches("a == 1 b != 2 c <= 3").Cast<Match>().Select(m => m.Value),
-                "a == 1",
-                "b != 2",
-                "c <= 3"
-            );
-
-            AssertUtil.AreEqual(r.Matches("a == 1 b != 2 c <= 3").Cast<Match>().Select(m => m.Groups["name"].Value),
-                "a",
-                "b",
-                "c"
-            );
-
-            AssertUtil.AreEqual(r.Matches("a -u b -f:x c").Cast<Match>().Select(m => m.Groups["name"].Value),
-                "a",
-                "b",
-                "c"
-            );
         }
 
         [TestMethod, Priority(0)]
@@ -213,6 +179,30 @@ namespace VSInterpretersTests {
             Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
                 new[] { "django >=1.9, <2" },
                 new[] { new PackageSpec("Django", "1.8") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 2.1.5,<3.0 " },
+                new[] { new PackageSpec("Django", "1.8") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 2.1.5, <= 3.0 " },
+                new[] { new PackageSpec("Django", "2.2") }
+            ));
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django>=2.1.5,<=3.0#comment" },
+                new[] { new PackageSpec("Django", "2.2") }
+            ));
+
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 2.1.5,<3.0" },
+                new PackageSpec[0]
+            ));
+
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 2.1.5,<3.0" },
+                new[] { new PackageSpec("flask", "2.2") }
             ));
 
             Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
