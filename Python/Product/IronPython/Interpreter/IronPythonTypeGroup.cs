@@ -24,7 +24,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private bool? _genericTypeDefinition;
         private PythonMemberType _memberType;
         private IList<IPythonType> _eventInvokeArgs;
-        private IList<IPythonType> _mro;
+        private IReadOnlyList<IPythonType> _mro;
         private IPythonFunction _ctors;
 
         public IronPythonTypeGroup(IronPythonInterpreter interpreter, ObjectIdentityHandle type)
@@ -103,7 +103,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public IList<IPythonType> Mro {
+        public IReadOnlyList<IPythonType> Mro {
             get {
                 if (_mro == null) {
                     _mro = new IPythonType[] { this };

@@ -45,7 +45,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public IList<IPythonFunctionOverload> Overloads {
+        public IReadOnlyList<IPythonFunctionOverload> Overloads {
             get {
                 // skip methods that are virtual base helpers (e.g. methods like
                 // object.Equals(Object_#1, object other))

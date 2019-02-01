@@ -442,13 +442,13 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string id,
             InterpreterConfiguration config
         ) {
-            var prefixPath = config.PrefixPath ?? string.Empty;
+            var prefixPath = config.GetPrefixPath() ?? string.Empty;
             var interpreterPath = string.IsNullOrEmpty(config.InterpreterPath) ?
                 string.Empty :
                 PathUtils.GetRelativeFilePath(prefixPath, config.InterpreterPath);
-            var windowInterpreterPath = string.IsNullOrEmpty(config.WindowsInterpreterPath) ?
+            var windowInterpreterPath = string.IsNullOrEmpty(config.GetWindowsInterpreterPath()) ?
                 string.Empty :
-                PathUtils.GetRelativeFilePath(prefixPath, config.WindowsInterpreterPath);
+                PathUtils.GetRelativeFilePath(prefixPath, config.GetWindowsInterpreterPath());
             prefixPath = PathUtils.GetRelativeDirectoryPath(sourcePath, prefixPath);
 
             return project.AddItem(

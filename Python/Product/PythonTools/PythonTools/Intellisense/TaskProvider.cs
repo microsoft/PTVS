@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Analysis.LanguageServer;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
@@ -1024,8 +1024,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var model = container.GetComponentModel();
                 var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
                 return new ErrorTaskProvider(container, errorList, errorProvider, new[] {
-                    VsProjectAnalyzer.ParserTaskMoniker,
-                    VsProjectAnalyzer.AnalyzerTaskMoniker,
+                    VsProjectAnalyzer.PythonMoniker,
                     VsProjectAnalyzer.InvalidEncodingMoniker,
                 });
             }

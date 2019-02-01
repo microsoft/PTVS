@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (e.ChangeType == WatcherChangeTypes.Renamed && Directory.Exists(e.FullPath)) {
                             var renamedFileInformation = e as RenamedEventArgs;
                             if (_factories.Values.Any(a =>
-                                PathUtils.IsSameDirectory(a.Configuration.PrefixPath, renamedFileInformation.OldFullPath))
+                                PathUtils.IsSameDirectory(a.Configuration.GetPrefixPath(), renamedFileInformation.OldFullPath))
                             ) {
                                 _refreshPythonInterpreters = true;
                                 _folderWatcherTimer?.Change(1000, Timeout.Infinite);
@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 windowsInterpreterPath = string.Empty;
             }
 
-            var config = new InterpreterConfiguration(
+            var config = new VisualStudioInterpreterConfiguration(
                 WorkspaceInterpreterFactoryConstants.GetInterpreterId(WorkspaceInterpreterFactoryConstants.EnvironmentCompanyName, name),
                 description,
                 prefixPath,

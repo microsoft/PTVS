@@ -95,7 +95,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                     var debugStdLib = _project.GetProperty(IronPythonLauncherOptions.DebugStandardLibrarySetting);
                     bool debugStdLibResult;
                     if (!bool.TryParse(debugStdLib, out debugStdLibResult) || !debugStdLibResult) {
-                        string interpDir = config.Interpreter.PrefixPath;
+                        string interpDir = config.Interpreter.GetPrefixPath();
                         config.InterpreterArguments += " -X:NoDebug \"" + System.Text.RegularExpressions.Regex.Escape(Path.Combine(interpDir, "Lib\\")) + ".*\"";
                     }
 
