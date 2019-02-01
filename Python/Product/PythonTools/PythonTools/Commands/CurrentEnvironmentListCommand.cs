@@ -35,7 +35,11 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
-            var envs = _envSwitchMgr.AllFactories.Select(f => f.Configuration.Description).OrderBy(desc => desc).ToArray();
+            var envs = _envSwitchMgr.AllFactories
+                .Select(f => f.Configuration.Description)
+                .OrderBy(desc => desc)
+                .Append(Strings.AddEnvironmentComboListEntry)
+                .ToArray();
             Marshal.GetNativeVariantForObject(envs, outArg);
         }
     }

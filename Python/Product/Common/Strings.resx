@@ -2224,6 +2224,9 @@ Expand selection to the full expression?</value>
   <data name="CondaNotFoundError" xml:space="preserve">
     <value>Conda is required for this functionality. Please install either Anaconda or Miniconda and try again.</value>
   </data>
+  <data name="AddEnvironmentComboListEntry" xml:space="preserve">
+    <value>Add Environment...</value>
+  </data>
   <data name="ModernDialogHeaderCloseButtonAutomationName" xml:space="preserve">
     <value>Close</value>
   </data>

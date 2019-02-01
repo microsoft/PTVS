@@ -40,16 +40,20 @@ namespace Microsoft.PythonTools.Commands {
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
         public Task InvokeAsync() {
-            var workspace = (_envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
-            var project = (_envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
+            return AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, _page);
+        }
+
+        public static Task AddEnvironmentAsync(EnvironmentSwitcherManager envSwitchMgr, IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
+            var workspace = (envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
+            var project = (envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
             if (workspace == null && project == null) {
-                var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+                var sln = (IVsSolution)serviceProvider.GetService(typeof(SVsSolution));
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
             }
 
             return AddEnvironmentDialog.ShowDialogAsync(
-                _page,
-                _serviceProvider,
+                page,
+                serviceProvider,
                 project,
                 workspace,
                 null,
