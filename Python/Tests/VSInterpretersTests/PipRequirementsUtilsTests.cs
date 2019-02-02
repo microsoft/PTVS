@@ -14,8 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -25,9 +25,10 @@ namespace VSInterpretersTests {
     public class PipRequirementsUtilsTests {
         [TestMethod, Priority(0)]
         public void MergeRequirements() {
+            IEnumerable<string> a;
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
-                PipRequirementsUtils.MergeRequirements(new[] {
+                a = PipRequirementsUtils.MergeRequirements(new[] {
                     "a # with a comment",
                     "B==0.2",
                     "# just a comment B==01234",
@@ -35,7 +36,9 @@ namespace VSInterpretersTests {
                     "x < 1",
                     "d==1.0",
                     "e==2.0",
-                    "f==3.0"
+                    "f==3.0",
+                    "-r user/requirements.txt",
+                    "git+https://myvcs.com/some_dependency",
                 }, new[] {
                     "b==0.1",
                     "a==0.2",
@@ -50,7 +53,9 @@ namespace VSInterpretersTests {
                 "x==0.8",
                 "d==1.0",
                 "e==4.0",
-                "f==3.0"
+                "f==3.0",
+                "-r user/requirements.txt",
+                "git+https://myvcs.com/some_dependency"
             );
 
             // addNew is true, so the c==0.3 should be added.
@@ -133,87 +138,122 @@ namespace VSInterpretersTests {
                 "werkzeug==0.9.6"
             );
         }
-        
-        [TestMethod, Priority(0)]
-        public void FindRequirementsRegexTest() {
-            var r = PipRequirementsUtils.FindRequirementRegex;
-            Assert.IsTrue(r.Matches("abcd").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches(" abcd  #this is a comment").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches("abcd==1").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches("abcd == 1").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches("abcd >= 1, abcde<=2").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches("abcd    >=   1.0").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-            Assert.IsTrue(r.Matches("abcd >= 1.0, <= 2.0,!=1.5").Cast<Match>().First().Groups["name"].Value.Equals("abcd"));
-
-        }
 
         [TestMethod, Priority(0)]
-        public void AnyPackageMissing() {
+        public void PackagesNotMissing() {
             // AnyPackageMissing only checks if a package is listed or not
             // It does NOT compare version numbers.
             Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "#comment Flask" },
+                new PackageSpec[0]
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "Django#comment Flask" },
+                new[] { new PackageSpec("DJANGO", "1.2") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django==1.1" },
+                new[] { new PackageSpec("Flask", "2.0"),
+                        new PackageSpec("Django", "1.1") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "  django>=1.1,<1.9#comment    #comment" },
+                new[] { new PackageSpec("DJANGO", "1.5") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django  >=   1.2 ,   < 1.98    #   comment  " },
+                new[] { new PackageSpec("Django", "1.8") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "Flask= =1.1",
+                        "FlaskAdmin < = 3.9",
+                        "Django> = 1.4 , <  = 1.9" },
+                new[] { new PackageSpec("Django", "1.8"),
+                        new PackageSpec("Flask", "2.1"),
+                        new PackageSpec("FlaskAdmin", "3.2") }
+            ));
+            
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 1.1.5, flask<= 3.0 " }, //Should only attempt to match "Django"
+                new[] { new PackageSpec("Django", "1.2")}
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "-r user/ptvs/requirements.txt",
+                        "git+https://myvcs.com/some_dependency",
+                        "#Django" },
+                new PackageSpec[0]
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "-r Django asd mor ereqs.txt",
+                        "git+ Django https://myvcs.com/some_d ependency  @sometag#egg=S    omeDependency" },
+                new PackageSpec[0]
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "-r asd mor ereqs.txt",
+                        "django#Bottle",
+                        "git+https://myvcs.com/some_dependency",
+                        "Flask#flaskAdmin" },
+                new[] { new PackageSpec("Django", "1.2"),
+                        new PackageSpec("Flask", "2.2") }
+            ));
+
+            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "git", "requirementstxt" },
+                new[] { new PackageSpec("git", "6.0"),
+                        new PackageSpec("requirementstxt", "7.0")}
+            ));
+        }
+        
+        [TestMethod, Priority(0)]
+        public void PackagesMissing() {
+            // AnyPackageMissing only checks if a package is listed or not
+            // It does NOT compare version numbers.
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
                 new[] { "Django" },
-                new[] { new PackageSpec("Django", "1.11") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django" },
-                new[] { new PackageSpec("Django", "1.11") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "Flask", "Flask-Admin" },
-                new[] { new PackageSpec("Flask", "1.0.2"), new PackageSpec("Flask-Admin", "1.5.2") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >=1.9, <2" },
-                new[] { new PackageSpec("Django", "1.11") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django==1.11" },
-                new[] { new PackageSpec("Django", "1.11") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >=1.9, <2" },
-                new[] { new PackageSpec("Django", "1.8") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >= 2.1.5,<3.0 " },
-                new[] { new PackageSpec("Django", "1.8") }
-            ));
-
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >= 2.1.5, <= 3.0 " },
-                new[] { new PackageSpec("Django", "2.2") }
-            ));
-            Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django>=2.1.5,<=3.0#comment" },
-                new[] { new PackageSpec("Django", "2.2") }
-            ));
-
-            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >= 2.1.5,<3.0" },
                 new PackageSpec[0]
             ));
 
             Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "django >= 2.1.5,<3.0" },
-                new[] { new PackageSpec("flask", "2.2") }
+                new[] { "Django#Flask" },
+                new[] { new PackageSpec("Flask", "2.0") }
             ));
 
             Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "Flask" },
+                new[] { "Fla sk" },
+                new[] { new PackageSpec("Flask", "2.0") }
+            ));
+
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "  django>=1.1,<1.9#comment" },
                 new PackageSpec[0]
             ));
 
             Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
-                new[] { "Flask", "Flask-Admin" },
+                new[] { "Django  >=   1.2  ,   < 1.98 ",
+                        "Flask  >=   2.2 ,   < 2.8 " },
+                new[] { new PackageSpec("Flask", "2.8") }
+            ));
+
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "django >= 1.1.5, flask<= 3.0 " }, //Should only attempt to match "Django"
+                new[] { new PackageSpec("Flask", "2.2") }
+            ));
+
+            Assert.IsTrue(PipRequirementsUtils.AnyPackageMissing(
+                new[] { "Flask",
+                        "FlaskAdmin" },
                 new[] { new PackageSpec("Flask", "1.0.2") }
             ));
         }
+
+
     }
 }
