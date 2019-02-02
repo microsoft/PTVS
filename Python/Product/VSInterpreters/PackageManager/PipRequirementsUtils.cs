@@ -21,9 +21,16 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class PipRequirementsUtils {
-        internal static readonly Regex FindRequirementRegex = new Regex(@"
-            (?<!\#.*)       # ensure we are not in a comment
-            (?<=\s|\A)      # ensure we are preceded by a space/start of the line
+        private static readonly Regex ParseRequirementLineRegex = new Regex(@"
+            #If the string begins with a '#' or '-r' or 'git+', regex will not return a match
+            (?!(\#))
+            (?!(-r))
+            (?!(git\+))
+            #Since the regex tries to find multiple matches, if any of the above 3 conditions are true, 
+            #The regex will move the character position forward and try to find another match 
+            #The \A will tell it to only match if the current character is the first character in the string
+            #This will only be true if any of the above 3 cases did not occur. 
+            (?<=\A)
             (?<spec>        # <spec> includes name, version and whitespace
                 (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
                 (\s*(?<cmp><=|>=|<|>|!=|==)\s*
@@ -52,17 +59,14 @@ namespace Microsoft.PythonTools.Interpreter {
             var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var _line in original) {
                 var line = _line;
-                foreach (var m in FindRequirementRegex.Matches(line).Cast<Match>()) {
-                    string newReq;
-                    var name = m.Groups["name"].Value;
-                    if (existing.TryGetValue(name, out newReq)) {
-                        line = FindRequirementRegex.Replace(line, m2 =>
-                            name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
-                                newReq :
-                                m2.Value
-                        );
-                        seen.Add(name);
-                    }
+                var name = ParseRequirementLineRegex.Match(line.Trim()).Groups["name"].Value;
+                if (existing.TryGetValue(name, out string newReq)) {
+                    line = ParseRequirementLineRegex.Replace(line, m2 =>
+                        name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
+                            newReq :
+                            m2.Value
+                    );
+                    seen.Add(name);
                 }
                 yield return line;
             }
@@ -83,12 +87,12 @@ namespace Microsoft.PythonTools.Interpreter {
             IEnumerable<PackageSpec> installed
         ) {
             foreach (var _line in original) {
-                var line = _line;
-                foreach (var m in FindRequirementRegex.Matches(line).Cast<Match>()) {
-                    var name = m.Groups["name"].Value;
-                    if (installed.FirstOrDefault(pkg => string.Compare(pkg.Name, name, StringComparison.OrdinalIgnoreCase) == 0) == null) {
-                        return true;
-                    }
+                var requirementPackageName = ParseRequirementLineRegex.Match(_line.Trim()).Groups["name"].Value;
+                var installedPackage = installed.FirstOrDefault(pkg => 
+                    string.Compare(pkg.Name, requirementPackageName, StringComparison.OrdinalIgnoreCase) == 0);
+
+                if (!requirementPackageName.Equals("") && installedPackage == null) {
+                    return true;
                 }
             }
 
