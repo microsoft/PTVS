@@ -2347,7 +2347,7 @@ Expand selection to the full expression?</value>
     <value>Description for this environment</value>
   </data>
   <data name="AddVirtualEnvironmentPreviewInProgress" xml:space="preserve">
-    <value>Please wait...</value>
+    <value>Building preview...</value>
   </data>
   <data name="AddCondaEnvironmentPreviewLabel" xml:space="preserve">
     <value>Packages preview</value>
@@ -2431,7 +2431,7 @@ Expand selection to the full expression?</value>
     <value>Description has invalid characters. It must only use valid path characters.</value>
   </data>
   <data name="AddCondaEnvironmentPreviewInProgress" xml:space="preserve">
-    <value>Preview in progress...</value>
+    <value>Building preview...</value>
   </data>
   <data name="AddCondaEnvironmentPreviewNoPackages" xml:space="preserve">
     <value>No packages will be installed.

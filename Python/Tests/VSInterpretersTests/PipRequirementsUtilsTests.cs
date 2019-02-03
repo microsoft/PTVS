@@ -25,10 +25,9 @@ namespace VSInterpretersTests {
     public class PipRequirementsUtilsTests {
         [TestMethod, Priority(0)]
         public void MergeRequirements() {
-            IEnumerable<string> a;
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
-                a = PipRequirementsUtils.MergeRequirements(new[] {
+                PipRequirementsUtils.MergeRequirements(new[] {
                     "a # with a comment",
                     "B==0.2",
                     "# just a comment B==01234",
@@ -177,10 +176,10 @@ namespace VSInterpretersTests {
                         new PackageSpec("Flask", "2.1"),
                         new PackageSpec("FlaskAdmin", "3.2") }
             ));
-            
+
             Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
                 new[] { "django >= 1.1.5, flask<= 3.0 " }, //Should only attempt to match "Django"
-                new[] { new PackageSpec("Django", "1.2")}
+                new[] { new PackageSpec("Django", "1.2") }
             ));
 
             Assert.IsFalse(PipRequirementsUtils.AnyPackageMissing(
@@ -211,7 +210,7 @@ namespace VSInterpretersTests {
                         new PackageSpec("requirementstxt", "7.0")}
             ));
         }
-        
+
         [TestMethod, Priority(0)]
         public void PackagesMissing() {
             // AnyPackageMissing only checks if a package is listed or not

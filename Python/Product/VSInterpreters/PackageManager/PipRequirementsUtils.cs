@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter {
             (?!(-r))
             (?!(git\+))
             #Since the regex tries to find multiple matches, if any of the above 3 conditions are true, 
-            #The regex will move the character position forward and try to find another match 
+            #The regex will move to the new character position and try to find another match 
             #The \A will tell it to only match if the current character is the first character in the string
             #This will only be true if any of the above 3 cases did not occur. 
             (?<=\A)
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Interpreter {
         ) {
             foreach (var _line in original) {
                 var requirementPackageName = ParseRequirementLineRegex.Match(_line.Trim()).Groups["name"].Value;
-                var installedPackage = installed.FirstOrDefault(pkg => 
+                var installedPackage = installed.FirstOrDefault(pkg =>
                     string.Compare(pkg.Name, requirementPackageName, StringComparison.OrdinalIgnoreCase) == 0);
 
                 if (!requirementPackageName.Equals("") && installedPackage == null) {
