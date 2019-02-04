@@ -21,11 +21,13 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Settings;
 
 namespace Microsoft.PythonTools {
     static class WorkspaceExtensions {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
+        private const string SearchPathsProperty = "SearchPaths";
 
         public static string GetInterpreter(this IWorkspace workspace) {
             if (workspace == null) {
@@ -37,6 +39,24 @@ namespace Microsoft.PythonTools {
             settings.GetProperty(InterpreterProperty, out string interpreter);
 
             return interpreter;
+        }
+
+        public static string[] GetSearchPaths(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var settingsMgr = workspace.GetSettingsManager();
+            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
+            var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
+
+            return searchPaths.ToArray();
+        }
+
+        public static string[] GetAbsoluteSearchPaths(this IWorkspace workspace) {
+            return workspace.GetSearchPaths()
+                .Select(sp => PathUtils.GetAbsoluteDirectoryPath(workspace.Location, sp))
+                .ToArray();
         }
 
         public static async Task SetInterpreterAsync(this IWorkspace workspace, string interpreter) {
@@ -89,7 +109,7 @@ namespace Microsoft.PythonTools {
                 throw new ArgumentNullException(nameof(workspace));
             }
 
-            return workspace.SetInterpreterAsync(factory.Configuration.Id);
+            return workspace.SetInterpreterAsync(factory?.Configuration.Id);
         }
 
         public static string GetRequirementsTxtPath(this IWorkspace workspace) {

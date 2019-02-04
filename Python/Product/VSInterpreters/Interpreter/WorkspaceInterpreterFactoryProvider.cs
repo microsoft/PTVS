@@ -20,11 +20,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Settings;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -36,9 +32,8 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private readonly IVsFolderWorkspaceService _workspaceService;
-        private IWorkspace _workspace;
-        private IWorkspaceSettingsManager _workspaceSettingsMgr;
+        private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
+        private IPythonWorkspaceContext _workspace;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
         private FileSystemWatcher _folderWatcher;
@@ -56,17 +51,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         [ImportingConstructor]
         public WorkspaceInterpreterFactoryProvider(
-            [Import] IVsFolderWorkspaceService workspaceService = null
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider
         ) {
-            _workspaceService = workspaceService;
-            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
+            _workspaceContextProvider = workspaceContextProvider;
+            _workspaceContextProvider.WorkspaceOpening += OnWorkspaceOpening;
+            _workspaceContextProvider.WorkspaceClosed += OnWorkspaceClosed;
         }
 
         protected void Dispose(bool disposing) {
             if (disposing) {
-                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
+                _workspaceContextProvider.WorkspaceOpening -= OnWorkspaceOpening;
+                _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceClosed;
+                if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
                 }
                 _folderWatcher?.Dispose();
                 _folderWatcherTimer?.Dispose();
@@ -86,23 +83,34 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_factories) {
                 if (!_initialized) {
                     _initialized = true;
-                    InitializeWorkspace();
+                    InitializeWorkspace(_workspaceContextProvider.Workspace);
                     DiscoverInterpreterFactories();
                 }
             }
         }
 
-        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
-            InitializeWorkspace();
-            DiscoverInterpreterFactories();
-            return Task.CompletedTask;
+        private void OnWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
+            lock (_factories) {
+                _initialized = true;
+                InitializeWorkspace(null);
+                DiscoverInterpreterFactories();
+            }
         }
 
-        private void InitializeWorkspace() {
+        private void OnWorkspaceOpening(object sender, PythonWorkspaceContextEventArgs e) {
+            lock (_factories) {
+                _initialized = true;
+                InitializeWorkspace(e.Workspace);
+                DiscoverInterpreterFactories();
+            }
+        }
+
+        private void InitializeWorkspace(IPythonWorkspaceContext workspace) {
             lock (_factories) {
                 // Cleanup state associated with the previous workspace, if any
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
+                if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
+                    _workspace = null;
                 }
 
                 _folderWatcher?.Dispose();
@@ -111,13 +119,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 _folderWatcherTimer = null;
 
                 // Setup new workspace
-                _workspace = _workspaceService.CurrentWorkspace;
-                _workspaceSettingsMgr = _workspace?.GetSettingsManager();
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
-                }
-
+                _workspace = workspace;
                 if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged += OnInterpreterSettingChanged;
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
                         _folderWatcher.Created += OnFileCreatedDeletedRenamed;
@@ -133,9 +137,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private Task OnSettingsChanged(object sender, EventArgs e) {
+        private void OnInterpreterSettingChanged(object sender, EventArgs e) {
             DiscoverInterpreterFactories();
-            return Task.CompletedTask;
         }
 
         private void DiscoverInterpreterFactories() {
@@ -152,7 +155,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            IWorkspace workspace = null;
+            IPythonWorkspaceContext workspace = null;
             lock (_factories) {
                 workspace = _workspace;
             }
@@ -193,7 +196,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IWorkspace workspace) {
+        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IPythonWorkspaceContext workspace) {
             var found = new List<PythonInterpreterInformation>();
 
             if (workspace != null) {
@@ -203,7 +206,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Then look at the currently set interpreter path,
                 // because it may point to a folder outside of the workspace,
                 // or in a deep subfolder that we don't look into.
-                var interpreter = workspace.GetInterpreter();
+                var interpreter = workspace.ReadInterpreterSetting();
                 if (PathUtils.IsValidPath(interpreter) && !Path.IsPathRooted(interpreter)) {
                     interpreter = workspace.MakeRooted(interpreter);
                 }

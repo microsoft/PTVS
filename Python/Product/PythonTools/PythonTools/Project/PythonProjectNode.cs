@@ -1083,7 +1083,6 @@ namespace Microsoft.PythonTools.Project {
 
                     if (_analyzer.RemoveUser()) {
                         _analyzer.AbnormalAnalysisExit -= AnalysisProcessExited;
-                        _analyzer.AnalyzerNeedsRestart -= OnActiveInterpreterChanged;
                         _analyzer.Dispose();
                     }
                     _analyzer = null;
@@ -1182,7 +1181,6 @@ namespace Microsoft.PythonTools.Project {
                 inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
-            res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
 
             HookErrorsAndWarnings(res);
             UpdateAnalyzerSearchPaths(res);
@@ -1204,6 +1202,16 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
+
+            if (IsClosed) {
+                return;
+            }
+
+            var factory = ActiveInterpreter;
+
+            Site.GetUIThread().InvokeTask(async () => {
+                await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
+            }).DoNotWait();
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {

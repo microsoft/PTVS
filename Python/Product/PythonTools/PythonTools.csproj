@@ -287,6 +287,8 @@
     <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
     <Compile Include="PythonTools\Environments\ProjectView.cs" />
     <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
+    <Compile Include="PythonTools\Intellisense\WorkspaceAnalyzer.cs" />
+    <Compile Include="PythonTools\Intellisense\WorkspaceAnalysis.cs" />
     <Compile Include="PythonTools\Options\CondaOptions.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -1178,6 +1180,7 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>

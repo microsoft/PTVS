@@ -79,6 +79,7 @@ namespace Microsoft.PythonTools.Logging {
 
     static class AnalysisInitializeReasons {
         public const string Project = "Project";
+        public const string Workspace = "Workspace";
         public const string Interactive = "Interactive";
         public const string Default = "Default";
     }

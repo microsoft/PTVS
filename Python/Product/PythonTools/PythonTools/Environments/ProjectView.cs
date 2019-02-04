@@ -18,12 +18,11 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Workspace;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class ProjectView {
         public PythonProjectNode Node { get; }
-        public IWorkspace Workspace { get; }
+        public IPythonWorkspaceContext Workspace { get; }
         public string Name { get; set; }
         public string HomeFolder { get; set; }
         public string[] InterpreterIds { get; set; }
@@ -42,13 +41,14 @@ namespace Microsoft.PythonTools.Environments {
             EnvironmentYmlPath = node.GetEnvironmentYmlPath();
         }
 
-        public ProjectView(IWorkspace workspace, IPythonInterpreterFactory currentFactory) {
+        public ProjectView(IPythonWorkspaceContext workspace) {
             Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
-            Name = workspace.GetName();
+            Name = workspace.WorkspaceName;
             HomeFolder = workspace.Location;
-            if (currentFactory != null) {
-                InterpreterIds = new string[] { currentFactory.Configuration.Id };
-                ActiveInterpreterId = currentFactory.Configuration.Id;
+            if (workspace.CurrentFactory != null) {
+                var id = workspace.CurrentFactory.Configuration.Id;
+                InterpreterIds = new string[] { id };
+                ActiveInterpreterId = id;
             } else {
                 InterpreterIds = new string[0];
                 ActiveInterpreterId = string.Empty;

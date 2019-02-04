@@ -262,6 +262,12 @@ namespace Microsoft.PythonTools {
                     yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
                 }
             }
+
+            var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
+            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+            if (workspaceAnalyzer != null) {
+                yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
+            }
         }
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;

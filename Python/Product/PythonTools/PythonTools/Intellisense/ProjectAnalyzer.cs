@@ -154,6 +154,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return analyzer;
         }
 
+        internal static async Task<VsProjectAnalyzer> CreateForWorkspaceAsync(
+            PythonEditorServices services,
+            IPythonInterpreterFactory factory,
+            string workspacePath,
+            bool inProcess = false
+        ) {
+            try {
+                services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                    InterpreterId = factory.Configuration.Id,
+                    Architecture = factory.Configuration.Architecture.ToString(),
+                    Version = factory.Configuration.Version.ToString(),
+                    IsIronPython = factory.Configuration.IsIronPython(),
+                    Reason = AnalysisInitializeReasons.Workspace,
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+            }
+
+            var analyzer = new VsProjectAnalyzer(services, factory);
+            await analyzer.InitializeAsync(!inProcess, workspacePath, workspacePath, false);
+            return analyzer;
+        }
+
         internal static async Task<VsProjectAnalyzer> CreateForInteractiveAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
@@ -316,12 +339,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var resp = await SendRequestAsync(new AP.SetAnalysisOptionsRequest {
                 options = _analysisOptions
             });
-        }
-
-        public event EventHandler AnalyzerNeedsRestart;
-
-        private void Factory_NewDatabaseAvailable(object sender, EventArgs e) {
-            AnalyzerNeedsRestart?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnOptionsChanged(object sender, EventArgs e) {

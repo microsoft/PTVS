@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Workspace;
 
 namespace Microsoft.PythonTools.Environments {
     static class VirtualEnv {
@@ -66,7 +65,7 @@ namespace Microsoft.PythonTools.Environments {
             IInterpreterRegistryService registry,
             IInterpreterOptionsService options,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string path,
             IPythonInterpreterFactory baseInterp,
             bool registerAsCustomEnv,
