@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,7 +35,11 @@ namespace PythonToolsTests {
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
             var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
             var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
-            var provider = new PythonWorkspaceContextProvider(workspaceService, optionsService, registryService);
+            var provider = new PythonWorkspaceContextProvider(
+                workspaceService,
+                new Lazy<IInterpreterOptionsService>(() => optionsService),
+                new Lazy<IInterpreterRegistryService>(() => registryService)
+            );
 
             Assert.AreEqual(workspaceFolder, provider.Workspace.Location);
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, provider.Workspace.CurrentFactory);
@@ -47,7 +52,11 @@ namespace PythonToolsTests {
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(null);
             var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
             var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
-            var provider = new PythonWorkspaceContextProvider(workspaceService, optionsService, registryService);
+            var provider = new PythonWorkspaceContextProvider(
+                workspaceService,
+                new Lazy<IInterpreterOptionsService>(() => optionsService),
+                new Lazy<IInterpreterRegistryService>(() => registryService)
+            );
 
             Assert.AreEqual(null, provider.Workspace);
 
@@ -79,7 +88,11 @@ namespace PythonToolsTests {
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
             var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
             var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
-            var provider = new PythonWorkspaceContextProvider(workspaceService, optionsService, registryService);
+            var provider = new PythonWorkspaceContextProvider(
+                workspaceService,
+                new Lazy<IInterpreterOptionsService>(() => optionsService),
+                new Lazy<IInterpreterRegistryService>(() => registryService)
+            );
 
             Assert.AreEqual(workspaceFolder, provider.Workspace.Location);
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, provider.Workspace.CurrentFactory);
@@ -113,7 +126,11 @@ namespace PythonToolsTests {
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace1);
             var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
             var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
-            var provider = new PythonWorkspaceContextProvider(workspaceService, optionsService, registryService);
+            var provider = new PythonWorkspaceContextProvider(
+                workspaceService,
+                new Lazy<IInterpreterOptionsService>(() => optionsService),
+                new Lazy<IInterpreterRegistryService>(() => registryService)
+            );
 
             Assert.AreEqual(workspaceFolder1, provider.Workspace.Location);
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, provider.Workspace.CurrentFactory);
