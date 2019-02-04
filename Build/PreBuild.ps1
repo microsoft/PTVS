@@ -13,7 +13,7 @@ $need_symlink = @(
 )
 
 if (-not $vstarget) {
-    $vstarget = "15.0"
+    $vstarget = "16.0"
 } elseif ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
