@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment..
+        ///   Looks up a localized string similar to The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment..
         /// </summary>
         public static string AddCondaEnvironmentFileHelp {
             get {
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Preview in progress....
+        ///   Looks up a localized string similar to Building preview....
         /// </summary>
         public static string AddCondaEnvironmentPreviewInProgress {
             get {
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of conda packages to install when creating the conda environment. Entries should be separated by spaces..
+        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces..
         /// </summary>
         public static string AddCondaPackagesHelpText {
             get {
@@ -386,9 +386,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Some fields have invalid values.
-        ///
-        ///{0}.
+        ///   Looks up a localized string similar to Some fields have invalid values.{0}.
         /// </summary>
         public static string AddEnvironmentValidationErrors {
             get {
@@ -766,7 +764,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please wait....
+        ///   Looks up a localized string similar to Building preview....
         /// </summary>
         public static string AddVirtualEnvironmentPreviewInProgress {
             get {
@@ -1270,7 +1268,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run command: conda install {0}.
+        ///   Looks up a localized string similar to Run command: Conda install {0}.
         /// </summary>
         public static string CondaExtensionCondaInstallFrom {
             get {
@@ -1326,7 +1324,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a conda environment.yml file, but no conda environments..
+        ///   Looks up a localized string similar to The project &quot;{0}&quot; has a Conda environment.yml file, but no Conda environments..
         /// </summary>
         public static string CondaInfoBarCreateNewMessage {
             get {
@@ -1335,7 +1333,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t show this again.
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
         /// </summary>
         public static string CondaInfoBarProjectIgnoreAction {
             get {
@@ -1344,7 +1342,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project &apos;{0}&apos; has a reference to a missing conda environment &apos;{1}&apos;..
+        ///   Looks up a localized string similar to The project &quot;{0}&quot; has a reference to a missing Conda environment &quot;{1}&quot;..
         /// </summary>
         public static string CondaInfoBarRecreateMessage {
             get {
@@ -1407,7 +1405,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to create conda environment &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Failed to create Conda environment &quot;{0}&quot;.
         /// </summary>
         public static string CondaStatusBarCreateFailed {
             get {
@@ -1416,7 +1414,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating conda environment &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Creating Conda environment &quot;{0}&quot;.
         /// </summary>
         public static string CondaStatusBarCreateStarted {
             get {
@@ -1425,7 +1423,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Successfully created conda environment &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Successfully created Conda environment &quot;{0}&quot;.
         /// </summary>
         public static string CondaStatusBarCreateSucceeded {
             get {
@@ -1479,7 +1477,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create conda environment &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Create Conda environment &quot;{0}&quot;.
         /// </summary>
         public static string CondaStatusCenterCreateTitle {
             get {
@@ -6125,7 +6123,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t show this again.
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
         /// </summary>
         public static string RequirementsTxtInfoBarProjectIgnoreAction {
             get {
@@ -6143,7 +6141,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to One or more packages listed in &apos;{0}&apos; of project &apos;{1}&apos; are missing from the &apos;{2}&apos; environment..
+        ///   Looks up a localized string similar to One or more packages listed in &quot;{0}&quot; of project &quot;{1}&quot; are missing from the &quot;{2}&quot; environment..
         /// </summary>
         public static string RequirementsTxtInstallPackagesInfoBarMessage {
             get {
