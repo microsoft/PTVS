@@ -386,7 +386,9 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Some fields have invalid values.{0}.
+        ///   Looks up a localized string similar to Some fields have invalid values.
+        ///
+        ///{0}.
         /// </summary>
         public static string AddEnvironmentValidationErrors {
             get {
@@ -1268,7 +1270,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run command: Conda install {0}.
+        ///   Looks up a localized string similar to Run command: conda install {0}.
         /// </summary>
         public static string CondaExtensionCondaInstallFrom {
             get {
@@ -6051,7 +6053,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python package specification file &apos;{0}&apos; was detected in project &apos;{1}&apos;..
+        ///   Looks up a localized string similar to Python package specification file &quot;{0}&quot; was detected in project &quot;{1}&quot;..
         /// </summary>
         public static string RequirementsTxtCreateVirtualEnvInfoBarMessage {
             get {
