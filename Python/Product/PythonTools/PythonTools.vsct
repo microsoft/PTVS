@@ -1055,6 +1055,10 @@ permissions and limitations under the License.
     <!--
         Button placements
     -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x0100">
       <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup"/>
     </CommandPlacement>
