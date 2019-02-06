@@ -124,18 +124,25 @@ namespace Microsoft.PythonTools.Workspace {
                 }
             }
 
-            IProjectLauncher launcher = null;
+            string workingDir = settings.GetValue(WorkingDirectoryKey, string.Empty);
+            if (string.IsNullOrEmpty(workingDir)) {
+                workingDir = workspace.MakeRooted(".");
+            } else if (PathUtils.IsValidPath(workingDir) && !Path.IsPathRooted(workingDir)) {
+                workingDir = workspace.MakeRooted(workingDir);
+            }
+
             var launchConfig = new LaunchConfiguration(config) {
                 InterpreterPath = config == null ? path : null,
                 InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
                 ScriptName = scriptName,
                 ScriptArguments = settings.GetValue(ScriptArgumentsKey, string.Empty),
-                WorkingDirectory = settings.GetValue(WorkingDirectoryKey, string.Empty),
+                WorkingDirectory = workingDir,
                 SearchPaths = searchPaths,
                 Environment = environment,
             };
             launchConfig.LaunchOptions[PythonConstants.EnableNativeCodeDebugging] = settings.GetValue(NativeDebuggingKey, false).ToString();
 
+            IProjectLauncher launcher = null;
             var browserUrl = settings.GetValue(WebBrowserUrlKey, string.Empty);
             if (!string.IsNullOrEmpty(browserUrl)) {
                 launchConfig.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = browserUrl;
