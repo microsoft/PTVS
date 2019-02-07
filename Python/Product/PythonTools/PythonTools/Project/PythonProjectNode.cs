@@ -2003,7 +2003,7 @@ namespace Microsoft.PythonTools.Project {
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
                 useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this).Show(true);
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this, null).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             } catch (MissingInterpreterException ex) {

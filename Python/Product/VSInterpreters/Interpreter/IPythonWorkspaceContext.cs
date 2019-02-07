@@ -115,5 +115,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <param name="interpreter">New interpreter setting.</param>
         Task SetInterpreterAsync(string interpreter);
+
+        /// <summary>
+        /// Add an action to execute when the workspace is diposed.
+        /// </summary>
+        void AddActionOnClose(object key, Action<object> action);
     }
 }

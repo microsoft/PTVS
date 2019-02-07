@@ -453,7 +453,12 @@ namespace Microsoft.PythonTools {
         internal static PythonProjectNode GetProjectFromFile(this IServiceProvider serviceProvider, string filename) {
             return serviceProvider.GetProjectFromOpenFile(filename) ?? serviceProvider.GetProjectContainingFile(filename);
         }
-        
+
+        internal static IPythonWorkspaceContext GetWorkspace(this IServiceProvider serviceProvider) {
+            var workspaceContextProvider = serviceProvider.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
+            return workspaceContextProvider.Workspace;
+        }
+
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {
             var caretPoint = view.GetPythonCaret();
             Debug.Assert(caretPoint != null);

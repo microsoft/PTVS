@@ -385,7 +385,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnActiveInterpreterChanged(object sender, EventArgs e) {
-            OnActiveInterpreterChangedAsync().HandleAllExceptions(_site).DoNotWait();
+            _site.GetUIThread().InvokeTask(async () => {
+                await OnActiveInterpreterChangedAsync();
+            }).HandleAllExceptions(_site).DoNotWait();
         }
 
         private async Task OnActiveInterpreterChangedAsync() {
