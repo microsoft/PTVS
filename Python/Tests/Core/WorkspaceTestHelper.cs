@@ -380,6 +380,10 @@ namespace PythonToolsTests {
             public Task SetInterpreterFactoryAsync(IPythonInterpreterFactory factory) {
                 throw new NotImplementedException();
             }
+
+            public void AddActionOnClose(object key, Action<object> action) {
+                throw new NotImplementedException();
+            }
         }
     }
 }
