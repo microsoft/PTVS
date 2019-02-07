@@ -1280,7 +1280,10 @@ modified from these scripts.</value>
     <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
   </data>
   <data name="ReplProjectConfigurationChanged" xml:space="preserve">
-    <value>The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+    <value>The associated project "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+  </data>
+  <data name="ReplWorkspaceConfigurationChanged" xml:space="preserve">
+    <value>The associated workspace "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
   </data>
   <data name="DebugLaunchScriptNameMissing" xml:space="preserve">
     <value>The project cannot be launched because the startup file is not specified.</value>
@@ -1889,6 +1892,10 @@ Expand selection to the full expression?</value>
   <data name="ReplProjectProjectCaption" xml:space="preserve">
     <value>Project: {0}</value>
     <comment>{0} is the name of the project</comment>
+  </data>
+  <data name="ReplWorkspaceCaption" xml:space="preserve">
+    <value>Workspace: {0}</value>
+    <comment>{0} is the name of the workspace</comment>
   </data>
   <data name="ReplSwitchModuleCommandDescription" xml:space="preserve">
     <value>Switches the current scope to the specified module name.</value>

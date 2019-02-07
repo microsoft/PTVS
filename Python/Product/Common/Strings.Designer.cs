@@ -5864,7 +5864,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The associated project &apos;{0}&apos; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        ///   Looks up a localized string similar to The associated project &quot;{0}&quot; has changed its configuration. These changes will not be reflected until you reset this interactive window..
         /// </summary>
         public static string ReplProjectConfigurationChanged {
             get {
@@ -6031,6 +6031,24 @@ namespace Microsoft.PythonTools {
         public static string ReplWindowOutOfIds {
             get {
                 return ResourceManager.GetString("ReplWindowOutOfIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace: {0}.
+        /// </summary>
+        public static string ReplWorkspaceCaption {
+            get {
+                return ResourceManager.GetString("ReplWorkspaceCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated workspace &quot;{0}&quot; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        /// </summary>
+        public static string ReplWorkspaceConfigurationChanged {
+            get {
+                return ResourceManager.GetString("ReplWorkspaceConfigurationChanged", resourceCulture);
             }
         }
         

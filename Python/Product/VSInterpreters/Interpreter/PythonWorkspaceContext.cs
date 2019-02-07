@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly IWorkspaceSettingsManager _workspaceSettingsMgr;
+        private Dictionary<object, Action<object>> _actionsOnClose;
 
         private bool _isDisposed;
 
@@ -96,6 +98,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             _isDisposed = true;
+
+            var actions = _actionsOnClose;
+            _actionsOnClose = null;
+            foreach (var keyValue in actions.MaybeEnumerate()) {
+                keyValue.Value?.Invoke(keyValue.Key);
+            }
+
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
             _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
             _registryService.InterpretersChanged -= OnInterpretersChanged;
@@ -262,6 +271,19 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return Task.CompletedTask;
+        }
+
+        public void AddActionOnClose(object key, Action<object> action) {
+            Debug.Assert(key != null);
+            Debug.Assert(action != null);
+            if (key == null || action == null) {
+                return;
+            }
+
+            if (_actionsOnClose == null) {
+                _actionsOnClose = new Dictionary<object, Action<object>>();
+            }
+            _actionsOnClose[key] = action;
         }
     }
 }
