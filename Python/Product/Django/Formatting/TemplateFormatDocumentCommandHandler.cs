@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+#if !DEV16_OR_LATER
 using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.Web.Editor;
-#if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Shared.Editor.Controller.Command;
-#else
 using Microsoft.Web.Editor.Controller.Command;
-#endif
 
 namespace Microsoft.PythonTools.Django.Formatting {
     internal class TemplateFormatDocumentCommandHandler : EditingCommand {
@@ -39,3 +36,4 @@ namespace Microsoft.PythonTools.Django.Formatting {
         }
     }
 }
+#endif

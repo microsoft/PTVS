@@ -24,12 +24,14 @@ using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TaskStatusCenter;
+using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentOperation {
         private readonly IServiceProvider _site;
         private readonly PythonProjectNode _project;
+        private readonly IPythonWorkspaceContext _workspace;
         private readonly string _virtualEnvPath;
         private readonly string _baseInterpreter;
         private readonly bool _useVEnv;
@@ -49,6 +51,7 @@ namespace Microsoft.PythonTools.Environments {
         public AddVirtualEnvironmentOperation(
             IServiceProvider site,
             PythonProjectNode project,
+            IPythonWorkspaceContext workspace,
             string virtualEnvPath,
             string baseInterpreterId,
             bool useVEnv,
@@ -63,6 +66,7 @@ namespace Microsoft.PythonTools.Environments {
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _project = project;
+            _workspace = workspace;
             _virtualEnvPath = virtualEnvPath ?? throw new ArgumentNullException(nameof(virtualEnvPath));
             _baseInterpreter = baseInterpreterId ?? throw new ArgumentNullException(nameof(baseInterpreterId));
             _useVEnv = useVEnv;
@@ -112,6 +116,7 @@ namespace Microsoft.PythonTools.Environments {
                     _registry,
                     _options,
                     _project,
+                    _workspace,
                     _virtualEnvPath,
                     baseInterp,
                     _registerAsCustomEnv,
@@ -125,6 +130,10 @@ namespace Microsoft.PythonTools.Environments {
                     }
 
                     await _site.GetUIThread().InvokeTask(async () => {
+                        // Note that for a workspace, VirtualEnv.CreateAndAddFactory
+                        // takes care of updating PythonSettings.json, as that is
+                        // required in order to obtain the factory. So no need to do
+                        // anything here for workspace.
                         if (_project != null) {
                             _project.AddInterpreter(factory.Configuration.Id);
                             if (_setAsCurrent) {

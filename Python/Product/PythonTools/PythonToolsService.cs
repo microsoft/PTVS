@@ -152,11 +152,13 @@ namespace Microsoft.PythonTools {
                     var installed = registry.Configurations.Count();
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);
+                    var installedIronPython = registry.Configurations.Where(c => c.IsIronPython()).Count();
 
                     Logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
                         { "Total", installed },
                         { "3x", installedV3 },
-                        { "2x", installedV2 }
+                        { "2x", installedV2 },
+                        { "IronPython", installedIronPython },
                     });
                 }
 
@@ -183,8 +185,10 @@ namespace Microsoft.PythonTools {
 
         internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             if (factory == null) {
-                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|2.7", "Analysis Only 2.7", version: new Version(2, 7));
+                factory = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
             }
+
             return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
         }
 
@@ -257,6 +261,12 @@ namespace Microsoft.PythonTools {
                 if (analyzer != null) {
                     yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
                 }
+            }
+
+            var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
+            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+            if (workspaceAnalyzer != null) {
+                yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
             }
         }
 

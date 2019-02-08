@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidAddEnvironment = 0x4006;
         public const uint cmdidAddVirtualEnv = 0x4007;
-        public const uint cmdidAddExistingVirtualEnv = 0x4008;
+        public const uint cmdidAddExistingEnv = 0x4008;
         public const uint cmdidActivateEnvironment = 0x4009;
         public const uint cmdidInstallPythonPackage = 0x400A;
         public const uint cmdidViewAllEnvironments = 0x400B;
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
 
-        public const uint cmdidAddEnvironmentNoIcon = 0x4038;
+        public const uint cmdidAddCondaEnv = 0x4037;
 
         public const uint cmdidWebPythonAtMicrosoft = 0x4040;
         public const uint cmdidWebPTVSSupport = 0x4041;

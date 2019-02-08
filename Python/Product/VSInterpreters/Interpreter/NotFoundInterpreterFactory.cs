@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
             string prefixPath = null,
             InterpreterArchitecture architecture = default(InterpreterArchitecture),
             string descriptionSuffix = null) {
-            Configuration = new InterpreterConfiguration(
+            Configuration = new VisualStudioInterpreterConfiguration(
                 id,
                 description ?? "Unknown Python {0}{1: ()} (unavailable)".FormatUI(version, architecture),
                 prefixPath,

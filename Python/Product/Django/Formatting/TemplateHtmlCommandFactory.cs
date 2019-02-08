@@ -14,16 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+#if !DEV16_OR_LATER
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-#if DEV16_OR_LATER
-using Microsoft.WebTools.Languages.Shared.Editor.Controller;
-#else
 using Microsoft.Web.Editor.Controller;
-#endif
 
 namespace Microsoft.PythonTools.Django.Formatting {
     [Export(typeof(ICommandFactory))]
@@ -40,4 +37,4 @@ namespace Microsoft.PythonTools.Django.Formatting {
         }
     }
 }
-
+#endif

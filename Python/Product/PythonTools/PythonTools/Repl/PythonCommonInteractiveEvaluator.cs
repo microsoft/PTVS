@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly StringBuilder _deferredOutput;
 
         private PythonProjectNode _projectWithHookedEvents;
+        private IPythonWorkspaceContext _workspaceWithHookedEvents;
 
         protected IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
@@ -90,6 +91,12 @@ namespace Microsoft.PythonTools.Repl {
                 _projectWithHookedEvents = null;
             }
 
+            if (_workspaceWithHookedEvents != null) {
+                _workspaceWithHookedEvents.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
+                _workspaceWithHookedEvents.SearchPathsSettingChanged -= Workspace_ConfigurationChanged;
+                _workspaceWithHookedEvents = null;
+            }
+
             if (disposing) {
                 _analyzer?.Dispose();
             }
@@ -106,6 +113,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName { get; set; }
         public string ProjectMoniker { get; set; }
+        public string WorkspaceMoniker { get; set; }
         public LaunchConfiguration Configuration { get; set; }
         public string ScriptsPath { get; set; }
 
@@ -120,6 +128,8 @@ namespace Microsoft.PythonTools.Repl {
         public string BackendName { get; set; }
 
         internal bool AssociatedProjectHasChanged { get; set; }
+
+        internal bool AssociatedWorkspaceHasChanged { get; set; }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
@@ -141,6 +151,15 @@ namespace Microsoft.PythonTools.Repl {
             return _serviceProvider.GetProjectFromFile(moniker);
         }
 
+        private IPythonWorkspaceContext GetAssociatedPythonWorkspace(InterpreterConfiguration interpreter = null) {
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
+            if (string.IsNullOrEmpty(WorkspaceMoniker)) {
+                return null;
+            }
+
+            return _serviceProvider.GetWorkspace();
+        }
 
         public virtual VsProjectAnalyzer Analyzer => _analyzer;
 
@@ -164,8 +183,6 @@ namespace Microsoft.PythonTools.Repl {
                 if (factory == null) {
                     a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
                 } else {
-                    var pyProject = GetAssociatedPythonProject(config.Interpreter);
-
                     a = await VsProjectAnalyzer.CreateForInteractiveAsync(
                         _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
@@ -173,7 +190,13 @@ namespace Microsoft.PythonTools.Repl {
                     );
 
                     IEnumerable<string> sp;
-                    if (pyProject != null) {
+
+                    var workspace = GetAssociatedPythonWorkspace(config.Interpreter);
+                    var pyProject = GetAssociatedPythonProject(config.Interpreter);
+
+                    if (workspace != null) {
+                        sp = workspace.GetAbsoluteSearchPaths().ToArray();
+                    } else if (pyProject != null) {
                         sp = pyProject.GetSearchPaths();
                     } else {
                         var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
@@ -337,6 +360,10 @@ namespace Microsoft.PythonTools.Repl {
             return _serviceProvider.GetUIThread().InvokeAsync(UpdatePropertiesFromProjectMoniker);
         }
 
+        internal Task<ExecutionResult> UpdatePropertiesFromWorkspaceMonikerAsync() {
+            return _serviceProvider.GetUIThread().InvokeAsync(UpdatePropertiesFromWorkspaceMoniker);
+        }
+
         internal ExecutionResult UpdatePropertiesFromProjectMoniker() {
             try {
                 if (_projectWithHookedEvents != null) {
@@ -379,6 +406,71 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Failure;
         }
 
+        internal ExecutionResult UpdatePropertiesFromWorkspaceMoniker() {
+            try {
+                if (_workspaceWithHookedEvents != null) {
+                    _workspaceWithHookedEvents.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
+                    _workspaceWithHookedEvents.SearchPathsSettingChanged -= Workspace_ConfigurationChanged;
+                    _workspaceWithHookedEvents = null;
+                }
+
+                AssociatedWorkspaceHasChanged = false;
+                var workspace = GetAssociatedPythonWorkspace();
+                if (workspace == null) {
+                    return ExecutionResult.Success;
+                }
+
+                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
+                    Configuration = GetWorkspaceLaunchConfigurationOrThrow(workspace);
+                    if (Configuration?.Interpreter != null) {
+                        try {
+                            ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                            ScriptsPath = null;
+                        }
+                    }
+                }
+
+                _workspaceWithHookedEvents = workspace;
+                workspace.ActiveInterpreterChanged += Workspace_ConfigurationChanged;
+                workspace.SearchPathsSettingChanged += Workspace_ConfigurationChanged;
+
+                return ExecutionResult.Success;
+            } catch (NoInterpretersException) {
+                WriteError(Strings.NoInterpretersAvailable);
+            } catch (MissingInterpreterException ex) {
+                WriteError(ex.ToString());
+            } catch (IOException ex) {
+                WriteError(ex.ToString());
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                WriteError(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+            return ExecutionResult.Failure;
+        }
+
+        internal static LaunchConfiguration GetWorkspaceLaunchConfigurationOrThrow(IPythonWorkspaceContext workspace) {
+            var fact = GetWorkspaceInterpreterFactoryOrThrow(workspace);
+            var config = new LaunchConfiguration(fact.Configuration);
+            config.WorkingDirectory = workspace.Location;
+            config.SearchPaths = workspace.GetAbsoluteSearchPaths().ToList();
+            return config;
+        }
+
+        private static IPythonInterpreterFactory GetWorkspaceInterpreterFactoryOrThrow(IPythonWorkspaceContext workspace) {
+            var fact = workspace.CurrentFactory;
+            if (fact == null) {
+                throw new NoInterpretersException();
+            }
+
+            if (!fact.Configuration.IsAvailable()) {
+                throw new MissingInterpreterException(
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
+                );
+            }
+
+            return fact;
+        }
+
         private void Project_ConfigurationChanged(object sender, EventArgs e) {
             var pyProj = _projectWithHookedEvents;
             _projectWithHookedEvents = null;
@@ -390,6 +482,20 @@ namespace Microsoft.PythonTools.Repl {
                 pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
                 WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
                 AssociatedProjectHasChanged = true;
+            }
+        }
+
+        private void Workspace_ConfigurationChanged(object sender, EventArgs e) {
+            var workspace = _workspaceWithHookedEvents;
+            _workspaceWithHookedEvents = null;
+
+            if (workspace != null) {
+                Debug.Assert(workspace == sender, "Unexpected workspace raised the event");
+                // Only warn once
+                workspace.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
+                workspace.SearchPathsSettingChanged -= Workspace_ConfigurationChanged;
+                WriteError(Strings.ReplWorkspaceConfigurationChanged.FormatUI(workspace.WorkspaceName));
+                AssociatedWorkspaceHasChanged = true;
             }
         }
 
@@ -572,11 +678,13 @@ namespace Microsoft.PythonTools.Repl {
 
         public async Task<ExecutionResult> ResetAsync(bool initialize = true) {
             await UpdatePropertiesFromProjectMonikerAsync();
+            await UpdatePropertiesFromWorkspaceMonikerAsync();
             return await ResetWorkerAsync(initialize, false);
         }
 
         public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
             await UpdatePropertiesFromProjectMonikerAsync();
+            await UpdatePropertiesFromWorkspaceMonikerAsync();
             return await ResetWorkerAsync(initialize, quiet);
         }
 

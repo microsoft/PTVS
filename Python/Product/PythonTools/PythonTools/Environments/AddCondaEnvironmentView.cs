@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private static bool HasPrefixName(InterpreterConfiguration config, string name) {
-            var current = PathUtils.GetFileOrDirectoryName(config.PrefixPath);
+            var current = PathUtils.GetFileOrDirectoryName(config.GetPrefixPath());
             return string.CompareOrdinal(current, name) == 0;
         }
 
@@ -199,6 +200,7 @@ namespace Microsoft.PythonTools.Environments {
                 Site,
                 _condaMgr,
                 SelectedProject?.Node,
+                SelectedProject?.Workspace,
                 EnvName,
                 IsEnvFile ? SelectedEnvFilePath : null,
                 IsPackages ? PackagesSpecs.ToList() : Enumerable.Empty<PackageSpec>().ToList(),
@@ -247,7 +249,7 @@ namespace Microsoft.PythonTools.Environments {
 
             // Clear the preview, display a progress icon/message
             var p = new CondaEnvironmentPreview();
-            p.IsInProgress = true;
+            p.Progress.IsProgressDisplayed = true;
             CondaPreview = p;
 
             var envName = EnvName ?? string.Empty;
@@ -278,7 +280,7 @@ namespace Microsoft.PythonTools.Environments {
                 ct.ThrowIfCancellationRequested();
                 Dispatcher.Invoke(() => {
                     var p = new CondaEnvironmentPreview();
-                    p.IsInProgress = false;
+                    p.Progress.IsProgressDisplayed = false;
                     p.IsEnvFile = result != null;
                     p.IsNoEnvFile = result == null;
                     p.EnvFileContents = result ?? "";
@@ -320,7 +322,7 @@ namespace Microsoft.PythonTools.Environments {
                     }
                     p.HasPreviewError = !string.IsNullOrEmpty(msg);
                     p.ErrorMessage = msg;
-                    p.IsInProgress = false;
+                    p.Progress.IsProgressDisplayed = false;
                     p.IsPackages = p.Packages.Count > 0;
                     p.IsNoPackages = !p.IsPackages && !p.HasPreviewError;
 
@@ -347,6 +349,9 @@ namespace Microsoft.PythonTools.Environments {
     sealed class CondaEnvironmentPreview : DependencyObject {
         public CondaEnvironmentPreview() {
             Packages = new ObservableCollection<CondaPackageView>();
+            Progress = new ProgressControlViewModel();
+            Progress.ProgressMessage = Strings.AddCondaEnvironmentPreviewInProgress;
+            Progress.IsProgressDisplayed = false;
         }
 
         public static readonly DependencyProperty IsNoPackagesProperty =
@@ -360,9 +365,6 @@ namespace Microsoft.PythonTools.Environments {
 
         public static readonly DependencyProperty PackagesProperty =
             PackagesPropertyKey.DependencyProperty;
-
-        public static readonly DependencyProperty IsInProgressProperty =
-            DependencyProperty.Register(nameof(IsInProgress), typeof(bool), typeof(CondaEnvironmentPreview));
 
         public static readonly DependencyProperty HasPreviewErrorProperty =
             DependencyProperty.Register(nameof(HasPreviewError), typeof(bool), typeof(CondaEnvironmentPreview));
@@ -379,6 +381,9 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty ErrorMessageProperty =
             DependencyProperty.Register(nameof(ErrorMessage), typeof(string), typeof(CondaEnvironmentPreview));
 
+        public static readonly DependencyProperty ProgressProperty =
+            DependencyProperty.Register(nameof(Progress), typeof(ProgressControlViewModel), typeof(CondaEnvironmentPreview));
+
         public ObservableCollection<CondaPackageView> Packages {
             get { return (ObservableCollection<CondaPackageView>)GetValue(PackagesProperty); }
             private set { SetValue(PackagesPropertyKey, value); }
@@ -392,11 +397,6 @@ namespace Microsoft.PythonTools.Environments {
         public bool IsPackages {
             get { return (bool)GetValue(IsPackagesProperty); }
             set { SetValue(IsPackagesProperty, value); }
-        }
-
-        public bool IsInProgress {
-            get { return (bool)GetValue(IsInProgressProperty); }
-            set { SetValue(IsInProgressProperty, value); }
         }
 
         public bool HasPreviewError {
@@ -422,6 +422,11 @@ namespace Microsoft.PythonTools.Environments {
         public string ErrorMessage{
             get { return (string)GetValue(ErrorMessageProperty); }
             set { SetValue(ErrorMessageProperty, value); }
+        }
+
+        public ProgressControlViewModel Progress {
+            get { return (ProgressControlViewModel)GetValue(ProgressProperty); }
+            set { SetValue(ProgressProperty, value); }
         }
     }
 

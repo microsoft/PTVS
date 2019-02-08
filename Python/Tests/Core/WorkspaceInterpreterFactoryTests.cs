@@ -19,15 +19,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Intellisense;
-using Microsoft.VisualStudio.Workspace.Settings;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using TestUtilities;
 
 namespace PythonToolsTests {
@@ -48,17 +42,22 @@ namespace PythonToolsTests {
             Directory.CreateDirectory(workspaceFolder2);
             File.WriteAllText(Path.Combine(workspaceFolder2, "app2.py"), string.Empty);
 
-            var workspace1 = new MockWorkspace(workspaceFolder1);
-            var workspace2 = new MockWorkspace(workspaceFolder2);
+            var workspace1 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder1);
+            var workspace2 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder2);
 
-            var workspaceService = new MockWorkspaceService(workspace1);
+            var workspaceContext1 = new WorkspaceTestHelper.MockWorkspaceContext(workspace1);
+            var workspaceContext2 = new WorkspaceTestHelper.MockWorkspaceContext(workspace2);
 
-            // Load a different workspace
-            Action triggerDiscovery = () => {
-                workspaceService.ChangeWorkspace(workspace2);
-            };
+            var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext1);
 
-            TestTriggerDiscovery(workspaceService, triggerDiscovery);
+            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider)) {
+                // Load a different workspace
+                Action triggerDiscovery = () => {
+                    workspaceContextProvider.SimulateChangeWorkspace(workspaceContext2);
+                };
+
+                TestTriggerDiscovery(workspaceContext1, triggerDiscovery, workspaceContextProvider, true);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -67,22 +66,15 @@ namespace PythonToolsTests {
             Directory.CreateDirectory(workspaceFolder);
             File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
 
-            var aggregatedSettings1 = new MockWorkspaceSettings(
-                new Dictionary<string, string> { { "Interpreter", null } }
-            );
-            var aggregatedSettings2 = new MockWorkspaceSettings(
-                new Dictionary<string, string> { { "Interpreter", "Global|PythonCore|3.7" } }
-            );
-            var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings1);
-            var workspace = new MockWorkspace(workspaceFolder, settingsManager);
-            var workspaceService = new MockWorkspaceService(workspace);
+            var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+            var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
 
             // Modify settings
             Action triggerDiscovery = () => {
-                settingsManager.ChangeSettings(aggregatedSettings2);
+                workspaceContext.SimulateChangeInterpreterSetting("Global|PythonCore|3.7");
             };
 
-            TestTriggerDiscovery(workspaceService, triggerDiscovery);
+            TestTriggerDiscovery(workspaceContext, triggerDiscovery, null, true);
         }
 
         [TestMethod, Priority(0)]
@@ -95,20 +87,14 @@ namespace PythonToolsTests {
 
             string envFolder = Path.Combine(workspaceFolder, "env");
 
-            var workspace = new MockWorkspace(workspaceFolder);
-            var workspaceService = new MockWorkspaceService(workspace);
+            var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+            var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
 
             // Create virtual env inside the workspace folder (one level from root)
-            Action triggerDiscovery = () => {
-                using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", "venv", envFolder)) {
-                    Console.WriteLine(p.Arguments);
-                    p.Wait();
-                    Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
-                    Assert.AreEqual(0, p.ExitCode);
-                }
-            };
-
-            var configs = TestTriggerDiscovery(workspaceService, triggerDiscovery).ToArray();
+            var configs = TestTriggerDiscovery(
+                workspaceContext,
+                () => CreatePythonVirtualEnv(python.InterpreterPath, workspaceFolder, "env")
+            ).ToArray();
 
             Assert.AreEqual(1, configs.Length);
             Assert.IsTrue(PathUtils.IsSamePath(
@@ -140,15 +126,13 @@ namespace PythonToolsTests {
             // Normally a local virtual environment outside the workspace
             // wouldn't be detected, but it is when it's referenced from
             // the workspace python settings.
-            var aggregatedSettings = new MockWorkspaceSettings(
-                new Dictionary<string, string> { { "Interpreter", @"..\outside\scripts\python.exe" } }
-            );
-            var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
-            var workspace = new MockWorkspace(workspaceFolder, settingsManager);
-            var workspaceService = new MockWorkspaceService(workspace);
+            var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+            var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace, @"..\outside\scripts\python.exe");
+            var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
 
-            using (var provider = new WorkspaceInterpreterFactoryProvider(workspaceService)) {
-                var configs = provider.GetInterpreterConfigurations().ToArray();
+            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider)) {
+                workspaceContextProvider.SimulateChangeWorkspace(workspaceContext);
+                var configs = factoryProvider.GetInterpreterConfigurations().ToArray();
 
                 Assert.AreEqual(1, configs.Length);
                 Assert.IsTrue(PathUtils.IsSamePath(
@@ -159,180 +143,83 @@ namespace PythonToolsTests {
             }
         }
 
-        private static IEnumerable<InterpreterConfiguration> TestTriggerDiscovery(IVsFolderWorkspaceService workspaceService, Action triggerDiscovery) {
-            using (var evt = new AutoResetEvent(false))
-            using (var provider = new WorkspaceInterpreterFactoryProvider(workspaceService)) {
+        [TestMethod, Priority(0)]
+        public void WatchWorkspaceVirtualEnvRenamed() {
+            const string ENV_NAME = "env";
+            var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
+
+            string envPath = Path.Combine(workspaceContext.Location, ENV_NAME);
+            string renamedEnvPath = Path.Combine(workspaceContext.Location, string.Concat(ENV_NAME, "1"));
+            var configs = TestTriggerDiscovery(workspaceContext, () => Directory.Move(envPath, renamedEnvPath)).ToArray();
+
+            Assert.AreEqual(1, configs.Length);
+            Assert.IsTrue(PathUtils.IsSamePath(Path.Combine(renamedEnvPath, "scripts", "python.exe"), configs[0].InterpreterPath));
+            Assert.AreEqual("Workspace|Workspace|env1", configs[0].Id);
+        }
+
+        [TestMethod, Priority(0)]
+        public void WatchWorkspaceVirtualEnvDeleted() {
+            const string ENV_NAME = "env";
+            var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
+
+            string envPath = Path.Combine(workspaceContext.Location, ENV_NAME);
+            var configs = TestTriggerDiscovery(workspaceContext, () => Directory.Delete(envPath, true)).ToArray();
+
+            Assert.AreEqual(0, configs.Length);
+        }
+
+        private static IEnumerable<InterpreterConfiguration> TestTriggerDiscovery(
+                IPythonWorkspaceContext workspaceContext,
+                Action triggerDiscovery,
+                IPythonWorkspaceContextProvider workspaceContextProvider = null,
+                bool useDiscoveryStartedEvent = false
+        ) {
+            workspaceContextProvider = workspaceContextProvider
+                ?? new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
+
+            using (var provider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
+            using (var evt = new AutoResetEvent(false)) {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
-                var configs = provider.GetInterpreterConfigurations();
-                provider.DiscoveryStarted += (sender, e) => {
-                    evt.Set();
-                };
+                provider.GetInterpreterFactories();
+
+                if (useDiscoveryStartedEvent) {
+                    provider.DiscoveryStarted += (sender, e) => {
+                        evt.Set();
+                    };
+                } else {
+                    provider.InterpreterFactoriesChanged += (sender, e) => {
+                        evt.Set();
+                    };
+                }
+
                 triggerDiscovery();
                 Assert.IsTrue(evt.WaitOne(5000), "Failed to trigger discovery.");
                 return provider.GetInterpreterConfigurations();
             }
         }
 
-        class MockWorkspaceService : IVsFolderWorkspaceService {
-            public MockWorkspaceService(IWorkspace workspace) {
-                CurrentWorkspace = workspace;
-            }
+        private WorkspaceTestHelper.MockWorkspaceContext CreateEnvAndGetWorkspaceService(string envName) {
+            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
-            public IWorkspace CurrentWorkspace { get; private set; }
+            var workspacePath = TestData.GetTempPath();
+            Directory.CreateDirectory(workspacePath);
+            File.WriteAllText(Path.Combine(workspacePath, "app.py"), string.Empty);
 
-            public AsyncEvent<EventArgs> OnActiveWorkspaceChanged { get; set; }
+            CreatePythonVirtualEnv(python.InterpreterPath, workspacePath, envName);
 
-            public void ChangeWorkspace(IWorkspace workspace) {
-                CurrentWorkspace = workspace;
-                OnActiveWorkspaceChanged?.InvokeAsync(this, EventArgs.Empty).DoNotWait();
-            }
+            return new WorkspaceTestHelper.MockWorkspaceContext(new WorkspaceTestHelper.MockWorkspace(workspacePath));
         }
 
-        class MockWorkspace : IWorkspace {
-            private readonly MockWorkspaceSettingsManager _settingsManager;
-
-            public MockWorkspace(string location) {
-                Location = location;
-                _settingsManager = new MockWorkspaceSettingsManager();
+        private static void CreatePythonVirtualEnv(string pythonInterpreterPath, string workspacePath, string envName) {
+            //Creating virtual environment and confirming it was created
+            using (var p = ProcessOutput.RunHiddenAndCapture(pythonInterpreterPath, "-m", "venv", Path.Combine(workspacePath, envName))) {
+                Console.WriteLine(p.Arguments);
+                Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
+                Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
+                Assert.AreEqual(0, p.ExitCode);
             }
-
-            public MockWorkspace(string location, MockWorkspaceSettingsManager settingsManager) {
-                Location = location;
-                _settingsManager = settingsManager;
-            }
-
-            public string Location { get; private set; }
-
-            public JoinableTaskFactory JTF => throw new NotImplementedException();
-
-            public Task DisposeAsync() {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetActionsForContextsAsync(string filePath, IEnumerable<FileContext> fileContexts, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyCollection<string>> GetDirectoriesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<Tuple<Lazy<ILanguageServiceProvider, ILanguageServiceProviderMetadata>, IReadOnlyCollection<FileContext>>>> GetFileContextsForLanguageServicesAsync(string filePath, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyCollection<string>> GetFilesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken)) {
-                throw new NotImplementedException();
-            }
-
-            public object GetService(Type serviceType) {
-                if (serviceType == typeof(IWorkspaceSettingsManager)) {
-                    return _settingsManager;
-                }
-
-                throw new NotImplementedException();
-            }
-
-            public Task<object> GetServiceAsync(Type serviceType) {
-                if (serviceType == typeof(IWorkspaceSettingsManager)) {
-                    return Task.FromResult<object>(_settingsManager);
-                }
-
-                throw new NotImplementedException();
-            }
-
-            public string MakeRelative(string path) {
-                return PathUtils.GetRelativeFilePath(Location, path);
-            }
-
-            public string MakeRooted(string subPath) {
-                return PathUtils.GetAbsoluteFilePath(Location, subPath);
-            }
-        }
-
-        class MockWorkspaceSettingsManager : IWorkspaceSettingsManager {
-            private IWorkspaceSettings _aggregatedSettings;
-
-            public MockWorkspaceSettingsManager() {
-                _aggregatedSettings = new MockWorkspaceSettings();
-            }
-
-            public MockWorkspaceSettingsManager(IWorkspaceSettings aggregatedSettings) {
-                _aggregatedSettings = aggregatedSettings;
-            }
-
-            public AsyncEvent<WorkspaceSettingsChangedEventArgs> OnWorkspaceSettingsChanged { get; set; }
-
-            public IWorkspaceSettings GetAggregatedSettings(string type, string scopePath = null) {
-                return _aggregatedSettings;
-            }
-
-            public Task<IWorkspaceSettingsPersistance> GetPersistanceAsync(bool autoCommit) {
-                throw new NotImplementedException();
-            }
-
-            public IWorkspaceSettingsSource GetSettings(string settingsFile) {
-                throw new NotImplementedException();
-            }
-
-            public void ChangeSettings(IWorkspaceSettings settings) {
-                _aggregatedSettings = settings;
-                OnWorkspaceSettingsChanged.InvokeAsync(this, new WorkspaceSettingsChangedEventArgs(string.Empty, string.Empty)).DoNotWait();
-            }
-        }
-
-        class MockWorkspaceSettings : IWorkspaceSettings {
-            private readonly Dictionary<string, string> _keyValuePairs;
-
-            public MockWorkspaceSettings() {
-                _keyValuePairs = new Dictionary<string, string>();
-            }
-
-            public MockWorkspaceSettings(Dictionary<string, string> keyValuePairs) {
-                _keyValuePairs = keyValuePairs;
-            }
-
-            public string ScopePath => throw new NotImplementedException();
-
-            public IWorkspaceSettings Parent => null;
-
-            public IEnumerable<string> GetKeys() => _keyValuePairs.Keys;
-
-            public WorkspaceSettingsResult GetProperty<T>(string key, out T value, out IWorkspaceSettings originator, T defaultValue = default(T)) {
-                value = defaultValue;
-                originator = this;
-
-                if (typeof(T) != typeof(string)) {
-                    return WorkspaceSettingsResult.Error;
-                }
-
-                if (_keyValuePairs.TryGetValue(key, out string v)) {
-                    value = (T)(object)v;
-                }
-
-                return WorkspaceSettingsResult.Success;
-            }
-
-            public WorkspaceSettingsResult GetProperty<T>(string key, out T value, T defaultValue = default(T)) {
-                return GetProperty(key, out value, out _, defaultValue);
-            }
+            Assert.IsTrue(File.Exists(Path.Combine(workspacePath, envName, "scripts", "python.exe")));
         }
     }
 }

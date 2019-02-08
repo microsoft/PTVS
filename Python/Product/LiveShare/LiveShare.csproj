@@ -37,7 +37,7 @@
     <CreateVsixContainer>true</CreateVsixContainer>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
     <CopyVsixManifestToOutput>true</CopyVsixManifestToOutput>
-    <DeployExtension>true</DeployExtension>
+    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -45,6 +45,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable" />
@@ -52,10 +53,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
-      <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
-      <Name>Analysis</Name>
-    </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
@@ -63,6 +60,10 @@
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
+      <Project>{815DB0CD-C0DD-4997-B43C-ABEE4DBEFFE7}</Project>
+      <Name>VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

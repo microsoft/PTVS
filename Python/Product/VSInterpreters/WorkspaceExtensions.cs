@@ -21,11 +21,13 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Settings;
 
 namespace Microsoft.PythonTools {
     static class WorkspaceExtensions {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
+        private const string SearchPathsProperty = "SearchPaths";
 
         public static string GetInterpreter(this IWorkspace workspace) {
             if (workspace == null) {
@@ -39,7 +41,25 @@ namespace Microsoft.PythonTools {
             return interpreter;
         }
 
-        public static async Task SetInterpreter(this IWorkspace workspace, string interpreter) {
+        public static string[] GetSearchPaths(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var settingsMgr = workspace.GetSettingsManager();
+            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
+            var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
+
+            return searchPaths.ToArray();
+        }
+
+        public static string[] GetAbsoluteSearchPaths(this IWorkspace workspace) {
+            return workspace.GetSearchPaths()
+                .Select(sp => PathUtils.GetAbsoluteDirectoryPath(workspace.Location, sp))
+                .ToArray();
+        }
+
+        public static async Task SetInterpreterAsync(this IWorkspace workspace, string interpreter) {
             if (workspace == null) {
                 throw new ArgumentNullException(nameof(workspace));
             }
@@ -84,12 +104,38 @@ namespace Microsoft.PythonTools {
             return factory ?? optionsService.DefaultInterpreter;
         }
 
-        public static Task SetInterpreterFactory(this IWorkspace workspace, IPythonInterpreterFactory factory) {
+        public static Task SetInterpreterFactoryAsync(this IWorkspace workspace, IPythonInterpreterFactory factory) {
             if (workspace == null) {
                 throw new ArgumentNullException(nameof(workspace));
             }
 
-            return workspace.SetInterpreter(factory.Configuration.Id);
+            return workspace.SetInterpreterAsync(factory?.Configuration.Id);
+        }
+
+        public static string GetRequirementsTxtPath(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var reqsPath = PathUtils.GetAbsoluteFilePath(workspace.Location, "requirements.txt");
+            return File.Exists(reqsPath) ? reqsPath : null;
+        }
+
+        public static string GetEnvironmentYmlPath(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var yamlPath = PathUtils.GetAbsoluteFilePath(workspace.Location, "environment.yml");
+            return File.Exists(yamlPath) ? yamlPath : null;
+        }
+
+        public static string GetName(this IWorkspace workspace) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            return PathUtils.GetFileOrDirectoryName(workspace.Location);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 // Create a test file and delete it immediately to ensure we can do it.
                 // If this fails, prompt the user to see whether they want to elevate.
-                var testFile = PathUtils.GetAvailableFilename(config.PrefixPath, "access-test", ".txt");
+                var testFile = PathUtils.GetAvailableFilename(config.GetPrefixPath(), "access-test", ".txt");
                 using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
                 return false;
             } catch (IOException) {

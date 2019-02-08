@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+
+  <Command name="bp py_mod.py 3"/>
+  <Command name="bp py_mod.py 5"/>
+
+  <Command name='launch "native {EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}" %PythonExe% py_mod.py'>
+    <!-- Use entry point filename as a sanity check that we've got Python symbols loaded correctly. -->
+    <Event name="IDebugEntryPointEvent2" expected="True">
+      <functionName Volatile="True" />
+      <function Volatile="True"/>
+      <file>python.c</file>
+      <line Volatile="True"/>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>3</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <Command name="eval o">
+    <EvalResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <EvalType>cpp_mod.CppObj</EvalType>
+    <EvalIsExpandable>True</EvalIsExpandable>
+    <EvalName Volatile="True"/>
+    <EvalFullName Volatile="True"/>
+  </Command>
+
+  <!-- T_OBJECT, T_OBJECT_EX and T_STRING are all null - should get None for those. T_BOOL is 0, should show as False. -->
+  <Command name="expandn 1 o">
+    <ExpandResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <ExpandType>cpp_mod.CppObj</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>T_BOOL</ChildName>
+    <ChildFullName>o.T_BOOL</ChildFullName>
+    <ChildResult>False</ChildResult>
+    <ChildType>bool</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_BYTE</ChildName>
+    <ChildFullName>o.T_BYTE</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_CHAR</ChildName>
+    <ChildFullName>o.T_CHAR</ChildFullName>
+    <ChildResult>'\x00'</ChildResult>
+    <ChildType>str</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_DOUBLE</ChildName>
+    <ChildFullName>o.T_DOUBLE</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_FLOAT</ChildName>
+    <ChildFullName>o.T_FLOAT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_INT</ChildName>
+    <ChildFullName>o.T_INT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_LONG</ChildName>
+    <ChildFullName>o.T_LONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_LONGLONG</ChildName>
+    <ChildFullName>o.T_LONGLONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_OBJECT</ChildName>
+    <ChildFullName>o.T_OBJECT</ChildFullName>
+    <ChildResult>None</ChildResult>
+    <ChildType>NoneType</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_OBJECT_EX</ChildName>
+    <ChildFullName>o.T_OBJECT_EX</ChildFullName>
+    <ChildResult>None</ChildResult>
+    <ChildType>NoneType</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_PYSSIZET</ChildName>
+    <ChildFullName>o.T_PYSSIZET</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_SHORT</ChildName>
+    <ChildFullName>o.T_SHORT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_STRING</ChildName>
+    <ChildFullName>o.T_STRING</ChildFullName>
+    <ChildResult>None</ChildResult>
+    <ChildType>NoneType</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_UBYTE</ChildName>
+    <ChildFullName>o.T_UBYTE</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_UINT</ChildName>
+    <ChildFullName>o.T_UINT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_ULONG</ChildName>
+    <ChildFullName>o.T_ULONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_ULONGLONG</ChildName>
+    <ChildFullName>o.T_ULONGLONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_USHORT</ChildName>
+    <ChildFullName>o.T_USHORT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName/>
+      <function>&lt;module&gt;</function>
+      <file>py_mod.py</file>
+      <line>5</line>
+      <col Volatile="True"/>
+    </Event>
+  </Command>
+
+  <!-- T_OBJECT, T_OBJECT_EX and T_STRING have proper values now. T_BOOL is 1, should show as True. -->
+  <Command name="expandn 1 o">
+    <ExpandResult RegEx="&lt;cpp_mod.CppObj object at 0x[0-9A-F]+&gt;"/>
+    <ExpandType>cpp_mod.CppObj</ExpandType>
+    <ExpandIsExpandable>True</ExpandIsExpandable>
+
+    <ChildName>T_BOOL</ChildName>
+    <ChildFullName>o.T_BOOL</ChildFullName>
+    <ChildResult>True</ChildResult>
+    <ChildType>bool</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_BYTE</ChildName>
+    <ChildFullName>o.T_BYTE</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_CHAR</ChildName>
+    <ChildFullName>o.T_CHAR</ChildFullName>
+    <ChildResult>'\x00'</ChildResult>
+    <ChildType>str</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_DOUBLE</ChildName>
+    <ChildFullName>o.T_DOUBLE</ChildFullName>
+    <ChildResult>0.0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_FLOAT</ChildName>
+    <ChildFullName>o.T_FLOAT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>float</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_INT</ChildName>
+    <ChildFullName>o.T_INT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_LONG</ChildName>
+    <ChildFullName>o.T_LONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_LONGLONG</ChildName>
+    <ChildFullName>o.T_LONGLONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+
+    <ChildName>T_OBJECT</ChildName>
+    <ChildFullName>o.T_OBJECT</ChildFullName>
+    <ChildResult>True</ChildResult>
+    <ChildType>bool</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_OBJECT_EX</ChildName>
+    <ChildFullName>o.T_OBJECT_EX</ChildFullName>
+    <ChildResult>True</ChildResult>
+    <ChildType>bool</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_PYSSIZET</ChildName>
+    <ChildFullName>o.T_PYSSIZET</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_SHORT</ChildName>
+    <ChildFullName>o.T_SHORT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_STRING</ChildName>
+    <ChildFullName>o.T_STRING</ChildFullName>
+    <ChildResult>'string'</ChildResult>
+    <ChildType>str</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable><!-- bug #1980 -->
+    
+    <ChildName>T_UBYTE</ChildName>
+    <ChildFullName>o.T_UBYTE</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_UINT</ChildName>
+    <ChildFullName>o.T_UINT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_ULONG</ChildName>
+    <ChildFullName>o.T_ULONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_ULONGLONG</ChildName>
+    <ChildFullName>o.T_ULONGLONG</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+    
+    <ChildName>T_USHORT</ChildName>
+    <ChildFullName>o.T_USHORT</ChildFullName>
+    <ChildResult>0</ChildResult>
+    <ChildType>int</ChildType>
+    <ChildIsExpandable>False</ChildIsExpandable>
+  </Command>
+
+  <Command name="go">
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+  </Command>
+  <Command name="quit"/>
+
+</GlassEventLog>

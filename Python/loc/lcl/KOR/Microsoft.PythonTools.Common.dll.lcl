@@ -42,10 +42,13 @@
       </Item>
       <Item ItemId=";AddCondaEnvironmentFileHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[환경 파일의 이름은 일반적으로 environment.yml이며, 환경 파일은 Conda 환경을 만들 때 설치할 Conda 및 pip 패키지를 지정합니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -111,10 +114,13 @@
       </Item>
       <Item ItemId=";AddCondaEnvironmentPreviewInProgress" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Preview in progress...]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Building preview...]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[미리 보기 진행 중...]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Preview in progress...]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -156,10 +162,13 @@
       </Item>
       <Item ItemId=";AddCondaPackagesHelpText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[List of conda packages to install when creating the conda environment. Entries should be separated by spaces.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Conda 환경을 만들 때 설치할 Conda 패키지의 목록입니다. 항목은 공백으로 구분되어야 합니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[List of conda packages to install when creating the conda environment. Entries should be separated by spaces.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -232,6 +241,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[취소]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddEnvironmentComboListEntry" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Add Environment...]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -693,10 +708,13 @@
       </Item>
       <Item ItemId=";AddVirtualEnvironmentPreviewInProgress" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Please wait...]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Building preview...]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[잠시 기다려 주세요....]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Please wait...]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -959,7 +977,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[이러한 도구는 현재 사용 중인 Visual Studio 버전용의 설치 가능 작업이며, 폭넓은 프로그래밍 언어로 Microsoft Azure용 응용 프로그램을 작성, 배포 및 디버그하는 데 사용할 수 있습니다.]]></Val>
+            <Val><![CDATA[이러한 도구는 현재 사용 중인 Visual Studio 버전용의 설치 가능 작업이며, 폭넓은 프로그래밍 언어로 Microsoft Azure용 애플리케이션을 작성, 배포 및 디버그하는 데 사용할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1260,36 +1278,36 @@
       </Item>
       <Item ItemId=";CondaInfoBarCreateNewMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The project '{0}' has a conda environment.yml file, but no conda environments.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[The project "{0}" has a Conda environment.yml file, but no Conda environments.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[프로젝트 '{0}'에 Conda environment.yml 파일이 있지만 Conda 환경이 없습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The project '{0}' has a conda environment.yml file, but no conda environments. Would you like to create one?]]></Val>
+            <Val><![CDATA[The project '{0}' has a conda environment.yml file, but no conda environments.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CondaInfoBarProjectIgnoreAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Don't show this again]]></Val>
+          <Val><![CDATA[Don't show this message again]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[다시 표시 안 함]]></Val>
+            <Val><![CDATA[이 메시지를 다시 표시 안 함]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Don't Show This Again]]></Val>
+            <Val><![CDATA[Don't show this again]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CondaInfoBarRecreateMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The project '{0}' has a reference to a missing conda environment '{1}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[The project "{0}" has a reference to a missing Conda environment "{1}".]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[프로젝트 '{0}'에 누락된 Conda 환경 '{1}'에 대한 참조가 있습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The project '{0}' has a reference to a missing conda environment '{1}'. Would you like to create it?]]></Val>
+            <Val><![CDATA[The project '{0}' has a reference to a missing conda environment '{1}'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1350,28 +1368,37 @@
       </Item>
       <Item ItemId=";CondaStatusBarCreateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Failed to create conda environment '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Failed to create Conda environment "{0}"]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Conda 환경 '{0}'을(를) 만들지 못했습니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Failed to create conda environment '{0}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CondaStatusBarCreateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Creating conda environment '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Creating Conda environment "{0}"]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Conda 환경 '{0}'을(를) 만드는 중]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Creating conda environment '{0}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CondaStatusBarCreateSucceeded" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Successfully created conda environment '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Successfully created Conda environment "{0}"]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Conda 환경 '{0}'을(를) 만들었습니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Successfully created conda environment '{0}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1422,10 +1449,13 @@
       </Item>
       <Item ItemId=";CondaStatusCenterCreateTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Create conda environment '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Create Conda environment "{0}"]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Conda 환경 '{0}' 만들기]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Create conda environment '{0}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3084,6 +3114,33 @@
           <Val><![CDATA['{0}' will be removed from the project.]D;]A;No files will be deleted from disk.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}'이(가) 프로젝트에서 제거됩니다.]D;]A;디스크에서 파일은 삭제되지 않습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherNoCurrentEnvironment" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[(no Python environment)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[(Python 환경 없음)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherTooltipWithKeyBinding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Environment ({0})]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 환경({0})]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";EnvironmentSwitcherTooltipWithoutKeyBinding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 환경]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5916,12 +5973,12 @@
       </Item>
       <Item ItemId=";RequirementsTxtCreateVirtualEnvInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Python package specification file '{0}' was detected in project '{1}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Python package specification file "{0}" was detected in project "{1}".]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Python 패키지 사양 파일 '{0}'이(가) '{1}' 프로젝트에서 검색되었습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Package specification file '{0}' was detected in project '{1}'. Would you like to add a virtual environment?]]></Val>
+            <Val><![CDATA[Python package specification file '{0}' was detected in project '{1}'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -5997,24 +6054,24 @@
       </Item>
       <Item ItemId=";RequirementsTxtInfoBarProjectIgnoreAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Don't show this again]]></Val>
+          <Val><![CDATA[Don't show this message again]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[다시 표시 안 함]]></Val>
+            <Val><![CDATA[이 메시지를 다시 표시 안 함]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Don't Show This Again]]></Val>
+            <Val><![CDATA[Don't show this again]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RequirementsTxtInstallPackagesInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[One or more packages listed in '{0}' of project '{1}' are missing from the '{2}' environment.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[One or more packages listed in "{0}" of project "{1}" are missing from the "{2}" environment.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA['{1}' 프로젝트의 '{0}'에 나열된 패키지 중 하나 이상이 '{2}' 환경에 없습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[One or more packages listed in '{0}' of project '{1}' are missing. Would you like to install packages in the '{2}' environment?]]></Val>
+            <Val><![CDATA[One or more packages listed in '{0}' of project '{1}' are missing from the '{2}' environment.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -6626,7 +6683,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A regex pattern to identify static URIs, for example: '^static/.*']D;]A;The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['^static/.*'와 같은 정적 URI를 식별하기 위한 정규식 패턴입니다.]D;]A;이 패턴과 일치하는 URI를 응용 프로그램이 아닌 파일 시스템 경로로 해석하도록 web.config 파일이 구성됩니다.]]></Val>
+            <Val><![CDATA['^static/.*'와 같은 정적 URI를 식별하기 위한 정규식 패턴입니다.]D;]A;이 패턴과 일치하는 URI를 애플리케이션이 아닌 파일 시스템 경로로 해석하도록 web.config 파일이 구성됩니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7239,6 +7296,15 @@
           <Val><![CDATA[WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[WebPI 참조는 사용되지 않습니다. 참조는 사용자 지정 설치 스크립트로 바꾸는 것이 좋습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WorkspaceEnvironmentDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Workspace Environment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[작업 영역 환경]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

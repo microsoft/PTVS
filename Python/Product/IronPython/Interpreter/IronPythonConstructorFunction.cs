@@ -52,7 +52,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             get { return ""; }
         }
 
-        public IList<IPythonFunctionOverload> Overloads {
+        public IReadOnlyList<IPythonFunctionOverload> Overloads {
             get {
                 if (_overloads == null) {
                     IPythonFunctionOverload[] res = new IPythonFunctionOverload[_infos.Length];

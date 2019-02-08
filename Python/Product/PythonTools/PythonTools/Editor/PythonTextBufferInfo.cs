@@ -23,11 +23,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -761,6 +759,12 @@ namespace Microsoft.PythonTools.Editor {
                 return analyzer;
             }
 
+            var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
+            analyzer = await workspaceAnalysis.GetAnalyzerAsync();
+            if (analyzer != null) {
+                return analyzer;
+            }
+
             return null;
         }
 
@@ -789,6 +793,15 @@ namespace Microsoft.PythonTools.Editor {
                     if (firstOnly) {
                         return found.ToArray();
                     }
+                }
+            }
+
+            var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
+            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+            if (workspaceAnalyzer != null) {
+                found.Add(workspaceAnalyzer);
+                if (firstOnly) {
+                    return found.ToArray();
                 }
             }
 
@@ -824,10 +837,7 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
 
-            // TODO: When we add non-project attached analyzers, return them here
-
             return found.ToArray();
         }
-
     }
 }

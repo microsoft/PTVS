@@ -25,7 +25,6 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Environments {
@@ -41,7 +40,7 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IInterpreterRegistryService _registryService;
         private readonly IVsMonitorSelection _monitorSelection;
         private readonly IVsShell _shell;
-        private readonly IVsFolderWorkspaceService _workspaceService;
+        private readonly IPythonWorkspaceContextProvider _pythonWorkspaceService;
         private uint _selectionEventsCookie;
         private IVsHierarchy _previousHier;
         private bool _isInitialized;
@@ -55,7 +54,7 @@ namespace Microsoft.PythonTools.Environments {
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
             _monitorSelection = serviceProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
             _shell = serviceProvider.GetService(typeof(SVsShell)) as IVsShell;
-            _workspaceService = serviceProvider.GetComponentModel().GetService<IVsFolderWorkspaceService>();
+            _pythonWorkspaceService = serviceProvider.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
             AllFactories = Enumerable.Empty<IPythonInterpreterFactory>();
         }
 
@@ -98,7 +97,8 @@ namespace Microsoft.PythonTools.Environments {
 
             _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
             _registryService.InterpretersChanged += OnInterpretersChanged;
-            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
+            _pythonWorkspaceService.WorkspaceClosing += OnWorkspaceClosing;
+            _pythonWorkspaceService.WorkspaceInitialized += OnWorkspaceInitialized;
             _monitorSelection.AdviseSelectionEvents(this, out _selectionEventsCookie);
 
             SetInitialContext();
@@ -108,7 +108,8 @@ namespace Microsoft.PythonTools.Environments {
             if (_isInitialized) {
                 _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
                 _registryService.InterpretersChanged -= OnInterpretersChanged;
-                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
+                _pythonWorkspaceService.WorkspaceClosing -= OnWorkspaceClosing;
+                _pythonWorkspaceService.WorkspaceInitialized -= OnWorkspaceInitialized;
                 _monitorSelection.UnadviseSelectionEvents(_selectionEventsCookie);
             }
 
@@ -122,10 +123,14 @@ namespace Microsoft.PythonTools.Environments {
             return Context != null ? Context.ChangeFactoryAsync(factory) : Task.CompletedTask;
         }
 
-        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+        private void OnWorkspaceClosing(object sender, EventArgs e) {
             _isPythonWorkspace = false;
             RefreshFactories();
-            return Task.CompletedTask;
+        }
+
+        private void OnWorkspaceInitialized(object sender, EventArgs e) {
+            _isPythonWorkspace = false;
+            RefreshFactories();
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
@@ -181,9 +186,9 @@ namespace Microsoft.PythonTools.Environments {
 
             if (project != null) {
                 ReplaceContext(new EnvironmentSwitcherProjectContext(project));
-            } else if (_workspaceService.CurrentWorkspace != null && (_isPythonWorkspace || isPythonFile)) {
+            } else if (_pythonWorkspaceService.Workspace != null && (_isPythonWorkspace || isPythonFile)) {
                 _isPythonWorkspace = true;
-                ReplaceContext(new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _workspaceService.CurrentWorkspace));
+                ReplaceContext(new EnvironmentSwitcherWorkspaceContext(_serviceProvider, _pythonWorkspaceService.Workspace));
             } else if (isPythonFile) {
                 ReplaceContext(new EnvironmentSwitcherFileContext(_serviceProvider, filePath));
             } else {
@@ -210,7 +215,7 @@ namespace Microsoft.PythonTools.Environments {
             try {
                 if (pHierNew != null &&
                     (ErrorHandler.Succeeded(pHierNew.GetCanonicalName(itemidNew, out string filePath)) ||
-                    _workspaceService.CurrentWorkspace != null)) {
+                    _pythonWorkspaceService.Workspace != null)) {
                     // We can get called multiple times for the same project,
                     // only process the first time it changes. It doesn't matter
                     // if it's a different document, since they all use the same

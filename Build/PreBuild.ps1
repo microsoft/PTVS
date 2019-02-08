@@ -8,11 +8,12 @@ $need_symlink = @(
     "python2",
     "MicroBuild.Core",
     "Microsoft.VSSDK.BuildTools",
-    "Newtonsoft.Json"
+    "Newtonsoft.Json",
+    "Microsoft.VisualStudio.Python.LanguageServer"
 )
 
 if (-not $vstarget) {
-    $vstarget = "15.0"
+    $vstarget = "16.0"
 } elseif ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }

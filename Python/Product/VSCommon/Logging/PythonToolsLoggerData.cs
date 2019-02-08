@@ -74,10 +74,12 @@ namespace Microsoft.PythonTools.Logging {
         public string Architecture { get; set; }
         public string Version { get; set; }
         public string Reason { get; set; }
+        public bool IsIronPython { get; set; }
     }
 
     static class AnalysisInitializeReasons {
         public const string Project = "Project";
+        public const string Workspace = "Workspace";
         public const string Interactive = "Interactive";
         public const string Default = "Default";
     }

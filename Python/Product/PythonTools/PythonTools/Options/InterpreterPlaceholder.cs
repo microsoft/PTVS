@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Options {
     class InterpreterPlaceholder : IPythonInterpreterFactory {
         public const string PlaceholderId = "Placeholder";
         public InterpreterPlaceholder(string id, string description) {
-            Configuration = new InterpreterConfiguration(
+            Configuration = new VisualStudioInterpreterConfiguration(
                 PlaceholderId + ";" + id.ToString(),
                 description,
                 null,

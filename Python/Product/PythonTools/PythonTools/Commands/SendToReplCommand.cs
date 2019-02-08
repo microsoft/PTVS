@@ -63,10 +63,11 @@ namespace Microsoft.PythonTools.Commands {
             var analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider);
             ITextSelection selection = activeView.Selection;
             ITextSnapshot snapshot = activeView.TextBuffer.CurrentSnapshot;
+            var workspace = _serviceProvider.GetWorkspace();
 
             IVsInteractiveWindow repl;
             try {
-                repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
+                repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project, workspace);
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
                 return;

@@ -89,6 +89,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public string FilePath { get; }
         public Uri DocumentUri { get; }
+        public IDocument Document => null;
 
         public int AnalysisVersion {
             get {
@@ -121,6 +122,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
 #endregion
 
+        public void Dispose() { }
     }
 
     interface IXamlProjectEntry : IExternalProjectEntry {

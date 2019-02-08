@@ -18,43 +18,38 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Settings;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class EnvironmentSwitcherWorkspaceContext : IEnvironmentSwitcherContext {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
-        private readonly IWorkspace _workspace;
-        private readonly IWorkspaceSettingsManager _workspaceSettingsMgr;
+        private readonly IPythonWorkspaceContext _pythonWorkspace;
 
-        public EnvironmentSwitcherWorkspaceContext(IServiceProvider serviceProvider, IWorkspace workspace) {
+        public EnvironmentSwitcherWorkspaceContext(IServiceProvider serviceProvider, IPythonWorkspaceContext pythonWorkspace) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _optionsService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
-            _workspaceSettingsMgr = _workspace.GetSettingsManager();
-            _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
+            _pythonWorkspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
         }
 
         public IEnumerable<IPythonInterpreterFactory> AllFactories => _registryService.Interpreters;
 
-        public IPythonInterpreterFactory CurrentFactory => _workspace.GetInterpreterFactory(_registryService, _optionsService);
+        public IPythonInterpreterFactory CurrentFactory => Workspace.CurrentFactory;
+
+        public IPythonWorkspaceContext Workspace => _pythonWorkspace;
 
         public event EventHandler EnvironmentsChanged;
 
         public async Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
-            await _workspace.SetInterpreterFactory(factory);
+            await _pythonWorkspace.SetInterpreterFactoryAsync(factory);
         }
 
-        private Task OnSettingsChanged(object sender, EventArgs e) {
+        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
-            return Task.CompletedTask;
         }
 
         public void Dispose() {
-            _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
+            _pythonWorkspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
         }
     }
 }

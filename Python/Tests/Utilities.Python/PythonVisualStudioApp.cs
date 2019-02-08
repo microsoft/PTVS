@@ -15,15 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Automation;
-using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -377,14 +374,53 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public TreeNode CreateCondaEnvironment(EnvDTE.Project project, string packageNames, string envFile, string expectedEnvFile, out string envName, out string envPath) {
+        public TreeNode CreateProjectCondaEnvironment(EnvDTE.Project project, string packageNames, string envFile, string expectedEnvFile, out string envName, out string envPath) {
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
+            environmentsNode.Select();
+
+            envName = ApplyCreateCondaEnvironmentDialog(packageNames, envFile, expectedEnvFile);
+
+            var id = CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, envName);
+            var config = WaitForEnvironment(id, TimeSpan.FromMinutes(3));
+            Assert.IsNotNull(config, "Could not find intepreter configuration");
+
+            string envLabel = string.Format("{0} ({1}, {2})", envName, config.Version, config.Architecture);
+            envPath = config.GetPrefixPath();
+
+            Console.WriteLine("Expecting environment: {0}", envLabel);
+
+            try {
+                return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envLabel);
+            } finally {
+                var text = GetOutputWindowText("General");
+                if (!string.IsNullOrEmpty(text)) {
+                    Console.WriteLine("** Output Window text");
+                    Console.WriteLine(text);
+                    Console.WriteLine("***");
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        public void CreateWorkspaceCondaEnvironment(string packageNames, string envFile, string expectedEnvFile, out string envName, out string envPath, out string envDescription) {
+            envName = ApplyCreateCondaEnvironmentDialog(packageNames, envFile, expectedEnvFile);
+
+            var id = CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, envName);
+            var config = WaitForEnvironment(id, TimeSpan.FromMinutes(5));
+            Assert.IsNotNull(config, "Could not find intepreter configuration");
+
+            envDescription = string.Format("{0} ({1}, {2})", envName, config.Version, config.Architecture);
+            envPath = config.GetPrefixPath();
+
+            Console.WriteLine("Expecting environment: {0}", envDescription);
+        }
+
+        private string ApplyCreateCondaEnvironmentDialog(string packageNames, string envFile, string expectedEnvFile) {
             if (packageNames == null && envFile == null) {
                 throw new ArgumentException("Must set either package names or environment file");
             }
 
-            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
-            environmentsNode.Select();
-
+            string envName;
             var dlg = AddCondaEnvironmentDialogWrapper.FromDte(this);
             try {
                 Assert.AreNotEqual(string.Empty, dlg.EnvName);
@@ -400,11 +436,17 @@ namespace TestUtilities.UI.Python {
                     if (expectedEnvFile == string.Empty) {
                         Assert.AreEqual(string.Empty, dlg.EnvFile);
                     } else if (expectedEnvFile != null) {
-                        Assert.IsTrue(PathUtils.IsSamePath(dlg.EnvFile, expectedEnvFile));
+                        Assert.IsTrue(
+                            PathUtils.IsSamePath(dlg.EnvFile, expectedEnvFile),
+                            string.Format("Env file doesn't match.\nExpected: {0}\nActual: {1}", dlg.EnvFile, expectedEnvFile)
+                        );
                     }
                     dlg.SetEnvFileMode();
                     dlg.EnvFile = envFile;
                 }
+
+                Console.WriteLine("Creating conda env");
+                Console.WriteLine("  Name: {0}", envName);
 
                 dlg.ClickAdd();
             } catch (Exception) {
@@ -412,26 +454,7 @@ namespace TestUtilities.UI.Python {
                 throw;
             }
 
-            var id = CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, envName);
-            var config = WaitForEnvironment(id, TimeSpan.FromMinutes(3));
-            Assert.IsNotNull(config, "Could not find intepreter configuration");
-
-            envName = string.Format("{0} ({1}, {2})", envName, config.Version, config.Architecture);
-            envPath = config.PrefixPath;
-
-            Console.WriteLine("Expecting environment named: {0}", envName);
-
-            try {
-                return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
-            } finally {
-                var text = GetOutputWindowText("General");
-                if (!string.IsNullOrEmpty(text)) {
-                    Console.WriteLine("** Output Window text");
-                    Console.WriteLine(text);
-                    Console.WriteLine("***");
-                    Console.WriteLine();
-                }
-            }
+            return envName;
         }
 
         private InterpreterConfiguration WaitForEnvironment(string id, TimeSpan timeout) {
@@ -447,34 +470,20 @@ namespace TestUtilities.UI.Python {
             return null;
         }
 
-        public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName) {
-            return CreateVirtualEnvironment(project, out envName, out _);
+        public TreeNode CreateProjectVirtualEnvironment(EnvDTE.Project project, out string envName) {
+            return CreateProjectVirtualEnvironment(project, out envName, out _);
         }
 
-        public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName, out string envPath) {
+        public TreeNode CreateProjectVirtualEnvironment(EnvDTE.Project project, out string envLabel, out string envPath) {
             var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
-            var dlg = AddVirtualEnvironmentDialogWrapper.FromDte(this);
-            try {
-                var baseInterp = dlg.BaseInterpreter;
-                var location = dlg.Location;
-                var name = dlg.EnvName;
-
-                envName = "{0} ({1})".FormatUI(name, baseInterp);
-                envPath = Path.Combine(location, name);
-
-                Console.WriteLine("Expecting environment named: {0}", envName);
-
-                dlg.WaitForReady();
-                dlg.ClickAdd();
-            } catch (Exception) {
-                dlg.CloseWindow();
-                throw;
-            }
+            ApplyVirtualEnvironmentDialog(out string baseInterp, out string location, out string envName);
+            envLabel = "{0} ({1})".FormatUI(envName, baseInterp);
+            envPath = Path.Combine(location, envName);
 
             try {
-                return OpenSolutionExplorer().WaitForChildOfProject(project, TimeSpan.FromMinutes(5), Strings.Environments, envName);
+                return OpenSolutionExplorer().WaitForChildOfProject(project, TimeSpan.FromMinutes(5), Strings.Environments, envLabel);
             } finally {
                 var text = GetOutputWindowText("General");
                 if (!string.IsNullOrEmpty(text)) {
@@ -486,31 +495,97 @@ namespace TestUtilities.UI.Python {
             }
         }
 
+        public void CreateWorkspaceVirtualEnvironment(out string baseEnvDescription, out string envPath) {
+            ApplyVirtualEnvironmentDialog(out baseEnvDescription, out string location, out string envName);
+            envPath = Path.Combine(location, envName);
+
+            try {
+                var id = WorkspaceInterpreterFactoryConstants.GetInterpreterId(WorkspaceInterpreterFactoryConstants.EnvironmentCompanyName, envName);
+                var config = WaitForEnvironment(id, TimeSpan.FromMinutes(3));
+                Assert.IsNotNull(config, "Config was not found.");
+            } finally {
+                var text = GetOutputWindowText("General");
+                if (!string.IsNullOrEmpty(text)) {
+                    Console.WriteLine("** Output Window text");
+                    Console.WriteLine(text);
+                    Console.WriteLine("***");
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        private void ApplyVirtualEnvironmentDialog(out string baseInterp, out string location, out string envName) {
+            var dlg = AddVirtualEnvironmentDialogWrapper.FromDte(this);
+            try {
+                baseInterp = dlg.BaseInterpreter;
+                location = dlg.Location;
+                envName = dlg.EnvName;
+
+                Console.WriteLine("Creating virtual env");
+                Console.WriteLine("  Name: {0}", envName);
+                Console.WriteLine("  Location: {0}", location);
+                Console.WriteLine("  Base Interpreter: {0}", baseInterp);
+
+                dlg.WaitForReady();
+                dlg.ClickAdd();
+            } catch (Exception) {
+                dlg.CloseWindow();
+                throw;
+            }
+        }
+
         public TreeNode AddExistingEnvironment(EnvDTE.Project project, string envPath, out string envName) {
             var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
-            var factory = InterpreterService.Interpreters.FirstOrDefault(interp => PathUtils.IsSameDirectory(interp.Configuration.PrefixPath, envPath));
+            var factory = InterpreterService.Interpreters.FirstOrDefault(interp => PathUtils.IsSameDirectory(interp.Configuration.GetPrefixPath(), envPath));
+            envName = string.Format("Python {1} ({2})", PathUtils.GetFileOrDirectoryName(envPath), factory.Configuration.Version, factory.Configuration.Architecture);
+
+            ApplyAddExistingEnvironmentDialog(envPath, out envName);
+
+            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
+        }
+
+        public void AddWorkspaceExistingEnvironment(string envPath, out string envName) {
+            ApplyAddExistingEnvironmentDialog(envPath, out envName);
+        }
+
+        private void ApplyAddExistingEnvironmentDialog(string envPath, out string envName) {
+            var factory = InterpreterService.Interpreters.FirstOrDefault(interp => PathUtils.IsSameDirectory(interp.Configuration.GetPrefixPath(), envPath));
             envName = string.Format("Python {1} ({2})", PathUtils.GetFileOrDirectoryName(envPath), factory.Configuration.Version, factory.Configuration.Architecture);
 
             var dlg = AddExistingEnvironmentDialogWrapper.FromDte(this);
             try {
                 dlg.Interpreter = envName;
 
-                Console.WriteLine("Expecting environment named: {0}", envName);
+                Console.WriteLine("Adding existing env");
+                Console.WriteLine("  Name: {0}", envName);
+                Console.WriteLine("  Prefix: {0}", envPath);
 
                 dlg.ClickAdd();
             } catch (Exception) {
                 dlg.CloseWindow();
                 throw;
             }
-
-            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
         }
 
-        public TreeNode AddLocalCustomEnvironment(EnvDTE.Project project, string envPath, string descriptionOverride, string expectedLangVer, string expectedArch, out string envName) {
+        public TreeNode AddProjectLocalCustomEnvironment(EnvDTE.Project project, string envPath, string descriptionOverride, string expectedLangVer, string expectedArch, out string envDescription) {
             var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
+
+            ApplyAddLocalCustomEnvironmentDialog(envPath, descriptionOverride, expectedLangVer, expectedArch, out envDescription, out _, out _, out _);
+
+            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envDescription);
+        }
+
+        public void AddWorkspaceLocalCustomEnvironment(string envPath, string descriptionOverride, string expectedLangVer, string expectedArch) {
+            ApplyAddLocalCustomEnvironmentDialog(envPath, descriptionOverride, expectedLangVer, expectedArch, out _, out _, out _, out _);
+        }
+
+        private void ApplyAddLocalCustomEnvironmentDialog(string envPath, string descriptionOverride, string expectedLangVer, string expectedArch, out string envDescription, out string envPrefixPath, out string languageVer, out string architecture) {
+            envDescription = string.Empty;
+            envPrefixPath = string.Empty;
+            languageVer = string.Empty;
 
             var dlg = AddExistingEnvironmentDialogWrapper.FromDte(this);
             try {
@@ -534,16 +609,22 @@ namespace TestUtilities.UI.Python {
                     dlg.Description = descriptionOverride;
                 }
 
-                envName = dlg.Description;
-                Console.WriteLine("Expecting environment named: {0}", envName);
+                envDescription = dlg.Description;
+                envPrefixPath = dlg.PrefixPath;
+                languageVer = dlg.LanguageVersion;
+                architecture = dlg.Architecture;
+
+                Console.WriteLine("Adding custom env");
+                Console.WriteLine("  Description: {0}", envDescription);
+                Console.WriteLine("  Prefix: {0}", envPrefixPath);
+                Console.WriteLine("  Version: {0}", languageVer);
+                Console.WriteLine("  Architecture: {0}", architecture);
 
                 dlg.ClickAdd();
             } catch (Exception) {
                 dlg.CloseWindow();
                 throw;
             }
-
-            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
         }
 
         public IPythonOptions Options {

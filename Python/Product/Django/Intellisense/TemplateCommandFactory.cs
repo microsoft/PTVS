@@ -44,8 +44,10 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 new TemplateTypingCommandHandler(
                     textView, textBuffer,
                     _editorOptionsFactory.GetOptions(textView),
-                    _editorOperationsFactory.GetEditorOperations(textView)),
-                new TemplateCompletionCommandHandler(textView)
+                    _editorOperationsFactory.GetEditorOperations(textView))
+#if !DEV16_OR_LATER
+                , new TemplateCompletionCommandHandler(textView)
+#endif
             };
         }
     }

@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GlassTestRoot xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+  <!--This file defines the rules for running glass tests. Add this file to any solution and install 
+  the GlassTestAdapter to get test integration-->
+  
+  <!--Special setup items for running glass tests from a debugger enlistment-->
+  <Setup>
+    <ImportPropertyGroup>tools\RunSettings.GlassTestProps</ImportPropertyGroup>
+    <RunScript Condition="Exists('tools\internal\PrepGlass.cmd')" RunAs="VSUser">tools\internal\PrepGlass.cmd &quot;$(GlassDir)&quot;</RunScript>
+  </Setup>
+  
+  <PropertyGroup>
+    <!--NOTE: GlassDir has a trailing slash-->
+    <GlassDir Condition="'?(GlassDir)'==''">$(GetFullPath('..\tools\glass\'))</GlassDir>
+    <PythonTestRootDir Condition="'?(PythonTestRootDir)'==''">$(GetFullPath('.\Python\'))</PythonTestRootDir>
+    <GlassPath Condition="'?(GlassPath)'==''">$(GlassDir)glass2.exe</GlassPath>
+  </PropertyGroup>
+  
+  <!-- Global setup scripts for Glass. -->
+  <Setup>
+    <RunScript RunAs="Admin">$(GlassDir)RegisterGlass.cmd</RunScript>
+    <RunScript RunAs="Admin">$(GlassDir)RegisterPythonEngine.cmd</RunScript>
+  </Setup>
+
+  <!-- The source files in a directory will be compiled in the order of the compilation rule definition. -->
+  <DebuggeeCompileRules>
+
+    <!-- Glass Test Extensions -->
+    <Rule Extension=".GlassExtension.cs" Output="$(GlassDir)\temp\$(SourceFileName).dll" Command="tools\CompileGlassTestExtension.cmd &quot;$(SourceFilePath)&quot; &quot;$(GlassDir)&quot;"/>  
+
+    <!-- Python debuggees -->
+    <Rule Extension=".cpp" Output="$(OutDir)\$(SourceFileName).cpp" Command="tools\CopyPythonDebuggee.cmd $(TargetArchitecture) &quot;$(SourceFilePath)&quot; &quot;$(OutDir)&quot; &quot;$(GlassDir)&quot; &quot;$(PythonTestRootDir)&quot;"/>
+    <Rule Extension=".py" Output="$(OutDir)\$(SourceFileName).py" Command="tools\CopyPythonDebuggee.cmd $(TargetArchitecture) &quot;$(SourceFilePath)&quot; &quot;$(OutDir)&quot; &quot;$(GlassDir)&quot; &quot;$(PythonTestRootDir)&quot;"/>
+  </DebuggeeCompileRules>
+  
+  <TestGroups>
+    <TestGroup Include="Python\Python.GlassTestGroup"/>
+    <TestGroup Include="Python2x\Python2x.GlassTestGroup"/>
+    <TestGroup Include="Python3x\Python3x.GlassTestGroup"/>
+  </TestGroups>
+</GlassTestRoot>

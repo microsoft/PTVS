@@ -25,6 +25,7 @@ using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentView : EnvironmentViewBase {
@@ -39,6 +40,9 @@ namespace Microsoft.PythonTools.Environments {
             SetAsCurrent = SelectedProject != null;
             SetAsDefault = false;
             ViewInEnvironmentWindow = false;
+            Progress = new ProgressControlViewModel();
+            Progress.ProgressMessage = Strings.AddVirtualEnvironmentPreviewInProgress;
+            Progress.IsProgressDisplayed = false;
 
             ResetProjectDependentProperties();
         }
@@ -115,8 +119,8 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty DescriptionProperty =
             DependencyProperty.Register(nameof(Description), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", Description_Changed));
 
-        public static readonly DependencyProperty IsWorkingProperty =
-            DependencyProperty.Register(nameof(IsWorking), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+        public static readonly DependencyProperty ProgressProperty =
+            DependencyProperty.Register(nameof(Progress), typeof(ProgressControlViewModel), typeof(AddVirtualEnvironmentView));
 
         public static readonly DependencyProperty BrowseOrigPrefixProperty =
             DependencyProperty.Register(nameof(BrowseOrigPrefix), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata());
@@ -130,9 +134,9 @@ namespace Microsoft.PythonTools.Environments {
         private static readonly DependencyProperty RequirementsPathProperty =
             DependencyProperty.Register(nameof(RequirementsPath), typeof(string), typeof(AddVirtualEnvironmentView), new PropertyMetadata("", RequirementsPath_Changed));
 
-        public bool IsWorking {
-            get { return (bool)GetValue(IsWorkingProperty); }
-            set { SetValue(IsWorkingProperty, value); }
+        public ProgressControlViewModel Progress {
+            get { return (ProgressControlViewModel)GetValue(ProgressProperty); }
+            set { SetValue(ProgressProperty, value); }
         }
 
         public string BrowseOrigPrefix {
@@ -332,8 +336,8 @@ namespace Microsoft.PythonTools.Environments {
             WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
 
             // For now, we enable but prompt when they click accept
-            //IsAcceptEnabled = WillCreateVirtualEnv && !IsWorking;
-            IsAcceptEnabled = !IsWorking;
+            //IsAcceptEnabled = WillCreateVirtualEnv && !Progress.IsProgressDisplayed;
+            IsAcceptEnabled = !Progress.IsProgressDisplayed;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
         }
 
@@ -381,6 +385,7 @@ namespace Microsoft.PythonTools.Environments {
                 var op = new AddVirtualEnvironmentOperation(
                     Site,
                     SelectedProject?.Node,
+                    SelectedProject?.Workspace,
                     Path.Combine(LocationPath, VirtualEnvName),
                     BaseInterpreter.Id,
                     UseVEnv,
@@ -431,7 +436,7 @@ namespace Microsoft.PythonTools.Environments {
                 return;
             }
 
-            IsWorking = true;
+            Progress.IsProgressDisplayed = true;
             IsAcceptEnabled = false;
 
             try {
@@ -479,7 +484,7 @@ namespace Microsoft.PythonTools.Environments {
                 } catch (ObjectDisposedException) {
                 }
 
-                IsWorking = false;
+                Progress.IsProgressDisplayed = false;
                 RefreshCanCreateVirtualEnv();
             }
         }

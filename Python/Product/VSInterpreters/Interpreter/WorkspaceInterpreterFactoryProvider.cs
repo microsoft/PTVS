@@ -20,11 +20,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Settings;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -36,14 +32,13 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(WorkspaceInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class WorkspaceInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private readonly IVsFolderWorkspaceService _workspaceService;
-        private IWorkspace _workspace;
-        private IWorkspaceSettingsManager _workspaceSettingsMgr;
+        private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
+        private IPythonWorkspaceContext _workspace;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
         private FileSystemWatcher _folderWatcher;
         private Timer _folderWatcherTimer;
-        private bool _pythonExecutableCreated;
+        private bool _refreshPythonInterpreters;
         private int _ignoreNotifications;
         private bool _initialized;
 
@@ -56,17 +51,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         [ImportingConstructor]
         public WorkspaceInterpreterFactoryProvider(
-            [Import] IVsFolderWorkspaceService workspaceService = null
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider
         ) {
-            _workspaceService = workspaceService;
-            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
+            _workspaceContextProvider = workspaceContextProvider;
+            _workspaceContextProvider.WorkspaceOpening += OnWorkspaceOpening;
+            _workspaceContextProvider.WorkspaceClosed += OnWorkspaceClosed;
         }
 
         protected void Dispose(bool disposing) {
             if (disposing) {
-                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
+                _workspaceContextProvider.WorkspaceOpening -= OnWorkspaceOpening;
+                _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceClosed;
+                if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
                 }
                 _folderWatcher?.Dispose();
                 _folderWatcherTimer?.Dispose();
@@ -86,23 +83,34 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_factories) {
                 if (!_initialized) {
                     _initialized = true;
-                    InitializeWorkspace();
+                    InitializeWorkspace(_workspaceContextProvider.Workspace);
                     DiscoverInterpreterFactories();
                 }
             }
         }
 
-        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
-            InitializeWorkspace();
-            DiscoverInterpreterFactories();
-            return Task.CompletedTask;
+        private void OnWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
+            lock (_factories) {
+                _initialized = true;
+                InitializeWorkspace(null);
+                DiscoverInterpreterFactories();
+            }
         }
 
-        private void InitializeWorkspace() {
+        private void OnWorkspaceOpening(object sender, PythonWorkspaceContextEventArgs e) {
+            lock (_factories) {
+                _initialized = true;
+                InitializeWorkspace(e.Workspace);
+                DiscoverInterpreterFactories();
+            }
+        }
+
+        private void InitializeWorkspace(IPythonWorkspaceContext workspace) {
             lock (_factories) {
                 // Cleanup state associated with the previous workspace, if any
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
+                if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
+                    _workspace = null;
                 }
 
                 _folderWatcher?.Dispose();
@@ -111,16 +119,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 _folderWatcherTimer = null;
 
                 // Setup new workspace
-                _workspace = _workspaceService.CurrentWorkspace;
-                _workspaceSettingsMgr = _workspace?.GetSettingsManager();
-                if (_workspaceSettingsMgr != null) {
-                    _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
-                }
-
+                _workspace = workspace;
                 if (_workspace != null) {
+                    _workspace.InterpreterSettingChanged += OnInterpreterSettingChanged;
                     try {
                         _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
-                        _folderWatcher.Created += OnFileCreated;
+                        _folderWatcher.Created += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Deleted += OnFileCreatedDeletedRenamed;
+                        _folderWatcher.Renamed += OnFileCreatedDeletedRenamed;
                         _folderWatcher.EnableRaisingEvents = true;
                         _folderWatcher.IncludeSubdirectories = true;
                     } catch (ArgumentException) {
@@ -131,22 +137,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private Task OnSettingsChanged(object sender, EventArgs e) {
+        private void OnInterpreterSettingChanged(object sender, EventArgs e) {
             DiscoverInterpreterFactories();
-            return Task.CompletedTask;
         }
 
-        internal void DiscoverInterpreterFactories() {
+        private void DiscoverInterpreterFactories() {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
 
+            ForceDiscoverInterpreterFactories();
+        }
+
+        private void ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            IWorkspace workspace = null;
+            IPythonWorkspaceContext workspace = null;
             lock (_factories) {
                 workspace = _workspace;
             }
@@ -187,7 +196,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IWorkspace workspace) {
+        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IPythonWorkspaceContext workspace) {
             var found = new List<PythonInterpreterInformation>();
 
             if (workspace != null) {
@@ -197,7 +206,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Then look at the currently set interpreter path,
                 // because it may point to a folder outside of the workspace,
                 // or in a deep subfolder that we don't look into.
-                var interpreter = workspace.GetInterpreter();
+                var interpreter = workspace.ReadInterpreterSetting();
                 if (PathUtils.IsValidPath(interpreter) && !Path.IsPathRooted(interpreter)) {
                     interpreter = workspace.MakeRooted(interpreter);
                 }
@@ -223,16 +232,41 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void OnFileCreated(object sender, FileSystemEventArgs e) {
+        private void OnFileCreatedDeletedRenamed(object sender, FileSystemEventArgs e) {
             lock (_factories) {
                 try {
-                    if (string.Compare(Path.GetFileName(e.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) == 0) {
-                        _pythonExecutableCreated = true;
+                    if (_refreshPythonInterpreters) {
+                        _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                    } else {
+
+                        //Renamed
+                        if (e.ChangeType == WatcherChangeTypes.Renamed && Directory.Exists(e.FullPath)) {
+                            var renamedFileInformation = e as RenamedEventArgs;
+                            if (_factories.Values.Any(a =>
+                                PathUtils.IsSameDirectory(a.Configuration.GetPrefixPath(), renamedFileInformation.OldFullPath))
+                            ) {
+                                _refreshPythonInterpreters = true;
+                                _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                            }
+                        } else if ((e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Deleted)
+                            && DetectPythonEnvironment(e)
+                        ) {
+                            _refreshPythonInterpreters = true;
+                            _folderWatcherTimer?.Change(1000, Timeout.Infinite);
+                        }
                     }
-                    _folderWatcherTimer?.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
                 }
             }
+        }
+
+        private bool DetectPythonEnvironment(FileSystemEventArgs fileChangeEventArgs) {
+            if (string.Compare(Path.GetFileName(fileChangeEventArgs.FullPath), "python.exe", StringComparison.OrdinalIgnoreCase) != 0) {
+                return false;
+            }
+
+            int pythonExecutableDepth = fileChangeEventArgs.Name.Split(Path.DirectorySeparatorChar).Length;
+            return pythonExecutableDepth != 0 && pythonExecutableDepth <= 3;
         }
 
         private void OnFileChangesTimerElapsed(object state) {
@@ -241,8 +275,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 lock (_factories) {
                     _folderWatcherTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                    shouldDiscover = _pythonExecutableCreated;
-                    _pythonExecutableCreated = false;
+                    shouldDiscover = _refreshPythonInterpreters;
+                    _refreshPythonInterpreters = false;
                 }
 
                 if (shouldDiscover) {
@@ -275,7 +309,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 windowsInterpreterPath = string.Empty;
             }
 
-            var config = new InterpreterConfiguration(
+            var config = new VisualStudioInterpreterConfiguration(
                 WorkspaceInterpreterFactoryConstants.GetInterpreterId(WorkspaceInterpreterFactoryConstants.EnvironmentCompanyName, name),
                 description,
                 prefixPath,
@@ -383,21 +417,26 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private sealed class DiscoverOnDispose : IDisposable {
             private readonly WorkspaceInterpreterFactoryProvider _provider;
+            private readonly bool _forceDiscovery;
 
-            public DiscoverOnDispose(WorkspaceInterpreterFactoryProvider provider) {
+            public DiscoverOnDispose(WorkspaceInterpreterFactoryProvider provider, bool forceDiscovery) {
                 _provider = provider;
+                _forceDiscovery = forceDiscovery;
                 Interlocked.Increment(ref _provider._ignoreNotifications);
             }
 
             public void Dispose() {
-                if (Interlocked.Decrement(ref _provider._ignoreNotifications) == 0) {
+                Interlocked.Decrement(ref _provider._ignoreNotifications);
+                if (_forceDiscovery) {
+                    _provider.ForceDiscoverInterpreterFactories();
+                } else {
                     _provider.DiscoverInterpreterFactories();
                 }
             }
         }
 
-        internal IDisposable SuppressDiscoverFactories() {
-            return new DiscoverOnDispose(this);
+        internal IDisposable SuppressDiscoverFactories(bool forceDiscoveryOnDispose) {
+            return new DiscoverOnDispose(this, forceDiscoveryOnDispose);
         }
     }
 }

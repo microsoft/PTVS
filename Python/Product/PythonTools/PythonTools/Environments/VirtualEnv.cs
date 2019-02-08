@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Environments {
             IInterpreterRegistryService registry,
             IInterpreterOptionsService options,
             PythonProjectNode project,
+            IPythonWorkspaceContext workspace,
             string path,
             IPythonInterpreterFactory baseInterp,
             bool registerAsCustomEnv,
@@ -112,14 +113,32 @@ namespace Microsoft.PythonTools.Environments {
                     customEnvName
                 );
 
-                if (project != null && factory != null) {
-                    project.AddInterpreter(factory.Configuration.Id);
+                if (factory != null) {
+                    if (project != null) {
+                        project.AddInterpreter(factory.Configuration.Id);
+                    } else if (workspace != null) {
+                        await workspace.SetInterpreterFactoryAsync(factory);
+                    }
                 }
 
                 return factory;
             } else {
                 if (project != null) {
                     return project.AddVirtualEnvironment(registry, path, baseInterp);
+                } else if (workspace != null) {
+                    // In workspaces, always store the path to the virtual env's python.exe
+                    GetVirtualEnvConfig(path, baseInterp, out string interpExe, out string winterpExe, out string pathVar);
+
+                    var workspaceFactoryProvider = site.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
+                    using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
+                        var relativeInterpExe = PathUtils.GetRelativeFilePath(workspace.Location, interpExe);
+                        await workspace.SetInterpreterAsync(relativeInterpExe);
+                    }
+
+                    var factory = workspaceFactoryProvider?
+                        .GetInterpreterFactories()
+                        .FirstOrDefault(f => PathUtils.IsSamePath(f.Configuration.InterpreterPath, interpExe));
+                    return factory;
                 } else {
                     return null;
                 }
@@ -140,34 +159,37 @@ namespace Microsoft.PythonTools.Environments {
                 }
             }
 
-            // Ensure the target directory exists.
-            Directory.CreateDirectory(dir);
+            var workspaceFactoryProvider = provider.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
+            using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
+                // Ensure the target directory exists.
+                Directory.CreateDirectory(dir);
 
-            using (var proc = ProcessOutput.Run(
-                factory.Configuration.InterpreterPath,
-                new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
-                dir,
-                UnbufferedEnv,
-                false,
-                output
-            )) {
-                var exitCode = await proc;
+                using (var proc = ProcessOutput.Run(
+                    factory.Configuration.InterpreterPath,
+                    new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
+                    dir,
+                    UnbufferedEnv,
+                    false,
+                    output
+                )) {
+                    var exitCode = await proc;
 
-                if (output != null) {
-                    if (exitCode == 0) {
-                        output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
-                    } else {
-                        output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
+                    if (output != null) {
+                        if (exitCode == 0) {
+                            output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
+                        } else {
+                            output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
+                        }
+                        if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
+                            output.ShowAndActivate();
+                        } else {
+                            output.Show();
+                        }
                     }
-                    if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
-                        output.ShowAndActivate();
-                    } else {
-                        output.Show();
-                    }
-                }
 
-                if (exitCode != 0 || !Directory.Exists(path)) {
-                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
+                    if (exitCode != 0 || !Directory.Exists(path)) {
+                        throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
+                    }
                 }
             }
         }
@@ -300,7 +322,7 @@ namespace Microsoft.PythonTools.Environments {
             GetVirtualEnvConfig(prefixPath, baseInterpreter, out string interpExe, out string winterpExe, out string pathVar);
             string description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
-            return new InterpreterConfiguration(
+            return new VisualStudioInterpreterConfiguration(
                 id ?? baseInterpreter.Configuration.Id,
                 baseInterpreter == null ? description : string.Format("{0} ({1})", description, baseInterpreter.Configuration.Description),
                 prefixPath,
@@ -322,7 +344,7 @@ namespace Microsoft.PythonTools.Environments {
 
             if (Directory.Exists(basePath)) {
                 return service.Interpreters.FirstOrDefault(interp =>
-                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.GetPrefixPath()), basePath)
                 );
             }
             return null;
@@ -381,7 +403,7 @@ namespace Microsoft.PythonTools.Environments {
             out string pathVar
         ) {
             interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
-            winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
+            winterpExe = Path.GetFileName(baseInterpreter.Configuration.GetWindowsInterpreterPath());
             var scripts = new[] { "Scripts", "bin" };
             interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
             winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);

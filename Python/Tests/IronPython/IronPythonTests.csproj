@@ -44,6 +44,8 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
@@ -77,20 +79,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IronPythonAnalysis.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
+    <Compile Include="IronPythonAnalysis.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
-      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
-      <Aliases>global,analysis</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
-      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
-      <Name>Analyzer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
       <Project>{5ae43c93-8ef6-4d57-bc10-511035ef56c5}</Project>
       <Name>Microsoft.IronPythonTools</Name>
@@ -123,10 +116,6 @@
     <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Analysis\AnalysisTests.csproj">
-      <Project>{c2c1c6a1-3c1e-45e4-9ee2-1181db641818}</Project>
-      <Name>AnalysisTests</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />

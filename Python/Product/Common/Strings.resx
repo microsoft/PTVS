@@ -1280,7 +1280,10 @@ modified from these scripts.</value>
     <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
   </data>
   <data name="ReplProjectConfigurationChanged" xml:space="preserve">
-    <value>The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+    <value>The associated project "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+  </data>
+  <data name="ReplWorkspaceConfigurationChanged" xml:space="preserve">
+    <value>The associated workspace "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
   </data>
   <data name="DebugLaunchScriptNameMissing" xml:space="preserve">
     <value>The project cannot be launched because the startup file is not specified.</value>
@@ -1890,6 +1893,10 @@ Expand selection to the full expression?</value>
     <value>Project: {0}</value>
     <comment>{0} is the name of the project</comment>
   </data>
+  <data name="ReplWorkspaceCaption" xml:space="preserve">
+    <value>Workspace: {0}</value>
+    <comment>{0} is the name of the workspace</comment>
+  </data>
   <data name="ReplSwitchModuleCommandDescription" xml:space="preserve">
     <value>Switches the current scope to the specified module name.</value>
   </data>
@@ -2135,16 +2142,16 @@ Expand selection to the full expression?</value>
     <comment>Displayed in the output window</comment>
   </data>
   <data name="CondaStatusBarCreateStarted" xml:space="preserve">
-    <value>Creating conda environment '{0}'</value>
+    <value>Creating Conda environment "{0}"</value>
   </data>
   <data name="CondaStatusBarCreateFailed" xml:space="preserve">
-    <value>Failed to create conda environment '{0}'</value>
+    <value>Failed to create Conda environment "{0}"</value>
   </data>
   <data name="CondaStatusBarCreateSucceeded" xml:space="preserve">
-    <value>Successfully created conda environment '{0}'</value>
+    <value>Successfully created Conda environment "{0}"</value>
   </data>
   <data name="CondaStatusCenterCreateTitle" xml:space="preserve">
-    <value>Create conda environment '{0}'</value>
+    <value>Create Conda environment "{0}"</value>
   </data>
   <data name="CondaStatusCenterCreateProgressPreparing" xml:space="preserve">
     <value>Preparing</value>
@@ -2195,22 +2202,22 @@ Expand selection to the full expression?</value>
     <value>Packages installed successfully</value>
   </data>
   <data name="CondaInfoBarCreateNewMessage" xml:space="preserve">
-    <value>The project '{0}' has a conda environment.yml file, but no conda environments.</value>
+    <value>The project "{0}" has a Conda environment.yml file, but no Conda environments.</value>
   </data>
   <data name="CondaInfoBarRecreateMessage" xml:space="preserve">
-    <value>The project '{0}' has a reference to a missing conda environment '{1}'.</value>
+    <value>The project "{0}" has a reference to a missing Conda environment "{1}".</value>
   </data>
   <data name="CondaInfoBarCreateAction" xml:space="preserve">
     <value>Create environment</value>
   </data>
   <data name="CondaInfoBarProjectIgnoreAction" xml:space="preserve">
-    <value>Don't show this again</value>
+    <value>Don't show this message again</value>
   </data>
   <data name="RequirementsTxtCreateVirtualEnvInfoBarMessage" xml:space="preserve">
-    <value>Python package specification file '{0}' was detected in project '{1}'.</value>
+    <value>Python package specification file "{0}" was detected in project "{1}".</value>
   </data>
   <data name="RequirementsTxtInstallPackagesInfoBarMessage" xml:space="preserve">
-    <value>One or more packages listed in '{0}' of project '{1}' are missing from the '{2}' environment.</value>
+    <value>One or more packages listed in "{0}" of project "{1}" are missing from the "{2}" environment.</value>
   </data>
   <data name="RequirementsTxtInfoBarCreateVirtualEnvAction" xml:space="preserve">
     <value>Create virtual environment</value>
@@ -2219,10 +2226,13 @@ Expand selection to the full expression?</value>
     <value>Install packages</value>
   </data>
   <data name="RequirementsTxtInfoBarProjectIgnoreAction" xml:space="preserve">
-    <value>Don't show this again</value>
+    <value>Don't show this message again</value>
   </data>
   <data name="CondaNotFoundError" xml:space="preserve">
     <value>Conda is required for this functionality. Please install either Anaconda or Miniconda and try again.</value>
+  </data>
+  <data name="AddEnvironmentComboListEntry" xml:space="preserve">
+    <value>Add Environment...</value>
   </data>
   <data name="ModernDialogHeaderCloseButtonAutomationName" xml:space="preserve">
     <value>Close</value>
@@ -2248,7 +2258,7 @@ Expand selection to the full expression?</value>
   <data name="AddEnvironmentCancelButton" xml:space="preserve">
     <value>_Cancel</value>
   </data>
-  <data name="AddEnvironmentValidationErrors" xml:space="preserve">
+    <data name="AddEnvironmentValidationErrors" xml:space="preserve">
     <value>Some fields have invalid values.
 
 {0}</value>
@@ -2347,7 +2357,7 @@ Expand selection to the full expression?</value>
     <value>Description for this environment</value>
   </data>
   <data name="AddVirtualEnvironmentPreviewInProgress" xml:space="preserve">
-    <value>Please wait...</value>
+    <value>Building preview...</value>
   </data>
   <data name="AddCondaEnvironmentPreviewLabel" xml:space="preserve">
     <value>Packages preview</value>
@@ -2401,7 +2411,7 @@ Expand selection to the full expression?</value>
     <value>environment.yml</value>
   </data>
   <data name="AddCondaEnvironmentFileHelp" xml:space="preserve">
-    <value>The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment.</value>
+    <value>The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.</value>
   </data>
   <data name="AddCondaEnvironmentFileBrowseButton" xml:space="preserve">
     <value>Browse for environment file</value>
@@ -2416,7 +2426,7 @@ Expand selection to the full expression?</value>
     <value>ex. numpy pandas</value>
   </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of conda packages to install when creating the conda environment. Entries should be separated by spaces.</value>
+    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>
@@ -2431,7 +2441,7 @@ Expand selection to the full expression?</value>
     <value>Description has invalid characters. It must only use valid path characters.</value>
   </data>
   <data name="AddCondaEnvironmentPreviewInProgress" xml:space="preserve">
-    <value>Preview in progress...</value>
+    <value>Building preview...</value>
   </data>
   <data name="AddCondaEnvironmentPreviewNoPackages" xml:space="preserve">
     <value>No packages will be installed.

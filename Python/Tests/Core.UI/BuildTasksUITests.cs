@@ -307,7 +307,7 @@ namespace PythonToolsUITests {
                 OpenProject(app, "CommandRequirePackages.sln", python, out node, out proj);
 
                 string envName;
-                var env = app.CreateVirtualEnvironment(proj, out envName);
+                var env = app.CreateProjectVirtualEnvironment(proj, out envName);
 
                 env.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");

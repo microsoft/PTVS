@@ -24,6 +24,7 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Internal.VisualStudio.PlatformUI;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.Environments {
 
         public AddEnvironmentView View => (AddEnvironmentView)DataContext;
 
-        enum PageKind {
+        public enum PageKind {
             CondaEnvironment,
             VirtualEnvironment,
             ExistingEnvironment,
@@ -54,15 +55,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IPythonWorkspaceContext workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             // For now default to the first tab (virtual environment)
             await ShowAddVirtualEnvironmentDialogAsync(
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -73,15 +76,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddVirtualEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IPythonWorkspaceContext workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.VirtualEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -92,15 +97,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddCondaEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IPythonWorkspaceContext workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.CondaEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -111,15 +118,17 @@ namespace Microsoft.PythonTools.Environments {
         public static async Task ShowAddExistingEnvironmentDialogAsync(
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IPythonWorkspaceContext workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             await ShowDialogAsync(
                 PageKind.ExistingEnvironment,
                 site,
                 project,
+                workspace,
                 existingCondaEnvName,
                 environmentYmlPath,
                 requirementsTxtPath,
@@ -127,13 +136,14 @@ namespace Microsoft.PythonTools.Environments {
             );
         }
 
-        private static async Task ShowDialogAsync(
+        public static async Task ShowDialogAsync(
             PageKind activePage,
             IServiceProvider site,
             PythonProjectNode project,
-            string existingCondaEnvName = null,
-            string environmentYmlPath = null,
-            string requirementsTxtPath = null,
+            IPythonWorkspaceContext workspace,
+            string existingCondaEnvName,
+            string environmentYmlPath,
+            string requirementsTxtPath,
             CancellationToken ct = default(CancellationToken)
         ) {
             if (site == null) {
@@ -143,19 +153,26 @@ namespace Microsoft.PythonTools.Environments {
             ProjectView[] projectViews;
             ProjectView selectedProjectView;
 
-            try {
-                var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-                var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? new PythonProjectNode[0];
+            if (workspace != null) {
+                var registryService = site.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var optionsService = site.GetComponentModel().GetService<IInterpreterOptionsService>();
+                selectedProjectView = new ProjectView(workspace);
+                projectViews = new ProjectView[] { selectedProjectView };
+            } else {
+                try {
+                    var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
+                    var projects = sln?.EnumerateLoadedPythonProjects().ToArray() ?? Array.Empty<PythonProjectNode>();
 
-                projectViews = projects
-                    .Select((projectNode) => new ProjectView(projectNode))
-                    .ToArray();
+                    projectViews = projects
+                        .Select((projectNode) => new ProjectView(projectNode))
+                        .ToArray();
 
-                selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
-            } catch (InvalidOperationException ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
-                projectViews = new ProjectView[0];
-                selectedProjectView = null;
+                    selectedProjectView = projectViews.SingleOrDefault(pv => pv.Node == project);
+                } catch (InvalidOperationException ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AddEnvironmentDialog)));
+                    projectViews = Array.Empty<ProjectView>();
+                    selectedProjectView = null;
+                }
             }
 
             if (selectedProjectView != null) {

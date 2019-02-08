@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.Workspace {
         public const string InterpreterKey = "interpreter";
         public const string InterpreterArgumentsKey = "interpreterArguments";
         public const string ScriptArgumentsKey = "scriptArguments";
+        public const string EnvKey = "env";
         public const string WorkingDirectoryKey = "workingDirectory";
         public const string NativeDebuggingKey = "nativeDebug";
         public const string WebBrowserUrlKey = "webBrowserUrl";
@@ -57,6 +59,7 @@ namespace Microsoft.PythonTools.Workspace {
         ""interpreterArguments"": { ""type"": ""string"" },
         ""scriptArguments"": { ""type"": ""string"" },
         ""workingDirectory"": { ""type"": ""string"" },
+        ""env"": { ""type"": ""object"" },
         ""nativeDebug"": { ""type"": ""boolean"" },
         ""webBrowserUrl"": { ""type"": ""string"" }
       }
@@ -96,7 +99,7 @@ namespace Microsoft.PythonTools.Workspace {
 
                 if (File.Exists(path)) {
                     config = registry.Configurations.FirstOrDefault(c => c.InterpreterPath.Equals(path, StringComparison.OrdinalIgnoreCase)) ??
-                        new InterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
+                        new VisualStudioInterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
                 } else {
                     config = registry.FindConfiguration(interpreterVal);
                 }
@@ -112,21 +115,34 @@ namespace Microsoft.PythonTools.Workspace {
                 throw new InvalidOperationException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(path));
             }
 
-            IProjectLauncher launcher = null;
+            var searchPaths = workspace.GetAbsoluteSearchPaths().ToList();
+
+            var environment = new Dictionary<string, string>();
+            if (settings.TryGetValue<IPropertySettings>(EnvKey, out IPropertySettings envSettings)) {
+                foreach (var keyVal in envSettings) {
+                    environment[keyVal.Key] = keyVal.Value.ToString();
+                }
+            }
+
+            string workingDir = settings.GetValue(WorkingDirectoryKey, string.Empty);
+            if (string.IsNullOrEmpty(workingDir)) {
+                workingDir = workspace.MakeRooted(".");
+            } else if (PathUtils.IsValidPath(workingDir) && !Path.IsPathRooted(workingDir)) {
+                workingDir = workspace.MakeRooted(workingDir);
+            }
+
             var launchConfig = new LaunchConfiguration(config) {
                 InterpreterPath = config == null ? path : null,
                 InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
                 ScriptName = scriptName,
                 ScriptArguments = settings.GetValue(ScriptArgumentsKey, string.Empty),
-                WorkingDirectory = settings.GetValue(WorkingDirectoryKey, string.Empty),
-                // TODO: Support search paths
-                SearchPaths = null,
-                // TODO: Support env variables
-                Environment = null,
+                WorkingDirectory = workingDir,
+                SearchPaths = searchPaths,
+                Environment = environment,
             };
             launchConfig.LaunchOptions[PythonConstants.EnableNativeCodeDebugging] = settings.GetValue(NativeDebuggingKey, false).ToString();
 
-
+            IProjectLauncher launcher = null;
             var browserUrl = settings.GetValue(WebBrowserUrlKey, string.Empty);
             if (!string.IsNullOrEmpty(browserUrl)) {
                 launchConfig.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = browserUrl;

@@ -38,16 +38,17 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
-            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory.Configuration, project);
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project, IPythonWorkspaceContext workspace) {
+            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory.Configuration, project, workspace);
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, InterpreterConfiguration config, PythonProjectNode project) {
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, InterpreterConfiguration config, PythonProjectNode project, IPythonWorkspaceContext workspace) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
             var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
             var projectId = project != null ? PythonReplEvaluatorProvider.GetEvaluatorId(project) : null;
+            var workspaceId = workspace != null ? PythonReplEvaluatorProvider.GetEvaluatorId(workspace) : null;
             var configId = config != null ? PythonReplEvaluatorProvider.GetEvaluatorId(config) : null;
 
             if (config?.IsRunnable() == false) {
@@ -69,6 +70,17 @@ namespace Microsoft.PythonTools.Commands {
                 }
             }
 
+            // If we find an open window for the workspace, prefer that to a per config one
+            if (!string.IsNullOrEmpty(workspaceId)) {
+                window = provider.Open(
+                    workspaceId,
+                    e => ((e as SelectableReplEvaluator)?.Evaluator as PythonCommonInteractiveEvaluator)?.AssociatedWorkspaceHasChanged != true
+                );
+                if (window != null) {
+                    return window;
+                }
+            }
+
             // If we find an open window for the configuration, return that
             if (!string.IsNullOrEmpty(configId)) {
                 window = provider.Open(configId);
@@ -81,6 +93,9 @@ namespace Microsoft.PythonTools.Commands {
             if (!string.IsNullOrEmpty(projectId)) {
                 window = provider.Create(projectId);
                 project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
+            } else if (!string.IsNullOrEmpty(workspaceId)) {
+                window = provider.Create(workspaceId);
+                workspace.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, workspaceId));
             } else if (!string.IsNullOrEmpty(configId)) {
                 window = provider.Create(configId);
             } else {
@@ -104,6 +119,7 @@ namespace Microsoft.PythonTools.Commands {
                 return;
             }
 
+            var workspace = _serviceProvider.GetWorkspace();
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
@@ -123,9 +139,12 @@ namespace Microsoft.PythonTools.Commands {
                 oleMenu.Text = Strings.ExecuteInReplCommand_ExecuteFile;
 
                 // Only enable if runnable
-                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                oleMenu.Enabled = interpreterService != null && interpreterService.DefaultInterpreter.IsRunnable();
-
+                if (workspace != null) {
+                    oleMenu.Enabled = workspace.CurrentFactory.IsRunnable();
+                } else {
+                    var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                    oleMenu.Enabled = interpreterService != null && interpreterService.DefaultInterpreter.IsRunnable();
+                }
             } else {
                 // Python is not active, so hide the command
                 oleMenu.Visible = false;
@@ -138,6 +157,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private async System.Threading.Tasks.Task DoCommand() {
+            var workspace = _serviceProvider.GetWorkspace();
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
@@ -154,7 +174,11 @@ namespace Microsoft.PythonTools.Commands {
 
             LaunchConfiguration config = null;
             try {
-                config = pyProj?.GetLaunchConfigurationOrThrow();
+                if (workspace != null) {
+                    config = PythonCommonInteractiveEvaluator.GetWorkspaceLaunchConfigurationOrThrow(workspace);
+                } else {
+                    config = pyProj?.GetLaunchConfigurationOrThrow();
+                }
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
                 return;
@@ -168,7 +192,10 @@ namespace Microsoft.PythonTools.Commands {
 
             if (!string.IsNullOrEmpty(scriptName)) {
                 config.ScriptName = scriptName;
-                config.WorkingDirectory = PathUtils.GetParent(scriptName);
+                // Only overwrite the working dir for a loose file, don't do it for workspaces
+                if (workspace == null) {
+                    config.WorkingDirectory = PathUtils.GetParent(scriptName);
+                }
             }
 
             if (config == null) {
@@ -178,7 +205,7 @@ namespace Microsoft.PythonTools.Commands {
 
             IVsInteractiveWindow window;
             try {
-                window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj);
+                window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj, workspace);
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
                 return;

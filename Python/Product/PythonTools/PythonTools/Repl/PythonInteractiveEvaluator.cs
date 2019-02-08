@@ -135,6 +135,10 @@ namespace Microsoft.PythonTools.Repl {
                     return null;
                 }
 
+                if (!UpdatePropertiesFromWorkspaceMoniker().IsSuccessful) {
+                    return null;
+                }
+
                 var scriptsPath = ScriptsPath;
                 if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null) {
                     try {

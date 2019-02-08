@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-            var rootPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
+            var rootPath = PathUtils.EnsureEndSeparator(config.GetPrefixPath());
 
             var id = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, config.Id);
             if (string.IsNullOrEmpty(id)) {
@@ -357,7 +357,7 @@ namespace Microsoft.PythonTools.Project {
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
                     { MSBuildConstants.DescriptionKey, config.Description },
                     { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
-                    { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
+                    { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.GetWindowsInterpreterPath()) },
                     { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
                     { MSBuildConstants.ArchitectureKey, config.Architecture.ToString("X") }
                 });
@@ -854,7 +854,7 @@ namespace Microsoft.PythonTools.Project {
                             isInterpreterReference: !isProjectSpecific,
                             canDelete:
                                 isProjectSpecific &&
-                                Directory.Exists(fact.Configuration.PrefixPath),
+                                Directory.Exists(fact.Configuration.GetPrefixPath()),
                             isGlobalDefault:false,
                             canRemove:canRemove
                         ));
@@ -1083,7 +1083,6 @@ namespace Microsoft.PythonTools.Project {
 
                     if (_analyzer.RemoveUser()) {
                         _analyzer.AbnormalAnalysisExit -= AnalysisProcessExited;
-                        _analyzer.AnalyzerNeedsRestart -= OnActiveInterpreterChanged;
                         _analyzer.Dispose();
                     }
                     _analyzer = null;
@@ -1182,7 +1181,6 @@ namespace Microsoft.PythonTools.Project {
                 inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
-            res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
 
             HookErrorsAndWarnings(res);
             UpdateAnalyzerSearchPaths(res);
@@ -1204,6 +1202,16 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
+
+            if (IsClosed) {
+                return;
+            }
+
+            var factory = ActiveInterpreter;
+
+            Site.GetUIThread().InvokeTask(async () => {
+                await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
+            }).DoNotWait();
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
@@ -1615,7 +1623,7 @@ namespace Microsoft.PythonTools.Project {
             );
 
 
-            var paths = config.Interpreter.PrefixPath;
+            var paths = config.Interpreter.GetPrefixPath();
             if (!Directory.Exists(paths)) {
                 paths = PathUtils.GetParent(config.GetInterpreterPath());
             }
@@ -1995,7 +2003,7 @@ namespace Microsoft.PythonTools.Project {
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
                 useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this).Show(true);
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this, null).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             } catch (MissingInterpreterException ex) {
@@ -2042,14 +2050,14 @@ namespace Microsoft.PythonTools.Project {
         public override bool Publish(PublishProjectOptions publishOptions, bool async) {
             var factory = GetInterpreterFactory();
             if (factory.Configuration.IsAvailable() &&
-                Directory.Exists(factory.Configuration.PrefixPath) &&
-                PathUtils.IsSubpathOf(ProjectHome, factory.Configuration.PrefixPath)
+                Directory.Exists(factory.Configuration.GetPrefixPath()) &&
+                PathUtils.IsSubpathOf(ProjectHome, factory.Configuration.GetPrefixPath())
             ) {
                 try {
                     publishOptions = TaskDialog.CallWithRetry(
                         _ => new PublishProjectOptions(
                             publishOptions.AdditionalFiles.Concat(
-                                PathUtils.EnumerateFiles(factory.Configuration.PrefixPath)
+                                PathUtils.EnumerateFiles(factory.Configuration.GetPrefixPath())
                                     // Exclude the completion DB
                                     .Where(f => !f.Contains("\\.ptvs\\"))
                                     .Select(f => new PublishFile(f, PathUtils.GetRelativeFilePath(ProjectHome, f)))
@@ -2383,6 +2391,7 @@ namespace Microsoft.PythonTools.Project {
                 Site,
                 this,
                 null,
+                null,
                 GetEnvironmentYmlPath(),
                 GetRequirementsTxtPath()
             ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
@@ -2393,6 +2402,7 @@ namespace Microsoft.PythonTools.Project {
             AddEnvironmentDialog.ShowAddExistingEnvironmentDialogAsync(
                 Site,
                 this,
+                null,
                 null,
                 GetEnvironmentYmlPath(),
                 GetRequirementsTxtPath()
@@ -2446,6 +2456,7 @@ namespace Microsoft.PythonTools.Project {
                     this,
                     null,
                     null,
+                    null,
                     requirementsPath
                 );
             } catch (Exception ex) {
@@ -2470,7 +2481,7 @@ namespace Microsoft.PythonTools.Project {
         internal IPythonInterpreterFactory AddVirtualEnvironment(IInterpreterRegistryService service, string path, IPythonInterpreterFactory baseInterp) {
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             foreach (var existingConfig in InterpreterConfigurations) {
-                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.PrefixPath);
+                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.GetPrefixPath());
 
                 if (rootPrefix.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {
                     return InterpreterRegistry.FindInterpreter(existingConfig.Id);
@@ -2509,7 +2520,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             foreach (var existingConfig in InterpreterConfigurations) {
-                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.PrefixPath);
+                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.GetPrefixPath());
 
                 if (rootPrefix.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {
                     return InterpreterRegistry.FindInterpreter(existingConfig.Id);
@@ -2518,7 +2529,7 @@ namespace Microsoft.PythonTools.Project {
 
             string id = GetNewEnvironmentName(path);
 
-            var config = new InterpreterConfiguration(
+            var config = new VisualStudioInterpreterConfiguration(
                 id,
                 description,
                 path,
@@ -2575,7 +2586,7 @@ namespace Microsoft.PythonTools.Project {
             }
             RemoveInterpreterFactory(factory);
 
-            var path = factory.Configuration.PrefixPath;
+            var path = factory.Configuration.GetPrefixPath();
             if (removeFromStorage && Directory.Exists(path)) {
                 var t = Task.Run(() => {
                     for (int retries = 5; Directory.Exists(path) && retries > 0; --retries) {
@@ -2625,9 +2636,11 @@ namespace Microsoft.PythonTools.Project {
             AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
                 Site,
                 this,
+                null,
                 existingName,
-                yamlPath).HandleAllExceptions(Site, typeof(PythonProjectNode)
-            ).DoNotWait();
+                yamlPath,
+                null
+            ).HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
             return VSConstants.S_OK;
         }
 

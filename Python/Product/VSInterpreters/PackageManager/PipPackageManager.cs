@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!IsReady) {
                 await UpdateIsReadyAsync(false, cancellationToken);
                 if (!IsReady) {
-                    throw new InvalidOperationException(Strings.MisconfiguredPip.FormatUI(_factory?.Configuration?.PrefixPath ?? "<null>"));
+                    throw new InvalidOperationException(Strings.MisconfiguredPip.FormatUI((_factory?.Configuration as VisualStudioInterpreterConfiguration)?.PrefixPath ?? "<null>"));
                 }
             }
         }
@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
                     _commands.CheckIsReady(),
-                    _factory.Configuration.PrefixPath,
+                    _factory.Configuration.GetPrefixPath(),
                     UnbufferedEnv,
                     false,
                     null
@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
                     _commands.Prepare(),
-                    _factory.Configuration.PrefixPath,
+                    _factory.Configuration.GetPrefixPath(),
                     UnbufferedEnv,
                     false,
                     PackageManagerUIRedirector.Get(this, ui),
@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         new[] { args.Trim() },
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var proc = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         null
@@ -597,8 +597,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             IReadOnlyList<string> paths = null;
 
-            if (_factory is Ast.AstPythonInterpreterFactory astFactory) {
-                paths = await astFactory.GetSearchPathsAsync(CancellationToken.None);
+            if (_factory.Configuration.SearchPaths.Any()) {
+                paths = _factory.Configuration.SearchPaths;
             }
 
             if (paths == null) {
@@ -612,7 +612,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             paths = paths
-                .Where(p => Directory.Exists(p))
+                .Where(Directory.Exists)
                 .OrderBy(p => p.Length)
                 .ToList();
 
