@@ -16,7 +16,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 
@@ -27,7 +26,6 @@ namespace Microsoft.PythonTools.Refactoring {
     sealed class RenameVariableRequestView : INotifyPropertyChanged {
         private readonly string _originalName;
         private readonly PythonLanguageVersion _languageVersion;
-        internal static readonly Regex _validNameRegex = ExtractMethodRequestView._validNameRegex;
 
         private string _name;
         private bool _isValid;
@@ -35,7 +33,7 @@ namespace Microsoft.PythonTools.Refactoring {
         private bool _previewChanges;
         private bool _searchInComments;
         private bool _searchInStrings;
-        
+
         /// <summary>
         /// Create a RenameVariableRequestView with default values.
         /// </summary>
@@ -86,10 +84,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 if (_name != value) {
                     _name = value;
                     OnPropertyChanged("Name");
-                    IsValid =
-                        !_originalName.Equals(_name) &&
-                        _validNameRegex.IsMatch(_name) &&
-                        !PythonKeywords.IsKeyword(_name, _languageVersion);
+                    IsValid = !_originalName.Equals(_name) && ExtractMethodRequestView.IsValidPythonIdentifier(_name, _languageVersion);
                 }
             }
         }
@@ -167,4 +162,4 @@ namespace Microsoft.PythonTools.Refactoring {
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }
- 
+
