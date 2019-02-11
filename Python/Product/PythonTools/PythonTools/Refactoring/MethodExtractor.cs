@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly PythonTextBufferInfo _buffer;
         private readonly ITextView _view;
         public AP.ExtractMethodResponse LastExtraction;
-        internal PythonLanguageVersion PythonVersion { get { return _buffer.LanguageVersion; } }
+        internal PythonLanguageVersion PythonVersion => _buffer.LanguageVersion;
 
         public ExtractedMethodCreator(PythonTextBufferInfo buffer, ITextView view, AP.ExtractMethodResponse initialExtraction) {
             _buffer = buffer;

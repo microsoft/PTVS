@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -2396,7 +2396,7 @@ def g(a, b, c):
 
         [TestMethod, Priority(0)]
         public void ValidPythonIdentifier() {
-            char unicodeCharacter = (char)13313;
+            string validUnicodeCharacters = "䶵䶴㐁";
             char invalidIdentifier = '!';
 
             //Valid python 2 and 3 identifiers
@@ -2407,10 +2407,10 @@ def g(a, b, c):
             CheckPythonIdentifierValidity("_abc_");
 
             //Valid in python 3 but not 2
-            CheckPythonIdentifierValidity(unicodeCharacter.ToString(), false);
-            CheckPythonIdentifierValidity(string.Concat(unicodeCharacter, "a1"), false);
-            CheckPythonIdentifierValidity(string.Concat("a1", unicodeCharacter), false);
-            CheckPythonIdentifierValidity(string.Concat("a1", unicodeCharacter, "b2", unicodeCharacter), false);
+            CheckPythonIdentifierValidity(validUnicodeCharacters, false);
+            CheckPythonIdentifierValidity(string.Concat(validUnicodeCharacters, "a1"), false);
+            CheckPythonIdentifierValidity(string.Concat("a1", validUnicodeCharacters), false);
+            CheckPythonIdentifierValidity(string.Concat("a1", validUnicodeCharacters, "b2", validUnicodeCharacters), false);
 
             //Valid in neither python 3 or 2
             CheckPythonIdentifierValidity(invalidIdentifier.ToString(), false, false);
@@ -2420,12 +2420,12 @@ def g(a, b, c):
             CheckPythonIdentifierValidity(" 1a 2b 3c ", false, false);
             CheckPythonIdentifierValidity(string.Concat("abc", invalidIdentifier), false, false);
             CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "abc"), false, false);
-            CheckPythonIdentifierValidity(string.Concat("abc", invalidIdentifier, "123", unicodeCharacter), false, false);
-            CheckPythonIdentifierValidity(string.Concat(unicodeCharacter, "1a2b3c", invalidIdentifier), false, false);
-            CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "a1b3c3", unicodeCharacter), false, false);
+            CheckPythonIdentifierValidity(string.Concat("abc", invalidIdentifier, "123", validUnicodeCharacters), false, false);
+            CheckPythonIdentifierValidity(string.Concat(validUnicodeCharacters, "1a2b3c", invalidIdentifier), false, false);
+            CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "a1b3c3", validUnicodeCharacters), false, false);
         }
 
-        private void CheckPythonIdentifierValidity(string identifier, bool isValidPython2Identifier = true, bool isValidPython3Identifier = true) {
+        private static void CheckPythonIdentifierValidity(string identifier, bool isValidPython2Identifier = true, bool isValidPython3Identifier = true) {
             Assert.AreEqual(isValidPython2Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V27));
             Assert.AreEqual(isValidPython3Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V30));
         }

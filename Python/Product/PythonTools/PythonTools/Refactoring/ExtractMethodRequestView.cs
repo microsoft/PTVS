@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// </summary>
     sealed class ExtractMethodRequestView : INotifyPropertyChanged {
         private readonly ExtractedMethodCreator _previewer;
+        internal static readonly Regex Python2IdentifierRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
         private const string _defaultName = "method_name";
         private string _name;
@@ -252,22 +253,15 @@ namespace Microsoft.PythonTools.Refactoring {
 
             //Python2 identifiers are only certain ASCII characters
             if (pythonVersion < PythonLanguageVersion.V30) {
-                var Python2IdentifierRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
                 return Python2IdentifierRegex.IsMatch(identifier);
             }
-
+            
             //Python3 identifiers can include unicode characters
             if (!Tokenizer.IsIdentifierStartChar(identifier[0])) {
                 return false;
             }
-            identifier = identifier.Substring(1);
-            foreach (char character in identifier) {
-                if (!Tokenizer.IsIdentifierChar(character)) {
-                    return false;
-                }
-            }
 
-            return true;
+            return identifier.Skip(1).All(Tokenizer.IsIdentifierChar);
         }
 
         /// <summary>
