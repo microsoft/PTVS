@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// </summary>
     sealed class ExtractMethodRequestView : INotifyPropertyChanged {
         private readonly ExtractedMethodCreator _previewer;
-        internal static readonly Regex Python2IdentifierRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
+        private static readonly Regex Python2IdentifierRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
         private const string _defaultName = "method_name";
         private string _name;
