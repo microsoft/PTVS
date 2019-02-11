@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Environments {
 
             var id = optionsService.AddConfigurableInterpreter(
                 description,
-                new InterpreterConfiguration(
+                new VisualStudioInterpreterConfiguration(
                     "", // ignored - id is generated and returned by AddConfigurableInterpreter
                     description,
                     prefixPath,

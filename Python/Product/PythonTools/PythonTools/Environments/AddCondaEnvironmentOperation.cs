@@ -25,7 +25,6 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TaskStatusCenter;
-using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Environments {
@@ -33,7 +32,7 @@ namespace Microsoft.PythonTools.Environments {
         private readonly IServiceProvider _site;
         private readonly ICondaEnvironmentManager _condaMgr;
         private readonly PythonProjectNode _project;
-        private readonly IWorkspace _workspace;
+        private readonly IPythonWorkspaceContext _workspace;
         private readonly string _envNameOrPath;
         private readonly string _actualName;
         private readonly string _envFilePath;
@@ -54,7 +53,7 @@ namespace Microsoft.PythonTools.Environments {
             IServiceProvider site,
             ICondaEnvironmentManager condaMgr,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string envNameOrPath,
             string envFilePath,
             List<PackageSpec> packages,

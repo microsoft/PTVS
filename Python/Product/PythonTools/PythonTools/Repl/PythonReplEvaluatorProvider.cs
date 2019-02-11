@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveEvaluatorProvider))]
     sealed class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider, IDisposable {
         private readonly IInterpreterRegistryService _interpreterService;
+        private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly IServiceProvider _serviceProvider;
         private readonly IVsSolution _solution;
         private readonly SolutionEventsListener _solutionEvents;
@@ -40,10 +41,12 @@ namespace Microsoft.PythonTools.Repl {
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
             [Import] IInterpreterRegistryService interpreterService,
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
         ) {
             Debug.Assert(interpreterService != null);
             _interpreterService = interpreterService;
+            _workspaceContextProvider = workspaceContextProvider;
             _serviceProvider = serviceProvider;
             _solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
             _solutionEvents = new SolutionEventsListener(_solution);
@@ -53,6 +56,12 @@ namespace Microsoft.PythonTools.Repl {
             _solutionEvents.SolutionOpened += SolutionChanged;
             _solutionEvents.SolutionClosed += SolutionChanged;
             _solutionEvents.StartListeningForChanges();
+            _workspaceContextProvider.WorkspaceClosed += OnWorkspaceChanged;
+            _workspaceContextProvider.WorkspaceInitialized += OnWorkspaceChanged;
+        }
+
+        private void OnWorkspaceChanged(object sender, PythonWorkspaceContextEventArgs e) {
+            EvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void SolutionChanged(object sender, EventArgs e) {
@@ -65,6 +74,8 @@ namespace Microsoft.PythonTools.Repl {
 
         public void Dispose() {
             _solutionEvents.Dispose();
+            _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceChanged;
+            _workspaceContextProvider.WorkspaceInitialized -= OnWorkspaceChanged;
         }
 
         public event EventHandler EvaluatorsChanged;
@@ -91,6 +102,14 @@ namespace Microsoft.PythonTools.Repl {
                     );
                 }
             }
+
+            var workspace = _workspaceContextProvider.Workspace;
+            if (workspace != null) {
+                yield return new KeyValuePair<string, string>(
+                    Strings.ReplWorkspaceCaption.FormatUI(workspace.WorkspaceName),
+                    GetEvaluatorId(workspace)
+                );
+            }
         }
 
         internal static string GetEvaluatorId(InterpreterConfiguration config) {
@@ -106,6 +125,14 @@ namespace Microsoft.PythonTools.Repl {
                 _prefix,
                 project.Caption,
                 project.GetMkDocument()
+            );
+        }
+
+        internal static string GetEvaluatorId(IPythonWorkspaceContext workspace) {
+            return "{0};workspace;{1};{2}".FormatInvariant(
+                _prefix,
+                workspace.WorkspaceName,
+                workspace.Location
             );
         }
 
@@ -134,6 +161,9 @@ namespace Microsoft.PythonTools.Repl {
                 return GetProjectEvaluator(bits.Skip(2).ToArray());
             }
 
+            if (bits[1].Equals("workspace", StringComparison.OrdinalIgnoreCase)) {
+                return GetWorkspaceEvaluator(bits.Skip(2).ToArray());
+            }
             return null;
         }
 
@@ -163,6 +193,21 @@ namespace Microsoft.PythonTools.Repl {
             };
 
             eval.UpdatePropertiesFromProjectMoniker();
+
+            return eval;
+        }
+
+        private IInteractiveEvaluator GetWorkspaceEvaluator(IReadOnlyList<string> args) {
+            _serviceProvider.MustBeCalledFromUIThread();
+
+            var workspace = args.ElementAtOrDefault(1);
+
+            var eval = new PythonInteractiveEvaluator(_serviceProvider) {
+                DisplayName = args.ElementAtOrDefault(0),
+                WorkspaceMoniker = workspace
+            };
+
+            eval.UpdatePropertiesFromWorkspaceMoniker();
 
             return eval;
         }

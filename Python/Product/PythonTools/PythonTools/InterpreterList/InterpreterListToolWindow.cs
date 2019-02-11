@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             ));
 
             RegisterCommands(
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironmentNoIcon, new AddEnvironmentCommand(this))
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this))
             );
 
             Content = list;
@@ -413,7 +413,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             var view = e.Parameter as EnvironmentView;
             e.CanExecute = view != null && File.Exists(e.Command == EnvironmentPathsExtension.StartInterpreter ?
                 view.Factory.Configuration.InterpreterPath :
-                view.Factory.Configuration.WindowsInterpreterPath);
+                view.Factory.Configuration.GetWindowsInterpreterPath());
             e.Handled = true;
         }
 
@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var config = new LaunchConfiguration(view.Factory.Configuration) {
                 PreferWindowedInterpreter = (e.Command == EnvironmentPathsExtension.StartWindowsInterpreter),
-                WorkingDirectory = view.Factory.Configuration.PrefixPath,
+                WorkingDirectory = view.Factory.Configuration.GetPrefixPath(),
                 SearchPaths = new List<string>()
             };
 
@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             // TODO: this is assuming that all environments that CanBeDeleted are conda environments, which may not be true in the future
             var view = e.Parameter as EnvironmentView;
             var result = MessageBox.Show(
-                Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.PrefixPath),
+                Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.GetPrefixPath()),
                 Resources.ProductTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question
@@ -483,7 +483,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             var registry = compModel.GetService<IInterpreterRegistryService>();
             var mgr = CondaEnvironmentManager.Create(_site);
             mgr.DeleteAsync(
-                view.Configuration.PrefixPath,
+                view.Configuration.GetPrefixPath(),
                 new CondaEnvironmentManagerUI(_outputWindow),
                 CancellationToken.None
             ).HandleAllExceptions(_site, GetType()).DoNotWait();

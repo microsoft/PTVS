@@ -334,7 +334,7 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault.Configuration)
                     .Count(mp => mp.FullName == "virtualenv"),
-                    string.Format("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.PrefixPath)
+                    string.Format("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.GetPrefixPath())
                 );
 
                 var project = CreateTemporaryProject(app);

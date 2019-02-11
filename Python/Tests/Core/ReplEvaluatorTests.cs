@@ -227,7 +227,7 @@ f()",
             }
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterConfiguration(
+                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
                     "Test Interpreter",
                     "Python 2.6 32-bit",
                     PathUtils.GetParent(_pythonExe),
@@ -341,7 +341,7 @@ f()",
 
             var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
                 DisplayName = "Test Interpreter",
-                Configuration = new LaunchConfiguration(new InterpreterConfiguration("InvalidInterpreter", "Test Interpreter", path: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
+                Configuration = new LaunchConfiguration(new VisualStudioInterpreterConfiguration("InvalidInterpreter", "Test Interpreter", pythonExePath: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
             };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);

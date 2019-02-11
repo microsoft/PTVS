@@ -331,7 +331,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
             var version = CPythonInterpreterFactoryProvider.VersionFromSysVersionInfo(interpreterPath);
 
-            var config = new InterpreterConfiguration(
+            var config = new VisualStudioInterpreterConfiguration(
                 CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, name),
                 description,
                 prefixPath,

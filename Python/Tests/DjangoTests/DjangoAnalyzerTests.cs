@@ -81,7 +81,7 @@ namespace DjangoTests {
                 p.Tree = parser.ParseFile();
                 p.Complete();
             }
-            entry.Analyze(CancellationToken.None, false);
+            entry.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(
                 proj._filters.Keys.Except(DjangoAnalyzer._knownFilters.Keys),
@@ -111,7 +111,7 @@ namespace DjangoTests {
                 p.Tree = parser.ParseFile();
                 p.Complete();
             }
-            entry.Analyze(CancellationToken.None, false);
+            entry.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
@@ -183,7 +183,7 @@ namespace DjangoTests {
             }
 
             foreach (var entry in entries) {
-                entry.Analyze(CancellationToken.None, false);
+                entry.Analyze(CancellationToken.None);
             }
 
             Debug.WriteLine((testFact as IPythonInterpreterFactoryWithLog)?.GetAnalysisLogContent(CultureInfo.CurrentUICulture) ?? "(no logs)");

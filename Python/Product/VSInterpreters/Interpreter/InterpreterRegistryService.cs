@@ -130,7 +130,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_noInterpretersValue == null) {
                     // Our default value is analysis-only for 3.6, since that is the default
                     // Python we would have shipped with VS.
-                    _noInterpretersValue = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6), Strings.NoInterpretersDescription);
+                    var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|3.6", Strings.NoInterpretersDescription, version: new Version(3, 6));
+                    _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
                 }
                 return _noInterpretersValue;
             }

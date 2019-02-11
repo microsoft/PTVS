@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Project {
                 switch ((VsCommands2K)cmd) {
                     case CommonConstants.OpenFolderInExplorerCmdId:
                         Process.Start(new ProcessStartInfo {
-                            FileName = _factory.Configuration.PrefixPath,
+                            FileName = _factory.Configuration.GetPrefixPath(),
                             Verb = "open",
                             UseShellExecute = true
                         });
@@ -237,7 +237,7 @@ namespace Microsoft.PythonTools.Project {
                         var pyProj = ProjectMgr as PythonProjectNode;
                         if (pyProj != null && _factory != null && _factory.Configuration != null) {
                             return pyProj.OpenCommandPrompt(
-                                _factory.Configuration.PrefixPath,
+                                _factory.Configuration.GetPrefixPath(),
                                 _factory.Configuration,
                                 _factory.Configuration.Description
                             );
@@ -287,7 +287,7 @@ namespace Microsoft.PythonTools.Project {
                     Strings.EnvironmentRemoveConfirmation.FormatUI(Caption) :
                     _factory == null ?
                         Strings.EnvironmentDeleteConfirmation_NoPath.FormatUI(Caption) :
-                        Strings.EnvironmentDeleteConfirmation.FormatUI(Caption, _factory.Configuration.PrefixPath);
+                        Strings.EnvironmentDeleteConfirmation.FormatUI(Caption, _factory.Configuration.GetPrefixPath());
                 int res = VsShellUtilities.ShowMessageBox(
                     ProjectMgr.Site,
                     string.Empty,
@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Project {
                 switch ((VsCommands2K)cmd) {
                     case CommonConstants.OpenFolderInExplorerCmdId:
                         result = QueryStatusResult.SUPPORTED;
-                        if (_factory != null && Directory.Exists(_factory.Configuration.PrefixPath)) {
+                        if (_factory != null && Directory.Exists(_factory.Configuration.GetPrefixPath())) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
@@ -407,7 +407,7 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.SUPPORTED;
                         if (_factory != null && _factory.Configuration.IsAvailable() &&
                             ProjectMgr.ActiveInterpreter != _factory &&
-                            Directory.Exists(_factory.Configuration.PrefixPath)
+                            Directory.Exists(_factory.Configuration.GetPrefixPath())
                         ) {
                             result |= QueryStatusResult.ENABLED;
                         }
@@ -415,7 +415,7 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_factory != null && _factory.Configuration.IsAvailable() &&
-                            Directory.Exists(_factory.Configuration.PrefixPath)
+                            Directory.Exists(_factory.Configuration.GetPrefixPath())
                         ) {
                             result |= QueryStatusResult.ENABLED;
                         }
@@ -449,7 +449,7 @@ namespace Microsoft.PythonTools.Project {
                     case SharedCommands.OpenCommandPromptHere:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_factory != null && _factory.Configuration.IsAvailable() &&
-                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            Directory.Exists(_factory.Configuration.GetPrefixPath()) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
                         }
@@ -457,7 +457,7 @@ namespace Microsoft.PythonTools.Project {
                     case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_factory != null && _factory.Configuration.IsAvailable() &&
-                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            Directory.Exists(_factory.Configuration.GetPrefixPath()) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
                         }
@@ -479,11 +479,11 @@ namespace Microsoft.PythonTools.Project {
                     return "UnknownInterpreter";
                 }
 
-                if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
+                if (!PathUtils.IsValidPath(_factory.Configuration.GetPrefixPath())) {
                     return "UnknownInterpreter\\{0}".FormatInvariant(_factory.Configuration.Id);
                 }
 
-                return _factory.Configuration.PrefixPath;
+                return _factory.Configuration.GetPrefixPath();
             }
         }
 

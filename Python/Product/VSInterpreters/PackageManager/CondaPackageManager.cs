@@ -57,11 +57,11 @@ namespace Microsoft.PythonTools.Interpreter {
             _factory = factory;
             _installedPackages = new List<PackageSpec>();
             _availablePackages = new List<PackageSpec>();
-            _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath);
+            _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.GetPrefixPath());
             if (!File.Exists(_condaPath)) {
                 throw new NotSupportedException();
             }
-            _historyPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta", "history");
+            _historyPath = Path.Combine(_factory.Configuration.GetPrefixPath(), "conda-meta", "history");
         }
 
         public string UniqueKey => "conda";
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private async Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
             // Check with the UI first, as it takes into account global elevation options
-            var elevate = ui == null ? false : await ui.ShouldElevateAsync(this, operation);
+            var elevate = ui != null && await ui.ShouldElevateAsync(this, operation);
             if (!elevate) {
                 // Package manager UI thinks we don't need to elevate, but we may have to.
                 // Apply the same logic as conda.gateways.disk.test.prefix_is_writable()
@@ -158,11 +158,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 // - ./conda-meta/*.json
                 // - ./python.exe
                 try {
-                    var metaPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta");
+                    var metaPath = Path.Combine(_factory.Configuration.GetPrefixPath(), "conda-meta");
                     var filePath = Directory.EnumerateFiles(metaPath, "history")
                         .Union(Directory.EnumerateFiles(metaPath, "conda*.json"))
                         .Union(Directory.EnumerateFiles(metaPath, "*.json"))
-                        .Union(Directory.EnumerateFiles(_factory.Configuration.PrefixPath, "python.exe"))
+                        .Union(Directory.EnumerateFiles(_factory.Configuration.GetPrefixPath(), "python.exe"))
                         .FirstOrDefault();
                     if (filePath != null) {
                         using (new FileStream(filePath, FileMode.Append)) {
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var proc = ProcessOutput.Run(
                     _condaPath,
                     args,
-                    _factory.Configuration.PrefixPath,
+                    _factory.Configuration.GetPrefixPath(),
                     UnbufferedEnv,
                     false,
                     null
@@ -244,7 +244,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var args = new List<string>();
             args.Add("install");
             args.Add("-p");
-            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.PrefixPath));
+            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.GetPrefixPath()));
             args.Add("-y");
 
             args.Add(package.FullSpec);
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var output = ProcessOutput.Run(
                         _condaPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var args = new List<string>();
             args.Add("uninstall");
             args.Add("-p");
-            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.PrefixPath));
+            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.GetPrefixPath()));
             args.Add("-y");
 
             args.Add(package.Name);
@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var output = ProcessOutput.Run(
                         _condaPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
@@ -357,7 +357,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InstalledPackagesChanged;
         public event EventHandler InstalledFilesChanged;
 
-        private string EnvironmentName => Path.GetFileName(_factory.Configuration.PrefixPath);
+        private string EnvironmentName => Path.GetFileName(_factory.Configuration.GetPrefixPath());
 
         public string ExtensionDisplayName => Strings.CondaExtensionDisplayName;
 
@@ -399,7 +399,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var args = new List<string>();
                 args.Add("list");
                 args.Add("-p");
-                args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.PrefixPath));
+                args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.GetPrefixPath()));
                 args.Add("--json");
 
                 var concurrencyLock = alreadyHasConcurrencyLock ? null : await _concurrencyLock.LockAsync(cancellationToken);
@@ -407,7 +407,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var proc = ProcessOutput.Run(
                         _condaPath,
                         args,
-                        _factory.Configuration.PrefixPath,
+                        _factory.Configuration.GetPrefixPath(),
                         UnbufferedEnv,
                         false,
                         null
@@ -510,13 +510,13 @@ namespace Microsoft.PythonTools.Interpreter {
             var args = new List<string>();
             args.Add("search");
             args.Add("-p");
-            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.PrefixPath));
+            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.GetPrefixPath()));
             args.Add("--json");
 
             using (var proc = ProcessOutput.Run(
                 _condaPath,
                 args,
-                _factory.Configuration.PrefixPath,
+                _factory.Configuration.GetPrefixPath(),
                 UnbufferedEnv,
                 false,
                 null

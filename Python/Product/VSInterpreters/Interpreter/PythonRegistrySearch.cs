@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterConfiguration.DisambiguateDescriptions(_info.Select(i => i.Configuration).ToArray());
         }
 
-        private InterpreterConfiguration TryReadConfiguration(
+        private VisualStudioInterpreterConfiguration TryReadConfiguration(
             string company,
             string tag,
             RegistryKey tagKey,
@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            return new InterpreterConfiguration(
+            return new VisualStudioInterpreterConfiguration(
                 id,
                 description,
                 prefixPath,

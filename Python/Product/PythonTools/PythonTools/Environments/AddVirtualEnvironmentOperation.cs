@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentOperation {
         private readonly IServiceProvider _site;
         private readonly PythonProjectNode _project;
-        private readonly IWorkspace _workspace;
+        private readonly IPythonWorkspaceContext _workspace;
         private readonly string _virtualEnvPath;
         private readonly string _baseInterpreter;
         private readonly bool _useVEnv;
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Environments {
         public AddVirtualEnvironmentOperation(
             IServiceProvider site,
             PythonProjectNode project,
-            IWorkspace workspace,
+            IPythonWorkspaceContext workspace,
             string virtualEnvPath,
             string baseInterpreterId,
             bool useVEnv,

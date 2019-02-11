@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Options {
         private const string EnterCommitsSetting = "EnterCommits";
         private const string IntersectMembersSetting = "IntersectMembers";
         private const string NewLineAtEndOfWordSetting = "NewLineAtEndOfWord";
-        private const string CompletionCommittedBySetting = "CompletionCommittedBy";
+        private const string CompletionCommittedBySetting = "CompletionCommittedByChars"; // "CompletionCommittedBy" in 16.0 preview 3 and earlier
         private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
         private const string FilterCompletionsSetting = "FilterCompletions";
@@ -34,8 +34,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
         private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
 
-        private const string _oldDefaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
-        private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#@\\";
+        private const string _defaultCompletionChars = ""; // "{}[]().,:;+-*/%&|^~=<>#@\\" in 16.0 preview 3 and earlier
 
         internal AdvancedEditorOptions(PythonToolsService service) {
             _service = service;
@@ -46,10 +45,6 @@ namespace Microsoft.PythonTools.Options {
             IntersectMembers = _service.LoadBool(IntersectMembersSetting, Category) ?? false;
             AddNewLineAtEndOfFullyTypedWord = _service.LoadBool(NewLineAtEndOfWordSetting, Category) ?? false;
             CompletionCommittedBy = _service.LoadString(CompletionCommittedBySetting, Category) ?? _defaultCompletionChars;
-            if (CompletionCommittedBy == _oldDefaultCompletionChars) {
-                CompletionCommittedBy = _defaultCompletionChars;
-                _service.SaveString(CompletionCommittedBySetting, Category, CompletionCommittedBy);
-            }
             EnterOutliningModeOnOpen = _service.LoadBool(EnterOutlingModeOnOpenSetting, Category) ?? true;
             PasteRemovesReplPrompts = _service.LoadBool(PasteRemovesReplPromptsSetting, Category) ?? true;
             FilterCompletions = _service.LoadBool(FilterCompletionsSetting, Category) ?? true;
