@@ -195,6 +195,26 @@ namespace ReplWindowUITests {
                 }
             },
             {
+                "Python37",
+                new ReplWindowProxySettings {
+                    Version = PythonPaths.Python37,
+                    RawInput = "input",
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'",
+                }
+            },
+            {
+                "Python37_x64",
+                new ReplWindowProxySettings {
+                    Version = PythonPaths.Python37_x64,
+                    RawInput = "input",
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'",
+                }
+            },
+            {
                 "Anaconda36",
                 new ReplWindowProxySettings {
                     Version = PythonPaths.Anaconda36,

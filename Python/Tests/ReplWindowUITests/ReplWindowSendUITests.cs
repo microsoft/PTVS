@@ -14,10 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
@@ -30,7 +37,7 @@ namespace ReplWindowUITests {
         /// the next statement.
         /// </summary>
         public void SendToInteractiveLineByLine(PythonVisualStudioApp app) {
-            RunOne(app, "Program.py",
+            RunFromProject(app, "Program.py",
                 Input("if True:"),
                 Input("    x = 1"),
                 Input("    y = 2"),
@@ -58,7 +65,7 @@ namespace ReplWindowUITests {
         /// the next statement.
         /// </summary>
         public void SendToInteractiveCellByCell(PythonVisualStudioApp app) {
-            RunOne(app, "Cells.py",
+            RunFromProject(app, "Cells.py",
                 Input(@"#%% cell 1
 ... x = 1
 ... 
@@ -87,7 +94,7 @@ namespace ReplWindowUITests {
         /// while it's executing.
         /// </summary>
         public void SendToInteractiveDelayed(PythonVisualStudioApp app) {
-            RunOne(app, "Delayed.py",
+            RunFromProject(app, "Delayed.py",
                Input("import time").Complete,
                Input("if True:"),
                Input("    time.sleep(5)"),
@@ -104,7 +111,7 @@ namespace ReplWindowUITests {
         /// Mixed line-by-line and selection, no buffering
         /// </summary>
         public void SendToInteractiveSelection(PythonVisualStudioApp app) {
-            RunOne(app, "Delayed.py",
+            RunFromProject(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
 ...     time.sleep(5)
@@ -125,7 +132,7 @@ namespace ReplWindowUITests {
         /// is submitted.
         /// </summary>
         public void SendToInteractiveSelectionNoWait(PythonVisualStudioApp app) {
-            RunOne(app, "Delayed.py",
+            RunFromProject(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
 ...     time.sleep(5)
@@ -145,7 +152,7 @@ namespace ReplWindowUITests {
         /// Submit when read-only text is selected in REPL.
         /// </summary>
         public void SendToInteractiveOutputSelected(PythonVisualStudioApp app) {
-            RunOne(app, "SelectOutput.py",
+            RunFromProject(app, "SelectOutput.py",
                 Input("print('first')").Complete.Outputs("first"),
                 SelectReplLine(1),
                 Input("print('second')").Complete.Outputs("second"),
@@ -159,24 +166,101 @@ namespace ReplWindowUITests {
             );
         }
 
+        /// <summary>
+        /// Verifies the workspace interpreter is used.
+        /// </summary>
+        public void SendToInteractiveWorkspaceInterpreter(PythonVisualStudioApp app) {
+            RunFromWorkspace(app, "PrintInterpreter.py",
+                Input("import sys").Complete,
+                Input("print(sys.version_info[:2])").Complete.Outputs("(3, 7)"),
+                EndOfInput
+            );
+        }
+
+        /// <summary>
+        /// Verifies the workspace package can be imported.
+        /// </summary>
+        public void SendToInteractiveWorkspacePackage(PythonVisualStudioApp app) {
+            RunFromWorkspace(app, "ImportWorkspacePackage.py",
+                Input("import package1").Complete,
+                Input("print(package1.PACKAGE_MSG)").Complete.Outputs("Package Success"),
+                EndOfInput
+            );
+        }
+
+        /// <summary>
+        /// Verifies the workspace search path package can be imported.
+        /// </summary>
+        public void SendToInteractiveWorkspaceSearchPathPackage(PythonVisualStudioApp app) {
+            RunFromWorkspace(app, "ImportSearchPathPackage.py",
+                Input("import folder1").Complete,
+                Input("print(folder1.SEARCH_PATH_MSG)").Complete.Outputs("Search Path Success"),
+                EndOfInput
+            );
+        }
+
         #endregion
 
         #region Helpers
 
-        private void RunOne(PythonVisualStudioApp app, string filename, params SendToStep[] inputs) {
-            // SendToInteractive.pyproj uses Python 3.5 32-bit
-            var settings = ReplWindowSettings.FindSettingsForInterpreter("Python35");
-            var sln = app.CopyProjectForTest(@"TestData\SendToInteractive.sln");
-            var project = app.OpenProject(sln);
-            var program = project.ProjectItems.Item(filename);
-            var window = program.Open();
+        private void RunFromProject(PythonVisualStudioApp app, string filename, params SendToStep[] inputs) {
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python37_x64.AssertInstalled();
 
+            // Set global default to 2.7 (different than workspace setting) to avoid false positive
+            using (var defaultInterpreterSetter = app.SelectDefaultInterpreter(PythonPaths.Python27_x64)) {
+                // SendToInteractive.pyproj uses Python 3.7 64-bit
+                var settings = ReplWindowSettings.FindSettingsForInterpreter("Python37_x64");
+                var sln = app.CopyProjectForTest(@"TestData\SendToInteractive.sln");
+                var project = app.OpenProject(sln);
+                var program = project.ProjectItems.Item(filename);
+                var window = program.Open();
+                window.Activate();
+                var doc = app.GetDocument(program.Document.FullName);
+
+                Run(app, inputs, settings, doc, window);
+            }
+        }
+
+        private void RunFromWorkspace(PythonVisualStudioApp app, string filename, params SendToStep[] inputs) {
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python37_x64.AssertInstalled();
+
+            // Set global default to 2.7 (different than workspace setting) to avoid false positive
+            using (var defaultInterpreterSetter = app.SelectDefaultInterpreter(PythonPaths.Python27_x64)) {
+                // "SendToInteractiveWorkspace" workspace uses Python 3.7 64-bit
+                var settings = ReplWindowSettings.FindSettingsForInterpreter("Python37_x64");
+
+                // Create a directory structure where we have a search path
+                // folder located outside of the workspace folder.
+                var parentFolder = TestData.GetTempPath();
+                string workspaceFolder = Path.Combine(parentFolder, "SendToInteractiveWorkspace");
+                string searchPathFolder = Path.Combine(parentFolder, "SendToInteractiveWorkspaceSearchPath");
+                FileUtils.CopyDirectory(TestData.GetPath("TestData", "SendToInteractiveWorkspace"), workspaceFolder);
+                FileUtils.CopyDirectory(TestData.GetPath("TestData", "SendToInteractiveWorkspaceSearchPath"), searchPathFolder);
+
+                var provider = app.ComponentModel.GetService<IPythonWorkspaceContextProvider>();
+                using (var initEvent = new AutoResetEvent(false)) {
+                    provider.WorkspaceInitialized += (sender, e) => { initEvent.Set(); };
+
+                    var documentFullPath = Path.Combine(workspaceFolder, filename);
+                    app.OpenFolder(workspaceFolder);
+                    var doc = app.OpenDocument(documentFullPath);
+                    var window = app.OpenDocumentWindows.SingleOrDefault(w => PathUtils.IsSamePath(w.Document.FullName, documentFullPath));
+                    Assert.IsNotNull(window, $"Could not get DTE window for {documentFullPath }");
+                    Assert.IsTrue(initEvent.WaitOne(5000), $"Expected {nameof(provider.WorkspaceOpening)}.");
+
+                    Run(app, inputs, settings, doc, window, workspaceName: "SendToInteractiveWorkspace");
+                }
+            }
+        }
+
+        private static void Run(PythonVisualStudioApp app, SendToStep[] inputs, ReplWindowProxySettings settings, EditorWindow doc, EnvDTE.Window window, string projectName = null, string workspaceName = null) {
             window.Activate();
-
-            var doc = app.GetDocument(program.Document.FullName);
             doc.MoveCaret(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, 0));
+            app.WaitForCommandAvailable("Python.SendSelectionToInteractive", TimeSpan.FromSeconds(15));
 
-            var interactive = ReplWindowProxy.Prepare(app, settings, useIPython: false);
+            var interactive = ReplWindowProxy.Prepare(app, settings, projectName, workspaceName, useIPython: false);
 
             interactive.ExecuteText("42").Wait();
             interactive.ClearScreen();
