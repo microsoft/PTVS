@@ -26,10 +26,7 @@ namespace IronPythonTests {
 
         public IronPythonAnalysis(string idOrDescription) : base(idOrDescription) { }
 
-        public IronPythonAnalysis(
-            IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null
-        ) : base(factory, interpreter) {
+        public IronPythonAnalysis(IPythonInterpreterFactory factory) : base(factory) {
             ((IronPythonInterpreter)Analyzer.Interpreter).Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
         }
 

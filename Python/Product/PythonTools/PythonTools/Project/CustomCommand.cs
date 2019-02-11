@@ -594,7 +594,7 @@ namespace Microsoft.PythonTools.Project {
             var factory = project.GetInterpreterFactoryOrThrow();
 
             return isWindows ?
-                factory.Configuration.WindowsInterpreterPath :
+                factory.Configuration.GetWindowsInterpreterPath() :
                 factory.Configuration.InterpreterPath;
         }
 

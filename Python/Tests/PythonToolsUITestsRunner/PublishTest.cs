@@ -53,44 +53,9 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void TestPublishFilesControlled() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesControlled));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void TestPublishFilesImpersonate() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonate));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void TestPublishFilesImpersonateNoMachineName() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateNoMachineName));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void TestPublishFilesImpersonateWrongCredentials() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateWrongCredentials));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void TestPublishFilesImpersonateCancelCredentials() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateCancelCredentials));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void TestPublishFtp() {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFtp));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
         public void TestPublishVirtualEnvironment() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishVirtualEnvironment));
         }
+
     }
 }

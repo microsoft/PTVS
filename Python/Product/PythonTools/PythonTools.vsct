@@ -353,26 +353,12 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="Add" />
         <CommandFlag>DefaultDisabled</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Environment...</ButtonText>
           <ToolTipText>Add a new or existing Python environment.</ToolTipText>
           <CanonicalName>Add Environment</CanonicalName>
           <LocCanonicalName>Add Environment</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <!-- This is a copy of cmdidAddEnvironment for use on the environments window toolbar -->
-      <!-- where there's only one button, which would look bad if we were to use an icon -->
-      <!-- When we add more buttons to the toolbar, we'll be able to get rid of this and use icons-->
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironmentNoIcon" priority="0x0100" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Add &amp;Environment...</ButtonText>
-          <ToolTipText>Add a new or existing Python environment.</ToolTipText>
         </Strings>
       </Button>
 
@@ -1069,6 +1055,10 @@ permissions and limitations under the License.
     <!--
         Button placements
     -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="EnvWindowAddGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x0100">
       <Parent guid="guidPythonToolsCmdSet" id="EnvironmentStatusManageEnvironmentsGroup"/>
     </CommandPlacement>
@@ -1144,10 +1134,6 @@ permissions and limitations under the License.
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0200" Condition="Defined(DEV14)">
       <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0200">
-      <Parent guid="guidPythonToolsCmdSet" id="MainPythonToolbarEnvironmentGroup"/>
     </CommandPlacement>
 
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInstallPythonPackage" priority="0x0300">
@@ -1255,7 +1241,6 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
       <IDSymbol name="cmdidAddCondaEnv" value="0x4037" />
-      <IDSymbol name="cmdidAddEnvironmentNoIcon" value="0x4038"/>
 
       <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
       <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>

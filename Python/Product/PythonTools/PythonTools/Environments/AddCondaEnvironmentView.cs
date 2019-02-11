@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private static bool HasPrefixName(InterpreterConfiguration config, string name) {
-            var current = PathUtils.GetFileOrDirectoryName(config.PrefixPath);
+            var current = PathUtils.GetFileOrDirectoryName(config.GetPrefixPath());
             return string.CompareOrdinal(current, name) == 0;
         }
 

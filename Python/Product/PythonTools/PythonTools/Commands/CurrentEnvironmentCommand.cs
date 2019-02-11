@@ -49,7 +49,15 @@ namespace Microsoft.PythonTools.Commands {
             if (inArg != null) {
                 var text = inArg as string;
                 var factory = _envSwitchMgr.AllFactories.SingleOrDefault(f => f.Configuration.Description == text);
-                SwitchToFactoryAsync(factory).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+                if (factory != null) {
+                    SwitchToFactoryAsync(factory).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+                } else {
+                    // The special "Add Environment..." entry, or any entry that no longer exists brings up the add dialog
+                    AddEnvironmentCommand
+                        .AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment)
+                        .HandleAllExceptions(_serviceProvider, GetType())
+                        .DoNotWait();
+                }
             }
         }
 

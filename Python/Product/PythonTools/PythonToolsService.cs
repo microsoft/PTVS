@@ -185,8 +185,10 @@ namespace Microsoft.PythonTools {
 
         internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             if (factory == null) {
-                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|2.7", "Analysis Only 2.7", version: new Version(2, 7));
+                factory = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
             }
+
             return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
         }
 
@@ -259,6 +261,12 @@ namespace Microsoft.PythonTools {
                 if (analyzer != null) {
                     yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
                 }
+            }
+
+            var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
+            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+            if (workspaceAnalyzer != null) {
+                yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
             }
         }
 

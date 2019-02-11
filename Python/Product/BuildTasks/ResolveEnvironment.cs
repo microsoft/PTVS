@@ -240,14 +240,14 @@ namespace Microsoft.PythonTools.BuildTasks {
         public ITaskHost HostObject { get; set; }
 
         private void UpdateResultFromConfiguration(InterpreterConfiguration config, string projectHome) {
-            PrefixPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
+            PrefixPath = PathUtils.EnsureEndSeparator(config.GetPrefixPath());
             if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
                 ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
             } else {
                 ProjectRelativePrefixPath = string.Empty;
             }
             InterpreterPath = config.InterpreterPath;
-            WindowsInterpreterPath = config.WindowsInterpreterPath;
+            WindowsInterpreterPath = config.GetWindowsInterpreterPath();
             Architecture = config.Architecture.ToString("X");
             PathEnvironmentVariable = config.PathEnvironmentVariable;
             Description = config.Description;

@@ -44,11 +44,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
-      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Microsoft.PythonTools.Analysis</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
       <Name>Microsoft.PythonTools.BuildTasks</Name>
@@ -81,17 +76,6 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
-      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
-      <Name>Microsoft.PythonTools.Analyzer</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
-    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
-      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Microsoft.PythonTools.Ipc.Json</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
-    <ProjectReference2 Include="..\Analyzer\Analyzer.csproj" />
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
@@ -198,6 +182,22 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
+    <Reference Include="Microsoft.Python.Analysis.Engine">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.Python.LanguageServer.Core">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.PythonTools.Ipc.Json">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.PythonTools.Analyzer">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -287,6 +287,8 @@
     <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
     <Compile Include="PythonTools\Environments\ProjectView.cs" />
     <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
+    <Compile Include="PythonTools\Intellisense\WorkspaceAnalyzer.cs" />
+    <Compile Include="PythonTools\Intellisense\WorkspaceAnalysis.cs" />
     <Compile Include="PythonTools\Options\CondaOptions.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -531,7 +533,6 @@
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
-    <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
     <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
     <Compile Include="PythonTools\Options\PythonFormattingWrappingOptionsPage.cs">
@@ -784,6 +785,41 @@
     <None Include="Theme\Repl\light.vstheme" />
     <None Include="Theme\Repl\additionalcontrast.vstheme" />
     <None Include="Theme\Repl\make_theme_pkgdef.py" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\scrape_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\BuiltinScraper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\ExtensionScraper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\IronPythonScraper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\PythonScraper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\get_search_paths.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\typing-stub.pyi">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
     <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1144,6 +1180,7 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>

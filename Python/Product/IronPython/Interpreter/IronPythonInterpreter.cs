@@ -33,12 +33,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreter :
-        IPythonInterpreter,
-        IDotNetPythonInterpreter,
-        IPythonInterpreterWithProjectReferences,
-        IDisposable
-    {
+    internal class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IPythonInterpreterWithProjectReferences {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
         private readonly ConcurrentDictionary<string, IPythonModule> _modules = new ConcurrentDictionary<string, IPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
@@ -47,14 +42,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
-        private readonly IPythonInterpreterFactory _factory;
+        private readonly IronPythonAstInterpreterFactory _factory;
+        private readonly IPythonInterpreter _pythonInterpreter;
         private readonly IronPythonBuiltinModule _builtinModule;
 #if DEBUG
         private int _id;
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(IPythonInterpreterFactory factory) {
+        public IronPythonInterpreter(IronPythonAstInterpreterFactory factory, IPythonInterpreter pythonInterpreter) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter {0} created from {1}", _id, factory.GetType().FullName));
@@ -65,6 +61,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 #endif
 
             _factory = factory;
+            _pythonInterpreter = pythonInterpreter;
 
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
@@ -91,6 +88,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private AppDomain CreateDomain(out RemoteInterpreterProxy remoteInterpreter) {
             // We create a sacrificial domain for loading all of our assemblies into.  
 
+            var ironPythonAssemblyPath = Path.GetDirectoryName(_factory.Configuration.GetWindowsInterpreterPath());
             AppDomainSetup setup = new AppDomainSetup();
             setup.ShadowCopyFiles = "true";
             // We are in ...\Extensions\Microsoft\IronPython Interpreter\2.0
@@ -101,18 +99,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
             // So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
             setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
             setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" +
-                                   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
+                                   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location) + ";" +
+                                   Path.Combine(ironPythonAssemblyPath, "DLLs") + ";" +
+                                   ironPythonAssemblyPath;
 
             setup.PrivateBinPathProbe = "";
-            if (Directory.Exists(_factory.Configuration.PrefixPath)) {
+            if (Directory.Exists(_factory.Configuration.GetPrefixPath())) {
                 setup.AppDomainInitializer = IronPythonResolver.Initialize;
-                setup.AppDomainInitializerArguments = new[] { _factory.Configuration.PrefixPath };
+                setup.AppDomainInitializerArguments = new[] { _factory.Configuration.GetPrefixPath() };
             }
-            var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
 
-            remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
-                typeof(RemoteInterpreterProxy).Assembly.FullName,
-                typeof(RemoteInterpreterProxy).FullName);
+            var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
+            using (new RemoteAssemblyResolver(domain, ironPythonAssemblyPath)) {
+                remoteInterpreter = (RemoteInterpreterProxy) domain.CreateInstanceAndUnwrap(
+                    typeof(RemoteInterpreterProxy).Assembly.FullName,
+                    typeof(RemoteInterpreterProxy).FullName);
+            }
 
 #if DEBUG
             var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
@@ -141,6 +143,52 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 #endif
 
+        [Serializable]
+        class RemoteAssemblyResolver : IDisposable {
+            private readonly AppDomain _appDomain;
+            private readonly string _ironPythonRootPath;
+
+            public RemoteAssemblyResolver(AppDomain appDomain, string ironPythonRootPath) {
+                _appDomain = appDomain;
+                _ironPythonRootPath = ironPythonRootPath;
+                _appDomain.AssemblyResolve += AppDomainOnAssemblyResolve;
+            }
+
+            private Assembly AppDomainOnAssemblyResolve(object sender, ResolveEventArgs args) {
+                var name = new AssemblyName(args.Name).Name;
+                switch (name) {
+                    case "IronPython":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "IronPython.dll"));
+                    case "IronPython.Modules":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "IronPython.Modules.dll"));
+                    case "IronPython.Wpf":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "DLLs", "IronPython.Wpf.dll"));
+                    case "Microsoft.Scripting":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "Microsoft.Scripting.dll"));
+                    case "Microsoft.Dynamic":
+                        return AssemblyLoadFrom(Path.Combine(_ironPythonRootPath, "Microsoft.Dynamic.dll"));
+                    default:
+                        return null;
+                }
+            }
+
+            public void Dispose() {
+                _appDomain.AssemblyResolve -= AppDomainOnAssemblyResolve;
+            }
+
+            private static Assembly AssemblyLoadFrom(string assemblyPath) {
+                try {
+                    return Assembly.LoadFrom(assemblyPath);
+                } catch (FileLoadException) {
+                    return null;
+                } catch (IOException) {
+                    return null;
+                } catch (BadImageFormatException) {
+                    return null;
+                }
+            }
+        }
+
         class AssemblyResolver {
             internal static AssemblyResolver Instance = new AssemblyResolver();
 
@@ -159,8 +207,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void LoadModules() {
-            if (!string.IsNullOrEmpty(_factory.Configuration.PrefixPath)) {
-                var dlls = PathUtils.GetAbsoluteDirectoryPath(_factory.Configuration.PrefixPath, "DLLs");
+            if (!string.IsNullOrEmpty(_factory.Configuration.GetPrefixPath())) {
+                var dlls = PathUtils.GetAbsoluteDirectoryPath(_factory.Configuration.GetPrefixPath(), "DLLs");
                 if (Directory.Exists(dlls)) {
                     foreach (var dll in PathUtils.EnumerateFiles(dlls, "*.dll", recurse: false)) {
                         try {
@@ -190,6 +238,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public void Initialize(PythonAnalyzer state) {
+            _pythonInterpreter.Initialize(state);
+
             if (_state != null) {
                 _state.SearchPathsChanged -= PythonAnalyzer_SearchPathsChanged;
             }
@@ -228,7 +278,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 }
 
                 // process xaml file, add attributes to self
-                string xamlPath = Path.Combine(Path.GetDirectoryName(unit.Entry.FilePath), strConst);
+                string xamlPath = Path.Combine(Path.GetDirectoryName(unit.ProjectEntry.FilePath), strConst);
                 if (_xamlByFilename.TryGetValue(xamlPath, out var xamlProject)) {
                     // TODO: Get existing analysis if it hasn't changed.
                     var analysis = xamlProject.Analysis;
@@ -241,7 +291,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         }
                     }
 
-                    xamlProject.AddDependency(unit.Entry);
+                    xamlProject.AddDependency(unit.ProjectEntry);
 
                     var evalUnit = unit.CopyForEval();
 
@@ -487,9 +537,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return _builtinModule;
             }
 
-            IPythonModule mod;
-
-            if (_modules.TryGetValue(name, out mod)) {
+            if (_modules.TryGetValue(name, out var mod)) {
                 return mod;
             }
 
@@ -501,65 +549,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 }
             }
 
-            if (_factory is AstPythonInterpreterFactory apf) {
-                var ctxt = new AstPythonInterpreterFactory.TryImportModuleContext {
-                    Interpreter = this,
-                    BuiltinModule = _builtinModule,
-                    ModuleCache = _modules
-                };
-                for (int retries = 5; retries > 0; --retries) {
-                    // The call should be cancelled by the cancellation token, but since we
-                    // are blocking here we wait for slightly longer. Timeouts are handled
-                    // gracefully by TryImportModuleAsync(), so we want those to trigger if
-                    // possible, but if all else fails then we'll abort and treat it as an
-                    // error.
-                    // (And if we've got a debugger attached, don't time out at all.)
-                    Task<AstPythonInterpreterFactory.TryImportModuleResult> impTask;
-#if DEBUG
-                    if (Debugger.IsAttached) {
-                        impTask = apf.TryImportModuleAsync(name, ctxt, CancellationToken.None);
-                    } else {
-#endif
-                        var cts = new CancellationTokenSource(5000);
-                        impTask = apf.TryImportModuleAsync(name, ctxt, cts.Token);
-                        try {
-                            if (!impTask.Wait(10000)) {
-                                throw new OperationCanceledException();
-                            }
-                        } catch (OperationCanceledException) {
-                            Debug.Fail("Import timeout");
-                            return null;
-                        }
-#if DEBUG
-                    }
-#endif
-                    var result = impTask.Result;
-                    mod = result.Module;
-                    switch (result.Status) {
-                        case AstPythonInterpreterFactory.TryImportModuleResultCode.Success:
-                            if (mod == null) {
-                                _modules.TryRemove(name, out _);
-                                break;
-                            }
-                            return mod;
-                        case AstPythonInterpreterFactory.TryImportModuleResultCode.ModuleNotFound:
-                            retries = 0;
-                            _modules.TryRemove(name, out _);
-                            break;
-                        case AstPythonInterpreterFactory.TryImportModuleResultCode.NotSupported:
-                            retries = 0;
-                            break;
-                        case AstPythonInterpreterFactory.TryImportModuleResultCode.NeedRetry:
-                        case AstPythonInterpreterFactory.TryImportModuleResultCode.Timeout:
-                            break;
-                    }
-                }
+            var pythonModule = _pythonInterpreter.ImportModule(name);
+            if (pythonModule != null) {
+                _modules.GetOrAdd(name, pythonModule);
+                return pythonModule;
             }
 
             var nameParts = name.Split('.');
-            mod = null;
             if (nameParts.Length > 1 && (mod = ImportModule(nameParts[0])) != null) {
-                for (int i = 1; i < nameParts.Length && mod != null; ++i) {
+                for (var i = 1; i < nameParts.Length && mod != null; ++i) {
                     mod = mod.GetMember(IronPythonModuleContext.ShowClrInstance, nameParts[i]) as IPythonModule;
                 }
             }
@@ -651,8 +649,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
 
             lock (this) {
-                IMember res;
-                if (_members.TryGetValue(obj, out res)) {
+                if (_members.TryGetValue(obj, out var res)) {
                     return res;
                 }
 
@@ -736,10 +733,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
+            _pythonInterpreter.Dispose();
             var evt = UnloadingDomain;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            evt?.Invoke(this, EventArgs.Empty);
 
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();

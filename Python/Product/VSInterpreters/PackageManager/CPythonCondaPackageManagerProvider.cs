@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-            var prefixPath = factory.Configuration.PrefixPath;
+            var prefixPath = factory.Configuration.GetPrefixPath();
             if (string.IsNullOrEmpty(prefixPath) ||
                 !Directory.Exists(Path.Combine(prefixPath, "conda-meta"))) {
                 yield break;

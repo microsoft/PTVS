@@ -27,12 +27,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly PythonAst _tree;
         private readonly string _filename;
         private readonly Uri _documentUri;
-        private readonly IReadOnlyList<LocationInfo> _spans;
+        private readonly IReadOnlyList<ILocationInfo> _spans;
         private bool _inClass;
 
-        public readonly List<KeyValuePair<string, LocationInfo>> Methods = new List<KeyValuePair<string, LocationInfo>>();
+        public readonly List<KeyValuePair<string, ILocationInfo>> Methods = new List<KeyValuePair<string, ILocationInfo>>();
 
-        public TestMethodWalker(PythonAst tree, string filename, Uri documentUri, IEnumerable<LocationInfo> spans) {
+        public TestMethodWalker(PythonAst tree, string filename, Uri documentUri, IEnumerable<ILocationInfo> spans) {
             _tree = tree;
             _filename = filename;
             _documentUri = documentUri;
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             base.PostWalk(node);
         }
 
-        private LocationInfo GetLoc(FunctionDefinition node) {
+        private ILocationInfo GetLoc(FunctionDefinition node) {
             var s = node.Header;
             var e = node.GetEnd(_tree);
             return new LocationInfo(
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public override bool Walk(FunctionDefinition node) {
             if (_inClass) {
                 try {
-                    Methods.Add(new KeyValuePair<string, LocationInfo>(node.Name, GetLoc(node)));
+                    Methods.Add(new KeyValuePair<string, ILocationInfo>(node.Name, GetLoc(node)));
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }

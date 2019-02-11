@@ -182,15 +182,15 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// return those.  If there aren't any 'test*' tests return (if one at 
         /// all) the runTest overridden method
         /// </summary>
-        private static IEnumerable<KeyValuePair<string, LocationInfo>> GetTestCaseMembers(
+        private static IEnumerable<KeyValuePair<string, ILocationInfo>> GetTestCaseMembers(
             PythonAst ast,
             string sourceFile,
             Uri documentUri,
-            ModuleAnalysis analysis,
+            IModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
 
-            IEnumerable<KeyValuePair<string, LocationInfo>> tests = null, runTest = null;
+            IEnumerable<KeyValuePair<string, ILocationInfo>> tests = null, runTest = null;
             if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
                 var walker = new TestMethodWalker(ast, sourceFile, documentUri, classValue.Locations);
                 ast.Walk(walker);
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method))
-                .Select(v => new KeyValuePair<string, LocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
+                .Select(v => new KeyValuePair<string, ILocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
 
             var analysisTests = methodFunctions.Where(v => v.Key.StartsWithOrdinal("test"));
             var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
@@ -215,8 +215,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
-            return analysis.GetAllAvailableMembers(SourceLocation.MinValue, GetMemberOptions.ExcludeBuiltins)
+        private static IEnumerable<AnalysisValue> GetTestCaseClasses(IModuleAnalysis analysis) {
+            return analysis.GetAllMembers(SourceLocation.MinValue, GetMemberOptions.ExcludeBuiltins)
                 .SelectMany(m => analysis.GetValues(m.Name, SourceLocation.MinValue))
                 .Where(v => v.MemberType == PythonMemberType.Class)
                 .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
@@ -224,8 +224,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private static IEnumerable<IPythonType> GetTestCaseClasses(IPythonModule module, IModuleContext context) {
             foreach (var name in module.GetMemberNames(context)) {
-                var cls = module.GetMember(context, name) as IPythonType;
-                if (cls != null) {
+                if (module.GetMember(context, name) is IPythonType cls) {
                     foreach (var baseCls in cls.Mro.MaybeEnumerate()) {
                         if (baseCls.Name == "TestCase" ||
                             baseCls.Name.StartsWithOrdinal("unittest.") && baseCls.Name.EndsWithOrdinal(".TestCase")) {
