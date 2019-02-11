@@ -23,8 +23,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -36,7 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// </summary>
     sealed class ExtractMethodRequestView : INotifyPropertyChanged {
         private readonly ExtractedMethodCreator _previewer;
-        internal static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
+        private static readonly Regex Python2IdentifierRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
         private const string _defaultName = "method_name";
         private string _name;
@@ -237,12 +239,29 @@ namespace Microsoft.PythonTools.Refactoring {
         /// </summary>
         void ExtractMethodRequestView_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             if (e.PropertyName != "IsValid") {
-                IsValid = (Name != null && _validNameRegex.IsMatch(Name)) &&
-                    TargetScope != null;
+                IsValid = (TargetScope != null) && IsValidPythonIdentifier(Name, _previewer.PythonVersion);
             }
             if (e.PropertyName != "PreviewText") {
                 UpdatePreview();
             }
+        }
+
+        internal static bool IsValidPythonIdentifier(string identifier, PythonLanguageVersion pythonVersion) {
+            if (String.IsNullOrEmpty(identifier) || PythonKeywords.IsKeyword(identifier, pythonVersion)) {
+                return false;
+            }
+
+            //Python2 identifiers are only certain ASCII characters
+            if (pythonVersion < PythonLanguageVersion.V30) {
+                return Python2IdentifierRegex.IsMatch(identifier);
+            }
+            
+            //Python3 identifiers can include unicode characters
+            if (!Tokenizer.IsIdentifierStartChar(identifier[0])) {
+                return false;
+            }
+
+            return identifier.Skip(1).All(Tokenizer.IsIdentifierChar);
         }
 
         /// <summary>
