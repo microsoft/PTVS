@@ -2243,6 +2243,12 @@ Expand selection to the full expression?</value>
   <data name="AddEnvironmentCancelButtonAutomationName" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="AddEnvironmentAddButtonAutomationName" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="AddEnvironmentCreateButtonAutomationName" xml:space="preserve">
+    <value>Create</value>
+  </data>
   <data name="AddEnvironmentPagesListBoxAutomationName" xml:space="preserve">
     <value>Pages</value>
   </data>
@@ -2278,7 +2284,10 @@ Expand selection to the full expression?</value>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>
-  <data name="AddInstalledEnvironmentLaunch" xml:space="preserve">
+  <data name="AddInstalledEnvironmentInstallButton" xml:space="preserve">
+    <value>_Install</value>
+  </data>
+  <data name="AddInstalledEnvironmentInstallButtonAutomationName" xml:space="preserve">
     <value>Install</value>
   </data>
   <data name="AddInstalledEnvironmentInstalledLabel" xml:space="preserve">

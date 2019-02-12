@@ -269,6 +269,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string AddEnvironmentAddButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddEnvironmentAddButtonAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Cancel.
         /// </summary>
         public static string AddEnvironmentCancelButton {
@@ -301,6 +310,15 @@ namespace Microsoft.PythonTools {
         public static string AddEnvironmentCreateButton {
             get {
                 return ResourceManager.GetString("AddEnvironmentCreateButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create.
+        /// </summary>
+        public static string AddEnvironmentCreateButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddEnvironmentCreateButtonAutomationName", resourceCulture);
             }
         }
         
@@ -586,6 +604,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Install.
+        /// </summary>
+        public static string AddInstalledEnvironmentInstallButton {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentInstallButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string AddInstalledEnvironmentInstallButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentInstallButtonAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Already installed.
         /// </summary>
         public static string AddInstalledEnvironmentInstalledLabel {
@@ -600,15 +636,6 @@ namespace Microsoft.PythonTools {
         public static string AddInstalledEnvironmentLabel {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install.
-        /// </summary>
-        public static string AddInstalledEnvironmentLaunch {
-            get {
-                return ResourceManager.GetString("AddInstalledEnvironmentLaunch", resourceCulture);
             }
         }
         
