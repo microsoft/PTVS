@@ -139,8 +139,7 @@
                         Margin="0 0 0 7"
                         AutomationProperties.AutomationId="Location"/>
 
-                    <Button
-                        Style="{StaticResource NavigationButton}"
+                    <vsui:HyperlinkButton
                         Margin="0 0 0 18"
                         Content="{x:Static common:Strings.AddVirtualEnvironmentChangeLocationLink}"
                         AutomationProperties.AutomationId="ChangeLocation"
