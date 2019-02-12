@@ -234,7 +234,7 @@
                 "Type": "other",
                 "Other": {
                     "Name": "six",
-                    "Version": "1.11",
+                    "Version": "1.11.0",
                     "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/six-1.11.0-py37_1.tar.bz2"
                 }
             }
