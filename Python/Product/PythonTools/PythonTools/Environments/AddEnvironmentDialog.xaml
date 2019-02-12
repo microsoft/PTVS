@@ -8,6 +8,7 @@
     xmlns:l="clr-namespace:Microsoft.PythonTools.Environments"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
+    xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
     xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
     mc:Ignorable="d"
     Title="{x:Static common:Strings.AddEnvironmentTitle}"
@@ -146,9 +147,8 @@
                         <ColumnDefinition/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button
+                    <vsui:HyperlinkButton
                         Grid.Column="0"
-                        Style="{StaticResource NavigationButton}"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Margin="6 0 24 0"
