@@ -165,7 +165,7 @@
                             VerticalAlignment="Center"
                             IsEnabled="{Binding Path=PagesView/IsAcceptEnabled}"
                             Click="OkClick"
-                            AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentOKButtonAutomationName}"
+                            AutomationProperties.Name="{Binding Path=PagesView/AcceptAutomationName}"
                             AutomationProperties.AutomationId="AddButton">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
