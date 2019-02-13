@@ -79,6 +79,7 @@
                         SelectedItem="{Binding Path=SelectedProject}"
                         ItemTemplate="{StaticResource ProjectTemplate}"
                         AutomationProperties.AutomationId="Project"
+                        AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
                         AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"/>
 
                     <Grid>
@@ -103,6 +104,7 @@
                                 HorizontalAlignment="Left"
                                 Text="{Binding Path=VirtualEnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 AutomationProperties.AutomationId="EnvName"
+                                AutomationProperties.IsRequiredForForm="True"
                                 AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
@@ -122,6 +124,7 @@
                                 HorizontalAlignment="Left"
                                 Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"
                                 AutomationProperties.AutomationId="BaseInterpreter"
+                                AutomationProperties.IsRequiredForForm="True"
                                 AutomationProperties.LabeledBy="{Binding ElementName=BaseInterpreterLabel}"
                                 ItemsSource="{Binding Interpreters}"
                                 ItemTemplate="{StaticResource NameTemplate}"
@@ -203,6 +206,7 @@
                         Text="{Binding Path=Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         IsEnabled="{Binding Path=IsRegisterCustomEnv}"
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
+                        IsRequiredForForm="{Binding Path=IsRegisterCustomEnv}"
                         AutomationProperties.AutomationId="Description"
                         AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
                 </StackPanel>

@@ -1268,6 +1268,7 @@
                                  AutomationProperties.AutomationId="{TemplateBinding AutomationProperties.AutomationId}"
                                  AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
                                  AutomationProperties.HelpText="{TemplateBinding HelpText}"
+                                 AutomationProperties.IsRequiredForForm="{TemplateBinding IsRequiredForForm}"
                                  AutomationProperties.LabeledBy="{TemplateBinding AutomationProperties.LabeledBy}"
                                  IsReadOnly="{Binding IsReadOnly,Mode=OneWay,RelativeSource={RelativeSource TemplatedParent}}"
                                  Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}">
@@ -1338,6 +1339,7 @@
                                   AutomationProperties.AutomationId="{TemplateBinding AutomationProperties.AutomationId}"
                                   AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
                                   AutomationProperties.HelpText="{TemplateBinding HelpText}"
+                                  AutomationProperties.IsRequiredForForm="{TemplateBinding IsRequiredForForm}"
                                   AutomationProperties.LabeledBy="{TemplateBinding AutomationProperties.LabeledBy}">
                         </ComboBox>
                     </Grid>
