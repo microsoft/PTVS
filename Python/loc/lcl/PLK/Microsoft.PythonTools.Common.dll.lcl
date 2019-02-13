@@ -163,8 +163,8 @@
       <Item ItemId=";AddCondaPackagesHelpText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Lista pakietów Conda do zainstalowania podczas tworzenia środowiska Conda. Wpisy powinny być oddzielane spacjami.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Lista pakietów Conda do zainstalowania podczas tworzenia środowiska Conda. Wpisy powinny być rozdzielone spacjami.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[List of conda packages to install when creating the conda environment. Entries should be separated by spaces.]]></Val>
