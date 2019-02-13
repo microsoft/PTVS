@@ -189,6 +189,7 @@
                         IsEnabled="{Binding Path=IsEnvFile}"
                         Text="{Binding SelectedEnvFilePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         Watermark="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
+                        HelpText="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
                         AutomationProperties.AutomationId="EnvFile"
                         AutomationProperties.LabeledBy="{Binding ElementName=EnvFileRadioButton}"
                         BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -210,6 +211,7 @@
                         Text="{Binding Packages,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                         BrowseButtonStyle="{StaticResource BrowsePackagesButton}"
                         Watermark="{x:Static common:Strings.AddCondaPackagesWatermark}"
+                        HelpText="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         AutomationProperties.AutomationId="Packages"
                         AutomationProperties.LabeledBy="{Binding ElementName=PackagesRadioButton}"/>
 
