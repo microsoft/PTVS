@@ -59,6 +59,11 @@
       <Project>{C42B194E-3333-45E8-BB26-D69D1A51EF0B}</Project>
       <Name>Profiling</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\ExternalProfilerDriver\ExternalProfilerDriver.csproj">
+      <Project>{21EBFB2D-1938-4EB1-A41D-8F071F46FE3B}</Project>
+      <Name>ExternalProfilerDriver</Name>
+    </ProjectReference>
+
     <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>

@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Profiling;
+//using Microsoft.PythonTools.Profiling.ExternalProfilerDriver;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -92,6 +93,13 @@ namespace ProfilingTests {
 
                 Trace.TraceInformation("OK");
             }
+        }
+
+        [TestMethod]
+        public void TestDummy() {
+            var pf = new Microsoft.PythonTools.Profiling.ExternalProfilerDriver.PerformanceSample("hello", "100", "world", "hello-world", "hello.c", "0x00");
+            Assert.AreEqual(pf.Function, "hello");            
+            //Assert.IsTrue(true);
         }
     }
 }

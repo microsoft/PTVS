@@ -27,4 +27,6 @@ __pycache__/
 /Python/*.VC.opendb
 /Python/*.VC.db
 *.pyperf
+UpgradeLog.htm
+
 
