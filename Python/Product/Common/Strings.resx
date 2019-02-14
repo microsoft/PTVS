@@ -2434,6 +2434,9 @@ Expand selection to the full expression?</value>
   <data name="AddCondaPackagesWatermark" xml:space="preserve">
     <value>ex. numpy pandas</value>
   </data>
+  <data name="AddCondaPackagesBrowseButton" xml:space="preserve">
+    <value>Add packages</value>
+  </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
     <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.</value>
   </data>
