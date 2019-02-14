@@ -69,6 +69,7 @@
                 SelectedItem="{Binding Path=SelectedProject}"
                 ItemTemplate="{StaticResource ProjectTemplate}"
                 AutomationProperties.AutomationId="Project"
+                AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
                 AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"/>
 
             <Label
@@ -88,6 +89,7 @@
                 SelectedItem="{Binding Path=SelectedInterpreter}"
                 ItemTemplateSelector="{StaticResource interpreterViewSelector}"
                 AutomationProperties.AutomationId="Interpreter"
+                AutomationProperties.IsRequiredForForm="True"
                 AutomationProperties.LabeledBy="{Binding ElementName=ExistingEnvLabel}">
 
                 <ComboBox.ItemContainerStyle>
@@ -109,6 +111,7 @@
                     Margin="0 0 265 18"
                     Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                     Watermark="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
+                    IsRequiredForForm="True"
                     HelpText="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
                     AutomationProperties.LabeledBy="{Binding ElementName=PrefixPathLabel}"
                     AutomationProperties.AutomationId="PrefixPath"
@@ -143,6 +146,7 @@
                                 Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
+                                IsRequiredForForm="{Binding Path=RegisterCustomEnv}"
                                 AutomationProperties.AutomationId="Description"
                                 AutomationProperties.LabeledBy="{Binding ElementName=DescriptionLabel}">
                                 <wpf:ConfigurationTextBoxWithHelp.IsReadOnly>
@@ -165,6 +169,7 @@
                                 IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
                                 Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
+                                IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
                                 AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
                                 AutomationProperties.AutomationId="InterpreterPath"
@@ -184,6 +189,7 @@
                                 IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
                                 Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
+                                IsRequiredForForm="False"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
                                 AutomationProperties.LabeledBy="{Binding ElementName=WindowsInterpreterPathLabel}"
                                 AutomationProperties.AutomationId="WindowsInterpreterPath"
@@ -206,6 +212,7 @@
                                 IsEnabled="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
                                 Value="{Binding VersionName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
                                 Values="{Binding VersionNames}"
+                                IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
                                 AutomationProperties.AutomationId="LanguageVersion"
                                 AutomationProperties.LabeledBy="{Binding ElementName=LanguageVersionLabel}"/>
 
@@ -224,6 +231,7 @@
                                 Value="{Binding ArchitectureName,Mode=TwoWay,ValidatesOnNotifyDataErrors=False}"
                                 Values="{Binding ArchitectureNames}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
+                                IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
                                 AutomationProperties.AutomationId="Architecture"
                                 AutomationProperties.LabeledBy="{Binding ElementName=ArchitectureLabel}"/>
@@ -240,6 +248,7 @@
                                 IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
                                 Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
+                                IsRequiredForForm="False"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
                                 AutomationProperties.AutomationId="PathEnvironmentVariable"
                                 AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>

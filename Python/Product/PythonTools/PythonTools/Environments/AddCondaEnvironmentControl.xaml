@@ -152,6 +152,7 @@
                         SelectedItem="{Binding Path=SelectedProject}"
                         ItemTemplate="{StaticResource ProjectTemplate}"
                         AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"
+                        AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
                         AutomationProperties.AutomationId="Project"
                         Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"/>
 
@@ -169,6 +170,7 @@
                         HorizontalAlignment="Left"
                         Text="{Binding Path=EnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         AutomationProperties.AutomationId="EnvName"
+                        AutomationProperties.IsRequiredForForm="True"
                         AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
 
                     <Label
@@ -192,6 +194,7 @@
                         HelpText="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
                         AutomationProperties.AutomationId="EnvFile"
                         AutomationProperties.LabeledBy="{Binding ElementName=EnvFileRadioButton}"
+                        IsRequiredForForm="{Binding Path=IsEnvFile}"
                         BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
                         BrowseCommandParameter="{x:Static common:Strings.AddCondaEnvironmentFileBrowseFilter}"
                         BrowseAutomationName="{x:Static common:Strings.AddCondaEnvironmentFileBrowseButton}"/>
