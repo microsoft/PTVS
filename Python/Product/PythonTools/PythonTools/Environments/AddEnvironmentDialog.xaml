@@ -120,6 +120,23 @@
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
+                                <Setter Property="FocusVisualStyle">
+                                    <Setter.Value>
+                                        <Style>
+                                            <Setter Property="Control.Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Rectangle Margin="2"
+                                                                   SnapsToDevicePixels="True"
+                                                                   Stroke="{DynamicResource {x:Static vsui:CommonDocumentColors.ListItemTextSelectedBrushKey}}"
+                                                                   StrokeThickness="1"
+                                                                   StrokeDashArray="1 2"/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="{DynamicResource {x:Static ptwpf:ModernStyles.SelectedItemActiveBrushKey}}"/>

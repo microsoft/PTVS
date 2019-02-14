@@ -191,6 +191,7 @@
                         IsEnabled="{Binding Path=IsEnvFile}"
                         Text="{Binding SelectedEnvFilePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         Watermark="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
+                        HelpText="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
                         AutomationProperties.AutomationId="EnvFile"
                         AutomationProperties.LabeledBy="{Binding ElementName=EnvFileRadioButton}"
                         IsRequiredForForm="{Binding Path=IsEnvFile}"
@@ -213,6 +214,7 @@
                         Text="{Binding Packages,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                         BrowseButtonStyle="{StaticResource BrowsePackagesButton}"
                         Watermark="{x:Static common:Strings.AddCondaPackagesWatermark}"
+                        HelpText="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         AutomationProperties.AutomationId="Packages"
                         AutomationProperties.LabeledBy="{Binding ElementName=PackagesRadioButton}"/>
 
@@ -255,11 +257,12 @@
                     Content="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"
                     Style="{StaticResource ModernLabel}"/>
 
-                <!-- Progress bar -->
-                <vsui:ProgressControl
-                    HorizontalAlignment="Center"
-                    DataContext="{Binding CondaPreview.Progress}"
-                    Grid.Row="1"/>
+                <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                    <vsui:ProgressControl
+                        HorizontalAlignment="Center"
+                        DataContext="{Binding CondaPreview.Progress}"/>
+                </Grid>
 
                 <!-- Preview results -->
                 <ScrollViewer

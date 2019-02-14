@@ -112,6 +112,7 @@
                     Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                     Watermark="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
                     IsRequiredForForm="True"
+                    HelpText="{x:Static common:Strings.ConfigurationExtensionPrefixPathWatermark}"
                     AutomationProperties.LabeledBy="{Binding ElementName=PrefixPathLabel}"
                     AutomationProperties.AutomationId="PrefixPath"
                     BrowseButtonStyle="{StaticResource BrowseFolderButton}"
@@ -143,6 +144,7 @@
                                 x:Name="DescriptionTextBox"
                                 Margin="0 0 0 15"
                                 Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                HelpText="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionDescriptionWatermark}"
                                 IsRequiredForForm="{Binding Path=RegisterCustomEnv}"
                                 AutomationProperties.AutomationId="Description"
@@ -168,6 +170,7 @@
                                 Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
                                 IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
+                                HelpText="{x:Static common:Strings.ConfigurationExtensionInterpreterPathWatermark}"
                                 AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
                                 AutomationProperties.AutomationId="InterpreterPath"
                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -187,6 +190,7 @@
                                 Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
                                 IsRequiredForForm="False"
+                                HelpText="{x:Static common:Strings.ConfigurationExtensionWindowedInterpreterPathWatermark}"
                                 AutomationProperties.LabeledBy="{Binding ElementName=WindowsInterpreterPathLabel}"
                                 AutomationProperties.AutomationId="WindowsInterpreterPath"
                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -228,6 +232,7 @@
                                 Values="{Binding ArchitectureNames}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
                                 IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
+                                HelpText="{x:Static common:Strings.ConfigurationExtensionArchitectureWatermark}"
                                 AutomationProperties.AutomationId="Architecture"
                                 AutomationProperties.LabeledBy="{Binding ElementName=ArchitectureLabel}"/>
 
@@ -244,6 +249,7 @@
                                 Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
                                 IsRequiredForForm="False"
+                                HelpText="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
                                 AutomationProperties.AutomationId="PathEnvironmentVariable"
                                 AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>
                         </StackPanel>

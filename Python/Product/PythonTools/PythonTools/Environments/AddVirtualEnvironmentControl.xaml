@@ -160,6 +160,7 @@
                         Margin="0 0 0 20"
                         Text="{Binding RequirementsPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentFileWatermark}"
+                        HelpText="{x:Static common:Strings.AddVirtualEnvironmentFileWatermark}"
                         AutomationProperties.LabeledBy="{Binding ElementName=RequirementsPathLabel}"
                         AutomationProperties.AutomationId="RequirementsPath"
                         BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -207,6 +208,7 @@
                         IsEnabled="{Binding Path=IsRegisterCustomEnv}"
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
                         IsRequiredForForm="{Binding Path=IsRegisterCustomEnv}"
+                        HelpText="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
                         AutomationProperties.AutomationId="Description"
                         AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
                 </StackPanel>
@@ -224,11 +226,12 @@
                     Content="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"
                     Style="{StaticResource ModernLabel}"/>
 
-                <!-- Progress bar -->
-                <vsui:ProgressControl
-                    HorizontalAlignment="Center"
-                    DataContext="{Binding Progress}"
-                    Grid.Row="1"/>
+                <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                <Grid Grid.Row="1" Visibility="{Binding Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                    <vsui:ProgressControl
+                        HorizontalAlignment="Center"
+                        DataContext="{Binding Progress}"/>
+                </Grid>
 
                 <!-- Preview results -->
                 <StackPanel
