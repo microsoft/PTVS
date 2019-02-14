@@ -220,11 +220,12 @@
                     Content="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"
                     Style="{StaticResource ModernLabel}"/>
 
-                <!-- Progress bar -->
-                <vsui:ProgressControl
-                    HorizontalAlignment="Center"
-                    DataContext="{Binding Progress}"
-                    Grid.Row="1"/>
+                <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                <Grid Grid.Row="1" Visibility="{Binding Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                    <vsui:ProgressControl
+                        HorizontalAlignment="Center"
+                        DataContext="{Binding Progress}"/>
+                </Grid>
 
                 <!-- Preview results -->
                 <StackPanel
