@@ -56,5 +56,7 @@ namespace Microsoft.PythonTools.Environments {
             RequirementsTxtPath = workspace.GetRequirementsTxtPath();
             EnvironmentYmlPath = workspace.GetEnvironmentYmlPath();
         }
+
+        public override string ToString() => Name;
     }
 }
