@@ -115,8 +115,8 @@
       <Item ItemId=";AddCondaEnvironmentPreviewInProgress" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Building preview...]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[預覽進行中...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[正在建立預覽...]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Preview in progress...]]></Val>
@@ -709,8 +709,8 @@
       <Item ItemId=";AddVirtualEnvironmentPreviewInProgress" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Building preview...]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[請稍候...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[正在建立預覽...]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Please wait...]]></Val>
@@ -5781,10 +5781,13 @@
       </Item>
       <Item ItemId=";ReplProjectConfigurationChanged" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[The associated project "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[相關聯的專案 '{0}' 已變更其組態。必須重設此互動式視窗，才可反映這些變更。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5932,6 +5935,18 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[恭喜，此工作階段已開啟過超過 20 億個互動式視窗! 您現在必須重新啟動 Visual Studio，才可開啟更多視窗。]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ReplWorkspaceCaption" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Workspace: {0}]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ReplWorkspaceConfigurationChanged" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The associated workspace "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
