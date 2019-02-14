@@ -157,6 +157,7 @@
                         Margin="0 0 0 20"
                         Text="{Binding RequirementsPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentFileWatermark}"
+                        HelpText="{x:Static common:Strings.AddVirtualEnvironmentFileWatermark}"
                         AutomationProperties.LabeledBy="{Binding ElementName=RequirementsPathLabel}"
                         AutomationProperties.AutomationId="RequirementsPath"
                         BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -203,6 +204,7 @@
                         Text="{Binding Path=Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         IsEnabled="{Binding Path=IsRegisterCustomEnv}"
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
+                        HelpText="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
                         AutomationProperties.AutomationId="Description"
                         AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
                 </StackPanel>
