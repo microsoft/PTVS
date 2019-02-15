@@ -228,14 +228,6 @@ namespace Microsoft.CookiecutterTools {
             }
         }
 
-        private void OpenInWindowsExplorer(string folderPath) {
-            Process.Start(new ProcessStartInfo() {
-                FileName = folderPath,
-                UseShellExecute = true,
-                Verb = "open"
-            });
-        }
-
         internal void NavigateToGitHub(int commandId) {
             switch (commandId) {
                 case PackageIds.cmdidLinkGitHubHome:
