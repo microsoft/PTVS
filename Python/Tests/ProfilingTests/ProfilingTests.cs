@@ -105,6 +105,12 @@ namespace ProfilingTests {
             //Assert.IsTrue(true);
         }
 
+        [TestMethod]
+        public void TestDummy2() {
+            var path = TestData.GetPath(@"TestData\HelloWorld\Program.py");
+            Assert.IsTrue(File.Exists(path));
+        }
+
 
         [TestMethod]
         public void VTunePath()
