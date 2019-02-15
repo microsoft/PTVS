@@ -173,10 +173,26 @@
                         AutomationProperties.IsRequiredForForm="True"
                         AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
 
-                    <Label
-                        Content="{x:Static common:Strings.AddCondaEnvironmentAddPackagesLabel}"
-                        Style="{StaticResource ModernLabel}"/>
+                    <!-- Wrap in a group box so that narrator reads the radio button header when entering the group -->
+                    <GroupBox
+                        Header="{x:Static common:Strings.AddCondaEnvironmentAddPackagesLabel}"
+                        BorderThickness="0"
+                        BorderBrush="Transparent"
+                        Background="Transparent"
+                        Padding="0"
+                        Margin="0">
 
+                        <GroupBox.HeaderTemplate>
+                            <DataTemplate>
+                                <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
+                                    <Label
+                                        Content="{Binding}"
+                                        Style="{StaticResource ModernLabel}"
+                                        Margin="-2 0 0 3"/>
+                                </Border>
+                            </DataTemplate>
+                        </GroupBox.HeaderTemplate>
+                    <StackPanel>
                     <RadioButton
                         x:Name="EnvFileRadioButton"
                         Margin="16 6 0 3"
@@ -217,7 +233,9 @@
                         HelpText="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         AutomationProperties.AutomationId="Packages"
                         AutomationProperties.LabeledBy="{Binding ElementName=PackagesRadioButton}"/>
-
+                    </StackPanel>
+                    </GroupBox>
+                    
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=SetAsCurrent}"
