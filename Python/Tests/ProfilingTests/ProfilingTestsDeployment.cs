@@ -1,4 +1,5 @@
 // Python Tools for Visual Studio
+// Copyright(c) 2019 Intel Corporation.  All rights reserved.
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -41,17 +42,9 @@ namespace ProfilingTestsDeployment {
             AssertListener.Initialize();
         }
 
-       
-
+#if false
         [TestMethod]
-        public void TestDummy() {
-            var pf = new /*  Microsoft.PythonTools.Profiling.ExternalProfilerDriver. */ PerformanceSample("hello", "100", "world", "hello-world", "hello.c", "0x00");
-            Assert.AreEqual(pf.Function, "hello");            
-            //Assert.IsTrue(true);
-        }
-
-        [TestMethod]
-        [DeploymentItem("zlib_example.csv")]
+        //[DeploymentItem("zlib_example.csv")]
         public void TestParsing()
         {
             string filename = "zlib_example.csv";
@@ -93,28 +86,15 @@ namespace ProfilingTestsDeployment {
                     Trace.WriteLine($"Key: {vkk.Key}, Value: [{vkk.Value.FunctionName}, {vkk.Value.SourceFile}, {vkk.Value.LineNumber}]");
                 }
             }
-
-            //var mfiles = VTuneToDWJSON.SourceFilesByModule(dict); // Doesnt exists
-
-
-
-            // This function doesnt exist.
-            //var modspec = VTuneToDWJSON.ModFunToTrace(dict).ToList();
-            //Assert.IsInstanceOfType(modspec[0], typeof(ModuleSpec));
-            // SequenceBaseSize
-
-            //foreach (var r in VTuneToDWJSON.ModFunToTrace(dict))
-            //{
-            //    Trace.WriteLine($"**** Got module {r.name}, assigned id: [{r.id}]");
-            //}
         }
+#endif
 
         [TestMethod]
         //[DeploymentItem("r_stacks_0004.csv")]
-        [DeploymentItem("zlib_example.csv")]
+        //[DeploymentItem("zlib_example.csv")]
         public void TestParseFromFile()
         {
-            string filename = "zlib_example.csv";
+            string filename = TestData.GetPath(@"TestData\ExternalProfilerDriverData\zlib_example.csv");
             Assert.IsTrue(File.Exists(filename));
             //int expected_sample_count = 5;
             // This function doesnt exists
@@ -122,6 +102,7 @@ namespace ProfilingTestsDeployment {
             //Assert.AreEqual(samples.Count, expected_sample_count);
         }
 
+#if false
         [TestMethod]
         [DeploymentItem("something.pdb")]
         public void LoadTest()
@@ -140,5 +121,6 @@ namespace ProfilingTestsDeployment {
             Assert.AreEqual(syms.Count, expected_symbol_count); */
 
         }
+#endif
     }
 }
