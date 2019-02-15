@@ -248,7 +248,7 @@
                                 IsReadOnly="{Binding Path=IsCustomVirtualEnv}"
                                 Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 Watermark="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
-                                IsRequiredForForm="False"
+                                IsRequiredForForm="{Binding Path=IsCustomVirtualEnv, Converter={x:Static wpf:Converters.Not}}"
                                 HelpText="{x:Static common:Strings.ConfigurationExtensionPathEnvVarWatermark}"
                                 AutomationProperties.AutomationId="PathEnvironmentVariable"
                                 AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>
