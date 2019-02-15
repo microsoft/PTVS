@@ -559,7 +559,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Windo_wed interpreter.
+        ///   Looks up a localized string similar to Windo_wed interpreter (optional).
         /// </summary>
         public static string AddExistingEnvironmentWindowsInterpreterPathLabel {
             get {
@@ -811,7 +811,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install packages fr_om file.
+        ///   Looks up a localized string similar to Install packages fr_om file (optional).
         /// </summary>
         public static string AddVirtualEnvironmentRequirementsPathLabel {
             get {

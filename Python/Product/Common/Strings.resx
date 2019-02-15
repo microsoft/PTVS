@@ -2345,7 +2345,7 @@ Expand selection to the full expression?</value>
     <value>Ba_se interpreter</value>
   </data>
   <data name="AddVirtualEnvironmentRequirementsPathLabel" xml:space="preserve">
-    <value>Install packages fr_om file</value>
+    <value>Install packages fr_om file (optional)</value>
   </data>
   <data name="AddVirtualEnvironmentPreviewLabel" xml:space="preserve">
     <value>Actions we will perform</value>
@@ -2390,7 +2390,7 @@ Expand selection to the full expression?</value>
     <value>In_terpreter path</value>
   </data>
   <data name="AddExistingEnvironmentWindowsInterpreterPathLabel" xml:space="preserve">
-    <value>Windo_wed interpreter</value>
+    <value>Windo_wed interpreter (optional)</value>
   </data>
   <data name="AddExistingEnvironmentLanguageVersionLabel" xml:space="preserve">
     <value>Language _version</value>
