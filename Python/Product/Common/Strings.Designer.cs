@@ -206,6 +206,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add packages.
+        /// </summary>
+        public static string AddCondaPackagesBrowseButton {
+            get {
+                return ResourceManager.GetString("AddCondaPackagesBrowseButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces..
         /// </summary>
         public static string AddCondaPackagesHelpText {

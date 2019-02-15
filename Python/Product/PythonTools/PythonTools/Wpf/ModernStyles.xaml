@@ -1290,6 +1290,7 @@
                                 MinHeight="29"
                                 VerticalAlignment="Center"
                                 Style="{TemplateBinding BrowseButtonStyle}"
+                                ToolTip="{TemplateBinding BrowseAutomationName}"
                                 AutomationProperties.Name="{TemplateBinding BrowseAutomationName}"
                                 CommandParameter="{TemplateBinding BrowseCommandParameter}"
                                 CommandTarget="{Binding ElementName=PART_TextBox}" />

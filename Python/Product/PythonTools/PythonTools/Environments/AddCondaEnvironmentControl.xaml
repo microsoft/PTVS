@@ -213,6 +213,7 @@
                         IsEnabled="{Binding Path=IsPackages}"
                         Text="{Binding Packages,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                         BrowseButtonStyle="{StaticResource BrowsePackagesButton}"
+                        BrowseAutomationName="{x:Static common:Strings.AddCondaPackagesBrowseButton}"
                         Watermark="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         HelpText="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         AutomationProperties.AutomationId="Packages"
