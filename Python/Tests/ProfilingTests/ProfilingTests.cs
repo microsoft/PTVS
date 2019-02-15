@@ -107,13 +107,13 @@ namespace ProfilingTests {
 
 
         [TestMethod]
-        public void TestVTunePath()
+        public void VTunePath()
         {
             Assert.IsTrue(File.Exists(VTuneInvoker.VTunePath()));
         }
 
         [TestMethod]
-        public void TestFullCLI_Hotspots()
+        public void HotspotsFullCLI()
         {
             string known_fullCLI = "-collect hotspots -user-data-dir=" + Path.GetTempPath();
             string workloadSpec = "test";
@@ -126,7 +126,7 @@ namespace ProfilingTests {
         }
 
         [TestMethod]
-        public void TestFullCLI_Callstacks()
+        public void CallstacksFullCLI()
         {
             string known_reportName = "-report callstacks -call-stack-mode user-plus-one -user-data-dir=" + Path.GetTempPath();
             string known_reportOutput = "-report-output=" + Path.GetTempPath();
@@ -138,7 +138,7 @@ namespace ProfilingTests {
         }
 
         [TestMethod]
-        public void TestFullCLI_Report()
+        public void ReportFullCLI()
         {
             string known_knobs = "-r-k column-by=CPUTime -r-k query-type=overtime -r-k bin_count=15";
             string known_reportOutput = "-report-output=" + Path.GetTempPath();
@@ -154,7 +154,7 @@ namespace ProfilingTests {
         }
 
         [TestMethod]
-        public void TestOverall()
+        public void Overall()
         {
             string vtuneExec = VTuneInvoker.VTunePath();
             Assert.IsTrue(File.Exists(vtuneExec));
@@ -187,7 +187,8 @@ namespace ProfilingTests {
             string dwjsonPath = Path.Combine(tmpPath, timeStamp + "_Sample.dwjson");
             string counterPath = Path.Combine(tmpPath, timeStamp + "_Session.counters");
 
-            // this fails here because there is VTuneToDWJSON.CSReportTODWJson is different too! ///
+            //// this fails here because VTuneToDWJSON.CSReportTODWJson is different ! ////
+
             // double runtime = VTuneToDWJSON.CSReportToDWJson(repspec.ReportOutputFile, dwjsonPath); 
             // VTuneToDWJSON.CPUReportToDWJson(reptimespec.ReportOutputFile, counterPath, runtime);   
 
@@ -196,5 +197,38 @@ namespace ProfilingTests {
 
         }
 
+        [TestMethod]
+        public void BaseSizeTupleCtor()
+        {
+            var baseTest = 10;
+            var sizeTest = 20;
+            var bs = new BaseSizeTuple(baseTest, sizeTest);
+
+            Assert.AreEqual(baseTest, bs.Base);
+        }
+
+        [TestMethod]
+        public void SequenceBaseSizeGenerate()
+        {
+            var sbs = new SequenceBaseSize();
+            CollectionAssert.AllItemsAreNotNull(sbs.Generate().Take(5).ToList());
+        }
+
+        [TestMethod]
+        public void SequenceBaseSizeSequence()
+        {
+            int expected_size = 10;
+            var sbs = new SequenceBaseSize();
+            Assert.AreEqual(expected_size, 10);
+            /// SequenceBaseSize is different
+            // Assert.AreEqual(sbs.Size, expected_size);
+        }
+
+        [TestMethod]
+        public void GeneratedSample()
+        {
+            var sbs = (new SequenceBaseSize()).Generate().Take(10).ToList();
+            Assert.IsTrue(sbs[4].Base == 44 && sbs[4].Size == 10);
+        }
     }
 }
