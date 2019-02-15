@@ -546,14 +546,15 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var paths = GetPathEntries(view);
             var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
-            var psi = new ProcessStartInfo("powershell.exe");
-            psi.Arguments = string.Join(" ", new[] {
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe")) {
+                Arguments = string.Join(" ", new[] {
             "-NoLogo",
             "-NoExit",
             "-Command",
             pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
-            }.Select(ProcessOutput.QuoteSingleArgument));
-            psi.WorkingDirectory = view.PrefixPath;
+            }.Select(ProcessOutput.QuoteSingleArgument)),
+                WorkingDirectory = view.PrefixPath
+            };
 
             Process.Start(psi).Dispose();
         }
