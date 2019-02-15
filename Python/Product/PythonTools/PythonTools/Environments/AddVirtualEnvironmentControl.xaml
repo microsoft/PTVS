@@ -195,7 +195,6 @@
 
                     <CheckBox
                         Margin="0 0 0 3"
-                        x:Name="RegisterCustomEnvCheckBox"
                         IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
                         IsChecked="{Binding Path=IsRegisterCustomEnv}"
                         Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
@@ -209,8 +208,9 @@
                         Watermark="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
                         IsRequiredForForm="{Binding Path=IsRegisterCustomEnv}"
                         HelpText="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
-                        AutomationProperties.AutomationId="Description"
-                        AutomationProperties.LabeledBy="{Binding ElementName=RegisterCustomEnvCheckBox}"/>
+                        ToolTip="{x:Static common:Strings.AddVirtualEnvironmentDescriptionWatermark}"
+                        AutomationProperties.Name="{x:Static common:Strings.AddVirtualEnvironmentDescriptionName}"
+                        AutomationProperties.AutomationId="Description"/>
                 </StackPanel>
             </ScrollViewer>
 
