@@ -2365,6 +2365,9 @@ Expand selection to the full expression?</value>
   <data name="AddVirtualEnvironmentDescriptionWatermark" xml:space="preserve">
     <value>Description for this environment</value>
   </data>
+  <data name="AddVirtualEnvironmentDescriptionName" xml:space="preserve">
+    <value>Environment description</value>
+  </data>
   <data name="AddVirtualEnvironmentPreviewInProgress" xml:space="preserve">
     <value>Building preview...</value>
   </data>
@@ -2420,7 +2423,10 @@ Expand selection to the full expression?</value>
     <value>environment.yml</value>
   </data>
   <data name="AddCondaEnvironmentFileHelp" xml:space="preserve">
-    <value>The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.</value>
+    <value>Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment.</value>
+  </data>
+  <data name="AddCondaEnvironmentFileName" xml:space="preserve">
+    <value>Environment file path</value>
   </data>
   <data name="AddCondaEnvironmentFileBrowseButton" xml:space="preserve">
     <value>Browse for environment file</value>
@@ -2434,11 +2440,14 @@ Expand selection to the full expression?</value>
   <data name="AddCondaPackagesWatermark" xml:space="preserve">
     <value>ex. numpy pandas</value>
   </data>
+  <data name="AddCondaPackagesName" xml:space="preserve">
+    <value>Package names</value>
+  </data>
   <data name="AddCondaPackagesBrowseButton" xml:space="preserve">
     <value>Add packages</value>
   </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.</value>
+    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>

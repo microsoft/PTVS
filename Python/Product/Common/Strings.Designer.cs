@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment..
+        ///   Looks up a localized string similar to Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment..
         /// </summary>
         public static string AddCondaEnvironmentFileHelp {
             get {
@@ -102,6 +102,15 @@ namespace Microsoft.PythonTools {
         public static string AddCondaEnvironmentFileInvalid {
             get {
                 return ResourceManager.GetString("AddCondaEnvironmentFileInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment file path.
+        /// </summary>
+        public static string AddCondaEnvironmentFileName {
+            get {
+                return ResourceManager.GetString("AddCondaEnvironmentFileName", resourceCulture);
             }
         }
         
@@ -215,11 +224,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces..
+        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas.
         /// </summary>
         public static string AddCondaPackagesHelpText {
             get {
                 return ResourceManager.GetString("AddCondaPackagesHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package names.
+        /// </summary>
+        public static string AddCondaPackagesName {
+            get {
+                return ResourceManager.GetString("AddCondaPackagesName", resourceCulture);
             }
         }
         
@@ -699,6 +717,15 @@ namespace Microsoft.PythonTools {
         public static string AddVirtualEnvironmentChangeLocationLink {
             get {
                 return ResourceManager.GetString("AddVirtualEnvironmentChangeLocationLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment description.
+        /// </summary>
+        public static string AddVirtualEnvironmentDescriptionName {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentDescriptionName", resourceCulture);
             }
         }
         
