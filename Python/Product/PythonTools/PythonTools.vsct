@@ -912,11 +912,9 @@ permissions and limitations under the License.
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
-        <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
-          <!--<ButtonText>Environment: </ButtonText>-->
-          <ButtonText></ButtonText>
+          <ButtonText>Python Environment</ButtonText>
           <ToolTipText>Current Python environment</ToolTipText>
           <CanonicalName>Python Environment</CanonicalName>
           <LocCanonicalName>Python Environment</LocCanonicalName>
@@ -1176,7 +1174,7 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="comboIdCurrentEnvironment" key1="K" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="comboIdCurrentEnvironment" key1="K" mod1="Control" key2="E" editor="guidVSStd97"/>
   </KeyBindings>
 
   <UsedCommands>

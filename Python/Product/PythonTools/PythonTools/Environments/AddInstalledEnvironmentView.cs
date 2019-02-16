@@ -39,7 +39,8 @@ namespace Microsoft.PythonTools.Environments {
         ) : base(serviceProvider, projects, selectedProject) {
             _logger = Site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
             PageName = Strings.AddInstalledEnvironmentTabHeader;
-            AcceptCaption = Strings.AddInstalledEnvironmentLaunch;
+            AcceptCaption = Strings.AddInstalledEnvironmentInstallButton;
+            AcceptAutomationName = Strings.AddInstalledEnvironmentInstallButtonAutomationName;
             IsAcceptShieldVisible = true;
 
             _setupService = Site.GetService(typeof(SVsSetupCompositionService)) as IVsSetupCompositionService;

@@ -74,5 +74,23 @@ namespace ReplWindowUITestsRunner {
         public void SendToInteractiveOutputSelected() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveOutputSelected));
         }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void SendToInteractiveWorkspaceInterpreter() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspaceInterpreter));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void SendToInteractiveWorkspacePackage() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspacePackage));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void SendToInteractiveWorkspaceSearchPathPackage() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspaceSearchPathPackage));
+        }
     }
 }

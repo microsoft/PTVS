@@ -14,7 +14,7 @@
     <RootNamespace>HelloWorld</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|3.5-32</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.7</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +31,7 @@
     <None Include="SelectOutput.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|3.5-32" />
+    <InterpreterReference Include="Global|PythonCore|3.7" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

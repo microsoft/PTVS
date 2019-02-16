@@ -1,0 +1,6 @@
+{
+  "Interpreter": "Global|PythonCore|3.7",
+  "SearchPaths": [
+    "..\\SendToInteractiveWorkspaceSearchPath"
+  ]
+}

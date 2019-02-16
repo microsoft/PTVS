@@ -28,6 +28,7 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
+        public static readonly DependencyProperty IsRequiredForFormProperty = DependencyProperty.Register("IsRequiredForForm", typeof(bool), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseButtonStyleProperty = DependencyProperty.Register("BrowseButtonStyle", typeof(Style), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseCommandParameterProperty = DependencyProperty.Register("BrowseCommandParameter", typeof(object), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseAutomationNameProperty = DependencyProperty.Register("BrowseAutomationName", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
@@ -52,6 +53,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public bool IsReadOnly {
             get { return (bool)GetValue(IsReadOnlyProperty); }
             set { SetValue(IsReadOnlyProperty, value); }
+        }
+
+        public bool IsRequiredForForm {
+            get { return (bool)GetValue(IsRequiredForFormProperty); }
+            set { SetValue(IsRequiredForFormProperty, value); }
         }
 
         public Style BrowseButtonStyle {
@@ -86,6 +92,7 @@ namespace Microsoft.VisualStudioTools.Wpf {
     sealed class ConfigurationComboBoxWithHelp : Control {
         public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
+        public static readonly DependencyProperty IsRequiredForFormProperty = DependencyProperty.Register("IsRequiredForForm", typeof(bool), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty ValueProperty = DependencyProperty.Register("Value", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty ValuesProperty = DependencyProperty.Register("Values", typeof(IList<string>), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
 
@@ -99,6 +106,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public string HelpText {
             get { return (string)GetValue(HelpTextProperty); }
             set { SetValue(HelpTextProperty, value); }
+        }
+
+        public bool IsRequiredForForm {
+            get { return (bool)GetValue(IsRequiredForFormProperty); }
+            set { SetValue(IsRequiredForFormProperty, value); }
         }
 
         public string Value {
