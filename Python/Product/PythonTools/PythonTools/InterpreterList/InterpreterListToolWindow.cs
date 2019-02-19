@@ -525,10 +525,10 @@ namespace Microsoft.PythonTools.InterpreterList {
             var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
                 Arguments = string.Join(" ", new[] {
-                "/S",
-                "/K",
-                pathCmd + string.Format("title {0} environment", view.Description)
-            }.Select(ProcessOutput.QuoteSingleArgument)),
+                    "/S",
+                    "/K",
+                    pathCmd + string.Format("title {0} environment", view.Description)
+                }.Select(ProcessOutput.QuoteSingleArgument)),
                 WorkingDirectory = view.PrefixPath
             };
 
@@ -548,11 +548,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe")) {
                 Arguments = string.Join(" ", new[] {
-            "-NoLogo",
-            "-NoExit",
-            "-Command",
-            pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
-            }.Select(ProcessOutput.QuoteSingleArgument)),
+                    "-NoLogo",
+                    "-NoExit",
+                    "-Command",
+                    pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
+                }.Select(ProcessOutput.QuoteSingleArgument)),
                 WorkingDirectory = view.PrefixPath
             };
 
