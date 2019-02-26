@@ -55,6 +55,8 @@ namespace TestUtilities {
         public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Anaconda37 = GetAnacondaVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Anaconda37_x64 = GetAnacondaVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
@@ -180,6 +182,8 @@ namespace TestUtilities {
 
         public static IEnumerable<PythonVersion> AnacondaVersions {
             get {
+                if (Anaconda37 != null) yield return Anaconda37;
+                if (Anaconda37_x64 != null) yield return Anaconda37_x64;
                 if (Anaconda36 != null) yield return Anaconda36;
                 if (Anaconda36_x64 != null) yield return Anaconda36_x64;
                 if (Anaconda27 != null) yield return Anaconda27;
