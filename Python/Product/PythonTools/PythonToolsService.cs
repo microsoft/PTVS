@@ -678,7 +678,7 @@ namespace Microsoft.PythonTools {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(Site);
                 var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = CondaUtils.GetActivatedEnvironmentVariables(condaExe, prefixPath);
+                    var condaEnv = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(condaExe, prefixPath);
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
                 }
             }

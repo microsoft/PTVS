@@ -60,15 +60,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="prefixPath">Path to the environment.</param>
         /// <returns><c>true</c> if it is a conda environment.</returns>
         internal static bool IsCondaEnvironment(string prefixPath) {
-            return Directory.Exists(Path.Combine(prefixPath, "conda-meta"));
+            return File.Exists(Path.Combine(prefixPath, "python.exe")) &&
+                Directory.Exists(Path.Combine(prefixPath, "conda-meta"));
         }
 
         /// <summary>
-        /// Activate the base conda environment, capture and return its environment variables
+        /// Activate the root conda environment, capture and return its environment variables
         /// </summary>
-        /// <param name="condaPath">Path to the base conda environment's conda.exe</param>
+        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
         /// <returns>List of environment variables.</returns>
-        internal async static Task<IEnumerable<KeyValuePair<string, string>>> GetActivatedEnvironmentVariablesAsync(string condaPath) {
+        internal async static Task<IEnumerable<KeyValuePair<string, string>>> CaptureActivationEnvironmentVariablesForRootAsync(string condaPath) {
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
             if (File.Exists(activateBat)) {
                 using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, new[] { "&", "python.exe", "-c", PrintEnvironmentCode })) {
@@ -88,7 +89,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="condaPath">Path to the base conda environment's conda.exe</param>
         /// <param name="prefixPath">Path to the conda environment to activate.</param>
         /// <returns>List of environment variables.</returns>
-        internal static IEnumerable<KeyValuePair<string, string>> GetActivatedEnvironmentVariables(string condaPath, string prefixPath) {
+        internal static IEnumerable<KeyValuePair<string, string>> CaptureActivationEnvironmentVariablesForPrefix(string condaPath, string prefixPath) {
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
             if (File.Exists(activateBat)) {
                 using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode })) {

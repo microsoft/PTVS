@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private async Task EnsureActivatedAsync() {
             if (_activatedEnvironmentVariables == null) {
-                var env = await CondaUtils.GetActivatedEnvironmentVariablesAsync(_condaPath);
+                var env = await CondaUtils.CaptureActivationEnvironmentVariablesForRootAsync(_condaPath);
                 _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
             }
         }
